@@ -34,10 +34,30 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /dashboard/* routes
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Protected route prefixes
+  const protectedPrefixes = [
+    "/dashboard",
+    "/certifications",
+    "/study-materials",
+    "/community",
+    "/profile",
+    "/onboarding",
+  ];
+
+  const isProtected = protectedPrefixes.some((prefix) =>
+    request.nextUrl.pathname.startsWith(prefix)
+  );
+
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // If authenticated user is on auth pages, redirect to dashboard
+  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/register")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
