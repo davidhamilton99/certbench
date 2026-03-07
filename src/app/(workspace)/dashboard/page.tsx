@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { DashboardPlan } from "@/components/workspace/DashboardPlan";
 import Link from "next/link";
 
 export const metadata = {
@@ -148,15 +149,7 @@ export default async function DashboardPage({
       )}
 
       {certification && diagnosticComplete && (
-        <Card padding="lg">
-          <h2 className="text-[18px] font-semibold text-text-primary mb-2">
-            Your study plan
-          </h2>
-          <p className="text-[15px] text-text-secondary">
-            Session engine will be implemented in Phase 3. Your personalised
-            daily study blocks will appear here.
-          </p>
-        </Card>
+        <DashboardPlan certSlug={certification.slug} />
       )}
     </div>
   );
