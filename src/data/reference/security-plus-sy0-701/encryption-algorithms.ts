@@ -1,0 +1,36 @@
+import type { ReferenceTable } from "../types";
+
+export const encryptionAlgorithms: ReferenceTable = {
+  id: "encryption-algorithms",
+  title: "Encryption & Hashing",
+  description: "Symmetric, asymmetric, and hashing algorithms with key sizes and use cases.",
+  columnHeaders: [
+    { key: "algorithm", label: "Algorithm" },
+    { key: "type", label: "Type" },
+    { key: "keySize", label: "Key Size", mono: true },
+    { key: "status", label: "Status" },
+    { key: "use", label: "Common Use" },
+  ],
+  entries: [
+    { columns: { algorithm: "AES", type: "Symmetric (block)", keySize: "128/192/256-bit", status: "Current standard", use: "Data encryption, disk encryption, TLS" } },
+    { columns: { algorithm: "3DES", type: "Symmetric (block)", keySize: "168-bit effective", status: "Deprecated", use: "Legacy systems, payment processing" } },
+    { columns: { algorithm: "DES", type: "Symmetric (block)", keySize: "56-bit", status: "Insecure", use: "Historical only — do not use" } },
+    { columns: { algorithm: "Blowfish", type: "Symmetric (block)", keySize: "32–448-bit", status: "Legacy", use: "bcrypt password hashing" } },
+    { columns: { algorithm: "Twofish", type: "Symmetric (block)", keySize: "128/192/256-bit", status: "Secure", use: "AES finalist, disk encryption" } },
+    { columns: { algorithm: "ChaCha20", type: "Symmetric (stream)", keySize: "256-bit", status: "Current", use: "TLS 1.3, mobile devices, WireGuard" } },
+    { columns: { algorithm: "RC4", type: "Symmetric (stream)", keySize: "40–2048-bit", status: "Insecure", use: "Historical — removed from TLS" } },
+    { columns: { algorithm: "RSA", type: "Asymmetric", keySize: "2048/4096-bit", status: "Current (≥2048)", use: "Key exchange, digital signatures, TLS" } },
+    { columns: { algorithm: "ECC", type: "Asymmetric", keySize: "256/384-bit", status: "Current", use: "TLS, mobile, IoT — shorter keys" } },
+    { columns: { algorithm: "Diffie-Hellman", type: "Key exchange", keySize: "2048+ bit", status: "Current", use: "Key agreement (not encryption itself)" } },
+    { columns: { algorithm: "ECDHE", type: "Key exchange", keySize: "256-bit", status: "Current — preferred", use: "TLS perfect forward secrecy" } },
+    { columns: { algorithm: "DSA", type: "Asymmetric (signing)", keySize: "1024–3072-bit", status: "Legacy", use: "Digital signatures" } },
+    { columns: { algorithm: "MD5", type: "Hash", keySize: "128-bit digest", status: "Insecure", use: "File verification only — not security" } },
+    { columns: { algorithm: "SHA-1", type: "Hash", keySize: "160-bit digest", status: "Deprecated", use: "Legacy certificate validation" } },
+    { columns: { algorithm: "SHA-256", type: "Hash", keySize: "256-bit digest", status: "Current standard", use: "Digital signatures, certificates, integrity" } },
+    { columns: { algorithm: "SHA-3", type: "Hash", keySize: "224–512-bit digest", status: "Current", use: "Alternative to SHA-2 family" } },
+    { columns: { algorithm: "HMAC", type: "MAC", keySize: "Varies (uses hash)", status: "Current", use: "Message authentication, API signing" } },
+    { columns: { algorithm: "bcrypt", type: "KDF/Password hash", keySize: "184-bit", status: "Current", use: "Password storage (adaptive cost)" } },
+    { columns: { algorithm: "PBKDF2", type: "KDF/Password hash", keySize: "Configurable", status: "Current", use: "Password-based key derivation" } },
+    { columns: { algorithm: "Argon2", type: "KDF/Password hash", keySize: "Configurable", status: "Recommended", use: "Password hashing (memory-hard)" } },
+  ],
+};
