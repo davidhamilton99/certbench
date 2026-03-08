@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface OptionObj {
+  text: string;
+  is_correct: boolean;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -64,7 +69,7 @@ export async function GET(request: NextRequest) {
           accuracy: 0,
           attempted: 0,
           correct: 0,
-          weak_questions: [],
+          questions: [],
         })),
         certName: cert.name,
         hasData: false,
@@ -76,26 +81,20 @@ export async function GET(request: NextRequest) {
       performance.map((p) => [p.question_id, p])
     );
 
-    // Identify weak questions: seen ≥1 time with accuracy < 60%
-    const weakQuestionIds = performance
-      .filter(
-        (p) => p.times_seen > 0 && p.times_correct / p.times_seen < 0.6
-      )
+    // Fetch ALL questions the user has answered (not just weak ones)
+    const allPerfQuestionIds = performance
+      .filter((p) => p.times_seen > 0)
       .map((p) => p.question_id);
 
-    // Fetch all question domain mappings (needed for stats)
-    const allPerfQuestionIds = performance.map((p) => p.question_id);
-    const { data: allQuestions } = await supabase
+    const { data: allQuestionDetails } = await supabase
       .from("cert_questions")
-      .select("id, domain_id")
-      .in("id", allPerfQuestionIds);
+      .select(
+        "id, domain_id, question_text, options, correct_index, explanation, difficulty"
+      )
+      .in("id", allPerfQuestionIds)
+      .eq("is_active", true);
 
-    const questionDomainMap = new Map(
-      (allQuestions || []).map((q) => [q.id, q.domain_id])
-    );
-
-    // Fetch weak question details (only if there are weak questions)
-    let weakQuestions: {
+    const questions = (allQuestionDetails || []) as {
       id: string;
       domain_id: string;
       question_text: string;
@@ -103,19 +102,7 @@ export async function GET(request: NextRequest) {
       correct_index: number;
       explanation: string | null;
       difficulty: string;
-    }[] = [];
-
-    if (weakQuestionIds.length > 0) {
-      const { data } = await supabase
-        .from("cert_questions")
-        .select(
-          "id, domain_id, question_text, options, correct_index, explanation, difficulty"
-        )
-        .in("id", weakQuestionIds)
-        .eq("is_active", true);
-
-      weakQuestions = (data || []) as typeof weakQuestions;
-    }
+    }[];
 
     // Aggregate performance by domain
     const domainStats = new Map<
@@ -123,16 +110,19 @@ export async function GET(request: NextRequest) {
       { attempted: number; correct: number }
     >();
 
-    for (const p of performance) {
-      const domainId = questionDomainMap.get(p.question_id);
-      if (!domainId) continue;
-      const stats = domainStats.get(domainId) || { attempted: 0, correct: 0 };
-      stats.attempted += p.times_seen;
-      stats.correct += p.times_correct;
-      domainStats.set(domainId, stats);
+    for (const q of questions) {
+      const perf = perfMap.get(q.id);
+      if (!perf) continue;
+      const stats = domainStats.get(q.domain_id) || {
+        attempted: 0,
+        correct: 0,
+      };
+      stats.attempted += perf.times_seen;
+      stats.correct += perf.times_correct;
+      domainStats.set(q.domain_id, stats);
     }
 
-    // Build domain cheat sheets
+    // Build domain cheat sheets with ALL answered questions
     const domainSheets = domains.map((domain) => {
       const stats = domainStats.get(domain.id) || {
         attempted: 0,
@@ -143,15 +133,18 @@ export async function GET(request: NextRequest) {
           ? Math.round((stats.correct / stats.attempted) * 100)
           : 0;
 
-      const domainWeakQuestions = weakQuestions
+      const domainQuestions = questions
         .filter((q) => q.domain_id === domain.id)
         .map((q) => {
           const perf = perfMap.get(q.id);
-          // Safely extract correct answer from options (JSONB)
+          // Options are stored as {text, is_correct}[] objects
           const opts = Array.isArray(q.options) ? q.options : [];
+          const correctOpt = opts[q.correct_index] as OptionObj | undefined;
           const correctAnswer =
-            q.correct_index >= 0 && q.correct_index < opts.length
-              ? String(opts[q.correct_index])
+            correctOpt && typeof correctOpt === "object" && "text" in correctOpt
+              ? correctOpt.text
+              : typeof correctOpt === "string"
+              ? correctOpt
               : "N/A";
 
           return {
@@ -164,6 +157,7 @@ export async function GET(request: NextRequest) {
             times_correct: perf?.times_correct || 0,
           };
         })
+        // Sort by accuracy ascending (weakest first)
         .sort((a, b) => {
           const accA =
             a.times_seen > 0 ? a.times_correct / a.times_seen : 0;
@@ -171,7 +165,7 @@ export async function GET(request: NextRequest) {
             b.times_seen > 0 ? b.times_correct / b.times_seen : 0;
           return accA - accB;
         })
-        .slice(0, 10);
+        .slice(0, 15);
 
       return {
         domain_id: domain.id,
@@ -181,7 +175,7 @@ export async function GET(request: NextRequest) {
         accuracy,
         attempted: stats.attempted,
         correct: stats.correct,
-        weak_questions: domainWeakQuestions,
+        questions: domainQuestions,
       };
     });
 

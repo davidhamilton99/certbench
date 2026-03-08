@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-interface WeakQuestion {
+interface QuestionEntry {
   id: string;
   question_text: string;
   correct_answer: string;
@@ -26,7 +26,7 @@ interface DomainSheet {
   accuracy: number;
   attempted: number;
   correct: number;
-  weak_questions: WeakQuestion[];
+  questions: QuestionEntry[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -80,9 +80,9 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
         setCertName(data.certName);
         setHasData(data.hasData);
 
-        // Auto-expand domains with weak questions
+        // Auto-expand domains that have weak questions (accuracy < 75%)
         const weakDomainIds = (data.domains as DomainSheet[])
-          .filter((d) => d.weak_questions.length > 0)
+          .filter((d) => d.questions.length > 0 && d.accuracy < 75)
           .map((d) => d.domain_id);
         setExpandedDomains(new Set(weakDomainIds));
       } catch {
@@ -133,7 +133,7 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
           />
         </svg>
         <p className="text-[15px] text-text-secondary">
-          Analysing your weak areas...
+          Analysing your performance...
         </p>
       </div>
     );
@@ -166,18 +166,14 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
           </svg>
           <p className="text-[15px] text-text-secondary text-center max-w-md">
             No performance data yet. Complete a diagnostic exam or practice
-            session to generate personalised cheat sheets based on your weak
-            areas.
+            session to generate personalised cheat sheets.
           </p>
         </div>
       </Card>
     );
   }
 
-  const weakDomains = domains.filter((d) => d.weak_questions.length > 0);
-  const strongDomains = domains.filter(
-    (d) => d.weak_questions.length === 0 && d.attempted > 0
-  );
+  const testedDomains = domains.filter((d) => d.attempted > 0);
   const untestedDomains = domains.filter((d) => d.attempted === 0);
 
   return (
@@ -186,145 +182,126 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
       <div className="flex items-center gap-4">
         <p className="text-[14px] text-text-secondary">{certName}</p>
         <span className="text-[13px] text-text-muted">
-          {weakDomains.length} domain{weakDomains.length !== 1 ? "s" : ""} with
-          weak areas
+          {testedDomains.length} domain
+          {testedDomains.length !== 1 ? "s" : ""} with data
         </span>
       </div>
 
-      {/* Weak domains (expanded) */}
-      {weakDomains.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {weakDomains.map((domain) => {
-            const isExpanded = expandedDomains.has(domain.domain_id);
+      {/* All tested domains — expandable */}
+      <div className="flex flex-col gap-3">
+        {testedDomains.map((domain) => {
+          const isExpanded = expandedDomains.has(domain.domain_id);
+          const weakCount = domain.questions.filter((q) => {
+            const acc =
+              q.times_seen > 0 ? q.times_correct / q.times_seen : 0;
+            return acc < 0.6;
+          }).length;
 
-            return (
-              <Card key={domain.domain_id} padding="md">
-                {/* Domain header */}
-                <button
-                  onClick={() => toggleDomain(domain.domain_id)}
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
-                        isExpanded ? "rotate-90" : ""
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                      />
-                    </svg>
-                    <span className="text-[15px] font-semibold text-text-primary">
-                      {domain.domain_number} {domain.title}
-                    </span>
-                    <Badge variant={getScoreVariant(domain.accuracy)}>
-                      {domain.accuracy}%
-                    </Badge>
-                  </div>
-                  <span className="text-[12px] text-text-muted">
-                    {domain.weak_questions.length} weak topic
-                    {domain.weak_questions.length !== 1 ? "s" : ""} ·{" "}
-                    {domain.exam_weight}% of exam
+          return (
+            <Card key={domain.domain_id} padding="md">
+              {/* Domain header — always clickable */}
+              <button
+                onClick={() => toggleDomain(domain.domain_id)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
+                      isExpanded ? "rotate-90" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                  <span className="text-[15px] font-semibold text-text-primary">
+                    {domain.domain_number} {domain.title}
                   </span>
-                </button>
+                  <Badge variant={getScoreVariant(domain.accuracy)}>
+                    {domain.accuracy}%
+                  </Badge>
+                </div>
+                <span className="text-[12px] text-text-muted">
+                  {domain.questions.length} question
+                  {domain.questions.length !== 1 ? "s" : ""}
+                  {weakCount > 0 && ` · ${weakCount} weak`} ·{" "}
+                  {domain.exam_weight}% of exam
+                </span>
+              </button>
 
-                {/* Expanded: weak questions as study cards */}
-                {isExpanded && (
-                  <div className="mt-4 flex flex-col gap-3 pl-6">
-                    {domain.weak_questions.map((q, i) => {
-                      const qAccuracy =
-                        q.times_seen > 0
-                          ? Math.round(
-                              (q.times_correct / q.times_seen) * 100
-                            )
-                          : 0;
+              {/* Expanded: questions as study cards */}
+              {isExpanded && domain.questions.length > 0 && (
+                <div className="mt-4 flex flex-col gap-3 pl-6">
+                  {domain.questions.map((q, i) => {
+                    const qAccuracy =
+                      q.times_seen > 0
+                        ? Math.round(
+                            (q.times_correct / q.times_seen) * 100
+                          )
+                        : 0;
 
-                      return (
-                        <div
-                          key={q.id}
-                          className="bg-bg-page border border-border-light rounded-lg p-4"
-                        >
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <span className="text-[13px] font-medium text-text-primary leading-snug">
-                              {i + 1}. {q.question_text}
+                    return (
+                      <div
+                        key={q.id}
+                        className="bg-bg-page border border-border-light rounded-lg p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <span className="text-[13px] font-medium text-text-primary leading-snug">
+                            {i + 1}. {q.question_text}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className="text-[11px] font-mono text-text-muted tabular-nums">
+                              {q.times_correct}/{q.times_seen}
                             </span>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-[11px] font-mono text-text-muted tabular-nums">
-                                {q.times_correct}/{q.times_seen}
-                              </span>
-                              <Badge
-                                variant={getScoreVariant(qAccuracy)}
-                              >
-                                {qAccuracy}%
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Correct answer */}
-                          <div className="bg-success/5 border border-success/20 rounded-md px-3 py-2 mb-2">
-                            <span className="text-[12px] font-medium text-success uppercase tracking-wider">
-                              Correct Answer
-                            </span>
-                            <p className="text-[13px] text-text-primary mt-0.5">
-                              {q.correct_answer}
-                            </p>
-                          </div>
-
-                          {/* Explanation */}
-                          {q.explanation && (
-                            <p className="text-[12px] text-text-secondary leading-relaxed">
-                              {q.explanation}
-                            </p>
-                          )}
-
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="neutral">
-                              {getDifficultyLabel(q.difficulty)}
+                            <Badge variant={getScoreVariant(qAccuracy)}>
+                              {qAccuracy}%
                             </Badge>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      )}
 
-      {/* Strong domains (collapsed summary) */}
-      {strongDomains.length > 0 && (
-        <div>
-          <h2 className="text-[14px] font-semibold text-text-primary mb-2">
-            Strong Domains
-          </h2>
-          <div className="flex flex-col gap-1.5">
-            {strongDomains.map((domain) => (
-              <div
-                key={domain.domain_id}
-                className="flex items-center justify-between bg-bg-surface border border-border rounded-lg px-4 py-2.5"
-              >
-                <span className="text-[14px] text-text-primary">
-                  {domain.domain_number} {domain.title}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-mono text-text-muted tabular-nums">
-                    {domain.correct}/{domain.attempted}
-                  </span>
-                  <Badge variant="success">{domain.accuracy}%</Badge>
+                        {/* Correct answer */}
+                        <div className="bg-bg-surface border border-success/30 rounded-md px-3 py-2 mb-2">
+                          <span className="text-[12px] font-medium text-success uppercase tracking-wider">
+                            Correct Answer
+                          </span>
+                          <p className="text-[13px] text-text-primary mt-0.5">
+                            {q.correct_answer}
+                          </p>
+                        </div>
+
+                        {/* Explanation */}
+                        {q.explanation && (
+                          <p className="text-[12px] text-text-secondary leading-relaxed">
+                            {q.explanation}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="neutral">
+                            {getDifficultyLabel(q.difficulty)}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              )}
+
+              {isExpanded && domain.questions.length === 0 && (
+                <p className="mt-3 pl-6 text-[13px] text-text-muted">
+                  No question details available for this domain.
+                </p>
+              )}
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Untested domains */}
       {untestedDomains.length > 0 && (
