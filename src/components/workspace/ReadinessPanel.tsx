@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -20,6 +21,7 @@ interface ReadinessPanelProps {
   totalQuestions: number;
   examDate: string | null;
   daysUntilExam: number | null;
+  certSlug?: string;
 }
 
 function getScoreVariant(score: number): "success" | "warning" | "danger" {
@@ -36,6 +38,7 @@ export function ReadinessPanel({
   totalQuestions,
   examDate,
   daysUntilExam,
+  certSlug,
 }: ReadinessPanelProps) {
   const sortedDomains = [...domainScores].sort(
     (a, b) => parseFloat(a.domainNumber) - parseFloat(b.domainNumber)
@@ -110,6 +113,16 @@ export function ReadinessPanel({
           })}
         </div>
       </div>
+
+      {/* Link to full report */}
+      {certSlug && (
+        <Link
+          href={`/readiness-report?cert=${certSlug}`}
+          className="text-[13px] text-primary hover:underline text-center"
+        >
+          View Full Readiness Report →
+        </Link>
+      )}
     </div>
   );
 }

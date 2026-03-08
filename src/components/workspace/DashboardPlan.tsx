@@ -60,6 +60,7 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
         totalQuestions={plan.totalQuestions}
         examDate={plan.examDate}
         daysUntilExam={plan.daysUntilExam}
+        certSlug={certSlug}
       />
 
       {/* Session blocks */}
