@@ -11,6 +11,7 @@ interface SubmittedAnswer {
   questionId: string;
   selectedIndex: number;
   timeSpentSeconds: number;
+  isFlagged?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -38,8 +39,8 @@ export async function POST(req: NextRequest) {
 
   // Verify attempt belongs to user and is not complete
   const { data: attempt } = await supabase
-    .from("diagnostic_attempts")
-    .select("id, user_id, certification_id, is_complete")
+    .from("practice_exam_attempts")
+    .select("id, user_id, certification_id, exam_type, is_complete")
     .eq("id", attemptId)
     .single();
 
@@ -49,12 +50,12 @@ export async function POST(req: NextRequest) {
 
   if (attempt.is_complete) {
     return NextResponse.json(
-      { error: "Diagnostic already submitted" },
+      { error: "Exam already submitted" },
       { status: 409 }
     );
   }
 
-  // Fetch the actual questions to grade
+  // Fetch questions to grade
   const questionIds = answers.map((a) => a.questionId);
   const { data: questions } = await supabase
     .from("cert_questions")
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
 
   const questionMap = new Map(questions.map((q) => [q.id, q]));
 
-  // Grade answers and build responses
+  // Grade answers
   let correctCount = 0;
   const responses = answers.map((a) => {
     const question = questionMap.get(a.questionId);
@@ -84,13 +85,14 @@ export async function POST(req: NextRequest) {
       question_id: a.questionId,
       selected_index: a.selectedIndex,
       is_correct: isCorrect,
+      is_flagged: a.isFlagged || false,
       time_spent_seconds: a.timeSpentSeconds,
     };
   });
 
   // Insert all responses
   const { error: responsesError } = await supabase
-    .from("diagnostic_responses")
+    .from("practice_exam_responses")
     .insert(responses);
 
   if (responsesError) {
@@ -100,9 +102,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Update attempt as complete
-  const { error: updateError } = await supabase
-    .from("diagnostic_attempts")
+  // Mark attempt complete
+  await supabase
+    .from("practice_exam_attempts")
     .update({
       is_complete: true,
       completed_at: new Date().toISOString(),
@@ -110,14 +112,7 @@ export async function POST(req: NextRequest) {
     })
     .eq("id", attemptId);
 
-  if (updateError) {
-    return NextResponse.json(
-      { error: "Failed to update attempt" },
-      { status: 500 }
-    );
-  }
-
-  // Create/update question_performance records
+  // Update question_performance with SRS scheduling
   const now = new Date().toISOString();
   for (const a of answers) {
     const question = questionMap.get(a.questionId);
@@ -125,10 +120,11 @@ export async function POST(req: NextRequest) {
 
     const isCorrect = a.selectedIndex === question.correct_index;
 
-    // Check if performance record exists
     const { data: existing } = await supabase
       .from("question_performance")
-      .select("id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor")
+      .select(
+        "id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor"
+      )
       .eq("user_id", user.id)
       .eq("question_id", a.questionId)
       .single();
@@ -136,8 +132,8 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const srs = computeSrsUpdate({
         isCorrect,
-        currentInterval: existing.srs_interval_days || 1,
-        currentEase: existing.srs_ease_factor || SRS_DEFAULT_EASE_FACTOR,
+        currentInterval: existing.srs_interval_days,
+        currentEase: existing.srs_ease_factor,
         currentStreak: existing.streak,
       });
 
@@ -196,8 +192,9 @@ export async function POST(req: NextRequest) {
     .select("id, domain_id")
     .eq("certification_id", attempt.certification_id);
 
+  let readiness = null;
+
   if (domains && allPerformance && questionDomainMap) {
-    // Build domain performance
     const qDomainLookup = new Map(
       questionDomainMap.map((q) => [q.id, q.domain_id])
     );
@@ -210,7 +207,10 @@ export async function POST(req: NextRequest) {
 
     const totalByDomain = new Map<string, number>();
     domainQuestionCounts?.forEach((q) => {
-      totalByDomain.set(q.domain_id, (totalByDomain.get(q.domain_id) || 0) + 1);
+      totalByDomain.set(
+        q.domain_id,
+        (totalByDomain.get(q.domain_id) || 0) + 1
+      );
     });
 
     const domainPerformances: DomainPerformance[] = domains.map((d) => {
@@ -234,39 +234,38 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    const readiness = computeReadinessScore(domainPerformances);
+    readiness = computeReadinessScore(domainPerformances);
 
-    // Save readiness snapshot
     await supabase.from("readiness_snapshots").insert({
       user_id: user.id,
       certification_id: attempt.certification_id,
       overall_score: readiness.overall_score,
-      domain_scores: readiness.domain_scores as unknown as Record<string, unknown>,
+      domain_scores: readiness.domain_scores as unknown as Record<
+        string,
+        unknown
+      >,
       total_questions_seen: readiness.total_questions_seen,
       is_preliminary: readiness.is_preliminary,
     });
-
-    // Fetch full question data for the review screen
-    const { data: fullQuestions } = await supabase
-      .from("cert_questions")
-      .select("id, question_text, options, correct_index, explanation, domain_id")
-      .in("id", questionIds);
-
-    return NextResponse.json({
-      correctCount,
-      totalQuestions: answers.length,
-      readiness,
-      questions: fullQuestions,
-      responses: responses.map((r) => ({
-        questionId: r.question_id,
-        selectedIndex: r.selected_index,
-        isCorrect: r.is_correct,
-      })),
-    });
   }
+
+  // Fetch full question data for review
+  const { data: fullQuestions } = await supabase
+    .from("cert_questions")
+    .select(
+      "id, question_text, options, correct_index, explanation, domain_id"
+    )
+    .in("id", questionIds);
 
   return NextResponse.json({
     correctCount,
     totalQuestions: answers.length,
+    readiness,
+    questions: fullQuestions,
+    responses: responses.map((r) => ({
+      questionId: r.question_id,
+      selectedIndex: r.selected_index,
+      isCorrect: r.is_correct,
+    })),
   });
 }

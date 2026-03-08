@@ -39,15 +39,22 @@ const typeLabels: Record<string, string> = {
 function getHref(
   type: string,
   certSlug: string,
-  _domainNumber?: string
+  domainNumber?: string
 ): string | null {
   switch (type) {
     case "diagnostic":
       return `/certifications/${certSlug}/diagnostic`;
     case "practice_exam":
       return `/certifications/${certSlug}/exam`;
+    case "domain_drill":
+      return domainNumber
+        ? `/certifications/${certSlug}/exam?type=domain_drill&domain=${domainNumber}`
+        : null;
+    case "srs_review":
+      return `/certifications/${certSlug}/srs`;
+    case "new_content":
+      return `/certifications/${certSlug}/exam?type=weak_points`;
     default:
-      // Domain drills, SRS review, new content — Phase 4
       return null;
   }
 }
