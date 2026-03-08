@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { shuffleArray } from "@/lib/shuffle-options";
 
 interface SrsQuestion {
   id: string;
@@ -45,6 +46,7 @@ export function SrsReview({
     totalReviewed: number;
   } | null>(null);
   const questionStartTime = useRef(Date.now());
+  const shuffleMaps = useRef<Map<string, number[]>>(new Map());
 
   const currentQuestion = questions[currentIndex];
 
@@ -74,7 +76,18 @@ export function SrsReview({
           return;
         }
 
-        setQuestions(data.questions);
+        // Shuffle options so correct answer isn't always at the same index
+        const maps = new Map<string, number[]>();
+        const shuffledQuestions = (data.questions as SrsQuestion[]).map((q) => {
+          const { shuffled, toOriginal } = shuffleArray(q.options);
+          maps.set(q.id, toOriginal);
+          // Find new position of the correct answer after shuffle
+          const newCorrectIndex = toOriginal.indexOf(q.correct_index);
+          return { ...q, options: shuffled, correct_index: newCorrectIndex };
+        });
+        shuffleMaps.current = maps;
+
+        setQuestions(shuffledQuestions);
         setPhase("reviewing");
       } catch {
         setError("Network error. Please try again.");
@@ -96,10 +109,13 @@ export function SrsReview({
       (Date.now() - questionStartTime.current) / 1000
     );
     const isCorrect = selectedOption === currentQuestion.correct_index;
+    // Map shuffled index back to original DB index
+    const toOriginal = shuffleMaps.current.get(currentQuestion.id);
+    const originalIndex = toOriginal ? toOriginal[selectedOption] : selectedOption;
 
     const answer: AnswerRecord = {
       questionId: currentQuestion.id,
-      selectedIndex: selectedOption,
+      selectedIndex: originalIndex,
       isCorrect,
       timeSpentSeconds: timeSpent,
     };

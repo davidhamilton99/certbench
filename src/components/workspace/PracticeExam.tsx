@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PracticeExamResults } from "@/components/workspace/PracticeExamResults";
+import { shuffleArray } from "@/lib/shuffle-options";
 
 interface ExamQuestion {
   id: string;
@@ -95,6 +96,7 @@ export function PracticeExam({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const questionStartTime = useRef(Date.now());
+  const shuffleMaps = useRef<Map<string, number[]>>(new Map());
 
   const currentQuestion = questions[currentIndex];
   const progress =
@@ -122,7 +124,17 @@ export function PracticeExam({
       }
 
       setAttemptId(data.attemptId);
-      setQuestions(data.questions);
+
+      // Shuffle options so correct answer isn't always at the same index
+      const maps = new Map<string, number[]>();
+      const shuffledQuestions = (data.questions as ExamQuestion[]).map((q) => {
+        const { shuffled, toOriginal } = shuffleArray(q.options);
+        maps.set(q.id, toOriginal);
+        return { ...q, options: shuffled };
+      });
+      shuffleMaps.current = maps;
+
+      setQuestions(shuffledQuestions);
       setPhase("exam");
     } catch {
       setError("Network error. Please try again.");
@@ -149,9 +161,13 @@ export function PracticeExam({
     const timeSpent = Math.round(
       (Date.now() - questionStartTime.current) / 1000
     );
+    // Map shuffled index back to original DB index for grading
+    const toOriginal = shuffleMaps.current.get(currentQuestion.id);
+    const originalIndex = toOriginal ? toOriginal[selectedOption] : selectedOption;
+
     const answer: AnswerRecord = {
       questionId: currentQuestion.id,
-      selectedIndex: selectedOption,
+      selectedIndex: originalIndex,
       timeSpentSeconds: timeSpent,
       isFlagged: flagged.has(currentIndex),
     };
