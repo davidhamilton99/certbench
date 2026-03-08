@@ -35,22 +35,18 @@
   --spacing-24: 96px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@layer base {
+  body {
+    font-family: var(--font-display);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-page);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
 
-body {
-  font-family: var(--font-display);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-page);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
-
-code,
-pre {
-  font-family: var(--font-mono);
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
 }
