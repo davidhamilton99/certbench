@@ -1,10 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 @import "tailwindcss";
 
 @theme {
-  /* Typography */
-  --font-display: "Instrument Sans", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  /* Typography — CSS variables set by next/font in layout.tsx */
+  --font-display: var(--font-instrument-sans), "Instrument Sans", sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
 
   /* Colours */
   --color-primary: #2563eb;
