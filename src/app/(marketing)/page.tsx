@@ -6,7 +6,7 @@ import { CTASection } from "@/components/marketing/CTASection";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-bg-page">
+    <div className="min-h-screen bg-bg-page overflow-x-hidden">
       {/* Header */}
       <header className="border-b border-border bg-bg-surface">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">

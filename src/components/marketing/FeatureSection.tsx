@@ -46,7 +46,7 @@ const features = [
 export function FeatureSection() {
   return (
     <section className="border-t border-border bg-bg-surface">
-      <div className="max-w-4xl mx-auto px-6 py-20">
+      <div className="w-full max-w-[900px] mx-auto px-6 py-20">
         <div className="text-center mb-16">
           <p className="text-[12px] font-medium text-text-muted uppercase tracking-wider mb-3">
             How it works
@@ -60,24 +60,24 @@ export function FeatureSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="border border-border rounded-lg p-5"
+              className="border border-border rounded-lg p-5 bg-bg-page"
             >
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-[24px] font-bold font-mono text-primary tabular-nums">
+                <span className="text-[22px] font-bold font-mono text-primary tabular-nums">
                   {feature.metric}
                 </span>
-                <span className="text-[12px] text-text-muted">
+                <span className="text-[11px] text-text-muted">
                   {feature.metricLabel}
                 </span>
               </div>
-              <h3 className="text-[16px] font-semibold text-text-primary mb-1.5">
+              <h3 className="text-[15px] font-semibold text-text-primary mb-1">
                 {feature.title}
               </h3>
-              <p className="text-[14px] text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {feature.description}
               </p>
             </div>
