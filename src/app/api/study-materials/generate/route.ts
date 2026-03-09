@@ -83,9 +83,7 @@ function isValidQuestion(q: GeneratedQuestion): boolean {
             text?: unknown;
             correct_position?: unknown;
           }>
-        ).every(
-          (o) => o.text && typeof o.correct_position === "number"
-        )
+        ).every((o) => o.text && typeof o.correct_position === "number")
       );
     case "matching":
       return (
@@ -151,8 +149,7 @@ export async function POST(req: NextRequest) {
 
   const truncatedContent = content.slice(0, 15000);
 
-  function buildSystemPrompt(batchCount: number): string {
-    return `You are an expert study question generator creating high-quality assessment items. Given study material, generate exactly ${batchCount} questions using a MIX of these question types:
+  const systemPrompt = `You are an expert study question generator. Output exactly ${questionCount} questions in JSONL format — one JSON object per line, no array wrapper, no preamble or explanation.
 
 TYPE DISTRIBUTION (approximate):
 - multiple_choice (~40%): 4 options, exactly 1 correct
@@ -194,72 +191,45 @@ correct_index: -1
 QUALITY REQUIREMENTS:
 - Question stems must be clear, specific, and unambiguous
 - Do not repeat questions or test the same concept twice
-- Avoid negatively phrased questions ("Which is NOT...")
 - Explanations: 2-3 sentences explaining why the answer(s) are correct
-- For ordering: ensure the sequence has a logical, defensible correct order
-- For matching: terms and definitions must be distinct and unambiguous
-- Vary the position of the correct answer across multiple_choice questions
 
-Return ONLY a JSON object:
-{
-  "questions": [
+OUTPUT FORMAT (critical):
+- Output exactly ${questionCount} lines
+- Each line is one complete, minified JSON object — no line breaks inside an object
+- No array brackets, no commas between lines, no markdown, no extra text
+- Example line: {"question_type":"multiple_choice","question_text":"...","options":[...],"correct_index":1,"explanation":"..."}`;
+
+  // Initiate the OpenAI streaming request
+  const openaiResponse = await fetch(
+    "https://api.openai.com/v1/chat/completions",
     {
-      "question_type": "multiple_choice",
-      "question_text": "The question",
-      "options": [...],
-      "correct_index": 1,
-      "explanation": "2-3 sentence explanation"
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Generate ${questionCount} questions from this study material:\n\n${truncatedContent}`,
+          },
+        ],
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 16384,
+      }),
     }
-  ]
-}`;
-  }
+  );
 
-  async function generateBatch(
-    batchCount: number,
-    userInstruction?: string
-  ): Promise<GeneratedQuestion[]> {
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: OPENAI_MODEL,
-          messages: [
-            { role: "system", content: buildSystemPrompt(batchCount) },
-            {
-              role: "user",
-              content: `${userInstruction ? userInstruction + "\n\n" : ""}Generate ${batchCount} questions from this study material:\n\n${truncatedContent}`,
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 10000,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.error?.message || `OpenAI API error: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-    const messageContent = data.choices?.[0]?.message?.content;
-    if (!messageContent) throw new Error("No response from AI model");
-
-    const parsed = JSON.parse(messageContent) as {
-      questions: GeneratedQuestion[];
-    };
-    if (!parsed.questions || !Array.isArray(parsed.questions))
-      throw new Error("Invalid response format from AI");
-
-    return parsed.questions.filter(isValidQuestion);
+  if (!openaiResponse.ok || !openaiResponse.body) {
+    const errorData = await openaiResponse.json().catch(() => null);
+    const message =
+      (errorData as { error?: { message?: string } } | null)?.error?.message ||
+      `OpenAI API error: ${openaiResponse.status}`;
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 
   const encoder = new TextEncoder();
@@ -270,41 +240,81 @@ Return ONLY a JSON object:
     controller.enqueue(encoder.encode(`data: ${data}\n\n`));
   };
 
+  const openaiReader = openaiResponse.body.getReader();
+  const decoder = new TextDecoder();
+
   const stream = new ReadableStream({
     async start(controller) {
+      send(
+        controller,
+        JSON.stringify({
+          _type: "meta",
+          sourcePreview: truncatedContent.slice(0, 200),
+        })
+      );
+
+      let openaiBuffer = "";
+      let lineBuffer = "";
+      let emittedCount = 0;
+
       try {
-        send(
-          controller,
-          JSON.stringify({
-            _type: "meta",
-            sourcePreview: truncatedContent.slice(0, 200),
-          })
-        );
+        while (true) {
+          const { done, value } = await openaiReader.read();
+          if (done) break;
 
-        const seen = new Set<string>();
-        let count = 0;
+          openaiBuffer += decoder.decode(value, { stream: true });
+          const events = openaiBuffer.split("\n\n");
+          openaiBuffer = events.pop() ?? "";
 
-        const emitQuestions = (questions: GeneratedQuestion[]) => {
-          for (const q of questions) {
-            if (!seen.has(q.question_text) && count < MAX_QUESTION_COUNT) {
-              seen.add(q.question_text);
-              count++;
-              send(controller, JSON.stringify(q));
+          for (const event of events) {
+            if (!event.startsWith("data: ")) continue;
+            const data = event.slice(6).trim();
+            if (data === "[DONE]") continue;
+
+            let chunk: {
+              choices?: Array<{ delta?: { content?: string } }>;
+            };
+            try {
+              chunk = JSON.parse(data) as typeof chunk;
+            } catch {
+              continue;
+            }
+
+            const delta = chunk.choices?.[0]?.delta?.content;
+            if (!delta) continue;
+
+            lineBuffer += delta;
+
+            // Extract and emit complete lines
+            const lines = lineBuffer.split("\n");
+            lineBuffer = lines.pop() ?? "";
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || emittedCount >= MAX_QUESTION_COUNT) continue;
+              try {
+                const q = JSON.parse(trimmed) as GeneratedQuestion;
+                if (isValidQuestion(q)) {
+                  send(controller, JSON.stringify(q));
+                  emittedCount++;
+                }
+              } catch {
+                // Incomplete or non-JSON line — skip
+              }
             }
           }
-        };
+        }
 
-        if (questionCount === 50) {
-          await Promise.all([
-            generateBatch(25).then(emitQuestions),
-            generateBatch(
-              25,
-              "Generate a DIFFERENT set of questions covering other aspects of the material."
-            ).then(emitQuestions),
-          ]);
-        } else {
-          const questions = await generateBatch(questionCount);
-          emitQuestions(questions);
+        // Flush any remaining buffered content
+        if (lineBuffer.trim() && emittedCount < MAX_QUESTION_COUNT) {
+          try {
+            const q = JSON.parse(lineBuffer.trim()) as GeneratedQuestion;
+            if (isValidQuestion(q)) {
+              send(controller, JSON.stringify(q));
+            }
+          } catch {
+            // ignore
+          }
         }
 
         send(controller, "[DONE]");
