@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+
+// Fisher-Yates shuffle — returns a new shuffled array of indices
+function shuffleIndices(length: number): number[] {
+  const indices = Array.from({ length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
 
 interface StudySet {
   id: string;
@@ -72,6 +82,11 @@ export function StudySetDetail({
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
+  // --- Option shuffle state ---
+  // Maps shuffled display index → original option index for each question.
+  // Re-generated when currentIndex changes (via startPractice / handleNext).
+  const [optionOrder, setOptionOrder] = useState<number[]>([0, 1, 2, 3]);
+
   // --- Question Editing state ---
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
@@ -87,6 +102,18 @@ export function StudySetDetail({
     localQuestions.length > 0
       ? (currentIndex / localQuestions.length) * 100
       : 0;
+
+  // Derive shuffled options and the shuffled correct index from the current question
+  const shuffledOptions = useMemo(() => {
+    if (!currentQuestion) return [];
+    return optionOrder.map((origIdx) => currentQuestion.options[origIdx]);
+  }, [currentQuestion, optionOrder]);
+
+  // The correct answer's position within the shuffled display
+  const shuffledCorrectIndex = useMemo(() => {
+    if (!currentQuestion) return 0;
+    return optionOrder.indexOf(currentQuestion.correct_index);
+  }, [currentQuestion, optionOrder]);
 
   // -----------------------------------------------------------------------
   // AI Tutor helpers
@@ -191,18 +218,20 @@ export function StudySetDetail({
 
   const handleAnswer = useCallback(async () => {
     if (selectedOption === null || !currentQuestion) return;
-    const isCorrect = selectedOption === currentQuestion.correct_index;
+    // selectedOption is the shuffled display index; compare against shuffled correct
+    const isCorrect = selectedOption === shuffledCorrectIndex;
 
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
     }
     setPhase("revealed");
 
-    // If wrong, auto-trigger AI explanation
+    // If wrong, auto-trigger AI explanation — pass original index to AI
     if (!isCorrect) {
       setAiExplanationLoading(true);
+      const originalSelectedIndex = optionOrder[selectedOption];
       const result = await callAiTutor("explain_wrong", {
-        selectedIndex: selectedOption,
+        selectedIndex: originalSelectedIndex,
       });
       if (result?.content) {
         setAiExplanation(result.content);
@@ -210,13 +239,14 @@ export function StudySetDetail({
       // If AI fails, we'll fall back to static explanation in the UI
       setAiExplanationLoading(false);
     }
-  }, [selectedOption, currentQuestion, callAiTutor]);
+  }, [selectedOption, currentQuestion, callAiTutor, shuffledCorrectIndex, optionOrder]);
 
   const handleNext = useCallback(() => {
     setSelectedOption(null);
     resetAiState();
     if (currentIndex < localQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      setOptionOrder(shuffleIndices(4));
       setPhase("practicing");
     } else {
       setPhase("complete");
@@ -228,6 +258,7 @@ export function StudySetDetail({
     setSelectedOption(null);
     setCorrectCount(0);
     resetAiState();
+    setOptionOrder(shuffleIndices(4));
     setPhase("practicing");
   }, [resetAiState]);
 
@@ -484,7 +515,7 @@ export function StudySetDetail({
   ) {
     const isRevealed = phase === "revealed";
     const isCorrect =
-      isRevealed && selectedOption === currentQuestion.correct_index;
+      isRevealed && selectedOption === shuffledCorrectIndex;
 
     // Determine which explanation to show
     const displayExplanation =
@@ -512,12 +543,12 @@ export function StudySetDetail({
           </p>
         </Card>
 
-        {/* Options */}
+        {/* Options (shuffled order) */}
         <div className="flex flex-col gap-2">
-          {currentQuestion.options.map((option, index) => {
+          {shuffledOptions.map((option, index) => {
             const letter = String.fromCharCode(65 + index);
             const isSelected = selectedOption === index;
-            const isCorrectOption = index === currentQuestion.correct_index;
+            const isCorrectOption = index === shuffledCorrectIndex;
 
             let borderStyle: string;
             let circleStyle: string;

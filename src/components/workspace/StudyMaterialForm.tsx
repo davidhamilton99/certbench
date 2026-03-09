@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -25,12 +25,19 @@ const DIFFICULTY_LEVELS = [
 ];
 type Difficulty = "mixed" | "easy" | "medium" | "hard";
 
+const ACCEPTED_FILE_TYPES = ".txt,.md,.csv,.tsv,.pdf,.docx";
+const PLAIN_TEXT_EXTENSIONS = ["txt", "md", "csv", "tsv"];
+const SERVER_PARSED_EXTENSIONS = ["pdf", "docx"];
+const ALL_EXTENSIONS = [...PLAIN_TEXT_EXTENSIONS, ...SERVER_PARSED_EXTENSIONS];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 export function StudyMaterialForm({
   certSlug,
 }: {
   certSlug?: string;
 }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -41,6 +48,114 @@ export function StudyMaterialForm({
   const [sourcePreview, setSourcePreview] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [fileLoading, setFileLoading] = useState(false);
+
+  // Auto-fill title from filename
+  const autoFillTitle = useCallback(
+    (fileName: string) => {
+      if (!title.trim()) {
+        const nameWithoutExt = fileName.replace(/\.[^.]+$/, "");
+        setTitle(nameWithoutExt.replace(/[_-]/g, " "));
+      }
+    },
+    [title]
+  );
+
+  // File reading handler — plain text client-side, PDF/DOCX server-side
+  const handleFile = useCallback(
+    async (file: File) => {
+      setError(null);
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError("File is too large. Maximum size is 10 MB.");
+        return;
+      }
+
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (!ext || !ALL_EXTENSIONS.includes(ext)) {
+        setError(
+          "Unsupported file type. Accepted: .txt, .md, .csv, .tsv, .pdf, .docx"
+        );
+        return;
+      }
+
+      // Plain text files — read client-side
+      if (PLAIN_TEXT_EXTENSIONS.includes(ext)) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result;
+          if (typeof text === "string") {
+            setContent(text);
+            setUploadedFileName(file.name);
+            autoFillTitle(file.name);
+          }
+        };
+        reader.onerror = () => {
+          setError("Failed to read file. Please try again.");
+        };
+        reader.readAsText(file);
+        return;
+      }
+
+      // PDF/DOCX — send to server for text extraction
+      if (SERVER_PARSED_EXTENSIONS.includes(ext)) {
+        setFileLoading(true);
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/study-materials/extract-text", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            setError(data.error || "Failed to extract text from file.");
+            return;
+          }
+
+          setContent(data.text);
+          setUploadedFileName(file.name);
+          autoFillTitle(file.name);
+        } catch {
+          setError("Network error. Please try again.");
+        } finally {
+          setFileLoading(false);
+        }
+      }
+    },
+    [autoFillTitle]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleFile(file);
+      // Reset input so the same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [handleFile]
+  );
+
+  const clearFile = useCallback(() => {
+    setUploadedFileName(null);
+    setContent("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
 
   const generate = useCallback(async () => {
     if (!title.trim() || !content.trim()) {
@@ -73,7 +188,7 @@ export function StudyMaterialForm({
       setError("Network error. Please try again.");
       setPhase("form");
     }
-  }, [title, content, questionCount]);
+  }, [title, content, questionCount, difficulty]);
 
   const removeQuestion = useCallback((index: number) => {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
@@ -237,8 +352,8 @@ export function StudyMaterialForm({
           Create Study Material
         </h1>
         <p className="text-[15px] text-text-secondary mt-1">
-          Paste your notes, textbook excerpts, or any study content. AI will
-          generate practice questions from it.
+          Upload a file or paste your notes. AI will generate practice
+          questions from it.
         </p>
       </div>
 
@@ -262,9 +377,132 @@ export function StudyMaterialForm({
             <label className="text-[13px] font-medium text-text-primary">
               Study Content
             </label>
+
+            {/* File upload drop zone */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`relative flex flex-col items-center justify-center gap-2 py-6 px-4 border-2 border-dashed rounded-md transition-colors ${
+                fileLoading
+                  ? "border-primary bg-blue-50 cursor-wait"
+                  : dragOver
+                    ? "border-primary bg-blue-50 cursor-pointer"
+                    : "border-border hover:border-border-dark bg-bg-surface cursor-pointer"
+              }`}
+              onClick={() => !fileLoading && fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_FILE_TYPES}
+                onChange={handleFileInput}
+                className="hidden"
+                disabled={fileLoading}
+              />
+              {fileLoading ? (
+                <>
+                  <svg
+                    className="animate-spin w-6 h-6 text-primary"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  <p className="text-[13px] text-text-secondary">
+                    Extracting text from file...
+                  </p>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-6 h-6 text-text-muted"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
+                  <p className="text-[13px] text-text-secondary text-center">
+                    <span className="text-primary font-medium">
+                      Click to upload
+                    </span>{" "}
+                    or drag and drop a file
+                  </p>
+                  <p className="text-[11px] text-text-muted">
+                    PDF, DOCX, TXT, MD, CSV — up to 10 MB
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Uploaded file indicator */}
+            {uploadedFileName && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-bg-page border border-border rounded-md">
+                <svg
+                  className="w-4 h-4 text-success shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-[13px] text-text-primary truncate">
+                  {uploadedFileName}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearFile();
+                  }}
+                  className="ml-auto text-[12px] text-text-muted hover:text-danger transition-colors shrink-0"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-t border-border" />
+              <span className="text-[11px] text-text-muted uppercase tracking-wider">
+                or paste directly
+              </span>
+              <div className="flex-1 border-t border-border" />
+            </div>
+
             <textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                if (uploadedFileName) setUploadedFileName(null);
+              }}
               placeholder="Paste your notes, textbook text, or any study material here..."
               rows={12}
               className="w-full px-3 py-2 text-[15px] text-text-primary bg-bg-surface border border-border rounded-md placeholder:text-text-muted transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 focus:border-primary resize-y"
