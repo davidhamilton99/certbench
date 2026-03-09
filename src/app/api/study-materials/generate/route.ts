@@ -262,43 +262,70 @@ Return ONLY a JSON object:
     return parsed.questions.filter(isValidQuestion);
   }
 
-  try {
-    let validQuestions: GeneratedQuestion[];
+  const encoder = new TextEncoder();
+  const send = (
+    controller: ReadableStreamDefaultController,
+    data: string
+  ) => {
+    controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+  };
 
-    if (questionCount === 50) {
-      // Split into two parallel batches of 25 to avoid token limits
-      const [batch1, batch2] = await Promise.all([
-        generateBatch(25),
-        generateBatch(
-          25,
-          "Generate a DIFFERENT set of questions covering other aspects of the material."
-        ),
-      ]);
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        send(
+          controller,
+          JSON.stringify({
+            _type: "meta",
+            sourcePreview: truncatedContent.slice(0, 200),
+          })
+        );
 
-      // Combine and deduplicate by question_text
-      const seen = new Set<string>();
-      validQuestions = [];
-      for (const q of [...batch1, ...batch2]) {
-        if (!seen.has(q.question_text)) {
-          seen.add(q.question_text);
-          validQuestions.push(q);
-          if (validQuestions.length === 50) break;
+        const seen = new Set<string>();
+        let count = 0;
+
+        const emitQuestions = (questions: GeneratedQuestion[]) => {
+          for (const q of questions) {
+            if (!seen.has(q.question_text) && count < MAX_QUESTION_COUNT) {
+              seen.add(q.question_text);
+              count++;
+              send(controller, JSON.stringify(q));
+            }
+          }
+        };
+
+        if (questionCount === 50) {
+          await Promise.all([
+            generateBatch(25).then(emitQuestions),
+            generateBatch(
+              25,
+              "Generate a DIFFERENT set of questions covering other aspects of the material."
+            ).then(emitQuestions),
+          ]);
+        } else {
+          const questions = await generateBatch(questionCount);
+          emitQuestions(questions);
         }
-      }
-    } else {
-      validQuestions = await generateBatch(questionCount);
-      validQuestions = validQuestions.slice(0, MAX_QUESTION_COUNT);
-    }
 
-    return NextResponse.json({
-      questions: validQuestions,
-      title,
-      sourcePreview: truncatedContent.slice(0, 200),
-    });
-  } catch (error) {
-    console.error("AI generation error:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to generate questions.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+        send(controller, "[DONE]");
+      } catch (error) {
+        console.error("AI generation error:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to generate questions.";
+        send(controller, JSON.stringify({ _type: "error", message }));
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

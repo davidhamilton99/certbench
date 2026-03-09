@@ -184,6 +184,7 @@ export function StudyMaterialForm({
     }
 
     setError(null);
+    setQuestions([]);
     setPhase("generating");
 
     try {
@@ -193,16 +194,54 @@ export function StudyMaterialForm({
         body: JSON.stringify({ title, content, questionCount, difficulty }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to generate questions");
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error || "Failed to generate questions");
         setPhase("form");
         return;
       }
 
-      setQuestions(data.questions);
-      setSourcePreview(data.sourcePreview || "");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          if (!part.startsWith("data: ")) continue;
+          const payload = part.slice(6);
+
+          if (payload === "[DONE]") {
+            setPhase("review");
+            return;
+          }
+
+          const parsed = JSON.parse(payload) as {
+            _type?: string;
+            message?: string;
+            sourcePreview?: string;
+          } & GeneratedQuestion;
+
+          if (parsed._type === "error") {
+            setError(parsed.message || "Failed to generate questions");
+            setPhase("form");
+            return;
+          }
+          if (parsed._type === "meta") {
+            setSourcePreview(parsed.sourcePreview || "");
+            continue;
+          }
+
+          setQuestions((prev) => [...prev, parsed]);
+        }
+      }
+
       setPhase("review");
     } catch {
       setError("Network error. Please try again.");
@@ -275,11 +314,17 @@ export function StudyMaterialForm({
           />
         </svg>
         <p className="text-[15px] text-text-secondary">
-          Generating {questionCount} questions from your content...
+          Generating questions...
         </p>
-        <p className="text-[13px] text-text-muted">
-          This may take 10–30 seconds.
-        </p>
+        {questions.length > 0 ? (
+          <p className="text-[20px] font-mono font-semibold text-primary tabular-nums">
+            {questions.length} / {questionCount}
+          </p>
+        ) : (
+          <p className="text-[13px] text-text-muted">
+            This may take 10–30 seconds.
+          </p>
+        )}
       </div>
     );
   }
