@@ -6,10 +6,17 @@ const MAX_QUESTION_COUNT = 50;
 const ALLOWED_COUNTS = [10, 25, 50];
 const ALLOWED_DIFFICULTIES = ["mixed", "easy", "medium", "hard"] as const;
 type Difficulty = (typeof ALLOWED_DIFFICULTIES)[number];
+type QuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "multiple_select"
+  | "ordering"
+  | "matching";
 
 interface GeneratedQuestion {
+  question_type: QuestionType;
   question_text: string;
-  options: { text: string; is_correct: boolean }[];
+  options: unknown[];
   correct_index: number;
   explanation: string;
 }
@@ -38,6 +45,59 @@ const difficultyInstructions: Record<Difficulty, string> = {
 - Vary question types throughout to create a balanced assessment
 - Cognitive levels: Remember through Analyse`,
 };
+
+function isValidQuestion(q: GeneratedQuestion): boolean {
+  if (!q.question_text || !Array.isArray(q.options) || q.options.length < 2)
+    return false;
+  const type = q.question_type || "multiple_choice";
+  switch (type) {
+    case "multiple_choice":
+      return (
+        q.options.length === 4 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length === 1 &&
+        q.correct_index >= 0 &&
+        q.correct_index <= 3
+      );
+    case "true_false":
+      return (
+        q.options.length === 2 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length === 1 &&
+        (q.correct_index === 0 || q.correct_index === 1)
+      );
+    case "multiple_select":
+      return (
+        q.options.length >= 2 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length >= 2
+      );
+    case "ordering":
+      return (
+        q.options.length >= 2 &&
+        (
+          q.options as Array<{
+            text?: unknown;
+            correct_position?: unknown;
+          }>
+        ).every(
+          (o) => o.text && typeof o.correct_position === "number"
+        )
+      );
+    case "matching":
+      return (
+        q.options.length >= 2 &&
+        (q.options as Array<{ left?: unknown; right?: unknown }>).every(
+          (o) => o.left && o.right
+        )
+      );
+    default:
+      return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -89,45 +149,72 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Truncate content to reasonable size for the model
+  // Scale max_tokens to avoid truncation at higher question counts
+  const maxTokens =
+    questionCount <= 10 ? 6000 : questionCount <= 25 ? 10000 : 16384;
+
   const truncatedContent = content.slice(0, 15000);
 
-  const systemPrompt = `You are an expert study question generator specialising in creating high-quality multiple-choice assessment items. Given study material, generate exactly ${questionCount} questions.
+  const systemPrompt = `You are an expert study question generator creating high-quality assessment items. Given study material, generate exactly ${questionCount} questions using a MIX of these question types:
 
-Each question must have exactly 4 options (A, B, C, D), with exactly one correct answer.
+TYPE DISTRIBUTION (approximate):
+- multiple_choice (~40%): 4 options, exactly 1 correct
+- true_false (~20%): True/False statement
+- multiple_select (~20%): 4 options, 2-3 correct
+- ordering (~10%): sequence 4 items in the correct order
+- matching (~10%): match 4 term-definition pairs
 
 ${difficultyInstructions[validDifficulty]}
 
-Quality requirements:
+STRUCTURES PER TYPE:
+
+[multiple_choice]
+options: exactly 4, each {"text": "...", "is_correct": false/true}, exactly 1 is true
+correct_index: 0-3 (0-based index of the correct option)
+
+[true_false]
+question_text: state a factual claim that is clearly true or false
+options: exactly [{"text": "True", "is_correct": ...}, {"text": "False", "is_correct": ...}]
+correct_index: 0 if True is correct, 1 if False is correct
+
+[multiple_select]
+question_text: MUST end with "(Select all that apply)"
+options: exactly 4, each {"text": "...", "is_correct": true/false}, exactly 2-3 are true
+correct_index: -1
+
+[ordering]
+question_text: "Arrange the following in the correct order:" or similar
+options: exactly 4 items in SCRAMBLED order, each {"text": "...", "correct_position": N}
+  where correct_position (0-3) is the 0-based position this item occupies in the correct sequence
+correct_index: -1
+
+[matching]
+question_text: "Match each term with its correct definition:" or similar
+options: exactly 4 pairs, each {"left": "term", "right": "definition"}
+  where options[i].left correctly pairs with options[i].right
+correct_index: -1
+
+QUALITY REQUIREMENTS:
 - Question stems must be clear, specific, and unambiguous
-- Avoid "all of the above" or "none of the above" options
-- Wrong options (distractors) must be plausible and relate to the topic — not obviously absurd
-- Explanations must be 3-4 sentences: explain WHY the correct answer is right, then briefly address why the most tempting wrong choice is incorrect
 - Do not repeat questions or test the same concept twice
 - Avoid negatively phrased questions ("Which is NOT...")
-- Vary the position of the correct answer across questions (don't always put it in the same slot)
+- Explanations: 2-3 sentences explaining why the answer(s) are correct
+- For ordering: ensure the sequence has a logical, defensible correct order
+- For matching: terms and definitions must be distinct and unambiguous
+- Vary the position of the correct answer across multiple_choice questions
 
-Return a JSON object with this exact structure:
+Return ONLY a JSON object:
 {
   "questions": [
     {
+      "question_type": "multiple_choice",
       "question_text": "The question",
-      "options": [
-        {"text": "Option A text", "is_correct": false},
-        {"text": "Option B text", "is_correct": true},
-        {"text": "Option C text", "is_correct": false},
-        {"text": "Option D text", "is_correct": false}
-      ],
+      "options": [...],
       "correct_index": 1,
-      "explanation": "3-4 sentence explanation"
+      "explanation": "2-3 sentence explanation"
     }
   ]
-}
-
-Rules:
-- correct_index is 0-based and must match the position of the option where is_correct is true
-- Each question must have exactly one option with is_correct: true
-- Do not include any text outside the JSON object`;
+}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -142,12 +229,12 @@ Rules:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generate ${questionCount} multiple-choice questions from this study material:\n\n${truncatedContent}`,
+            content: `Generate ${questionCount} questions from this study material:\n\n${truncatedContent}`,
           },
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 8192,
+        max_tokens: maxTokens,
       }),
     });
 
@@ -179,17 +266,8 @@ Rules:
       );
     }
 
-    // Validate and clean each question
     const validQuestions = parsed.questions
-      .filter(
-        (q) =>
-          q.question_text &&
-          Array.isArray(q.options) &&
-          q.options.length === 4 &&
-          typeof q.correct_index === "number" &&
-          q.correct_index >= 0 &&
-          q.correct_index <= 3
-      )
+      .filter(isValidQuestion)
       .slice(0, MAX_QUESTION_COUNT);
 
     return NextResponse.json({

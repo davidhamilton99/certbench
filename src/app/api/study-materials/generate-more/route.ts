@@ -3,12 +3,70 @@ import { createClient } from "@/lib/supabase/server";
 
 const OPENAI_MODEL = "gpt-4.1-nano";
 const ALLOWED_COUNTS = [5, 10, 15];
+type QuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "multiple_select"
+  | "ordering"
+  | "matching";
 
 interface GeneratedQuestion {
+  question_type: QuestionType;
   question_text: string;
-  options: { text: string; is_correct: boolean }[];
+  options: unknown[];
   correct_index: number;
   explanation: string;
+}
+
+function isValidQuestion(q: GeneratedQuestion): boolean {
+  if (!q.question_text || !Array.isArray(q.options) || q.options.length < 2)
+    return false;
+  const type = q.question_type || "multiple_choice";
+  switch (type) {
+    case "multiple_choice":
+      return (
+        q.options.length === 4 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length === 1 &&
+        q.correct_index >= 0 &&
+        q.correct_index <= 3
+      );
+    case "true_false":
+      return (
+        q.options.length === 2 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length === 1 &&
+        (q.correct_index === 0 || q.correct_index === 1)
+      );
+    case "multiple_select":
+      return (
+        q.options.length >= 2 &&
+        (q.options as Array<{ is_correct?: boolean }>).filter(
+          (o) => o.is_correct
+        ).length >= 2
+      );
+    case "ordering":
+      return (
+        q.options.length >= 2 &&
+        (
+          q.options as Array<{
+            text?: unknown;
+            correct_position?: unknown;
+          }>
+        ).every((o) => o.text && typeof o.correct_position === "number")
+      );
+    case "matching":
+      return (
+        q.options.length >= 2 &&
+        (q.options as Array<{ left?: unknown; right?: unknown }>).every(
+          (o) => o.left && o.right
+        )
+      );
+    default:
+      return false;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -29,10 +87,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!setId) {
-    return NextResponse.json(
-      { error: "setId is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "setId is required" }, { status: 400 });
   }
 
   if (!ALLOWED_COUNTS.includes(questionCount)) {
@@ -63,9 +118,7 @@ export async function POST(req: NextRequest) {
     .eq("study_set_id", setId)
     .order("sort_order", { ascending: false });
 
-  const existingTexts = (existingQuestions || []).map(
-    (q) => q.question_text
-  );
+  const existingTexts = (existingQuestions || []).map((q) => q.question_text);
   const maxSortOrder =
     existingQuestions && existingQuestions.length > 0
       ? existingQuestions[0].sort_order
@@ -79,7 +132,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Build source content from stored preview + optional additional content
   let sourceContent = studySet.source_material_preview || "";
   if (additionalContent) {
     sourceContent = sourceContent
@@ -98,41 +150,57 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Build existing questions list for de-duplication
   const existingList = existingTexts
-    .slice(0, 50) // Cap to prevent prompt overflow
+    .slice(0, 50)
     .map((q, i) => `${i + 1}. ${q}`)
     .join("\n");
 
-  const systemPrompt = `You are an expert study question generator. Generate exactly ${questionCount} NEW multiple-choice questions from the provided study material.
+  const systemPrompt = `You are an expert study question generator. Generate exactly ${questionCount} NEW questions from the provided study material using a MIX of question types.
 
-CRITICAL: You must NOT duplicate or closely paraphrase any of the existing questions listed below. Cover different aspects of the material.
+CRITICAL: Do NOT duplicate or closely paraphrase any of the existing questions listed below.
 
-Each question must have exactly 4 options (A, B, C, D), with exactly one correct answer.
+TYPE DISTRIBUTION (approximate):
+- multiple_choice (~40%): 4 options, exactly 1 correct
+- true_false (~20%): True/False statement
+- multiple_select (~20%): 4 options, 2-3 correct
+- ordering (~10%): sequence 4 items in correct order
+- matching (~10%): match 4 term-definition pairs
 
-Quality requirements:
-- Question stems must be clear, specific, and unambiguous
-- Avoid "all of the above" or "none of the above" options
-- Wrong options (distractors) must be plausible and relate to the topic
-- Explanations must be 3-4 sentences explaining why the correct answer is right
-- Vary the position of the correct answer across questions
+STRUCTURES PER TYPE:
 
-Existing questions (DO NOT duplicate these):
+[multiple_choice]
+options: exactly 4, each {"text": "...", "is_correct": false/true}, exactly 1 is true
+correct_index: 0-3
+
+[true_false]
+options: exactly [{"text": "True", "is_correct": ...}, {"text": "False", "is_correct": ...}]
+correct_index: 0 if True is correct, 1 if False is correct
+
+[multiple_select]
+question_text: MUST end with "(Select all that apply)"
+options: exactly 4, 2-3 have is_correct: true
+correct_index: -1
+
+[ordering]
+options: exactly 4 items in SCRAMBLED order, each {"text": "...", "correct_position": N}
+correct_index: -1
+
+[matching]
+options: exactly 4 pairs [{"left": "term", "right": "definition"}]
+correct_index: -1
+
+Existing questions (DO NOT duplicate):
 ${existingList}
 
-Return a JSON object with this exact structure:
+Return ONLY a JSON object:
 {
   "questions": [
     {
+      "question_type": "multiple_choice",
       "question_text": "The question",
-      "options": [
-        {"text": "Option A text", "is_correct": false},
-        {"text": "Option B text", "is_correct": true},
-        {"text": "Option C text", "is_correct": false},
-        {"text": "Option D text", "is_correct": false}
-      ],
+      "options": [...],
       "correct_index": 1,
-      "explanation": "3-4 sentence explanation"
+      "explanation": "2-3 sentence explanation"
     }
   ]
 }`;
@@ -157,7 +225,7 @@ Return a JSON object with this exact structure:
           ],
           response_format: { type: "json_object" },
           temperature: 0.7,
-          max_tokens: 8192,
+          max_tokens: 6000,
         }),
       }
     );
@@ -192,17 +260,8 @@ Return a JSON object with this exact structure:
       );
     }
 
-    // Validate questions
     const validQuestions = parsed.questions
-      .filter(
-        (q) =>
-          q.question_text &&
-          Array.isArray(q.options) &&
-          q.options.length === 4 &&
-          typeof q.correct_index === "number" &&
-          q.correct_index >= 0 &&
-          q.correct_index <= 3
-      )
+      .filter(isValidQuestion)
       .slice(0, questionCount);
 
     if (validQuestions.length === 0) {
@@ -216,6 +275,7 @@ Return a JSON object with this exact structure:
     const questionRows = validQuestions.map((q, i) => ({
       study_set_id: setId,
       user_id: user.id,
+      question_type: q.question_type || "multiple_choice",
       question_text: q.question_text,
       options: q.options,
       correct_index: q.correct_index,
@@ -227,7 +287,7 @@ Return a JSON object with this exact structure:
       .from("user_study_questions")
       .insert(questionRows)
       .select(
-        "id, question_text, options, correct_index, explanation, sort_order"
+        "id, question_type, question_text, options, correct_index, explanation, sort_order"
       );
 
     if (insertError) {
