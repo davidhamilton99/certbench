@@ -23,7 +23,7 @@ export default async function StudySetPage({
   // Fetch the study set
   const { data: studySet } = await supabase
     .from("user_study_sets")
-    .select("id, user_id, title, category, question_count, is_public, created_at")
+    .select("id, user_id, title, category, question_count, is_public, created_at, source_material_preview")
     .eq("id", setId)
     .single();
 

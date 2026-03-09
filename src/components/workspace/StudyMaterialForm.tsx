@@ -17,6 +17,13 @@ interface GeneratedQuestion {
 type Phase = "form" | "generating" | "review";
 
 const QUESTION_COUNTS = [10, 25, 50] as const;
+const DIFFICULTY_LEVELS = [
+  { value: "mixed" as const, label: "Mixed", desc: "Balanced mix of difficulty" },
+  { value: "easy" as const, label: "Easy", desc: "Recall and definitions" },
+  { value: "medium" as const, label: "Medium", desc: "Understanding and comparison" },
+  { value: "hard" as const, label: "Hard", desc: "Application and scenarios" },
+];
+type Difficulty = "mixed" | "easy" | "medium" | "hard";
 
 export function StudyMaterialForm({
   certSlug,
@@ -29,6 +36,7 @@ export function StudyMaterialForm({
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
   const [questionCount, setQuestionCount] = useState<number>(10);
+  const [difficulty, setDifficulty] = useState<Difficulty>("mixed");
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [sourcePreview, setSourcePreview] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +55,7 @@ export function StudyMaterialForm({
       const res = await fetch("/api/study-materials/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, questionCount }),
+        body: JSON.stringify({ title, content, questionCount, difficulty }),
       });
 
       const data = await res.json();
@@ -285,6 +293,31 @@ export function StudyMaterialForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-medium text-text-primary">
+              Difficulty Level
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {DIFFICULTY_LEVELS.map((level) => (
+                <button
+                  key={level.value}
+                  onClick={() => setDifficulty(level.value)}
+                  className={`px-4 py-2 text-[14px] font-medium rounded-md border transition-colors ${
+                    difficulty === level.value
+                      ? "border-primary bg-blue-50 text-primary"
+                      : "border-border bg-bg-surface text-text-secondary hover:border-border-dark"
+                  }`}
+                  title={level.desc}
+                >
+                  {level.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[12px] text-text-muted">
+              {DIFFICULTY_LEVELS.find((l) => l.value === difficulty)?.desc}
+            </p>
           </div>
 
           {error && <p className="text-[14px] text-danger">{error}</p>}

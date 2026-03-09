@@ -23,7 +23,7 @@ export default async function CommunitySetPage({
   // Fetch the study set (must be public)
   const { data: studySet } = await supabase
     .from("user_study_sets")
-    .select("id, user_id, title, category, question_count, is_public, created_at")
+    .select("id, user_id, title, category, question_count, is_public, created_at, source_material_preview")
     .eq("id", setId)
     .eq("is_public", true)
     .single();
