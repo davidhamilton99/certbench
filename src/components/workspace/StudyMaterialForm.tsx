@@ -34,7 +34,7 @@ interface GeneratedQuestion {
   explanation: string;
 }
 
-type Phase = "form" | "generating" | "review";
+type Phase = "form" | "generating" | "validating" | "review";
 
 const QUESTION_COUNTS = [10, 25, 50] as const;
 const DIFFICULTY_LEVELS = [
@@ -71,6 +71,7 @@ export function StudyMaterialForm({
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [fileLoading, setFileLoading] = useState(false);
+  const [contentTruncated, setContentTruncated] = useState(false);
 
   // Auto-fill title from filename
   const autoFillTitle = useCallback(
@@ -226,6 +227,11 @@ export function StudyMaterialForm({
             _type?: string;
             message?: string;
             sourcePreview?: string;
+            contentTruncated?: boolean;
+            index?: number;
+            question?: GeneratedQuestion;
+            reason?: string;
+            count?: number;
           } & GeneratedQuestion;
 
           if (parsed._type === "error") {
@@ -235,10 +241,37 @@ export function StudyMaterialForm({
           }
           if (parsed._type === "meta") {
             setSourcePreview(parsed.sourcePreview || "");
+            if (parsed.contentTruncated) {
+              setContentTruncated(true);
+            }
+            continue;
+          }
+          // Validation phase events
+          if (parsed._type === "validating") {
+            setPhase("validating");
+            continue;
+          }
+          if (parsed._type === "validated") {
+            // Question passed validation — no change needed
+            continue;
+          }
+          if (parsed._type === "rewrite" && parsed.question != null && parsed.index != null) {
+            // Replace question at index with improved version
+            setQuestions((prev) =>
+              prev.map((q, i) => (i === parsed.index ? parsed.question! : q))
+            );
+            continue;
+          }
+          if (parsed._type === "removed" && parsed.index != null) {
+            // Mark question for removal by index
+            setQuestions((prev) => prev.filter((_, i) => i !== parsed.index));
             continue;
           }
 
-          setQuestions((prev) => [...prev, parsed]);
+          // Regular question from generation phase
+          if (!parsed._type) {
+            setQuestions((prev) => [...prev, parsed]);
+          }
         }
       }
 
@@ -290,8 +323,8 @@ export function StudyMaterialForm({
     }
   }, [questions, title, category, sourcePreview, certSlug, router]);
 
-  // Generating state
-  if (phase === "generating") {
+  // Generating / validating state
+  if (phase === "generating" || phase === "validating") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
         <svg
@@ -314,7 +347,9 @@ export function StudyMaterialForm({
           />
         </svg>
         <p className="text-[15px] text-text-secondary">
-          Generating questions...
+          {phase === "validating"
+            ? "Checking question quality..."
+            : "Generating questions..."}
         </p>
         {questions.length > 0 ? (
           <p className="text-[20px] font-mono font-semibold text-primary tabular-nums">
@@ -322,7 +357,7 @@ export function StudyMaterialForm({
           </p>
         ) : (
           <p className="text-[13px] text-text-muted">
-            This may take 10–30 seconds.
+            This may take 10-30 seconds.
           </p>
         )}
       </div>
@@ -341,6 +376,12 @@ export function StudyMaterialForm({
             {questions.length} questions for &ldquo;{title}&rdquo;. Remove any
             that don&rsquo;t look right.
           </p>
+          {contentTruncated && (
+            <p className="text-[13px] text-warning mt-2">
+              Your content was trimmed to fit. Consider splitting large documents
+              into multiple study sets for better coverage.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">

@@ -457,16 +457,15 @@ export function StudySetDetail({
           setAiImproving(null);
           return;
         }
-        startEditing(q);
-        if (data.question_text) setEditQuestion(data.question_text);
-        if (data.options) {
-          setEditOptions(data.options.map((o: { text: string }) => o.text));
-          const correctIdx = data.options.findIndex(
-            (o: { is_correct: boolean }) => o.is_correct
-          );
-          if (correctIdx >= 0) setEditCorrectIndex(correctIdx);
-        }
-        if (data.explanation) setEditExplanation(data.explanation);
+        // Build a StudyQuestion-shaped object from the AI response to reuse startEditing
+        const improved: StudyQuestion = {
+          ...q,
+          question_text: data.question_text || q.question_text,
+          options: data.options || q.options,
+          correct_index: data.correct_index ?? q.correct_index,
+          explanation: data.explanation || q.explanation,
+        };
+        startEditing(improved);
       } catch {
         setEditError("Network error during AI improvement.");
       } finally {
