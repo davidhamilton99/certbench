@@ -31,31 +31,15 @@ export default async function CommunityPage() {
   const certSlug = cert?.slug;
   const certName = cert?.name;
 
-  // Fetch public community sets, optionally filtered by certification
-  let query = supabase
+  // Fetch all public community sets
+  const { data: sets } = await supabase
     .from("user_study_sets")
     .select(
       "id, user_id, title, category, question_count, is_public, created_at"
     )
     .eq("is_public", true)
-    .neq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(50);
-
-  // If user has active cert, filter by cert tag
-  if (certSlug) {
-    const { data: taggedSetIds } = await supabase
-      .from("study_set_cert_tags")
-      .select("study_set_id")
-      .eq("certification_slug", certSlug);
-
-    if (taggedSetIds && taggedSetIds.length > 0) {
-      const ids = taggedSetIds.map((t) => t.study_set_id);
-      query = query.in("id", ids);
-    }
-  }
-
-  const { data: sets } = await query;
 
   // Get creators' display names
   const creatorIds = [...new Set((sets || []).map((s) => s.user_id))];
