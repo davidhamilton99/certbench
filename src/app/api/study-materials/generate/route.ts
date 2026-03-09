@@ -7,6 +7,7 @@ import {
   MAX_QUESTION_COUNT,
   type GeneratedQuestion,
   type Difficulty,
+  type QuestionType,
   ALLOWED_DIFFICULTIES,
   difficultyInstructions,
   isValidQuestion,
@@ -28,13 +29,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { content, questionCount, title, difficulty = "mixed" } =
-    (await req.json()) as {
-      content: string;
-      questionCount: number;
-      title: string;
-      difficulty?: Difficulty;
-    };
+  const {
+    content,
+    questionCount,
+    title,
+    difficulty = "mixed",
+    questionTypes,
+  } = (await req.json()) as {
+    content: string;
+    questionCount: number;
+    title: string;
+    difficulty?: Difficulty;
+    questionTypes?: QuestionType[];
+  };
 
   if (!content || !title) {
     return NextResponse.json(
@@ -69,6 +76,44 @@ export async function POST(req: NextRequest) {
 
   const truncatedContent = content.slice(0, CONTENT_CHAR_LIMIT);
 
+  // Build type distribution based on user selection
+  const ALL_TYPES: QuestionType[] = [
+    "multiple_choice",
+    "true_false",
+    "multiple_select",
+    "ordering",
+    "matching",
+  ];
+  const DEFAULT_WEIGHTS: Record<QuestionType, number> = {
+    multiple_choice: 40,
+    true_false: 20,
+    multiple_select: 20,
+    ordering: 10,
+    matching: 10,
+  };
+  const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
+    multiple_choice: "4 options, exactly 1 correct",
+    true_false: "True/False statement",
+    multiple_select: "4 options, 2-3 correct",
+    ordering: "sequence 4 items in the correct order",
+    matching: "match 4 term-definition pairs",
+  };
+
+  const validTypes =
+    questionTypes && questionTypes.length > 0
+      ? ALL_TYPES.filter((t) => questionTypes.includes(t))
+      : ALL_TYPES;
+  const totalWeight = validTypes.reduce(
+    (sum, t) => sum + DEFAULT_WEIGHTS[t],
+    0
+  );
+  const typeDistribution = validTypes
+    .map((t) => {
+      const pct = Math.round((DEFAULT_WEIGHTS[t] / totalWeight) * 100);
+      return `- ${t} (~${pct}%): ${TYPE_DESCRIPTIONS[t]}`;
+    })
+    .join("\n");
+
   const systemPrompt = `You are an expert study question generator. Output exactly ${questionCount} questions in JSONL format — one JSON object per line, no array wrapper, no preamble or explanation.
 
 ACCURACY RULES (critical — follow strictly):
@@ -79,11 +124,8 @@ ACCURACY RULES (critical — follow strictly):
 - Explanations must reference or paraphrase information from the study material
 
 TYPE DISTRIBUTION (approximate):
-- multiple_choice (~40%): 4 options, exactly 1 correct
-- true_false (~20%): True/False statement
-- multiple_select (~20%): 4 options, 2-3 correct
-- ordering (~10%): sequence 4 items in the correct order
-- matching (~10%): match 4 term-definition pairs
+${typeDistribution}
+${validTypes.length < ALL_TYPES.length ? `\nIMPORTANT: ONLY generate the types listed above. Do NOT generate any other question type.` : ""}
 
 ${difficultyInstructions[validDifficulty]}
 

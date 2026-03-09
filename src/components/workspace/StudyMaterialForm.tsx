@@ -36,6 +36,14 @@ interface GeneratedQuestion {
 
 type Phase = "form" | "generating" | "validating" | "review";
 
+const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
+  { value: "multiple_choice", label: "Multiple Choice" },
+  { value: "true_false", label: "True / False" },
+  { value: "multiple_select", label: "Multi-Select" },
+  { value: "ordering", label: "Ordering" },
+  { value: "matching", label: "Matching" },
+];
+
 const QUESTION_COUNTS = [10, 25, 50] as const;
 const DIFFICULTY_LEVELS = [
   { value: "mixed" as const, label: "Mixed", desc: "Balanced mix of difficulty" },
@@ -68,7 +76,11 @@ export function StudyMaterialForm({
   const [sourcePreview, setSourcePreview] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<Set<QuestionType>>(
+    new Set(QUESTION_TYPE_OPTIONS.map((t) => t.value))
+  );
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedFileSize, setUploadedFileSize] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [fileLoading, setFileLoading] = useState(false);
   const [contentTruncated, setContentTruncated] = useState(false);
@@ -110,6 +122,7 @@ export function StudyMaterialForm({
           if (typeof text === "string") {
             setContent(text);
             setUploadedFileName(file.name);
+            setUploadedFileSize(file.size);
             autoFillTitle(file.name);
           }
         };
@@ -141,6 +154,7 @@ export function StudyMaterialForm({
 
           setContent(data.text);
           setUploadedFileName(file.name);
+          setUploadedFileSize(file.size);
           autoFillTitle(file.name);
         } catch {
           setError("Network error. Please try again.");
@@ -174,6 +188,7 @@ export function StudyMaterialForm({
 
   const clearFile = useCallback(() => {
     setUploadedFileName(null);
+    setUploadedFileSize(null);
     setContent("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
@@ -192,7 +207,13 @@ export function StudyMaterialForm({
       const res = await fetch("/api/study-materials/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, questionCount, difficulty }),
+        body: JSON.stringify({
+          title,
+          content,
+          questionCount,
+          difficulty,
+          questionTypes: [...selectedTypes],
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -280,7 +301,7 @@ export function StudyMaterialForm({
       setError("Network error. Please try again.");
       setPhase("form");
     }
-  }, [title, content, questionCount, difficulty]);
+  }, [title, content, questionCount, difficulty, selectedTypes]);
 
   const removeQuestion = useCallback((index: number) => {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
@@ -517,89 +538,20 @@ export function StudyMaterialForm({
               Study Content
             </label>
 
-            {/* File upload drop zone */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`relative flex flex-col items-center justify-center gap-2 py-6 px-4 border-2 border-dashed rounded-md transition-colors ${
-                fileLoading
-                  ? "border-primary bg-blue-50 cursor-wait"
-                  : dragOver
-                    ? "border-primary bg-blue-50 cursor-pointer"
-                    : "border-border hover:border-border-dark bg-bg-surface cursor-pointer"
-              }`}
-              onClick={() => !fileLoading && fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_FILE_TYPES}
-                onChange={handleFileInput}
-                className="hidden"
-                disabled={fileLoading}
-              />
-              {fileLoading ? (
-                <>
-                  <svg
-                    className="animate-spin w-6 h-6 text-primary"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  <p className="text-[13px] text-text-secondary">
-                    Extracting text from file...
-                  </p>
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-6 h-6 text-text-muted"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                    />
-                  </svg>
-                  <p className="text-[13px] text-text-secondary text-center">
-                    <span className="text-primary font-medium">
-                      Click to upload
-                    </span>{" "}
-                    or drag and drop a file
-                  </p>
-                  <p className="text-[11px] text-text-muted">
-                    PDF, DOCX, TXT, MD, CSV — up to 10 MB
-                  </p>
-                </>
-              )}
-            </div>
+            {/* File upload drop zone — swaps to file info when a file is loaded */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES}
+              onChange={handleFileInput}
+              className="hidden"
+              disabled={fileLoading}
+            />
 
-            {/* Uploaded file indicator */}
-            {uploadedFileName && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-bg-page border border-border rounded-md">
+            {uploadedFileName ? (
+              <div className="flex items-center gap-3 px-4 py-3 bg-bg-page border border-border rounded-md">
                 <svg
-                  className="w-4 h-4 text-success shrink-0"
+                  className="w-5 h-5 text-success shrink-0"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={2}
@@ -611,28 +563,105 @@ export function StudyMaterialForm({
                     d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="text-[13px] text-text-primary truncate">
-                  {uploadedFileName}
-                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[13px] font-medium text-text-primary truncate">
+                    {uploadedFileName}
+                  </span>
+                  {uploadedFileSize != null && (
+                    <span className="text-[11px] text-text-muted">
+                      {uploadedFileSize < 1024
+                        ? `${uploadedFileSize} B`
+                        : uploadedFileSize < 1024 * 1024
+                          ? `${(uploadedFileSize / 1024).toFixed(1)} KB`
+                          : `${(uploadedFileSize / (1024 * 1024)).toFixed(1)} MB`}
+                      {" · "}
+                      {content.length.toLocaleString()} characters extracted
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearFile();
-                  }}
+                  onClick={clearFile}
                   className="ml-auto text-[12px] text-text-muted hover:text-danger transition-colors shrink-0"
                 >
                   Remove
                 </button>
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={`relative flex flex-col items-center justify-center gap-2 py-6 px-4 border-2 border-dashed rounded-md transition-colors ${
+                  fileLoading
+                    ? "border-primary bg-blue-50 cursor-wait"
+                    : dragOver
+                      ? "border-primary bg-blue-50 cursor-pointer"
+                      : "border-border hover:border-border-dark bg-bg-surface cursor-pointer"
+                }`}
+                onClick={() => !fileLoading && fileInputRef.current?.click()}
+              >
+                {fileLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin w-6 h-6 text-primary"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    <p className="text-[13px] text-text-secondary">
+                      Extracting text from file...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-6 h-6 text-text-muted"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
+                    </svg>
+                    <p className="text-[13px] text-text-secondary text-center">
+                      <span className="text-primary font-medium">
+                        Click to upload
+                      </span>{" "}
+                      or drag and drop a file
+                    </p>
+                    <p className="text-[11px] text-text-muted">
+                      PDF, DOCX, TXT, MD, CSV — up to 10 MB
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
             {/* Divider */}
             <div className="flex items-center gap-3">
               <div className="flex-1 border-t border-border" />
-              <span className="text-[11px] text-text-muted uppercase tracking-wider">
-                or paste directly
-              </span>
+              <span className="text-[12px] text-text-muted">or</span>
               <div className="flex-1 border-t border-border" />
             </div>
 
@@ -640,11 +669,15 @@ export function StudyMaterialForm({
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);
-                if (uploadedFileName) setUploadedFileName(null);
+                if (uploadedFileName) {
+                  setUploadedFileName(null);
+                  setUploadedFileSize(null);
+                }
               }}
               placeholder="Paste your notes, textbook text, or any study material here..."
-              rows={12}
-              className="w-full px-3 py-2 text-[15px] text-text-primary bg-bg-surface border border-border rounded-md placeholder:text-text-muted transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 focus:border-primary resize-y"
+              rows={5}
+              className="w-full px-3 py-2 text-[15px] text-text-primary bg-bg-surface border border-border rounded-md placeholder:text-text-muted transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 focus:border-primary resize-y min-h-[120px]"
+              style={{ height: content ? undefined : "120px" }}
             />
             <p className="text-[12px] text-text-muted">
               {content.length.toLocaleString()} characters
@@ -670,6 +703,45 @@ export function StudyMaterialForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-medium text-text-primary">
+              Question Types
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {QUESTION_TYPE_OPTIONS.map((type) => {
+                const isSelected = selectedTypes.has(type.value);
+                return (
+                  <button
+                    key={type.value}
+                    onClick={() => {
+                      setSelectedTypes((prev) => {
+                        const next = new Set(prev);
+                        if (isSelected && next.size > 1) {
+                          next.delete(type.value);
+                        } else {
+                          next.add(type.value);
+                        }
+                        return next;
+                      });
+                    }}
+                    className={`px-3 py-1.5 text-[13px] font-medium rounded-md border transition-colors ${
+                      isSelected
+                        ? "border-primary bg-blue-50 text-primary"
+                        : "border-border bg-bg-surface text-text-secondary hover:border-border-dark"
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[12px] text-text-muted">
+              {selectedTypes.size === QUESTION_TYPE_OPTIONS.length
+                ? "All types — AI will choose the best mix"
+                : `${selectedTypes.size} type${selectedTypes.size !== 1 ? "s" : ""} selected`}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
