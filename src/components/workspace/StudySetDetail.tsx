@@ -1251,18 +1251,18 @@ export function StudySetDetail({
                       </div>
                       {isOwner && (
                         <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => improveWithAi(q)}
+                            disabled={aiImproving === q.id}
+                            className="text-[12px] text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+                          >
+                            {aiImproving === q.id
+                              ? "Improving..."
+                              : "Improve with AI"}
+                          </button>
+                          <span className="text-text-muted">|</span>
                           {isMCEditSupported && (
                             <>
-                              <button
-                                onClick={() => improveWithAi(q)}
-                                disabled={aiImproving === q.id}
-                                className="text-[12px] text-text-muted hover:text-primary transition-colors disabled:opacity-50"
-                              >
-                                {aiImproving === q.id
-                                  ? "Improving..."
-                                  : "Improve with AI"}
-                              </button>
-                              <span className="text-text-muted">|</span>
                               <button
                                 onClick={() => startEditing(q)}
                                 className="text-[12px] text-text-muted hover:text-text-primary transition-colors"
