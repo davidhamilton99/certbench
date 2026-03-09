@@ -7,9 +7,29 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
+type QuestionType =
+  | "multiple_choice"
+  | "true_false"
+  | "multiple_select"
+  | "ordering"
+  | "matching";
+
+interface MCTFOption { text: string; is_correct: boolean }
+interface OrderingOption { text: string; correct_position: number }
+interface MatchingOption { left: string; right: string }
+
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  multiple_choice: "MC",
+  true_false: "T/F",
+  multiple_select: "Multi-Select",
+  ordering: "Ordering",
+  matching: "Matching",
+};
+
 interface GeneratedQuestion {
+  question_type: QuestionType;
   question_text: string;
-  options: { text: string; is_correct: boolean }[];
+  options: unknown[];
   correct_index: number;
   explanation: string;
 }
@@ -283,9 +303,14 @@ export function StudyMaterialForm({
             <Card key={i} padding="md">
               <div className="flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-[14px] font-medium text-text-primary">
-                    {i + 1}. {q.question_text}
-                  </p>
+                  <div className="flex items-start gap-2 flex-1">
+                    <p className="text-[14px] font-medium text-text-primary">
+                      {i + 1}. {q.question_text}
+                    </p>
+                    <span className="shrink-0 text-[11px] font-mono text-text-muted bg-bg-page border border-border rounded px-1.5 py-0.5 mt-0.5">
+                      {QUESTION_TYPE_LABELS[q.question_type] || "MC"}
+                    </span>
+                  </div>
                   <button
                     onClick={() => removeQuestion(i)}
                     className="text-[12px] text-text-muted hover:text-danger transition-colors shrink-0"
@@ -294,23 +319,51 @@ export function StudyMaterialForm({
                   </button>
                 </div>
                 <div className="flex flex-col gap-1 ml-4">
-                  {q.options.map((opt, optIdx) => {
-                    const letter = String.fromCharCode(65 + optIdx);
-                    const isCorrect = optIdx === q.correct_index;
-                    return (
-                      <span
-                        key={optIdx}
-                        className={`text-[13px] ${
-                          isCorrect
-                            ? "text-success font-medium"
-                            : "text-text-secondary"
-                        }`}
-                      >
-                        {letter}) {opt.text}
-                        {isCorrect && " ✓"}
+                  {(!q.question_type ||
+                    q.question_type === "multiple_choice" ||
+                    q.question_type === "true_false") &&
+                    (q.options as MCTFOption[]).map((opt, optIdx) => {
+                      const letter = String.fromCharCode(65 + optIdx);
+                      const isCorrect = optIdx === q.correct_index;
+                      return (
+                        <span
+                          key={optIdx}
+                          className={`text-[13px] ${isCorrect ? "text-success font-medium" : "text-text-secondary"}`}
+                        >
+                          {letter}) {opt.text}
+                          {isCorrect && " \u2713"}
+                        </span>
+                      );
+                    })}
+                  {q.question_type === "multiple_select" &&
+                    (q.options as MCTFOption[]).map((opt, optIdx) => {
+                      const letter = String.fromCharCode(65 + optIdx);
+                      return (
+                        <span
+                          key={optIdx}
+                          className={`text-[13px] ${opt.is_correct ? "text-success font-medium" : "text-text-secondary"}`}
+                        >
+                          {letter}) {opt.text}
+                          {opt.is_correct && " \u2713"}
+                        </span>
+                      );
+                    })}
+                  {q.question_type === "ordering" &&
+                    [...(q.options as OrderingOption[])]
+                      .sort((a, b) => a.correct_position - b.correct_position)
+                      .map((opt, idx) => (
+                        <span key={idx} className="text-[13px] text-text-secondary">
+                          {idx + 1}. {opt.text}
+                        </span>
+                      ))}
+                  {q.question_type === "matching" &&
+                    (q.options as MatchingOption[]).map((opt, idx) => (
+                      <span key={idx} className="text-[13px] text-text-secondary">
+                        {opt.left}{" "}
+                        <span className="text-text-muted">→</span>{" "}
+                        {opt.right}
                       </span>
-                    );
-                  })}
+                    ))}
                 </div>
                 {q.explanation && (
                   <p className="text-[12px] text-text-muted ml-4 mt-1">

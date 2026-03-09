@@ -34,7 +34,7 @@ export default async function CommunitySetPage({
   const { data: questions } = await supabase
     .from("user_study_questions")
     .select(
-      "id, question_text, options, correct_index, explanation, sort_order"
+      "id, question_type, question_text, options, correct_index, explanation, sort_order"
     )
     .eq("study_set_id", setId)
     .order("sort_order");

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 interface QuestionPayload {
+  question_type?: string;
   question_text: string;
-  options: { text: string; is_correct: boolean }[];
+  options: unknown[];
   correct_index: number;
   explanation: string;
 }
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
   const questionRows = questions.map((q, i) => ({
     study_set_id: studySet.id,
     user_id: user.id,
+    question_type: q.question_type || "multiple_choice",
     question_text: q.question_text,
     options: q.options,
     correct_index: q.correct_index,
