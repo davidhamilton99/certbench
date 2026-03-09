@@ -149,13 +149,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Scale max_tokens to avoid truncation at higher question counts
-  const maxTokens =
-    questionCount <= 10 ? 6000 : questionCount <= 25 ? 10000 : 16384;
-
   const truncatedContent = content.slice(0, 15000);
 
-  const systemPrompt = `You are an expert study question generator creating high-quality assessment items. Given study material, generate exactly ${questionCount} questions using a MIX of these question types:
+  function buildSystemPrompt(batchCount: number): string {
+    return `You are an expert study question generator creating high-quality assessment items. Given study material, generate exactly ${batchCount} questions using a MIX of these question types:
 
 TYPE DISTRIBUTION (approximate):
 - multiple_choice (~40%): 4 options, exactly 1 correct
@@ -215,60 +212,83 @@ Return ONLY a JSON object:
     }
   ]
 }`;
+  }
 
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Generate ${questionCount} questions from this study material:\n\n${truncatedContent}`,
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: maxTokens,
-      }),
-    });
+  async function generateBatch(
+    batchCount: number,
+    userInstruction?: string
+  ): Promise<GeneratedQuestion[]> {
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          messages: [
+            { role: "system", content: buildSystemPrompt(batchCount) },
+            {
+              role: "user",
+              content: `${userInstruction ? userInstruction + "\n\n" : ""}Generate ${batchCount} questions from this study material:\n\n${truncatedContent}`,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 10000,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error?.message || `OpenAI API error: ${response.status}`;
-      return NextResponse.json({ error: errorMessage }, { status: 502 });
+      throw new Error(
+        errorData?.error?.message || `OpenAI API error: ${response.status}`
+      );
     }
 
     const data = await response.json();
     const messageContent = data.choices?.[0]?.message?.content;
-
-    if (!messageContent) {
-      return NextResponse.json(
-        { error: "No response from AI model" },
-        { status: 502 }
-      );
-    }
+    if (!messageContent) throw new Error("No response from AI model");
 
     const parsed = JSON.parse(messageContent) as {
       questions: GeneratedQuestion[];
     };
+    if (!parsed.questions || !Array.isArray(parsed.questions))
+      throw new Error("Invalid response format from AI");
 
-    if (!parsed.questions || !Array.isArray(parsed.questions)) {
-      return NextResponse.json(
-        { error: "Invalid response format from AI" },
-        { status: 502 }
-      );
+    return parsed.questions.filter(isValidQuestion);
+  }
+
+  try {
+    let validQuestions: GeneratedQuestion[];
+
+    if (questionCount === 50) {
+      // Split into two parallel batches of 25 to avoid token limits
+      const [batch1, batch2] = await Promise.all([
+        generateBatch(25),
+        generateBatch(
+          25,
+          "Generate a DIFFERENT set of questions covering other aspects of the material."
+        ),
+      ]);
+
+      // Combine and deduplicate by question_text
+      const seen = new Set<string>();
+      validQuestions = [];
+      for (const q of [...batch1, ...batch2]) {
+        if (!seen.has(q.question_text)) {
+          seen.add(q.question_text);
+          validQuestions.push(q);
+          if (validQuestions.length === 50) break;
+        }
+      }
+    } else {
+      validQuestions = await generateBatch(questionCount);
+      validQuestions = validQuestions.slice(0, MAX_QUESTION_COUNT);
     }
-
-    const validQuestions = parsed.questions
-      .filter(isValidQuestion)
-      .slice(0, MAX_QUESTION_COUNT);
 
     return NextResponse.json({
       questions: validQuestions,
@@ -277,9 +297,8 @@ Return ONLY a JSON object:
     });
   } catch (error) {
     console.error("AI generation error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate questions. Please try again." },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to generate questions.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
