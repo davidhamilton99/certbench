@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const OPENAI_MODEL = "gpt-4.1-nano";
+const OPENAI_MODEL = "gpt-4.1-mini";
 
 // ---------------------------------------------------------------------------
 // PATCH — Edit a question or request AI improvement
@@ -77,6 +77,7 @@ export async function PATCH(
 - Improve the explanation to be 3-4 sentences that explain WHY the correct answer is right
 - Maintain the same topic and general difficulty level
 - Keep exactly 4 options with exactly 1 correct
+- Do NOT change the factual content or introduce new information not implied by the original question
 
 Return a JSON object with this exact structure:
 {
@@ -110,7 +111,7 @@ Return a JSON object with this exact structure:
               },
             ],
             response_format: { type: "json_object" },
-            temperature: 0.7,
+            temperature: 0.3,
             max_tokens: 1024,
           }),
         }

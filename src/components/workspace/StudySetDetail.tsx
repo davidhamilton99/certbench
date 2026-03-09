@@ -89,19 +89,6 @@ export function StudySetDetail({
   const [localQuestions, setLocalQuestions] =
     useState<StudyQuestion[]>(initialQuestions);
 
-  // --- AI Tutor state ---
-  const [hintText, setHintText] = useState<string | null>(null);
-  const [hintLoading, setHintLoading] = useState(false);
-  const [hintUsed, setHintUsed] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
-  const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
-  const [deeperExplanation, setDeeperExplanation] = useState<string | null>(
-    null
-  );
-  const [deeperLoading, setDeeperLoading] = useState(false);
-  const [deeperUsed, setDeeperUsed] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-
   // --- Generate More state ---
   const [showGenerateMore, setShowGenerateMore] = useState(false);
   const [generateMoreCount, setGenerateMoreCount] = useState<5 | 10 | 15>(5);
@@ -209,89 +196,6 @@ export function StudySetDetail({
   }, []);
 
   // -----------------------------------------------------------------------
-  // AI Tutor helpers
-  // -----------------------------------------------------------------------
-
-  const callAiTutor = useCallback(
-    async (
-      mode: "explain_wrong" | "hint" | "explain_more",
-      extras?: {
-        selectedIndex?: number;
-        previousExplanation?: string;
-      }
-    ) => {
-      if (!currentQuestion) return null;
-      try {
-        const res = await fetch("/api/study-materials/ai-tutor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mode,
-            questionText: currentQuestion.question_text,
-            options: currentQuestion.options,
-            correctIndex: currentQuestion.correct_index,
-            selectedIndex: extras?.selectedIndex,
-            sourceContext: studySet.source_material_preview || undefined,
-            previousExplanation: extras?.previousExplanation,
-          }),
-        });
-
-        if (res.status === 429) {
-          return { error: "Too many AI requests. Please wait a moment." };
-        }
-
-        const data = await res.json();
-        if (!res.ok) {
-          return { error: data.error || "AI unavailable" };
-        }
-        return { content: data.content as string };
-      } catch {
-        return { error: "Network error" };
-      }
-    },
-    [currentQuestion, studySet.source_material_preview]
-  );
-
-  const requestHint = useCallback(async () => {
-    if (hintUsed || hintLoading) return;
-    setHintLoading(true);
-    setAiError(null);
-    const result = await callAiTutor("hint");
-    if (result?.content) {
-      setHintText(result.content);
-    } else {
-      setAiError(result?.error || "Could not generate hint.");
-    }
-    setHintUsed(true);
-    setHintLoading(false);
-  }, [hintUsed, hintLoading, callAiTutor]);
-
-  const requestDeeperExplanation = useCallback(async () => {
-    if (deeperUsed || deeperLoading) return;
-    setDeeperLoading(true);
-    const displayedExplanation =
-      aiExplanation || currentQuestion?.explanation || "";
-    const result = await callAiTutor("explain_more", {
-      previousExplanation: displayedExplanation,
-    });
-    if (result?.content) setDeeperExplanation(result.content);
-    setDeeperUsed(true);
-    setDeeperLoading(false);
-  }, [deeperUsed, deeperLoading, callAiTutor, aiExplanation, currentQuestion]);
-
-  const resetAiState = useCallback(() => {
-    setHintText(null);
-    setHintLoading(false);
-    setHintUsed(false);
-    setAiExplanation(null);
-    setAiExplanationLoading(false);
-    setDeeperExplanation(null);
-    setDeeperLoading(false);
-    setDeeperUsed(false);
-    setAiError(null);
-  }, []);
-
-  // -----------------------------------------------------------------------
   // Practice handlers
   // -----------------------------------------------------------------------
 
@@ -342,22 +246,10 @@ export function StudySetDetail({
 
     if (isCorrect) setCorrectCount((c) => c + 1);
     setPhase("revealed");
-
-    // AI explanation only for MC wrong answers
-    if (!isCorrect && currentType === "multiple_choice") {
-      setAiExplanationLoading(true);
-      const originalSelectedIndex = optionOrder[selectedOption!];
-      const result = await callAiTutor("explain_wrong", {
-        selectedIndex: originalSelectedIndex,
-      });
-      if (result?.content) setAiExplanation(result.content);
-      setAiExplanationLoading(false);
-    }
   }, [
     selectedOption,
     currentQuestion,
     currentType,
-    callAiTutor,
     shuffledCorrectIndex,
     optionOrder,
     msSelected,
@@ -367,7 +259,6 @@ export function StudySetDetail({
 
   const handleNext = useCallback(() => {
     resetAnswerState();
-    resetAiState();
     if (currentIndex < localQuestions.length - 1) {
       const nextIdx = currentIndex + 1;
       const nextQ = localQuestions[nextIdx];
@@ -381,7 +272,6 @@ export function StudySetDetail({
     currentIndex,
     localQuestions,
     resetAnswerState,
-    resetAiState,
     initQuestionState,
   ]);
 
@@ -389,11 +279,10 @@ export function StudySetDetail({
     setCurrentIndex(0);
     resetAnswerState();
     setCorrectCount(0);
-    resetAiState();
     const firstQ = localQuestions[0];
     if (firstQ) initQuestionState(firstQ);
     setPhase("practicing");
-  }, [resetAnswerState, resetAiState, initQuestionState, localQuestions]);
+  }, [resetAnswerState, initQuestionState, localQuestions]);
 
   // -----------------------------------------------------------------------
   // Set management handlers
@@ -706,14 +595,7 @@ export function StudySetDetail({
       }
     }
 
-    const displayExplanation =
-      isRevealed && !isCorrect && aiExplanation
-        ? aiExplanation
-        : currentQuestion.explanation;
-
-    // Hint is only shown for MC/TF
-    const showHintFeature =
-      currentType === "multiple_choice" || currentType === "true_false";
+    const displayExplanation = currentQuestion.explanation;
 
     return (
       <div className="flex flex-col gap-6 max-w-2xl">
@@ -1163,89 +1045,18 @@ export function StudySetDetail({
           </div>
         )}
 
-        {/* Hint card (MC/TF only, during practicing phase) */}
-        {!isRevealed && showHintFeature && hintText && (
-          <Card accent="primary" padding="lg">
-            <div className="flex flex-col gap-1">
-              <p className="text-[12px] font-medium text-primary">Hint</p>
+        {/* Explanation section (shown after reveal) */}
+        {isRevealed && displayExplanation && (
+          <Card accent={isCorrect ? "success" : "danger"} padding="lg">
+            <div className="flex flex-col gap-2">
+              <p className="text-[14px] font-medium text-text-primary">
+                {isCorrect ? "Correct" : "Incorrect"}
+              </p>
               <p className="text-[13px] text-text-secondary leading-relaxed">
-                {hintText}
+                {displayExplanation}
               </p>
             </div>
           </Card>
-        )}
-
-        {!isRevealed && aiError && (
-          <p className="text-[13px] text-text-muted">{aiError}</p>
-        )}
-
-        {/* Explanation section (shown after reveal) */}
-        {isRevealed && (
-          <>
-            {!isCorrect && aiExplanationLoading && !aiExplanation && (
-              <Card accent="danger" padding="lg">
-                <div className="flex flex-col gap-2">
-                  <p className="text-[14px] font-medium text-text-primary">
-                    Incorrect
-                  </p>
-                  <p className="text-[13px] text-text-muted animate-pulse">
-                    AI is analysing your answer...
-                  </p>
-                </div>
-              </Card>
-            )}
-
-            {(!aiExplanationLoading || aiExplanation) &&
-              displayExplanation && (
-                <Card accent={isCorrect ? "success" : "danger"} padding="lg">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[14px] font-medium text-text-primary">
-                        {isCorrect ? "Correct" : "Incorrect"}
-                      </p>
-                      {!isCorrect && aiExplanation && (
-                        <Badge variant="neutral">AI Tutor</Badge>
-                      )}
-                    </div>
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      {displayExplanation}
-                    </p>
-                  </div>
-                </Card>
-              )}
-
-            {!deeperUsed && !deeperLoading && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={requestDeeperExplanation}
-              >
-                Explain More
-              </Button>
-            )}
-
-            {deeperLoading && (
-              <p className="text-[13px] text-text-muted animate-pulse">
-                Generating deeper explanation...
-              </p>
-            )}
-
-            {deeperExplanation && (
-              <Card accent="primary" padding="lg">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[12px] font-medium text-primary">
-                      Deep Dive
-                    </p>
-                    <Badge variant="neutral">AI Tutor</Badge>
-                  </div>
-                  <p className="text-[13px] text-text-secondary leading-relaxed">
-                    {deeperExplanation}
-                  </p>
-                </div>
-              </Card>
-            )}
-          </>
         )}
 
         {/* Action bar */}
@@ -1254,19 +1065,6 @@ export function StudySetDetail({
             {localQuestions.length - currentIndex - 1} remaining
           </span>
           <div className="flex items-center gap-2">
-            {/* Hint button (MC/TF only, during practicing) */}
-            {!isRevealed && showHintFeature && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={requestHint}
-                loading={hintLoading}
-                disabled={hintUsed}
-              >
-                {hintUsed ? "Hint Used" : "Get a Hint"}
-              </Button>
-            )}
-
             {isRevealed ? (
               <Button size="lg" onClick={handleNext}>
                 {currentIndex === localQuestions.length - 1

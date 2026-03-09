@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const OPENAI_MODEL = "gpt-4.1-nano";
+const OPENAI_MODEL = "gpt-4.1-mini";
 const ALLOWED_COUNTS = [5, 10, 15];
 type QuestionType =
   | "multiple_choice"
@@ -157,6 +157,13 @@ export async function POST(req: NextRequest) {
 
   const systemPrompt = `You are an expert study question generator. Generate exactly ${questionCount} NEW questions from the provided study material using a MIX of question types.
 
+ACCURACY RULES (critical — follow strictly):
+- ONLY generate questions whose answers can be directly found in or logically inferred from the provided study material
+- Do NOT introduce facts, terminology, definitions, or concepts that are not present in the source material
+- Every correct answer and every distractor must be grounded in the content provided
+- If the material does not contain enough content for ${questionCount} unique new questions, generate fewer rather than inventing information
+- Explanations must reference or paraphrase information from the study material
+
 CRITICAL: Do NOT duplicate or closely paraphrase any of the existing questions listed below.
 
 TYPE DISTRIBUTION (approximate):
@@ -220,11 +227,11 @@ Return ONLY a JSON object:
             { role: "system", content: systemPrompt },
             {
               role: "user",
-              content: `Generate ${questionCount} new questions from this material:\n\n${truncatedContent}`,
+              content: `Generate ${questionCount} new questions ONLY from the facts and concepts in this study material. Do not add any outside knowledge:\n\n${truncatedContent}`,
             },
           ],
           response_format: { type: "json_object" },
-          temperature: 0.7,
+          temperature: 0.3,
           max_tokens: 6000,
         }),
       }

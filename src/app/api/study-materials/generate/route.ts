@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const OPENAI_MODEL = "gpt-4.1-nano";
+const OPENAI_MODEL = "gpt-4.1-mini";
 const MAX_QUESTION_COUNT = 50;
 const ALLOWED_COUNTS = [10, 25, 50];
 const ALLOWED_DIFFICULTIES = ["mixed", "easy", "medium", "hard"] as const;
@@ -151,6 +151,13 @@ export async function POST(req: NextRequest) {
 
   const systemPrompt = `You are an expert study question generator. Output exactly ${questionCount} questions in JSONL format — one JSON object per line, no array wrapper, no preamble or explanation.
 
+ACCURACY RULES (critical — follow strictly):
+- ONLY generate questions whose answers can be directly found in or logically inferred from the provided study material
+- Do NOT introduce facts, terminology, definitions, or concepts that are not present in the source material
+- Every correct answer and every distractor must be grounded in the content provided
+- If the material does not contain enough content for ${questionCount} questions, generate fewer rather than inventing information
+- Explanations must reference or paraphrase information from the study material
+
 TYPE DISTRIBUTION (approximate):
 - multiple_choice (~40%): 4 options, exactly 1 correct
 - true_false (~20%): True/False statement
@@ -167,7 +174,7 @@ options: exactly 4, each {"text": "...", "is_correct": false/true}, exactly 1 is
 correct_index: 0-3 (0-based index of the correct option)
 
 [true_false]
-question_text: state a factual claim that is clearly true or false
+question_text: state a factual claim that is clearly true or false based on the study material
 options: exactly [{"text": "True", "is_correct": ...}, {"text": "False", "is_correct": ...}]
 correct_index: 0 if True is correct, 1 if False is correct
 
@@ -191,7 +198,7 @@ correct_index: -1
 QUALITY REQUIREMENTS:
 - Question stems must be clear, specific, and unambiguous
 - Do not repeat questions or test the same concept twice
-- Explanations: 2-3 sentences explaining why the answer(s) are correct
+- Explanations: 2-3 sentences explaining why the answer(s) are correct, referencing the study material
 
 OUTPUT FORMAT (critical):
 - Output exactly ${questionCount} lines
@@ -214,11 +221,11 @@ OUTPUT FORMAT (critical):
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generate ${questionCount} questions from this study material:\n\n${truncatedContent}`,
+            content: `Generate ${questionCount} questions ONLY from the facts and concepts in this study material. Do not add any outside knowledge:\n\n${truncatedContent}`,
           },
         ],
         stream: true,
-        temperature: 0.7,
+        temperature: 0.3,
         max_tokens: 16384,
       }),
     }
@@ -249,7 +256,7 @@ OUTPUT FORMAT (critical):
         controller,
         JSON.stringify({
           _type: "meta",
-          sourcePreview: truncatedContent.slice(0, 200),
+          sourcePreview: truncatedContent,
         })
       );
 
