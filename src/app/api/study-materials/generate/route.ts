@@ -211,10 +211,25 @@ OUTPUT FORMAT (critical):
   });
 
   if (!anthropicResponse.ok || !anthropicResponse.body) {
-    const errorData = await anthropicResponse.json().catch(() => null);
-    const message =
-      (errorData as { error?: { message?: string } } | null)?.error?.message ||
-      `Anthropic API error: ${anthropicResponse.status}`;
+    const errorData = await anthropicResponse.json().catch(() => null) as {
+      error?: { message?: string; type?: string };
+    } | null;
+    const apiMessage = errorData?.error?.message;
+    const errorType = errorData?.error?.type;
+
+    let message: string;
+    if (errorType === "authentication_error" || anthropicResponse.status === 401) {
+      message = "Invalid API key. Please check your ANTHROPIC_API_KEY environment variable.";
+    } else if (errorType === "permission_error" || anthropicResponse.status === 403) {
+      message = "Your API key does not have permission to use this model.";
+    } else if (errorType === "rate_limit_error" || anthropicResponse.status === 429) {
+      message = "Rate limit exceeded. Please wait a moment and try again.";
+    } else if (apiMessage) {
+      message = apiMessage;
+    } else {
+      message = `AI service error (${anthropicResponse.status}). Please try again.`;
+    }
+
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
