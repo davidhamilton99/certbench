@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+
+interface UserPlan {
+  plan: "free" | "pro";
+  generationsUsed: number;
+  generationsLimit: number | null;
+  canGenerate: boolean;
+}
 
 type QuestionType =
   | "multiple_choice"
@@ -84,6 +92,15 @@ export function StudyMaterialForm({
   const [dragOver, setDragOver] = useState(false);
   const [fileLoading, setFileLoading] = useState(false);
   const [contentTruncated, setContentTruncated] = useState(false);
+  const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
+
+  // Fetch user plan on mount
+  useEffect(() => {
+    fetch("/api/user/plan")
+      .then((res) => res.json())
+      .then((data) => setUserPlan(data as UserPlan))
+      .catch(() => {});
+  }, []);
 
   // Auto-fill title from filename
   const autoFillTitle = useCallback(
@@ -217,8 +234,11 @@ export function StudyMaterialForm({
       });
 
       if (!res.ok || !res.body) {
-        const data = await res.json().catch(() => ({}));
-        setError((data as { error?: string }).error || "Failed to generate questions");
+        const data = await res.json().catch(() => ({})) as { error?: string; code?: string };
+        if (data.code === "GENERATION_LIMIT_REACHED") {
+          setUserPlan((prev) => prev ? { ...prev, canGenerate: false } : prev);
+        }
+        setError(data.error || "Failed to generate questions");
         setPhase("form");
         return;
       }
@@ -295,6 +315,12 @@ export function StudyMaterialForm({
           }
         }
       }
+
+      // Refresh plan after successful generation
+      fetch("/api/user/plan")
+        .then((r) => r.json())
+        .then((d) => setUserPlan(d as UserPlan))
+        .catch(() => {});
 
       setPhase("review");
     } catch {
@@ -516,6 +542,35 @@ export function StudyMaterialForm({
           questions from it.
         </p>
       </div>
+
+      {/* Usage indicator / upgrade banner */}
+      {userPlan && !userPlan.canGenerate && (
+        <Card accent="primary" padding="lg">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-[16px] font-semibold text-text-primary">
+              Free generation limit reached
+            </h2>
+            <p className="text-[14px] text-text-secondary">
+              You&apos;ve used all {userPlan.generationsLimit} free AI generations this month.
+              Upgrade to Pro for unlimited quiz generation.
+            </p>
+            <div className="flex gap-3">
+              <Link href="/pricing">
+                <Button size="md">Upgrade to Pro — $8/mo</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {userPlan && userPlan.canGenerate && userPlan.plan === "free" && userPlan.generationsLimit && (
+        <p className="text-[13px] text-text-muted">
+          {userPlan.generationsLimit - userPlan.generationsUsed} of {userPlan.generationsLimit} free generations remaining this month.{" "}
+          <Link href="/pricing" className="text-primary hover:underline">
+            Upgrade for unlimited
+          </Link>
+        </p>
+      )}
 
       <Card padding="lg">
         <div className="flex flex-col gap-5">
@@ -774,7 +829,7 @@ export function StudyMaterialForm({
           <Button
             size="lg"
             onClick={generate}
-            disabled={!title.trim() || !content.trim()}
+            disabled={!title.trim() || !content.trim() || (userPlan !== null && !userPlan.canGenerate)}
           >
             Generate Questions
           </Button>

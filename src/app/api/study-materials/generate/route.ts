@@ -15,6 +15,7 @@ import {
   callClaude,
   buildValidationPrompt,
 } from "@/lib/ai/config";
+import { getUserPlan, incrementGenerationUsage } from "@/lib/subscription";
 
 const ALLOWED_COUNTS = [10, 25, 50];
 
@@ -27,6 +28,18 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check subscription & usage limits
+  const userPlan = await getUserPlan(supabase, user.id);
+  if (!userPlan.canGenerate) {
+    return NextResponse.json(
+      {
+        error: "You\u2019ve used all your free AI generations this month. Upgrade to Pro for unlimited access.",
+        code: "GENERATION_LIMIT_REACHED",
+      },
+      { status: 403 }
+    );
   }
 
   const {
@@ -441,6 +454,11 @@ OUTPUT FORMAT (critical):
             console.error("Validation pass error:", validationError);
             // Validation failure is non-fatal — questions still usable
           }
+        }
+
+        // Track usage after successful generation
+        if (allQuestions.length > 0) {
+          await incrementGenerationUsage(supabase, user.id);
         }
 
         send(controller, "[DONE]");
