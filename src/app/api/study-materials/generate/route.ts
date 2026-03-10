@@ -280,6 +280,33 @@ OUTPUT FORMAT (critical):
               if (line.startsWith("data: ")) eventData = line.slice(6).trim();
             }
 
+            // Handle stream-level errors from Anthropic
+            if (eventType === "error" && eventData) {
+              try {
+                const errPayload = JSON.parse(eventData) as {
+                  error?: { message?: string; type?: string };
+                };
+                const errMsg =
+                  errPayload?.error?.message ||
+                  "AI generation failed. Please check your API key and try again.";
+                send(
+                  controller,
+                  JSON.stringify({ _type: "error", message: errMsg })
+                );
+              } catch {
+                send(
+                  controller,
+                  JSON.stringify({
+                    _type: "error",
+                    message: "AI generation failed. Please try again.",
+                  })
+                );
+              }
+              send(controller, "[DONE]");
+              controller.close();
+              return;
+            }
+
             if (eventType !== "content_block_delta" || !eventData) continue;
 
             let chunk: { delta?: { type?: string; text?: string } };
@@ -326,6 +353,21 @@ OUTPUT FORMAT (critical):
           } catch {
             // ignore
           }
+        }
+
+        // If no valid questions were generated, report an error
+        if (allQuestions.length === 0) {
+          send(
+            controller,
+            JSON.stringify({
+              _type: "error",
+              message:
+                "No questions could be generated. Please check your API key and try again.",
+            })
+          );
+          send(controller, "[DONE]");
+          controller.close();
+          return;
         }
 
         // Phase 2: Validation pass
