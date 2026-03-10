@@ -1,101 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  ANTHROPIC_MODEL,
+  ANTHROPIC_API_URL,
+  CONTENT_CHAR_LIMIT,
+  MAX_QUESTION_COUNT,
+  type GeneratedQuestion,
+  type Difficulty,
+  type QuestionType,
+  ALLOWED_DIFFICULTIES,
+  difficultyInstructions,
+  isValidQuestion,
+  getAnthropicApiKey,
+  callClaude,
+  buildValidationPrompt,
+} from "@/lib/ai/config";
 
-const OPENAI_MODEL = "gpt-4.1-nano";
-const MAX_QUESTION_COUNT = 50;
 const ALLOWED_COUNTS = [10, 25, 50];
-const ALLOWED_DIFFICULTIES = ["mixed", "easy", "medium", "hard"] as const;
-type Difficulty = (typeof ALLOWED_DIFFICULTIES)[number];
-type QuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "multiple_select"
-  | "ordering"
-  | "matching";
-
-interface GeneratedQuestion {
-  question_type: QuestionType;
-  question_text: string;
-  options: unknown[];
-  correct_index: number;
-  explanation: string;
-}
-
-const difficultyInstructions: Record<Difficulty, string> = {
-  easy: `Difficulty level: EASY
-- Focus on recall and definition questions ("What is X?", "Which of the following describes Y?")
-- Test basic terminology and core concepts from the material
-- Distractors (wrong options) should be clearly different from the correct answer
-- Cognitive level: Remember / Understand`,
-
-  medium: `Difficulty level: MEDIUM
-- Focus on understanding and comparison ("Why does X work this way?", "What is the difference between X and Y?")
-- Test relationships between concepts and cause-effect understanding
-- Distractors should be plausible but distinguishable with solid understanding
-- Cognitive level: Understand / Apply`,
-
-  hard: `Difficulty level: HARD
-- Focus on application and scenario-based questions ("Given situation Y, what would you do?", "A company needs to solve X — which approach is best?")
-- Test ability to apply knowledge to novel situations and make judgements
-- Distractors should be very plausible — the kind of answers someone with partial knowledge might choose
-- Cognitive level: Apply / Analyse`,
-
-  mixed: `Difficulty level: MIXED
-- Mix difficulty levels across the set: roughly 30% recall/definition, 40% understanding/comparison, 30% application/scenario
-- Vary question types throughout to create a balanced assessment
-- Cognitive levels: Remember through Analyse`,
-};
-
-function isValidQuestion(q: GeneratedQuestion): boolean {
-  if (!q.question_text || !Array.isArray(q.options) || q.options.length < 2)
-    return false;
-  const type = q.question_type || "multiple_choice";
-  switch (type) {
-    case "multiple_choice":
-      return (
-        q.options.length === 4 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length === 1 &&
-        q.correct_index >= 0 &&
-        q.correct_index <= 3
-      );
-    case "true_false":
-      return (
-        q.options.length === 2 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length === 1 &&
-        (q.correct_index === 0 || q.correct_index === 1)
-      );
-    case "multiple_select":
-      return (
-        q.options.length >= 2 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length >= 2
-      );
-    case "ordering":
-      return (
-        q.options.length >= 2 &&
-        (
-          q.options as Array<{
-            text?: unknown;
-            correct_position?: unknown;
-          }>
-        ).every((o) => o.text && typeof o.correct_position === "number")
-      );
-    case "matching":
-      return (
-        q.options.length >= 2 &&
-        (q.options as Array<{ left?: unknown; right?: unknown }>).every(
-          (o) => o.left && o.right
-        )
-      );
-    default:
-      return false;
-  }
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -108,13 +29,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { content, questionCount, title, difficulty = "mixed" } =
-    (await req.json()) as {
-      content: string;
-      questionCount: number;
-      title: string;
-      difficulty?: Difficulty;
-    };
+  const {
+    content,
+    questionCount,
+    title,
+    difficulty = "mixed",
+    questionTypes,
+  } = (await req.json()) as {
+    content: string;
+    questionCount: number;
+    title: string;
+    difficulty?: Difficulty;
+    questionTypes?: QuestionType[];
+  };
 
   if (!content || !title) {
     return NextResponse.json(
@@ -136,27 +63,69 @@ export async function POST(req: NextRequest) {
     ? (difficulty as Difficulty)
     : "mixed";
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json(
       {
         error:
-          "AI generation is not configured. Add OPENAI_API_KEY to your environment variables.",
+          "AI generation is not configured. Add ANTHROPIC_API_KEY to your environment variables.",
       },
       { status: 503 }
     );
   }
 
-  const truncatedContent = content.slice(0, 15000);
+  const truncatedContent = content.slice(0, CONTENT_CHAR_LIMIT);
+
+  // Build type distribution based on user selection
+  const ALL_TYPES: QuestionType[] = [
+    "multiple_choice",
+    "true_false",
+    "multiple_select",
+    "ordering",
+    "matching",
+  ];
+  const DEFAULT_WEIGHTS: Record<QuestionType, number> = {
+    multiple_choice: 40,
+    true_false: 20,
+    multiple_select: 20,
+    ordering: 10,
+    matching: 10,
+  };
+  const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
+    multiple_choice: "4 options, exactly 1 correct",
+    true_false: "True/False statement",
+    multiple_select: "4 options, 2-3 correct",
+    ordering: "sequence 4 items in the correct order",
+    matching: "match 4 term-definition pairs",
+  };
+
+  const validTypes =
+    questionTypes && questionTypes.length > 0
+      ? ALL_TYPES.filter((t) => questionTypes.includes(t))
+      : ALL_TYPES;
+  const totalWeight = validTypes.reduce(
+    (sum, t) => sum + DEFAULT_WEIGHTS[t],
+    0
+  );
+  const typeDistribution = validTypes
+    .map((t) => {
+      const pct = Math.round((DEFAULT_WEIGHTS[t] / totalWeight) * 100);
+      return `- ${t} (~${pct}%): ${TYPE_DESCRIPTIONS[t]}`;
+    })
+    .join("\n");
 
   const systemPrompt = `You are an expert study question generator. Output exactly ${questionCount} questions in JSONL format — one JSON object per line, no array wrapper, no preamble or explanation.
 
+ACCURACY RULES (critical — follow strictly):
+- ONLY generate questions whose answers can be directly found in or logically inferred from the provided study material
+- Do NOT introduce facts, terminology, definitions, or concepts that are not present in the source material
+- Every correct answer and every distractor must be grounded in the content provided
+- If the material does not contain enough content for ${questionCount} questions, generate fewer rather than inventing information
+- Explanations must reference or paraphrase information from the study material
+
 TYPE DISTRIBUTION (approximate):
-- multiple_choice (~40%): 4 options, exactly 1 correct
-- true_false (~20%): True/False statement
-- multiple_select (~20%): 4 options, 2-3 correct
-- ordering (~10%): sequence 4 items in the correct order
-- matching (~10%): match 4 term-definition pairs
+${typeDistribution}
+${validTypes.length < ALL_TYPES.length ? `\nIMPORTANT: ONLY generate the types listed above. Do NOT generate any other question type.` : ""}
 
 ${difficultyInstructions[validDifficulty]}
 
@@ -167,7 +136,7 @@ options: exactly 4, each {"text": "...", "is_correct": false/true}, exactly 1 is
 correct_index: 0-3 (0-based index of the correct option)
 
 [true_false]
-question_text: state a factual claim that is clearly true or false
+question_text: state a factual claim that is clearly true or false based on the study material
 options: exactly [{"text": "True", "is_correct": ...}, {"text": "False", "is_correct": ...}]
 correct_index: 0 if True is correct, 1 if False is correct
 
@@ -188,10 +157,29 @@ options: exactly 4 pairs, each {"left": "term", "right": "definition"}
   where options[i].left correctly pairs with options[i].right
 correct_index: -1
 
+QUESTION STEM RULES:
+- Ask one thing per question — no compound questions
+- Put the core question in the stem, not in the options (avoid generic "Which of the following is true?" where all substance is in the options)
+- For medium/hard: use scenario-based framing — give a context, then ask
+- For true/false: the statement must be unambiguously true or false — avoid "sometimes" or "usually" qualifiers that make it arguable
+
+DISTRACTOR QUALITY (critical for learning):
+- Every wrong answer must be a concept that genuinely exists in the domain and could plausibly be confused with the correct answer
+- Never use absurd, humorous, or obviously-wrong options
+- For "which of the following" questions, all options should be the same grammatical form and roughly the same length
+- Do NOT use "All of the above" or "None of the above"
+- Wrong options should target common misconceptions, not random facts
+
+EXPLANATION QUALITY:
+- Sentence 1: State the correct answer and why it is correct, citing the specific concept from the study material
+- Sentence 2: Explain why the most plausible wrong answer is wrong — this teaches the key distinction
+- Sentence 3 (optional): Provide a memory aid, broader context, or connection to related concepts in the material
+- Never write generic explanations like "This is correct because it is the right answer"
+
 QUALITY REQUIREMENTS:
 - Question stems must be clear, specific, and unambiguous
 - Do not repeat questions or test the same concept twice
-- Explanations: 2-3 sentences explaining why the answer(s) are correct
+- Each question should test a distinct concept or skill from the material
 
 OUTPUT FORMAT (critical):
 - Output exactly ${questionCount} lines
@@ -199,36 +187,34 @@ OUTPUT FORMAT (critical):
 - No array brackets, no commas between lines, no markdown, no extra text
 - Example line: {"question_type":"multiple_choice","question_text":"...","options":[...],"correct_index":1,"explanation":"..."}`;
 
-  // Initiate the OpenAI streaming request
-  const openaiResponse = await fetch(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Generate ${questionCount} questions from this study material:\n\n${truncatedContent}`,
-          },
-        ],
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 16384,
-      }),
-    }
-  );
+  // Initiate the Anthropic streaming request
+  const anthropicResponse = await fetch(ANTHROPIC_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: `Generate ${questionCount} questions ONLY from the facts and concepts in this study material. Do not add any outside knowledge:\n\n${truncatedContent}`,
+        },
+      ],
+      stream: true,
+      temperature: 0.5,
+      max_tokens: 16384,
+    }),
+  });
 
-  if (!openaiResponse.ok || !openaiResponse.body) {
-    const errorData = await openaiResponse.json().catch(() => null);
+  if (!anthropicResponse.ok || !anthropicResponse.body) {
+    const errorData = await anthropicResponse.json().catch(() => null);
     const message =
       (errorData as { error?: { message?: string } } | null)?.error?.message ||
-      `OpenAI API error: ${openaiResponse.status}`;
+      `Anthropic API error: ${anthropicResponse.status}`;
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
@@ -240,7 +226,7 @@ OUTPUT FORMAT (critical):
     controller.enqueue(encoder.encode(`data: ${data}\n\n`));
   };
 
-  const openaiReader = openaiResponse.body.getReader();
+  const anthropicReader = anthropicResponse.body.getReader();
   const decoder = new TextDecoder();
 
   const stream = new ReadableStream({
@@ -249,53 +235,62 @@ OUTPUT FORMAT (critical):
         controller,
         JSON.stringify({
           _type: "meta",
-          sourcePreview: truncatedContent.slice(0, 200),
+          sourcePreview: truncatedContent,
+          contentTruncated: content.length > CONTENT_CHAR_LIMIT,
         })
       );
 
-      let openaiBuffer = "";
+      let sseBuffer = "";
       let lineBuffer = "";
       let emittedCount = 0;
+      const allQuestions: GeneratedQuestion[] = [];
 
       try {
+        // Phase 1: Stream questions from Claude
         while (true) {
-          const { done, value } = await openaiReader.read();
+          const { done, value } = await anthropicReader.read();
           if (done) break;
 
-          openaiBuffer += decoder.decode(value, { stream: true });
-          const events = openaiBuffer.split("\n\n");
-          openaiBuffer = events.pop() ?? "";
+          sseBuffer += decoder.decode(value, { stream: true });
+          const events = sseBuffer.split("\n\n");
+          sseBuffer = events.pop() ?? "";
 
           for (const event of events) {
-            if (!event.startsWith("data: ")) continue;
-            const data = event.slice(6).trim();
-            if (data === "[DONE]") continue;
+            // Anthropic SSE format: event: <type>\ndata: <json>
+            const lines = event.split("\n");
+            let eventType = "";
+            let eventData = "";
+            for (const line of lines) {
+              if (line.startsWith("event: ")) eventType = line.slice(7).trim();
+              if (line.startsWith("data: ")) eventData = line.slice(6).trim();
+            }
 
-            let chunk: {
-              choices?: Array<{ delta?: { content?: string } }>;
-            };
+            if (eventType !== "content_block_delta" || !eventData) continue;
+
+            let chunk: { delta?: { type?: string; text?: string } };
             try {
-              chunk = JSON.parse(data) as typeof chunk;
+              chunk = JSON.parse(eventData) as typeof chunk;
             } catch {
               continue;
             }
 
-            const delta = chunk.choices?.[0]?.delta?.content;
-            if (!delta) continue;
+            if (chunk.delta?.type !== "text_delta" || !chunk.delta.text)
+              continue;
 
-            lineBuffer += delta;
+            lineBuffer += chunk.delta.text;
 
             // Extract and emit complete lines
-            const lines = lineBuffer.split("\n");
-            lineBuffer = lines.pop() ?? "";
+            const jsonLines = lineBuffer.split("\n");
+            lineBuffer = jsonLines.pop() ?? "";
 
-            for (const line of lines) {
+            for (const line of jsonLines) {
               const trimmed = line.trim();
               if (!trimmed || emittedCount >= MAX_QUESTION_COUNT) continue;
               try {
                 const q = JSON.parse(trimmed) as GeneratedQuestion;
                 if (isValidQuestion(q)) {
                   send(controller, JSON.stringify(q));
+                  allQuestions.push(q);
                   emittedCount++;
                 }
               } catch {
@@ -311,9 +306,83 @@ OUTPUT FORMAT (critical):
             const q = JSON.parse(lineBuffer.trim()) as GeneratedQuestion;
             if (isValidQuestion(q)) {
               send(controller, JSON.stringify(q));
+              allQuestions.push(q);
             }
           } catch {
             // ignore
+          }
+        }
+
+        // Phase 2: Validation pass
+        if (allQuestions.length > 0) {
+          send(
+            controller,
+            JSON.stringify({ _type: "validating", count: allQuestions.length })
+          );
+
+          try {
+            const { system, userMessage } = buildValidationPrompt(
+              allQuestions,
+              truncatedContent
+            );
+            const validationResult = await callClaude({
+              system,
+              userMessage,
+              maxTokens: 8192,
+              temperature: 0.1,
+            });
+
+            // Extract JSON from the response (may have markdown wrapping)
+            const jsonMatch = validationResult.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]) as {
+                reviews: Array<{
+                  index: number;
+                  status: "pass" | "rewrite" | "remove";
+                  improved?: GeneratedQuestion;
+                  reason?: string;
+                }>;
+              };
+
+              if (Array.isArray(parsed.reviews)) {
+                for (const review of parsed.reviews) {
+                  if (
+                    review.status === "rewrite" &&
+                    review.improved &&
+                    isValidQuestion(review.improved)
+                  ) {
+                    send(
+                      controller,
+                      JSON.stringify({
+                        _type: "rewrite",
+                        index: review.index,
+                        question: review.improved,
+                      })
+                    );
+                  } else if (review.status === "remove") {
+                    send(
+                      controller,
+                      JSON.stringify({
+                        _type: "removed",
+                        index: review.index,
+                        reason: review.reason || "Question quality issue",
+                      })
+                    );
+                  } else {
+                    send(
+                      controller,
+                      JSON.stringify({
+                        _type: "validated",
+                        index: review.index,
+                      })
+                    );
+                  }
+                }
+              }
+            }
+          } catch (validationError) {
+            console.error("Validation pass error:", validationError);
+            // Validation failure is non-fatal — questions still usable
           }
         }
 

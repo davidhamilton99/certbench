@@ -1,73 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  CONTENT_CHAR_LIMIT,
+  type GeneratedQuestion,
+  type Difficulty,
+  ALLOWED_DIFFICULTIES,
+  difficultyInstructions,
+  isValidQuestion,
+  getAnthropicApiKey,
+  callClaude,
+  buildValidationPrompt,
+} from "@/lib/ai/config";
 
-const OPENAI_MODEL = "gpt-4.1-nano";
 const ALLOWED_COUNTS = [5, 10, 15];
-type QuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "multiple_select"
-  | "ordering"
-  | "matching";
-
-interface GeneratedQuestion {
-  question_type: QuestionType;
-  question_text: string;
-  options: unknown[];
-  correct_index: number;
-  explanation: string;
-}
-
-function isValidQuestion(q: GeneratedQuestion): boolean {
-  if (!q.question_text || !Array.isArray(q.options) || q.options.length < 2)
-    return false;
-  const type = q.question_type || "multiple_choice";
-  switch (type) {
-    case "multiple_choice":
-      return (
-        q.options.length === 4 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length === 1 &&
-        q.correct_index >= 0 &&
-        q.correct_index <= 3
-      );
-    case "true_false":
-      return (
-        q.options.length === 2 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length === 1 &&
-        (q.correct_index === 0 || q.correct_index === 1)
-      );
-    case "multiple_select":
-      return (
-        q.options.length >= 2 &&
-        (q.options as Array<{ is_correct?: boolean }>).filter(
-          (o) => o.is_correct
-        ).length >= 2
-      );
-    case "ordering":
-      return (
-        q.options.length >= 2 &&
-        (
-          q.options as Array<{
-            text?: unknown;
-            correct_position?: unknown;
-          }>
-        ).every((o) => o.text && typeof o.correct_position === "number")
-      );
-    case "matching":
-      return (
-        q.options.length >= 2 &&
-        (q.options as Array<{ left?: unknown; right?: unknown }>).every(
-          (o) => o.left && o.right
-        )
-      );
-    default:
-      return false;
-  }
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -80,11 +25,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { setId, questionCount, additionalContent } = (await req.json()) as {
-    setId: string;
-    questionCount: number;
-    additionalContent?: string;
-  };
+  const { setId, questionCount, additionalContent, difficulty = "mixed" } =
+    (await req.json()) as {
+      setId: string;
+      questionCount: number;
+      additionalContent?: string;
+      difficulty?: Difficulty;
+    };
 
   if (!setId) {
     return NextResponse.json({ error: "setId is required" }, { status: 400 });
@@ -96,6 +43,12 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+
+  const validDifficulty: Difficulty = ALLOWED_DIFFICULTIES.includes(
+    difficulty as Difficulty
+  )
+    ? (difficulty as Difficulty)
+    : "mixed";
 
   // Verify ownership
   const { data: studySet } = await supabase
@@ -111,20 +64,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch existing question texts to avoid duplicates
+  // Fetch existing questions with full context for better dedup
   const { data: existingQuestions } = await supabase
     .from("user_study_questions")
-    .select("question_text, sort_order")
+    .select("question_type, question_text, options, correct_index, sort_order")
     .eq("study_set_id", setId)
     .order("sort_order", { ascending: false });
 
-  const existingTexts = (existingQuestions || []).map((q) => q.question_text);
   const maxSortOrder =
     existingQuestions && existingQuestions.length > 0
       ? existingQuestions[0].sort_order
       : -1;
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json(
       { error: "AI generation is not configured." },
@@ -138,7 +90,7 @@ export async function POST(req: NextRequest) {
       ? `${sourceContent}\n\n--- Additional Content ---\n\n${additionalContent}`
       : additionalContent;
   }
-  const truncatedContent = sourceContent.slice(0, 15000);
+  const truncatedContent = sourceContent.slice(0, CONTENT_CHAR_LIMIT);
 
   if (!truncatedContent.trim()) {
     return NextResponse.json(
@@ -150,14 +102,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const existingList = existingTexts
+  // Build full-context dedup list (not just question text)
+  const existingList = (existingQuestions || [])
     .slice(0, 50)
-    .map((q, i) => `${i + 1}. ${q}`)
+    .map((q, i) => {
+      const type = (q.question_type as string) || "multiple_choice";
+      const opts = q.options as Array<{ text?: string; is_correct?: boolean }>;
+      const correctOpt = opts.find((o) => o.is_correct);
+      const correctText = correctOpt?.text || `index ${q.correct_index}`;
+      return `${i + 1}. [${type}] "${q.question_text}" — correct: "${correctText}"`;
+    })
     .join("\n");
 
   const systemPrompt = `You are an expert study question generator. Generate exactly ${questionCount} NEW questions from the provided study material using a MIX of question types.
 
-CRITICAL: Do NOT duplicate or closely paraphrase any of the existing questions listed below.
+ACCURACY RULES (critical — follow strictly):
+- ONLY generate questions whose answers can be directly found in or logically inferred from the provided study material
+- Do NOT introduce facts, terminology, definitions, or concepts that are not present in the source material
+- Every correct answer and every distractor must be grounded in the content provided
+- If the material does not contain enough content for ${questionCount} unique new questions, generate fewer rather than inventing information
+- Explanations must reference or paraphrase information from the study material
+
+CRITICAL: Do NOT duplicate or test the same concept as any existing question listed below. Each new question must cover a DIFFERENT concept.
 
 TYPE DISTRIBUTION (approximate):
 - multiple_choice (~40%): 4 options, exactly 1 correct
@@ -165,6 +131,8 @@ TYPE DISTRIBUTION (approximate):
 - multiple_select (~20%): 4 options, 2-3 correct
 - ordering (~10%): sequence 4 items in correct order
 - matching (~10%): match 4 term-definition pairs
+
+${difficultyInstructions[validDifficulty]}
 
 STRUCTURES PER TYPE:
 
@@ -189,10 +157,26 @@ correct_index: -1
 options: exactly 4 pairs [{"left": "term", "right": "definition"}]
 correct_index: -1
 
-Existing questions (DO NOT duplicate):
+QUESTION STEM RULES:
+- Ask one thing per question — no compound questions
+- Put the core question in the stem, not in the options
+- For true/false: statements must be unambiguously true or false
+
+DISTRACTOR QUALITY:
+- Every wrong answer must be a plausible concept from the domain
+- No absurd or obviously-wrong options; all options same grammatical form and similar length
+- Do NOT use "All of the above" or "None of the above"
+- Target common misconceptions
+
+EXPLANATION QUALITY:
+- Sentence 1: State the correct answer and why, citing the study material
+- Sentence 2: Explain why the most plausible wrong answer is wrong
+- Sentence 3 (optional): Memory aid or broader context
+
+Existing questions (DO NOT duplicate or test the same concept):
 ${existingList}
 
-Return ONLY a JSON object:
+Return ONLY a JSON object, no other text:
 {
   "questions": [
     {
@@ -206,41 +190,12 @@ Return ONLY a JSON object:
 }`;
 
   try {
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: OPENAI_MODEL,
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `Generate ${questionCount} new questions from this material:\n\n${truncatedContent}`,
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 6000,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error("OpenAI generate-more error:", errorData);
-      return NextResponse.json(
-        { error: "AI service temporarily unavailable." },
-        { status: 502 }
-      );
-    }
-
-    const data = await response.json();
-    const messageContent = data.choices?.[0]?.message?.content;
+    const messageContent = await callClaude({
+      system: systemPrompt,
+      userMessage: `Generate ${questionCount} new questions ONLY from the facts and concepts in this study material. Do not add any outside knowledge:\n\n${truncatedContent}`,
+      maxTokens: 12000,
+      temperature: 0.3,
+    });
 
     if (!messageContent) {
       return NextResponse.json(
@@ -249,7 +204,16 @@ Return ONLY a JSON object:
       );
     }
 
-    const parsed = JSON.parse(messageContent) as {
+    // Extract JSON from response (may have markdown wrapping)
+    const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return NextResponse.json(
+        { error: "Invalid response format from AI." },
+        { status: 502 }
+      );
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as {
       questions: GeneratedQuestion[];
     };
 
@@ -260,13 +224,64 @@ Return ONLY a JSON object:
       );
     }
 
-    const validQuestions = parsed.questions
+    let validQuestions = parsed.questions
       .filter(isValidQuestion)
       .slice(0, questionCount);
 
     if (validQuestions.length === 0) {
       return NextResponse.json(
         { error: "AI failed to generate valid questions." },
+        { status: 502 }
+      );
+    }
+
+    // Validation pass — review generated questions for accuracy
+    try {
+      const { system: valSystem, userMessage: valUser } =
+        buildValidationPrompt(validQuestions, truncatedContent);
+      const validationResult = await callClaude({
+        system: valSystem,
+        userMessage: valUser,
+        maxTokens: 8192,
+        temperature: 0.1,
+      });
+
+      const valJsonMatch = validationResult.match(/\{[\s\S]*\}/);
+      if (valJsonMatch) {
+        const valParsed = JSON.parse(valJsonMatch[0]) as {
+          reviews: Array<{
+            index: number;
+            status: "pass" | "rewrite" | "remove";
+            improved?: GeneratedQuestion;
+          }>;
+        };
+
+        if (Array.isArray(valParsed.reviews)) {
+          const updatedQuestions: GeneratedQuestion[] = [];
+          for (let i = 0; i < validQuestions.length; i++) {
+            const review = valParsed.reviews.find((r) => r.index === i);
+            if (!review || review.status === "pass") {
+              updatedQuestions.push(validQuestions[i]);
+            } else if (
+              review.status === "rewrite" &&
+              review.improved &&
+              isValidQuestion(review.improved)
+            ) {
+              updatedQuestions.push(review.improved);
+            }
+            // "remove" status — question is dropped
+          }
+          validQuestions = updatedQuestions;
+        }
+      }
+    } catch (validationError) {
+      console.error("Validation pass error:", validationError);
+      // Non-fatal — use unvalidated questions
+    }
+
+    if (validQuestions.length === 0) {
+      return NextResponse.json(
+        { error: "All generated questions failed quality checks. Please try again." },
         { status: 502 }
       );
     }
