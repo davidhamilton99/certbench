@@ -2,7 +2,7 @@
 // Shared AI configuration for quiz generation
 // ---------------------------------------------------------------------------
 
-export const ANTHROPIC_MODEL = "claude-sonnet-4-5-20250514";
+export const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 export const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 export const CONTENT_CHAR_LIMIT = 100_000;
 export const MAX_QUESTION_COUNT = 50;
