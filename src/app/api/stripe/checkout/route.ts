@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { stripe, PRO_PRICE_ID } from "@/lib/stripe/config";
+
+function getAdminSupabase() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST() {
   const supabase = await createClient();
@@ -12,9 +20,11 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const adminDb = getAdminSupabase();
+
   try {
     // Check if user already has a Stripe customer ID
-    const { data: sub } = await supabase
+    const { data: sub } = await adminDb
       .from("user_subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
@@ -31,7 +41,7 @@ export async function POST() {
       customerId = customer.id;
 
       // Upsert subscription record with customer ID
-      await supabase.from("user_subscriptions").upsert(
+      await adminDb.from("user_subscriptions").upsert(
         {
           user_id: user.id,
           stripe_customer_id: customerId,
