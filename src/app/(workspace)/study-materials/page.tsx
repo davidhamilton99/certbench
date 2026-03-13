@@ -31,9 +31,14 @@ export default async function StudyMaterialsPage() {
         <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
           My Study Materials
         </h1>
-        <Link href="/study-materials/new">
-          <Button>Create New</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/study-materials/import">
+            <Button variant="secondary">Import Flashcards</Button>
+          </Link>
+          <Link href="/study-materials/new">
+            <Button>Create with AI</Button>
+          </Link>
+        </div>
       </div>
 
       {!studySets || studySets.length === 0 ? (

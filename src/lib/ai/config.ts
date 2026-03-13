@@ -2,7 +2,10 @@
 // Shared AI configuration for quiz generation
 // ---------------------------------------------------------------------------
 
-export const ANTHROPIC_MODEL = "claude-sonnet-4-6";
+export const ANTHROPIC_MODEL_SONNET = "claude-sonnet-4-6";
+export const ANTHROPIC_MODEL_HAIKU = "claude-haiku-4-5-20251001";
+/** @deprecated Use ANTHROPIC_MODEL_SONNET instead */
+export const ANTHROPIC_MODEL = ANTHROPIC_MODEL_SONNET;
 export const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 export const CONTENT_CHAR_LIMIT = 100_000;
 export const MAX_QUESTION_COUNT = 50;
@@ -127,6 +130,7 @@ export async function callClaude(opts: {
   userMessage: string;
   maxTokens?: number;
   temperature?: number;
+  model?: string;
 }): Promise<string> {
   const apiKey = getAnthropicApiKey();
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured.");
@@ -139,7 +143,7 @@ export async function callClaude(opts: {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: opts.model ?? ANTHROPIC_MODEL,
       max_tokens: opts.maxTokens ?? 8192,
       temperature: opts.temperature ?? 0.3,
       system: opts.system,
@@ -176,6 +180,7 @@ export async function callClaudeStream(opts: {
   userMessage: string;
   maxTokens?: number;
   temperature?: number;
+  model?: string;
 }): Promise<{ body: ReadableStream<Uint8Array>; ok: boolean; status: number }> {
   const apiKey = getAnthropicApiKey();
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured.");
@@ -188,7 +193,7 @@ export async function callClaudeStream(opts: {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: opts.model ?? ANTHROPIC_MODEL,
       max_tokens: opts.maxTokens ?? 16384,
       temperature: opts.temperature ?? 0.5,
       stream: true,
