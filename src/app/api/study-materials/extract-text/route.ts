@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const SUPPORTED_EXTENSIONS = ["txt", "md", "csv", "tsv", "pdf", "docx"];
+const SUPPORTED_EXTENSIONS = [
+  "txt",
+  "md",
+  "csv",
+  "tsv",
+  "pdf",
+  "docx",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+];
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -60,6 +72,8 @@ export async function POST(req: NextRequest) {
       text = await extractDocxText(file);
     } else if (ext === "pdf") {
       text = await extractPdfText(file);
+    } else if (IMAGE_EXTENSIONS.includes(ext)) {
+      text = await extractImageText(file);
     } else {
       return NextResponse.json(
         { error: "Unsupported file type" },
@@ -72,7 +86,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "No readable text found in the file. The file may be image-based or empty. Try pasting the content instead.",
+            "No readable text found in the file. The file may be empty or the image too blurry. Try pasting the content instead.",
         },
         { status: 400 }
       );
@@ -118,4 +132,16 @@ async function extractPdfText(file: File): Promise<string> {
   const pdf = new PDFParse({ data: new Uint8Array(buffer) });
   const result = await pdf.getText();
   return result.text;
+}
+
+// ---------------------------------------------------------------------------
+// Image OCR text extraction using tesseract.js
+// ---------------------------------------------------------------------------
+
+async function extractImageText(file: File): Promise<string> {
+  const Tesseract = await import("tesseract.js");
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const { data } = await Tesseract.recognize(buffer, "eng");
+  return data.text;
 }

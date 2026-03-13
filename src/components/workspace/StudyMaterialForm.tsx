@@ -61,9 +61,9 @@ const DIFFICULTY_LEVELS = [
 ];
 type Difficulty = "mixed" | "easy" | "medium" | "hard";
 
-const ACCEPTED_FILE_TYPES = ".txt,.md,.csv,.tsv,.pdf,.docx";
+const ACCEPTED_FILE_TYPES = ".txt,.md,.csv,.tsv,.pdf,.docx,.png,.jpg,.jpeg,.webp";
 const PLAIN_TEXT_EXTENSIONS = ["txt", "md", "csv", "tsv"];
-const SERVER_PARSED_EXTENSIONS = ["pdf", "docx"];
+const SERVER_PARSED_EXTENSIONS = ["pdf", "docx", "png", "jpg", "jpeg", "webp"];
 const ALL_EXTENSIONS = [...PLAIN_TEXT_EXTENSIONS, ...SERVER_PARSED_EXTENSIONS];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -126,7 +126,7 @@ export function StudyMaterialForm({
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (!ext || !ALL_EXTENSIONS.includes(ext)) {
         setError(
-          "Unsupported file type. Accepted: .txt, .md, .csv, .tsv, .pdf, .docx"
+          "Unsupported file type. Accepted: .txt, .md, .csv, .tsv, .pdf, .docx, .png, .jpg, .webp"
         );
         return;
       }
@@ -150,7 +150,7 @@ export function StudyMaterialForm({
         return;
       }
 
-      // PDF/DOCX — send to server for text extraction
+      // PDF/DOCX/images — send to server for text extraction
       if (SERVER_PARSED_EXTENSIONS.includes(ext)) {
         setFileLoading(true);
         try {
@@ -706,7 +706,7 @@ export function StudyMaterialForm({
                       or drag and drop a file
                     </p>
                     <p className="text-[11px] text-text-muted">
-                      PDF, DOCX, TXT, MD, CSV — up to 10 MB
+                      PDF, DOCX, TXT, MD, CSV, PNG, JPG, WEBP — up to 10 MB
                     </p>
                   </>
                 )}
