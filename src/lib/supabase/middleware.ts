@@ -42,6 +42,7 @@ export async function updateSession(request: NextRequest) {
     "/community",
     "/profile",
     "/onboarding",
+    "/upgrade",
   ];
 
   const isProtected = protectedPrefixes.some((prefix) =>

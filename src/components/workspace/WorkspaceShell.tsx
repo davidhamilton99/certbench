@@ -217,7 +217,7 @@ export function WorkspaceShell({
         {/* Upgrade link */}
         <div className="px-3 pb-2">
           <Link
-            href="/pricing"
+            href="/upgrade"
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] font-medium text-primary hover:bg-blue-50 transition-colors duration-150"
           >
