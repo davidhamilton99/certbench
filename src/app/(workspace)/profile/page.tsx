@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileEditor } from "@/components/workspace/ProfileEditor";
-import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export const metadata = {
-  title: "Profile — CertBench",
+  title: "Account Settings — CertBench",
 };
 
 export default async function ProfilePage() {
@@ -32,9 +31,12 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-8">
-        Profile
+      <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-1">
+        Account Settings
       </h1>
+      <p className="text-[14px] text-text-muted mb-8">
+        Manage your profile, preferences, and account.
+      </p>
       <ProfileEditor
         userId={user.id}
         email={user.email || ""}
@@ -43,9 +45,6 @@ export default async function ProfilePage() {
         examDate={activeEnrollment?.exam_date || null}
         certificationId={activeEnrollment?.certification_id || null}
       />
-      <div className="mt-8">
-        <SignOutButton />
-      </div>
     </div>
   );
 }
