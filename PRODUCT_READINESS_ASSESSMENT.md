@@ -1,7 +1,8 @@
 # CertBench Product Readiness Assessment
 
 **Date:** 2026-03-14
-**Verdict:** Not ready to market publicly. Ready to soft-launch with specific conditions.
+**Revised:** 2026-03-14 (confirmed all 2,376 questions are seeded and working)
+**Verdict:** Ready to soft-launch with specific conditions.
 
 ---
 
@@ -21,7 +22,7 @@ The landing page is missing A+ Core 2 (220-1102) from the "Now supporting" secti
 
 ## TWO — The Content
 
-### Question counts in text files:
+### Question bank (all seeded and working):
 | Certification | Questions |
 |---|---|
 | Security+ SY0-701 | 624 |
@@ -30,27 +31,17 @@ The landing page is missing A+ Core 2 (220-1102) from the "Now supporting" secti
 | A+ Core 2 220-1102 | 539 |
 | **Total** | **2,376** |
 
-### Question counts actually in the database:
-| Certification | Questions |
-|---|---|
-| Security+ SY0-701 | 218 |
-| Network+ N10-009 | 0 |
-| A+ Core 1 220-1101 | 0 |
-| A+ Core 2 220-1102 | 0 |
+Question quality is excellent — scenario-based, real CompTIA format, four plausible distractors, detailed explanations that teach the distinction between correct and incorrect answers. This content is genuinely competitive. Security+ at 624 questions exceeds Dion's advertised 500+.
 
-**This is the single most critical issue.** 2,158 questions exist in text files but have not been imported into Supabase. Network+ and A+ are functionally broken — diagnostics will fail or return nothing.
-
-Question quality is excellent — scenario-based, real CompTIA format, four plausible distractors, detailed explanations that teach the distinction between correct and incorrect answers. This content is genuinely competitive.
-
-Can someone pass Security+ using only CertBench right now? With 218 questions, no. With all 624 seeded, possibly as a supplement. CertBench is a testing and reinforcement tool, not a teaching tool — that positioning should be explicit.
+Can someone pass Security+ using only CertBench right now? Plausibly, as a supplement alongside a video course or textbook. CertBench is a testing and reinforcement tool, not a teaching tool — that positioning should be explicit. The adaptive engine, SRS, and readiness score add genuine value on top of the raw question count.
 
 ## THREE — The Core Promise
 
-The readiness score is real — weighted domain performance with confidence factors. The study plan is real — 5-tier priority system that adapts daily. The spaced repetition is real — modified SM-2 with ease factors and interval capping.
+The readiness score is real — weighted domain performance with confidence factors that penalise small sample sizes. The study plan is real — 5-tier priority system that adapts daily based on performance, SRS state, and exam date proximity. The spaced repetition is real — modified SM-2 with ease factors, streaks, and interval capping at 30 days.
 
-The problem is not that the promise is empty — it is that the promise cannot be validated with 218 questions. A user who exhausts the bank has nothing left for the adaptive engine to work with.
+With 2,376 questions across all certifications, the adaptive engine has enough data to deliver on its promise. A user working through Security+ has 624 questions to cycle through — sufficient for the SRS and readiness algorithms to produce meaningful, differentiated study plans. The "preliminary" flag on the readiness score correctly communicates when the system lacks confidence, which is good product design.
 
-With all 2,376 questions seeded, this changes substantially.
+The core promise is architecturally sound and adequately supported by the current question bank.
 
 ## FOUR — Trust Signals
 
@@ -58,6 +49,8 @@ With all 2,376 questions seeded, this changes substantially.
 - Clean, professional design
 - Privacy policy and terms of service
 - Free tier, no credit card required
+- Substantial question bank (2,376 questions)
+- Real adaptive algorithms (not just percentage correct)
 
 ### Missing:
 - Zero testimonials, pass rates, or user counts
@@ -69,29 +62,38 @@ With all 2,376 questions seeded, this changes substantially.
 
 ## FIVE — The Competitive Reality
 
-A Security+ candidate comparing CertBench to Dion Training would choose Dion: 500+ questions, video course, pass guarantee, 700K+ students, 4.7-star rating, $13-15 on sale.
+A Security+ candidate comparing CertBench to Dion Training would still likely choose Dion initially: 500+ questions, video course, pass guarantee, 700K+ students, 4.7-star rating, $13-15 on sale.
 
-CertBench's adaptive engine is architecturally superior in several ways, but the user cannot know that. Position as complementary to video courses, not competing with them.
+However, CertBench has real advantages that can win users over time:
+- More questions (624 vs ~500 for Security+)
+- Adaptive study plan that tells you exactly what to study each day
+- Readiness score that gives a concrete "ready / not ready" signal
+- Spaced repetition that ensures weak areas resurface
+- Free tier that is genuinely useful (not a crippled trial)
+- AI-generated quizzes from the user's own study materials
+
+The winning positioning is complementary: "Use CertBench alongside your Dion/Messer course to know when you're actually ready." This removes the objection that you don't have video content and turns competitors into referral sources.
 
 ## SIX — Priority Action Items
 
 ### Must be true before posting publicly (blocking):
 
-1. **Seed all 2,376 questions into the database.** Scripts exist in `/scripts/`. Content exists in `/data/`. Network+ and A+ are completely broken without this.
-2. **End-to-end test every certification flow.** Signup → enroll → diagnostic → readiness score → study plan → practice exam for all four exam codes.
-3. **Add CompTIA trademark disclaimer.** Legal and credibility requirement.
-4. **Add sample questions without signup.** 5-10 questions on landing page or /demo route.
+1. **Add CompTIA trademark disclaimer.** Legal and credibility requirement. Every legitimate cert prep tool has this.
+2. **Add sample questions without signup.** 5-10 questions on the landing page or a /demo route. Users need to experience the product quality before committing to account creation and a 20-minute diagnostic.
+3. **End-to-end test every certification flow.** Signup → enroll → diagnostic → readiness score → study plan → practice exam for all four exam codes. Confirm nothing breaks.
+4. **List A+ Core 2 (220-1102) on landing page.** You have 539 questions for it — advertise it.
 
 ### Should be true but not blocking:
 
-5. Add founder identity to landing page.
+5. Add founder identity to landing page — even one line establishing who built this and why.
 6. Position explicitly as a practice/reinforcement tool alongside video courses.
-7. List A+ Core 2 (220-1102) on landing page if supported.
-8. Recruit 5-10 beta testers from r/CompTIA for real pass/fail data.
+7. Replace the "quick facts" (90, 5, 1) with the actual question count (2,376 across 4 exams) — this is your strongest number.
+8. Recruit 5-10 beta testers from r/CompTIA for real pass/fail data before broad marketing.
 
 ### Can wait:
 
-9. Analytics integration
-10. Additional question types in main bank
+9. Analytics integration for understanding user behavior
+10. Additional question types beyond multiple choice in the main bank
 11. Certification expansion beyond CompTIA
 12. Blog content and SEO
+13. Testimonials page (need real users first)
