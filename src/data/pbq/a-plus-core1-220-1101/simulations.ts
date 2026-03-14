@@ -233,7 +233,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
             id: "aplus-core1-sim-soho-network-t1-f1",
             label: "Enter the correct default gateway IP address that client workstations should be assigned by DHCP.",
             acceptedValues: ["192.168.1.1"],
-            placeholder: "e.g. 192.168.0.1",
+            placeholder: "x.x.x.x",
           },
           {
             type: "dropdown",
@@ -291,7 +291,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
             id: "aplus-core1-sim-soho-network-t2-f1",
             label: "Enter the SSID (network name) that will be broadcast for the office wireless network. Use the format: OfficeNet-[YourInitials] — for this exam enter exactly: OfficeNet-HQ",
             acceptedValues: ["OfficeNet-HQ", "officenet-hq", "OFFICENET-HQ"],
-            placeholder: "e.g. OfficeNet-HQ",
+            placeholder: "Enter SSID",
           },
           {
             type: "dropdown",

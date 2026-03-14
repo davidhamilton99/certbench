@@ -611,7 +611,7 @@ tcp    0       0       172.16.10.20:80       10.0.0.1:54321        ESTABLISHED  
               "v=spf1 ip4:203.0.113.10 -all",
               "v=spf1 include:mail.acme-corp.com -all",
             ],
-            placeholder: 'e.g. v=spf1 ... -all',
+            placeholder: 'v=spf1 ...',
           },
           {
             type: "dropdown",
