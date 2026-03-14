@@ -11,7 +11,8 @@ export function Hero() {
       </h1>
       <p className="text-[17px] sm:text-[18px] text-text-secondary mt-6 max-w-xl mx-auto leading-relaxed">
         CertBench builds a personalised study plan from your actual performance
-        data. No guessing, no wasted time — just the topics you need to master.
+        data. Use it alongside your favourite course — it tracks what you get
+        wrong and tells you when you&apos;re ready to sit the exam.
       </p>
       <div className="mt-10 flex items-center justify-center gap-4">
         <Link href="/register">
@@ -22,9 +23,9 @@ export function Hero() {
       {/* Quick facts */}
       <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
         {[
-          { value: "90", label: "Questions per practice exam" },
-          { value: "5", label: "Exam domains weighted by importance" },
-          { value: "1", label: "Readiness score that tracks everything" },
+          { value: "2,000+", label: "Practice questions across 4 exams" },
+          { value: "4", label: "CompTIA certifications supported" },
+          { value: "100%", label: "Free to start — no credit card" },
         ].map((fact) => (
           <div key={fact.value + fact.label}>
             <p className="text-[36px] sm:text-[44px] font-bold font-mono text-text-primary tabular-nums">

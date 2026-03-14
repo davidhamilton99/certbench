@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PricingCheckout } from "@/components/marketing/PricingCheckout";
+import { Footer } from "@/components/marketing/Footer";
 
 export const metadata = {
   title: "Pricing — CertBench",
@@ -153,13 +154,7 @@ export default function PricingPage() {
         </div>
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <p className="text-[13px] text-text-muted">
-            CertBench — Certification preparation, simplified.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

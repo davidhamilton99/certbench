@@ -227,13 +227,13 @@ These are not launch requirements but will determine whether CertBench grows bey
 
 ---
 
-### 4.3 Add analytics
+### 4.3 Add custom PostHog events
 
-**Why:** You currently have zero visibility into user behavior beyond what's in the database. You don't know where users drop off, which features they use, or how long they study.
+**Status:** PostHog is already integrated in the root layout (`src/app/layout.tsx`) and tracking page views. The next step is adding custom events to build a conversion funnel.
 
 **What to do:**
-- Add a lightweight, privacy-respecting analytics tool (Plausible, Umami, or PostHog)
-- Key events to track: landing page → signup, signup → diagnostic started, diagnostic started → diagnostic completed, diagnostic completed → first practice exam
+- Add custom events for: signup completed, diagnostic started, diagnostic completed, first practice exam, subscription upgrade
+- Build a PostHog funnel: landing page → signup → diagnostic started → diagnostic completed → first practice exam
 - This funnel will tell you exactly where you're losing people
 
 ---
@@ -242,10 +242,13 @@ These are not launch requirements but will determine whether CertBench grows bey
 
 Before posting on r/CompTIA, verify:
 
-- [ ] CompTIA trademark disclaimer visible in landing page footer
-- [ ] All 4 certifications listed in "Now supporting" section (including A+ 220-1102)
-- [ ] 3 sample questions playable on landing page without signup
-- [ ] Hero stats updated to show real numbers (2,376 questions, 4 certs)
+- [x] CompTIA trademark disclaimer visible in landing page footer
+- [x] All 4 certifications listed in "Now supporting" section (including A+ 220-1102)
+- [x] 3 sample questions playable on landing page without signup
+- [x] Hero stats updated to show real numbers (2,000+ questions, 4 certs)
+- [x] Complementary positioning copy in hero and CTA
+- [x] Founder identity in CTA section
+- [x] Shared Footer component with disclaimer on all marketing pages
 - [ ] Reddit post drafted, reviewed, and read aloud
 - [ ] Full signup → diagnostic → dashboard → practice exam flow tested for Security+ SY0-701
 - [ ] Full signup → diagnostic → dashboard → practice exam flow tested for Network+ N10-009

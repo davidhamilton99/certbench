@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Hero } from "@/components/marketing/Hero";
 import { FeatureSection } from "@/components/marketing/FeatureSection";
+import { SampleQuestions } from "@/components/marketing/SampleQuestions";
 import { CTASection } from "@/components/marketing/CTASection";
+import { Footer } from "@/components/marketing/Footer";
 
 export default function LandingPage() {
   return (
@@ -34,33 +36,11 @@ export default function LandingPage() {
       <main>
         <Hero />
         <FeatureSection />
+        <SampleQuestions />
         <CTASection />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-3">
-          <p className="text-[13px] text-text-muted">
-            CertBench — Certification preparation, simplified.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-[12px] text-text-muted hover:text-text-primary transition-colors">
-              Privacy Policy
-            </Link>
-            <span className="text-[12px] text-text-muted">&middot;</span>
-            <Link href="/terms" className="text-[12px] text-text-muted hover:text-text-primary transition-colors">
-              Terms of Service
-            </Link>
-            <span className="text-[12px] text-text-muted">&middot;</span>
-            <a href="mailto:support@certbench.com" className="text-[12px] text-text-muted hover:text-text-primary transition-colors">
-              Contact
-            </a>
-          </div>
-          <p className="text-[11px] text-text-muted">
-            &copy; {new Date().getFullYear()} CertBench. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
