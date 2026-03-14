@@ -1,0 +1,1129 @@
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A network administrator is designing a small office network where every device connects to a central switch. Which topology best describes this design?
+A) Bus
+B) Ring
+C) Star
+D) Mesh
+Correct: C
+Explanation: In a star topology, all devices connect to a central device such as a switch or hub, making the switch the single point of connectivity. A mesh topology would require direct links between every device, which is far more cabling-intensive. Star is the dominant topology in modern Ethernet LANs because it simplifies troubleshooting and isolates failures to individual links.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which topology provides the highest redundancy by connecting every node directly to every other node?
+A) Partial mesh
+B) Full mesh
+C) Star
+D) Ring
+Correct: B
+Explanation: Full mesh topology creates a direct link between every pair of nodes, eliminating any single point of failure and providing the maximum number of redundant paths. Partial mesh connects only some nodes directly, reducing cost but also reducing redundancy. Full mesh is commonly used in WAN core networks where uptime is critical, though it scales poorly due to the n(n-1)/2 link requirement.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A legacy Token Ring network uses which physical topology for frame transmission?
+A) Bus
+B) Star
+C) Ring
+D) Mesh
+Correct: C
+Explanation: Token Ring networks pass a token sequentially around a logical ring, so each device receives and retransmits frames to the next device in the ring. Bus topology uses a single shared cable where all devices tap into the same medium simultaneously. Understanding ring topology is useful for recognizing older LAN technologies and for understanding SONET/SDH carrier rings still used in some WAN designs.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A small startup has five employees who share files directly between their laptops without a dedicated server. This arrangement is an example of which network model?
+A) Client-server
+B) Peer-to-peer
+C) Hierarchical
+D) Three-tier
+Correct: B
+Explanation: In a peer-to-peer network, each device acts as both a client and a server, sharing resources directly without a centralized server. Client-server networks use dedicated servers to centralize resources and authentication, which provides better scalability and security. Peer-to-peer is practical for very small environments but becomes difficult to manage as the number of users grows.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which network type is specifically designed to provide high-speed block-level storage access to servers using protocols such as Fibre Channel or iSCSI?
+A) WAN
+B) MAN
+C) SAN
+D) CAN
+Correct: C
+Explanation: A Storage Area Network (SAN) is a dedicated high-speed network that connects servers to shared storage devices, providing block-level access as if the storage were locally attached. A WAN connects geographically dispersed sites and is not optimized for storage traffic. SANs are commonly found in data centres where multiple servers need to access the same storage pool for virtualization or database workloads.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A university connects all buildings on its campus using fibre optic cabling spanning several kilometres but does not extend beyond the campus grounds. Which network type is this?
+A) WAN
+B) LAN
+C) CAN
+D) MAN
+Correct: C
+Explanation: A Campus Area Network (CAN) spans multiple buildings within a single campus or organizational site, larger than a LAN but geographically limited to one location. A MAN (Metropolitan Area Network) covers a city or metropolitan region and typically involves service provider infrastructure. CAN is the correct classification because the network is self-contained within one organization's campus.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A service provider offers Layer 2 Ethernet connectivity between customer sites across a metropolitan area at speeds up to 10 Gbps. Which WAN technology is this?
+A) PPPoE
+B) Metro Ethernet
+C) MPLS
+D) DMVPN
+Correct: B
+Explanation: Metro Ethernet extends Ethernet services over a metropolitan area, allowing customers to use standard Ethernet interfaces and protocols between geographically separated sites. MPLS is a label-switching technology that can carry multiple Layer 3 protocols and is typically used for larger, more complex WAN services. Metro Ethernet is attractive because it leverages familiar Ethernet technology while providing high-bandwidth city-wide connectivity.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which WAN technology uses software-defined principles to centrally manage and route traffic across multiple underlying transport connections such as MPLS and broadband?
+A) Metro Ethernet
+B) DMVPN
+C) SD-WAN
+D) PPPoE
+Correct: C
+Explanation: SD-WAN (Software-Defined Wide Area Network) uses a centralized controller to dynamically route traffic across multiple WAN links based on application policy and real-time link conditions. DMVPN creates a dynamic mesh of VPN tunnels but does not provide the same centralized application-aware routing. SD-WAN allows organizations to use lower-cost broadband connections alongside MPLS while maintaining application performance.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: An enterprise needs to create a dynamic, scalable IPsec VPN overlay that allows spoke sites to communicate directly with each other without routing all traffic through a central hub. Which technology meets this requirement?
+A) PPPoE
+B) DMVPN
+C) Metro Ethernet
+D) SD-WAN
+Correct: B
+Explanation: DMVPN (Dynamic Multipoint VPN) allows spoke routers to form on-demand IPsec tunnels directly to other spokes using NHRP, avoiding the need to route all traffic through a hub. PPPoE is a DSL encapsulation protocol used for last-mile broadband access, not enterprise VPN overlays. DMVPN is especially valuable for large branch deployments where building static point-to-point VPNs to every site would be impractical.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which WAN technology encapsulates PPP frames within Ethernet frames and is commonly used by ISPs for DSL broadband subscriber authentication?
+A) MPLS
+B) Metro Ethernet
+C) PPPoE
+D) SD-WAN
+Correct: C
+Explanation: PPPoE (Point-to-Point Protocol over Ethernet) encapsulates PPP within Ethernet, enabling ISPs to use PPP authentication (PAP, CHAP) over DSL and other broadband connections. MPLS operates at Layer 2.5 using labels for packet forwarding and is used within provider cores, not for subscriber authentication. PPPoE remains common in residential DSL deployments because it supports per-user authentication and IP address assignment.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which IoT wireless technology operates in the 900 MHz band, provides a range of up to 100 metres, and uses a mesh topology to connect smart home devices?
+A) NFC
+B) Zigbee
+C) Z-Wave
+D) Bluetooth
+Correct: C
+Explanation: Z-Wave operates in the sub-GHz 908.42 MHz band (in North America), supports mesh networking, and is specifically designed for low-bandwidth smart home automation with ranges up to approximately 100 metres. Zigbee also supports mesh networking but operates in the 2.4 GHz band rather than 900 MHz. Z-Wave's use of a dedicated frequency band helps avoid interference with Wi-Fi and Bluetooth devices.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A warehouse management system uses small tags attached to inventory items that can be scanned from several metres away without line of sight. Which technology is being used?
+A) NFC
+B) Bluetooth
+C) RFID
+D) Zigbee
+Correct: C
+Explanation: RFID (Radio Frequency Identification) uses electromagnetic fields to automatically identify and track tags attached to objects and can operate at ranges from centimetres to several metres depending on the frequency band. NFC is a subset of RFID but is limited to very short ranges (under 20 cm) and requires near-contact. RFID is widely deployed in supply chain, asset tracking, and access control applications.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A user taps their smartphone against a payment terminal to complete a contactless purchase. Which wireless technology enables this transaction?
+A) Zigbee
+B) Z-Wave
+C) Bluetooth
+D) NFC
+Correct: D
+Explanation: NFC (Near Field Communication) operates at 13.56 MHz with a maximum range of approximately 20 centimetres, making it ideal for secure contactless payments and data exchange that requires physical proximity. Bluetooth operates at much longer ranges (up to 10 metres or more) and is not suitable for the inherently short-range security model of payment transactions. NFC's very short range provides an inherent physical security benefit by requiring deliberate proximity.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which IoT technology operates in the 2.4 GHz band, supports mesh networking with up to 65,000 nodes, and is commonly used in building automation and smart energy systems?
+A) Z-Wave
+B) NFC
+C) Zigbee
+D) Bluetooth
+Correct: C
+Explanation: Zigbee (IEEE 802.15.4) operates in the 2.4 GHz band globally, supports mesh topologies with up to 65,000 devices per network, and is designed for low-power, low-data-rate IoT applications. Z-Wave supports far fewer nodes (up to 232) and operates at sub-GHz frequencies. Zigbee's large node count makes it suitable for large-scale building automation deployments such as smart lighting and HVAC control.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: An administrator is designing a WAN where the service provider uses label-switching to forward packets, enabling traffic engineering and support for multiple VPNs across the same infrastructure. Which technology is described?
+A) PPPoE
+B) MPLS
+C) Metro Ethernet
+D) DMVPN
+Correct: B
+Explanation: MPLS (Multiprotocol Label Switching) inserts short fixed-length labels between Layer 2 and Layer 3 headers, allowing routers to make forwarding decisions based on labels rather than IP routing lookups, which enables traffic engineering and Layer 3 VPN services. Metro Ethernet provides Ethernet-based connectivity but does not inherently use label switching for traffic engineering. MPLS is the dominant technology in service provider cores because of its flexibility in supporting multiple services over a single infrastructure.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A personal area network connects a smartphone to wireless earbuds and a smartwatch over a short range of up to 10 metres. Which technology is most likely being used?
+A) Zigbee
+B) Z-Wave
+C) NFC
+D) Bluetooth
+Correct: D
+Explanation: Bluetooth is designed for PAN (Personal Area Network) use, operating in the 2.4 GHz band with typical ranges of up to 10 metres (Class 2 devices), making it ideal for connecting personal devices. Zigbee also operates at 2.4 GHz but is intended for large-scale IoT mesh deployments, not personal device pairing. Bluetooth's widespread adoption in consumer electronics and standardized pairing mechanisms make it the de facto standard for personal device connectivity.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which network type uses licensed cellular frequencies (4G LTE or 5G) to connect IoT sensors in remote locations where wired infrastructure is unavailable?
+A) Zigbee
+B) Z-Wave
+C) Cellular
+D) NFC
+Correct: C
+Explanation: Cellular IoT technologies (including LTE-M and NB-IoT on 4G, and expanding with 5G) use licensed spectrum to provide wide-area connectivity for devices in locations without Wi-Fi or wired access. Zigbee and Z-Wave are short-range mesh technologies unsuitable for remote field deployments. Cellular IoT is commonly used for smart meters, asset tracking, and agricultural sensors that need connectivity across large geographic areas.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: In which network type would you most commonly find technologies such as T1/T3 leased lines, SONET, and Frame Relay connecting offices in different countries?
+A) LAN
+B) WLAN
+C) PAN
+D) WAN
+Correct: D
+Explanation: A Wide Area Network (WAN) connects geographically dispersed sites, often spanning countries or continents, and relies on service provider infrastructure such as leased lines, SONET, and packet-switched technologies. A WLAN provides wireless connectivity within a limited area such as a building or campus. WAN technologies are characterized by lower bandwidth relative to cost and higher latency compared to LANs.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A hybrid topology combines elements of which two topologies to form the majority of modern enterprise networks?
+A) Bus and ring
+B) Star and mesh
+C) Ring and bus
+D) Mesh and bus
+Correct: B
+Explanation: Modern enterprise networks typically combine star topology at the access layer (devices connecting to switches) with partial mesh at the distribution and core layers for redundancy, creating a hybrid star-mesh topology. Bus and ring topologies are largely obsolete in Ethernet networks. Hybrid topologies allow organizations to balance the simplicity of star connections at the edge with the redundancy of mesh connections at the core.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A metropolitan fibre provider delivers Ethernet services to business customers within a city using a ring of fibre between distribution nodes. What network type does this describe?
+A) LAN
+B) CAN
+C) MAN
+D) SAN
+Correct: C
+Explanation: A Metropolitan Area Network (MAN) covers a city or metropolitan region, connecting multiple buildings or organizations across a urban area using provider-managed infrastructure. A CAN is limited to a single organization's campus, while a MAN may serve multiple unrelated customers across a city. MANs often use SONET rings or Ethernet rings to provide resilient fibre-based connectivity to business customers.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A network uses a single cable to which all devices connect, with terminators at each end. A break in the cable causes the entire network to fail. Which topology is described?
+A) Star
+B) Ring
+C) Bus
+D) Mesh
+Correct: C
+Explanation: Bus topology uses a single shared cable (the bus) with all devices tapping into it; terminators absorb signals at each end, and a cable break disrupts all communications. Ring topology also fails on a break (unless dual rings are used), but devices connect in a closed loop rather than along a single linear cable. Bus topology was used in early 10BASE-5 and 10BASE-2 Ethernet networks but has been replaced by star topology due to its fragility.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which architecture places an organization's servers and applications in a provider-managed facility that the organization reaches over a dedicated WAN link or the internet?
+A) Client-server on-premises
+B) Peer-to-peer
+C) Cloud/hosted
+D) Three-tier
+Correct: C
+Explanation: Cloud or hosted architecture moves servers and services off-premises to provider-managed data centres, accessible over WAN or internet connections, shifting capital expenditure to operational expenditure. On-premises client-server keeps all infrastructure within the organization's own facilities. Cloud architecture introduces WAN dependency for internal users, making reliable, low-latency WAN connectivity critical.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A three-tier network architecture separates the network into which three layers?
+A) Physical, Data Link, Network
+B) Core, Distribution, Access
+C) Internet, Intranet, Extranet
+D) Client, Application, Database
+Correct: B
+Explanation: The three-tier hierarchical network model divides the network into the Access layer (connecting end devices), the Distribution layer (policy enforcement and routing between VLANs), and the Core layer (high-speed backbone). The OSI layers (Physical, Data Link, Network) describe protocol functions, not network design tiers. The three-tier model is the foundation of Cisco's hierarchical design methodology and is widely used in enterprise campus networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A spine-leaf data centre architecture is an example of which broader topology category?
+A) Bus
+B) Ring
+C) Full mesh
+D) Partial mesh
+Correct: D
+Explanation: In a spine-leaf architecture, every leaf switch connects to every spine switch but leaf switches do not connect to each other and spine switches do not connect to each other, forming a partial mesh. A full mesh would require every switch to connect to every other switch, which is impractical at data centre scale. Spine-leaf provides predictable, low-latency east-west traffic patterns essential for modern virtualized workloads.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which statement best distinguishes a WLAN from a LAN?
+A) A WLAN uses coaxial cable while a LAN uses fibre optic
+B) A WLAN provides wireless connectivity using radio frequencies while a LAN uses wired media
+C) A WLAN spans a wider geographic area than a LAN
+D) A WLAN requires a dedicated storage network
+Correct: B
+Explanation: A WLAN (Wireless LAN) provides network connectivity via radio frequency (typically 2.4 GHz or 5 GHz) without physical cables, while a LAN uses wired media such as twisted-pair or fibre. WLANs do not span wider areas than LANs by definition; both typically cover the same local area. WLANs use IEEE 802.11 standards and share the same Layer 3 addressing space as the wired LAN they extend.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network administrator manually enters a route to the 10.20.0.0/24 network on a router. Which type of route is this?
+A) Dynamic route
+B) Default route
+C) Static route
+D) Floating static route
+Correct: C
+Explanation: A static route is a manually configured route that does not change unless an administrator modifies it, providing predictable, overhead-free routing for stable network paths. A dynamic route is learned automatically through a routing protocol such as OSPF or EIGRP. Static routes are commonly used for stub networks, default routes, and situations where routing protocol overhead is undesirable.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which route serves as the router's last resort when no more specific route matches a destination IP address in the routing table?
+A) Host route
+B) Static route
+C) Summary route
+D) Default route
+Correct: D
+Explanation: The default route (0.0.0.0/0) matches any destination address and is used when no more specific route exists, acting as the gateway of last resort. A host route (/32) is the most specific possible route, matching only a single IP address. The default route is critical at network edges where a single upstream path to the internet is used.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: OSPF is classified as which type of routing protocol?
+A) Distance-vector
+B) Path-vector
+C) Link-state
+D) Hybrid
+Correct: C
+Explanation: OSPF (Open Shortest Path First) is a link-state protocol in which each router builds a complete map of the network topology using Link State Advertisements (LSAs) and runs the Dijkstra algorithm to calculate the shortest path. RIP is a distance-vector protocol that only shares routing tables with neighbours without a full topology view. OSPF converges faster than distance-vector protocols and is free from routing loops by design because each router has a consistent topology database.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which routing protocol is Cisco proprietary, uses a composite metric based on bandwidth and delay by default, and is classified as an advanced distance-vector (hybrid) protocol?
+A) OSPF
+B) BGP
+C) RIPv2
+D) EIGRP
+Correct: D
+Explanation: EIGRP (Enhanced Interior Gateway Routing Protocol) is a Cisco proprietary protocol that uses a composite metric incorporating bandwidth and delay (and optionally load, reliability, and MTU) and employs DUAL (Diffusing Update Algorithm) to maintain loop-free paths. OSPF is an open standard link-state protocol, not a hybrid. EIGRP is called hybrid because it combines features of both distance-vector and link-state protocols, including partial updates and neighbour relationships.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: BGP is the routing protocol used to exchange routing information between autonomous systems on the internet. Which routing protocol type is BGP?
+A) Link-state
+B) Distance-vector
+C) Path-vector
+D) Hybrid
+Correct: C
+Explanation: BGP (Border Gateway Protocol) is a path-vector protocol that makes routing decisions based on policies, path attributes (such as AS_PATH), and rules, rather than simple metrics. OSPF is a link-state protocol used within autonomous systems, not between them. BGP's AS_PATH attribute prevents routing loops between autonomous systems by listing every AS a route has traversed.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A router has two routes to the 192.168.10.0/24 network: one learned via OSPF and one via RIP. Which route will the router prefer and install in the routing table by default?
+A) RIP route, because it has a lower metric
+B) OSPF route, because OSPF has a lower administrative distance
+C) RIP route, because RIP is a simpler protocol
+D) OSPF route, because OSPF has a higher administrative distance
+Correct: B
+Explanation: Administrative distance (AD) is the trustworthiness of a routing source; OSPF has an AD of 110 while RIP has an AD of 120, so the router prefers the OSPF route because a lower AD indicates higher trustworthiness. Metric is used to compare routes learned from the same routing protocol, not between different protocols. When two protocols advertise the same prefix, the router installs only the route from the protocol with the lowest AD.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: What is the default administrative distance of a directly connected route?
+A) 0
+B) 1
+C) 5
+D) 110
+Correct: A
+Explanation: Directly connected routes have an administrative distance of 0, meaning they are considered the most trustworthy since the router is directly attached to that network. Static routes have an AD of 1, making them the next most preferred. An AD of 0 for connected routes makes sense because the router has direct knowledge of the network without relying on any external information.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: RIPv2 improves upon RIPv1 by adding which two features?
+A) Link-state algorithm and OSPF compatibility
+B) Classless routing (VLSM support) and authentication
+C) DUAL algorithm and composite metrics
+D) AS path attributes and policy-based routing
+Correct: B
+Explanation: RIPv2 added support for classless inter-domain routing (VLSM/CIDR) by including subnet masks in routing updates, and added MD5 authentication to prevent route injection attacks; RIPv1 supported neither. DUAL and composite metrics are features of EIGRP, not RIP. RIPv2 still uses the same 15-hop maximum and 30-second update timer as RIPv1, limiting its use to small networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network administrator configures a static route with an administrative distance of 200 as a backup to an OSPF-learned route with AD 110. What is this backup route called?
+A) Default route
+B) Summary route
+C) Floating static route
+D) Host route
+Correct: C
+Explanation: A floating static route is a static route configured with an AD higher than the primary dynamic routing protocol so it only becomes active if the dynamic route is removed from the routing table. With AD 200, the floating static route remains dormant while the OSPF route (AD 110) is present, activating only when OSPF loses the path. This technique is commonly used to provide WAN backup over a secondary link such as a 4G connection.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Route redistribution is used when a network runs multiple routing protocols. What does route redistribution accomplish?
+A) It converts all routes to static routes for stability
+B) It allows routes learned by one routing protocol to be shared into another routing protocol
+C) It assigns equal administrative distances to all routing protocols
+D) It prevents routing loops by blocking duplicate route advertisements
+Correct: B
+Explanation: Route redistribution enables routes learned by one routing protocol (such as EIGRP) to be injected into another routing protocol's domain (such as OSPF), allowing routers running different protocols to have end-to-end reachability. It does not convert routes to static routes; those remain dynamic within their respective protocol domains. Route redistribution requires careful metric translation and filtering to prevent routing loops and suboptimal paths.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which QoS mechanism marks packets at Layer 3 using the DSCP field in the IP header to classify and prioritize traffic?
+A) 802.1p
+B) CoS
+C) DSCP
+D) Traffic shaping
+Correct: C
+Explanation: DSCP (Differentiated Services Code Point) uses 6 bits in the IP header's Differentiated Services field to classify packets into per-hop behaviours, enabling routers to apply different forwarding treatments based on the marking. 802.1p and CoS use the 3-bit Priority Code Point (PCP) field in the 802.1Q VLAN tag, which is a Layer 2 mechanism and is lost when frames leave the LAN. DSCP markings persist end-to-end across Layer 3 routed boundaries, making it the preferred QoS marking for WAN and inter-site deployments.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A technician notices that VoIP calls become choppy during business hours when large file transfers are occurring. Which QoS mechanism would best address this by delaying non-critical traffic to smooth its transmission rate?
+A) Traffic policing
+B) Traffic shaping
+C) DSCP marking
+D) Route redistribution
+Correct: B
+Explanation: Traffic shaping buffers and delays excess traffic to conform to a defined rate, smoothing bursts and allowing prioritized traffic like VoIP to transit without contention. Traffic policing drops or re-marks packets that exceed the defined rate immediately without buffering, which can cause more disruption to bulk transfers but does not smooth traffic. Traffic shaping is typically applied to outbound WAN interfaces to prevent large transfers from overwhelming limited uplink bandwidth.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which QoS marking standard uses the 3-bit Priority Code Point (PCP) field within an 802.1Q VLAN tag to classify traffic at Layer 2?
+A) DSCP
+B) 802.1p
+C) ToS
+D) MPLS EXP
+Correct: B
+Explanation: IEEE 802.1p defines the use of the 3-bit PCP field in the 802.1Q frame header to provide eight Classes of Service (CoS values 0-7) for Layer 2 traffic prioritisation. DSCP operates at Layer 3 in the IP header and survives routing, while 802.1p markings are only visible within a Layer 2 domain. Voice traffic is typically marked with 802.1p CoS 5, while network control traffic uses CoS 7.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: OSPF uses which algorithm to calculate the shortest path through the network topology?
+A) Bellman-Ford
+B) Dijkstra's Shortest Path First
+C) DUAL (Diffusing Update Algorithm)
+D) Distance-vector Bellman-Ford
+Correct: B
+Explanation: OSPF uses Dijkstra's Shortest Path First (SPF) algorithm, running it against the Link State Database (LSDB) to compute a loop-free shortest path tree from each router's perspective. RIP and other distance-vector protocols use the Bellman-Ford algorithm. Dijkstra's algorithm guarantees loop-free paths because it builds a complete topology map before computing routes, unlike distance-vector protocols that rely on neighbour information.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A router running OSPF is connected to multiple areas. Which special router type connects an OSPF area to the backbone area (Area 0)?
+A) Internal router
+B) Backbone router
+C) Area Border Router (ABR)
+D) Autonomous System Boundary Router (ASBR)
+Correct: C
+Explanation: An Area Border Router (ABR) has interfaces in both a non-backbone area and Area 0 (the backbone), summarizing and forwarding routing information between areas. An ASBR connects the OSPF domain to external routing domains and redistributes external routes. ABRs are critical to OSPF's hierarchical design because all inter-area traffic must traverse Area 0.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Bandwidth throttling limits the maximum rate of traffic for specific applications or users. In which scenario is this technique most appropriately applied?
+A) Prioritizing VoIP traffic over other traffic types
+B) Limiting peer-to-peer file sharing traffic to prevent it from consuming all available WAN bandwidth
+C) Guaranteeing minimum bandwidth for video conferencing
+D) Preventing routing loops in OSPF
+Correct: B
+Explanation: Bandwidth throttling caps the maximum rate at which specific traffic (such as P2P file sharing) can consume bandwidth, ensuring other applications have access to network resources. Prioritizing VoIP and guaranteeing minimum bandwidth for video are achieved through QoS queuing mechanisms, not throttling. Throttling is a punitive technique applied to greedy or low-priority traffic classes, while prioritization is a preferential technique applied to high-priority traffic.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A distance-vector routing protocol is susceptible to routing loops. Which mechanism counts to a maximum hop value (15) to prevent packets from circulating indefinitely, and is a feature of RIP?
+A) Split horizon
+B) Maximum hop count
+C) Route poisoning
+D) Hold-down timer
+Correct: B
+Explanation: RIP uses a maximum hop count of 15 as infinity; any route with a hop count of 16 is considered unreachable, preventing packets from circulating through a routing loop indefinitely. Split horizon prevents a router from advertising a route back out the interface through which it was learned, which is a different loop prevention mechanism. RIP's 15-hop maximum effectively limits its deployment to small networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which OSPF network type is used on a point-to-point serial link between two routers and does not require a Designated Router (DR) election?
+A) Broadcast multi-access
+B) Non-broadcast multi-access (NBMA)
+C) Point-to-point
+D) Point-to-multipoint
+Correct: C
+Explanation: OSPF point-to-point network type is used on links connecting exactly two routers and skips the DR/BDR election process since there is no need to reduce LSA flooding on a link with only two devices. Broadcast multi-access networks (such as Ethernet) require a DR/BDR election to manage the number of adjacencies. Point-to-point is the default OSPF network type on serial interfaces and simplifies configuration on WAN links.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A routing table shows the following entry: O 172.16.0.0/16 [110/20] via 10.0.0.1. What does the value "20" represent?
+A) Administrative distance
+B) OSPF metric (cost)
+C) Hop count
+D) Bandwidth in Mbps
+Correct: B
+Explanation: In the routing table notation [AD/metric], the first number (110) is OSPF's administrative distance and the second number (20) is the OSPF metric (cost), calculated based on reference bandwidth divided by interface bandwidth. The hop count is used as the metric for RIP, not OSPF. OSPF cost is calculated as 100,000,000 / interface bandwidth in bps by default, so a Fast Ethernet interface has a cost of 1 and a T1 has a cost of approximately 64.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: Which type of routing protocol sends its full routing table to neighbours at regular intervals and is susceptible to slow convergence?
+A) Link-state
+B) Path-vector
+C) Distance-vector
+D) Hybrid
+Correct: C
+Explanation: Distance-vector protocols (such as RIP) periodically send their complete routing table to directly connected neighbours, leading to slow convergence because changes must propagate hop by hop across the network. Link-state protocols flood topology information immediately upon a change and converge much faster. Distance-vector protocols are described by the phrase "routing by rumour" because each router only knows what its neighbours have told it, without a complete topology view.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network administrator wants to logically separate departmental traffic on a single physical switch without additional hardware. Which feature should be configured?
+A) STP
+B) Port security
+C) VLANs
+D) LACP
+Correct: C
+Explanation: VLANs (Virtual Local Area Networks) create logical broadcast domain separation on a single physical switch by assigning ports to different VLANs, isolating traffic between departments without requiring separate physical switches. STP (Spanning Tree Protocol) prevents Layer 2 loops but does not separate traffic. VLANs are fundamental to modern network design because they improve security, reduce broadcast domains, and simplify network management.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A switch port connecting to another switch needs to carry traffic for multiple VLANs simultaneously. Which port type and standard should be used?
+A) Access port using 802.1D
+B) Trunk port using 802.1Q
+C) Voice VLAN port using 802.1p
+D) Mirror port using SPAN
+Correct: B
+Explanation: An 802.1Q trunk port tags Ethernet frames with a VLAN ID so that multiple VLANs can be carried across a single inter-switch link, allowing both switches to differentiate frames belonging to different VLANs. An access port carries traffic for only a single VLAN and does not add a VLAN tag. 802.1Q trunking is the IEEE standard for VLAN tagging and is universally supported across multi-vendor switch environments.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: What is the native VLAN on an 802.1Q trunk, and what is its significance?
+A) The VLAN used for management traffic; it cannot be changed
+B) The VLAN whose frames are sent untagged across the trunk; it must match on both ends
+C) The VLAN with the highest priority; it is always VLAN 1
+D) A reserved VLAN that carries STP BPDUs only
+Correct: B
+Explanation: The native VLAN is the one VLAN on an 802.1Q trunk whose frames are transmitted without a VLAN tag; both sides of the trunk must agree on the same native VLAN or a VLAN mismatch will cause connectivity issues. Management traffic does not have to use the native VLAN; it is a security best practice to change the native VLAN away from VLAN 1. VLAN mismatch on the native VLAN is a common troubleshooting scenario because frames arrive on the wrong VLAN silently.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Spanning Tree Protocol (IEEE 802.1D) was designed to solve which Layer 2 problem?
+A) VLAN segmentation
+B) Broadcast storms caused by Layer 2 loops
+C) MAC address table overflow
+D) Trunk port negotiation
+Correct: B
+Explanation: STP prevents broadcast storms by detecting and blocking redundant paths in the Layer 2 network, ensuring there is only one active path between any two network segments while keeping backup paths available. MAC address table overflow is a different attack (MAC flooding) that STP does not address. STP is essential in any network with redundant switch connections; without it, a single broadcast frame would circulate indefinitely, consuming all available bandwidth.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Which STP variant defined by IEEE 802.1w significantly reduces convergence time compared to 802.1D by allowing ports to transition directly to forwarding from discarding?
+A) MSTP (802.1s)
+B) PVST+
+C) RSTP (802.1w)
+D) STP (802.1D)
+Correct: C
+Explanation: RSTP (Rapid Spanning Tree Protocol, 802.1w) reduces convergence from the 30-50 second convergence time of 802.1D to sub-second convergence by introducing new port roles (Alternate and Backup) and a proposal/agreement handshake mechanism. MSTP (802.1s) builds on RSTP but maps multiple VLANs to a single spanning tree instance. RSTP's rapid convergence is achieved through active topology negotiation rather than relying solely on timers.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Multiple Spanning Tree Protocol (MSTP, 802.1s) improves upon RSTP by providing which additional capability?
+A) Sub-second failover for a single spanning tree instance
+B) Mapping multiple VLANs to multiple spanning tree instances for load balancing
+C) Automatic trunk negotiation between switches
+D) PoE power budgeting across multiple switches
+Correct: B
+Explanation: MSTP groups VLANs into spanning tree instances (MSTIs), allowing different VLANs to use different forwarding paths, which enables load balancing across redundant links. RSTP provides fast convergence but still runs a single spanning tree for all VLANs, wasting redundant links. MSTP combines RSTP's rapid convergence with the ability to distribute traffic across multiple paths, making it the most scalable and efficient STP variant.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A switch port is configured with port security to allow a maximum of two MAC addresses and to shut down if a violation occurs. An attacker connects a hub with three devices to this port. What will happen?
+A) All three devices will be allowed because hubs do not have MAC addresses
+B) The port will enter err-disable state after detecting a violation
+C) The switch will block only the third device and allow the first two
+D) Port security will be disabled automatically
+Correct: B
+Explanation: When a port security violation occurs (more unique source MACs than the configured maximum), the default violation mode "shutdown" places the port into err-disable state, effectively disabling the port until an administrator manually re-enables it. The switch counts individual MAC addresses from devices behind the hub; since hubs forward frames from all connected devices, each device's MAC is seen on the switch port. Err-disable provides a strong deterrent against unauthorized device connections.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network administrator needs to capture all traffic passing through a switch port connected to a server for security analysis. The packet capture device is connected to a different port on the same switch. Which feature should be configured?
+A) Port security
+B) LACP
+C) SPAN (port mirroring)
+D) Flow control
+Correct: C
+Explanation: SPAN (Switched Port Analyzer), also called port mirroring, copies all frames sent or received on a source port to a designated destination port where a packet capture device or IDS is connected. LACP bundles multiple physical links into a logical channel and is unrelated to traffic monitoring. SPAN allows non-intrusive traffic monitoring without interrupting production traffic, making it essential for security analysis and troubleshooting.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A VoIP phone is connected to a switch port that also provides data connectivity to a PC. Which VLAN feature separates voice traffic from data traffic on the same physical port?
+A) Native VLAN
+B) Voice VLAN
+C) Management VLAN
+D) Private VLAN
+Correct: B
+Explanation: A voice VLAN (also called auxiliary VLAN) is configured on a switch access port to carry tagged VoIP traffic from the IP phone on a dedicated VLAN while the PC's data traffic remains on the untagged access VLAN. The native VLAN carries untagged traffic and is not specific to voice; using it for voice would not provide separation. The voice VLAN allows QoS policies to be applied specifically to voice traffic, ensuring proper prioritisation for time-sensitive call data.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Which IEEE standard defines Power over Ethernet (PoE) that delivers up to 15.4 watts per port to power devices such as IP phones and basic wireless access points?
+A) 802.3bt
+B) 802.3at
+C) 802.3af
+D) 802.3ad
+Correct: C
+Explanation: IEEE 802.3af (PoE) delivers up to 15.4 watts at the switch port (12.95 W at the powered device) and is sufficient for IP phones, basic cameras, and access points. 802.3at (PoE+) doubles the power to 30 watts per port, while 802.3bt (PoE++) supports up to 60 or 90 watts. Knowing the PoE standard determines which devices can be powered; high-power devices like PTZ cameras or newer 802.11ax APs typically require PoE+ or PoE++.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network engineer bundles four Gigabit Ethernet links between two switches into a single logical 4 Gbps link using an IEEE open standard. Which protocol is being used?
+A) LACP (802.3ad)
+B) PAgP
+C) RSTP (802.1w)
+D) CDP
+Correct: A
+Explanation: LACP (Link Aggregation Control Protocol), defined in IEEE 802.3ad (now 802.1AX), is the open standard protocol for negotiating and managing link aggregation (EtherChannel/port-channel) between switches. PAgP (Port Aggregation Protocol) is Cisco proprietary and performs a similar function but is not interoperable with non-Cisco equipment. LACP provides load balancing and redundancy; if one physical link fails, traffic is redistributed across the remaining links without interruption.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Which Cisco proprietary Layer 2 protocol discovers directly connected Cisco devices and provides information such as device type, IP address, and interface details?
+A) LLDP
+B) STP
+C) CDP
+D) LACP
+Correct: C
+Explanation: CDP (Cisco Discovery Protocol) is a Cisco proprietary Layer 2 protocol that runs on Cisco devices and periodically advertises device information to directly connected neighbours, including device type, IOS version, IP address, and interface details. LLDP (Link Layer Discovery Protocol) is the IEEE open standard equivalent (802.1AB) that performs the same function across multi-vendor environments. CDP is enabled by default on Cisco devices and is invaluable for network documentation, but should be disabled on untrusted interfaces for security.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network administrator wants a vendor-neutral neighbour discovery protocol that works across switches and routers from multiple manufacturers. Which protocol should be used?
+A) CDP
+B) STP
+C) LLDP
+D) RSTP
+Correct: C
+Explanation: LLDP (Link Layer Discovery Protocol, IEEE 802.1AB) is the vendor-neutral standard for Layer 2 neighbour discovery, supported by virtually all modern network equipment regardless of manufacturer. CDP is Cisco proprietary and only exchanges information between Cisco devices. LLDP is essential in multi-vendor environments and is also used by LLDP-MED extensions to communicate PoE and voice VLAN information to IP phones.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Jumbo frames on an Ethernet network refer to frames with an MTU larger than the standard 1500 bytes. What is the most common jumbo frame MTU used in storage and data centre networks?
+A) 4096 bytes
+B) 9000 bytes
+C) 1518 bytes
+D) 65535 bytes
+Correct: B
+Explanation: The most common jumbo frame size used in data centre and storage networks (such as iSCSI SANs) is 9000 bytes MTU, which reduces CPU overhead by requiring fewer frames to transmit large amounts of data. 1518 bytes is the standard Ethernet maximum frame size (including the 802.1Q tag), not a jumbo frame. Jumbo frames must be enabled end-to-end on all switches, routers, and NICs in the path, or fragmentation will occur.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Flow control in Ethernet uses which mechanism to signal an overwhelmed device to temporarily pause frame transmission from the sending device?
+A) STP BPDU
+B) PAUSE frames (802.3x)
+C) LACP PDUs
+D) CDP advertisements
+Correct: B
+Explanation: IEEE 802.3x flow control uses PAUSE frames, which a receiving device sends when its buffers are filling, instructing the transmitting device to stop sending for a specified duration. STP BPDUs are used for loop prevention, not flow control. Flow control is particularly important in storage networks and high-speed links where buffer overflow would cause packet drops and TCP retransmissions.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A switch administrator needs to prevent unauthorized devices from connecting to specific switch ports by only allowing specific MAC addresses to communicate. Which feature accomplishes this?
+A) 802.1Q trunking
+B) MAC filtering / port security
+C) SPAN
+D) VLAN tagging
+Correct: B
+Explanation: MAC filtering (implemented through port security) restricts which MAC addresses are permitted to send frames through a switch port, blocking unauthorized devices from communicating. 802.1Q trunking tags frames with VLAN IDs for inter-switch transport and does not restrict device access. Port security can be configured with static MAC addresses or sticky learning, which dynamically learns and locks the first MAC addresses seen on a port.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: An administrator configures PoE+ on a switch to power a PTZ security camera requiring 25 watts. Which IEEE standard supports this power level?
+A) 802.3af
+B) 802.3at
+C) 802.3ab
+D) 802.3bt
+Correct: B
+Explanation: IEEE 802.3at (PoE+) delivers up to 30 watts at the switch port (25.5 W at the powered device), making it suitable for PTZ cameras, dual-radio access points, and other higher-power devices. 802.3af delivers a maximum of 15.4 watts, which is insufficient for 25-watt devices. 802.3bt (PoE++) delivers up to 60-90 watts and would be used for even higher-power devices such as video conferencing endpoints.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network engineer troubleshooting a loop in the network notices that one switch port is in the BLK (blocking) state in STP. What does this mean?
+A) The port has been administratively shut down
+B) The port is receiving BPDUs and is preventing a forwarding loop by not forwarding data frames
+C) The port has failed due to a hardware error
+D) The port is in err-disable state due to a security violation
+Correct: B
+Explanation: A port in STP blocking state receives and processes BPDUs to maintain topology awareness but does not forward data frames, preventing a Layer 2 loop. An administratively shut-down port is in the down/down state, not a STP blocking state. Blocking ports are part of normal STP operation; they represent redundant paths that will transition to forwarding if the active path fails.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: RSPAN extends port mirroring to allow traffic captured on one switch to be monitored on a port located on a different switch. How does RSPAN differ from local SPAN?
+A) RSPAN uses CDP to forward captured frames, while SPAN uses STP
+B) RSPAN carries mirrored traffic across the network using a dedicated RSPAN VLAN over trunk links
+C) RSPAN requires PoE-enabled ports, while SPAN does not
+D) RSPAN only captures ingress traffic, while SPAN captures both ingress and egress
+Correct: B
+Explanation: RSPAN (Remote SPAN) encapsulates mirrored traffic in a dedicated RSPAN VLAN and forwards it across trunk links to a destination port on a remote switch, enabling centralized network monitoring across a multi-switch environment. Standard SPAN only works within a single switch. RSPAN is essential in large campus networks where security monitoring equipment cannot be co-located with every switch.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Which IEEE 802.11 standard operates exclusively in the 5 GHz band, provides a maximum theoretical throughput of 54 Mbps, and was designed to avoid 2.4 GHz interference?
+A) 802.11b
+B) 802.11g
+C) 802.11a
+D) 802.11n
+Correct: C
+Explanation: 802.11a operates exclusively in the 5 GHz band at up to 54 Mbps using OFDM modulation, making it immune to the interference that plagued 2.4 GHz 802.11b deployments. 802.11g operates in the 2.4 GHz band at up to 54 Mbps and is backward compatible with 802.11b. The 5 GHz band used by 802.11a provides more non-overlapping channels than 2.4 GHz but offers less range due to higher frequency signal attenuation.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Which 802.11 standard introduced MIMO (Multiple Input Multiple Output) antenna technology and was the first to operate in both the 2.4 GHz and 5 GHz bands?
+A) 802.11a
+B) 802.11g
+C) 802.11n
+D) 802.11ac
+Correct: C
+Explanation: 802.11n (Wi-Fi 4) introduced MIMO with up to four spatial streams and channel bonding (40 MHz channels), and was the first dual-band standard supporting both 2.4 GHz and 5 GHz operation, with maximum theoretical throughput of 600 Mbps. 802.11ac operates exclusively in the 5 GHz band and introduced MU-MIMO. 802.11n's dual-band capability allowed organizations to deploy both bands simultaneously to improve client density and reduce interference.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless engineer is deploying 802.11ac access points. In which frequency band do these APs operate?
+A) 2.4 GHz only
+B) 5 GHz only
+C) Both 2.4 GHz and 5 GHz
+D) 6 GHz only
+Correct: B
+Explanation: 802.11ac (Wi-Fi 5) operates exclusively in the 5 GHz band, leveraging wider channels (up to 160 MHz), up to eight spatial streams, and MU-MIMO to achieve theoretical speeds up to 6.9 Gbps. 802.11n was the previous dual-band standard; 802.11ac dropped 2.4 GHz support. The 5 GHz band provides more non-overlapping channels and less congestion than 2.4 GHz, but has shorter range, which is mitigated by deploying more APs at closer spacing.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: 802.11ax (Wi-Fi 6) introduces OFDMA to improve performance in dense environments. What does OFDMA enable that 802.11ac's OFDM does not?
+A) Wider channel bonding up to 320 MHz
+B) Operation in the 6 GHz band
+C) Simultaneous transmission to multiple clients within a single channel using sub-carriers
+D) Use of the 2.4 GHz band for backhaul
+Correct: C
+Explanation: OFDMA (Orthogonal Frequency Division Multiple Access) divides a channel into smaller resource units (sub-carriers) allowing an AP to transmit to multiple clients simultaneously within the same channel, improving efficiency in dense environments. OFDM (used in 802.11ac) transmits to only one client at a time per channel. Wi-Fi 6E adds 6 GHz band support, and Wi-Fi 6E/7 introduce 320 MHz channels; 802.11ax itself primarily adds 2.4 and 5 GHz improvements plus OFDMA.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Wi-Fi 6E extends the 802.11ax standard by adding which frequency band that significantly reduces interference?
+A) 900 MHz
+B) 2.4 GHz
+C) 5 GHz
+D) 6 GHz
+Correct: D
+Explanation: Wi-Fi 6E extends Wi-Fi 6 (802.11ax) to the newly available 6 GHz band, which provides up to 1,200 MHz of additional spectrum and 59 new 20 MHz channels that are free from legacy device interference. 2.4 GHz and 5 GHz are already congested with older Wi-Fi generations and non-Wi-Fi devices. The 6 GHz band is a greenfield deployment space where only Wi-Fi 6E and newer devices can connect, ensuring optimal performance.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: In the 2.4 GHz band, how many non-overlapping 20 MHz channels are available in North America?
+A) 1
+B) 3
+C) 11
+D) 23
+Correct: B
+Explanation: The 2.4 GHz band has 11 channels available in North America, but due to channel overlap (each 20 MHz channel overlaps adjacent channels), only channels 1, 6, and 11 are non-overlapping. Deploying APs on the same channel causes co-channel interference, which is worse than adjacent channel interference. The limited number of non-overlapping channels is a major limitation of the 2.4 GHz band, making the 5 GHz band (with up to 25 non-overlapping 20 MHz channels) preferable for high-density deployments.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Channel bonding in 802.11n combines two 20 MHz channels into a 40 MHz channel. What is the primary trade-off of using 40 MHz channels in the 2.4 GHz band?
+A) Reduced data rates compared to 20 MHz channels
+B) Significantly fewer non-overlapping channels, causing increased interference
+C) Incompatibility with 802.11a devices
+D) Inability to use WPA2 security
+Correct: B
+Explanation: In the 2.4 GHz band, using 40 MHz channels leaves only one non-overlapping channel (instead of three), which causes severe co-channel interference in any environment with neighbouring APs or networks. In the 5 GHz band, 40 MHz channels are much more practical due to the greater number of available channels. 802.11n channel bonding is generally recommended only in the 5 GHz band for high-density deployments; 20 MHz channels are preferred in the 2.4 GHz band.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: WPA3 improves upon WPA2 personal mode by implementing which key security enhancement that protects against offline dictionary attacks?
+A) RC4 encryption instead of AES
+B) Simultaneous Authentication of Equals (SAE)
+C) TKIP key mixing
+D) Pre-Shared Key (PSK) with longer passwords
+Correct: B
+Explanation: WPA3-Personal uses SAE (Simultaneous Authentication of Equals, based on the Dragonfly handshake) instead of WPA2's PSK mechanism, providing forward secrecy and protection against offline dictionary attacks even if the passphrase is captured. WPA2's PSK exchange can be captured and subjected to offline brute-force attacks; SAE prevents this because the key derivation cannot be performed without completing the online exchange. WPA3's SAE also protects against KRACK-style key reinstallation attacks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: An enterprise wireless network requires users to authenticate individually using their Active Directory credentials rather than a shared passphrase. Which combination of technologies is most appropriate?
+A) WPA2-Personal with a complex PSK
+B) WPA2-Enterprise with RADIUS and 802.1X
+C) WPA3-Personal with SAE
+D) Open authentication with a captive portal
+Correct: B
+Explanation: WPA2-Enterprise combined with 802.1X and a RADIUS server allows individual user authentication using credentials (username/password or certificates), providing per-user accountability and centralized access control. WPA2-Personal uses a shared passphrase that all users know, making it impossible to revoke access for individual users without changing the passphrase for everyone. WPA2/WPA3-Enterprise with RADIUS is the standard for corporate wireless networks because it integrates with existing directory services and supports certificate-based authentication.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Which EAP type uses client and server certificates for mutual authentication, providing the strongest form of wireless authentication?
+A) PEAP
+B) EAP-MD5
+C) EAP-TLS
+D) LEAP
+Correct: C
+Explanation: EAP-TLS (EAP Transport Layer Security) requires both the client and the RADIUS server to present digital certificates, providing mutual authentication and the strongest security among common EAP types. PEAP (Protected EAP) only requires a server-side certificate and uses a tunnelled inner method (typically MSCHAPv2) for client authentication. EAP-TLS's reliance on client certificates makes it the most secure EAP type but also the most operationally complex due to certificate lifecycle management.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: PEAP encapsulates an inner authentication method within a TLS tunnel. What is the primary advantage of PEAP over EAP-TLS in terms of infrastructure requirements?
+A) PEAP provides faster authentication because it uses fewer round trips
+B) PEAP only requires a server-side certificate, eliminating the need to deploy client certificates
+C) PEAP supports more cipher suites than EAP-TLS
+D) PEAP operates without a RADIUS server
+Correct: B
+Explanation: PEAP creates a TLS tunnel using only a server certificate and then authenticates the client within that tunnel using credentials (typically MSCHAPv2), eliminating the need to issue and manage certificates on every client device. EAP-TLS requires client certificates on every device, which is operationally challenging in large environments without a mature PKI. PEAP is the most widely deployed enterprise EAP type because it balances strong security with simpler client provisioning.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless engineer needs to provide wide coverage in a large open warehouse using a single access point. Which antenna type provides equal signal radiation in all horizontal directions?
+A) Directional
+B) Yagi
+C) Patch
+D) Omnidirectional
+Correct: D
+Explanation: An omnidirectional antenna radiates signal equally in all horizontal directions (360 degrees), making it ideal for covering open areas from a centrally located access point. A Yagi antenna is highly directional with a narrow beam width, making it suitable for point-to-point links or covering a long narrow area. Omnidirectional antennas are the most common type used in indoor enterprise APs because they provide symmetric coverage without requiring precise alignment.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless engineer needs to establish a long-distance point-to-point wireless link between two buildings 2 km apart. Which antenna type is most appropriate?
+A) Omnidirectional
+B) Patch
+C) Yagi
+D) Dipole
+Correct: C
+Explanation: A Yagi antenna is a highly directional antenna with high gain and a narrow beam width, making it ideal for long-distance point-to-point wireless links where signal must be focused in a single direction to maximize range. Omnidirectional antennas waste signal in unwanted directions, reducing effective range and gain. Yagi antennas require precise alignment between the two endpoints but deliver significantly better link budgets than omnidirectional antennas for outdoor point-to-point connections.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: During a wireless site survey, a network engineer uses heat maps to analyse which aspect of the wireless deployment?
+A) IP address allocation for wireless clients
+B) Signal strength and coverage across the physical space
+C) Authentication server availability
+D) DHCP lease times for wireless devices
+Correct: B
+Explanation: Heat maps display the spatial distribution of signal strength (RSSI) across a floor plan or physical area, allowing engineers to identify coverage gaps, dead zones, and areas of excessive overlap. IP address allocation and DHCP are not assessed through heat maps. Heat maps are a critical output of wireless site surveys and are used during both pre-deployment planning (predictive surveys) and post-deployment validation (passive surveys) to ensure adequate coverage.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Which wireless deployment model uses a centralized controller to manage configuration, roaming, and RF policies for all access points in the network?
+A) Autonomous AP
+B) Cloud-managed AP with local switching
+C) Controller-based (thin AP) architecture
+D) Fat AP standalone deployment
+Correct: C
+Explanation: Controller-based (thin AP) architecture centralizes management, roaming decisions, and RF policies on a Wireless LAN Controller (WLC), with APs (thin/lightweight APs) acting as radio frequency front-ends that tunnel client traffic to the controller. Autonomous (fat) APs manage their own configuration independently and are more complex to manage at scale. Controller-based architecture simplifies large-scale deployments, enables seamless roaming between APs, and allows centralized policy enforcement.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Band steering is a wireless feature that encourages compatible clients to connect to which frequency band to improve overall network performance?
+A) 2.4 GHz, because it has longer range
+B) 5 GHz, because it offers more channels and higher throughput
+C) 6 GHz, because it is mandatory for Wi-Fi 6 clients
+D) 900 MHz, because it has better wall penetration
+Correct: B
+Explanation: Band steering detects dual-band capable clients and steers them toward the 5 GHz band, which offers more non-overlapping channels, higher maximum throughput, and less congestion than the 2.4 GHz band. The 2.4 GHz band is reserved by band steering for legacy single-band clients and devices that need greater range. By offloading capable clients to 5 GHz, band steering reduces interference in the 2.4 GHz band and improves the experience for all clients.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: MU-MIMO (Multi-User MIMO) was introduced in which Wi-Fi standard and allows an AP to transmit to multiple clients simultaneously?
+A) 802.11n (Wi-Fi 4) — downlink MU-MIMO
+B) 802.11ac (Wi-Fi 5) — downlink MU-MIMO
+C) 802.11g — bidirectional MU-MIMO
+D) 802.11a — uplink MU-MIMO
+Correct: B
+Explanation: 802.11ac (Wi-Fi 5) Wave 2 introduced downlink MU-MIMO, allowing the AP to transmit to up to four clients simultaneously using spatial multiplexing. 802.11n introduced MIMO but only for single-user (SU-MIMO) operation, where only one client could be served at a time. 802.11ax (Wi-Fi 6) extended MU-MIMO to support both uplink and downlink simultaneously for up to eight clients.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless engineer is performing a pre-deployment site survey. A predictive survey uses which approach to plan AP placement before installation?
+A) Walking the physical space with an AP and laptop to measure actual signal strength
+B) Using software to model RF propagation based on floor plan dimensions and construction materials
+C) Reviewing existing DHCP logs to identify wireless client density
+D) Interviewing users about their current wireless experience
+Correct: B
+Explanation: A predictive (passive) site survey uses RF planning software to model signal propagation based on floor plan geometry, wall materials, and AP specifications without physically deploying equipment. A passive survey walking the space with an AP measures actual RF conditions and is called an active or passive on-site survey. Predictive surveys accelerate deployment planning by identifying optimal AP placement and count before any hardware is purchased or installed.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless client roams from AP1 to AP2 in a controller-based WLAN. What mechanism ensures the client session is maintained without re-authentication?
+A) 802.1Q trunking between APs
+B) RSTP topology recalculation
+C) Fast BSS Transition (802.11r) or controller-managed roaming
+D) WPA3-SAE re-keying
+Correct: C
+Explanation: In a controller-based architecture, the WLC manages client state and can hand off sessions between APs without requiring the client to re-authenticate to the RADIUS server; 802.11r (Fast BSS Transition) further reduces roaming latency by pre-authenticating with candidate APs. 802.1Q trunking is for wired VLAN transport between switches, not wireless roaming. Seamless roaming is critical for real-time applications like VoIP, where even a brief authentication delay would cause a noticeable gap in call audio.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: An 802.11ax access point in a dense stadium deployment uses OFDMA resource units to schedule uplink transmissions from multiple clients simultaneously. This improves which wireless metric most directly?
+A) Maximum single-client throughput
+B) Overall spectral efficiency and capacity in high-density environments
+C) AP transmit power and range
+D) WPA3 authentication speed
+Correct: B
+Explanation: OFDMA's ability to allocate small resource units to multiple clients simultaneously dramatically improves spectral efficiency in high-density environments by reducing idle channel time and overhead from per-client channel access. Maximum single-client throughput may actually be slightly lower with OFDMA since the full channel is shared, but aggregate network capacity increases significantly. OFDMA is the primary reason Wi-Fi 6 provides better real-world performance in crowded environments like stadiums and conference halls even without increasing raw data rates.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A network technician is troubleshooting a bus topology network and discovers that all devices have lost connectivity simultaneously. What is the most likely cause?
+A) A single device has failed
+B) The central switch has failed
+C) A break or termination fault exists in the shared cable
+D) STP has placed all ports in blocking state
+Correct: C
+Explanation: In a bus topology, all devices share a single cable; a break anywhere in the cable or a failed terminator causes signal reflection or disruption that affects all devices simultaneously. A single device failure in any topology only affects that device, not the entire network. This is the fundamental weakness of bus topology and the reason it has been replaced by star topology, where a single link failure only isolates one device.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A router receives a packet destined for 10.30.5.1. The routing table contains entries for 10.30.0.0/16 and 10.30.5.0/24. Which route will the router use?
+A) 10.30.0.0/16, because it was learned first
+B) 10.30.5.0/24, because longest prefix match is always preferred
+C) Both routes simultaneously for load balancing
+D) Neither route; the router will send an ICMP unreachable
+Correct: B
+Explanation: Routers use longest prefix match (most specific route) when multiple routes match a destination; 10.30.5.0/24 has a longer prefix (24 bits) than 10.30.0.0/16 (16 bits), so it is more specific and selected. Administrative distance and metric are only used when multiple routes from different or same sources have equal prefix length. Longest prefix match is the fundamental routing decision algorithm and is why subnetting allows precise traffic steering.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network administrator discovers that a switch is flooding unknown unicast traffic out all ports in a VLAN, causing excessive traffic. What is the most likely cause?
+A) A routing loop in the network
+B) The destination MAC address is not in the switch's MAC address table
+C) STP has placed the port in forwarding state
+D) LACP has failed on the uplink
+Correct: B
+Explanation: When a switch receives a unicast frame with a destination MAC address not found in its MAC address table, it floods the frame out all ports in the same VLAN except the ingress port, a process called unknown unicast flooding. A routing loop occurs at Layer 3 and would not cause MAC address flooding. MAC table flooding can be a symptom of a MAC flooding attack (which deliberately overflows the table with fake entries, causing the switch to flood all traffic).
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A switch administrator has configured VLAN 10 on switchport Gi0/1 as an access port. A new device is connected to the port and cannot communicate with other VLAN 10 devices on a different switch. Inter-switch link is a trunk. What should the administrator verify first?
+A) That VLAN 10 exists in the VLAN database on both switches
+B) That PoE is enabled on the port
+C) That LACP is configured on the access port
+D) That STP is disabled on the trunk
+Correct: A
+Explanation: A VLAN must exist in the VLAN database on a switch before frames tagged for that VLAN will be forwarded over a trunk; if VLAN 10 is not in the allowed VLAN list or does not exist on the remote switch, traffic will be dropped. PoE and LACP are unrelated to VLAN reachability issues. This is a very common troubleshooting scenario: VLAN creation must be verified on all switches in the path, not just the one where the device is connected.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: An OSPF network has several routers on a broadcast multi-access segment. Which two router roles are elected to reduce the number of OSPF adjacencies on the segment?
+A) Active Router and Standby Router
+B) Designated Router (DR) and Backup Designated Router (BDR)
+C) Root Bridge and Backup Root Bridge
+D) ABR and ASBR
+Correct: B
+Explanation: On broadcast multi-access networks (like Ethernet), OSPF elects a DR and BDR to reduce the number of full adjacencies from n(n-1)/2 to 2(n-1); all other routers form adjacencies only with the DR and BDR. Active and Standby Routers are HSRP/VRRP first-hop redundancy roles, not OSPF roles. The DR election is based on the highest OSPF priority (default 1), with the highest Router ID as a tiebreaker.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A technician notices that clients in a conference room 15 metres from an AP consistently get poor performance during large company meetings. The AP is 802.11n operating at 2.4 GHz. What is the most likely cause?
+A) The AP is too close to the clients
+B) Co-channel interference and client density on the congested 2.4 GHz band
+C) The AP's SSID is hidden
+D) EAP-TLS certificates have expired
+Correct: B
+Explanation: The 2.4 GHz band has only three non-overlapping channels, and dense client environments exhaust available airtime quickly due to CSMA/CA contention and potential co-channel interference from neighbouring APs. A hidden SSID would prevent clients from connecting at all, not cause performance degradation during meetings. The solution would be to add a 5 GHz AP for the conference room, use band steering to push clients to 5 GHz, and reduce AP density on 2.4 GHz.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: Which of the following best describes the difference between a LAN and a WAN from a geographic and ownership perspective?
+A) A LAN is always wireless; a WAN always uses fibre optic
+B) A LAN is typically owned and operated by a single organization within a limited area; a WAN spans large distances and often uses service provider infrastructure
+C) A WAN always has higher bandwidth than a LAN
+D) A LAN requires a router; a WAN does not
+Correct: B
+Explanation: A LAN is confined to a building or campus and is typically owned and managed by a single organization, while a WAN connects geographically dispersed locations often using leased lines, MPLS, or internet connections provided by carriers. WANs typically have lower bandwidth at higher cost compared to LANs, not higher bandwidth. This distinction is fundamental to network design because WAN links are usually the bandwidth bottleneck and reliability concern in enterprise networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network uses QoS to guarantee a minimum bandwidth of 256 kbps for VoIP traffic during congestion. Which QoS mechanism provides a minimum bandwidth guarantee?
+A) Traffic policing
+B) Traffic shaping
+C) Low Latency Queuing (LLQ) with bandwidth command
+D) Best-effort forwarding
+Correct: C
+Explanation: LLQ (Low Latency Queuing) with a bandwidth guarantee allocates a minimum reserved bandwidth to a class of traffic and provides absolute priority queuing for time-sensitive traffic like VoIP, ensuring it receives its bandwidth even during congestion. Traffic policing drops or re-marks traffic exceeding a rate limit but does not guarantee bandwidth. LLQ combines a strict priority queue for real-time traffic with class-based weighted fair queuing (CBWFQ) for other traffic classes.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: An administrator wants to see all CDP neighbours on a Cisco switch, including their IP addresses and interface connections. Which command would provide this information?
+A) show ip route
+B) show vlan brief
+C) show cdp neighbors detail
+D) show spanning-tree
+Correct: C
+Explanation: The "show cdp neighbors detail" command displays comprehensive information about directly connected Cisco devices, including their hostname, IP address, platform type, IOS version, and the local and remote interfaces. "show ip route" displays the routing table and provides no CDP information. CDP neighbor details are essential for network discovery and documentation, particularly when physical documentation is incomplete.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless deployment uses autonomous access points. How does managing these APs differ from a controller-based deployment?
+A) Autonomous APs are centrally managed from a single pane of glass
+B) Each autonomous AP must be configured individually, and roaming requires re-authentication
+C) Autonomous APs cannot support WPA2 Enterprise
+D) Autonomous APs automatically synchronize configurations via CAPWAP
+Correct: B
+Explanation: Autonomous (fat) APs are standalone devices that each require individual configuration; they do not have a centralized controller for policy distribution, and client roaming between APs typically requires re-authentication because there is no shared state. Controller-based APs use CAPWAP tunnels to a WLC for centralized management and seamless roaming. Autonomous APs are appropriate for small deployments with few APs, but become impractical and difficult to manage at enterprise scale.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A BGP router receives multiple paths to the same prefix from different peers. BGP selects the best path based on a defined attribute order. Which attribute is checked first in the standard BGP best path selection process?
+A) Local preference
+B) Weight (Cisco proprietary)
+C) AS_PATH length
+D) MED (Multi-Exit Discriminator)
+Correct: B
+Explanation: Cisco's BGP best path selection process begins with Weight (highest preferred), which is a Cisco-proprietary attribute that is locally significant to a single router. Local preference is checked second (higher is preferred) and is propagated within an AS. Knowing the BGP best path selection order is critical for Network+ candidates because it explains how traffic engineering policies are implemented in BGP-based enterprise and ISP networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A Layer 2 switch receives a frame with a destination MAC address of FF:FF:FF:FF:FF:FF. How does the switch handle this frame?
+A) Drops the frame because broadcast addresses are not supported
+B) Forwards the frame to the default gateway only
+C) Floods the frame out all ports in the same VLAN except the ingress port
+D) Forwards the frame only to the device that sent it
+Correct: C
+Explanation: Broadcast frames (destination MAC FF:FF:FF:FF:FF:FF) are flooded out all ports in the same VLAN except the ingress port; this is fundamental Layer 2 switching behaviour for broadcasts. Switches do not filter or drop broadcasts at Layer 2 (only routers segment broadcast domains). This is why VLANs are essential: without VLANs, broadcast traffic from all devices floods the entire switched network, consuming bandwidth on every device.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A company connects its headquarters to a cloud provider using a dedicated private connection rather than the public internet. Which architecture type does this represent?
+A) Peer-to-peer
+B) Direct Connect / private WAN cloud connectivity
+C) Site-to-site VPN over the internet
+D) Autonomous AP deployment
+Correct: B
+Explanation: Direct Connect (AWS) or ExpressRoute (Azure) provides a dedicated private circuit from the customer's premises to the cloud provider's network, bypassing the public internet and providing consistent bandwidth, lower latency, and enhanced security. A site-to-site VPN uses the public internet as the transport medium and is subject to internet congestion and variable performance. Private cloud connectivity is preferred for organizations with latency-sensitive applications or large data volumes that cannot tolerate internet variability.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network engineer configures OSPF and notices that two routers are stuck in EXSTART state. What is the most likely cause?
+A) Mismatched VLAN configurations
+B) MTU mismatch between the two routers' interfaces
+C) Incorrect DSCP markings on OSPF packets
+D) LACP negotiation failure on the link
+Correct: B
+Explanation: OSPF routers get stuck in EXSTART/EXCHANGE state when there is an MTU mismatch on the connected interfaces; one router's Database Description packets may be larger than the other can accept, preventing the database exchange from completing. VLAN mismatches would prevent Layer 2 connectivity entirely, so OSPF would not even begin the adjacency process. MTU mismatch is a common OSPF troubleshooting scenario, and the fix is to either match the MTU on both interfaces or use the "ip ospf mtu-ignore" command.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless client is configured with a static IP address but cannot access the network after connecting to the SSID. Other DHCP clients on the same SSID connect successfully. What is the most likely cause?
+A) WPA3 is not supported by the client
+B) The static IP address is in a different subnet than the wireless VLAN's gateway
+C) The RADIUS server has rejected the client
+D) Band steering has moved the client to an incompatible channel
+Correct: B
+Explanation: If a static IP address is configured with an incorrect subnet mask or in a wrong subnet, the client will be unable to reach the default gateway or other devices on the VLAN, even though the wireless association succeeds. DHCP clients succeed because they receive correct addressing automatically from the DHCP server. This is a common Layer 3 troubleshooting scenario: wireless association (Layer 2) can succeed while Layer 3 connectivity fails due to misconfigured static addressing.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: Which STP port role represents the best path back toward the root bridge on a non-root switch?
+A) Designated port
+B) Alternate port
+C) Root port
+D) Backup port
+Correct: C
+Explanation: The root port is the port on a non-root switch with the lowest-cost path to the root bridge; every non-root switch has exactly one root port, and it is always in the forwarding state. A designated port is the forwarding port on each network segment that sends traffic toward the root bridge. Understanding root port selection is essential for predicting traffic paths and planning STP optimization in redundant switch networks.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A branch office router loses its connection to the OSPF network. The floating static default route with AD 200 becomes active. After OSPF reconverges, what happens to the floating static route?
+A) It remains active alongside the OSPF routes
+B) It is removed from the routing table because the OSPF route (AD 110) is more preferred
+C) It becomes the primary route because static routes are always preferred
+D) It is converted to an OSPF route automatically
+Correct: B
+Explanation: When OSPF reconverges and re-installs the dynamic route with AD 110, the floating static route (AD 200) is removed from the active routing table because routers install only the route with the lowest AD for each prefix. The floating static route remains in the configuration but is not used as long as the preferred dynamic route is present. This is the intended behaviour: floating static routes provide automatic failover without manual intervention.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: An 802.11b device connects to an access point that also serves 802.11g clients. What performance impact does the legacy 802.11b client have on the 802.11g clients?
+A) No impact; 802.11g clients maintain full throughput regardless
+B) The AP switches to 802.11g-only mode and drops the 802.11b client
+C) The 802.11b client causes the AP to use lower data rates and longer protection mechanisms, reducing throughput for all clients
+D) 802.11g clients cannot associate when an 802.11b client is present
+Correct: C
+Explanation: When an 802.11b client connects to a mixed 802.11b/g network, the AP must use CTS-to-Self or RTS/CTS protection mechanisms to ensure 802.11b clients receive frames, which adds overhead and reduces the channel efficiency for all clients including 802.11g devices. The AP does not drop the legacy client; it accommodates it at the expense of network performance. This is why modern networks often disable 802.11b data rates (1, 2, 5.5, 11 Mbps) to improve overall network performance.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: A network administrator enables PortFast on a switch access port connected to a server. What does PortFast do?
+A) It disables STP entirely on the switch
+B) It allows the port to immediately transition to forwarding state, bypassing STP listening and learning states
+C) It enables the port to carry multiple VLANs simultaneously
+D) It enables PoE on the port immediately upon device connection
+Correct: B
+Explanation: PortFast allows a port to skip the STP listening (15 sec) and learning (15 sec) states and immediately enter the forwarding state, eliminating the 30-second delay that would otherwise prevent the connected device from communicating immediately upon connection. PortFast should only be enabled on ports connected to end devices, never on ports connected to other switches, because it cannot detect a topology change that would warrant keeping the port in blocking state. PortFast should always be used with BPDU Guard to shut down the port if a switch is accidentally connected.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network engineer implements QoS DSCP marking and notices that the markings are being reset to default (DSCP 0) at a service provider handoff. What is the most likely reason?
+A) The service provider's router does not support DSCP
+B) The service provider has a policy to remark or ignore customer DSCP markings at the network edge
+C) DSCP markings are stripped when frames traverse a VLAN trunk
+D) WPA3 authentication resets DSCP values
+Correct: B
+Explanation: Many service providers re-mark or ignore customer DSCP values at their network boundary as a policy measure, requiring customers to re-apply QoS markings after the handoff or negotiate a QoS agreement with the provider. DSCP is an IP header field and survives routing and VLAN trunking; it is not stripped at Layer 2 boundaries. End-to-end QoS requires coordination at every network boundary, particularly at service provider handoff points where trust boundaries exist.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: In a client-server network model, which device typically provides centralized authentication, file storage, and print services?
+A) End-user workstation
+B) Dedicated server
+C) Network switch
+D) Wireless access point
+Correct: B
+Explanation: In the client-server model, dedicated servers provide centralized services (authentication via Active Directory, file sharing via SMB, print services via print spooler) that client workstations access over the network. End-user workstations are the clients that request services, not the providers. The client-server model is preferred over peer-to-peer in organizations of any significant size because it centralizes management, improves security, and scales better.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: An administrator wants to prevent unknown devices from connecting by having the switch learn and permanently lock the first MAC address seen on each access port. Which port security feature accomplishes this?
+A) Static MAC address entry
+B) Sticky MAC address learning
+C) MAC filtering with ACL
+D) 802.1Q trunking
+Correct: B
+Explanation: Sticky MAC address learning (also called sticky learning) dynamically learns the first MAC address(es) seen on a port and converts them to secure sticky entries that persist in the running configuration (and optionally the startup config), locking the port to the learned device. Static MAC address entry requires manually specifying each MAC address, which is impractical for large deployments. Sticky learning combines the ease of dynamic learning with the permanence of static entries, making it efficient for locking down access ports at scale.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A wireless client shows a strong RSSI signal but experiences poor throughput. An administrator checks the AP and finds significant retry rates. What is the most likely cause?
+A) The client is using a static IP address
+B) RF interference is causing high error rates and retransmissions
+C) The RADIUS server authentication is timing out
+D) LACP has failed on the AP uplink
+Correct: B
+Explanation: High retry rates despite strong RSSI indicate RF interference causing frame errors rather than signal weakness; the signal is strong enough to connect but corrupted enough to require frequent retransmission, reducing effective throughput. Static IP addressing would not cause retry rates; it would only affect Layer 3 connectivity. RF interference sources such as microwave ovens, cordless phones, and competing Wi-Fi networks are common causes of high retry rates, and can be identified using a wireless spectrum analyzer.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: An administrator needs to verify which routing protocols are running on a Cisco router and view the current routing table. Which two commands would provide this information?
+A) show interfaces and show vlan
+B) show ip protocols and show ip route
+C) show cdp neighbors and show spanning-tree
+D) show port-security and show mac address-table
+Correct: B
+Explanation: "show ip protocols" displays the routing protocols currently configured and running on the router, including their timers, networks, and neighbours; "show ip route" displays the complete routing table with all learned routes. "show cdp neighbors" and "show spanning-tree" are Layer 2 commands used for switch topology, not routing protocol verification. These two commands are the first-line diagnostic tools for verifying routing protocol operation and troubleshooting IP connectivity issues.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: Which wireless security protocol from the WPA3 suite replaces the 4-way handshake with a dragonfly key exchange and provides forward secrecy?
+A) WEP
+B) TKIP
+C) WPA2-PSK
+D) WPA3-SAE
+Correct: D
+Explanation: WPA3-SAE (Simultaneous Authentication of Equals) replaces WPA2's 4-way handshake with the Dragonfly handshake, providing forward secrecy (past sessions cannot be decrypted even if the passphrase is later compromised) and protection against offline dictionary attacks. WEP and TKIP are deprecated and vulnerable to well-known attacks. WPA3-SAE is the current recommended standard for personal Wi-Fi security and is mandatory on Wi-Fi 6 certified devices.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.3 — Configure and deploy common Ethernet switching features
+Question: BPDU Guard is a STP feature that should be enabled on which type of switch ports to prevent unauthorized switches from being connected?
+A) Trunk ports connecting to other switches
+B) Access ports connected to end devices with PortFast enabled
+C) Uplink ports to the distribution layer
+D) Mirror ports running SPAN
+Correct: B
+Explanation: BPDU Guard should be enabled on access ports configured with PortFast; if a BPDU (Bridge Protocol Data Unit) is received on such a port (indicating a switch has been connected), the port is immediately placed in err-disable state. Trunk ports connecting to known switches need to receive BPDUs for STP operation and must not have BPDU Guard. BPDU Guard is a critical security and stability feature that prevents users from inadvertently or maliciously connecting rogue switches that could disrupt the STP topology.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.1 — Compare and contrast various network topologies, architectures, and types
+Question: A technology allows multiple tenant networks to share the same physical network infrastructure while maintaining complete logical isolation. Which technology provides this capability in a service provider environment?
+A) VLAN trunking with 802.1Q
+B) MPLS Layer 3 VPN (L3VPN)
+C) PPPoE dial-up
+D) NFC pairing
+Correct: B
+Explanation: MPLS L3VPN uses VRF (Virtual Routing and Forwarding) tables and MPLS labels to provide complete routing table separation between multiple customer networks sharing the same provider infrastructure. 802.1Q VLAN trunking provides Layer 2 separation within a single organization's network but does not scale to multi-tenant service provider deployments. MPLS L3VPN is the standard enterprise WAN service offered by carriers, allowing hundreds of customers to share the same physical infrastructure with guaranteed isolation.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.2 — Compare and contrast routing technologies and bandwidth management
+Question: A network engineer notices intermittent connectivity loss to a remote site that is connected via OSPF. The OSPF neighbour relationship repeatedly drops and re-establishes. What should be investigated first?
+A) VLAN configuration on the access layer switches
+B) OSPF hello and dead interval timer mismatches between the two routers
+C) PortFast configuration on end-device ports
+D) RADIUS server availability
+Correct: B
+Explanation: OSPF neighbour relationships fail when hello or dead intervals do not match between adjacent routers; if the dead interval expires before a hello is received, the neighbour is declared down and the adjacency resets. VLAN and PortFast configurations do not affect Layer 3 OSPF neighbour relationships. OSPF timers must match on both ends of a link; by default hello=10 seconds and dead=40 seconds on broadcast links, and hello=30 seconds, dead=120 seconds on NBMA links.
+
+Domain: 2.0 Network Implementation
+Sub-objective: 2.4 — Install and configure wireless standards and technologies
+Question: A patch antenna is commonly used in which deployment scenario?
+A) Providing 360-degree horizontal coverage from a ceiling-mounted AP
+B) Providing directional coverage on an exterior wall or in a corridor
+C) Long-distance point-to-point outdoor bridging between buildings several kilometres apart
+D) Creating a personal area network between two smartphones
+Correct: B
+Explanation: A patch antenna is a flat, low-profile directional antenna with moderate gain and a relatively broad beam width (typically 60-90 degrees), commonly mounted on walls or ceilings to provide directed coverage in corridors, along walls, or in specific zones. A Yagi antenna provides much higher gain and a narrower beam for long-distance point-to-point links. Patch antennas are popular in enterprise indoor deployments where directional coverage is needed without the narrow beam of a Yagi.

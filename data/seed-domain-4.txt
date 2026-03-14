@@ -1,0 +1,1399 @@
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A systems administrator is hardening a new Windows workstation before deploying it to an end user. Which action BEST establishes a secure baseline for the device?
+A) Enable the built-in Administrator account and set a strong password
+B) Apply a vendor-approved security configuration benchmark such as CIS Level 1
+C) Install all available software the user may need to minimise future changes
+D) Disable Windows Update to prevent configuration drift
+Correct: B
+Explanation: Applying a published benchmark (e.g., CIS Benchmark Level 1) gives a documented, repeatable secure baseline aligned with industry best practice. Enabling the built-in Administrator account widens the attack surface; pre-installing unnecessary software violates least functionality; disabling Windows Update prevents critical patches.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A company deploys IoT temperature sensors throughout its manufacturing plant. These devices run a proprietary RTOS and cannot be patched. Which control BEST reduces risk?
+A) Enable WPA3 on the sensors and connect them to the corporate Wi-Fi
+B) Place the sensors on an isolated VLAN with strict ACLs limiting inbound and outbound traffic
+C) Require MFA before each sensor transmits data
+D) Install host-based antivirus on each sensor
+Correct: B
+Explanation: Network segmentation via an isolated VLAN with ACLs limits lateral movement and restricts what the unpatched devices can reach. WPA3 alone does not prevent exploitation of RTOS vulnerabilities. MFA is impractical for automated sensor telemetry, and RTOS devices typically cannot run antivirus agents.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: Which wireless security protocol provides simultaneous authentication of equals (SAE) to replace the vulnerable PSK handshake?
+A) WPA2-Enterprise
+B) WPA3-Personal
+C) WPA2-Personal with TKIP
+D) 802.1X with PEAP
+Correct: B
+Explanation: WPA3-Personal introduces SAE, which replaces the four-way handshake and eliminates offline dictionary attacks possible under WPA2-PSK. WPA2-Enterprise and 802.1X with PEAP are EAP-based enterprise frameworks requiring a RADIUS server. WPA2 with TKIP is deprecated and insecure.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A developer submits code that queries a database using user-supplied input. The security team wants to prevent SQL injection without altering the application logic. Which technique is MOST appropriate?
+A) Code signing
+B) Input validation using parameterised queries
+C) Static code analysis
+D) Sandboxing the application at runtime
+Correct: B
+Explanation: Parameterised queries (prepared statements) separate SQL logic from user data, directly preventing SQL injection. Code signing ensures code integrity but does not sanitise input. Static analysis can flag potential issues but does not prevent runtime injection. Sandboxing limits damage but does not stop the injection itself.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: An organisation wants to ensure that mobile devices used for remote work enforce disk encryption, screen lock timeouts, and remote-wipe capability. Which solution addresses all three requirements?
+A) Network Access Control (NAC)
+B) Mobile Device Management (MDM)
+C) Cloud Access Security Broker (CASB)
+D) Data Loss Prevention (DLP)
+Correct: B
+Explanation: MDM provides policy enforcement on mobile endpoints including encryption, lock policies, and remote wipe. NAC controls network admission but not device configuration policies. CASB mediates cloud service access. DLP prevents data exfiltration but does not manage device configuration.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A web application sets an authentication cookie that is accessible via JavaScript. Which cookie attribute should the developer add to reduce the risk of cross-site scripting (XSS) cookie theft?
+A) SameSite=Strict
+B) HttpOnly
+C) Secure
+D) Max-Age=0
+Correct: B
+Explanation: The HttpOnly flag prevents client-side scripts from accessing the cookie, directly mitigating XSS-based cookie theft. SameSite=Strict limits cross-origin requests but does not prevent JavaScript from reading the cookie. Secure ensures the cookie is only transmitted over HTTPS. Max-Age=0 would delete the cookie immediately.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A security engineer is hardening a managed Layer 3 switch. Which action is MOST important to reduce the risk of VLAN hopping attacks?
+A) Enable Spanning Tree Protocol (STP) PortFast on all ports
+B) Disable auto-trunking (DTP) on all access ports and assign them to a non-default VLAN
+C) Configure the switch with SNMPv1 for monitoring
+D) Enable Telnet for remote management instead of SSH
+Correct: B
+Explanation: VLAN hopping via switch spoofing relies on DTP negotiating trunk links. Disabling DTP on access ports and moving them off the default VLAN (VLAN 1) prevents this. PortFast does not prevent VLAN hopping. SNMPv1 and Telnet are insecure management protocols that increase risk rather than reduce it.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A development team asks the security team to test their web application by executing the running application and observing its responses to crafted inputs. Which technique does this describe?
+A) Static code analysis
+B) Dynamic code analysis
+C) Code signing verification
+D) Fuzz testing with source review
+Correct: B
+Explanation: Dynamic analysis tests an application while it is running, sending inputs and observing runtime behaviour. Static analysis examines source code without execution. Code signing verifies authenticity and integrity of compiled code. Fuzz testing is a subset of dynamic testing but paired with "source review" makes the option inaccurate as described.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A company operates ICS/SCADA systems that control physical machinery. A new firmware update is available. Which approach is MOST appropriate before applying the update?
+A) Apply the update immediately to all systems to close the vulnerability
+B) Test the update in an isolated replica environment and coordinate with the ICS vendor before production deployment
+C) Defer all updates indefinitely because SCADA systems should never be changed
+D) Apply the update only to systems that are not currently running
+Correct: B
+Explanation: ICS/SCADA updates can cause unexpected behaviour on proprietary firmware. Testing in an isolated replica and coordinating with the vendor ensures operational continuity. Immediate deployment without testing risks production disruption. Deferring all updates ignores real threats. Applying only to idle systems is insufficient and still skips testing.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: An administrator needs to authenticate wireless users against an existing Active Directory identity store using certificate-based authentication. Which combination is MOST appropriate?
+A) WPA3-Personal with SAE
+B) 802.1X with EAP-TLS and a RADIUS server
+C) WPA2-Personal with AES
+D) MAC address filtering with a pre-shared key
+Correct: B
+Explanation: 802.1X with EAP-TLS uses digital certificates for mutual authentication and integrates with RADIUS, which proxies requests to Active Directory. WPA3/WPA2-Personal use pre-shared keys and do not support per-user certificate authentication. MAC filtering is easily spoofed and is not a strong authentication mechanism.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: Which practice ensures that only approved code is allowed to execute on a server by verifying a cryptographic signature before execution?
+A) Sandboxing
+B) Code signing
+C) Input validation
+D) Static analysis
+Correct: B
+Explanation: Code signing attaches a cryptographic signature to software, allowing the OS or runtime to verify the code's authenticity and integrity before execution. Sandboxing isolates processes after execution. Input validation sanitises user-supplied data. Static analysis reviews source code for flaws but does not enforce runtime execution controls.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A security analyst discovers that a cloud-hosted virtual machine has several unused open ports and an overly permissive security group policy. Which hardening action should be taken FIRST?
+A) Migrate the VM to an on-premises data centre
+B) Remove unnecessary services and restrict the security group to only required ports and source IPs
+C) Enable full disk encryption on the VM
+D) Install an endpoint detection and response agent
+Correct: B
+Explanation: Reducing attack surface by disabling unused services and tightening security group rules directly addresses the identified misconfiguration. Migrating to on-premises does not fix the misconfiguration. Encryption protects data at rest but does not close attack vectors. EDR is a useful control but does not eliminate unnecessary exposure.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A router in a branch office still uses its factory-default credentials and has several unused management protocols enabled. Which TWO actions should be taken to harden the device? (Choose the best single answer representing both)
+A) Change default credentials and disable unused management protocols such as Telnet and HTTP
+B) Enable SNMP v1 for monitoring and keep default credentials for vendor support
+C) Add a second default account for backup access
+D) Enable all management interfaces to ensure administrative flexibility
+Correct: A
+Explanation: Default credentials are a leading cause of router compromise. Disabling unused or insecure protocols (Telnet, HTTP) reduces attack surface. SNMPv1 transmits community strings in cleartext and should be replaced with SNMPv3. Keeping default credentials or adding more default accounts multiplies risk.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: An organisation wants to validate the integrity of an OS image on a server at every boot cycle before the OS loads. Which feature accomplishes this?
+A) Full disk encryption
+B) Secure Boot
+C) Host-based IDS
+D) SELinux
+Correct: B
+Explanation: Secure Boot uses cryptographic signatures stored in firmware to verify that boot components (bootloader, OS kernel) are trusted before they execute. Full disk encryption protects data at rest but does not validate boot integrity. Host-based IDS monitors running processes. SELinux enforces mandatory access controls after boot.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A hospital deploys embedded medical devices that run a fixed firmware version and cannot receive security updates. Which BEST describes the risk classification of these devices?
+A) Low risk because they are on a private network
+B) Legacy or end-of-life embedded systems with elevated risk due to unpatchable vulnerabilities
+C) Moderate risk that can be eliminated by installing antivirus on the devices
+D) No risk because medical devices are air-gapped by regulation
+Correct: B
+Explanation: Embedded and IoT medical devices that cannot be patched retain known vulnerabilities indefinitely, representing elevated and persistent risk. Being on a private network reduces but does not eliminate risk. Most embedded devices cannot run antivirus. Air-gapping is not universally mandated and does not fully eliminate risk either.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company is disposing of old hard drives that contain sensitive HR data. Which method provides the HIGHEST assurance that the data cannot be recovered?
+A) Deleting all files and emptying the Recycle Bin
+B) Reformatting the drives using a quick format
+C) Physical destruction of the drive platters
+D) Overwriting the drive once with zeros
+Correct: C
+Explanation: Physical destruction (shredding, degaussing, disintegrating) renders data unrecoverable. Deleting files and quick formatting only remove directory entries; data remains. A single overwrite may be sufficient for HDDs under most threat models, but physical destruction provides the highest assurance, especially for SSDs where overwrite effectiveness is uncertain.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: Which data sanitization method meets the NIST SP 800-88 definition of "Purge" for solid-state drives?
+A) Overwriting data with a single pass of zeros
+B) Using ATA Secure Erase or cryptographic erase (sanitize command)
+C) Deleting all files and performing a full format
+D) Physically labelling the drive for future reuse
+Correct: B
+Explanation: NIST SP 800-88 defines Purge as applying techniques that protect against laboratory-level attacks. For SSDs, this means ATA Secure Erase, the NVMe Sanitize command, or cryptographic erase (if the drive was encrypted). A single-pass overwrite (Clear) may leave data in remapped blocks on SSDs. Deletion and formatting are insufficient.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: An asset manager discovers that several laptops assigned to employees who left six months ago have not been decommissioned. Which security risk does this PRIMARILY represent?
+A) Increased licensing costs
+B) Ghost or orphaned assets that may still have active network credentials and access rights
+C) Reduced IT asset ROI
+D) Increased warranty costs
+Correct: B
+Explanation: Orphaned assets may retain valid credentials, certificates, or network access that former employees could exploit. This is a key risk of poor de-provisioning. Licensing and ROI impacts are operational concerns. Warranty is unrelated to the security risk described.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company classifies data into four tiers: Public, Internal, Confidential, and Restricted. Which asset management practice ensures each data store is handled appropriately throughout its lifecycle?
+A) Encrypting only Restricted data at rest
+B) Applying data classification labels and enforcing handling procedures matched to each classification level
+C) Storing all data in a single database with role-based access
+D) Archiving all data after 90 days regardless of classification
+Correct: B
+Explanation: Classification labels tied to handling procedures (encryption, access control, retention, disposal) enforce consistent protection proportional to sensitivity. Encrypting only the highest tier leaves lower tiers exposed. A single database with RBAC may be appropriate for storage but does not address full lifecycle handling. Uniform archiving ignores classification-specific retention requirements.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: Which process formally documents the transfer of responsibility for an IT asset from procurement through disposal, ensuring accountability at every stage?
+A) Data classification
+B) Asset tagging and lifecycle tracking
+C) Change management
+D) Configuration management database (CMDB) entry
+Correct: B
+Explanation: Asset tagging combined with lifecycle tracking records custodianship from acquisition to disposal. Data classification identifies sensitivity. Change management governs changes to systems. A CMDB stores configuration data but does not inherently track physical custody or disposal certification.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A compliance audit finds that retired servers were sold at auction without any data sanitization. Which two compliance and legal risks does this PRIMARILY create?
+A) Increased hardware procurement costs and supply chain risk
+B) Potential regulatory violation and exposure of sensitive or personally identifiable information
+C) Loss of vendor warranty and support contracts
+D) Increased power consumption in the data centre
+Correct: B
+Explanation: Disposing of unsanitized drives containing PII or regulated data can violate GDPR, HIPAA, and other regulations, resulting in fines and data breach notifications. Hardware costs, warranties, and power consumption are not security or compliance risks from this scenario.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company requires a certificate of destruction (CoD) from its third-party shredding vendor. What does this document provide?
+A) Confirmation that the hardware was resold at fair market value
+B) Legal evidence that media was destroyed in compliance with the organisation's data sanitization policy
+C) A warranty that the replacement hardware is defect-free
+D) An inventory list of all software installed on destroyed devices
+Correct: B
+Explanation: A CoD from an accredited vendor serves as auditable evidence that destruction was performed according to policy, supporting regulatory compliance and legal defence. It does not relate to resale value, hardware warranties, or software inventories.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: An organisation uses a barcode system to track physical IT assets. An asset was recently moved between departments but the system was not updated. Which risk does this create?
+A) The asset may be used outside its approved security zone without controls appropriate for its classification
+B) The asset will automatically be decommissioned by the CMDB
+C) The asset's software licences will be revoked
+D) The asset will receive duplicate patches
+Correct: A
+Explanation: Inaccurate asset location tracking means the asset may be in an environment with inappropriate physical or logical security controls. CMDB systems do not auto-decommission assets. Software licences are managed separately. Duplicate patching is a minor operational issue, not a primary security risk.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: Which data sanitization method is MOST appropriate when a company needs to reassign an internal hard drive to a different employee for continued use?
+A) Physical destruction
+B) Degaussing
+C) Clearing (overwriting with approved patterns)
+D) Purging via cryptographic erase for reuse in a classified environment
+Correct: C
+Explanation: Clearing (overwriting) renders data unrecoverable with standard tools and leaves the drive functional for reuse — ideal for reassignment within the same organisation. Physical destruction and degaussing render the drive unusable. Cryptographic erase (Purge) is more thorough and appropriate for high-security reuse scenarios, but Clearing meets the stated requirement.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: During procurement, a company discovers a network switch arrived with unexpected firmware pre-installed that differs from the manufacturer's published image. Which supply chain security concern does this represent?
+A) End-of-life hardware
+B) A counterfeit or tampered device that may contain a hardware backdoor
+C) Misconfigured default settings requiring hardening
+D) An unsupported vendor requiring an alternative source
+Correct: B
+Explanation: Firmware that differs from the manufacturer's published image on a new device is a hallmark of supply chain tampering or counterfeiting, potentially introducing persistent backdoors. This is different from misconfigured defaults, EOL status, or vendor support issues.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company maintains a list of approved software titles that employees are permitted to install. Which asset management concept does this BEST represent?
+A) Software asset lifecycle management
+B) An approved software allowlist (application whitelist)
+C) A software bill of materials (SBOM)
+D) A vulnerability disclosure programme
+Correct: B
+Explanation: An approved software list that restricts what can be installed is an application allowlist (whitelist), a key asset management and endpoint hardening control. An SBOM lists components within a specific software product. A vulnerability disclosure programme governs how researchers report bugs. Lifecycle management tracks software from procurement to retirement.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: Which action during the decommissioning phase of an asset's lifecycle is SPECIFICALLY required to protect cryptographic keys stored on a hardware security module (HSM)?
+A) Overwrite the HSM with zeros before returning it to the vendor
+B) Perform a secure key zeroisation procedure to erase all stored key material
+C) Reformat the HSM using the operating system's format utility
+D) Remove the HSM from the rack and store it in a locked cabinet
+Correct: B
+Explanation: HSMs are designed to be tamper-resistant and require a formal zeroisation (key destruction) procedure to cryptographically erase stored key material. OS format utilities cannot access HSM internal storage. Overwriting with zeros does not work on cryptographic hardware. Physical storage in a cabinet retains the key material.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company assigns each asset to a specific owner who is responsible for authorising access and ensuring appropriate handling. Which principle does this BEST reflect?
+A) Separation of duties
+B) Asset custodianship and ownership accountability
+C) Least privilege
+D) Need-to-know
+Correct: B
+Explanation: Assigning an owner to each asset creates accountability for access decisions and handling procedures throughout the asset's lifecycle — a core asset management principle. Separation of duties, least privilege, and need-to-know are access control principles, not asset ownership concepts.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: An organisation disposes of tape backups that contain five-year-old financial records required by regulation to be retained for seven years. Which two risks does early disposal create?
+A) Increased tape storage costs and risk of hardware failure
+B) Regulatory non-compliance and potential inability to support legal discovery
+C) Risk of data corruption and backup software licensing issues
+D) Increased energy consumption and carbon footprint
+Correct: B
+Explanation: Destroying records before the mandated retention period violates regulations (e.g., SOX, GDPR) and can prevent the organisation from producing records in legal proceedings (e-discovery). Storage costs and environmental impact are not the primary security or compliance risks.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: Which term describes a formal process that ensures every component in a software package — including open-source libraries — is inventoried and its provenance verified?
+A) Software asset management (SAM)
+B) Software bill of materials (SBOM)
+C) Configuration baseline
+D) Security information and event management (SIEM)
+Correct: B
+Explanation: An SBOM is a structured inventory of all software components, dependencies, and their sources, enabling vulnerability tracking and supply chain transparency. SAM focuses on licence compliance. A configuration baseline defines approved settings. SIEM aggregates and correlates security events.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A security team runs a monthly authenticated vulnerability scan across all servers. After the most recent scan, a critical CVSS 9.8 vulnerability is identified on a payment processing server. What is the FIRST action the team should take?
+A) Immediately patch the server during business hours
+B) Confirm the vulnerability is not a false positive by validating it against additional sources
+C) Archive the scan report and schedule a patch for next quarter
+D) Replace the server with a new one
+Correct: B
+Explanation: Confirmation is the first step in vulnerability analysis — validating that the finding is accurate before acting. Patching critical production systems without validation risks unnecessary downtime. Archiving defers critical action irresponsibly. Replacing the server is disproportionate as the initial response.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A vulnerability scanner reports a critical finding on a system that the organisation's team believes has a compensating control in place. Which concept allows the organisation to formally acknowledge the vulnerability while documenting why immediate remediation is not required?
+A) Risk transference
+B) A vulnerability exception or exemption
+C) Vulnerability suppression in the scanner
+D) A service level agreement (SLA) adjustment
+Correct: B
+Explanation: A formal exception/exemption documents that a vulnerability exists, identifies the compensating controls in place, and records management acceptance of residual risk. Risk transference shifts financial impact but does not address the vulnerability. Simply suppressing scanner output hides the finding without accountability. SLA adjustments are contractual, not vulnerability management artefacts.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: An organisation wants to understand how attackers view its external attack surface. Which vulnerability identification method BEST achieves this?
+A) An internal authenticated network scan
+B) An external penetration test conducted from an unauthenticated attacker perspective
+C) A code review of all internal applications
+D) An annual risk assessment
+Correct: B
+Explanation: An external penetration test simulates an unauthenticated attacker targeting the organisation's perimeter, revealing the attack surface as seen from the internet. Internal authenticated scans show vulnerabilities visible from inside. Code reviews focus on application logic. Risk assessments are broader management activities, not technical attack surface assessments.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: Which CVSS metric reflects how much of the affected system an attacker can control if the vulnerability is successfully exploited?
+A) Attack Vector (AV)
+B) Scope (S)
+C) Integrity Impact (I)
+D) Privileges Required (PR)
+Correct: C
+Explanation: Integrity Impact measures the degree to which successful exploitation affects the integrity (and implicitly, control) of the system's data and functions. Attack Vector describes the exploitation path. Scope indicates whether the vulnerability can affect resources beyond the vulnerable component. Privileges Required reflects pre-exploitation access needed.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A security analyst is prioritising a long list of vulnerabilities. A critical CVSS 9.1 vulnerability exists on an isolated development server with no internet access and no sensitive data. A high CVSS 7.8 vulnerability exists on a customer-facing payment server. Which should be remediated FIRST?
+A) The CVSS 9.1 vulnerability because it has the highest base score
+B) The CVSS 7.8 vulnerability because environmental factors increase its effective risk
+C) Both simultaneously because severity scores are the only priority factor
+D) Neither; both require a business case approval before any action
+Correct: B
+Explanation: CVSS base scores do not account for environmental context. The payment server's exposure and data sensitivity elevate the business risk of the 7.8 vulnerability above the isolated dev server's 9.1. Effective vulnerability prioritisation combines base score with environmental and threat context.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: Which activity allows external security researchers to report vulnerabilities to an organisation under defined rules of engagement in exchange for potential recognition or reward?
+A) Penetration testing
+B) Bug bounty programme
+C) Threat intelligence subscription
+D) Red team exercise
+Correct: B
+Explanation: Bug bounty programmes formally invite external researchers to identify and responsibly disclose vulnerabilities, often with monetary rewards. Penetration tests are contracted, scoped engagements. Threat intelligence subscriptions provide external data feeds. Red team exercises are internal or contracted adversary simulations.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: After applying a patch to remediate a vulnerability, which step validates that the remediation was successful?
+A) Reviewing the patch release notes from the vendor
+B) Rescanning the affected system and verifying the vulnerability no longer appears
+C) Updating the asset inventory to reflect the patch version
+D) Notifying management that patching is complete
+Correct: B
+Explanation: Rescanning and confirming the vulnerability is absent is the direct technical validation of remediation. Release notes confirm intent, not success. Updating inventory is good practice but does not validate remediation. Management notification is an administrative step, not a validation activity.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A vulnerability assessment reveals a critical flaw in an OT system that cannot be patched without shutting down production for two weeks. The organisation accepts the risk but implements a firewall rule to restrict inbound traffic to the OT segment. Which response strategy does this represent?
+A) Remediation via patching
+B) Risk transference via cyber insurance
+C) Compensating control to reduce exposure while accepting residual risk
+D) Vulnerability suppression
+Correct: C
+Explanation: When immediate patching is not feasible, a compensating control (firewall rule) reduces the exploitability and exposure. This is a recognised vulnerability response strategy paired with documented risk acceptance. Transference shifts financial risk to a third party. Suppression hides findings without addressing risk.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: An analyst is reviewing a vulnerability report and notices several findings flagged as informational with no CVSS score. Which statement BEST describes how these should be handled?
+A) Informational findings can be safely ignored because they carry no exploitable risk
+B) Informational findings should be reviewed in context; some may indicate misconfigurations that elevate other risks
+C) Informational findings must be patched before any other finding
+D) Informational findings are always false positives and should be suppressed
+Correct: B
+Explanation: Informational findings often reveal misconfigurations, exposed banners, or weak settings that, while not directly exploitable alone, can assist attackers or compound other vulnerabilities. Ignoring them categorically misses important context. They are not automatically false positives, nor do they universally outrank higher-severity findings.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: Which threat intelligence source aggregates community-submitted vulnerability data including vendor advisories, CVE details, and severity scoring?
+A) The organisation's own SIEM
+B) The National Vulnerability Database (NVD)
+C) A commercial endpoint detection and response (EDR) tool
+D) An internal patch management console
+Correct: B
+Explanation: The NVD is a US government repository that aggregates CVE data, CVSS scores, and vendor advisories, serving as a primary threat feed for vulnerability management. A SIEM correlates internal events. EDR focuses on endpoint threat detection. A patch console manages deployment but relies on external vulnerability data.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A security team conducts a comprehensive review of all processes, policies, and technical controls to identify gaps in the organisation's security posture. Which vulnerability identification method is described?
+A) Vulnerability scanning
+B) System and process audit
+C) Bug bounty programme
+D) Dynamic application security testing (DAST)
+Correct: B
+Explanation: A system and process audit reviews policies, procedures, and technical controls holistically to identify gaps, non-compliance, and weaknesses. Vulnerability scanning is automated and technically focused. Bug bounty involves external researchers. DAST tests running applications specifically, not processes or policies.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: Which metric in the CVSS environmental score allows an organisation to increase the severity of a vulnerability based on the criticality of the affected system to business operations?
+A) Exploit Code Maturity (ECM)
+B) Modified Attack Vector (MAV)
+C) Report Confidence (RC)
+D) Asset Value / Modified Impact metrics
+Correct: D
+Explanation: CVSS environmental scoring includes Modified Impact metrics and Confidentiality/Integrity/Availability Requirements that allow organisations to adjust base scores based on the asset's value and criticality. ECM and Report Confidence are temporal metrics. Modified Attack Vector adjusts exploitability, not asset importance.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: An organisation's risk tolerance requires that critical vulnerabilities on internet-facing systems be remediated within 15 days of discovery. This requirement is documented in which type of artefact?
+A) A vulnerability exception request
+B) A service level agreement (SLA) or vulnerability management policy with defined SLOs
+C) A CVSS score report
+D) A penetration test scope of work
+Correct: B
+Explanation: Remediation timeframes based on risk tolerance are documented in the vulnerability management policy or associated SLAs/SLOs. An exception request documents why a deadline cannot be met. A CVSS report shows severity, not policy. A pen test SOW defines engagement scope.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A company wants to understand whether a newly disclosed vulnerability in a third-party library is present in its production applications. Which approach MOST efficiently identifies affected systems?
+A) Conduct a tabletop exercise with development and operations teams
+B) Query the software bill of materials (SBOM) and cross-reference with the CVE
+C) Run a full penetration test of all applications
+D) Wait for the vendor to issue an advisory
+Correct: B
+Explanation: An SBOM catalogues all software components and dependencies. Cross-referencing it with a CVE rapidly identifies which applications contain the vulnerable library, enabling targeted response. A tabletop exercise is a planning activity. A full pen test is time-consuming and indirect. Waiting for advisories delays action.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A security operations centre receives thousands of log events per hour from diverse sources. Which tool aggregates these logs, correlates events across sources, and generates prioritised security alerts?
+A) Network Access Control (NAC)
+B) Security Information and Event Management (SIEM)
+C) Endpoint Detection and Response (EDR)
+D) Data Loss Prevention (DLP)
+Correct: B
+Explanation: A SIEM aggregates logs from multiple sources, normalises them, applies correlation rules, and generates alerts. NAC controls network access. EDR focuses on endpoint-level threat detection and response. DLP prevents sensitive data from leaving the organisation.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: An analyst notices that the SIEM is generating hundreds of alerts per day for a benign scheduled task running on all workstations. Which alert management action should be taken?
+A) Disable the SIEM rule permanently
+B) Tune the alert rule to exclude the known-good scheduled task while preserving detection of anomalous behaviour
+C) Increase the alert threshold to reduce all alerts by 50%
+D) Assign all alerts to a junior analyst for manual review
+Correct: B
+Explanation: Alert tuning refines detection logic to reduce false positives from known-good activity without disabling the rule entirely. Disabling the rule creates a detection gap. Increasing thresholds indiscriminately may suppress real threats. Manual review of hundreds of known-false alerts wastes analyst time.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: Which monitoring technology collects IP flow records — including source/destination IP, port, protocol, and byte counts — from network devices to detect anomalous traffic patterns?
+A) SNMP traps
+B) NetFlow
+C) Syslog
+D) DLP
+Correct: B
+Explanation: NetFlow (and its variants sFlow, IPFIX) captures metadata about network conversations without capturing full packet payloads, enabling traffic baselining and anomaly detection. SNMP traps are event notifications from devices. Syslog forwards device log messages. DLP inspects data content for policy violations.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A SIEM alert fires indicating 500 failed login attempts against the same account within one minute. The analyst determines this is a genuine brute-force attempt. What is the NEXT step in alert response?
+A) Archive the alert and document it for the quarterly report
+B) Validate the alert, then follow the incident response playbook — typically containing the account and blocking the source IP
+C) Tune the SIEM rule to reduce the alert count
+D) Escalate directly to law enforcement
+Correct: B
+Explanation: After validating a true positive alert, the analyst follows the IR playbook: contain the threat (lock the account, block the IP) before the attacker succeeds. Archiving defers action. Tuning would suppress a legitimate true positive. Law enforcement escalation comes later, if at all, after internal containment.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: Which tool allows a security team to automatically respond to SIEM alerts by executing predefined playbooks, such as blocking an IP address or isolating a host?
+A) Vulnerability scanner
+B) Security Orchestration, Automation, and Response (SOAR)
+C) Intrusion Prevention System (IPS)
+D) NetFlow analyser
+Correct: B
+Explanation: SOAR platforms integrate with security tools and execute automated playbooks in response to SIEM alerts, enabling fast, consistent incident response. Vulnerability scanners identify weaknesses. An IPS blocks traffic inline but cannot orchestrate multi-tool response workflows. NetFlow analysers provide traffic visibility, not response automation.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: An organisation wants to monitor removable media usage and detect when employees copy sensitive files to USB drives. Which tool is MOST appropriate?
+A) SIEM
+B) NetFlow
+C) Data Loss Prevention (DLP)
+D) Antivirus
+Correct: C
+Explanation: DLP monitors and controls data in motion, at rest, and in use — including USB/removable media. It can detect and block sensitive data transfers. SIEM correlates logs but relies on DLP or endpoint agents for this specific detection. NetFlow monitors network traffic, not endpoint file operations. Antivirus detects malware, not data exfiltration patterns.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A network device sends an asynchronous notification to the monitoring server when its CPU utilisation exceeds 90%. Which protocol is being used?
+A) NetFlow
+B) Syslog
+C) SNMP trap
+D) ICMP
+Correct: C
+Explanation: SNMP traps are unsolicited alert messages sent by network devices to an SNMP manager when a defined threshold is crossed. NetFlow exports traffic flow data. Syslog sends text-based log messages. ICMP is used for connectivity testing (ping) and network error reporting, not threshold notifications.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: Which SIEM capability enables analysts to identify related events across different log sources — such as linking a failed VPN login to a subsequent successful internal RDP session — to reveal a potential attack chain?
+A) Log aggregation
+B) Alert and event correlation
+C) Log archiving
+D) Vulnerability scanning integration
+Correct: B
+Explanation: Event correlation links related events from disparate sources over time to identify attack patterns that are invisible when viewing sources in isolation. Log aggregation collects and normalises logs. Archiving stores logs for retention. Vulnerability scanning integration enriches asset context but does not correlate events.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: An organisation must retain all security logs for seven years to meet a regulatory requirement. Which monitoring concept addresses this requirement?
+A) Alert tuning
+B) Log archiving with integrity protection
+C) Real-time alerting
+D) NetFlow sampling
+Correct: B
+Explanation: Long-term log archiving with write-once or cryptographically protected storage meets retention compliance requirements. Alert tuning reduces noise. Real-time alerting addresses immediate response. NetFlow sampling provides traffic telemetry, not log retention.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A security analyst quarantines a workstation after a SIEM alert identifies it as communicating with a known command-and-control (C2) domain. Which alert response phase does this action represent?
+A) Alert validation
+B) Root cause analysis
+C) Containment via quarantine
+D) Eradication
+Correct: C
+Explanation: Quarantine is a containment action that isolates the affected system to prevent further C2 communication or lateral movement. Alert validation precedes containment. Root cause analysis and eradication occur after containment. These steps follow the incident response lifecycle.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A security team wants to monitor for sensitive data leaving the network via encrypted web traffic. Which capability must be combined with DLP to make this effective?
+A) NetFlow analysis
+B) TLS/SSL inspection (decryption proxy)
+C) SNMP polling
+D) Syslog forwarding
+Correct: B
+Explanation: DLP cannot inspect encrypted payloads without first decrypting them. A TLS inspection proxy decrypts traffic, passes it to DLP for inspection, then re-encrypts it. NetFlow provides metadata only. SNMP and syslog are monitoring/logging protocols that do not inspect application payload content.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: An analyst reviewing SIEM dashboards notices a sudden spike in DNS queries from a single workstation to many different external domains. Which threat does this pattern MOST likely indicate?
+A) A DDoS attack originating from the workstation
+B) DNS tunnelling or malware beaconing using fast-flux C2 infrastructure
+C) A misconfigured DNS forwarder
+D) Normal web browsing activity
+Correct: B
+Explanation: High volumes of DNS queries to diverse external domains from a single host are a strong indicator of DNS tunnelling (data exfiltration via DNS) or malware using fast-flux C2 to evade detection. DDoS would target external victims, not generate diverse queries. A misconfigured forwarder would affect multiple hosts. Normal browsing generates far fewer DNS queries.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: An organisation has a new SIEM deployment and initially receives 10,000 alerts per day, nearly all false positives. Which strategy BEST addresses this problem over time?
+A) Replace the SIEM with a simpler logging solution
+B) Iteratively tune alert thresholds, add exceptions for known-good behaviour, and enrich alerts with contextual data
+C) Disable all alerting and rely on daily log reviews
+D) Hire additional analysts to review every alert manually
+Correct: B
+Explanation: Iterative alert tuning — refining thresholds, whitelisting known-good activity, and adding enrichment — progressively reduces false positive rates without sacrificing detection capability. Replacing the SIEM or disabling alerts sacrifices security visibility. Hiring analysts to review all alerts is unsustainable and does not fix the underlying noise problem.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A security team wants to measure the volume of network traffic between specific host pairs to detect large data transfers indicative of exfiltration. Which data source is MOST useful?
+A) Windows Event Logs
+B) NetFlow records
+C) DNS logs
+D) Application error logs
+Correct: B
+Explanation: NetFlow records include source/destination IP, port, protocol, and byte/packet counts, making them ideal for detecting volumetric anomalies such as large data transfers. Windows Event Logs focus on system and authentication events. DNS logs show name resolution activity. Application error logs record software errors, not traffic volumes.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A company wants to prevent employees from uploading sensitive documents to personal cloud storage services like Dropbox. Which solution addresses this at the network layer for cloud services?
+A) Endpoint-based DLP agent
+B) Cloud Access Security Broker (CASB)
+C) Firewall port blocking
+D) URL filter blocking all HTTPS traffic
+Correct: B
+Explanation: A CASB sits between users and cloud services, enforcing policies such as blocking uploads of sensitive data to unsanctioned cloud applications. Endpoint DLP agents also help but may be absent on unmanaged devices. Blocking all HTTPS traffic is impractical. Port blocking cannot distinguish between allowed and disallowed cloud services on the same port.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An organisation's IDS is generating alerts for known attack signatures but takes no automated action to stop the attacks. A security engineer wants to automatically block matching traffic. Which change should be made?
+A) Replace the IDS with a SIEM
+B) Switch from IDS to IPS mode or deploy an inline IPS
+C) Enable NetFlow on the IDS
+D) Install an EDR agent on all endpoints
+Correct: B
+Explanation: An IDS (Intrusion Detection System) alerts only; an IPS (Intrusion Prevention System) is deployed inline and can actively block matching traffic. Switching to IPS mode or deploying an inline IPS is the appropriate change. A SIEM correlates events but does not block traffic. NetFlow provides flow data. EDR protects endpoints, not network traffic inline.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A Windows domain administrator wants to enforce a consistent security configuration across all workstations, including disabling USB storage and enforcing screensaver locks. Which tool is MOST appropriate?
+A) Mobile Device Management (MDM)
+B) Group Policy Objects (GPOs) deployed via Active Directory
+C) Security Information and Event Management (SIEM)
+D) Host-based firewall rules applied locally
+Correct: B
+Explanation: GPOs allow centralised policy enforcement across AD-joined Windows systems, including device restrictions, screensaver settings, and security configurations. MDM is typically used for mobile/non-domain devices. SIEM monitors but does not enforce configurations. Local firewall rules require individual management and are inconsistent.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A Linux server hosts a web application and the security team wants to enforce mandatory access controls that confine the web server process to only the files and ports it needs, even if it is compromised. Which technology should be implemented?
+A) AppArmor or SELinux
+B) iptables port filtering
+C) Sudo privilege restrictions
+D) File system encryption
+Correct: A
+Explanation: SELinux and AppArmor are Mandatory Access Control (MAC) frameworks that confine processes to predefined security policies, limiting blast radius if the process is exploited. iptables filters network traffic but does not restrict process-level file access. Sudo restricts command execution. Encryption protects data at rest, not process containment.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An organisation wants to block users from accessing websites categorised as gambling and social media during work hours. Which control implements this?
+A) DNS sinkholing
+B) Web content/URL filtering
+C) Firewall ACL blocking port 443
+D) DLP policy on email
+Correct: B
+Explanation: URL/web content filters categorise websites and enforce policy-based access controls, blocking specific categories like gambling or social media. DNS sinkholing redirects malicious domains to a safe IP. Blocking port 443 would prevent all HTTPS traffic. DLP on email addresses data exfiltration via email, not web browsing.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A security team wants to detect and prevent email phishing attacks, spam, and malicious attachments before they reach users' inboxes. Which control should be implemented?
+A) Endpoint antivirus
+B) A secure email gateway with anti-spam, sandboxing, and DMARC/DKIM/SPF enforcement
+C) User awareness training only
+D) Network-based IPS
+Correct: B
+Explanation: A secure email gateway inspects inbound email for spam, malicious links, and attachments (via sandboxing) and enforces sender authentication protocols (DMARC/DKIM/SPF) to block spoofed emails. Endpoint AV catches some threats but is a last line of defence. Training reduces user susceptibility but does not technically block attacks. Network IPS operates at the packet level and is not email-aware.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A financial institution requires that all employee laptops be verified as compliant — with current patches, encryption, and approved antivirus — before being allowed to connect to the corporate network. Which solution enforces this?
+A) Cloud Access Security Broker (CASB)
+B) Network Access Control (NAC)
+C) Intrusion Prevention System (IPS)
+D) Data Loss Prevention (DLP)
+Correct: B
+Explanation: NAC enforces posture assessment at network connection time, blocking or quarantining devices that fail compliance checks (missing patches, disabled AV, lack of encryption). CASB controls cloud service access. IPS inspects and blocks malicious traffic. DLP prevents data exfiltration. None of the others enforce device compliance at network admission.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An analyst wants to detect changes to critical system files — such as /etc/passwd and /etc/shadow — that may indicate an attacker has added a backdoor account. Which control should be deployed?
+A) Log aggregation via syslog
+B) File Integrity Monitoring (FIM)
+C) Endpoint antivirus
+D) Network-based IPS
+Correct: B
+Explanation: FIM establishes cryptographic hashes of critical files at a known-good baseline and alerts when those hashes change, detecting unauthorised modifications. Syslog captures events but does not specifically monitor file changes. Antivirus detects malware signatures. Network IPS does not monitor file system state.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A company's firewall ruleset has grown to over 500 rules accumulated over years. An audit finds many rules are redundant, contradictory, or permit overly broad traffic. What should be done?
+A) Replace the firewall with a next-generation firewall (NGFW)
+B) Conduct a firewall rule review and clean-up to remove redundant, shadowed, and overly permissive rules
+C) Add more deny rules at the bottom of the ruleset
+D) Migrate all rules to a cloud firewall without review
+Correct: B
+Explanation: A rule review removes redundant, shadowed (never-matched), or overly permissive rules, applying least privilege to network access. This is a configuration hygiene activity, not a hardware problem. Adding deny rules at the bottom has no effect if existing rules already permit traffic. Migrating without review carries all existing problems to the new platform.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An organisation wants to redirect queries for known malicious domains to a safe IP address to prevent endpoints from connecting to C2 servers. Which DNS-based control achieves this?
+A) DNSSEC
+B) DNS sinkholing
+C) Split-horizon DNS
+D) DNS over HTTPS (DoH)
+Correct: B
+Explanation: DNS sinkholing returns a controlled IP address (typically a security monitoring server) for known-malicious domains, blocking C2 communication and identifying infected hosts. DNSSEC validates DNS response integrity. Split-horizon DNS serves different answers to internal vs. external queries. DoH encrypts DNS queries but does not block malicious domains.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A company issues smartphones to sales staff. The IT team wants to remotely wipe a device if it is lost, enforce PIN complexity, and prevent the installation of unapproved applications. Which solution provides all three capabilities?
+A) CASB
+B) MDM (Mobile Device Management)
+C) NAC
+D) Web content filter
+Correct: B
+Explanation: MDM provides remote wipe, PIN/password policy enforcement, and application management (allowlisting/blocklisting) for mobile devices. CASB governs cloud application access. NAC controls network admission. Web content filters restrict browsing categories.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An EDR solution on a compromised endpoint automatically kills a malicious process, quarantines the associated files, and sends telemetry to the SIEM. Which EDR capability does this represent?
+A) Alert correlation
+B) Automated threat containment via behavioural detection and response
+C) Vulnerability scanning
+D) Log aggregation
+Correct: B
+Explanation: EDR platforms continuously monitor endpoint activity, detect malicious behaviour (not just known signatures), and can automatically respond — killing processes, quarantining files, and isolating hosts — while forwarding rich telemetry. Alert correlation is a SIEM function. Vulnerability scanning is a separate tool. Log aggregation collects but does not respond.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A company implements a DLP policy that scans all outbound emails for patterns matching credit card numbers and blocks the message if a match is found. An employee is sending a valid sales report that contains a masked card number. The DLP blocks the email as a false positive. Which adjustment should be made?
+A) Disable the DLP policy for the sales team
+B) Refine the DLP policy regex and add an exception for masked/tokenised card number formats
+C) Encrypt all emails to bypass DLP inspection
+D) Require all employees to use personal email for sensitive data
+Correct: B
+Explanation: Refining the detection pattern to exclude masked or tokenised formats (e.g., ****-****-****-1234) reduces false positives while preserving detection of actual full card numbers. Disabling the policy for a team creates a security gap. Encrypting emails to bypass DLP is a policy violation and security risk. Personal email for sensitive data violates acceptable use policy.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: A company's NGFW has application awareness enabled. An analyst wants to block the use of TOR browser while allowing normal HTTPS traffic. Which firewall capability enables this granular control?
+A) Stateful packet inspection
+B) Application-layer (Layer 7) filtering based on deep packet inspection
+C) MAC address filtering
+D) Port-based ACL blocking port 9001
+Correct: B
+Explanation: NGFW application-layer filtering uses DPI to identify application signatures regardless of port, enabling blocking of TOR while permitting other HTTPS traffic. Stateful inspection tracks connection state but cannot distinguish applications on the same port. MAC filtering controls physical access. Blocking port 9001 alone is insufficient as TOR can use other ports.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company's HR system automatically creates a user account, assigns role-based group memberships, and provisions application access when a new employee is hired. Which IAM process is described?
+A) Identity proofing
+B) Automated user provisioning
+C) Privilege escalation
+D) Federated identity
+Correct: B
+Explanation: Automated provisioning creates accounts and assigns appropriate access rights based on role at the time of hire, enforcing least privilege and reducing manual error. Identity proofing verifies the person's claimed identity during onboarding. Privilege escalation is an attack technique. Federated identity enables cross-organisation SSO.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: An employee moves from the finance department to the marketing department. Their old finance application access is not removed. Six months later, they still have access to payroll data. Which IAM failure does this represent?
+A) Privilege creep due to improper access review and de-provisioning
+B) Separation of duties violation
+C) Incorrect MFA configuration
+D) Password policy non-compliance
+Correct: A
+Explanation: Privilege creep occurs when users accumulate access rights over time without removal of old rights upon role changes. This is an access review and de-provisioning failure. Separation of duties refers to splitting critical tasks. MFA and password policy are authentication controls, not access review failures.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company uses SAML to allow employees to authenticate once with their corporate identity provider and gain access to multiple SaaS applications without re-entering credentials. Which IAM concept is described?
+A) Multi-factor authentication
+B) Federated identity with Single Sign-On (SSO) using SAML
+C) Mandatory Access Control (MAC)
+D) Privileged Access Management (PAM)
+Correct: B
+Explanation: SAML is an XML-based standard for exchanging authentication and authorisation data between an identity provider (IdP) and service providers, enabling federated SSO. MFA adds additional authentication factors. MAC is an access control model. PAM manages privileged accounts and sessions.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A user receives a one-time passcode generated by an authenticator app on their smartphone every 30 seconds. Which MFA factor type does this represent?
+A) Something you know
+B) Something you have
+C) Something you are
+D) Somewhere you are
+Correct: B
+Explanation: A TOTP (Time-based One-Time Password) generated by an authenticator app is a possession factor — something you have (your phone/app). A password is something you know. Biometrics (fingerprint, retina) are something you are. Location-based controls are somewhere you are.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: An access control model grants permissions based on the data owner's discretion rather than a centralised policy. A file owner can grant or revoke access to their files. Which model is described?
+A) Mandatory Access Control (MAC)
+B) Role-Based Access Control (RBAC)
+C) Discretionary Access Control (DAC)
+D) Attribute-Based Access Control (ABAC)
+Correct: C
+Explanation: In DAC, the resource owner determines who can access their resources, granting permissions at their discretion. MAC uses centrally defined labels that neither users nor resource owners can override. RBAC grants access based on job roles. ABAC uses dynamic attributes such as time, location, and classification.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A government agency classifies information as Top Secret, Secret, and Unclassified. Users are granted clearances and can only access data at or below their clearance level. Which access control model is in use?
+A) Discretionary Access Control (DAC)
+B) Role-Based Access Control (RBAC)
+C) Mandatory Access Control (MAC)
+D) Rule-Based Access Control
+Correct: C
+Explanation: MAC uses centrally administered classification labels (Top Secret, Secret, Unclassified) and clearance levels; users cannot override these controls. DAC lets owners set permissions. RBAC is based on job roles. Rule-Based Access Control uses defined rules (e.g., time-of-day) rather than data classification labels.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company uses OAuth 2.0 to allow a third-party application to access a user's data on another service without the user sharing their password with the third party. Which IAM framework is described?
+A) SAML 2.0
+B) OAuth 2.0 delegated authorisation
+C) OpenID Connect (OIDC) for authentication
+D) RADIUS
+Correct: B
+Explanation: OAuth 2.0 is a delegated authorisation framework that allows a third-party application to act on behalf of a user by obtaining a scoped access token, without sharing credentials. SAML handles authentication assertions. OIDC is an identity layer built on OAuth 2.0 for authentication (not just authorisation). RADIUS is a AAA protocol for network access.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A database administrator account requires access to production databases for emergency break-glass procedures. Normally the account is disabled. Which PAM control does this represent?
+A) Just-in-time (JIT) privileged access
+B) Privilege creep management
+C) Multi-factor authentication for admins
+D) Federated identity management
+Correct: A
+Explanation: JIT privileged access enables accounts (or elevated permissions) only when needed and disables them immediately after, reducing the window of exposure for high-risk credentials. Privilege creep is an uncontrolled accumulation of access. MFA adds authentication factors. Federated identity is for cross-domain SSO.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company policy requires that users create passwords of at least 12 characters containing uppercase, lowercase, numbers, and symbols, and that they cannot reuse any of their last 10 passwords. Which password controls are described?
+A) Password length, complexity, and history requirements
+B) Password expiration and account lockout policy
+C) Multi-factor authentication and password vaulting
+D) Single sign-on and federated authentication
+Correct: A
+Explanation: The scenario describes password length (12+ chars), complexity (character class requirements), and history (no reuse of last 10). Expiration defines how often passwords must be changed. Lockout limits failed attempts. MFA and SSO are separate authentication mechanisms.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A healthcare portal requires users to authenticate with a username/password and then verify their identity using a fingerprint scanner. Which MFA factor type does the fingerprint represent?
+A) Something you know
+B) Something you have
+C) Something you are
+D) Somewhere you are
+Correct: C
+Explanation: A fingerprint is a biometric — a physical characteristic of the user — classified as something you are. A password is something you know. A hardware token is something you have. Location-based verification is somewhere you are.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A cloud application grants access based on a combination of user department, device compliance status, and time of day. Which access control model does this BEST represent?
+A) Mandatory Access Control (MAC)
+B) Role-Based Access Control (RBAC)
+C) Attribute-Based Access Control (ABAC)
+D) Discretionary Access Control (DAC)
+Correct: C
+Explanation: ABAC evaluates multiple dynamic attributes (department, device posture, time) simultaneously to make access decisions, enabling fine-grained, contextual control. MAC uses fixed classification labels. RBAC uses job roles. DAC uses owner-assigned permissions. ABAC's flexibility supports zero trust architectures.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A privileged access management solution records all keystrokes, commands, and screen activity during administrator sessions to a remote server and stores them in tamper-evident logs. Which PAM capability is described?
+A) Just-in-time access provisioning
+B) Session recording and privileged session management (PSM)
+C) Password vaulting
+D) Multi-factor authentication for privileged accounts
+Correct: B
+Explanation: Session recording (PSM) captures administrator activity during privileged sessions for accountability, forensic review, and compliance. JIT access controls when accounts are active. Password vaulting stores and rotates credentials. MFA verifies identity at login but does not record session activity.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: An organisation conducts quarterly access reviews in which managers certify that each team member's system access is still appropriate for their role. Which IAM activity does this describe?
+A) User provisioning
+B) Identity proofing
+C) Access recertification (access review)
+D) Role-based access control implementation
+Correct: C
+Explanation: Access recertification (or access review/certification) is a periodic process in which approvers validate that each user's access rights remain appropriate. Provisioning creates accounts. Identity proofing verifies identity at onboarding. RBAC is an access control model, not a review activity.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: An organisation stores privileged account passwords in an encrypted vault that automatically rotates them after each use and requires MFA to retrieve them. Which PAM control is described?
+A) Privileged session recording
+B) Just-in-time access
+C) Password vaulting with automated rotation
+D) Access recertification
+Correct: C
+Explanation: Password vaulting stores privileged credentials encrypted and can automatically rotate them post-use, preventing credential reuse and limiting exposure. Session recording captures activity. JIT controls when access is granted. Recertification validates ongoing access appropriateness.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company's identity proofing process requires new remote employees to upload a government-issued ID and participate in a live video verification before an account is created. Which purpose does this serve?
+A) Ensuring the new hire can use the VPN
+B) Confirming that the person claiming an identity is who they say they are before provisioning credentials
+C) Verifying that the employee's device meets security requirements
+D) Enrolling biometric factors for future MFA
+Correct: B
+Explanation: Identity proofing validates the real-world identity of an individual before provisioning accounts or credentials, reducing the risk of fraudulent account creation. It is not about device compliance (NAC), VPN access, or biometric enrolment, though biometrics may be a separate step.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A security team uses a SOAR platform to automatically create an incident ticket, look up the offending IP in a threat intelligence database, and escalate to a tier-2 analyst if the IP is known malicious — all within seconds of a SIEM alert firing. Which benefit of automation does this BEST illustrate?
+A) Standardised infrastructure configuration
+B) Reduced reaction time and analyst workforce multiplication
+C) Continuous integration and deployment
+D) Employee retention improvement
+Correct: B
+Explanation: Automated playbooks execute complex, multi-step responses in seconds, dramatically reducing reaction time and multiplying the effective capacity of the security team. Standardised infrastructure configs relate to provisioning automation. CI/CD is a DevSecOps concept. Employee retention is an indirect benefit, not what is demonstrated here.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A cloud team uses infrastructure-as-code templates to automatically deploy new virtual machines with pre-approved security group rules, encryption, and logging enabled. Which automation benefit does this BEST represent?
+A) Reduced employee attrition
+B) Enforcing security baselines and standard infrastructure configurations at scale
+C) Faster incident ticket escalation
+D) Improved physical security posture
+Correct: B
+Explanation: IaC templates ensure every deployed resource starts with a compliant, secure configuration, enforcing baselines consistently at scale. This eliminates configuration drift caused by manual processes. Reduced attrition is an indirect HR benefit. Ticket escalation is an IR automation use case. Physical security is unrelated.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: When an employee is terminated, an automated workflow immediately disables their Active Directory account, revokes their VPN certificate, removes their cloud application licences, and submits a ticket to retrieve their equipment. Which automation use case is described?
+A) Continuous integration and testing
+B) Automated user de-provisioning
+C) Security group rule enforcement
+D) Escalation playbook
+Correct: B
+Explanation: Automated de-provisioning ensures all access is revoked immediately upon termination, eliminating the window of exposure created by manual processes. CI/CT is a software development practice. Security group enforcement controls network access. Escalation playbooks route incidents to the correct team.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A DevSecOps pipeline automatically runs static analysis, dependency scanning, and security unit tests on every code commit before allowing a merge to the main branch. Which automation concept does this represent?
+A) Automated incident response
+B) Continuous integration with automated security testing
+C) Automated log archiving
+D) SOAR playbook execution
+Correct: B
+Explanation: Embedding security testing in CI pipelines (SAST, SCA, security unit tests) catches vulnerabilities at the point of code change — shift-left security. This is continuous integration with automated security testing. SOAR handles incident response. Log archiving manages retention. CI/CT is distinct from SOAR playbooks.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A cloud platform's security automation detects that a newly deployed EC2 instance was launched without encryption. The automation immediately terminates the instance and alerts the team. Which concept does this represent?
+A) Automated threat hunting
+B) Security guardrail enforcement
+C) Vulnerability scanning
+D) Incident triage playbook
+Correct: B
+Explanation: Security guardrails are automated preventive controls that enforce mandatory policies (encryption, logging, approved regions) and remediate or block non-compliant resources automatically. Threat hunting is proactive. Vulnerability scanning identifies weaknesses. Incident triage processes detected events; guardrails prevent non-compliant deployments.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A security team uses APIs to integrate their SIEM, threat intelligence platform, ITSM ticketing system, and firewall — enabling automated data sharing and response actions across tools. Which automation concept does this represent?
+A) Manual playbook execution
+B) Security orchestration via API integrations
+C) Network segmentation
+D) Identity federation
+Correct: B
+Explanation: Orchestration connects disparate security tools via APIs so they share data and trigger actions across the stack, creating automated, end-to-end workflows. Manual playbooks require human execution at each step. Network segmentation is an architectural control. Identity federation is an IAM concept.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: Which benefit of security automation MOST directly allows a small security team to manage the same workload as a much larger team?
+A) Improved employee retention
+B) Workforce multiplication (acting as a force multiplier)
+C) Reduced infrastructure costs
+D) Standardised vulnerability scoring
+Correct: B
+Explanation: Automation acts as a force multiplier by handling repetitive, high-volume tasks — triage, enrichment, containment — allowing a small team to maintain coverage equivalent to a much larger manual team. Retention, cost reduction, and vulnerability scoring are secondary or separate benefits.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A security automation system is designed to block an IP address based on threat intelligence feeds. However, the threat feed incorrectly flags a partner organisation's IP, causing legitimate traffic to be blocked for six hours. Which risk of automation does this scenario highlight?
+A) Automation is always less reliable than manual processes
+B) Automation can amplify the impact of incorrect data or logic errors at machine speed
+C) Threat intelligence feeds should never be integrated with automation
+D) Firewalls should not be controlled via APIs
+Correct: B
+Explanation: Automation executes at machine speed, meaning errors in input data or logic propagate and cause widespread impact before humans can intervene. This is a known risk that must be mitigated through testing, validation steps, and human-in-the-loop controls for high-impact actions. The answer is not that automation is always worse — it is that error amplification is a specific risk to manage.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A company automatically provisions cloud security groups with only the ports required for each application tier, using infrastructure-as-code. Which security principle does this automation BEST enforce?
+A) Defence in depth
+B) Least privilege applied to network access
+C) Non-repudiation
+D) Data sovereignty
+Correct: B
+Explanation: Automatically provisioning security groups with only necessary ports enforces network least privilege — limiting each tier to its required communications — consistently and at scale. Defence in depth is a broader strategy. Non-repudiation ensures actions are attributable. Data sovereignty concerns data residency requirements.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A company's security automation reduces the mean time to detect (MTTD) and mean time to respond (MTTR) to security incidents by automatically correlating and triaging alerts. Which business benefit does this MOST directly produce?
+A) Lower infrastructure capital expenditure
+B) Reduced attacker dwell time and minimised breach impact
+C) Improved application performance
+D) Reduced licence costs for security tools
+Correct: B
+Explanation: Faster detection and response directly reduces the window of time attackers have to operate inside the environment (dwell time), limiting the damage they can cause. Capital expenditure, application performance, and licence costs are not directly related to MTTD/MTTR improvements.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A security engineer argues that automating repetitive tasks like log rotation, alert triage, and patch status reporting will free analysts to focus on more complex investigations. Which human-centric benefit of automation does this describe?
+A) Improved regulatory compliance
+B) Enhanced employee job satisfaction and retention through reduction of toil
+C) Increased hardware utilisation
+D) Reduced need for security training
+Correct: B
+Explanation: Removing repetitive, low-value toil through automation allows analysts to engage in higher-value work, improving job satisfaction and reducing burnout-driven turnover — a real workforce benefit cited in automation frameworks. Compliance, hardware utilisation, and training are separate concerns.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A cloud-native application uses auto-scaling to spin up additional containers during peak traffic. The security team wants to ensure that all new containers automatically receive the correct security agent and logging configuration. Which automation technique ensures this?
+A) Manual agent installation by the operations team
+B) Baking security agents and logging configuration into the approved container image (golden image)
+C) Running a vulnerability scan on each new container after launch
+D) Notifying the security team when new containers launch
+Correct: B
+Explanation: Embedding security agents and logging into the approved base container image (golden image) ensures every auto-scaled instance is compliant from first launch with no manual intervention. Manual installation cannot keep pace with auto-scaling. Scanning after launch finds issues but does not prevent non-compliant starts. Notification requires manual follow-up.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A SOAR playbook automatically sends an SMS alert to the on-call engineer and creates a P1 incident ticket when a ransomware behavioural indicator fires on an endpoint. Which automation use case is demonstrated?
+A) Automated user provisioning
+B) Automated alert escalation and ticket creation
+C) Continuous security testing
+D) Infrastructure guard rails
+Correct: B
+Explanation: The playbook demonstrates automated escalation (SMS to on-call) and ticket creation in the ITSM tool — removing manual steps from the critical path during a high-severity incident. User provisioning is an IAM use case. Continuous testing is a DevSecOps concept. Guard rails prevent non-compliant resource deployments.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the security implications of proper hardware, software, and data asset management
+Question: An organisation needs to ensure its automated patch deployment system is itself protected from tampering. Which security control ensures the integrity of the automation pipeline?
+A) Encrypting patch binaries with a symmetric key
+B) Signing patch packages and verifying signatures before deployment, with access to the pipeline restricted by MFA
+C) Running the patch server on an isolated VLAN
+D) Monitoring patch deployment logs in the SIEM
+Correct: B
+Explanation: Signing patch packages (code signing) and requiring verified signatures before deployment prevents tampered or malicious packages from being deployed. MFA on pipeline access prevents unauthorised modifications. VLAN isolation and SIEM monitoring are useful layers but do not directly ensure the integrity of the packages being deployed.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A security team is discussing what they would do if a ransomware attack encrypted all file servers. No actual incident has occurred. Which IR training activity is described?
+A) Penetration testing
+B) Tabletop exercise
+C) Live fire simulation with production systems
+D) Vulnerability assessment
+Correct: B
+Explanation: A tabletop exercise is a discussion-based activity where participants walk through a hypothetical scenario to identify gaps in plans and decision-making, without taking real actions. Penetration testing is a technical test. A live fire simulation with production systems would be disruptive and is rarely used. Vulnerability assessments identify weaknesses, not IR plan gaps.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: Following a data breach, the legal team places a hold on all backup tapes and email archives, preventing them from being modified or deleted. Which forensic/legal activity does this represent?
+A) Chain of custody
+B) Legal hold
+C) Evidence acquisition
+D) E-discovery production
+Correct: B
+Explanation: A legal hold (litigation hold) is a directive to preserve potentially relevant electronically stored information (ESI) in anticipation of litigation or investigation, preventing destruction or alteration. Chain of custody tracks evidence handling. Acquisition is the act of collecting evidence. E-discovery production is the delivery of collected materials to requesting parties.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: During the analysis phase of an incident, a forensic analyst creates a write-blocked bit-for-bit copy of a compromised hard drive before examining it. Which principle does this MOST directly preserve?
+A) Non-repudiation
+B) Integrity of original evidence through forensic imaging
+C) Confidentiality of collected evidence
+D) Chain of custody documentation
+Correct: B
+Explanation: Forensic imaging with a write blocker creates a bit-for-bit copy, preserving the original's integrity so analysis is performed on the copy and the original is admissible as unaltered evidence. Non-repudiation is about attributing actions. Confidentiality limits access. Chain of custody documents who handled evidence, not how the copy was made.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A SOC analyst detects that a server is actively exfiltrating data to an external IP. The analyst's FIRST priority under the NIST IR framework should be to:
+A) Identify the root cause of the compromise
+B) Contain the incident to prevent further data loss
+C) Notify executive leadership
+D) Eradicate the malware from the server
+Correct: B
+Explanation: After detection and analysis confirm an active incident, containment is the immediate priority to stop ongoing harm (data exfiltration). Root cause analysis and eradication follow containment. Executive notification is important but occurs in parallel with or after initiating containment. Acting to eradicate before containing may allow continued exfiltration.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: After a phishing campaign compromised 12 employee accounts, the security team rebuilds the affected systems from clean images and resets all compromised credentials. Which IR phase does this represent?
+A) Containment
+B) Eradication
+C) Recovery
+D) Lessons learned
+Correct: B
+Explanation: Eradication removes the threat from the environment — rebuilding from clean images and resetting credentials eliminates the attacker's access. Containment isolated the incident. Recovery restores systems to normal operation. Lessons learned reviews what happened to improve future response.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: After resolving a ransomware incident, the IR team holds a post-incident review meeting, documents what worked and what failed, and updates the IR plan and playbooks accordingly. Which IR phase is described?
+A) Recovery
+B) Eradication
+C) Lessons learned
+D) Preparation
+Correct: C
+Explanation: Lessons learned (post-incident review) is the final IR phase in which the team documents the timeline, evaluates response effectiveness, and improves plans, playbooks, and controls. Recovery restores operations. Eradication removes the threat. Preparation establishes IR capabilities before incidents occur.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A threat hunter proactively searches through network logs looking for signs of lateral movement that SIEM alerts have not flagged. Which IR-related activity is described?
+A) Vulnerability assessment
+B) Threat hunting
+C) Penetration testing
+D) Incident triage
+Correct: B
+Explanation: Threat hunting is a proactive, analyst-driven search for threats that have evaded automated detection. It differs from reactive IR (responding to alerts), vulnerability assessment (identifying weaknesses), and penetration testing (simulated attacks with scope and rules of engagement).
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A forensic investigator must prove that digital evidence collected from a server was not altered between collection and court presentation. Which forensic practice accomplishes this?
+A) Legal hold notification
+B) Hashing the evidence at collection and verifying the hash at each transfer point (chain of custody with integrity verification)
+C) Encrypting all evidence with AES-256
+D) Storing evidence on write-protected media only
+Correct: B
+Explanation: Hashing evidence at collection and recording the hash at each handoff (chain of custody) provides cryptographic proof of integrity. A changed hash proves tampering. Legal hold prevents destruction but does not prove integrity. Encryption protects confidentiality. Write-protected media prevents further changes but does not prove the original was unaltered before media was applied.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: An organisation discovers that an attacker had persistent access to their network for 90 days before detection. Which IR phase should have been strengthened to detect the intrusion earlier?
+A) Eradication
+B) Recovery
+C) Detection and analysis
+D) Lessons learned
+Correct: C
+Explanation: A 90-day dwell time indicates a failure in the detection and analysis phase — the organisation's monitoring, alerting, or threat hunting capabilities were insufficient to identify the attacker's presence. Eradication and recovery occur after detection. Lessons learned addresses improvements post-incident.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: During a simulated IR exercise, team members execute the exact tools and procedures they would use in a real incident, but against a dedicated test environment. Which type of exercise is described?
+A) Tabletop exercise
+B) Full-scale simulation exercise
+C) Vulnerability assessment
+D) Purple team engagement
+Correct: B
+Explanation: A simulation (or functional/full-scale) exercise has participants execute real procedures and tools in a test environment, providing higher fidelity than a tabletop discussion. A tabletop is discussion-only. Vulnerability assessment is a security testing activity. A purple team is a collaborative red/blue team exercise, not an IR simulation per se.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: After a web application breach, a forensic analyst needs to determine the initial point of entry. Which activity does this represent?
+A) Eradication
+B) Root cause analysis
+C) Evidence acquisition
+D) Legal hold
+Correct: B
+Explanation: Root cause analysis identifies the initial vulnerability or failure (root cause) that allowed the incident to occur. This informs eradication and prevents recurrence. Eradication removes the threat. Evidence acquisition collects artefacts. Legal hold preserves evidence for legal proceedings.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A company's incident response plan includes a defined communications tree specifying who is notified at each stage of an incident, including legal, PR, and executive leadership. During which IR phase is this plan MOST relevant?
+A) Eradication
+B) Recovery
+C) Preparation
+D) Lessons learned
+Correct: C
+Explanation: Defining the communications tree (roles, notification procedures, escalation paths) is a preparation activity completed before incidents occur. While the communications plan is executed during an incident, its creation belongs to preparation. Eradication removes threats. Recovery restores services. Lessons learned improves future preparation.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A forensic investigator collects volatile data from a running server — RAM contents, running processes, and network connections — before imaging the disk. Why is this the correct order?
+A) RAM data is encrypted and must be collected before disk imaging decrypts it
+B) Volatile data is lost when the system is powered off, so it must be collected first following the order of volatility
+C) Disk imaging corrupts RAM contents if performed first
+D) Regulations require collecting RAM before disk in all forensic cases
+Correct: B
+Explanation: The order of volatility dictates that the most transient data (RAM, network state, running processes) must be collected first because it is destroyed when the system is powered down. Disk data persists through power cycles. RAM encryption and disk imaging corruption are not accurate explanations. Regulations vary by jurisdiction.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: An analyst needs to produce log exports, email archives, and database records in response to a civil lawsuit. Which legal process governs this activity?
+A) Legal hold
+B) Chain of custody
+C) Electronic discovery (e-discovery)
+D) Evidence preservation
+Correct: C
+Explanation: E-discovery is the formal legal process of identifying, collecting, and producing electronically stored information in response to litigation or regulatory requests. Legal hold preserves relevant data. Chain of custody tracks evidence handling. Evidence preservation is a broader concept; e-discovery is the specific legal process described.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst is investigating a suspected malware infection on a Windows workstation. Which log source would show details of processes created by the malware, including parent-child process relationships?
+A) Firewall logs
+B) Windows Security Event Log (Event IDs 4688 / Sysmon Event ID 1)
+C) NetFlow records
+D) Application error logs
+Correct: B
+Explanation: Windows Security Event ID 4688 (or Sysmon Event ID 1) records process creation events including command-line arguments and parent process information — critical for tracing malware execution chains. Firewall logs show network connections. NetFlow shows traffic metadata. Application error logs record software faults.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: A security analyst is investigating a possible data exfiltration event. Which data source would show the volume of data transferred from an internal host to an external IP over the past 24 hours?
+A) Windows Event Logs
+B) NetFlow records
+C) Application logs
+D) DNS logs
+Correct: B
+Explanation: NetFlow records include byte and packet counts for each flow between source and destination, making them ideal for quantifying data volumes transferred during an exfiltration event. Windows Event Logs capture system and authentication events. Application logs focus on application behaviour. DNS logs show name resolution queries.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: During an investigation, an analyst needs to identify which user account was used to authenticate to a Windows server at 2:17 AM. Which log source contains this information?
+A) IDS/IPS logs
+B) Windows Security Event Log (Event ID 4624 — successful logon)
+C) NetFlow records
+D) Firewall logs
+Correct: B
+Explanation: Windows Security Event ID 4624 records successful logon events, including the username, logon type, source IP, and timestamp. IDS/IPS logs record anomalous traffic. NetFlow captures network flow metadata. Firewall logs show permitted/denied connections but typically not user identity at logon.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst wants to determine whether a malicious script attempted to resolve a known malware C2 domain from a compromised host. Which log source is MOST relevant?
+A) Firewall deny logs
+B) DNS query logs from the internal DNS resolver
+C) NetFlow byte count records
+D) Windows application event logs
+Correct: B
+Explanation: DNS query logs from the internal resolver capture every name resolution request, showing which hosts queried which domains and when — directly revealing C2 domain lookup attempts. Firewall deny logs show blocked connections by IP/port. NetFlow shows traffic volume. Windows application logs record application-specific events, not DNS queries.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: A SOC team wants to understand the full sequence of events during an intrusion, from initial access through persistence to data exfiltration. Which single data source, when available, provides the most complete payload-level picture?
+A) NetFlow records
+B) Full packet capture (PCAP)
+C) SIEM aggregated alerts
+D) Endpoint process logs
+Correct: B
+Explanation: Full packet capture records every byte of every packet, providing complete payload visibility for reconstruction of attacker activities including commands, files transferred, and credentials. NetFlow provides metadata only. SIEM alerts are correlation outputs, not raw events. Endpoint process logs show host activity but not network payload content.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst is reviewing IDS/IPS logs and sees alerts for port scanning activity originating from an internal IP address. Which FIRST investigative step should the analyst take?
+A) Block the internal IP at the firewall immediately
+B) Correlate the alerts with firewall logs and endpoint logs to determine whether the IP is a legitimate scanner or a compromised host
+C) Ignore the alerts because internal scanners are normal
+D) Escalate directly to law enforcement
+Correct: B
+Explanation: Internal port scanning could be authorised (a vulnerability scanner) or a sign of a compromised host conducting reconnaissance. Correlating with firewall and endpoint logs identifies the host, its purpose, and whether the activity is authorised. Immediate blocking could disrupt legitimate scanning. Ignoring misses real threats. Law enforcement is premature.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: A security analyst uses a vulnerability scanner's automated report to identify all systems missing a critical patch after a zero-day advisory is released. Which data source is being used?
+A) IDS/IPS alert log
+B) Automated vulnerability scan report
+C) NetFlow summary
+D) Windows Event Log
+Correct: B
+Explanation: Automated vulnerability scan reports identify systems with missing patches, misconfigurations, or known vulnerabilities across the network. IDS/IPS logs detect exploitation attempts. NetFlow provides traffic data. Windows Event Logs record system and security events, not patch inventory.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst reviewing firewall logs notices repeated connection attempts from an external IP to port 3389 (RDP) on a DMZ server, all denied. What does this pattern MOST likely indicate?
+A) A misconfigured internal application
+B) An automated scan or brute-force attempt targeting RDP from an external threat actor
+C) Normal backup traffic from a partner organisation
+D) A DNS amplification attack
+Correct: B
+Explanation: Repeated denied connections to port 3389 from an external IP are a classic signature of RDP brute-force attempts or automated scanning by an external threat actor. Internal misconfigurations would originate internally. Backup traffic from a partner would typically be authorised and from a known IP. DNS amplification targets UDP port 53.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An organisation's SIEM dashboard shows an unusual spike in authentication failures across 20 different systems within a two-minute window, all from the same user account but different source IPs. Which attack does this pattern MOST suggest?
+A) Credential stuffing from a single compromised host
+B) Distributed password spraying or an impossible travel / account takeover indicator
+C) A legitimate user who forgot their password
+D) A misconfigured authentication service
+Correct: B
+Explanation: Authentication failures across many systems from different IPs for the same account in a short window suggests distributed password spraying or an account takeover attempt using a botnet. A single forgotten password generates failures on one or two systems from the user's own IP. A misconfigured service would affect all users consistently.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: A forensic analyst needs to determine the geographic location and ISP of a remote attacker based on packet captures. Which metadata field in the PCAP is MOST useful for this initial step?
+A) TCP sequence numbers
+B) Source IP address of the attacker's packets
+C) HTTP User-Agent string
+D) TLS cipher suite negotiated
+Correct: B
+Explanation: The source IP address in captured packets can be correlated with WHOIS/GeoIP databases to identify the attacker's ISP and approximate geographic location. TCP sequence numbers relate to connection reliability. User-Agent strings reveal browser/OS (often spoofed). TLS cipher suites indicate cryptographic negotiation, not origin.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: Which type of log would contain details about a user uploading a sensitive file to a web-based file sharing service, including the filename and destination URL?
+A) Network firewall permit log
+B) Web proxy or application-layer log with full URL logging enabled
+C) NetFlow record
+D) DNS query log
+Correct: B
+Explanation: A web proxy or NGFW with URL logging captures the full URL (including file upload endpoints and filenames in some configurations), providing application-layer context. A firewall permit log shows IP/port but not URL details. NetFlow provides traffic volume without URLs. DNS logs show domain resolution but not full URLs or file names.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst wants to investigate the email headers of a suspected phishing message to identify the originating mail server and trace the delivery path. Which data source is being used?
+A) DNS logs
+B) Email metadata and header analysis
+C) Firewall logs
+D) SIEM correlation rules
+Correct: B
+Explanation: Email headers contain the full delivery chain including originating IP, relay servers, timestamps, and authentication results (SPF/DKIM/DMARC), enabling investigators to trace the email's path and identify the true origin. DNS logs show domain resolution. Firewall logs show SMTP connection details. SIEM rules correlate events but are not raw email data.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: A SIEM dashboard shows a baseline of 100 GB of data leaving the network per day. On Tuesday, the dashboard shows 2.1 TB of outbound traffic. Which investigation should the analyst PRIORITISE?
+A) Review inbound traffic for DDoS indicators
+B) Investigate the source hosts and destinations of the anomalous outbound traffic for data exfiltration
+C) Verify that the SIEM dashboard is displaying data correctly
+D) Check patch levels of all workstations
+Correct: B
+Explanation: A 20× spike in outbound traffic above the established baseline is a high-confidence indicator of data exfiltration. The analyst should immediately investigate which hosts are sending data, to which external IPs, and what data is involved. While validating the dashboard is a reasonable sanity check, it should not delay investigation of a potential exfiltration event.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: Which log source on a Linux system records sudo command usage, allowing investigators to determine which commands a user ran with elevated privileges?
+A) /var/log/messages
+B) /var/log/auth.log or /var/log/secure
+C) /var/log/syslog
+D) /var/log/dmesg
+Correct: B
+Explanation: /var/log/auth.log (Debian/Ubuntu) and /var/log/secure (RHEL/CentOS) record authentication events including sudo commands, showing exactly which privileged commands were executed by which user. /var/log/messages and /var/log/syslog are general system logs that may not capture sudo detail. /var/log/dmesg contains kernel ring buffer messages.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst receives an automated daily report showing all systems that failed their vulnerability scan baseline. The analyst uses this to generate a prioritised remediation ticket list. Which data sources are being used together?
+A) SIEM alerts and NetFlow records
+B) Automated vulnerability scan reports and a dashboard integrated with the ticketing system
+C) IDS/IPS logs and firewall logs
+D) Packet captures and DNS logs
+Correct: B
+Explanation: The combination of automated vulnerability scan reports and a dashboard that feeds into the ticketing system represents the integration of two key investigation/operations data sources — scan output and workflow management. SIEM/NetFlow and IDS/firewall logs address threat detection. PCaps and DNS address forensic investigation.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.1 — Given a scenario, apply common security techniques to computing resources
+Question: A security analyst is reviewing an embedded RTOS device used in a medical infusion pump. The device has no user interface and communicates only via a proprietary protocol over a local network. Which security control is MOST feasible to implement on this device?
+A) Install host-based antivirus software
+B) Enable TLS 1.3 on all device communications if the RTOS supports cryptographic libraries
+C) Require the device to join an Active Directory domain
+D) Apply OS-level security benchmarks using Group Policy
+Correct: B
+Explanation: Many modern RTOS platforms support lightweight cryptographic libraries. Enabling encrypted communications (TLS) reduces interception risk on the network — often the most feasible control on a constrained embedded device. Antivirus, Active Directory, and Group Policy are Windows/PC paradigms incompatible with constrained RTOS devices.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.2 — Explain the security implications of proper hardware, software, and data asset management
+Question: A company donates old laptops to a charity. The laptops previously held confidential internal documents. Which data sanitization step is REQUIRED before donation?
+A) Deleting documents and donating the laptops as-is
+B) Performing a cryptographic erase or multi-pass overwrite on all drives so no company data is recoverable
+C) Installing a fresh operating system without wiping the original data partition
+D) Encrypting the data before donation so the charity cannot read it
+Correct: B
+Explanation: Donating assets containing company data without sanitization creates a data breach risk. Cryptographic erase or multi-pass overwrite ensures data is unrecoverable. Simply deleting files or installing a new OS leaves original data recoverable with forensic tools. Encrypting data leaves it intact and potentially recoverable if the key is exposed.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: An organisation's vulnerability management programme identifies a critical vulnerability in a web application framework used across 47 applications. Patching all 47 simultaneously would take six weeks. Which remediation strategy should be applied FIRST to the highest-risk applications?
+A) Wait until all 47 applications can be patched simultaneously
+B) Apply a virtual patch (WAF rule) to block exploitation while prioritising and scheduling application patches by risk
+C) Disable all 47 applications until patching is complete
+D) Accept the risk for all 47 applications and document exceptions
+Correct: B
+Explanation: A virtual patch (WAF rule blocking the exploitation path) is a compensating control that reduces immediate risk while the team works through the patching backlog ordered by risk. Waiting six weeks to patch exposes all applications. Disabling all applications causes unnecessary outage. Accepting risk without any compensating control for critical vulnerabilities is imprudent.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.4 — Explain security alerting and monitoring concepts and tools
+Question: A SIEM rule fires when more than five distinct privileged commands are executed within 60 seconds by a non-administrative account. This triggers an alert but also automatically creates an incident ticket and pages the on-call engineer. Which monitoring and response approach is described?
+A) Passive monitoring with manual ticketing
+B) Alert-driven automation integrating SIEM with SOAR for escalation
+C) Real-time firewall rule modification
+D) Threat intelligence enrichment
+Correct: B
+Explanation: Automatically creating a ticket and paging the on-call engineer in response to a SIEM alert is SOAR orchestration integrated with monitoring — removing manual steps from the escalation path. This is not passive monitoring (it takes automated action). Firewall rule modification is a separate response action. Threat intelligence enrichment adds context; it does not escalate.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.5 — Given a scenario, modify enterprise capabilities to enhance security
+Question: An enterprise is deploying a zero trust architecture and wants to ensure that every application access request is evaluated based on user identity, device health, and application sensitivity — regardless of whether the request originates from inside or outside the corporate network. Which capability is CENTRAL to this architecture?
+A) Traditional perimeter firewall with DMZ
+B) Continuous contextual access evaluation using an identity-aware proxy and policy engine
+C) VPN with split tunnelling disabled
+D) Static IP allowlisting for all application servers
+Correct: B
+Explanation: Zero trust requires continuous verification of identity, device posture, and context for every access request. An identity-aware proxy and policy engine implements per-request access decisions rather than implicit network-based trust. Traditional perimeter firewalls grant broad network trust after authentication. VPN improves encryption but is not per-request contextual. Static IP allowlisting is network-based and ignores identity and device health.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.6 — Given a scenario, implement and maintain identity and access management
+Question: A company uses OpenID Connect (OIDC) to allow users to log in to its application using their Google account. Which IAM function does OIDC provide in this scenario?
+A) Delegated authorisation for third-party API access
+B) Federated authentication — verifying user identity via a trusted external identity provider
+C) Mandatory access control policy enforcement
+D) Privileged session management
+Correct: B
+Explanation: OIDC is an identity layer built on OAuth 2.0 that provides authentication — verifying who the user is via a trusted IdP (Google). OAuth 2.0 itself provides delegated authorisation (what resources the app can access). MAC is a government-grade access model. PSM records privileged sessions.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.7 — Explain the importance of automation and orchestration related to secure operations
+Question: A security team is evaluating whether to automate firewall block actions in response to threat intelligence feeds. A key concern is accidentally blocking legitimate business traffic. Which control BEST mitigates this risk while preserving the benefits of automation?
+A) Disable the automation entirely and rely on manual blocking
+B) Implement a human-in-the-loop approval step for high-impact block actions, with full automation for lower-risk actions
+C) Block all threat intelligence feed IPs without review to maximise speed
+D) Use the threat intelligence feed only for reporting, never for action
+Correct: B
+Explanation: A tiered approach — full automation for lower-risk actions (e.g., alerting) and a human-in-the-loop for high-impact actions (blocking) — preserves automation speed benefits while adding accountability for decisions with significant blast radius. Disabling automation sacrifices speed. Blocking all IPs without review risks false positives. Using feeds only for reporting wastes their actionable potential.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.8 — Explain appropriate incident response activities
+Question: A forensic investigator is asked to collect evidence from a live Windows server that is suspected of being compromised. The investigator must collect a memory dump, running process list, and open network connections BEFORE powering off the server. Which forensic principle drives this decision?
+A) Chain of custody documentation
+B) Order of volatility — collecting the most transient evidence before it is lost
+C) Legal hold compliance
+D) E-discovery production requirements
+Correct: B
+Explanation: The order of volatility mandates collecting the most short-lived data first (RAM, process table, network connections) because this data is lost on shutdown. Chain of custody documents the evidence handling process. Legal hold preserves data. E-discovery produces evidence for legal proceedings. These all occur after collection.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.9 — Given a scenario, use data sources to support an investigation
+Question: An analyst is correlating logs to investigate a lateral movement incident. Which combination of log sources BEST reveals an attacker moving from a compromised workstation to additional internal servers using stolen credentials?
+A) Web proxy logs and vulnerability scan reports
+B) Windows authentication event logs (4624/4648), firewall logs for internal east-west traffic, and Sysmon process creation logs
+C) SNMP trap logs and NetFlow external traffic
+D) Application error logs and DNS logs
+Correct: B
+Explanation: Lateral movement via stolen credentials is detected by correlating Windows logon events (4624 remote logons, 4648 explicit credential use), east-west firewall logs showing internal connections, and process creation logs showing tools executed on target systems. Web proxy and vulnerability scans focus on internet traffic and weakness identification. SNMP and NetFlow external traffic miss internal lateral movement. Application errors and DNS logs provide limited lateral movement visibility.
+
+Domain: 4.0 Security Operations
+Sub-objective: 4.3 — Explain various activities associated with vulnerability management
+Question: A security analyst discovers a CVSS 4.3 (Medium) vulnerability on a web server. However, a public exploit is actively being used in the wild against this exact vulnerability. Which factor MOST changes the effective priority of this finding?
+A) The CVSS base score should be raised by the analyst
+B) The presence of active exploitation in the wild elevates the effective risk, requiring accelerated remediation despite the medium base score
+C) Medium-severity vulnerabilities should always wait for the next quarterly patching cycle
+D) The vulnerability can be ignored if the web server is behind a load balancer
+Correct: B
+Explanation: CVSS base scores do not account for real-world exploitation activity. Active exploitation (captured in CVSS temporal metrics as Exploit Code Maturity: High) dramatically increases the likelihood of compromise, overriding the relatively low base score. Quarterly patching for an actively exploited vulnerability is unacceptable. A load balancer does not remove the vulnerability.

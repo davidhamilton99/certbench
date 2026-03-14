@@ -1,0 +1,1639 @@
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A company installs large concrete posts at the entrance to its parking lot to prevent vehicles from ramming into the building. What type of physical security control are these posts?
+A) Mantrap
+B) Bollards
+C) Fencing
+D) Jersey barriers
+Correct: B
+Explanation: Bollards are short, sturdy vertical posts designed to control or prevent vehicle access to a protected area. They are a physical security deterrent against vehicle-based attacks on facilities. Unlike fences, bollards specifically target vehicle threats while still allowing pedestrian access.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: Which logical security control restricts which network traffic is allowed to pass through a router or firewall based on source and destination addresses?
+A) IDS signatures
+B) Password policy
+C) Access control list
+D) Multi-factor authentication
+Correct: C
+Explanation: An access control list (ACL) is a set of rules applied to routers and firewalls that permit or deny traffic based on criteria such as IP addresses, ports, and protocols. ACLs operate at the network level to filter inbound and outbound traffic. They are a foundational logical security mechanism for network perimeter protection.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A security guard notices someone attempting to follow an authorized employee through a secured door without badging in. What physical security threat does this represent?
+A) Shoulder surfing
+B) Impersonation
+C) Tailgating
+D) Piggybacking
+Correct: C
+Explanation: Tailgating occurs when an unauthorized person follows an authorized person through a secured entry point without using their own credentials. This bypasses badge reader and access control systems entirely. Security guards and mantraps are common countermeasures used to prevent tailgating.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: An organization wants to detect unauthorized access attempts on its internal network and generate alerts without actively blocking traffic. Which technology should they deploy?
+A) Firewall
+B) IDS
+C) IPS
+D) VPN concentrator
+Correct: B
+Explanation: An Intrusion Detection System (IDS) monitors network traffic for suspicious activity and generates alerts but does not take active blocking action. This distinguishes it from an Intrusion Prevention System (IPS), which can actively block detected threats. IDS is used when administrators want visibility without the risk of legitimate traffic being blocked.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A technician configures a system to require both a password and a one-time code sent to the user's smartphone before granting access. This is an example of which security measure?
+A) Single sign-on
+B) Biometric authentication
+C) Multi-factor authentication
+D) Role-based access control
+Correct: C
+Explanation: Multi-factor authentication (MFA) requires users to present two or more independent verification factors from different categories: something you know, something you have, and something you are. A password plus a smartphone OTP combines knowledge and possession factors. MFA significantly reduces the risk of credential-based attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A company deploys cameras at all entry points and in server rooms that record continuously and store footage for 30 days. Which physical security control is this?
+A) Motion sensors
+B) Badge readers
+C) Video surveillance
+D) Biometric locks
+Correct: C
+Explanation: Video surveillance systems use cameras to monitor and record activity in physical spaces, providing both deterrence and forensic evidence after incidents. Continuous recording allows review of events that may not have triggered other alarms. Cameras complement other physical controls like badge readers and guards.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: Which security control automatically sends an alert when movement is detected in a restricted area after business hours?
+A) Video surveillance
+B) Badge reader
+C) Motion sensor
+D) Smart lock
+Correct: C
+Explanation: Motion sensors detect physical movement in a defined area and can trigger alarms, lighting, or recording systems. They are especially effective as after-hours security controls in restricted areas where no activity should occur. Motion sensors are often integrated with video surveillance and alarm systems for a layered physical security approach.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A technician needs to ensure that only messages from approved senders reach users' inboxes and that known malicious links in emails are blocked. Which logical security control addresses this?
+A) IPS
+B) Email filtering
+C) Firewall rules
+D) Access control list
+Correct: B
+Explanation: Email filtering examines inbound and outbound email for spam, phishing links, malicious attachments, and policy violations before delivery. It can block messages from known bad senders, strip dangerous attachments, and flag suspicious links. Email filtering is one of the most effective controls against phishing and social engineering attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: An IPS device is deployed inline on a network segment and is configured to drop packets matching known attack signatures automatically. How does an IPS differ from an IDS?
+A) An IPS only generates logs while an IDS blocks traffic
+B) An IPS actively blocks threats while an IDS only detects and alerts
+C) An IPS requires manual intervention while an IDS is automated
+D) An IPS monitors endpoints while an IDS monitors the network
+Correct: B
+Explanation: An Intrusion Prevention System (IPS) sits inline in the network path and can actively block, drop, or modify malicious traffic in real time. An IDS passively monitors traffic and generates alerts but does not take blocking action. The key distinction is that IPS provides active protection while IDS provides passive detection.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A facility uses a small enclosed room with two sets of doors where only one door can open at a time, requiring badge authentication between doors. What is this physical security control called?
+A) Bollard enclosure
+B) Mantrap
+C) Faraday cage
+D) Air gap
+Correct: B
+Explanation: A mantrap is a physical security control consisting of a small, enclosed space with interlocking doors so only one can be open at a time. It forces individuals to authenticate before proceeding and prevents tailgating by allowing only one person through at a time. Mantraps are common in high-security facilities like data centers and server rooms.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A company requires that employees use badge readers to enter the server room and that all access events are logged with timestamps. Which two physical security controls are described?
+A) Bollards and motion sensors
+B) Badge readers and video surveillance
+C) Badge readers and access logs
+D) Guards and biometrics
+Correct: C
+Explanation: Badge readers authenticate users attempting to access a secured area and can be configured to log each access event. Access logs provide an audit trail showing who entered a restricted area and when. Together, these controls provide both preventive and detective physical security capabilities.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A technician is asked to harden a workstation by ensuring that only necessary network services are accessible and blocking all others. Which logical security control is most appropriate?
+A) Multi-factor authentication
+B) Host-based firewall
+C) IDS sensor
+D) Email filtering
+Correct: B
+Explanation: A host-based firewall controls inbound and outbound network traffic at the individual workstation level, allowing only authorized services and blocking everything else. This limits the attack surface by closing unused ports and preventing unauthorized connections. Host-based firewalls complement network firewalls by providing endpoint-level traffic control.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A security manager wants to ensure the perimeter of a data center campus is clearly defined and that unauthorized individuals cannot easily enter the grounds. Which physical control is most appropriate?
+A) Bollards
+B) Guards
+C) Fencing
+D) Motion sensors
+Correct: C
+Explanation: Fencing establishes a physical perimeter barrier that delineates the boundary of a secured area and deters unauthorized entry. It is a foundational physical security control used to protect campuses, data centers, and other facilities. Fencing is often combined with other controls like guards, cameras, and motion sensors for layered protection.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which wireless security protocol uses AES-CCMP encryption and is considered the current minimum standard for securing Wi-Fi networks?
+A) WEP
+B) WPA
+C) WPA2
+D) WPA3
+Correct: C
+Explanation: WPA2 (Wi-Fi Protected Access 2) uses AES-CCMP (Counter Mode with Cipher Block Chaining Message Authentication Code Protocol) as its encryption standard, providing strong data protection. WPA2 replaced the weaker TKIP-based WPA and the broken WEP standard. WPA2 has been the industry minimum standard for Wi-Fi security since its widespread adoption.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A technician is configuring a wireless network for a small business and wants to use the most current and secure Wi-Fi protocol available. Which protocol should they select?
+A) WEP
+B) WPA
+C) WPA2
+D) WPA3
+Correct: D
+Explanation: WPA3 is the latest Wi-Fi security standard, offering improved encryption and protections over WPA2, including Simultaneous Authentication of Equals (SAE) which replaces the Pre-Shared Key handshake. WPA3 provides stronger protections against offline dictionary attacks and forward secrecy. It is the recommended choice for new wireless deployments.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which encryption protocol used in early versions of WPA is now considered weak and has been deprecated in favor of AES?
+A) DES
+B) TKIP
+C) RC4
+D) MD5
+Correct: B
+Explanation: TKIP (Temporal Key Integrity Protocol) was introduced as a short-term fix to address WEP's weaknesses and was used in the original WPA standard. It has since been found to have vulnerabilities and was deprecated by the IEEE in 2012. AES-CCMP replaced TKIP as the recommended encryption method in WPA2.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: An enterprise deploys a RADIUS server to authenticate wireless users. Which wireless authentication framework is being used?
+A) WPA2-Personal
+B) WPA2-Enterprise
+C) WPA3-Personal
+D) Open authentication
+Correct: B
+Explanation: WPA2-Enterprise uses the 802.1X authentication framework, which requires a RADIUS server to authenticate individual users with unique credentials. This differs from WPA2-Personal, which uses a single pre-shared key for all users. Enterprise mode provides better security, user accountability, and centralized credential management.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which authentication protocol is commonly used in Unix/Linux environments and enterprise networks to provide centralized authentication for network access?
+A) TACACS+
+B) Kerberos
+C) RADIUS
+D) LDAP
+Correct: C
+Explanation: RADIUS (Remote Authentication Dial-In User Service) is a widely used AAA (Authentication, Authorization, Accounting) protocol for centralizing network access authentication. It is commonly used with wireless networks (802.1X/WPA2-Enterprise), VPNs, and network device access. RADIUS communicates over UDP and encrypts only the password portion of the authentication exchange.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: How does TACACS+ differ from RADIUS in terms of what it encrypts during the authentication process?
+A) TACACS+ encrypts only the password while RADIUS encrypts the entire packet
+B) RADIUS encrypts the entire packet while TACACS+ encrypts only the password
+C) TACACS+ encrypts the entire packet while RADIUS encrypts only the password
+D) Both protocols encrypt the entire authentication packet equally
+Correct: C
+Explanation: TACACS+ (Terminal Access Controller Access-Control System Plus) encrypts the entire authentication payload, providing better security than RADIUS, which only encrypts the password field. TACACS+ also separates the authentication, authorization, and accounting functions, providing more granular control. TACACS+ is commonly used for authenticating network device management access.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A user logs in once in the morning and is then automatically authenticated to email, file shares, and internal applications without re-entering credentials. Which authentication method is in use?
+A) Multi-factor authentication
+B) RADIUS
+C) Single sign-on
+D) Kerberos ticketing
+Correct: C
+Explanation: Single sign-on (SSO) allows users to authenticate once and gain access to multiple systems and applications without re-entering credentials. SSO improves user experience and can also reduce password fatigue and the number of credentials that need to be managed. It is often implemented using protocols like Kerberos, SAML, or OAuth.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which authentication protocol issues tickets to grant access to network services and is natively used in Active Directory environments?
+A) RADIUS
+B) TACACS+
+C) SAML
+D) Kerberos
+Correct: D
+Explanation: Kerberos is a ticket-based authentication protocol that uses a Key Distribution Center (KDC) to issue Ticket Granting Tickets (TGTs) and service tickets. It is the default authentication protocol in Microsoft Active Directory environments. Kerberos provides mutual authentication and avoids transmitting passwords over the network.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A wireless network uses a shared passphrase that all users enter to connect. Which WPA2 mode is this?
+A) WPA2-Enterprise
+B) WPA2-Personal
+C) WPA2-RADIUS
+D) WPA2-802.1X
+Correct: B
+Explanation: WPA2-Personal (also called WPA2-PSK) uses a single pre-shared key (PSK) that all users enter to connect to the wireless network. This mode is suitable for home and small business environments but provides less accountability than enterprise mode. Because all users share the same key, compromise of the key affects all users.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: An administrator is setting up wireless authentication and wants each user to have individual credentials and the session to be encrypted with a unique key per user. Which solution meets these requirements?
+A) WPA2-Personal with a complex PSK
+B) WPA3-Personal with SAE
+C) WPA2-Enterprise with RADIUS
+D) Open authentication with a captive portal
+Correct: C
+Explanation: WPA2-Enterprise with RADIUS provides per-user authentication using individual credentials (username and password or certificates) and generates a unique encryption key for each user session. This eliminates the shared key problem of Personal mode and enables revocation of individual user access. It also provides an audit trail tied to individual user identities.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which feature of WPA3-Personal makes it resistant to offline dictionary attacks against captured handshakes?
+A) AES-256 encryption
+B) Simultaneous Authentication of Equals
+C) TKIP key rotation
+D) RADIUS back-end verification
+Correct: B
+Explanation: WPA3-Personal uses Simultaneous Authentication of Equals (SAE), which replaces the WPA2 four-way handshake. SAE is resistant to offline dictionary attacks because it does not expose a verifiable handshake that attackers can capture and crack offline. Each authentication attempt requires active interaction with the access point, making brute-force attacks impractical.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A technician configures wireless authentication that requires a username, password, and a one-time code from an authenticator app. Which authentication method is this?
+A) Single sign-on
+B) Kerberos
+C) Multi-factor authentication
+D) TACACS+
+Correct: C
+Explanation: Multi-factor authentication (MFA) requires verification from two or more different factor categories. In this case, username/password (something you know) combined with an OTP from an authenticator app (something you have) constitutes MFA. MFA is increasingly required for wireless and remote access to protect against credential theft.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: Which encryption standard used in WPA2 operates in Counter Mode with CBC-MAC and is the basis for WPA2's strong security?
+A) TKIP
+B) RC4
+C) AES-CCMP
+D) DES-CBC
+Correct: C
+Explanation: AES-CCMP (Advanced Encryption Standard in Counter Mode with Cipher Block Chaining Message Authentication Code Protocol) is the encryption and integrity mechanism used in WPA2. It provides both data confidentiality through AES encryption and data integrity through the CBC-MAC component. AES-CCMP replaced the deprecated TKIP protocol and is considered cryptographically strong.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A user reports that their computer has become very slow and their files have been encrypted, with a message demanding payment to restore access. Which type of malware is responsible?
+A) Spyware
+B) Ransomware
+C) Keylogger
+D) Adware
+Correct: B
+Explanation: Ransomware encrypts victim files and demands payment (usually cryptocurrency) in exchange for the decryption key. It has become one of the most damaging and prevalent malware types affecting both individuals and organizations. Prevention through backups and prompt patching is critical because ransomware recovery without paying the ransom is often impossible without prior backups.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician discovers that malware has embedded itself in the master boot record of a hard drive and loads before the operating system. Which malware type is this?
+A) Rootkit
+B) Boot sector virus
+C) Trojan
+D) Worm
+Correct: B
+Explanation: A boot sector virus infects the master boot record (MBR) or volume boot record, allowing it to load before the operating system and persist even through OS reinstallation. This type of malware is particularly difficult to detect and remove because it operates below the OS level. Removing boot sector malware typically requires specialized tools or formatting and reinstalling the OS.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A piece of software presents itself as a legitimate media player but secretly opens a backdoor for remote access. Which malware type is this?
+A) Worm
+B) Virus
+C) Trojan
+D) Rootkit
+Correct: C
+Explanation: A Trojan horse appears to be legitimate or useful software but contains hidden malicious functionality. Unlike viruses and worms, Trojans do not self-replicate; they rely on users installing them willingly. The hidden payload commonly includes backdoors, remote access tools, or data stealers.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: Malware hides itself and other malicious processes from the operating system, antivirus software, and system administrators by intercepting OS calls. Which type of malware does this?
+A) Keylogger
+B) Spyware
+C) Rootkit
+D) Cryptominer
+Correct: C
+Explanation: A rootkit is designed to conceal the presence of malware by intercepting and modifying system calls, hiding files, processes, registry entries, and network connections from the OS and security tools. Rootkits can operate in user mode or kernel mode, with kernel-mode rootkits being especially difficult to detect and remove. Removal often requires booting from external media and using specialized tools.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A user complains that their computer has slowed significantly and the CPU usage is constantly near 100% even when idle. Investigation reveals the system is solving mathematical problems for an unknown party. Which malware type is this?
+A) Ransomware
+B) Spyware
+C) Cryptominer
+D) Adware
+Correct: C
+Explanation: A cryptominer (also called a cryptojacker) uses a victim's computing resources—CPU, GPU, and memory—to mine cryptocurrency for the attacker without the victim's knowledge or consent. High CPU usage at idle is a common symptom. Cryptominers degrade system performance and increase electricity costs for the victim.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A malware variant spreads across a network by exploiting an unpatched vulnerability in a file-sharing service without any user interaction. Which malware type is this?
+A) Virus
+B) Trojan
+C) Worm
+D) Spyware
+Correct: C
+Explanation: A worm is self-replicating malware that spreads across networks automatically without requiring user interaction or a host file. It exploits vulnerabilities in network services to propagate from system to system. Famous examples include WannaCry and Blaster, which caused widespread damage by exploiting unpatched network services.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician suspects a system is infected with a rootkit. Which is the most effective initial step for removing deeply embedded malware?
+A) Run a full antivirus scan in normal mode
+B) Boot into safe mode and run a scan
+C) Uninstall all recently added programs
+D) Enable Windows Defender real-time protection
+Correct: B
+Explanation: Booting into safe mode loads only essential drivers and services, preventing many types of malware—including rootkits—from loading and hiding. Scanning in safe mode allows security tools to detect and remove malware that would otherwise conceal itself during normal operation. For the most severe infections, booting from external rescue media may be required.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: After removing malware from a workstation, which step should the technician perform to prevent the malware from returning due to system vulnerabilities?
+A) Rename the administrator account
+B) Enable the guest account
+C) Apply all available OS and software patches
+D) Disable Windows Firewall temporarily
+Correct: C
+Explanation: Patching the operating system and applications closes the vulnerabilities that malware exploited to infect the system in the first place. Without patching, the same or similar malware can reinfect the system. Patch management is a critical preventive measure and should always follow malware removal.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A user unknowingly installs software that records every keystroke and sends the data to a remote server, capturing passwords and credit card numbers. Which malware type is this?
+A) Ransomware
+B) Keylogger
+C) Rootkit
+D) Worm
+Correct: B
+Explanation: A keylogger records keystrokes made by a user and exfiltrates the captured data to an attacker. Keyloggers are commonly used to steal credentials, financial data, and personal information. They can be implemented as software or hardware (hardware keyloggers plug between the keyboard and computer).
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: When an antivirus scan detects an infected file, the technician wants to isolate the file from the rest of the system without permanently deleting it for further analysis. Which action should they take?
+A) Delete the file immediately
+B) Quarantine the file
+C) Move the file to the desktop
+D) Compress the file with a password
+Correct: B
+Explanation: Quarantine isolates a suspicious or infected file in a protected location where it cannot execute or spread, while preserving it for further analysis or recovery. This is preferable to immediate deletion when the file's status or impact is uncertain. Antivirus software typically provides quarantine functionality as a standard option after detection.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A user frequently clicks on email attachments without thinking. After removing malware from their system, what is the most important follow-up step specific to preventing future infections from user behavior?
+A) Enable BitLocker on the drive
+B) Educate the user about safe computing practices
+C) Upgrade the user's RAM
+D) Change the user's desktop wallpaper
+Correct: B
+Explanation: User education is a critical component of malware prevention because many infections begin with user actions such as clicking phishing links or opening malicious attachments. Teaching users to recognize suspicious emails, avoid unknown attachments, and verify links reduces the likelihood of future infections. Technical controls alone cannot fully compensate for unsafe user behavior.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: Which malware type secretly monitors user activity, collects personal information, and sends it to third parties, often installed alongside free software?
+A) Ransomware
+B) Virus
+C) Spyware
+D) Worm
+Correct: C
+Explanation: Spyware collects information about users without their knowledge—including browsing habits, credentials, and personal data—and transmits it to remote parties. It is commonly bundled with free software (a practice called bundleware) or installed through drive-by downloads. Spyware differs from adware, though adware is sometimes classified as a type of spyware.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician wants to prevent malware from creating restore points that could be used to revert removal efforts. Which Windows feature should be verified and managed?
+A) BitLocker
+B) System Protection (System Restore)
+C) Windows Defender
+D) User Account Control
+Correct: B
+Explanation: System Protection manages System Restore points in Windows. After removing malware, technicians should enable System Protection to allow creation of clean restore points, and may need to delete old restore points that could reinfect the system if used. Malware can sometimes hide in restore points, so managing this feature is an important step in thorough remediation.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker sends a fraudulent email appearing to come from a bank, asking the recipient to click a link and verify their account credentials. Which attack type is this?
+A) Vishing
+B) Phishing
+C) Whaling
+D) Smishing
+Correct: B
+Explanation: Phishing uses deceptive emails that impersonate legitimate organizations to trick recipients into revealing credentials, clicking malicious links, or downloading malware. It remains one of the most common and effective social engineering attack vectors. Email filtering, user training, and multi-factor authentication are primary defenses.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker calls a target employee pretending to be from IT support and asks them to provide their login credentials to resolve a fictitious account issue. Which attack type is this?
+A) Phishing
+B) Tailgating
+C) Vishing
+D) Impersonation
+Correct: C
+Explanation: Vishing (voice phishing) uses phone calls to manipulate victims into divulging sensitive information or taking harmful actions. Attackers typically impersonate trusted entities such as IT support, banks, or government agencies. Users should be trained to verify caller identity through official channels before providing any information.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: A targeted phishing attack is directed specifically at a company's CEO or CFO in an attempt to steal credentials or authorize large wire transfers. What is this type of attack called?
+A) Spear phishing
+B) Whaling
+C) Vishing
+D) Smishing
+Correct: B
+Explanation: Whaling is a highly targeted phishing attack aimed at senior executives (the "big fish") because they have elevated access, authority to authorize financial transactions, and access to sensitive information. Whaling emails are carefully crafted to appear legitimate and exploit the executive's position and authority. Controls include executive security training and strict wire transfer verification procedures.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker positions themselves behind a user at a help desk kiosk to observe the user entering their PIN. Which social engineering attack is this?
+A) Tailgating
+B) Dumpster diving
+C) Shoulder surfing
+D) Impersonation
+Correct: C
+Explanation: Shoulder surfing involves observing someone's screen, keyboard, or input device to steal passwords, PINs, or other sensitive information. It can occur in person or through cameras positioned to capture screens. Privacy screens on monitors and user awareness training are effective countermeasures.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker searches through a company's discarded documents in trash bins outside the building to find useful information such as org charts, account numbers, or internal memos. Which attack type is this?
+A) Impersonation
+B) Dumpster diving
+C) Shoulder surfing
+D) Tailgating
+Correct: B
+Explanation: Dumpster diving involves searching through discarded materials to gather sensitive organizational information that can be used in attacks or sold. Organizations should use cross-cut shredding for sensitive documents and have clear document disposal policies. Information found through dumpster diving can enable more convincing social engineering attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker sets up a rogue wireless access point with the same SSID as the company's legitimate guest Wi-Fi to capture traffic from unsuspecting users. Which attack is this?
+A) On-path attack
+B) Evil twin
+C) Rogue AP
+D) SSID spoofing
+Correct: B
+Explanation: An evil twin attack creates a fraudulent wireless access point that mimics a legitimate network by using the same SSID and sometimes the same BSSID. Victims who connect to the evil twin have their traffic captured by the attacker. Using a VPN, verifying certificate warnings, and avoiding public Wi-Fi without verification are key defenses.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: A disgruntled employee with legitimate network access deliberately leaks confidential customer data to a competitor. Which threat type does this represent?
+A) Zero-day exploit
+B) DoS attack
+C) Insider threat
+D) Brute force attack
+Correct: C
+Explanation: An insider threat originates from individuals with legitimate access to organizational systems—employees, contractors, or business partners—who misuse that access intentionally or unintentionally. Insider threats are particularly dangerous because they bypass perimeter security controls. Monitoring, least-privilege access, and separation of duties help mitigate insider threats.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker repeatedly sends connection requests to a web server from thousands of compromised machines until the server can no longer respond to legitimate users. Which attack type is this?
+A) On-path attack
+B) SQL injection
+C) Brute force
+D) DDoS
+Correct: D
+Explanation: A Distributed Denial of Service (DDoS) attack uses multiple compromised systems (a botnet) to flood a target with traffic or requests, overwhelming its capacity to serve legitimate users. Unlike a DoS attack from a single source, DDoS attacks are harder to mitigate because traffic comes from many distributed sources. DDoS mitigation involves traffic scrubbing services, rate limiting, and CDN-based protection.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker exploits a vulnerability in web application input fields to execute malicious database queries, potentially exposing or modifying the entire database. Which attack is this?
+A) Cross-site scripting
+B) SQL injection
+C) On-path attack
+D) Brute force
+Correct: B
+Explanation: SQL injection occurs when an attacker inserts malicious SQL code into input fields that are processed by a database, potentially allowing unauthorized data access, modification, or deletion. It is consistently ranked among the most critical web application vulnerabilities. Input validation, parameterized queries, and prepared statements are the primary defenses.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker injects malicious scripts into a web page that executes in the browsers of other users who visit the page, potentially stealing their session cookies. Which attack is this?
+A) SQL injection
+B) On-path attack
+C) Cross-site scripting
+D) Brute force
+Correct: C
+Explanation: Cross-site scripting (XSS) occurs when an attacker injects client-side scripts into web pages viewed by other users. When victims load the page, the malicious script executes in their browser, potentially stealing cookies, session tokens, or credentials. Input sanitization, output encoding, and Content Security Policy (CSP) headers are key defenses.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker positions themselves between two communicating parties, intercepting and potentially altering communications without either party's knowledge. Which attack type is this?
+A) DDoS
+B) Spoofing
+C) On-path attack
+D) Evil twin
+Correct: C
+Explanation: An on-path attack (formerly known as a man-in-the-middle attack) involves an attacker secretly intercepting communications between two parties who believe they are communicating directly with each other. The attacker can eavesdrop or modify the data in transit. Encryption (TLS), certificate pinning, and mutual authentication help prevent on-path attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker exploits a previously unknown vulnerability in an operating system for which no patch exists. Which threat type is this?
+A) Insider threat
+B) Zero-day exploit
+C) Brute force attack
+D) Dictionary attack
+Correct: B
+Explanation: A zero-day exploit takes advantage of a software vulnerability that is unknown to the vendor and for which no patch has been released. Because defenders have zero days to prepare a patch-based response, these attacks are particularly dangerous. Defense-in-depth strategies, behavioral detection, and application sandboxing help mitigate zero-day risks.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker sends packets with a forged source IP address to make traffic appear to originate from a trusted host. Which technique is being used?
+A) On-path attack
+B) Evil twin
+C) Spoofing
+D) Phishing
+Correct: C
+Explanation: Spoofing involves falsifying the source of communications—such as IP addresses, MAC addresses, email addresses, or caller ID—to impersonate a trusted entity. IP spoofing is commonly used in DDoS amplification attacks and to bypass IP-based access controls. Ingress filtering and cryptographic authentication help detect and prevent spoofing.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician wants to require that local user accounts use passwords with a minimum length of 12 characters on a Windows workstation. Where is this configured?
+A) Windows Defender settings
+B) Local Security Policy
+C) Device Manager
+D) Task Scheduler
+Correct: B
+Explanation: The Local Security Policy (secpol.msc) in Windows provides configuration for password policies, account lockout policies, audit policies, and user rights. Minimum password length and complexity requirements are set under Account Policies > Password Policy. These settings apply to all local accounts on the workstation.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A user needs to run an application that requires elevated privileges but should not be running as an administrator for daily tasks. Which Windows feature allows this?
+A) BitLocker
+B) EFS
+C) Run as administrator
+D) User Account Control prompt
+Correct: C
+Explanation: The "Run as administrator" option in Windows allows a user to launch a specific application with elevated privileges without logging in as an administrator. This follows the principle of least privilege by keeping the user in a standard account for everyday tasks. The user will be prompted by UAC to confirm or provide administrator credentials when running elevated applications.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician configures a Windows 11 workstation to allow users to log in using their face instead of a password. Which Windows login option is being used?
+A) PIN
+B) Fingerprint
+C) Facial recognition
+D) Single sign-on
+Correct: C
+Explanation: Windows Hello for Business supports facial recognition as a biometric login option, using the device's camera to authenticate users without a password. Facial recognition is categorized as a "something you are" authentication factor. Windows Hello biometrics are stored locally on the device and never transmitted to Microsoft.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: An employee stores sensitive files on a Windows laptop. The IT department wants to ensure those files are encrypted even if the hard drive is removed. Which Windows feature should be used?
+A) EFS
+B) BitLocker
+C) NTFS permissions
+D) Windows Defender
+Correct: B
+Explanation: BitLocker encrypts the entire drive, including the OS volume, protecting data even if the drive is physically removed and connected to another system. It uses the TPM chip to store encryption keys and can require a PIN or startup key for pre-boot authentication. BitLocker protects against theft and unauthorized physical access to the device.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A user wants to encrypt individual files and folders on a Windows NTFS volume without encrypting the entire drive. Which built-in Windows feature supports this?
+A) BitLocker
+B) BitLocker To Go
+C) EFS
+D) Share permissions
+Correct: C
+Explanation: Encrypting File System (EFS) is a Windows feature that allows individual files and folders on NTFS volumes to be encrypted using the user's account credentials. EFS encryption is transparent to the user—they can open their files normally—but other users or processes cannot access the encrypted data. EFS provides file-level protection rather than full-disk encryption.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician plugs in a USB drive containing sensitive data and wants to encrypt it using a Windows built-in tool that works on removable media. Which feature should they use?
+A) BitLocker
+B) EFS
+C) BitLocker To Go
+D) NTFS compression
+Correct: C
+Explanation: BitLocker To Go extends BitLocker full-disk encryption to removable drives such as USB flash drives and external hard drives. It allows the drive to be protected with a password or smart card and can be configured to require authentication before the drive can be accessed on any Windows system. BitLocker To Go is specifically designed for portable media protection.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A shared Windows workstation has a folder that should be accessible to all network users for reading but only one department's team should be able to modify files. Which two permission systems must be configured correctly, and which takes the most restrictive combination?
+A) Share and NTFS permissions; share permissions always win
+B) Share and NTFS permissions; the most restrictive combination of both applies
+C) NTFS and EFS permissions; EFS always overrides NTFS
+D) Local and domain policies; domain policy always wins
+Correct: B
+Explanation: Windows uses both Share permissions and NTFS permissions for network folder access. When both are configured, the effective permissions for a network user are the most restrictive combination of the two permission sets. For local access (sitting at the machine), only NTFS permissions apply. Proper configuration requires setting both permission types appropriately.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: Windows Defender detects a suspicious file during a scheduled scan. What is the default action Windows Defender takes with detected threats?
+A) Immediately delete the file permanently
+B) Quarantine the file to a protected location
+C) Send the file to Microsoft automatically
+D) Disable the user account that owns the file
+Correct: B
+Explanation: Windows Defender's default action for detected threats is to quarantine the file, moving it to a protected location where it cannot execute or spread. Quarantined files can later be reviewed, restored if they are false positives, or permanently removed. This approach prevents immediate permanent deletion of files that might have been incorrectly flagged.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A standard user account on Windows 10 attempts to install software that requires elevated privileges. Which Windows security feature prompts for administrator credentials?
+A) Windows Defender
+B) EFS
+C) User Account Control
+D) BitLocker
+Correct: C
+Explanation: User Account Control (UAC) is a Windows security feature that prompts for confirmation or administrator credentials when an action requires elevated privileges. It helps prevent malware and unauthorized software from making system-level changes without the user's knowledge. UAC is configured through Local Security Policy or Group Policy.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and contrast wireless security protocols and authentication methods
+Question: A technician configures a Windows workstation to use a 6-digit numeric code as a login option that is tied to the device and does not require an internet connection after initial setup. Which Windows Hello feature is this?
+A) Fingerprint
+B) Facial recognition
+C) PIN
+D) SSO token
+Correct: C
+Explanation: Windows Hello PIN is a device-specific login option that replaces the password for local and Microsoft account sign-in. Unlike a password, the PIN is tied to the specific device and is stored locally using TPM, making it useless on other devices even if stolen. A PIN can provide strong authentication even though it may appear simpler than a long password.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A security analyst discovers that a local user account has been granted Full Control NTFS permissions on a sensitive directory but the IT policy requires Read-Only access for that account. Which tool should the technician use to correct this?
+A) Local Security Policy
+B) File Explorer advanced security settings
+C) Windows Defender settings
+D) Task Manager
+Correct: B
+Explanation: NTFS permissions are managed through the Security tab in a file or folder's Properties dialog (accessible via File Explorer's advanced security settings). Administrators can add, remove, or modify permissions for individual user accounts and groups. Correcting overly permissive NTFS permissions is a key step in enforcing the principle of least privilege.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A company policy requires that all user accounts be locked out after five incorrect password attempts to protect against brute force attacks. Where is this configured on a standalone Windows workstation?
+A) Windows Defender
+B) Device Manager
+C) Local Security Policy
+D) Task Scheduler
+Correct: C
+Explanation: Account lockout policies, including the threshold, duration, and reset counter, are configured in Local Security Policy under Account Policies > Account Lockout Policy. Setting an appropriate lockout threshold protects against brute force and automated password guessing attacks. Account lockout should be balanced with a reset duration to avoid excessive help desk burden.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician is hardening a new Windows workstation and discovers the built-in Administrator account is enabled with a blank password. Which best practice should be applied?
+A) Delete the Administrator account entirely
+B) Rename the account and set a strong password
+C) Enable the Guest account instead
+D) Change the account to a standard user
+Correct: B
+Explanation: The built-in Administrator account should be renamed to make it harder for attackers to target it by its default name and should be given a strong, complex password. Deleting the built-in Administrator account is not recommended because it may be needed for recovery purposes. Disabling the account when not in use is another acceptable option.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician wants to ensure that a workstation automatically locks when left unattended. Which setting should be configured?
+A) BitLocker pre-boot authentication
+B) Screensaver with password-protected lock
+C) UAC prompt timeout
+D) Windows Defender scheduled scan
+Correct: B
+Explanation: Configuring a password-protected screensaver with an appropriate idle timeout ensures that a workstation automatically locks after a period of inactivity, requiring re-authentication to resume use. This prevents unauthorized access when a user steps away from their desk. The timeout duration should be set appropriately for the environment's security requirements.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician is configuring a workstation and wants to prevent USB drives, CDs, and DVDs from automatically launching programs when connected or inserted. Which feature should be disabled?
+A) BitLocker To Go
+B) AutoRun and AutoPlay
+C) Windows Defender real-time protection
+D) Remote Desktop
+Correct: B
+Explanation: AutoRun and AutoPlay are Windows features that automatically execute programs or display content when removable media is connected or inserted. Disabling these features prevents malware on removable media from automatically executing without user initiation. This is a critical hardening step because many malware outbreaks have historically exploited AutoRun functionality.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: An organization's password policy requires a minimum of 12 characters, complexity, and that passwords cannot be reused for at least 10 previous passwords. Which aspect of password policy prevents reuse?
+A) Maximum password age
+B) Password history
+C) Account lockout threshold
+D) Minimum password length
+Correct: B
+Explanation: Password history is the policy setting that tracks previously used passwords and prevents users from reusing them. Setting a history count of 10 means users must create 10 unique passwords before repeating an old one. Combined with maximum password age, this prevents users from simply cycling back to their favorite password.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: The built-in Guest account on a Windows workstation provides limited access but poses a security risk because anyone can log in without credentials. What should be done?
+A) Set a strong password on the Guest account
+B) Give the Guest account administrative privileges
+C) Disable the Guest account
+D) Rename the Guest account to Administrator
+Correct: C
+Explanation: The built-in Guest account should be disabled on workstations as a security best practice because it allows unauthenticated access to the system. In most corporate environments, there is no legitimate use case for the Guest account. Disabling it eliminates a low-privilege entry point that could be used for initial access or privilege escalation.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: An administrator wants to ensure that users cannot create passwords shorter than 10 characters or reuse the same password each time a change is required. Which two policy settings address these requirements?
+A) Account lockout threshold and lockout duration
+B) Minimum password length and password history
+C) Maximum password age and minimum password age
+D) Password complexity and account lockout threshold
+Correct: B
+Explanation: Minimum password length enforces that passwords meet a minimum character count, while password history prevents users from immediately reusing previous passwords. Together these settings form the foundation of a strong password policy. They should be combined with complexity requirements and maximum password age for comprehensive password security.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician is setting up end-user best practices training. Which behavior should users be trained to follow regarding software installation on corporate workstations?
+A) Install any software needed for productivity from any source
+B) Only install software that is approved and from trusted sources
+C) Use administrator credentials for all daily work tasks
+D) Share administrator passwords with colleagues when needed
+Correct: B
+Explanation: Users should be trained to only install software that has been approved by IT and obtained from official, trusted sources. Unauthorized software can introduce malware, vulnerabilities, and compliance risks. A formal software approval process combined with user training helps prevent shadow IT and malware infections from untrusted applications.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A security policy requires that user passwords expire every 90 days to limit the window during which a compromised credential can be used. Which password policy setting controls this?
+A) Minimum password age
+B) Password complexity
+C) Maximum password age
+D) Password history
+Correct: C
+Explanation: Maximum password age sets the number of days a password can be used before the user is required to change it. Setting this to 90 days limits the period during which a stolen or guessed password remains valid. This should be paired with password history to prevent immediate reuse of old passwords.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A newly imaged workstation has Windows Firewall disabled and no antivirus installed. A technician needs to address these gaps to meet company security baseline. Which term describes applying these minimum required security configurations?
+A) Defense in depth
+B) Security hardening
+C) Vulnerability scanning
+D) Penetration testing
+Correct: B
+Explanation: Security hardening is the process of configuring a system to reduce its attack surface and meet a security baseline by enabling security features, disabling unnecessary services, and applying required configurations. Hardening a workstation typically includes enabling firewalls, installing antivirus, patching, disabling unused accounts, and following password policies. Hardening checklists help ensure consistent baseline security across all systems.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A user's account was discovered to be compromised because their password was "password123." Which password best practice would have most directly prevented this?
+A) Enabling maximum password age
+B) Requiring password complexity
+C) Setting account lockout threshold
+D) Enabling password history
+Correct: B
+Explanation: Password complexity requirements force users to include a mix of uppercase and lowercase letters, numbers, and special characters, making simple passwords like "password123" inadmissible. Complexity requirements significantly increase the search space for brute force and dictionary attacks. This is a foundational password policy setting that should be enabled on all corporate systems.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A company issues smartphones to employees and wants to ensure that if a device is lost, all corporate data can be removed immediately. Which mobile security feature enables this?
+A) Screen lock
+B) Remote wipe
+C) Device encryption
+D) Locator app
+Correct: B
+Explanation: Remote wipe allows an administrator or user to remotely erase all data on a lost or stolen mobile device. This is a critical capability for protecting sensitive corporate data when physical device recovery is not possible. Remote wipe is typically managed through a Mobile Device Management (MDM) platform.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: An organization allows employees to use personal smartphones for work email. Which policy framework governs the security requirements for personally owned devices accessing corporate resources?
+A) Corporate-owned device policy
+B) Acceptable use policy
+C) BYOD policy
+D) IoT security framework
+Correct: C
+Explanation: A Bring Your Own Device (BYOD) policy defines the rules, security requirements, and acceptable use standards for personally owned devices that access corporate resources. BYOD policies typically require device registration, minimum OS versions, screen lock, encryption, and MDM enrollment. They balance employee flexibility with organizational security requirements.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A technician is configuring a mobile device and wants to ensure that after 10 consecutive failed PIN attempts, the device automatically erases itself. Which security feature is this?
+A) Remote wipe
+B) Screen lock timeout
+C) Failed login attempts restriction
+D) Device encryption
+Correct: C
+Explanation: Failed login attempts restriction (or failed login wipe) automatically wipes or locks a device after a configured number of consecutive unsuccessful authentication attempts. This protects against brute-force attacks on device PINs and passwords by making it impractical to guess the code without triggering the wipe. Most MDM platforms can enforce this policy across managed devices.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A company needs to locate a stolen corporate laptop that is registered with its MDM. Which mobile security feature would help find the device?
+A) Device encryption
+B) Remote backup
+C) Locator app
+D) Screen lock
+Correct: C
+Explanation: Locator apps use GPS, Wi-Fi, or cellular positioning to determine and report a device's geographic location. For corporate devices, MDM platforms often include asset tracking features that allow administrators to locate lost or stolen devices. Locator functionality can also be paired with remote wipe capabilities.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A mobile device's data must be protected so that if the device is lost, the stored data cannot be read even by connecting the device's storage directly to another system. Which feature accomplishes this?
+A) Remote wipe
+B) Screen lock
+C) Device encryption
+D) OS patching
+Correct: C
+Explanation: Device encryption encodes data stored on the device so that it cannot be read without the correct decryption key (typically derived from the user's PIN or password). Even if a storage chip is removed and connected to another device, the encrypted data remains unreadable. Modern iOS and Android devices enable full-device encryption by default.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: An IT department wants to ensure that all corporate mobile devices automatically backup important data to the cloud so that it can be restored if a device is lost. Which feature addresses this?
+A) Locator app
+B) Remote wipe
+C) Remote backup
+D) Profile security requirements
+Correct: C
+Explanation: Remote backup automatically copies device data—contacts, email, apps, and settings—to a cloud or corporate server so it can be restored on a replacement device if the original is lost or damaged. MDM platforms can enforce automated backup schedules and verify backup compliance. Regular backups ensure business continuity without relying on users to manually initiate backups.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: Smart thermostats, IP cameras, and connected sensors on a factory floor are examples of which category of devices that require special security consideration?
+A) BYOD devices
+B) IoT devices
+C) Corporate-owned mobile devices
+D) Embedded workstations
+Correct: B
+Explanation: Internet of Things (IoT) devices are physical objects with network connectivity, including smart thermostats, cameras, sensors, and industrial control systems. IoT devices often have limited security features, default credentials, and infrequent patching, making them high-risk targets. Securing IoT devices involves network segmentation, changing default credentials, disabling unnecessary services, and keeping firmware updated.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A corporate MDM policy requires that all managed devices must run no older than the previous major OS version. Which security feature does this policy enforce?
+A) Device encryption
+B) Screen lock
+C) OS updates
+D) Failed login restriction
+Correct: C
+Explanation: Requiring current OS versions ensures that devices receive security patches that address known vulnerabilities. Outdated operating systems contain unpatched vulnerabilities that can be exploited by malware and attackers. MDM platforms can enforce minimum OS version requirements and block access for non-compliant devices.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A company deploys corporate-owned tablets to field technicians with a specific set of approved apps, restricted settings, and enforced encryption. How does this differ from a BYOD approach?
+A) Corporate-owned devices have no security requirements
+B) Corporate-owned devices allow full personal use by employees
+C) Corporate-owned devices give IT full control over configuration and policies
+D) BYOD devices are more secure than corporate-owned devices
+Correct: C
+Explanation: Corporate-owned devices allow the IT department to enforce comprehensive security policies, app whitelisting, configuration profiles, and monitoring without the privacy considerations present with employee-owned BYOD devices. The organization owns the device and can fully control its configuration and usage. BYOD requires balancing corporate security with employee privacy, limiting the depth of control IT can apply.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A mobile device management profile is pushed to all company phones requiring a minimum 6-character alphanumeric passcode and automatic lock after 2 minutes of inactivity. What does the automatic lock requirement configure?
+A) Failed login restriction
+B) Screen lock timeout
+C) Remote wipe trigger
+D) Device encryption key
+Correct: B
+Explanation: Screen lock timeout (or automatic lock) configures how long a device can be idle before it automatically locks and requires re-authentication. A short timeout limits the window of opportunity for unauthorized access when a device is left unattended. This is a fundamental mobile security control enforced through MDM profile security requirements.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: An organization's BYOD policy requires that employees install a mobile management app that enforces encryption and allows remote wipe of corporate data only, not personal data. What capability allows selective removal of only corporate data?
+A) Full remote wipe
+B) Selective wipe
+C) Factory reset
+D) Screen lock enforcement
+Correct: B
+Explanation: Selective wipe (also called enterprise wipe) removes only corporate data, apps, and profiles from a personal device while leaving personal data intact. This capability is important for BYOD environments because a full remote wipe of an employee's personal device could create legal and trust issues. MDM platforms with container-based management can isolate and selectively remove corporate data.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A smart building uses networked door locks that run embedded firmware and have not been patched in three years. Which risk is most directly associated with this situation?
+A) The locks will lose their encryption keys
+B) Unpatched vulnerabilities could be exploited to bypass physical security
+C) The locks will stop communicating with the access control server
+D) Users will forget their PINs due to infrequent use
+Correct: B
+Explanation: IoT and embedded devices with outdated firmware contain known, publicly documented vulnerabilities that attackers can exploit. In the case of networked door locks, a firmware vulnerability could allow an attacker to remotely unlock doors or disable the access control system. Regular firmware updates are essential for maintaining the security of IoT and embedded devices.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company is decommissioning old hard drives containing sensitive HR records. The drives will not be reused. Which physical destruction method uses powerful magnets to destroy the magnetic data on a drive?
+A) Shredding
+B) Incineration
+C) Degaussing
+D) Drilling
+Correct: C
+Explanation: Degaussing exposes a magnetic storage medium to a powerful magnetic field that disrupts the magnetic alignment of the data, effectively erasing all stored information. It is effective for traditional magnetic hard drives and magnetic tape. Degaussing does not work on solid-state drives (SSDs) or optical media because they do not use magnetic storage.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: An organization wants to dispose of old SSDs in a way that guarantees the data cannot be recovered even with advanced forensic tools. Which method provides the highest assurance of data destruction?
+A) Standard formatting
+B) Low-level formatting
+C) Physical shredding
+D) Degaussing
+Correct: C
+Explanation: Physical shredding of an SSD destroys the flash memory chips into small particles, making data recovery practically impossible. SSDs cannot be reliably sanitized by degaussing because they use flash memory rather than magnetic storage. For highly sensitive data on SSDs, physical destruction is the most reliable disposal method.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company repurposes old laptops for a donation program. The IT team wants to remove all data while keeping the drives functional for reuse. Which method is most appropriate?
+A) Physical shredding
+B) Degaussing
+C) Low-level formatting (secure erase)
+D) Drilling
+Correct: C
+Explanation: Low-level formatting, also called secure erase or zero-fill, overwrites all sectors of the drive with zeros or random data, making recovery of previous data extremely difficult while leaving the drive functional for reuse. This is appropriate when the drive needs to be reused or donated with a new installation. Multiple-pass overwrite methods (like DoD 5220.22-M) provide additional assurance.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A regulated healthcare organization outsources the destruction of hard drives to a certified vendor. What document should the organization require from the vendor to prove the drives were properly destroyed?
+A) Non-disclosure agreement
+B) Chain of custody form
+C) Certificate of destruction
+D) Service level agreement
+Correct: C
+Explanation: A certificate of destruction is a formal document provided by a destruction vendor that confirms specific media was destroyed according to agreed-upon standards, including the date, method, and serial numbers of destroyed items. This document is essential for regulatory compliance audits in industries like healthcare and finance. It provides legal and evidentiary proof that data was properly handled.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A technician physically destroys a hard drive by using a drill press to create multiple holes through the platters. Which destruction method is this?
+A) Shredding
+B) Degaussing
+C) Drilling
+D) Incineration
+Correct: C
+Explanation: Drilling physically destroys hard drive platters by creating holes that make the drive mechanically unusable and the data on the damaged sectors unrecoverable. While effective, drilling may leave some data intact on undamaged platter areas, so it is often combined with degaussing for higher assurance. Drilling is a common physical destruction method when industrial shredders are not available.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company performs a standard format on a drive before selling a used computer. Which risk remains after only performing a standard format?
+A) The drive will no longer function after formatting
+B) Standard formatting may not prevent data recovery with specialized tools
+C) The OS cannot be installed after standard formatting
+D) Standard formatting encrypts the data rather than removing it
+Correct: B
+Explanation: A standard (high-level) format typically only removes the file system index and marks the sectors as available, without overwriting the actual data. Specialized data recovery software can often recover data from standard-formatted drives. For secure disposal, low-level formatting, secure erase, or physical destruction should be used instead.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: Which data destruction method uses extreme heat to completely destroy storage media along with its physical form?
+A) Drilling
+B) Degaussing
+C) Shredding
+D) Incineration
+Correct: D
+Explanation: Incineration destroys storage media by burning it at extremely high temperatures, leaving no recoverable material. It provides one of the highest levels of assurance for data destruction. Incineration is typically conducted at certified facilities that can handle electronic waste and provide documentation of the destruction.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company wants to dispose of old tape backups containing financial records. Which physical destruction method is specifically designed to process large volumes of media quickly by cutting it into very small pieces?
+A) Degaussing
+B) Drilling
+C) Incineration
+D) Shredding
+Correct: D
+Explanation: Shredding uses industrial shredders to cut storage media—hard drives, tapes, optical discs, and printed documents—into small pieces that cannot be reassembled for data recovery. Industrial hard drive shredders are specifically designed to handle the physical materials in electronic media. Shredding is efficient for processing large volumes of media and can be performed on-site or by certified third-party vendors.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: An organization must decide whether to perform in-house data destruction or use an outsourced service. Which factor most strongly favors using an outsourced certified destruction service?
+A) In-house destruction always costs more
+B) Outsourced services provide certificates of destruction and regulatory compliance documentation
+C) In-house destruction uses better equipment
+D) Outsourced services can only destroy paper documents
+Correct: B
+Explanation: Certified outsourced destruction services provide official certificates of destruction with serial numbers, destruction methods, and chain of custody documentation, which are often required for regulatory compliance. While in-house destruction may work for some organizations, certified vendors provide legally defensible proof of destruction. This documentation is particularly important for HIPAA, PCI DSS, and other regulatory frameworks.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: Before disposing of a hard drive through recycling, a technician performs a secure overwrite of all data. Which term best describes this process when applied to the entire drive surface?
+A) Degaussing
+B) Shredding
+C) Low-level formatting
+D) Standard formatting
+Correct: C
+Explanation: Low-level formatting (secure erase) writes zeros, ones, or random data to every sector of the drive, overwriting all existing data and making recovery with standard tools infeasible. Unlike standard formatting, which only removes the file system structure, low-level formatting addresses the actual data content. Secure erase tools specifically designed for SSDs (like ATA Secure Erase) should be used for flash-based storage.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician sets up a new wireless router for a home office and immediately changes the admin username and password from the manufacturer defaults. Which security best practice does this implement?
+A) MAC filtering
+B) Firmware update
+C) Disabling SSID broadcast
+D) Changing default passwords
+Correct: D
+Explanation: Changing default administrative credentials is one of the most critical first steps in securing any network device. Default usernames and passwords are publicly known and documented, making devices using them trivially easy to compromise. This best practice applies to routers, switches, access points, IoT devices, and any other networked equipment.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A SOHO router is configured to only allow network devices with pre-approved hardware addresses to connect to the Wi-Fi network. Which security feature is being used?
+A) IP filtering
+B) Content filtering
+C) MAC filtering
+D) SSID hiding
+Correct: C
+Explanation: MAC address filtering allows administrators to create a list of approved device hardware (MAC) addresses and block all others from connecting to the wireless network. While MAC addresses can be spoofed, MAC filtering adds a layer of access control against casual unauthorized users. It is most effective when combined with other wireless security measures.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A small business wants to prevent employees from accessing social media and streaming sites during work hours through the company router. Which router feature should be configured?
+A) IP filtering
+B) Content filtering
+C) MAC filtering
+D) Guest network
+Correct: B
+Explanation: Content filtering on routers or firewalls allows administrators to block or restrict access to categories of websites (social media, gaming, streaming) or specific URLs. Many SOHO routers include built-in content filtering features or support DNS-based content filtering services. Content filtering improves productivity and reduces security risks from malicious websites.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A network administrator wants to prevent network clients from directly communicating with a specific external IP address associated with a known malicious server. Which router feature should be used?
+A) Content filtering
+B) MAC filtering
+C) IP filtering
+D) SSID broadcast disable
+Correct: C
+Explanation: IP filtering (also called IP address filtering or ACLs on the router) allows administrators to block or permit traffic based on source or destination IP addresses. Creating a rule to block the known malicious IP address prevents all internal clients from communicating with that server. IP filtering is a basic but effective network security control for blocking known bad actors.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A SOHO router has firmware that is three years old with several known security vulnerabilities. What should the technician do to address these vulnerabilities?
+A) Replace the router with a new model
+B) Enable MAC filtering
+C) Update the router firmware
+D) Disable the SSID broadcast
+Correct: C
+Explanation: Firmware updates for routers and network devices patch known security vulnerabilities and may also add new features or improve stability. Router manufacturers periodically release firmware updates to address discovered vulnerabilities. Keeping firmware current is a fundamental network device security maintenance task.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A small business sets up a separate wireless network for customers and visitors that is isolated from the corporate network. Which SOHO router feature provides this?
+A) IP filtering
+B) SSID broadcast disabling
+C) Guest network
+D) MAC filtering
+Correct: C
+Explanation: A guest network creates a separate, isolated wireless network segment for visitors, typically without access to the corporate LAN or internal resources. Guest networks prevent visitors from accessing sensitive business systems while still providing internet access. This segmentation also protects the corporate network even if a guest device is compromised.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician configures a wireless router to not broadcast its network name so that it does not appear in the list of available networks on nearby devices. Which feature has been configured?
+A) MAC filtering
+B) Guest network isolation
+C) SSID broadcast disable
+D) WPA3 encryption
+Correct: C
+Explanation: Disabling SSID broadcast prevents the router from advertising the network name in beacon frames, making the network invisible to passive scans. While determined attackers can still discover a hidden network using packet analysis tools, it reduces visibility to casual users. Disabling SSID broadcast is a minor security through obscurity measure and should be combined with strong encryption and authentication.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A network administrator enables the SPI firewall on a SOHO router to inspect incoming and outgoing traffic, blocking packets that don't match established connection states. Which firewall type is described?
+A) Packet filtering firewall
+B) Proxy firewall
+C) Stateful packet inspection firewall
+D) Application layer firewall
+Correct: C
+Explanation: Stateful Packet Inspection (SPI) firewalls track the state of active network connections and only allow return traffic that corresponds to established sessions. Unlike simple packet filtering, SPI understands the context of connections and can block unsolicited inbound traffic more effectively. SPI is the most common firewall type in SOHO and consumer-grade routers.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician notices that a SOHO router has several ports in the administration panel enabled that are not being used, including Telnet and legacy FTP management access. What should be done to harden the device?
+A) Enable content filtering on those ports
+B) Disable unused ports and services
+C) Change the IP addresses of those ports
+D) Assign MAC filter rules to those ports
+Correct: B
+Explanation: Disabling unused ports and services reduces the attack surface of a network device by eliminating potential entry points for attackers. Telnet and FTP are particularly insecure because they transmit data in plaintext. Only necessary services should be enabled, and those should use secure protocols (SSH instead of Telnet, SFTP instead of FTP).
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A home office router has its management interface accessible from the internet, which could allow remote attacks. Which change addresses this risk?
+A) Enable SSID broadcast
+B) Disable remote management from the WAN interface
+C) Enable MAC filtering on the LAN
+D) Update the SSID name
+Correct: B
+Explanation: Disabling WAN-side remote management prevents attackers from accessing the router's administrative interface from the internet. Router management should only be accessible from the local network (LAN side) by default. Exposing router management to the internet significantly increases the risk of unauthorized configuration changes or exploitation of management interface vulnerabilities.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A physical security concern at a small office involves ensuring that people cannot physically access network equipment such as routers and switches. Which measure addresses this?
+A) Enabling WPA3 on all wireless devices
+B) Locking network equipment in a secured cabinet or room
+C) Disabling SSID broadcast
+D) Enabling content filtering
+Correct: B
+Explanation: Physical security for network equipment involves securing routers, switches, and servers in locked cabinets, closets, or data rooms to prevent unauthorized physical access. Physical access to network equipment can allow complete compromise, including resetting to factory defaults or installing malicious firmware. Physical and logical security controls must work together for comprehensive protection.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A company wants to ensure that employees connecting to the SOHO network can only access websites appropriate for work and that children in a home office environment cannot access adult content. Which router feature enforces this at the network level?
+A) MAC filtering
+B) WPA3 encryption
+C) Content filtering with category blocking
+D) Disabling guest network
+Correct: C
+Explanation: Content filtering with category blocking allows routers to restrict access to entire categories of websites (adult content, gambling, social media) at the network level, applying to all connected devices without needing client-side software. Many SOHO routers support DNS-based content filtering or subscribe to category databases for this purpose. This is more effective than per-device filtering because it applies automatically to all devices on the network.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician notices that a browser extension has access to all browsing history, can read all website content, and has permissions to capture screenshots. Which action is most appropriate?
+A) Update the extension to the latest version
+B) Review and remove unnecessary or overly permissive extensions
+C) Disable all browser pop-up blockers
+D) Clear the browser cache and cookies
+Correct: B
+Explanation: Browser extensions can pose significant security risks because they often have broad permissions to access browsing data and page content. Extensions from unknown publishers or those requesting excessive permissions should be removed or avoided. Regularly auditing installed extensions and only keeping those from trusted sources with minimal necessary permissions reduces browser attack surface.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user wants their browser to not save visited websites, search history, cookies, or form data during a session and have it all discarded when the browser closes. Which browser feature provides this?
+A) Ad blocker
+B) Password manager
+C) Private browsing mode
+D) Browser data sync
+Correct: C
+Explanation: Private browsing mode (InPrivate in Edge, Incognito in Chrome) creates a temporary session where browsing history, cookies, form data, and site data are not saved after the session ends. It prevents the browser from storing locally accessible records of the session. Note that private browsing does not prevent websites, employers, or ISPs from seeing the user's activity.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user receives a browser warning that the website's certificate has expired. What security risk does this indicate?
+A) The website is definitely infected with malware
+B) The connection may not be encrypted or the site identity cannot be verified
+C) The browser needs to be updated immediately
+D) The user's password has been compromised
+Correct: B
+Explanation: An expired or invalid SSL/TLS certificate means the browser cannot verify the site's identity or that the secure connection may be compromised. While the site itself may be legitimate and just have an administration oversight, it could also indicate an on-path attack or a fraudulent site. Users should avoid entering sensitive information on sites with certificate warnings.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user frequently visits many sites requiring login and struggles to remember unique passwords for each. Which browser security feature can securely store and autofill credentials?
+A) Ad blocker
+B) Password manager
+C) Private browsing
+D) Pop-up blocker
+Correct: B
+Explanation: A browser-integrated or standalone password manager securely stores credentials for websites and can autofill them when needed. Password managers encourage the use of unique, complex passwords for every site, which significantly reduces the damage from any single site's data breach. Many modern browsers include built-in password managers, and dedicated applications like Bitwarden or 1Password provide additional features.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user's browser is constantly displaying unsolicited advertisement windows from websites they are not visiting. Which browser feature should be enabled to prevent this?
+A) Password manager
+B) Private browsing
+C) Pop-up blocker
+D) Browser sync
+Correct: C
+Explanation: A pop-up blocker prevents websites from automatically opening new browser windows or tabs without user initiation. Unsolicited pop-ups are frequently used to display advertising, conduct phishing attacks, or trick users into clicking malicious content. Most modern browsers have pop-up blockers enabled by default, and they can also be enforced through browser settings.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician wants to ensure browser software is downloaded from the official publisher's website rather than a third-party download site to avoid bundled malware. Which best practice does this represent?
+A) Using private browsing for all downloads
+B) Downloading only from official, trusted sources
+C) Clearing cache after installation
+D) Disabling browser sync before downloading
+Correct: B
+Explanation: Downloading browser software and extensions only from official publisher websites or verified app stores reduces the risk of obtaining modified or malware-bundled versions. Third-party download sites frequently inject adware, spyware, or malware into software packages. Verifying download sources is a fundamental security best practice for any software installation.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user signs into their browser with their account credentials and finds that bookmarks, passwords, and history are synchronized across all their devices. Which browser feature enables this?
+A) Private browsing
+B) Browser data sync
+C) Password manager
+D) Ad blocker
+Correct: B
+Explanation: Browser data sync connects the browser to a user's account and synchronizes bookmarks, history, passwords, extensions, and settings across all devices where the user is signed in. While convenient, browser sync should be protected with a strong account password and MFA because compromising the sync account gives access to all synchronized data. Organizations may restrict or disable browser sync on managed devices.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician notices that a website is served over HTTP rather than HTTPS. What security concern does this create?
+A) The page will load faster than HTTPS pages
+B) Data transmitted between the browser and server is unencrypted and can be intercepted
+C) The browser will refuse to display HTTP pages automatically
+D) HTTP websites cannot use browser extensions
+Correct: B
+Explanation: HTTP transmits data in plaintext, meaning that any data exchanged between the browser and server—including credentials and personal information—can be captured and read by anyone intercepting the network traffic. HTTPS uses TLS encryption to protect data in transit. Modern browsers warn users about HTTP sites, especially when forms are present, and many enforce HTTPS-only modes.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A user complains that websites load slowly and they suspect tracking scripts are consuming bandwidth. Which browser security feature can block these tracking scripts and reduce page load times?
+A) Password manager
+B) Browser sync
+C) Pop-up blocker
+D) Ad blocker
+Correct: D
+Explanation: Ad blockers and privacy-focused browser extensions can block advertisements, tracking scripts, and analytics beacons that load alongside page content. Blocking these scripts reduces bandwidth usage, improves page load speed, and protects user privacy by preventing tracking across websites. Ad blockers can also reduce exposure to malicious advertisements (malvertising).
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician clears a browser's cache and cookies to resolve a website login issue. Beyond troubleshooting, which security benefit does regularly clearing the cache provide?
+A) Prevents websites from loading at all
+B) Removes locally stored session data and tracking cookies that could be misused
+C) Forces the browser to upgrade to the latest version
+D) Prevents password manager from storing new credentials
+Correct: B
+Explanation: Clearing the browser cache and cookies removes locally stored session tokens, tracking cookies, and cached personal data that could be accessed by other users of the same device or exploited through certain browser attacks. Regularly clearing cache is particularly important on shared computers. It also prevents stale session data from causing authentication issues.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A corporate policy requires that browser add-ons be evaluated and approved before employees can install them. Which risk does this policy primarily mitigate?
+A) Slow page load times from excessive extensions
+B) Malicious or data-stealing extensions accessing sensitive browser data
+C) Browser version incompatibilities with approved websites
+D) Password sync conflicts between multiple browser profiles
+Correct: B
+Explanation: Malicious browser extensions can steal credentials, capture form data, redirect traffic, inject advertisements, or exfiltrate browsing history. An extension approval policy ensures that only vetted, necessary extensions with appropriate permission scopes are installed on corporate browsers. This control is particularly important because extension permissions often include full access to page content and browsing data.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A data center uses a combination of a fence around the perimeter, badge readers at all doors, and security guards at the entrance. This combination of controls is an example of which security concept?
+A) Single point of failure
+B) Defense in depth
+C) Zero trust architecture
+D) Least privilege implementation
+Correct: B
+Explanation: Defense in depth (also called layered security) uses multiple overlapping security controls so that if one layer fails, others continue to provide protection. Using fencing, badge readers, and guards together means an attacker must overcome multiple independent barriers. This principle applies to both physical and logical security controls.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician discovers that a virus has disabled System Restore on an infected workstation. After removing the malware, which step should be performed to re-enable future recovery capabilities?
+A) Reinstall the antivirus software
+B) Enable System Protection to allow new restore points to be created
+C) Defragment the hard drive
+D) Run a disk check utility
+Correct: B
+Explanation: Re-enabling System Protection (System Restore) after malware removal allows Windows to create restore points that can be used for future recovery. Malware sometimes disables this feature to prevent users from easily rolling back to a clean state. After enabling System Protection, it is advisable to immediately create a new restore point as a clean baseline.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker tries every possible combination of characters to crack a user's password hash. Which attack type is this?
+A) Dictionary attack
+B) Rainbow table attack
+C) Brute force attack
+D) Credential stuffing
+Correct: C
+Explanation: A brute force attack systematically tries every possible combination of characters until the correct password is found. While guaranteed to eventually succeed, it becomes impractical with long, complex passwords due to the exponential increase in combinations. Account lockout policies and strong passwords are the primary defenses against brute force attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: Rather than trying all possible combinations, an attacker uses a list of common words and likely passwords to crack a password hash. Which attack type is this?
+A) Brute force attack
+B) Dictionary attack
+C) Rainbow table attack
+D) Spoofing
+Correct: B
+Explanation: A dictionary attack uses a precompiled list of common words, phrases, and frequently used passwords to attempt to crack password hashes. It is much faster than brute force because most users choose common or predictable passwords. Password complexity requirements and salted hashing are effective countermeasures against dictionary attacks.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician needs to verify that Windows Defender real-time protection is enabled and virus definitions are up to date on a Windows 10 workstation. Where should they look?
+A) Task Manager
+B) Windows Security Center (Windows Security app)
+C) Device Manager
+D) Local Security Policy
+Correct: B
+Explanation: The Windows Security app (formerly Windows Defender Security Center) provides a unified interface for viewing and managing security features including real-time protection status, virus definition updates, firewall settings, and other security components. It also provides notifications when security issues require attention. Technicians should verify all green status indicators in this app during security assessments.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: An administrator notices that a workstation account has more permissions than the user's job role requires. Which security principle was violated, and what should be applied?
+A) Defense in depth; apply layered controls
+B) Least privilege; remove unnecessary permissions
+C) Separation of duties; assign the work to multiple users
+D) Zero trust; require re-authentication for all tasks
+Correct: B
+Explanation: The principle of least privilege states that users and systems should have only the minimum permissions necessary to perform their job functions. Granting excessive permissions increases the potential damage from compromised accounts or insider threats. Periodic access reviews help identify and remediate accounts with unnecessary privileges.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A network engineer is designing an authentication system and wants to use a protocol that separates authentication, authorization, and accounting into distinct, independently controllable functions for network device management. Which protocol is best suited for this?
+A) RADIUS
+B) Kerberos
+C) TACACS+
+D) LDAP
+Correct: C
+Explanation: TACACS+ uniquely separates the AAA functions (Authentication, Authorization, Accounting) into independent components, allowing each to be controlled and configured separately. This granularity is particularly valuable for network device management where different levels of command authorization are needed. RADIUS combines authentication and authorization, making TACACS+ the preferred choice for this use case.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A SOHO router administration guide recommends configuring the device to only use HTTPS for the management interface rather than HTTP. Why is this important?
+A) HTTPS pages load faster on local networks
+B) HTTPS encrypts management traffic, preventing credential capture in transit
+C) HTTP management is not supported on modern routers
+D) HTTPS is required for wireless access to work correctly
+Correct: B
+Explanation: Using HTTPS for router management encrypts the administrative session, preventing credentials and configuration changes from being captured in plaintext by anyone monitoring the local network. HTTP management traffic, including usernames and passwords, is transmitted in cleartext and can be easily intercepted. Enabling HTTPS management and disabling HTTP management access is a fundamental router security hardening step.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company acquires a used server with a solid-state drive that needs to be repurposed for storing non-sensitive data. Which sanitization method is most appropriate for SSDs before repurposing?
+A) Degaussing
+B) ATA Secure Erase command
+C) Standard format
+D) Drilling
+Correct: B
+Explanation: The ATA Secure Erase command is specifically designed for solid-state and hard drives and instructs the drive's controller to overwrite all cells, including those in the over-provisioning area that standard formats cannot reach. Unlike degaussing, which is ineffective on SSDs, ATA Secure Erase properly sanitizes flash-based storage. This method leaves the drive functional and ready for repurposing.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A mobile device management system flags a corporate phone as non-compliant because it has been jailbroken. Why is jailbreaking a security concern for corporate devices?
+A) Jailbroken devices cannot connect to Wi-Fi networks
+B) Jailbreaking removes manufacturer warranty only, with no security impact
+C) Jailbreaking removes OS security restrictions and can bypass MDM controls
+D) Jailbroken devices consume more battery power
+Correct: C
+Explanation: Jailbreaking (iOS) or rooting (Android) removes the manufacturer's security sandboxing and restrictions, allowing apps to access system-level functions and bypassing security controls enforced by the OS. This can undermine MDM enforcement of security policies, enable installation of unauthorized apps, and expose the device to malware. Corporate MDM policies should detect and block jailbroken or rooted devices from accessing corporate resources.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician suspects that a Windows PC has been compromised by a rootkit that hides itself from the installed OS. Which approach provides the best chance of detecting a kernel-level rootkit?
+A) Run Windows Defender in Quick Scan mode
+B) Scan the drive from a known-clean bootable OS environment
+C) Use Task Manager to look for suspicious processes
+D) Check installed programs in Control Panel
+Correct: B
+Explanation: Kernel-level rootkits can intercept OS system calls and hide from security tools running within the compromised operating system. Booting from a separate, known-clean OS (such as a bootable antivirus rescue disk) allows scanning the target drive from outside the compromised environment, bypassing rootkit concealment techniques. This offline scanning approach is the most reliable method for detecting deeply embedded rootkits.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An employee receives a personalized email using their name, job title, and their manager's name, asking them to urgently transfer funds to a new vendor. The email appears to come from their manager but uses a slightly different domain. Which attack type is this most likely?
+A) Vishing
+B) Whaling
+C) Spear phishing
+D) Shoulder surfing
+Correct: C
+Explanation: Spear phishing is a targeted phishing attack that uses personal information gathered about the victim—such as name, employer, role, and colleagues—to create highly convincing fraudulent messages. The personalization makes spear phishing much more effective than generic phishing campaigns. Employee training on verifying urgent financial requests through secondary channels (phone verification) is a critical defense.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician must ensure that a Windows workstation requires Ctrl+Alt+Delete before displaying the login screen, preventing malware from spoofing the login interface. Where is this configured?
+A) Windows Defender settings
+B) BitLocker pre-boot settings
+C) Local Security Policy under Interactive Logon settings
+D) Task Manager startup settings
+Correct: C
+Explanation: The Local Security Policy setting "Interactive logon: Do not require CTRL+ALT+DEL" can be configured to require the Secure Attention Sequence (Ctrl+Alt+Delete) before the login screen appears. This prevents malware from creating fake login screens to capture credentials because only the OS can respond to Ctrl+Alt+Delete. This setting is found under Local Policies > Security Options in Local Security Policy.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A browser displays a padlock icon and "https://" in the address bar when visiting a banking site. What does this indicate about the connection?
+A) The website has been verified as safe by the browser manufacturer
+B) The connection is encrypted using TLS and the server's identity has been verified by a CA
+C) The user's passwords for this site are stored in the browser
+D) The website does not use cookies or tracking
+Correct: B
+Explanation: The padlock icon and HTTPS prefix indicate that the connection uses TLS encryption and that the website's SSL/TLS certificate was issued and verified by a trusted Certificate Authority (CA). This provides both encryption of data in transit and authentication of the server's identity. It does not guarantee the site is free of malware or that the site operator is trustworthy, only that the connection is encrypted and the domain identity is verified.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A company deploys uniformed security officers at all building entrances who verify identification and log visitor entries. Which physical security control do the officers represent?
+A) Bollards
+B) Badge readers
+C) Guards
+D) Motion sensors
+Correct: C
+Explanation: Security guards provide a human element of physical security that can verify identities, challenge suspicious individuals, respond to incidents, and exercise judgment in ambiguous situations that automated systems cannot. Guards are particularly effective at preventing social engineering attacks such as tailgating and impersonation. They are commonly used in combination with technical controls like badge readers and cameras for layered physical security.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: An organization transitions from WPA2-Personal to WPA2-Enterprise for its corporate wireless network. Which primary security benefit does this transition provide?
+A) Faster wireless speeds due to hardware offloading
+B) Per-user authentication and individual session keys rather than a shared passphrase
+C) Automatic firmware updates for all access points
+D) Elimination of the need for WPA3
+Correct: B
+Explanation: WPA2-Enterprise requires each user to authenticate with individual credentials through a RADIUS server, generating a unique encryption key for each user's session. WPA2-Personal uses a single pre-shared key for all users, meaning all users share the same key and compromise of one user's device exposes the key to all. Enterprise mode also allows immediate revocation of individual user access without changing credentials for all users.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician configures a workstation policy that prevents users from installing printer drivers without administrator approval, even though those drivers would technically install without administrator rights on some systems. Which security principle is being enforced?
+A) Defense in depth
+B) Separation of duties
+C) Least privilege
+D) Need to know
+Correct: C
+Explanation: Least privilege restricts users to only the permissions necessary for their job function, preventing them from performing actions—such as installing drivers—that could introduce vulnerabilities or unwanted software. Running as a standard user for daily tasks and requiring elevation for administrative tasks reduces the risk of malware installation and system misconfiguration. This principle is foundational to endpoint security hardening.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician is setting up a new SOHO wireless router. After changing the default admin password and updating the firmware, which wireless security protocol should they configure to provide the strongest available protection?
+A) WEP with 128-bit keys
+B) WPA with TKIP
+C) WPA2 with AES
+D) WPA3 with SAE
+Correct: D
+Explanation: WPA3 with SAE (Simultaneous Authentication of Equals) is the most current and secure wireless protocol, offering improved protection against offline dictionary attacks and providing forward secrecy. If all client devices support WPA3, it should be the first choice for a new wireless deployment. WPA3 is backward compatible in mixed WPA3/WPA2 transition mode for networks with older clients.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician is following a malware removal process. After confirming the malware is removed, verifying that the system is working correctly, and patching vulnerabilities, what is the final recommended step?
+A) Reinstall the operating system
+B) Document the incident and actions taken
+C) Disable antivirus to speed up the system
+D) Remove the user's account
+Correct: B
+Explanation: Documentation is the final step in the malware removal process and is essential for maintaining records of what occurred, what was found, and what actions were taken. This documentation supports future incident response, compliance reporting, and pattern analysis. CompTIA's A+ best practices for malware removal include documenting findings and actions as a critical concluding step.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker poses as a vendor technician and convinces a receptionist to let them into the server room to "service the equipment." Which social engineering technique is primarily being used?
+A) Phishing
+B) Shoulder surfing
+C) Impersonation
+D) Dumpster diving
+Correct: C
+Explanation: Impersonation involves an attacker pretending to be someone with legitimate authority or access—such as a vendor, IT staff, or executive—to manipulate targets into granting access or providing information. Impersonation attacks exploit trust and authority to bypass physical and logical security controls. Verification procedures requiring photo ID and scheduling confirmation through official channels help defend against impersonation.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: An organization must dispose of backup tapes containing years of employee personal data subject to data protection regulations. Which combination of methods provides the highest compliance assurance?
+A) Standard format and donation to a recycling center
+B) Physical shredding or incineration with a certificate of destruction
+C) Degaussing and selling to a secondary market
+D) Low-level format and labeling as sanitized
+Correct: B
+Explanation: For regulated personal data on media that will not be reused, physical destruction (shredding or incineration) combined with a certificate of destruction from a certified vendor provides the highest assurance and legal defensibility. Magnetic tape can potentially survive degaussing if the degausser is underpowered, while physical destruction leaves no recoverable material. The certificate of destruction provides documentation for compliance audits.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: A hospital deploys IoT-connected patient monitoring devices on the same network segment as administrative workstations. Which security recommendation should be made?
+A) Install antivirus software on all IoT devices
+B) Segment IoT devices onto a separate network from administrative systems
+C) Enable SSID broadcast on all IoT access points
+D) Use WEP encryption for IoT device communications
+Correct: B
+Explanation: IoT devices typically have limited security features and cannot be patched as easily as computers, making them higher-risk endpoints. Placing them on a separate network segment (VLAN) isolates them from critical administrative systems, limiting the potential impact of a compromised IoT device. Network segmentation is the primary architectural control for managing IoT security risks in enterprise and healthcare environments.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician enables BitLocker on a Windows 10 workstation that does not have a TPM chip. Which alternative must be configured to allow BitLocker to function without TPM?
+A) EFS on the system volume
+B) A USB startup key or PIN at pre-boot
+C) A Microsoft account for key escrow
+D) Windows Hello fingerprint enrollment
+Correct: B
+Explanation: Without a TPM chip, BitLocker requires an alternative key storage method for pre-boot authentication, such as a USB drive containing the startup key or a configured PIN. The Local Group Policy must be modified to allow BitLocker without a compatible TPM. This ensures that the encryption keys are not stored on the device itself, maintaining protection if the drive is removed.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A company policy requires that users' browser history, passwords, and bookmarks not be synchronized to cloud accounts on corporate devices to prevent data leakage. Which browser feature must be disabled or restricted?
+A) Pop-up blocker
+B) Private browsing mode
+C) Browser data sync
+D) Password manager autofill
+Correct: C
+Explanation: Browser data sync uploads locally stored data—passwords, history, bookmarks, and open tabs—to the browser vendor's cloud for synchronization across devices. On corporate devices, this could exfiltrate sensitive browsing data to personal accounts or cloud services outside corporate control. Disabling or restricting browser sync is a common enterprise security policy enforced through Group Policy or browser management solutions.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: A cybersecurity team deploys a system that monitors all network traffic, analyzes it against behavioral baselines, and actively blocks connections that deviate from normal patterns. Which type of security system is described?
+A) Host-based IDS
+B) Network-based IPS
+C) Email filtering gateway
+D) Stateful firewall
+Correct: B
+Explanation: A network-based IPS (Intrusion Prevention System) is deployed inline on the network to monitor all passing traffic, compare it against known signatures and behavioral baselines, and actively block anomalous or malicious connections without manual intervention. Unlike an IDS which only detects and alerts, an IPS actively responds to threats. Network-based IPS provides real-time protection for all devices on the monitored segment.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A company's security policy requires that all local user accounts must have their passwords changed every 90 days and users must be given 14 days advance notice before the deadline. Which policy setting controls the advance notice period?
+A) Minimum password age
+B) Password history
+C) Maximum password age
+D) Password must meet complexity requirements
+Correct: C
+Explanation: Maximum password age determines how many days a password can remain in use before the user is required to change it. Windows will notify users in advance (configurable, default 14 days) before the password expires. Setting maximum password age to 90 days achieves the 90-day rotation requirement described in the scenario.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: A flood of traffic from a single IP address overwhelms a web server, making it unavailable to users. Which type of attack is this?
+A) DDoS
+B) DoS
+C) Brute force
+D) On-path attack
+Correct: B
+Explanation: A Denial of Service (DoS) attack originates from a single source and attempts to consume the target's resources (bandwidth, CPU, connections) to prevent legitimate users from accessing the service. A DoS from a single IP is easier to mitigate than a DDoS attack because the source can be blocked. Both DoS and DDoS attacks are availability attacks targeting the accessibility of a service.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician sets up a small business firewall and creates rules to allow only outbound traffic on specific necessary ports (80, 443, 25, 110) while blocking all other outbound traffic by default. Which firewall configuration principle is being applied?
+A) Default allow with explicit deny
+B) Default deny with explicit allow
+C) Implicit deny bypass
+D) Port forwarding policy
+Correct: B
+Explanation: The "default deny, explicit allow" (also called implicit deny, whitelist) principle blocks all traffic that is not explicitly permitted by a firewall rule. Only ports that are necessary for business operations are opened, minimizing the attack surface. This is considered a security best practice because it prevents unexpected or unauthorized traffic from passing through the firewall.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A user visits a malicious website and malware is downloaded and installed without any user interaction or clicks. Which malware delivery method is described?
+A) Trojan horse
+B) Drive-by download
+C) Phishing attachment
+D) Worm propagation
+Correct: B
+Explanation: A drive-by download installs malware on a visitor's system simply by visiting a compromised or malicious website, exploiting browser or plugin vulnerabilities without requiring user interaction. Keeping browsers and plugins updated, using content filtering, and enabling click-to-play for browser plugins are key defenses. This attack vector is commonly used to deliver ransomware, spyware, and cryptominers.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: An administrator reviews the wireless security configuration of an older access point and finds it is using WEP. Why must WEP be replaced immediately?
+A) WEP does not support the 5GHz frequency band
+B) WEP is deprecated and its encryption can be cracked in minutes using freely available tools
+C) WEP requires a RADIUS server that the organization doesn't have
+D) WEP does not support connecting more than two devices simultaneously
+Correct: B
+Explanation: WEP (Wired Equivalent Privacy) uses the RC4 cipher with known cryptographic weaknesses that allow its encryption keys to be recovered in minutes from captured wireless traffic using tools like Aircrack-ng. WEP was officially deprecated by the IEEE and should be replaced with WPA2 or WPA3 immediately. Any network still using WEP should be considered unsecured regardless of the passphrase complexity.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician needs to review all successful and failed login attempts on a Windows workstation to investigate a potential unauthorized access incident. Which Windows tool provides this audit information?
+A) Task Manager
+B) Event Viewer
+C) Device Manager
+D) Windows Defender history
+Correct: B
+Explanation: Event Viewer logs Windows security events including successful logons (Event ID 4624) and failed logon attempts (Event ID 4625) when audit logon events is enabled in Local Security Policy. The Security log in Event Viewer is the primary source for authentication-related forensic investigation. Audit policies must be enabled in Local Security Policy for these events to be recorded.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: An organization's BYOD policy requires that personal devices enrolling in MDM must have a screen lock passcode set with a minimum of 6 characters. What type of MDM control is this?
+A) Remote wipe capability
+B) Locator enforcement
+C) Profile security requirement
+D) Remote backup policy
+Correct: C
+Explanation: Profile security requirements are MDM policy settings pushed to enrolled devices that enforce specific security configurations such as minimum passcode length, screen lock timeout, encryption status, and OS version requirements. Devices that do not comply with profile requirements can be blocked from accessing corporate resources until they meet the policy. This allows organizations to enforce consistent security across managed devices.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician observes that a browser installed on a workstation came from a download site that bundled additional toolbars and search engine hijackers along with the browser. What should the technician do to remediate this situation?
+A) Update the browser to the latest version through the bundled update mechanism
+B) Uninstall the bundled software and install the browser from the official vendor website
+C) Enable the pop-up blocker to prevent the toolbars from displaying
+D) Use private browsing mode to avoid the toolbar tracking
+Correct: B
+Explanation: Bundled software from third-party download sites often includes adware, browser hijackers, and potentially unwanted programs (PUPs) that can compromise security and privacy. The correct remediation is to uninstall all bundled components and reinstall the browser from the official vendor's website to ensure a clean, unmodified installation. Official sources guarantee that the software has not been tampered with or supplemented with unwanted additions.
+
+Domain: 2.0 Security
+Sub-objective: 2.8 — Use common data destruction and disposal methods
+Question: A company wants to securely dispose of a large batch of old hard drives and needs to choose between in-house physical destruction and outsourcing. The primary reason to choose in-house destruction is to maintain which capability?
+A) Receive a certificate of destruction from a third party
+B) Ensure regulatory compliance documentation is provided
+C) Maintain direct chain of custody and control over drives until destruction
+D) Use more advanced shredding equipment than vendors offer
+Correct: C
+Explanation: Performing destruction in-house ensures the organization maintains direct chain of custody and physical control over drives from the moment they are removed from service until destruction is complete. With outsourced destruction, there is a window during transport and handling where drives could potentially be accessed. In-house destruction eliminates this risk but requires the organization to have appropriate equipment and document the process internally.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: An attacker sends a series of login attempts against a user account using previously leaked username/password combinations from other breached websites. Which attack type is this?
+A) Dictionary attack
+B) Brute force attack
+C) Credential stuffing
+D) Rainbow table attack
+Correct: C
+Explanation: Credential stuffing uses automated tools to test large numbers of username/password pairs obtained from previous data breaches against other services, exploiting the fact that many users reuse passwords across sites. Unlike dictionary attacks that try common words, credential stuffing uses real credentials known to have been used by the target user. Unique passwords for every site (enforced by a password manager) and MFA are the primary defenses.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: An administrator needs to ensure that users on a workstation cannot access the local administrator account but that it is available for recovery purposes. Which combination of actions achieves this?
+A) Delete the account and create a new one with a different name
+B) Disable the built-in Administrator account and create a separate emergency access account
+C) Rename the administrator account and set a complex password known only to IT
+D) Convert the administrator account to a standard user account
+Correct: C
+Explanation: Renaming the built-in Administrator account makes it harder for attackers to target it by name, while setting a complex password protects it from unauthorized access. The renamed account remains available for emergency recovery without being easily discoverable. This approach is recommended over disabling the account, which could leave no administrative access if the environment lacks another admin account.
+
+Domain: 2.0 Security
+Sub-objective: 2.9 — Configure appropriate security settings on SOHO wireless and wired networks
+Question: A technician is configuring a SOHO router and wants to ensure that devices on the guest network can access the internet but cannot communicate with devices on the main network. Which router feature provides this network isolation?
+A) MAC filtering on the guest network
+B) Guest network isolation (AP isolation)
+C) IP filtering between guest and main SSIDs
+D) Disabling SSID broadcast on the guest network
+Correct: B
+Explanation: Guest network isolation (also called AP or client isolation) configures the router to prevent devices connected to the guest network from communicating with each other or with devices on the main network, while still allowing internet access. This is a built-in feature of most modern SOHO routers that supports guest networking. Without isolation, a compromised guest device could potentially attack devices on the main network.
+
+Domain: 2.0 Security
+Sub-objective: 2.6 — Configure a workstation to meet best practices for security
+Question: A technician is configuring a new Windows workstation and notices that the built-in Guest account is disabled but another unused account called "temp_user" is enabled with no password. What should be done?
+A) Set a password on temp_user and enable it for future use
+B) Disable or delete the unused temp_user account
+C) Rename temp_user to Guest and use it as the guest account
+D) Convert temp_user to an administrator account
+Correct: B
+Explanation: Unused user accounts, especially those with weak or no passwords, represent unnecessary security risks because they provide potential entry points for unauthorized access. Best practice requires that all unused accounts be disabled or deleted as part of workstation hardening. Account management policies should include periodic reviews to identify and remove dormant accounts.
+
+Domain: 2.0 Security
+Sub-objective: 2.3 — Detect, remove, and prevent malware using the appropriate tools and methods
+Question: A technician suspects a PC is infected with a virus that attaches itself to executable files. Each time an infected program runs, the virus looks for and infects other executable files on the system. Which characteristic differentiates a file-infecting virus from a worm?
+A) A virus requires a host file to attach to, while a worm is self-contained and spreads without a host file
+B) A worm requires a host file while a virus spreads independently
+C) A virus only affects documents while a worm affects executables
+D) A worm requires user interaction while a virus spreads automatically
+Correct: A
+Explanation: A file-infecting virus requires a host file (such as an executable) to attach to and spreads when the infected file is executed or shared. A worm, by contrast, is a standalone program that does not require a host file and can replicate and spread automatically across networks by exploiting vulnerabilities. This distinction is important for understanding infection vectors and choosing appropriate removal strategies.
+
+Domain: 2.0 Security
+Sub-objective: 2.1 — Summarize various security measures and their purposes
+Question: An access control list on a firewall is configured to permit traffic from the IP range 192.168.1.0/24 to reach the web server on port 443, and deny all other inbound traffic. Which security function does this ACL primarily perform?
+A) Authentication of users attempting to access the web server
+B) Encryption of data between clients and the web server
+C) Filtering of network traffic based on defined rules
+D) Detection of intrusion attempts against the web server
+Correct: C
+Explanation: Access control lists (ACLs) on firewalls and routers filter network traffic by permitting or denying packets based on source/destination IP addresses, ports, and protocols. They are a fundamental network traffic control mechanism. ACLs perform filtering but do not authenticate users, encrypt traffic, or detect intrusions—those functions require additional security controls.
+
+Domain: 2.0 Security
+Sub-objective: 2.10 — Install and configure browsers and relevant security settings
+Question: A technician configures a browser to display a warning before navigating to sites known to distribute malware or engage in phishing. Which browser security feature enables this?
+A) Certificate pinning
+B) Safe browsing protection
+C) Content Security Policy
+D) Browser sync
+Correct: B
+Explanation: Safe browsing (available in Chrome, Firefox, and other browsers) maintains and checks URLs against databases of known malicious and phishing sites, warning users before they navigate to dangerous pages. This feature provides real-time protection against web-based threats including phishing sites and malware distribution pages. Safe browsing should be enabled as a baseline browser security setting.
+
+Domain: 2.0 Security
+Sub-objective: 2.2 — Compare and contrast wireless security protocols and authentication methods
+Question: A company wants to implement wireless authentication that allows users to use their existing Active Directory credentials to authenticate to Wi-Fi without additional password prompts. Which combination of technologies enables seamless AD-integrated wireless authentication?
+A) WPA2-Personal with a shared AD group password
+B) WPA2-Enterprise with RADIUS and AD as the backend directory
+C) WPA3-Personal with AD password synchronization
+D) Open authentication with AD captive portal
+Correct: B
+Explanation: WPA2-Enterprise uses 802.1X with RADIUS as the authentication server. When RADIUS is configured to use Active Directory as its user database (via LDAP or NPS), users can authenticate to Wi-Fi using their existing AD credentials. This provides seamless integration with existing identity management, enables per-user authentication, and allows AD-based access control and auditing for wireless access.
+
+Domain: 2.0 Security
+Sub-objective: 2.7 — Explain common methods for securing mobile and embedded devices
+Question: An employee leaves a company and returns their corporate-issued phone. Before reassigning the device, the IT department needs to erase all data and return the phone to factory settings. Which action is most appropriate?
+A) Remote wipe via MDM
+B) Selective wipe of corporate data
+C) Factory reset of the device
+D) Low-level format of the storage
+Correct: C
+Explanation: A factory reset returns the device to its original out-of-box state, erasing all accounts, data, apps, and settings. This is appropriate when a corporate device needs to be fully wiped before reassignment. While remote wipe via MDM can achieve the same result, a factory reset performed directly on the device is the most thorough and straightforward method when the device is physically in hand.
+
+Domain: 2.0 Security
+Sub-objective: 2.4 — Explain common social engineering attacks, threats, and vulnerabilities
+Question: A system administrator discovers that an attacker was able to access internal systems using valid credentials belonging to an employee who had left the company six months ago. Which vulnerability allowed this attack?
+A) Zero-day exploit
+B) Failure to disable departed employee accounts promptly
+C) Brute force attack on the account
+D) Social engineering of current employees
+Correct: B
+Explanation: Failure to promptly disable accounts for departed employees creates orphaned accounts that can be exploited long after the employee's departure. Attackers who obtain these credentials—through phishing of the former employee, purchasing from dark web, or other means—can use them to access corporate systems undetected. An account lifecycle management process that immediately disables accounts upon employee departure is essential.
+
+Domain: 2.0 Security
+Sub-objective: 2.5 — Manage and configure basic security settings in the Microsoft Windows OS
+Question: A technician configures a Windows login option that uses a short numeric code that is stored locally on the device and works even when offline, while a long complex password is also set for the account. Which feature allows the PIN to be used as an alternative authentication method?
+A) BitLocker PIN
+B) EFS PIN
+C) Windows Hello PIN
+D) Local Security Policy PIN
+Correct: C
+Explanation: Windows Hello PIN is a device-specific, locally stored authentication option that serves as an alternative to the account password. The PIN is protected by the TPM and associated with the specific device, so it cannot be used on other machines. Windows Hello supports PIN, fingerprint, and facial recognition as alternatives to traditional password authentication.

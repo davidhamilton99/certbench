@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/Card";
+import { ProfileEditor } from "@/components/workspace/ProfileEditor";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export const metadata = {
@@ -22,37 +22,27 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
+  // Get user's active enrollment for exam date
+  const { data: activeEnrollment } = await supabase
+    .from("user_enrollments")
+    .select("certification_id, exam_date")
+    .eq("user_id", user.id)
+    .eq("is_active", true)
+    .single();
+
   return (
     <div>
       <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-8">
         Profile
       </h1>
-      <Card padding="lg">
-        <div className="flex flex-col gap-4">
-          <div>
-            <p className="text-[13px] text-text-muted uppercase tracking-wider font-medium">
-              Display Name
-            </p>
-            <p className="text-[15px] text-text-primary mt-1">
-              {profile?.display_name || "—"}
-            </p>
-          </div>
-          <div>
-            <p className="text-[13px] text-text-muted uppercase tracking-wider font-medium">
-              Email
-            </p>
-            <p className="text-[15px] text-text-primary mt-1">{user.email}</p>
-          </div>
-          <div>
-            <p className="text-[13px] text-text-muted uppercase tracking-wider font-medium">
-              Member Since
-            </p>
-            <p className="text-[15px] text-text-primary mt-1 font-mono">
-              {new Date(profile?.created_at).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      </Card>
+      <ProfileEditor
+        userId={user.id}
+        email={user.email || ""}
+        displayName={profile?.display_name || ""}
+        memberSince={profile?.created_at || user.created_at}
+        examDate={activeEnrollment?.exam_date || null}
+        certificationId={activeEnrollment?.certification_id || null}
+      />
       <div className="mt-8">
         <SignOutButton />
       </div>

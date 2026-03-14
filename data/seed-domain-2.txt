@@ -1,0 +1,1559 @@
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which threat actor type is most commonly associated with Advanced Persistent Threats (APTs) and long-term espionage campaigns targeting government infrastructure?
+A) Hacktivists
+B) Script kiddies
+C) Nation-state actors
+D) Organized crime groups
+Correct: C
+Explanation: Nation-state actors have the resources, funding, and motivation to conduct sustained APT campaigns targeting government and critical infrastructure for espionage. Hacktivists are motivated by political or ideological goals and typically conduct shorter, higher-visibility attacks rather than long-term covert operations.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A disgruntled employee who still has valid credentials copies sensitive customer data before resigning. Which threat actor category best describes this individual?
+A) External threat actor
+B) Insider threat
+C) Hacktivist
+D) Script kiddie
+Correct: B
+Explanation: An insider threat is a current or former employee, contractor, or partner with legitimate access who misuses that access. The key distinguishing factor is that the actor has or had authorized access to systems. An external threat actor does not have legitimate access and must breach the perimeter to gain entry.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which attribute most distinguishes a nation-state threat actor from organized crime?
+A) Use of malware
+B) Financial motivation
+C) Level of resources and geopolitical motivation
+D) Targeting of financial institutions
+Correct: C
+Explanation: Nation-state actors are distinguished by state-level resources, funding, and geopolitical motivations such as espionage, sabotage, or warfare. Organized crime is primarily financially motivated. Both may use sophisticated malware and target financial institutions, so those attributes alone do not differentiate them.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: An attacker defaces a corporation's website with political messaging condemning the company's environmental policies. Which threat actor motivation best describes this attack?
+A) Financial gain
+B) Espionage
+C) Ideological or political
+D) Service disruption for competitive advantage
+Correct: C
+Explanation: Website defacement with political messaging is a hallmark of hacktivism — attacks motivated by ideological or political beliefs. Financial gain and espionage involve data theft or monetization. Service disruption for competitive advantage is a motivation more associated with competitors or organized crime.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which term describes a threat actor who uses pre-built, publicly available hacking tools without deeply understanding how they work?
+A) Nation-state actor
+B) Insider threat
+C) Script kiddie
+D) Hacktivist
+Correct: C
+Explanation: Script kiddies lack the technical expertise to develop their own tools and instead rely on pre-built exploits and automated toolkits. They represent a low-sophistication threat but can still cause significant damage. Nation-state actors and organized crime groups have high sophistication and typically develop custom tooling.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A security analyst discovers that an employee has been running unauthorized cloud services using a corporate credit card to bypass IT procurement. This is an example of which threat concept?
+A) Supply chain attack
+B) Shadow IT
+C) Insider espionage
+D) Pretexting
+Correct: B
+Explanation: Shadow IT refers to systems, software, or services used within an organization without explicit IT approval. It creates security risk because these assets are outside security monitoring and controls. It is not espionage unless data is being exfiltrated for external parties, and it differs from supply chain attacks which involve compromised vendors.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which motivation is MOST commonly associated with organized crime threat actors?
+A) Political influence
+B) Financial gain
+C) Disruption of military operations
+D) Revenge against a former employer
+Correct: B
+Explanation: Organized crime groups are primarily motivated by financial gain, often through ransomware, credit card fraud, or theft of intellectual property they can sell. Political influence is more associated with nation-states or hacktivists. Military disruption is a nation-state motivation, and revenge is more typical of disgruntled insiders.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A competitor hires an individual to gain employment at a target company and exfiltrate product roadmap data over several months. Which combination of threat actor attributes applies?
+A) External actor, low sophistication, financial motivation
+B) Insider threat, high sophistication, espionage motivation
+C) Hacktivist, medium sophistication, ideological motivation
+D) Script kiddie, low sophistication, revenge motivation
+Correct: B
+Explanation: Planting an employee to conduct long-term espionage requires high sophistication and planning. Once inside, the actor becomes an insider threat. The motivation is espionage (stealing competitive intelligence). This is different from a disgruntled employee acting spontaneously, as this scenario involves deliberate infiltration.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which threat actor attribute refers to the financial backing, personnel, and technical capabilities available to carry out attacks?
+A) Motivation
+B) Sophistication
+C) Resources and funding
+D) Attack surface
+Correct: C
+Explanation: Resources and funding describe the capacity a threat actor has to conduct operations — including money, personnel, infrastructure, and time. Sophistication refers to the technical skill level. Motivation describes why the attack occurs. Attack surface is a target-side concept, not a threat actor attribute.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: An APT group maintains persistent access to a defense contractor's network for 18 months, slowly exfiltrating design documents. Which characteristic is the defining feature of an APT?
+A) Use of zero-day exploits exclusively
+B) Persistent, long-term access with a specific objective
+C) Immediate data destruction after exfiltration
+D) Attacks conducted only through physical means
+Correct: B
+Explanation: The defining feature of an Advanced Persistent Threat is the combination of advanced capabilities, persistence over time, and a specific targeted objective (often espionage). APTs do not exclusively use zero-days — they may use spear phishing or other vectors. Immediate data destruction is the opposite of what APTs typically do.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A hacktivist group launches a DDoS attack against a financial institution to protest economic inequality. Which two characteristics best describe this threat actor?
+A) High sophistication and financial motivation
+B) External actor with ideological motivation
+C) Internal actor with service disruption goals
+D) Nation-state actor with political motivation
+Correct: B
+Explanation: Hacktivists are external actors motivated by ideology, politics, or social causes. A DDoS attack against a financial institution to make a political statement fits this profile precisely. Nation-state actors are state-sponsored and pursue geopolitical objectives rather than activist causes. Hacktivists vary in sophistication but are typically not internal.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which threat actor type typically has the LOWEST level of technical sophistication?
+A) Nation-state actor
+B) Organized crime group
+C) Script kiddie
+D) APT group
+Correct: C
+Explanation: Script kiddies are characterized by low technical sophistication — they use existing tools and exploits created by others rather than developing their own. Nation-state actors, organized crime groups, and APT groups all operate at higher sophistication levels with custom tooling, planning, and resources.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: An employee who was passed over for a promotion begins intentionally misconfiguring firewall rules. Which threat actor motivation best describes this behavior?
+A) Financial gain
+B) Espionage
+C) Revenge
+D) Ideological
+Correct: C
+Explanation: An employee deliberately sabotaging systems after a perceived slight is motivated by revenge — a common insider threat motivation. Financial gain would involve theft. Espionage would involve data exfiltration for a competing party. Ideological motivation is associated with hacktivists acting on beliefs rather than personal grievances.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which category of threat actor is MOST likely to engage in cyber warfare targeting critical national infrastructure?
+A) Script kiddies
+B) Organized crime
+C) Nation-state actors
+D) Hacktivists
+Correct: C
+Explanation: Cyber warfare targeting national infrastructure (power grids, water systems, financial systems) is a nation-state activity. Only nation-states have the motivation (geopolitical/wartime goals), resources, and operational security required for sustained campaigns against critical infrastructure. Organized crime avoids actions that invite nation-state-level law enforcement response.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A security researcher discovers that an attacker is motivated by exposing corporate wrongdoing and leaking internal emails to the press. Which threat actor type does this describe?
+A) Organized crime
+B) Insider threat acting for financial gain
+C) Hacktivist
+D) Nation-state actor
+Correct: C
+Explanation: Leaking internal documents to expose wrongdoing is a form of hacktivism — using hacking as a form of activism. The motivation is ethical or ideological rather than financial. Organized crime monetizes stolen data rather than publicizing it. Nation-states typically want to keep exfiltrated intelligence secret rather than release it publicly.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which characteristic distinguishes an internal threat actor from an external one?
+A) Level of technical sophistication
+B) Type of malware used
+C) Whether the actor has authorized access to the organization's systems
+D) The motivation behind the attack
+Correct: C
+Explanation: The defining distinction between internal and external threat actors is authorized access. Internal actors (employees, contractors, partners) have legitimate access, which makes them particularly dangerous. External actors must first breach defenses. Sophistication, malware type, and motivation can apply to both categories.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A foreign intelligence agency conducts a multi-year campaign to steal vaccine research from pharmaceutical companies. Which threat actor description is most accurate?
+A) Organized crime motivated by financial gain
+B) Hacktivist motivated by anti-corporate ideology
+C) Nation-state actor motivated by geopolitical advantage
+D) Insider threat motivated by revenge
+Correct: C
+Explanation: Stealing vaccine research through a multi-year campaign is state-sponsored espionage — a nation-state motivation of gaining geopolitical or economic advantage. The sustained, targeted nature and intelligence collection objective are hallmarks of APT/nation-state activity. Organized crime would more likely monetize the research through extortion or sale.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which threat actor motivation is associated with disrupting a competitor's online services to gain market share?
+A) Espionage
+B) Financial gain through service disruption
+C) Ideological belief
+D) Warfare
+Correct: B
+Explanation: Disrupting a competitor's services to gain business advantage combines financial motivation with service disruption tactics. This is distinct from espionage (which involves data theft for intelligence) and hacktivism (ideological). While it could be considered a form of economic warfare, the more precise answer combines financial motivation with competitive disruption.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which statement BEST describes the motivation of a nation-state conducting cyber espionage against a foreign government?
+A) Generating revenue through ransomware deployment
+B) Collecting intelligence to support national security objectives
+C) Publicly exposing government corruption
+D) Testing newly developed offensive capabilities
+Correct: B
+Explanation: Nation-state cyber espionage is fundamentally about collecting intelligence — military secrets, diplomatic communications, economic plans — to support the sponsoring nation's security and geopolitical interests. Revenue generation is organized crime's motivation. Public exposure aligns with hacktivism. Testing capabilities may be a secondary benefit but is not the primary motivation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which combination of attributes is MOST characteristic of an APT threat actor?
+A) Low funding, external, opportunistic
+B) High sophistication, persistent access, specific targeting
+C) Medium sophistication, internal, financial motivation
+D) Low sophistication, external, ideological motivation
+Correct: B
+Explanation: APT actors are defined by advanced technical capabilities (high sophistication), maintaining access over extended periods (persistent), and focusing on specific high-value targets. They are not opportunistic. Low sophistication describes script kiddies, internal actors describes insiders, and ideological motivation describes hacktivists.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A threat actor gains employment at a managed service provider specifically to access the MSP's downstream client networks. This technique is BEST associated with which threat actor type?
+A) Script kiddie
+B) Nation-state or sophisticated organized crime actor
+C) Hacktivist
+D) Insider threat with revenge motivation
+Correct: B
+Explanation: Infiltrating an MSP to pivot to client networks is a sophisticated supply chain / trusted relationship attack requiring significant planning and resources. This is characteristic of nation-state or highly sophisticated organized crime actors. Script kiddies lack the sophistication, and hacktivists rarely engage in this level of operational planning for supply chain attacks.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which motivation is MOST associated with a threat actor who demands cryptocurrency payment to restore encrypted files?
+A) Espionage
+B) Warfare
+C) Financial gain
+D) Ideological belief
+Correct: C
+Explanation: Ransomware demanding cryptocurrency payment is a purely financially motivated attack. The attacker's goal is monetization through extortion. Espionage involves covert data collection without tipping off the victim. Warfare aims to cause damage rather than collect payment. Ideological motivation (hacktivism) typically involves public shaming or disruption rather than financial extortion.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker sends an email with a PDF attachment that exploits a vulnerability in the PDF reader to execute malicious code. Which threat vector does this represent?
+A) Voice-based attack vector
+B) File-based attack vector
+C) Removable device vector
+D) Unsecure network vector
+Correct: B
+Explanation: Delivering malware through a malicious file attachment (such as a PDF, Office document, or archive) is a file-based attack vector. The file itself carries the exploit payload. A voice-based vector would use phone calls. A removable device vector requires physical media. The email is the delivery mechanism but the vector that carries the exploit is the file.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A user receives a text message claiming their bank account has been suspended and asking them to click a link. This is an example of which attack type?
+A) Vishing
+B) Smishing
+C) Spear phishing
+D) Pretexting
+Correct: B
+Explanation: Smishing (SMS phishing) uses text messages to deliver phishing lures. The victim receives a fraudulent SMS designed to trick them into clicking a link or providing credentials. Vishing uses voice calls. Spear phishing is targeted email phishing. Pretexting is the creation of a fabricated scenario — it can be a component of smishing but is not the specific term for SMS-based phishing.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker compromises a legitimate software vendor's update server and pushes malicious updates to all customers. Which threat vector does this represent?
+A) Watering hole attack
+B) Removable media vector
+C) Supply chain attack
+D) Open service port exploitation
+Correct: C
+Explanation: Compromising a vendor's update mechanism to distribute malware to downstream customers is a classic supply chain attack. The attacker leverages trusted relationships between vendors and customers. A watering hole attack compromises websites that targets are known to visit. Open service port exploitation targets exposed network services directly.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which attack technique involves registering domain names that are slight misspellings of legitimate websites to capture users who make typing errors?
+A) Brand impersonation
+B) Watering hole attack
+C) Typosquatting
+D) DNS poisoning
+Correct: C
+Explanation: Typosquatting (URL hijacking) involves registering domains with common misspellings of legitimate sites (e.g., "amaz0n.com") to catch misdirected traffic. Brand impersonation uses legitimate-looking branding but is broader in scope. Watering hole attacks compromise sites that target users already visit legitimately. DNS poisoning manipulates DNS records rather than registering look-alike domains.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker identifies that a company uses default credentials on its internet-facing network management interface and gains administrative access. Which attack surface element was exploited?
+A) Unsupported operating system
+B) Default credentials
+C) Open service ports
+D) Vulnerable client-side software
+Correct: B
+Explanation: Default credentials (factory-set usernames and passwords that are never changed) are a distinct attack surface element. The attacker didn't need to exploit a software vulnerability — the authentication mechanism itself was weak. Open service ports would be the mechanism to reach the interface, but the vulnerability is specifically the unchanged default credentials.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A security team discovers that employees are connecting personal Bluetooth speakers to their work laptops, creating a potential attack vector. Which threat vector category does Bluetooth fall under?
+A) Message-based vector
+B) Removable device vector
+C) Unsecure network (wireless)
+D) File-based vector
+Correct: C
+Explanation: Bluetooth is a wireless communication technology and falls under the unsecure network (wireless) threat vector category. Attacks such as bluejacking, bluesnarfing, and BIAS attacks exploit Bluetooth. Removable devices involve physical media (USB drives). The wireless category encompasses Wi-Fi, Bluetooth, and other radio-frequency communications.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker calls an employee pretending to be from the IT help desk and convinces them to reveal their password. Which social engineering technique is this?
+A) Smishing
+B) Pretexting combined with vishing
+C) Watering hole attack
+D) Brand impersonation
+Correct: B
+Explanation: This combines vishing (voice-based phishing using a phone call) with pretexting (creating a fabricated scenario — impersonating IT help desk — to establish legitimacy). The pretext gives the attacker credibility to make the request seem legitimate. Smishing uses SMS. A watering hole attack requires no direct social interaction.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which threat vector involves attackers compromising websites frequently visited by a specific target group in order to infect the targets' systems?
+A) Typosquatting
+B) Spear phishing
+C) Watering hole attack
+D) Supply chain attack
+Correct: C
+Explanation: A watering hole attack compromises websites known to be frequented by the intended targets, waiting for victims to visit the site and become infected. The name comes from predators waiting near water sources. Spear phishing is direct targeted email. Typosquatting uses look-alike domains. Supply chain attacks compromise vendors or update mechanisms.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An employee finds a USB drive in the parking lot, plugs it in, and unknowingly installs malware. Which threat vector was used?
+A) Message-based vector
+B) Removable device vector
+C) Unsecure wired network
+D) Open service port exploitation
+Correct: B
+Explanation: The USB drive is a removable device attack vector — physical media used to deliver malware, often as part of a baiting social engineering technique. The attacker relies on human curiosity. Message-based vectors use email, SMS, or IM. Network-based vectors require network connectivity rather than physical media.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which attack type involves sending unsolicited fraudulent messages via instant messaging platforms to trick users into clicking malicious links?
+A) Vishing
+B) Spear phishing
+C) Message-based attack via IM
+D) Watering hole attack
+Correct: C
+Explanation: Instant messaging (IM) platforms represent a message-based attack vector. Attackers send malicious links or files through IM channels (Slack, Teams, WhatsApp, etc.). Vishing uses voice calls. Spear phishing is specifically email-based and targeted. Watering hole attacks compromise websites rather than sending direct messages.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A threat actor registers "micros0ft-support.com" and creates a website that mimics Microsoft's support portal to harvest credentials. Which technique is this?
+A) Typosquatting only
+B) Brand impersonation combined with phishing
+C) Watering hole attack
+D) Pretexting
+Correct: B
+Explanation: This combines brand impersonation (replicating Microsoft's visual identity and branding) with phishing (harvesting credentials). While the domain name involves character substitution (zero for O), the key technique being exploited is brand impersonation. Pretexting is a component but the attacker's primary weapon is the fake Microsoft brand. Watering hole attacks require compromising legitimate sites.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which threat vector involves using Voice over IP (VoIP) technology to make bulk fraudulent phone calls attempting to trick recipients into revealing personal information?
+A) Smishing
+B) SPIT (Spam over Internet Telephony) combined with vishing
+C) Spear phishing
+D) Pretexting
+Correct: B
+Explanation: Spam over Internet Telephony (SPIT) uses VoIP to conduct mass automated calling campaigns. When combined with vishing (voice phishing), it creates large-scale voice-based social engineering attacks. Smishing uses SMS. This differs from traditional vishing by using VoIP infrastructure to scale the attack rather than traditional phone lines.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A company's legacy Windows XP workstations can no longer receive security patches. Which attack surface risk does this create?
+A) Default credentials vulnerability
+B) Open service ports
+C) Unsupported systems creating unpatched vulnerabilities
+D) Supply chain risk
+Correct: C
+Explanation: Unsupported (end-of-life) systems no longer receive security updates, meaning known vulnerabilities remain permanently unpatched. Windows XP stopped receiving patches in 2014, leaving any discovered vulnerabilities permanently exploitable. This is a distinct attack surface element from default credentials or open ports, though all can co-exist on the same system.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker performs reconnaissance and identifies that port 23 (Telnet) is open on a network device, transmitting credentials in cleartext. Which attack surface element is being exploited?
+A) Default credentials
+B) Open service ports with insecure protocols
+C) Unsupported hardware
+D) Supply chain weakness
+Correct: B
+Explanation: An open service port running an insecure protocol (Telnet transmits data including credentials in cleartext) represents a combined attack surface risk. The open port provides access and the insecure protocol enables credential theft through interception. Default credentials are a separate issue. Unsupported hardware relates to end-of-life equipment, not open ports.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: During a penetration test, a tester discovers a malicious image file that executes code when rendered by a vulnerable image viewer. Which attack vector category does this represent?
+A) File-based vector
+B) Message-based vector
+C) Image-based vector
+D) Removable device vector
+Correct: C
+Explanation: Image-based attacks exploit vulnerabilities in image rendering software. A specially crafted image can contain embedded exploit code that executes when the vulnerable viewer processes it. This is distinct from a file-based vector (documents with macros) because the exploit is specifically triggered by image rendering. The Security+ SY0-701 exam explicitly calls out image-based as a separate vector category.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which type of software installed on endpoints creates an attack surface by requiring regular updates and potentially having privileged access to the operating system?
+A) Shadow IT applications
+B) Client-based or agent-based software
+C) Open source libraries
+D) Firmware
+Correct: B
+Explanation: Client-based (or agent-based) software — such as endpoint detection tools, VPN clients, and management agents — creates attack surface because it runs with elevated privileges and must communicate with external servers. If not updated, it introduces vulnerabilities. Shadow IT is unauthorized software. Firmware is hardware-level code. The SY0-701 explicitly identifies vulnerable client/agent-based software as a threat vector.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A company's managed service provider (MSP) is compromised, and the attacker uses the MSP's administrative access to push malicious configurations to all client networks. This is an example of which threat vector?
+A) Watering hole attack
+B) Insider threat
+C) Supply chain attack through a managed service provider
+D) Open service port exploitation
+Correct: C
+Explanation: Compromising an MSP to attack its clients through trusted administrative channels is a supply chain attack. The SY0-701 specifically calls out managed service providers as a supply chain attack surface. The attacker exploits the trust relationship between the MSP and its clients. This is different from a watering hole attack (which compromises websites) and an insider threat (which requires the attacker to be an employee).
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker creates a convincing phishing email that appears to come from the CEO of a company targeting the CFO for a fraudulent wire transfer. Which specific type of attack is this?
+A) Smishing
+B) Whaling (spear phishing targeting executives)
+C) Vishing
+D) Watering hole
+Correct: B
+Explanation: Targeting a high-value executive (CFO) with a spear phishing email impersonating another executive (CEO) for financial fraud is called whaling — a subset of spear phishing targeting "big fish" (senior executives). The Business Email Compromise (BEC) element makes it a high-value attack. Smishing uses SMS, vishing uses phone calls, and watering hole attacks use compromised websites.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A coffee shop provides free Wi-Fi on an unsecured (open) network. Which attack can a threat actor on this network most easily conduct against other users?
+A) SQL injection
+B) On-path (man-in-the-middle) attack
+C) Watering hole attack
+D) Typosquatting
+Correct: B
+Explanation: An open, unencrypted Wi-Fi network allows an attacker on the same network to intercept traffic between other users and the internet, enabling an on-path (man-in-the-middle) attack. SQL injection attacks target web application backends, not the network layer. Watering hole and typosquatting require DNS/web infrastructure manipulation, not just shared network presence.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Which social engineering attack creates a fabricated but believable backstory to manipulate a target into taking a desired action?
+A) Phishing
+B) Pretexting
+C) Baiting
+D) Typosquatting
+Correct: B
+Explanation: Pretexting involves creating a fabricated scenario or identity (the pretext) to establish trust and manipulate the target. For example, claiming to be a vendor, auditor, or IT worker to extract information. Phishing uses deceptive messages but doesn't necessarily require a detailed backstory. Baiting uses physical media or enticing offers. Typosquatting is a technical domain-name attack.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A hardware component purchased from a third-party reseller is discovered to contain hidden firmware that exfiltrates data. Which attack surface does this exploit?
+A) Open service ports
+B) Default credentials
+C) Supply chain (vendor/supplier)
+D) Unsupported systems
+Correct: C
+Explanation: Compromised hardware introduced through a third-party vendor or supplier is a supply chain attack at the hardware/firmware level. The SY0-701 explicitly identifies vendors and suppliers as supply chain attack surface elements. This is particularly dangerous because the malicious functionality is embedded before the organization ever receives the equipment.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A developer's application fails to validate the length of user-supplied input before copying it into a fixed-size memory buffer. Which vulnerability type is this?
+A) SQL injection
+B) Buffer overflow
+C) Race condition
+D) Improper error handling
+Correct: B
+Explanation: A buffer overflow occurs when a program writes more data to a memory buffer than it can hold, overwriting adjacent memory. This can allow attackers to overwrite return addresses and execute arbitrary code. SQL injection targets database queries. Race conditions involve timing. Improper error handling leaks information rather than causing memory corruption.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker injects malicious JavaScript into a web application's comment field. When other users view the comment, the script executes in their browsers, stealing their session cookies. Which vulnerability type is this?
+A) SQL injection
+B) CSRF
+C) Stored Cross-Site Scripting (XSS)
+D) Directory traversal
+Correct: C
+Explanation: Stored (persistent) XSS occurs when malicious scripts are permanently stored on the target server and execute in victims' browsers when they view the infected content. SQL injection targets the database layer. CSRF tricks authenticated users into making unintended requests rather than executing scripts in their browsers. Directory traversal allows file system access, not script injection.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A vulnerability exists in a file upload function that allows attackers to use "../" sequences in filenames to access files outside the web root. Which vulnerability type is this?
+A) Buffer overflow
+B) Cross-Site Request Forgery
+C) Directory traversal
+D) Memory injection
+Correct: C
+Explanation: Directory traversal (path traversal) uses sequences like "../" to navigate outside the intended directory and access files the application should not expose. This can expose configuration files, credentials, and system files. CSRF is a different web vulnerability. Buffer overflow and memory injection are memory corruption issues, not file path manipulation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker exploits a TOCTOU (Time-of-Check to Time-of-Use) vulnerability in a file permission check. Which vulnerability category does this fall under?
+A) Buffer overflow
+B) Race condition
+C) Memory injection
+D) Improper error handling
+Correct: B
+Explanation: TOCTOU is the canonical example of a race condition vulnerability, where there is a gap between the time a condition is checked and the time it is used. An attacker can change the state of a resource during this window. Buffer overflows corrupt memory. Memory injection inserts malicious code. Improper error handling reveals sensitive information in error messages.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A web application displays detailed database error messages including table names and query structure when a query fails. Which vulnerability type does this represent?
+A) SQL injection
+B) Improper error handling
+C) Buffer overflow
+D) Cross-Site Scripting
+Correct: B
+Explanation: Displaying verbose error messages containing sensitive information (table names, database structure, stack traces) is improper error handling. This information helps attackers map the application's backend for SQL injection or other attacks. SQL injection is the exploit that may follow, but the vulnerability enabling reconnaissance is the improper error handling itself.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker sends a specially crafted HTTP request that tricks a user's browser into submitting an authenticated request to a banking application without the user's knowledge. Which vulnerability type is this?
+A) Cross-Site Scripting
+B) SQL Injection
+C) Cross-Site Request Forgery (CSRF)
+D) Session hijacking
+Correct: C
+Explanation: CSRF (Cross-Site Request Forgery) exploits the trust a web application has in the user's authenticated browser, tricking it into making unintended authenticated requests. Unlike XSS (which injects code into the application), CSRF abuses the browser's automatic cookie inclusion. The attacker doesn't steal the session — they abuse it from a distance.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A virtual machine is able to execute code that breaks out of its isolated environment and gains access to the hypervisor or other VMs on the same physical host. Which vulnerability type is this?
+A) Side-channel attack
+B) Resource reuse vulnerability
+C) VM escape
+D) Cloud misconfiguration
+Correct: C
+Explanation: VM escape is a virtualization vulnerability where code running inside a virtual machine exploits a flaw in the hypervisor to break isolation and access the host system or other VMs. Side-channel attacks infer information by observing shared physical resources (CPU cache timing, power consumption). Resource reuse occurs when memory or storage from previous tenants is not properly cleared.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker on a shared cloud platform infers information about another tenant's encryption keys by measuring CPU cache timing patterns. Which vulnerability type does this represent?
+A) VM escape
+B) Resource reuse
+C) Cloud misconfiguration
+D) Side-channel attack
+Correct: D
+Explanation: Side-channel attacks extract secret information by observing indirect physical or logical signals (timing, power consumption, electromagnetic emissions, cache behavior) rather than directly exploiting software flaws. Spectre and Meltdown are real-world CPU side-channel vulnerabilities. VM escape requires breaking out of the virtualization layer. Resource reuse involves cleartext remnants from prior use of shared storage.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A cloud administrator accidentally makes an S3 storage bucket containing sensitive customer data publicly accessible. Which vulnerability category does this represent?
+A) Zero-day vulnerability
+B) Cryptographic vulnerability
+C) Cloud misconfiguration
+D) Supply chain vulnerability
+Correct: C
+Explanation: Misconfigured cloud resources (publicly accessible storage buckets, overly permissive IAM policies, disabled logging) are the most common cause of cloud data breaches. This is a configuration error, not a software flaw. Zero-days are previously unknown flaws. Cryptographic vulnerabilities involve weak algorithms or improper implementation. Supply chain vulnerabilities involve third-party components.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A vendor discovers a critical flaw in a widely used embedded hardware component after the product line has been discontinued. Which vulnerability type is most relevant?
+A) Zero-day vulnerability
+B) Hardware/firmware vulnerability in end-of-life equipment
+C) Supply chain vulnerability
+D) Cryptographic vulnerability
+Correct: B
+Explanation: End-of-life hardware with unpatched firmware vulnerabilities represents a specific vulnerability category. When hardware is discontinued, the vendor will not release patches, leaving the flaw permanently unaddressed in deployed equipment. This differs from a zero-day (which is unknown to the vendor) — here the vendor knows the flaw but won't patch discontinued products.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A mobile application stores OAuth tokens in cleartext in shared storage on an Android device, accessible to any application. Which vulnerability type is this?
+A) Insecure data storage (mobile vulnerability)
+B) CSRF
+C) Buffer overflow
+D) VM escape
+Correct: A
+Explanation: Storing sensitive authentication tokens in cleartext in accessible storage locations is a mobile device vulnerability — specifically insecure data storage. This is a distinct mobile security concern addressed in the SY0-701 exam. Mobile platforms have specific security models that applications must follow to protect credentials. CSRF, buffer overflow, and VM escape are different vulnerability categories.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A researcher discovers a vulnerability in a widely deployed library before any patch exists or the vendor is aware. Which type of vulnerability is this?
+A) Legacy vulnerability
+B) Misconfiguration vulnerability
+C) Zero-day vulnerability
+D) End-of-life vulnerability
+Correct: C
+Explanation: A zero-day vulnerability is one that is unknown to the software vendor and for which no patch exists. The term "zero-day" refers to the vendor having zero days to fix the issue before it can be exploited. Legacy and end-of-life vulnerabilities exist in older, unsupported software where patches may never come. Misconfiguration is a deployment error, not a software flaw.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker exploits a weak implementation of WEP encryption on a legacy wireless network to decrypt captured traffic. Which vulnerability category does this represent?
+A) Cloud misconfiguration
+B) Cryptographic vulnerability
+C) Zero-day vulnerability
+D) Race condition
+Correct: B
+Explanation: WEP uses RC4 incorrectly with weak IV reuse, making it cryptographically broken. This is a cryptographic vulnerability — the algorithm implementation is flawed, allowing an attacker who captures sufficient traffic to decrypt it. Cloud misconfiguration is a deployment error. Zero-days are unknown flaws. Race conditions involve timing issues in code execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A web application uses user-supplied input directly in a database query without sanitization: SELECT * FROM users WHERE name = '[input]'. Which vulnerability type is present?
+A) Cross-Site Scripting
+B) Directory traversal
+C) SQL injection
+D) Buffer overflow
+Correct: C
+Explanation: Directly concatenating user input into SQL queries without parameterization or sanitization creates SQL injection vulnerability. An attacker can input SQL syntax to alter the query's logic, dump data, or even execute OS commands. XSS injects scripts into web pages. Directory traversal manipulates file paths. Buffer overflows corrupt memory, not SQL queries.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A Windows operating system running in production has not had security patches applied in 18 months due to application compatibility concerns. Which vulnerability type does this represent?
+A) Zero-day vulnerability
+B) Unpatched OS vulnerability
+C) Hardware firmware vulnerability
+D) Virtualization vulnerability
+Correct: B
+Explanation: An unpatched OS with known, publicly disclosed vulnerabilities represents OS vulnerability exposure. This is distinct from a zero-day (which would be unknown/unpatched even if patches were applied). The risk here is that patches exist but haven't been applied. This is one of the most common causes of successful attacks — known vulnerabilities that organizations fail to patch promptly.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A malicious open-source package uploaded to a public repository contains a backdoor and is unknowingly included as a dependency in enterprise software. Which vulnerability type is this?
+A) Zero-day vulnerability
+B) Supply chain vulnerability
+C) Cryptographic vulnerability
+D) Misconfiguration
+Correct: B
+Explanation: Malicious or compromised components introduced through software dependencies, open-source libraries, or package repositories are supply chain vulnerabilities. The SolarWinds attack and Log4Shell's impact via transitive dependencies are real-world examples. Zero-days are unknown flaws in legitimate software. Misconfigurations are deployment errors. This vulnerability enters through the development pipeline.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker exploits a vulnerability where the application injects attacker-controlled data directly into process memory, enabling arbitrary code execution. Which vulnerability type is this?
+A) Buffer overflow
+B) Memory injection
+C) Race condition
+D) Improper error handling
+Correct: B
+Explanation: Memory injection involves inserting malicious code or data directly into a running process's memory space (e.g., DLL injection, process hollowing). While related to buffer overflows, memory injection is a broader category encompassing techniques that place attacker-controlled code into memory for execution. Buffer overflow is one method; memory injection includes other techniques like reflective loading and code cave injection.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A user reports that all files on their workstation now have a ".locked" extension and a text file has appeared demanding cryptocurrency payment for decryption keys. Which type of malware is indicated?
+A) Rootkit
+B) Spyware
+C) Ransomware
+D) Logic bomb
+Correct: C
+Explanation: File encryption with a ransom demand for decryption keys is the definitive indicator of ransomware. The ".locked" extension and payment demand are classic ransomware characteristics. Rootkits hide malicious activity without encrypting files. Spyware silently collects information. Logic bombs trigger destructive events under specific conditions but do not encrypt files for ransom.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security analyst notices that a legitimate Windows process (svchost.exe) is making unusual outbound connections to an IP address in a foreign country. Process Explorer shows the process was spawned from an unusual parent process. Which malware technique is most likely indicated?
+A) Keylogging
+B) Logic bomb
+C) Process hollowing (memory injection / trojan)
+D) Bloatware installation
+Correct: C
+Explanation: A legitimate process name (svchost.exe) being used for malicious outbound connections, especially when spawned from an unusual parent, is a strong indicator of process hollowing or process injection — a technique used by trojans and sophisticated malware to masquerade as trusted processes. Keyloggers capture keystrokes. Logic bombs wait for trigger conditions. Bloatware is unwanted but not typically hidden in legitimate processes.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A network monitor shows that a workstation is systematically scanning all 65,535 TCP ports on every host in the subnet. Which type of malicious activity does this indicate?
+A) Data exfiltration
+B) Ransomware propagation
+C) Network reconnaissance by a worm or attacker
+D) DDoS attack participation
+Correct: C
+Explanation: Systematic port scanning across all hosts in a subnet is a reconnaissance indicator — the attacker or malware is mapping the network to identify targets and services. This pattern is also consistent with a worm seeking vulnerable services to spread. Data exfiltration would show large outbound transfers to external hosts. DDoS would show heavy traffic toward a single external target.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An employee's workstation suddenly begins sending thousands of DNS queries for random subdomains of a single domain. Which malicious activity does this BEST indicate?
+A) Ransomware encrypting files
+B) DNS tunneling for command-and-control communication
+C) Credential harvesting attack
+D) RFID cloning attack
+Correct: B
+Explanation: High volumes of DNS queries for random or encoded subdomains of a single domain is a classic indicator of DNS tunneling — a technique where malware encodes C2 communications or exfiltrated data within DNS queries/responses to bypass firewalls. Ransomware causes file system changes. Credential harvesting involves authentication activity. RFID cloning is a physical attack.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Security logs show that a user account successfully authenticated from New York at 9:00 AM and from Tokyo at 9:15 AM. Which type of malicious activity is most likely indicated?
+A) Privilege escalation
+B) Credential replay or account compromise (impossible travel)
+C) Rootkit installation
+D) Worm propagation
+Correct: B
+Explanation: Logins from geographically distant locations within an impossibly short time frame (known as "impossible travel") is a strong indicator of credential compromise — the account's credentials have been stolen and are being used by an attacker in a different geographic location. This is a classic indicator of credential replay or credential stuffing. Privilege escalation, rootkits, and worm propagation would show different behavioral indicators.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A user reports their computer is slow, and a security analyst discovers software installed on the machine that displays excessive advertisements and tracks browsing behavior without the user's clear consent. Which malware type is this?
+A) Ransomware
+B) Rootkit
+C) Adware/spyware (bloatware characteristics)
+D) Worm
+Correct: C
+Explanation: Software that displays excessive ads and tracks browsing without clear consent exhibits characteristics of adware and spyware — collectively sometimes called bloatware when bundled with legitimate software. Ransomware encrypts files. Rootkits hide at a deep system level and don't typically cause visible slowdowns through ads. Worms self-replicate across networks.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A developer commits code that includes a hidden condition: if the current date is after January 1, 2025, the application deletes all financial records. This code goes undetected until it triggers. Which malware type is this?
+A) Trojan horse
+B) Logic bomb
+C) Rootkit
+D) Virus
+Correct: B
+Explanation: A logic bomb is malicious code that executes its payload when a specific condition is met (in this case, a date trigger). It lies dormant until triggered. A trojan horse is malicious software disguised as legitimate software. A rootkit provides persistent hidden access. A virus self-replicates by attaching to files. Logic bombs are particularly dangerous when planted by insider threats.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security analyst finds evidence of software on a server that intercepts and records all keystrokes made by users, including passwords and credit card numbers. Which malware type is present?
+A) Worm
+B) Rootkit
+C) Keylogger
+D) Logic bomb
+Correct: C
+Explanation: Keyloggers capture and record keystrokes, enabling attackers to harvest credentials, financial data, and personal information. They can be software-based (running as processes) or hardware-based (physical devices on keyboard cables). Worms self-replicate across networks. Rootkits provide persistent access with stealth. Logic bombs trigger destructive events on conditions.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Forensic analysis of a compromised server reveals that the malware modified the Master Boot Record and intercepts OS loading, making it invisible to the operating system's security tools. Which malware type is this?
+A) Trojan horse
+B) Worm
+C) Rootkit
+D) Ransomware
+Correct: C
+Explanation: A rootkit that modifies the Master Boot Record or operates below the OS level (bootkit) can subvert all OS-level security tools because it controls the environment those tools run in. This level of stealth — being invisible to the OS — is the defining characteristic of rootkits. Trojans are disguised as legitimate software. Worms self-replicate. Ransomware encrypts files and announces its presence.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Network monitoring alerts on a sudden 40x increase in inbound traffic to a web server from thousands of geographically distributed IP addresses, causing the service to become unavailable. Which attack is indicated?
+A) On-path attack
+B) Credential stuffing
+C) Distributed Denial of Service (DDoS)
+D) DNS hijacking
+Correct: C
+Explanation: A sudden massive increase in traffic from numerous distributed sources overwhelming a service is the definitive indicator of a Distributed Denial of Service (DDoS) attack. The "distributed" aspect (thousands of IPs) distinguishes it from a simple DoS. On-path attacks intercept traffic. Credential stuffing shows authentication attempts. DNS hijacking involves redirected domain resolution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A user reports that their browser is redirecting to unexpected websites and the IT team discovers the DNS server settings on the DHCP server have been changed to malicious IPs. Which attack is indicated?
+A) Typosquatting
+B) DNS hijacking/poisoning
+C) Watering hole attack
+D) On-path attack
+Correct: B
+Explanation: Changing DNS server settings to redirect users to attacker-controlled infrastructure is DNS hijacking. By controlling DNS resolution, the attacker can redirect any domain to a malicious site. Typosquatting requires users to make typing errors. Watering hole attacks compromise specific sites. On-path attacks require network-level interception rather than DNS manipulation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An analyst observes that a malware sample on a workstation creates a scheduled task that re-installs the malware if removed, and it spreads to other network hosts by exploiting a known SMB vulnerability. Which malware type is this?
+A) Trojan horse
+B) Virus
+C) Rootkit
+D) Worm
+Correct: D
+Explanation: Self-propagation across networks by exploiting vulnerabilities (such as EternalBlue targeting SMB) is the defining characteristic of a worm. Worms spread autonomously without requiring user interaction or host file attachment. The persistence mechanism (scheduled task) is common to many malware types. WannaCry is a famous example. Viruses require attaching to files. Trojans require user execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security camera system is compromised and begins sending traffic to an external server. Investigation reveals the firmware was legitimate but the device was taken over by commands using the manufacturer's default telnet credentials. Which type of attack does this indicate?
+A) Physical brute force attack
+B) Compromised IoT device via default credentials
+C) RFID cloning
+D) Rootkit installation
+Correct: B
+Explanation: Compromising IoT/embedded devices using unchanged default credentials is a pervasive attack pattern. The attacker didn't need to exploit a vulnerability — the device was configured insecurely out of the box. This is an indicator of default credential exploitation. Physical brute force and RFID cloning are physical attacks. Rootkits operate at a deeper level than firmware default credential exploitation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Logs show that a user account that normally accesses only HR systems is now running PowerShell commands and accessing Active Directory objects it has never touched before. Which malicious activity is most likely indicated?
+A) Credential stuffing
+B) Privilege escalation or lateral movement
+C) DDoS participation
+D) Logic bomb activation
+Correct: B
+Explanation: An account accessing resources far outside its normal pattern — especially administrative objects like Active Directory — combined with unusual tool usage (PowerShell) indicates either privilege escalation (account gained elevated rights) or lateral movement (attacker is using the compromised account to move through the network). This is a behavioral indicator of compromise. Credential stuffing involves many login attempts. DDoS shows outbound traffic floods.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Wireless network logs show repeated authentication attempts using captured, unmodified authentication handshakes replayed to a wireless access point. Which attack is indicated?
+A) Evil twin attack
+B) Credential replay attack
+C) Deauthentication attack
+D) Bluesnarfing
+Correct: B
+Explanation: Replaying captured authentication credentials (in this case, wireless authentication handshakes) without modification is a credential replay attack. The attacker reuses valid captured authentication material. An evil twin uses a rogue AP. A deauthentication attack forces clients to disconnect. Bluesnarfing exploits Bluetooth to access device data.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An application server's logs show requests containing strings like "../../etc/passwd" in URL parameters. Which attack type is indicated?
+A) SQL injection
+B) Cross-Site Scripting
+C) Directory traversal attack
+D) Buffer overflow attempt
+Correct: C
+Explanation: "../" sequences in URL parameters attempting to navigate to system files like "/etc/passwd" are classic directory traversal attack indicators. The attacker is attempting to access files outside the web root. SQL injection would show SQL keywords in input. XSS would show script tags. Buffer overflow attempts would appear in other contexts, not URL traversal patterns.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A user reports receiving a phone call from someone claiming to be from Microsoft Support, stating their computer has a virus and requesting remote access. Which attack type is this?
+A) Smishing
+B) Pretexting combined with vishing
+C) Spear phishing email
+D) Watering hole attack
+Correct: B
+Explanation: A phone call (vishing) using a fabricated scenario (pretexting — impersonating Microsoft Support) to gain remote access is a vishing + pretexting attack. This is a common tech support scam. Smishing uses SMS. Spear phishing uses targeted email. Watering hole attacks require compromising websites rather than direct phone contact.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A forensic investigator discovers malware on a system that appears to be legitimate software but contains hidden functionality that opens a remote shell for the attacker. Which malware category is this?
+A) Worm
+B) Virus
+C) Trojan horse
+D) Spyware
+Correct: C
+Explanation: Software that appears legitimate but contains hidden malicious functionality (in this case, a remote access backdoor) is a Trojan horse. Trojans are named for the Greek myth — they appear as gifts but carry hostile functionality. Worms self-replicate across networks. Viruses attach to and infect other files. Spyware covertly collects information without typically providing remote access.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A threat actor obtains physical access to a server room and inserts a USB hardware device between a server's keyboard port and keyboard that silently records all keystrokes. Which attack type is this?
+A) Brute force physical attack
+B) Hardware keylogger (physical attack)
+C) RFID cloning
+D) Evil twin attack
+Correct: B
+Explanation: A physical hardware keylogger captures keystrokes at the hardware level, making it undetectable to software security tools. This is a physical attack requiring physical access. Brute force physical attacks involve forcing open locks or devices. RFID cloning captures and duplicates access card data. Evil twin attacks create rogue wireless access points.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: An organization wants to prevent a compromised workstation from being able to directly communicate with critical database servers. Which mitigation technique BEST achieves this?
+A) Encryption
+B) Network segmentation
+C) Patching
+D) Application allow listing
+Correct: B
+Explanation: Network segmentation divides the network into zones with controlled traffic flow between them. By placing workstations and database servers in separate segments with firewall rules restricting direct communication, a compromised workstation cannot directly reach databases. Encryption protects data confidentiality. Patching addresses vulnerabilities. Application allow listing controls which software can run.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security policy requires that all software execution on endpoints be restricted to a predefined list of approved applications. Which mitigation technique implements this?
+A) Deny listing
+B) Network segmentation
+C) Application allow listing
+D) Least privilege
+Correct: C
+Explanation: Application allow listing (whitelisting) permits only explicitly approved applications to execute, blocking everything else by default. This is highly effective against malware because even zero-day malware is blocked if it's not on the approved list. Deny listing (blacklisting) blocks only known-bad applications — a weaker approach because new malware is unknown. Least privilege controls access rights, not application execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: Which security principle ensures that users and processes are granted only the minimum access rights necessary to perform their required functions?
+A) Defense in depth
+B) Separation of duties
+C) Least privilege
+D) Need to know
+Correct: C
+Explanation: Least privilege limits access rights to the minimum necessary for performing required functions, reducing the potential damage from compromised accounts or malicious insiders. It is a fundamental access control principle. Separation of duties divides critical functions among multiple individuals. Need to know is related but specifically refers to information access. Defense in depth refers to multiple overlapping security layers.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: After decommissioning storage devices that contained sensitive financial data, the security team uses DoD 5220.22-M standard wiping to ensure data cannot be recovered. Which mitigation technique is being applied?
+A) Encryption
+B) Configuration enforcement
+C) Secure decommissioning
+D) Patching
+Correct: C
+Explanation: Secure decommissioning involves properly disposing of or repurposing hardware to ensure sensitive data cannot be recovered. Wiping drives before disposal is part of this process. Encryption (if already applied) would also mitigate this risk, but the act of performing the wipe during decommissioning is specifically the decommissioning mitigation technique. Configuration enforcement applies to active systems.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security team deploys a system that records all network traffic, system events, and user activity to detect anomalies and support incident investigation. Which mitigation technique is this?
+A) Segmentation
+B) Monitoring
+C) Isolation
+D) Encryption
+Correct: B
+Explanation: Monitoring (including SIEM, IDS/IPS, network flow analysis, and log aggregation) provides visibility into security events, enables anomaly detection, and supports incident response through forensic evidence. Segmentation controls network flow. Isolation removes a system from the network. Encryption protects data. Monitoring is the mitigation that provides detection and response capability.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A company configures all new servers using automated configuration management tools that enforce approved security baselines and remediate drift. Which mitigation technique does this represent?
+A) Patching
+B) Configuration enforcement
+C) Least privilege
+D) Network segmentation
+Correct: B
+Explanation: Configuration enforcement ensures systems maintain approved secure configurations and automatically corrects deviations (configuration drift). Tools like Puppet, Chef, Ansible, and Group Policy implement this. Patching addresses software vulnerabilities but doesn't ensure other security settings are correct. Least privilege is an access control principle. Segmentation addresses network architecture.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: During an incident, a security team disconnects an infected server from all network interfaces and blocks all communication to and from the server while preserving the system for forensic analysis. Which mitigation technique is this?
+A) Segmentation
+B) Decommissioning
+C) Isolation
+D) Patching
+Correct: C
+Explanation: Isolation removes a specific system from the network to contain an incident while preserving the system state for investigation. Unlike decommissioning (which permanently takes a system out of service), isolation is a temporary containment measure. Segmentation is a preventive architecture technique. Patching addresses vulnerabilities. Isolation is a reactive containment technique.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security administrator applies operating system and application patches within 48 hours of critical patches being released by vendors. Which mitigation technique is this, and what risk does it primarily address?
+A) Monitoring — addresses detection of attacks
+B) Patching — addresses known vulnerabilities being exploited
+C) Configuration enforcement — addresses misconfiguration risk
+D) Hardening — addresses default setting exposure
+Correct: B
+Explanation: Timely patching is the primary mitigation for known vulnerabilities. Once a CVE is published, attackers scan for unpatched systems. Critical patches applied rapidly (48 hours) dramatically reduce the exploitation window. Monitoring detects attacks but doesn't prevent them. Configuration enforcement ensures settings are correct. Hardening removes unnecessary features but timely patch application is specifically about addressing known CVEs.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: An organization encrypts all data stored on laptops. A laptop is stolen, but the data is inaccessible to the thief. Which security property does this encryption protect?
+A) Availability
+B) Integrity
+C) Confidentiality
+D) Non-repudiation
+Correct: C
+Explanation: Encrypting data at rest on laptops protects confidentiality — ensuring that even if physical access is obtained, the data cannot be read without the decryption key. Availability concerns whether data is accessible to authorized users. Integrity ensures data has not been tampered with. Non-repudiation provides proof of origin. Full-disk encryption is specifically a confidentiality control for lost or stolen devices.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security team implements a policy preventing all software not explicitly listed from executing on endpoint workstations, while also maintaining a deny list of known-malicious file hashes. Which combined approach best describes this strategy?
+A) Defense in depth using both allow listing and deny listing
+B) Configuration enforcement and patching
+C) Network segmentation and monitoring
+D) Isolation and decommissioning
+Correct: A
+Explanation: Using both allow listing (only approved applications run) and deny listing (known-bad applications are blocked) represents a defense-in-depth approach to application control. Allow listing is more restrictive and effective, but combining it with deny listing provides an additional layer. This is not configuration enforcement (which focuses on settings) or network segmentation (which is architectural).
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: The process of removing unnecessary services, closing unused ports, disabling default accounts, and applying vendor-recommended secure settings to a new system before deployment is called:
+A) Patching
+B) Monitoring
+C) System hardening
+D) Segmentation
+Correct: C
+Explanation: System hardening is the process of reducing a system's attack surface by removing unnecessary features, disabling unused services, closing unneeded ports, changing default credentials, and configuring security settings per a baseline. Patching applies security updates. Monitoring provides visibility. Segmentation controls network communication. Hardening is the initial secure configuration process before and after deployment.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A company implements micro-segmentation in its data center, creating individual security zones for each virtual workload. Which security benefit does this PRIMARILY provide?
+A) Prevents zero-day exploits
+B) Limits lateral movement in the event of a compromise
+C) Eliminates the need for endpoint protection
+D) Ensures high availability of services
+Correct: B
+Explanation: Micro-segmentation limits lateral movement by requiring traffic between workloads to traverse security controls, even within the same data center or cloud environment. If one workload is compromised, the attacker cannot freely move to adjacent workloads. Micro-segmentation does not prevent zero-days (it contains their damage), does not replace endpoint protection, and is not primarily an availability control.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: An organization implements Role-Based Access Control (RBAC) ensuring that database administrators cannot approve their own access requests, and finance users cannot modify audit logs they generate. Which two principles are being enforced?
+A) Least privilege and separation of duties
+B) Defense in depth and isolation
+C) Configuration enforcement and patching
+D) Monitoring and decommissioning
+Correct: A
+Explanation: RBAC configured so administrators cannot self-approve access enforces separation of duties (critical functions split among different roles). Restricting finance users from modifying their own audit logs enforces least privilege (only the minimum necessary access). These two principles together create accountability and prevent both fraud and privilege abuse. Defense in depth is a broader architectural concept.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A financial services company's policy requires that systems storing cardholder data be completely decommissioned and replaced rather than repurposed for other functions. Which security concern does this policy PRIMARILY address?
+A) Ensuring systems receive current patches
+B) Preventing data remnants from being accessed on repurposed systems
+C) Meeting network segmentation requirements
+D) Enforcing application allow listing policies
+Correct: B
+Explanation: Secure decommissioning of systems that contained sensitive data prevents data remnants from persisting on repurposed equipment. Even "deleted" data can often be recovered unless drives are properly wiped or destroyed. This is a compliance and data protection requirement (relevant to PCI DSS). Patching, segmentation, and allow listing are operational controls, not decommissioning concerns.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security architect designs a network where Internet-facing web servers are placed in a DMZ, separated from internal application servers and databases by firewall rules. Which mitigation technique is this?
+A) Isolation
+B) Encryption
+C) Network segmentation
+D) Application allow listing
+Correct: C
+Explanation: Placing systems in different network zones (Internet-facing DMZ, internal application tier, database tier) separated by firewalls is network segmentation. This limits the blast radius of a compromise — an attacker who compromises a web server cannot directly reach internal databases. Isolation is a reactive technique. Encryption protects data confidentiality. Allow listing controls application execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A security analyst is reviewing threat intelligence and notices that an attack campaign uses custom-developed malware, zero-day exploits, and maintains persistence for over a year while avoiding detection. Which threat actor type is MOST consistent with this campaign profile?
+A) Script kiddie using modified public tools
+B) Hacktivist group conducting a protest campaign
+C) Nation-state sponsored APT group
+D) Disgruntled insider with system access
+Correct: C
+Explanation: Custom malware, zero-day exploit usage, year-long persistence, and advanced evasion techniques collectively describe a nation-state sponsored APT. The level of investment (zero-days alone cost tens of thousands to millions of dollars) and operational security required for year-long undetected access requires state-level resources. Script kiddies use off-the-shelf tools. Hacktivists typically lack zero-day capability and don't maintain long-term stealth.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A security engineer is reviewing a new third-party software component being integrated into a production system. The engineer is concerned about hidden malicious functionality inserted during the component's development process. Which threat vector is the engineer evaluating?
+A) Open service port vulnerability
+B) Supply chain attack vector
+C) Default credential exposure
+D) Unsecure wireless network
+Correct: B
+Explanation: Concern about malicious code inserted into a software component during its development pipeline is a supply chain security concern. This attack vector compromises software or hardware before it reaches the end customer. The SY0-701 explicitly identifies software supply chain as a threat vector. Open ports, default credentials, and wireless networks are different threat vectors unrelated to component integrity.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A penetration tester discovers that a web application's error page reveals the full stack trace including the programming language version, framework, and database connection string. Which vulnerability exists?
+A) SQL injection vulnerability
+B) Improper error handling leading to information disclosure
+C) Cross-Site Scripting vulnerability
+D) Directory traversal vulnerability
+Correct: B
+Explanation: Error pages that expose stack traces, framework versions, database connection strings, and internal paths are a classic improper error handling vulnerability. This information gives attackers a roadmap for targeted attacks. The connection string itself could expose database credentials. This is a pre-exploitation vulnerability — it facilitates subsequent attacks rather than being the attack itself.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An intrusion detection system alerts on a host making outbound connections to 50 different external IP addresses on TCP port 6667 (IRC) at regular intervals. Which malicious activity pattern does this MOST likely indicate?
+A) Ransomware encrypting cloud backups
+B) Botnet C2 communication via IRC
+C) DNS tunneling activity
+D) Port scanning for vulnerable services
+Correct: B
+Explanation: Regular outbound connections to multiple external IPs on IRC ports (6667) at regular intervals is a classic indicator of botnet Command and Control (C2) communication. Early botnets used IRC channels for C2. The regularity (beaconing) and IRC port are strong behavioral indicators. DNS tunneling uses DNS ports (53). Port scanning involves many destination ports on local subnet hosts, not regular outbound connections to external IPs.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A company requires all administrator accounts to use a privileged access workstation (PAW) — a dedicated, hardened workstation used exclusively for administrative tasks, with no internet browsing or email access. Which hardening principle does this PRIMARILY implement?
+A) Patching and vulnerability management
+B) Isolation and least privilege for privileged access
+C) Network segmentation of servers
+D) Application deny listing
+Correct: B
+Explanation: A PAW implements isolation (dedicated device for privileged tasks only) combined with least privilege (no general internet/email use that could introduce risk to the privileged session). By isolating administrative access to a hardened workstation, the attack surface for credential theft or compromise is dramatically reduced. This is patching-independent and is an architectural access control measure.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which threat actor type is primarily characterized by activism, publicity-seeking, and attacks motivated by social or political causes, with variable technical sophistication?
+A) Organized crime
+B) Nation-state actor
+C) Hacktivist
+D) APT group
+Correct: C
+Explanation: Hacktivists combine hacking with activism — their primary motivation is advancing a social, political, or ethical cause and gaining publicity for it. Technical sophistication varies widely (from script-kiddie level to very capable). Organized crime is financially motivated. Nation-states pursue geopolitical goals. APT groups (often nation-state affiliated) prioritize stealth over publicity — the opposite of hacktivists.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker discovers that a company's VPN concentrator is running firmware from 2019 with multiple published CVEs that have never been patched. Which attack surface element represents the highest risk here?
+A) Default credentials on the VPN appliance
+B) Open service ports on the VPN concentrator
+C) Vulnerable, unpatched network appliance firmware
+D) Unsupported operating system on workstations
+Correct: C
+Explanation: An internet-facing VPN concentrator with multiple published, unpatched CVEs represents extreme risk — it is directly accessible from the internet and has known exploitable vulnerabilities. While the other options are also risks, internet-facing appliances with known CVEs are the highest-priority attack surface. The firmware being from 2019 with published CVEs means exploit code is likely publicly available.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A cloud provider's shared physical infrastructure allows a tenant's workload to potentially observe memory access patterns of another tenant's workload through CPU cache behavior. Which vulnerability type is demonstrated?
+A) VM escape
+B) Resource reuse vulnerability
+C) Side-channel vulnerability
+D) Cloud misconfiguration
+Correct: C
+Explanation: Observing another tenant's activity through CPU cache behavior (such as the Flush+Reload or Prime+Probe cache timing techniques) is a side-channel attack. It exploits shared physical hardware rather than a software vulnerability. VM escape requires breaking out of virtualization. Resource reuse involves uncleared data from previous use. Misconfiguration is an administrative error.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security analyst reviews IDS alerts showing hundreds of authentication failures from a single external IP address against an SSH service, followed by a single successful login. Which attack pattern is indicated?
+A) Credential stuffing
+B) Password spraying
+C) Brute force attack leading to unauthorized access
+D) Replay attack
+Correct: C
+Explanation: Hundreds of authentication failures from a single source against a single service followed by a successful login is the classic pattern of a brute force attack — systematically trying passwords until one succeeds. Credential stuffing uses known username/password pairs from data breaches (typically across multiple services, not a single SSH service). Password spraying uses one common password against many accounts. Replay attacks reuse captured valid credentials.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security team implements TLS 1.3 for all web traffic, AES-256 for data at rest, and certificate-based authentication for all administrative access. Which mitigation category encompasses all of these controls?
+A) Network segmentation
+B) Access control
+C) Encryption
+D) Monitoring
+Correct: C
+Explanation: TLS for data in transit, AES for data at rest, and certificate-based authentication all fall under the encryption mitigation category. Encryption protects confidentiality (and in the case of certificates, authenticity). Network segmentation addresses network architecture. Access control manages who can access resources (though certificates contribute to this, the specific controls listed are encryption implementations). Monitoring is a detection control.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: An organization's security team assesses that a persistent attacker has been silently present in their network for eight months, slowly exfiltrating intellectual property to an unknown foreign entity. Which threat actor attribute is MOST relevant to the organization's response planning?
+A) The attacker's financial motivation
+B) The attacker's internal vs. external classification
+C) The attacker's high sophistication and persistence
+D) The attacker's use of publicly available tools
+Correct: C
+Explanation: Understanding that the attacker is sophisticated and persistent shapes the response — standard incident response playbooks for opportunistic attacks are insufficient. The team must assume deep compromise, thorough knowledge of the environment, and that the attacker may have backdoors not yet discovered. The fact that it's been eight months of undetected access means the threat actor has significant operational security capabilities.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A red team exercise discovers that a significant number of employees will plug in a USB drive found in the parking lot. What is the security term for this attack technique?
+A) Spear phishing
+B) Baiting
+C) Pretexting
+D) Watering hole
+Correct: B
+Explanation: Baiting is a social engineering technique that uses physical objects (USB drives, CDs) left in accessible locations to exploit curiosity. Victims plug in the device, executing malware. This is a physical manifestation of the removable device threat vector combined with social engineering. Spear phishing and pretexting use direct communication. Watering hole attacks compromise websites.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An attacker exploits a race condition in a setuid program to overwrite a sensitive system file between the program's permission check and its file write operation. Which exploit technique is this?
+A) Buffer overflow
+B) Privilege escalation via TOCTOU race condition
+C) SQL injection
+D) Memory injection
+Correct: B
+Explanation: Exploiting a Time-of-Check to Time-of-Use (TOCTOU) race condition in a privileged (setuid) program to overwrite system files achieves privilege escalation. The attacker wins the race by changing a symlink between the check and the write. This is a classic Linux privilege escalation technique. Buffer overflows corrupt memory directly. SQL injection targets databases. This is specifically a race condition exploited for privilege escalation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A user calls the help desk reporting that their screen shows a message claiming their computer is infected and instructing them to call a phone number immediately for help. Calling the number connects them to an attacker. Which attack type is this?
+A) Ransomware with ransom demand
+B) Scareware (fake alert) combined with vishing
+C) Logic bomb activation
+D) Trojan horse execution
+Correct: B
+Explanation: Fake security alerts designed to frighten users into calling attacker-controlled phone numbers combine scareware (false alarming messages) with vishing (voice phishing via the phone call). This tech support scam is common and does not typically involve actual malware — the psychological manipulation is the attack. Ransomware encrypts files. Logic bombs execute destructive code. Trojans hide malicious functionality in seemingly legitimate software.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security policy mandates that all administrator accounts must use multi-factor authentication, and administrator privileges should be separate from day-to-day user accounts. Which mitigation principle does this implement?
+A) Defense in depth through network segmentation
+B) Least privilege and access control for privileged accounts
+C) Configuration enforcement for endpoint security
+D) Monitoring and alerting for privilege abuse
+Correct: B
+Explanation: Requiring separate admin accounts and MFA for privileged access implements least privilege (admin rights only in dedicated accounts, not used for daily activities) and access control (MFA gates access to privileged accounts). This limits the impact of credential compromise — a phished daily-use credential doesn't provide admin access. Network segmentation and monitoring are different mitigation categories.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which statement BEST distinguishes organized crime from nation-state actors in the context of cyber threats?
+A) Organized crime uses more sophisticated malware than nation-states
+B) Organized crime primarily seeks financial gain, while nation-states pursue geopolitical objectives
+C) Nation-states never conduct financially motivated attacks
+D) Organized crime has greater resources and funding than nation-states
+Correct: B
+Explanation: The primary distinguishing factor is motivation: organized crime seeks profit (ransomware, fraud, data theft for sale) while nation-states pursue geopolitical goals (espionage, sabotage, influence operations). Nation-states do sometimes conduct financially motivated attacks (notably North Korea), but their primary driver is strategic national interest. Nation-states generally have greater resources, not organized crime.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker intercepts and modifies network traffic between a client and server without either party detecting the change. Which attack type and threat vector does this represent?
+A) Replay attack via removable media
+B) On-path (man-in-the-middle) attack via unsecure network
+C) Credential stuffing via message-based vector
+D) Supply chain attack via vendor access
+Correct: B
+Explanation: Intercepting and modifying traffic in real time without detection is an on-path (man-in-the-middle) attack. This requires the attacker to be positioned between the communicating parties, typically by exploiting unsecure network infrastructure (ARP poisoning, rogue AP, BGP hijacking). This is different from a replay attack (which reuses previously captured data without modification). Removable media and supply chain are entirely different vectors.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A development team deploys an application with verbose logging that records full credit card numbers in log files that are accessible to all developers. Which vulnerability category is this?
+A) SQL injection
+B) Cryptographic vulnerability
+C) Misconfiguration leading to sensitive data exposure
+D) Improper error handling
+Correct: C
+Explanation: Logging sensitive data (credit card numbers) to files accessible to unauthorized parties is a misconfiguration vulnerability — specifically a data handling misconfiguration. The system is not broken; it was configured to store data insecurely. This is different from improper error handling (which exposes data in error messages) and cryptographic vulnerabilities (which involve broken encryption). PCI DSS explicitly prohibits logging cardholder data.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security analyst investigates an alert showing that a workstation's hosts file has been modified to redirect "bank.com" to an attacker-controlled IP address. Which attack type is indicated?
+A) DNS hijacking
+B) Local hosts file poisoning (on-path attack setup)
+C) Watering hole attack
+D) Typosquatting
+Correct: B
+Explanation: Modifying the local hosts file to redirect legitimate domains to attacker-controlled IPs is a local hosts file poisoning attack — it achieves the same result as DNS hijacking but operates at the workstation level rather than the DNS infrastructure level. DNS hijacking occurs at the DNS server level. Watering hole attacks compromise legitimate websites. Typosquatting uses misspelled domain names rather than redirecting legitimate domain names.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: An organization implements mandatory security awareness training covering phishing recognition, password security, and social engineering tactics. Which mitigation category does this represent?
+A) Technical access control
+B) Hardening
+C) People-focused mitigation (security awareness)
+D) Configuration enforcement
+Correct: C
+Explanation: Security awareness training is a people-focused (administrative/managerial) mitigation control targeting the human attack surface. Many attacks (phishing, social engineering, baiting) specifically target human behavior rather than technical vulnerabilities. Technical controls cannot fully compensate for uninformed users. Hardening applies to systems. Configuration enforcement applies to technical settings. Access control manages system permissions.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A vulnerability scanner identifies an outdated version of OpenSSL with a known critical CVE in a production web server. The vendor released a patch 30 days ago. Which vulnerability type and contributing factor is present?
+A) Zero-day vulnerability with no available patch
+B) Known vulnerability unaddressed due to delayed patching
+C) Cryptographic misconfiguration
+D) Supply chain vulnerability
+Correct: B
+Explanation: A known CVE with an available patch that hasn't been applied is an unpatched known vulnerability — one of the most common and preventable security failures. This is distinct from a zero-day (which has no available patch). The contributing factor is the organization's patch management failure. The cryptographic library being vulnerable makes it a software vulnerability, not a cryptographic misconfiguration per se.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A web application firewall alerts on requests containing "' OR 1=1 --" in login form fields. Which attack type is indicated, and what is the attacker attempting to achieve?
+A) XSS attack attempting to inject a script
+B) SQL injection attempting to bypass authentication
+C) Buffer overflow attempting to crash the application
+D) CSRF attempting to submit unauthorized requests
+Correct: B
+Explanation: "' OR 1=1 --" is a classic SQL injection payload attempting to modify a login query so it always returns true, bypassing authentication. The single quote breaks out of the string context, "OR 1=1" makes the condition always true, and "--" comments out the rest of the query. XSS uses script tags. Buffer overflows use excessively long input. CSRF forges cross-site requests rather than manipulating SQL.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A new employee is given access to only the file shares and applications required for their specific job role, reviewed quarterly. Which mitigation principle is being applied?
+A) Configuration enforcement
+B) Least privilege through periodic access reviews
+C) Network segmentation
+D) Application allow listing
+Correct: B
+Explanation: Granting only job-required access (least privilege) combined with periodic reviews to ensure access remains appropriate implements both least privilege and access control through ongoing validation. Access tends to accumulate over time ("privilege creep"), so quarterly reviews enforce the principle continuously. Configuration enforcement applies to system settings. Network segmentation controls network-level access, not application or file share permissions.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: Attackers compromise a widely used open-source build tool and inject a backdoor into the build process that gets compiled into all software built with the tool. Which type of attack is this?
+A) Watering hole attack
+B) Build pipeline supply chain attack
+C) Logic bomb activation
+D) Zero-day exploitation
+Correct: B
+Explanation: Compromising the build pipeline (build tools, CI/CD systems, compilers) to inject malicious code into all software products built with the compromised tool is a build pipeline supply chain attack. The XZ Utils backdoor (CVE-2024-3094) is a real-world example. Watering hole attacks compromise websites. Logic bombs are pre-planted by insiders. Zero-days exploit previously unknown vulnerabilities.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A penetration tester exploits a flaw in a hypervisor that allows a malicious virtual machine to read memory belonging to adjacent virtual machines on the same physical host. Which vulnerability type is this?
+A) Side-channel attack
+B) Resource reuse vulnerability
+C) VM escape with memory access to co-located VMs
+D) Cloud misconfiguration
+Correct: C
+Explanation: Escaping VM isolation to directly read another VM's memory represents VM escape — specifically the cross-VM memory access variant. Side-channel attacks infer information through indirect signals (timing, power) without breaking isolation. Resource reuse involves cleared-data remnants from previous use of shared storage, not active cross-VM memory access. Cloud misconfiguration is an administrative error, not a hypervisor flaw.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An organization's SIEM correlates events showing: (1) a user opened a phishing email attachment, (2) PowerShell downloaded a second-stage payload, (3) the process established persistence via registry run key, (4) it began scanning internal hosts. Which attack phase sequence is this?
+A) Lateral movement → persistence → reconnaissance → initial access
+B) Initial access → execution → persistence → lateral movement/reconnaissance
+C) Persistence → execution → lateral movement → initial access
+D) Reconnaissance → initial access → persistence → execution
+Correct: B
+Explanation: This sequence maps to the MITRE ATT&CK framework: Initial Access (phishing email), Execution (PowerShell downloading payload), Persistence (registry run key), then Reconnaissance/Lateral Movement (scanning internal hosts). Understanding kill chain/attack sequence order is important for Security+. This is the standard post-compromise attack progression. Recognizing this sequence helps analysts prioritize containment actions.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security team implements network access control (NAC) that checks endpoint health (patch status, AV signature currency, approved configuration) before allowing network access. Which mitigation approach does this represent?
+A) Network segmentation only
+B) Configuration enforcement combined with access control
+C) Application allow listing
+D) Monitoring and alerting
+Correct: B
+Explanation: NAC enforces configuration requirements (patch status, AV currency) as a condition of network access — this combines configuration enforcement (verifying the endpoint meets security standards) with access control (blocking non-compliant endpoints). It is not just segmentation (though NAC can place endpoints in quarantine VLANs). It goes beyond monitoring by actively blocking non-compliant devices.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: Which motivational factor is MOST likely to drive a foreign nation-state to target a pharmaceutical company's research networks?
+A) Financial extortion through ransomware
+B) Ideological opposition to the company's business practices
+C) Economic espionage to gain competitive advantage without R&D investment
+D) Service disruption to harm the company's market position
+Correct: C
+Explanation: Nation-states targeting pharmaceutical research are motivated by economic espionage — stealing R&D results to benefit domestic industries without the investment cost. This is particularly common for vaccine research, drug development, and medical technology. Ransomware extortion is organized crime's domain. Ideological opposition is hacktivist motivation. Service disruption is a short-term tactical goal, not a strategic espionage objective.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A security analyst discovers that employees are regularly connecting to the corporate network via public hotel Wi-Fi without using a VPN. Which specific risks does this create?
+A) Risk of logic bomb deployment via the network
+B) On-path attack and credential interception via unsecure wireless network
+C) Supply chain compromise through third-party network providers
+D) RFID cloning attacks from nearby attackers
+Correct: B
+Explanation: Connecting to uncontrolled public Wi-Fi without VPN creates on-path (MITM) attack risk — an attacker on the same network can intercept unencrypted traffic and capture credentials. This is an unsecure wireless network attack vector. VPN creates an encrypted tunnel that protects against this. Logic bombs require planted code. Supply chain attacks target the development pipeline. RFID cloning is a separate physical attack.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A web application uses client-side JavaScript to validate input before submitting to the server, but performs no server-side validation. An attacker bypasses the client-side checks by modifying the HTTP request directly. Which vulnerability exists?
+A) Cross-Site Scripting
+B) Reliance on client-side validation — an application vulnerability
+C) CSRF vulnerability
+D) Buffer overflow
+Correct: B
+Explanation: Relying solely on client-side validation is an application vulnerability because client-side controls can always be bypassed (through browser developer tools, proxy tools like Burp Suite, or direct HTTP requests). All security-relevant input validation must occur server-side. This is a fundamental application security principle. XSS and CSRF are different web vulnerabilities. Buffer overflows are memory corruption issues.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A threat hunter reviews endpoint telemetry and finds a process "svchost.exe" running from the path "C:\Users\Public\svchost.exe" rather than "C:\Windows\System32\svchost.exe". Which malicious activity indicator is this?
+A) Process running from an unexpected location (masquerading)
+B) Privilege escalation indicator
+C) Logic bomb activation indicator
+D) Rootkit hidden process indicator
+Correct: A
+Explanation: A legitimate Windows process name running from an unusual path (C:\Users\Public\ instead of C:\Windows\System32\) is a classic masquerading technique — malware named to look like a legitimate process but running from a user-writable location. This is a key threat hunting indicator. Detecting process path anomalies is an important behavioral detection technique. Rootkits typically hide processes entirely rather than showing them with unusual paths.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: After discovering that an attacker maintained access to a compromised server for six months through a web shell, the security team implements file integrity monitoring on all web directories. Which mitigation capability does this implement?
+A) Preventive control — prevents web shell installation
+B) Corrective control — removes existing web shells
+C) Detective control — alerts on unauthorized file changes
+D) Recovery control — restores files after deletion
+Correct: C
+Explanation: File integrity monitoring (FIM) is a detective control — it monitors files for unauthorized changes and alerts security teams. It would have detected the web shell installation rather than preventing it. FIM does not prevent or remove web shells — it detects them by comparing file hashes or monitoring for changes. This enables faster incident detection and response. Preventive controls (WAF, access controls) would restrict the ability to write web shells.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Network flow data shows a workstation sending 2GB of data to an external cloud storage service over three hours during business hours. Normal outbound transfers for this workstation average 50MB per day. Which indicator category does this represent?
+A) Indicator of network scanning activity
+B) Indicator of data exfiltration
+C) Indicator of DDoS participation
+D) Indicator of credential stuffing
+Correct: B
+Explanation: A 40x increase in outbound data transfer to an external cloud storage service far outside the normal baseline is a behavioral indicator of data exfiltration. The pattern (large volume, external destination, cloud storage service) is consistent with an insider threat or malware copying sensitive data. Network scanning would show many destination IPs. DDoS would show traffic to a single external IP with high packet rates.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A security researcher demonstrates that an attacker who can execute code inside a container can read the host filesystem by exploiting a kernel vulnerability shared between the container and host. Which vulnerability type is demonstrated?
+A) VM escape
+B) Resource reuse
+C) Container escape via OS vulnerability
+D) Side-channel attack
+Correct: C
+Explanation: Container escape exploiting a shared kernel vulnerability is analogous to VM escape but specific to containers. Containers share the host OS kernel (unlike VMs which have separate kernels), meaning kernel vulnerabilities can allow container breakout. This falls under virtualization vulnerabilities. VM escape specifically refers to hypervisor-based virtualization. Resource reuse involves data remnants. Side-channel attacks use indirect information leakage.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: An attacker gains access to a large enterprise by first compromising a small HVAC maintenance contractor that has VPN access to the target's building management systems. This entry method is an example of which attack vector?
+A) Watering hole attack
+B) Supply chain / trusted third-party attack vector
+C) Default credential exploitation
+D) Removable device vector
+Correct: B
+Explanation: Compromising a trusted third-party vendor with legitimate network access to gain entry into the primary target is a supply chain / trusted third-party attack — notably used in the famous Target data breach. The attacker exploits the trust relationship and access granted to the vendor. Watering hole attacks compromise websites. Default credentials and removable devices are different vectors not involving third-party vendor access.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security architect proposes replacing flat network architecture with tiered zones, implementing zero-trust network access, and requiring authentication for all east-west traffic within the data center. Which mitigation strategy encompasses all of these?
+A) Comprehensive hardening of individual endpoints
+B) Defense in depth through layered network access controls and segmentation
+C) Application allow listing across all workloads
+D) Monitoring and SIEM implementation
+Correct: B
+Explanation: Tiered network zones, zero-trust (authenticate all traffic), and east-west traffic controls together form a defense-in-depth approach using layered network segmentation and access controls. Zero-trust network access (ZTNA) assumes breach and requires authentication for all internal traffic, limiting lateral movement. This is an architectural/network control strategy. Endpoint hardening, allow listing, and SIEM are different mitigation categories.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A security operations team discovers that their company's internal source code repository has been accessed by an unknown external party over several weeks. Investigation reveals the attacker used valid credentials belonging to a contractor. The contractor reports having no knowledge of the access. Which threat actor scenario BEST fits?
+A) Disgruntled insider conducting espionage
+B) Script kiddie using automated credential stuffing
+C) APT using stolen contractor credentials for persistent access
+D) Hacktivist targeting the company for ideological reasons
+Correct: C
+Explanation: Sustained access over weeks using stolen credentials targeting source code is consistent with an APT (nation-state or sophisticated organized crime) using credential theft to maintain covert access. APTs frequently compromise third-party credentials to gain access while minimizing their own footprint. Script kiddies lack the patience and operational sophistication for weeks-long covert access. Hacktivists typically publicize their attacks rather than remaining covert.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: During incident response, an analyst finds that a malware sample creates a scheduled task named "WindowsUpdateService", establishes a connection to an IP on port 443, sends small amounts of data every 60 seconds, and accepts commands from the remote server. Which malicious behavior is described?
+A) Ransomware encrypting files and contacting payment infrastructure
+B) Worm scanning for vulnerable systems to propagate
+C) Remote access trojan (RAT) with C2 beaconing and persistence
+D) Spyware sending keystrokes to an attacker
+Correct: C
+Explanation: Regular small data transmissions on port 443 (HTTPS — blends with legitimate traffic) at fixed intervals (beaconing), a persistence mechanism (scheduled task with a legitimately-sounding name), and the ability to receive commands describes a Remote Access Trojan (RAT) with Command and Control (C2) beaconing. RATs provide attackers with remote control capabilities. Ransomware encrypts files. Worms spread autonomously. Spyware sends captured data but doesn't typically provide two-way command execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A financial institution implements separation of duties requiring that the person who creates a wire transfer cannot also approve it. Which security principle is enforced and what threat does it mitigate?
+A) Least privilege — prevents privilege escalation attacks
+B) Separation of duties — mitigates insider fraud and error
+C) Configuration enforcement — prevents misconfiguration
+D) Isolation — prevents lateral movement
+Correct: B
+Explanation: Separation of duties divides sensitive processes across multiple individuals so no single person can complete a fraudulent transaction alone. In financial processes, requiring different people for creation and approval is the classic separation of duties implementation. It mitigates insider fraud (collusion required) and unintentional error (second set of eyes). Least privilege limits what each role can do. Isolation and configuration enforcement are different control types.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A penetration tester discovers that when the tested application encounters an exception, it falls back to a less-secure code path that grants elevated access rather than failing safely. Which vulnerability type is this?
+A) Privilege escalation via improper error handling
+B) Buffer overflow leading to privilege escalation
+C) Race condition in privilege checking
+D) SQL injection enabling privilege escalation
+Correct: A
+Explanation: An application that grants elevated access when it encounters an error rather than denying access and failing safely demonstrates improper error handling. The principle of "fail secure" or "fail closed" requires that errors result in denial of access, not elevation. This is a distinct application vulnerability where exception handling logic creates a privilege escalation path. Buffer overflows and race conditions are different memory/timing vulnerability categories.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Security researchers analyze a malware sample and determine it actively looks for antivirus processes and terminates them, uses encryption to hide C2 communications, and employs code obfuscation to evade signature detection. These are indicators of which malware sophistication level and type?
+A) Script kiddie-level adware
+B) Bloatware with annoying but benign behavior
+C) Sophisticated evasion-capable malware (likely nation-state or organized crime)
+D) Simple keylogger without evasion capabilities
+Correct: C
+Explanation: AV termination (defense evasion), encrypted C2 (detection evasion), and code obfuscation (signature evasion) are hallmarks of sophisticated, professionally developed malware associated with nation-state or advanced organized crime threat actors. These techniques require significant development expertise. Script kiddie tools don't incorporate active defense evasion. Bloatware and simple keyloggers lack these advanced capabilities.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A user reports receiving a voicemail from "IRS Collections" demanding immediate payment of back taxes via gift cards or face arrest. This is an example of which attack type?
+A) Spear phishing via email
+B) Vishing (voice phishing) using authority and urgency
+C) Smishing via voicemail
+D) Pretexting via watering hole
+Correct: B
+Explanation: A phone-based social engineering attack impersonating an authority figure (IRS) and using urgency (arrest threat) to manipulate the victim into immediate action is vishing. The psychological manipulation elements — authority (IRS), urgency (arrest), and an unusual payment method (gift cards) — are classic vishing indicators. This is voice-based (vishing), not SMS-based (smishing) or email-based (phishing). The voicemail delivery is still a voice channel.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: An application uses MD5 to hash passwords stored in a database. A data breach exposes the hashed passwords, and attackers crack them using precomputed rainbow tables within hours. Which vulnerability is present?
+A) SQL injection enabling database access
+B) Cryptographic vulnerability — use of weak, broken hash algorithm
+C) Misconfiguration — passwords not salted
+D) Improper error handling
+Correct: B
+Explanation: MD5 is a cryptographically broken algorithm — it is fast (enabling rapid brute force) and has known collision vulnerabilities. Using MD5 for password hashing is a cryptographic vulnerability. While the lack of salting is also a contributing misconfiguration, the root issue is using a broken algorithm. Password hashing requires slow, purpose-built algorithms (bcrypt, Argon2, scrypt) that resist GPU-accelerated attacks. The question specifically tests recognition of weak cryptographic algorithms as a vulnerability category.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A threat hunter finds that a process on a server is making regular HTTPS connections to a domain registered six days ago with WHOIS privacy protection. The domain name is a random-looking 16-character string. Which malicious activity indicator is this?
+A) Indicator of brute force authentication attempts
+B) Indicator of domain generation algorithm (DGA) C2 communication
+C) Indicator of DNS tunneling
+D) Indicator of watering hole attack staging
+Correct: B
+Explanation: Connections to recently registered domains with random-looking names are indicators of Domain Generation Algorithm (DGA) based malware — many botnet families generate pseudorandom domain names that beaconing malware tries to contact until it reaches an active C2 server. The short registration age and random-looking name are the key indicators. DNS tunneling uses high volumes of DNS queries, not HTTPS connections. Brute force involves authentication attempts.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: An organization requires all web traffic from endpoints to pass through a cloud-based secure web gateway that inspects and blocks malicious content, regardless of whether the user is on-premises or remote. Which mitigation technique does this represent?
+A) Network segmentation between internal zones
+B) Isolation of compromised endpoints
+C) Monitoring through traffic inspection and filtering
+D) Configuration enforcement via proxy policy
+Correct: C
+Explanation: A secure web gateway that inspects and blocks malicious web traffic implements monitoring (inspection) combined with filtering/blocking (access control). The inspection capability provides visibility into web traffic. The blocking capability prevents access to malicious sites. This addresses web-based threat vectors. Network segmentation applies to internal zone separation. Isolation is a reactive containment technique. Configuration enforcement applies to endpoint settings.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: A threat intelligence report describes an actor that conducts attacks for both financial gain and ideological reasons, targeting companies that conduct animal testing. The group releases stolen research data publicly rather than selling it. Which threat actor type BEST describes this group?
+A) Organized crime with opportunistic targeting
+B) Nation-state conducting economic espionage
+C) Hacktivist with financial sustainability concerns
+D) Insider threat group
+Correct: C
+Explanation: Targeting companies for ideological reasons (opposition to animal testing) and releasing stolen data publicly rather than monetizing it is classic hacktivist behavior. The financial component may fund operations rather than being the primary motivation. Publishing stolen data to create reputational harm and public awareness is a hacktivist tactic. Nation-states keep stolen data secret. Organized crime monetizes data. Insiders require legitimate access.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A security team discovers that a widely used third-party analytics JavaScript library included in their website has been modified to include a credit card skimmer. This type of attack has a specific name. Which attack is this?
+A) Watering hole attack
+B) Formjacking / web skimming supply chain attack
+C) Cross-Site Scripting
+D) Typosquatting
+Correct: B
+Explanation: Compromising a third-party JavaScript library to inject payment card skimming code into websites that include the library is called formjacking or web skimming — a supply chain attack targeting the software supply chain. Magecart is the most famous threat actor group conducting these attacks. This differs from XSS (which requires a vulnerability in the target site) because the malicious code is introduced through a trusted third-party resource.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A security researcher discovers a flaw in a popular CPU microarchitecture that allows a process to speculatively read memory it shouldn't have access to, potentially leaking data across security boundaries. This class of vulnerability is known as:
+A) Virtual machine escape
+B) Buffer overflow vulnerability
+C) Speculative execution / microarchitectural side-channel vulnerability
+D) Race condition vulnerability
+Correct: C
+Explanation: CPU speculative execution vulnerabilities (Spectre, Meltdown) exploit microarchitectural features (speculative execution and cache timing) to leak data across security boundaries. These are microarchitectural side-channel vulnerabilities. They affect hardware at a fundamental level rather than software. VM escape requires software-level hypervisor flaws. Buffer overflows corrupt memory through software. Race conditions involve timing in software execution.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An attacker gains physical access to a building by following an authorized employee through a secured door without badging in. Which type of physical attack is this?
+A) RFID cloning
+B) Tailgating / piggybacking
+C) Environmental attack
+D) Dumpster diving
+Correct: B
+Explanation: Tailgating (also called piggybacking) involves following an authorized person through a secured entrance without using one's own credentials. It exploits social norms (holding doors open) to bypass physical access controls. RFID cloning involves copying access card data to create a duplicate. Environmental attacks target physical infrastructure (HVAC, power). Dumpster diving involves searching discarded materials for information.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security team implements automatic revocation of access rights for employees immediately upon HR system notification of termination, ensuring accounts are disabled before the final workday ends. Which mitigation principle does this implement?
+A) Monitoring and alerting
+B) Configuration enforcement
+C) Access control through prompt deprovisioning
+D) Least privilege review
+Correct: C
+Explanation: Prompt deprovisioning of access upon employee termination is a critical access control process that prevents former employees from retaining unauthorized access. This directly mitigates the insider threat risk from disgruntled former employees. It is an access control lifecycle management technique. Monitoring detects unauthorized access after the fact. Configuration enforcement manages system settings. Least privilege reviews adjust existing access levels.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A developer inadvertently commits AWS access keys to a public GitHub repository. An automated bot discovers the keys within minutes and begins spinning up cryptocurrency mining instances. Which vulnerability category allowed this breach?
+A) Supply chain vulnerability
+B) Cryptographic vulnerability
+C) Misconfiguration — insecure credential storage
+D) Zero-day vulnerability
+Correct: C
+Explanation: Committing credentials (API keys, passwords) to version control is a misconfiguration and insecure credential storage vulnerability. Credentials should never be hardcoded in source code. This is one of the most common cloud security failures. It is not a supply chain vulnerability (which involves compromised components), not a cryptographic vulnerability (the credentials themselves were exposed, not broken cryptography), and not a zero-day.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: Analysis of a malware sample shows it spreads by attaching a copy of itself to executable files on the infected system and any connected network shares. Each time an infected file is executed, the malware activates and spreads further. Which malware type is this?
+A) Worm
+B) Trojan horse
+C) Virus
+D) Rootkit
+Correct: C
+Explanation: A virus attaches copies of itself to existing executable files and requires a host file to spread. When infected files are executed, the virus activates. This self-replication via file infection is the defining characteristic distinguishing viruses from worms (which spread independently without needing host files) and trojans (which don't self-replicate). Rootkits provide hidden persistent access but don't typically spread by infecting files.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A company replaces all end-of-life network switches and firewalls that can no longer receive security firmware updates, even though the equipment still functions operationally. Which mitigation principle drives this decision?
+A) Configuration enforcement
+B) Monitoring expansion
+C) Decommissioning to eliminate unmitigable vulnerabilities
+D) Network segmentation redesign
+Correct: C
+Explanation: Replacing end-of-life equipment that can no longer receive security patches is a decommissioning decision to eliminate vulnerabilities that cannot be mitigated through patching. EOL hardware with unpatchable vulnerabilities represents permanent, growing risk. While expensive, decommissioning is sometimes the only mitigation option. Configuration enforcement cannot fix firmware vulnerabilities. Monitoring detects but doesn't prevent exploitation.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: A security analyst reviews proxy logs and notices a workstation making GET requests to a URL containing a long Base64-encoded string in the URL path at regular intervals, with responses containing small amounts of encoded data. Which malicious activity is indicated?
+A) DDoS attack participation
+B) Ransomware contacting its payment infrastructure
+C) HTTP-based C2 communication with encoded data
+D) Credential stuffing against a web application
+Correct: C
+Explanation: Regular HTTP/HTTPS GET requests with Base64-encoded data in URL paths at fixed intervals, with encoded responses, is a pattern of HTTP-based Command and Control (C2) communication. Malware uses HTTP/HTTPS to blend with normal web traffic, and encodes data to obscure its content. The regular interval (beaconing) is a key indicator. Credential stuffing shows many POST requests to authentication endpoints. DDoS participation shows high-volume traffic to a single external destination.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.2 — Explain common threat vectors and attack surfaces
+Question: A company's security policy prohibits the use of Bluetooth on corporate laptops due to attack surface concerns. Which specific Bluetooth attack type involves an attacker forcing unauthorized connections to a Bluetooth-enabled device to exfiltrate data?
+A) Bluejacking
+B) Bluesnarfing
+C) Evil twin via Bluetooth
+D) Bluetooth relay attack
+Correct: B
+Explanation: Bluesnarfing involves an attacker exploiting Bluetooth vulnerabilities to gain unauthorized access to a device and exfiltrate data (contacts, messages, calendar data). Bluejacking is less harmful — it involves sending unsolicited messages to nearby Bluetooth devices. Evil twin attacks typically apply to Wi-Fi. Relay attacks are used against proximity card systems. The SY0-701 tests awareness of specific Bluetooth attack types.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A security team discovers that a critical healthcare application still runs on Windows Server 2008 R2 because updating it would require re-certifying the application for regulatory compliance, a two-year process. Which vulnerability category is exemplified, and why is it particularly risky?
+A) Zero-day vulnerability — exploitable before patches exist
+B) Legacy/end-of-life OS vulnerability — no security patches available against known CVEs
+C) Misconfiguration — the server is not properly configured
+D) Supply chain vulnerability — the vendor is no longer providing support
+Correct: B
+Explanation: Windows Server 2008 R2 reached end-of-life in January 2020, meaning Microsoft no longer provides security patches. New CVEs discovered after EOL will never be patched, creating permanently unaddressable vulnerabilities. Healthcare and industrial environments commonly face this challenge due to certification requirements. This is the legacy/EOL OS vulnerability category. Zero-days affect supported software with no patches yet available. Misconfiguration is a different category.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: An organization detects that an attacker accessed several systems in sequence: initially the HR workstation, then the HR manager's laptop, then the Active Directory server, then the file server. Which attack technique is this progression an indicator of?
+A) Vertical privilege escalation
+B) Lateral movement
+C) Defense evasion
+D) Initial access
+Correct: B
+Explanation: Sequential access to multiple hosts within an environment — moving from one compromised system to another to reach higher-value targets — is lateral movement. The attacker is using each compromised system as a staging point to reach the next target. This is distinct from vertical privilege escalation (gaining higher privileges on the same system). Recognizing lateral movement patterns is essential for incident response containment.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: To prevent an attacker who compromises a web server from accessing the internal database server, a security architect implements a rule that only the web server's IP address can connect to the database server on port 1433. Which mitigation technique is this?
+A) Application allow listing
+B) Network access control via segmentation and firewall rules
+C) Encryption of database connections
+D) Least privilege for database accounts
+Correct: B
+Explanation: Restricting database server access to only the web server IP via firewall rules implements network segmentation with access control. Even if the web server is compromised, the attacker is constrained by the firewall rule — they can access the database only through the web server's existing connection, not establish new direct connections. Application allow listing controls software execution. Database encryption protects data at rest/in transit. Least privilege controls database account permissions.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.1 — Compare and contrast common threat actors and motivations
+Question: An employee who was recently laid off accesses the company's customer database using credentials that were not revoked and exfiltrates customer data to sell to a competitor. Which threat actor type and motivation combination is MOST accurate?
+A) External actor, financial motivation
+B) Former insider threat, financial motivation
+C) Hacktivist, ideological motivation
+D) Nation-state actor, espionage motivation
+Correct: B
+Explanation: A recently laid-off employee retains insider-level knowledge and potentially still-valid credentials, making them a former insider threat. The motivation is financial (selling data to a competitor). This scenario highlights both the importance of prompt credential revocation (deprovisioning) and the insider threat risk. External actors don't have legitimate credentials. Hacktivists and nation-states have different motivations.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.3 — Explain various types of vulnerabilities
+Question: A red team discovers that a cloud environment has IAM policies granting every EC2 instance full administrative access to all S3 buckets in the account, even though only two instances actually need this access. Which vulnerability category is this?
+A) Zero-day vulnerability
+B) Side-channel vulnerability
+C) Cloud misconfiguration — overly permissive IAM policy
+D) Cryptographic vulnerability
+Correct: C
+Explanation: Overly permissive IAM policies in cloud environments are a misconfiguration vulnerability and one of the most common cloud security failures. Granting all instances full admin access to all S3 buckets violates least privilege and means a single compromised instance can access all data. This is a configuration error (the technology works correctly; it's been configured insecurely). Zero-days, side-channels, and cryptographic issues are fundamentally different vulnerability types.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.4 — Given a scenario, analyze indicators of malicious activity
+Question: During a forensic investigation, an analyst discovers that log files on a compromised server covering the period of the intrusion have been deleted. The attacker also modified timestamps on remaining files. Which malicious activity category do these actions fall under?
+A) Data exfiltration indicators
+B) Lateral movement indicators
+C) Anti-forensics and evidence tampering
+D) Ransomware staging indicators
+Correct: C
+Explanation: Deleting log files and modifying file timestamps to eliminate or obscure evidence of malicious activity are anti-forensics techniques — actions taken to hinder incident response and forensic investigation. This falls under the defense evasion tactic in MITRE ATT&CK. Data exfiltration involves sending data externally. Lateral movement involves moving between hosts. Ransomware staging involves preparing for encryption.
+
+Domain: 2.0 Threats, Vulnerabilities, and Mitigations
+Sub-objective: 2.5 — Explain the purpose of mitigation techniques used to secure the enterprise
+Question: A security policy mandates that all laptops have full-disk encryption enabled using a platform-managed key stored in the device's TPM, unlocked only after successful authentication. Which threats does this mitigation PRIMARILY address?
+A) Network-based attacks against the laptop
+B) Malware execution on the operating system
+C) Data theft from stolen or lost physical devices
+D) Unauthorized remote access to the laptop
+Correct: C
+Explanation: Full-disk encryption with TPM-backed key management protects against physical theft — if a laptop is stolen, the data on the drive cannot be read without authenticating to the device. This is a confidentiality control for the physical threat vector. It does not protect against network attacks, prevent malware from running on a booted, authenticated system, or protect against remote access attacks. It specifically addresses the risk of data exposure from physical device loss.

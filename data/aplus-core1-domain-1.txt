@@ -1,0 +1,979 @@
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician needs to upgrade the RAM in a laptop. After opening the bottom panel, they find the RAM modules are installed at an angle and held in place by metal clips. What is the correct procedure to remove the existing RAM?
+A) Pull the module straight out along the slot's axis
+B) Press the retaining clips outward until the module pops up, then slide it out at an angle
+C) Unscrew the module from the motherboard before pulling it out
+D) Twist the module 90 degrees and then pull it straight up
+Correct: B
+Explanation: Laptop SO-DIMM RAM is installed at roughly a 45-degree angle and secured by spring-loaded retaining clips on each side; pressing those clips outward releases the module so it pops up to the insertion angle and can be slid out. Pulling the module straight out along the slot axis would damage the contacts or break the slot. This lever-and-angle mechanism is the same for both DDR4 and DDR5 SO-DIMMs found in modern laptops.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A user wants to replace their laptop's 2.5-inch SATA HDD with a faster storage option. The laptop has an available M.2 slot. Which drive type should the technician recommend for maximum performance?
+A) M.2 SATA SSD
+B) M.2 NVMe SSD
+C) mSATA SSD
+D) 2.5-inch SATA SSD
+Correct: B
+Explanation: An M.2 NVMe SSD uses the PCIe bus and NVMe protocol, delivering sequential read speeds often exceeding 3,000 MB/s, far outpacing any SATA-based alternative. An M.2 SATA SSD is limited to the SATA III ceiling of roughly 600 MB/s, the same as a 2.5-inch SATA SSD. mSATA is an older, largely discontinued form factor also constrained by SATA speeds.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: When replacing a laptop keyboard, a technician notices a thin ribbon cable connecting the keyboard to the motherboard. What type of connector typically secures this ribbon cable?
+A) Molex connector
+B) ZIF (Zero Insertion Force) connector
+C) PCIe x1 connector
+D) RJ-45 connector
+Correct: B
+Explanation: Laptop keyboard ribbon cables use ZIF connectors, which have a flip-up locking bar that allows the cable to be inserted and removed with zero insertion force, preventing damage to the fragile ribbon. Molex connectors are used for power in desktop systems and are far too large for a keyboard ribbon. PCIe and RJ-45 connectors are completely unrelated to keyboard ribbon cables.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is migrating a user's data from an old laptop HDD to a new SSD. Which method allows the new SSD to be an exact bootable clone of the existing drive without reinstalling the OS?
+A) Copy all files manually using File Explorer
+B) Use disk cloning software to image the source drive to the destination drive
+C) Reinstall Windows on the SSD and restore data from a backup
+D) Use ROBOCOPY to transfer the user profile folder
+Correct: B
+Explanation: Disk cloning software (such as Macrium Reflect or Clonezilla) performs a sector-level or partition-level copy that replicates the OS, boot sector, and all data, resulting in a directly bootable drive. Manually copying files in File Explorer skips hidden system files and the boot partition, so the cloned drive will not boot. ROBOCOPY transfers files but cannot replicate the MBR/GPT partition structure needed for booting.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A laptop's battery no longer holds a charge beyond 15 minutes. The technician confirms the battery is swollen. What is the safest immediate action?
+A) Discharge the battery completely and then recharge it to recalibrate
+B) Replace the battery and dispose of the old one according to local regulations
+C) Run a battery reconditioning cycle from the BIOS to restore capacity
+D) Keep using the laptop on AC power only until a replacement is ordered
+Correct: B
+Explanation: A swollen (bloated) lithium-ion battery is a fire and explosion hazard and must be replaced immediately; the swelling is caused by gas buildup from internal chemical breakdown. Running reconditioning cycles cannot reverse lithium-ion battery swelling or chemical degradation. Continuing to use a swollen battery, even on AC power, risks rupture and should be avoided; the battery must be removed and properly recycled at a certified e-waste facility.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is installing a new wireless card in a laptop. After seating the card in the M.2 slot, what remaining step is most commonly overlooked?
+A) Formatting the card before use
+B) Reconnecting the antenna wires to the card's antenna connectors
+C) Installing a driver before powering on for the first time
+D) Updating the laptop BIOS to recognize the new card
+Correct: B
+Explanation: Wireless cards have small coaxial antenna connectors (typically labelled MAIN and AUX) that must be re-attached to the card after installation; without them the signal will be extremely weak or non-existent. Drivers are important but can be installed after the hardware is physically assembled and the system boots. BIOS updates are occasionally required for compatibility but reconnecting antenna leads is the physical step most technicians forget during reassembly.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: Which laptop storage form factor uses a keyed edge connector and is available in 2242, 2260, and 2280 lengths?
+A) 2.5-inch SATA
+B) mSATA
+C) M.2
+D) PCIe Add-in Card
+Correct: C
+Explanation: M.2 drives use an edge connector and are available in multiple widths and lengths; the four-digit code describes millimetre dimensions (e.g., 2280 = 22 mm wide, 80 mm long). mSATA uses a different, older mini-PCIe-style connector and is not described by these length codes. 2.5-inch SATA drives use a standardised enclosure with SATA data and power connectors rather than an edge connector.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A corporate laptop contains a smart card reader used for two-factor authentication. A technician replaces the laptop. Which physical security feature must be re-provisioned on the new device for the user to continue using smart card login?
+A) Biometric fingerprint calibration
+B) Trusted Platform Module (TPM) certificate and PIN
+C) Hard drive encryption key backup
+D) Wi-Fi antenna alignment
+Correct: B
+Explanation: Smart card authentication relies on certificates stored on the card and validated against a PKI; the TPM on the new laptop must be initialised and the user's certificates re-enrolled or the new TPM associated with the smart card. Fingerprint calibration is a separate biometric feature unrelated to smart card authentication. Hard drive encryption keys may need migration but are not the primary re-provisioning step for smart card login.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician upgrades a laptop from a 500 GB SATA HDD to a 1 TB NVMe SSD. After the upgrade, the BIOS recognises the drive but Windows Setup cannot find it. What is the most likely cause?
+A) The SSD is defective and must be replaced
+B) Windows Setup is missing NVMe drivers and requires a driver to be loaded during setup
+C) The M.2 slot only supports SATA drives
+D) The drive must be formatted with FAT32 before Windows can detect it
+Correct: B
+Explanation: Older Windows installation media may lack built-in NVMe drivers; the technician must load the manufacturer's NVMe driver using the "Load driver" option in Windows Setup. The slot accepting the drive physically proves it is not limited to SATA; if it were, the BIOS would also fail to detect the drive. Windows requires NTFS, not FAT32, for system installation, making option D incorrect.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A privacy screen protector is being applied to a laptop used in a shared office space. What is the primary security benefit of this accessory?
+A) It prevents the display from emitting blue light, reducing eye strain
+B) It limits the viewing angle so only the person directly in front can read the screen
+C) It acts as an anti-glare coating to improve outdoor visibility
+D) It blocks RF emissions from the display to prevent data interception
+Correct: B
+Explanation: A physical privacy filter uses micro-louver technology to darken the screen from side angles, preventing shoulder-surfing by people seated or standing to the side. Anti-glare coatings and blue-light filters are separate display accessories that address eye comfort rather than visual privacy. RF shielding is not a feature of standard privacy screen protectors and is unrelated to visual eavesdropping.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop's display appears washed out with poor contrast and slow pixel response during video playback. The display type is most likely which of the following?
+A) IPS
+B) OLED
+C) TN (Twisted Nematic)
+D) VA (Vertical Alignment)
+Correct: C
+Explanation: TN panels have the fastest response times among LCD types but suffer from poor colour accuracy, low contrast ratios, and significant colour shift at off-axis viewing angles, resulting in a washed-out appearance. IPS panels offer wide viewing angles and accurate colours. OLED panels deliver infinite contrast ratios and vibrant colour, making them the opposite of washed-out.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A graphic designer needs a laptop with the most accurate colour reproduction and widest viewing angles for professional photo editing. Which display technology is most appropriate?
+A) TN LCD
+B) IPS LCD
+C) VA LCD
+D) Reflective LCD
+Correct: B
+Explanation: IPS (In-Plane Switching) panels are the preferred choice for colour-critical work because they maintain colour accuracy across nearly 178 degrees of viewing angle horizontally and vertically. TN panels have narrow viewing angles and poor colour fidelity. VA panels offer higher contrast than IPS but still exhibit colour shift at wide angles, making them less ideal for professional colour work.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop display is completely dark, but the technician can faintly see the desktop image when shining a flashlight at the screen. Which component has most likely failed?
+A) The LCD panel itself
+B) The LED backlight or its power circuit
+C) The GPU on the motherboard
+D) The digitizer layer
+Correct: B
+Explanation: When a backlight fails, the LCD panel continues to produce an image but it is invisible under normal lighting; shining an external light source reveals the faint image, confirming the panel is functional while the backlight is not. A failed GPU would produce no image at all, even faintly. The digitizer handles touch input and has no effect on backlight or image display.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: Which display technology does NOT require a backlight because each pixel generates its own light?
+A) IPS LCD
+B) TN LCD
+C) VA LCD
+D) OLED
+Correct: D
+Explanation: OLED (Organic Light-Emitting Diode) displays are emissive: each organic pixel produces its own light and can be individually switched off for true blacks, eliminating the need for a separate backlight. IPS, TN, and VA are all LCD technologies that require an external light source — typically an LED backlight — to illuminate the liquid crystal layer.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A technician replaces a laptop's LCD panel but the touch functionality no longer works after reassembly. Which component was most likely damaged or not reconnected during the repair?
+A) The inverter board
+B) The Wi-Fi antenna
+C) The digitizer
+D) The GPU heat pipe
+Correct: C
+Explanation: The digitizer is a transparent layer bonded over the display that detects touch input; if its ribbon cable is disconnected or the layer itself is cracked during disassembly, touch functionality is lost while the display image remains normal. The inverter board (in older CCFL displays) controls backlighting, not touch. Wi-Fi antennas run through the display lid but have no role in touch sensing.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: An older laptop uses a CCFL backlight. The display flickers and has a high-pitched whine. Which component is most likely responsible for these symptoms?
+A) The LCD matrix
+B) The inverter board
+C) The graphics card
+D) The video cable
+Correct: B
+Explanation: The inverter board converts DC power from the motherboard into the high-frequency AC required to drive CCFL backlights; a failing inverter causes flickering, dimming, and a characteristic high-pitched whine from the high-voltage circuitry. Modern LED-backlit displays do not use an inverter. A faulty video cable might cause image artifacts but not the audible whine associated with high-voltage inverter failure.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop lid contains thin wires routed around the display bezel. What is the primary purpose of these wires?
+A) They carry video signal from the GPU to the LCD panel
+B) They are Wi-Fi and/or Bluetooth antenna cables
+C) They supply power to the LED backlight strips
+D) They connect the webcam to the USB controller
+Correct: B
+Explanation: The thin coaxial wires routed around the inside of a laptop's display bezel are antenna cables for the wireless card; routing them around the display maximises signal reception by keeping them away from metal chassis components. The video signal travels through a dedicated LVDS or eDP cable, which is thicker and ribbon-shaped. Backlight power is also provided by a separate, thicker cable from the motherboard.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: Which LCD panel type typically offers the highest static contrast ratio, making dark scenes appear deeper and richer?
+A) TN
+B) IPS
+C) VA
+D) Twisted LCD
+Correct: C
+Explanation: VA (Vertical Alignment) panels achieve the highest static contrast ratios among common LCD technologies, often 3,000:1 or higher, producing deeper blacks than IPS or TN panels. TN panels have the fastest response times but the lowest contrast and worst colour. IPS panels excel at colour accuracy and viewing angles but have moderate contrast ratios, typically 1,000:1.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop's webcam produces a very dark, grainy image even in a well-lit room. The software driver is confirmed correct. What hardware component is most likely at fault?
+A) The display inverter
+B) The webcam image sensor or its cable connection
+C) The digitizer layer over the screen
+D) The GPU memory
+Correct: B
+Explanation: A dark and grainy webcam image in adequate lighting typically points to a failing image sensor or a loose/damaged ribbon cable between the webcam module and the motherboard, which reduces the signal quality. The display inverter controls backklighting and has no connection to the webcam's imaging capability. The digitizer is a touch-input component and does not affect camera output.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A user reports that their laptop's touchscreen requires multiple taps to register input. The display image is perfect. Which component should the technician inspect first?
+A) The LCD panel
+B) The digitizer
+C) The inverter
+D) The backlight driver IC
+Correct: B
+Explanation: The digitizer is the touch-sensitive layer responsible for translating physical touch into coordinate data; degradation, damage, or a loose connection causes unreliable touch registration while leaving the display image unaffected. The LCD panel, inverter, and backlight driver IC all relate to image display and backlighting rather than touch input.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop is described as having a "glossy" display. What is the primary trade-off of a glossy versus matte display?
+A) Glossy displays have lower resolution but better contrast
+B) Glossy displays produce more vivid colours and contrast but reflect more ambient light
+C) Glossy displays are always IPS while matte displays are always TN
+D) Glossy displays consume significantly more power than matte displays
+Correct: B
+Explanation: Glossy display coatings do not diffuse light, so colours appear more saturated and contrast looks higher; however, the reflective surface creates strong mirror-like reflections in bright environments. Matte displays use an anti-glare coating that diffuses reflections at the cost of slightly reduced colour vibrancy. Display finish (glossy vs. matte) is independent of the panel technology (IPS, TN, VA) used underneath.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user wants to connect their new smartphone to a laptop to transfer photos. The phone uses USB-C and the laptop has only USB-A ports. What does the technician need?
+A) A USB-C to Lightning adapter
+B) A USB-C to USB-A cable or adapter
+C) A Thunderbolt 4 hub
+D) A Bluetooth file transfer application
+Correct: B
+Explanation: A USB-C to USB-A cable physically bridges the two different connector types, allowing data transfer between the phone and laptop over the USB protocol. A USB-C to Lightning adapter converts between two phone port standards and would not help connect to a USB-A laptop port. Thunderbolt 4 hubs require a Thunderbolt host port, which the laptop does not have.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A field technician needs to connect a ruggedised laptop to an older industrial serial device for configuration. The laptop has no DB-9 port. Which adapter is needed?
+A) USB to RJ-45
+B) USB to RS-232 (DB-9) serial adapter
+C) USB to parallel port adapter
+D) USB to PS/2 adapter
+Correct: B
+Explanation: RS-232 (DB-9) is the standard serial interface used by legacy industrial equipment; a USB-to-serial adapter presents a virtual COM port to the OS, allowing the laptop to communicate with the device. USB-to-RJ-45 provides Ethernet connectivity, not serial. USB-to-parallel adapters are used for legacy printers and do not provide serial communication.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user taps their smartphone against a payment terminal and the transaction completes without inserting a card. Which wireless technology enables this contactless payment?
+A) Bluetooth
+B) Wi-Fi Direct
+C) NFC (Near Field Communication)
+D) ANT+
+Correct: C
+Explanation: NFC operates at 13.56 MHz over distances of typically less than 4 cm, making it ideal for secure contactless payments where the user intentionally brings the device very close to the terminal. Bluetooth has a range of up to 10 metres and requires pairing, making it unsuitable for the brief, proximity-enforced interaction of payment terminals. Wi-Fi Direct is used for peer-to-peer data transfers at Wi-Fi speeds, not point-of-sale transactions.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: Which port, found on Apple iPhones prior to the iPhone 15, is proprietary to Apple and not based on any industry-standard connector?
+A) USB-C
+B) Micro-USB
+C) Lightning
+D) USB-B
+Correct: C
+Explanation: Apple's Lightning connector, introduced with the iPhone 5 in 2012, is a proprietary 8-pin reversible connector used exclusively on Apple devices; it was not an industry standard and was replaced by USB-C starting with the iPhone 15 to comply with EU regulations. USB-C and Micro-USB are open industry standards used across many manufacturers. USB-B is the square connector used on USB peripherals like printers.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A technician is pairing a Bluetooth headset with a laptop. After enabling Bluetooth on both devices, what is the next step?
+A) Enter a static IP address for the Bluetooth adapter
+B) Put the headset into pairing/discovery mode and select it from the laptop's Bluetooth device list
+C) Connect both devices to the same Wi-Fi network
+D) Install an NFC tag on the headset to initiate pairing
+Correct: B
+Explanation: Bluetooth pairing requires the peripheral device to be in discoverable mode so the host can detect it; the user then selects the device from the available list and, if prompted, confirms a passkey. Bluetooth devices do not use IP addresses for pairing — IP addressing is a network-layer concept. Wi-Fi connectivity is completely separate from Bluetooth pairing and is not required.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user wants to share their laptop's cellular connection with a colleague's tablet over Wi-Fi. Which feature should be enabled on the laptop?
+A) Bluetooth tethering
+B) Mobile hotspot (Wi-Fi tethering)
+C) USB tethering
+D) NFC sharing
+Correct: B
+Explanation: The mobile hotspot feature broadcasts the laptop's cellular data connection as a Wi-Fi access point that other devices can join wirelessly, which is what the colleague's tablet needs. Bluetooth tethering also shares a connection but at much lower speeds and requires Bluetooth pairing. USB tethering shares the connection via a physical cable, which would not work for a colleague's separate tablet without a cable connection.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A USB-C port on a modern laptop supports DisplayPort Alternate Mode. What does this mean for the user?
+A) The port can only be used for charging, not data
+B) The user can connect an external monitor directly using a USB-C to DisplayPort cable
+C) The port automatically switches to USB 2.0 speeds when a monitor is connected
+D) The port requires a Thunderbolt 3 cable to output video
+Correct: B
+Explanation: DisplayPort Alternate Mode (DP Alt Mode) allows the USB-C port to carry DisplayPort video signals over the same physical connector, enabling direct connection to displays with a USB-C to DisplayPort or USB-C to HDMI adapter cable. The port still supports USB data and power delivery simultaneously in most implementations. A standard USB-C cable rated for the port's USB version is sufficient; a Thunderbolt-specific cable is not required solely for DisplayPort output.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user connects their Android phone to a laptop via USB cable, but the laptop only charges the phone and does not see it as a storage device. What must the user do on the phone?
+A) Enable Bluetooth on the phone
+B) Change the USB connection mode on the phone from Charging Only to File Transfer (MTP)
+C) Install a USB hub driver on the laptop
+D) Enable hotspot mode on the phone
+Correct: B
+Explanation: Modern Android phones default to Charging Only mode when connected via USB for security; the user must pull down the notification shade and change the USB mode to MTP (Media Transfer Protocol) or PTP for the laptop to enumerate the phone as a storage device. Enabling Bluetooth is unrelated to USB file transfer. No special hub driver is needed for a direct phone-to-laptop USB connection.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: Which Bluetooth version introduced Low Energy (LE) mode, significantly reducing power consumption for IoT and wearable devices?
+A) Bluetooth 2.0
+B) Bluetooth 3.0
+C) Bluetooth 4.0
+D) Bluetooth 5.0
+Correct: C
+Explanation: Bluetooth 4.0, released in 2010, introduced Bluetooth Low Energy (BLE, also called Bluetooth Smart), which allows devices like fitness bands and beacons to operate for months or years on small batteries. Bluetooth 2.0 introduced EDR (Enhanced Data Rate). Bluetooth 5.0 improved BLE range and speed but did not introduce the LE concept itself.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user's laptop has a USB-C port labelled with a lightning bolt icon. What additional capability does this indicate beyond standard USB-C?
+A) The port supports fast-charge only and no data transfer
+B) The port is Thunderbolt-compatible, supporting higher data rates and daisy-chaining
+C) The port provides power output only and cannot receive data
+D) The port is an eSATA/USB combo port
+Correct: B
+Explanation: A lightning bolt symbol on a USB-C port indicates Thunderbolt compatibility (Thunderbolt 3 or 4), which provides up to 40 Gbps data transfer, supports up to two 4K displays, and allows daisy-chaining of Thunderbolt devices. Standard USB-C ports without the lightning bolt do not support Thunderbolt devices at full speed. eSATA/USB combo ports use a different, wider physical connector and are not related to the Thunderbolt symbol.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user shares their smartphone's 5G connection with a laptop using a USB cable. What is this configuration called?
+A) Wi-Fi hotspot
+B) Bluetooth PAN
+C) USB tethering
+D) NFC bridging
+Correct: C
+Explanation: USB tethering uses a physical USB cable to share the phone's mobile data connection with a connected computer; the phone appears as a network adapter to the host OS. Wi-Fi hotspot and Bluetooth PAN also share mobile data but do so wirelessly. NFC is a very short-range protocol not used for sustained data tethering.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A technician is asked to set up a docking station for a laptop using a single cable that provides power, data, and video simultaneously. Which port standard best supports this use case?
+A) USB 2.0 Type-A
+B) USB-C with Power Delivery and Thunderbolt 4
+C) HDMI 2.0
+D) DisplayPort 1.4 (DP only)
+Correct: B
+Explanation: USB-C with Thunderbolt 4 and Power Delivery can simultaneously carry up to 100 W of charging power, 40 Gbps of data, and multiple video signals over a single cable to a compatible dock. USB 2.0 Type-A cannot supply sufficient power or bandwidth for a modern dock. HDMI and DisplayPort carry only video (and audio) signals and cannot simultaneously deliver power or high-speed data.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A corporate IT policy requires that all employee smartphones have their applications, VPN profiles, and security policies pushed remotely. Which technology enables this centralised management?
+A) NFC
+B) MDM (Mobile Device Management)
+C) Mobile hotspot
+D) Bluetooth pairing
+Correct: B
+Explanation: MDM solutions (such as Microsoft Intune, Jamf, or VMware Workspace ONE) enrol mobile devices and allow IT administrators to remotely push configurations, enforce security policies, deploy applications, and wipe devices if lost or stolen. NFC is a short-range communication technology used for payments and data sharing. Mobile hotspot and Bluetooth pairing are connectivity features with no remote management capability.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user's iPhone email client receives messages instantly as they arrive at the server. Which email retrieval method is being used?
+A) POP3 with a 5-minute polling interval
+B) IMAP IDLE (push IMAP)
+C) SMTP with read receipts
+D) S/MIME auto-retrieve
+Correct: B
+Explanation: IMAP IDLE allows the mail client to maintain a persistent connection with the server and receive notifications the moment new mail arrives, effectively providing push email behaviour. POP3 polls the server at set intervals and does not support server-push notification. SMTP is an outbound mail protocol for sending messages, not retrieving them.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user needs to configure their mobile email client to access corporate Exchange email with full calendar and contacts synchronisation. Which account type should be configured?
+A) POP3
+B) IMAP
+C) Microsoft Exchange / ActiveSync
+D) SMTP relay
+Correct: C
+Explanation: Microsoft Exchange (using the ActiveSync protocol) provides full synchronisation of email, calendar, contacts, and tasks in real time, which is the expected behaviour for a corporate Exchange deployment. POP3 and IMAP are email-only protocols that do not natively synchronise calendar or contacts. SMTP is an outbound-only protocol used for sending mail.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: What is the standard port number used by IMAP over SSL/TLS (IMAPS)?
+A) 110
+B) 143
+C) 465
+D) 993
+Correct: D
+Explanation: IMAPS (IMAP over SSL/TLS) uses port 993 for encrypted connections, ensuring that credentials and message contents are protected in transit. Port 143 is standard (unencrypted) IMAP, port 110 is POP3, and port 465 is sometimes used for SMTPS (SMTP over SSL). Knowing these port numbers is an A+ exam objective.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user sets up their personal email account on a smartphone using POP3. After reading emails on the phone, they no longer appear on their desktop client. What is the most likely cause?
+A) The email server has a storage quota that was exceeded
+B) POP3 downloaded and deleted the messages from the server by default
+C) IMAP synchronised the deletions across all devices
+D) The MDM policy removed the messages remotely
+Correct: B
+Explanation: POP3's default behaviour is to download messages to the client and then delete them from the server, so once the phone retrieves the mail, it is no longer available to other clients. IMAP leaves messages on the server and synchronises state across devices, which is the opposite behaviour. MDM policies can restrict access but do not selectively delete individual emails as a routine operation.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: Which email security standard uses digital certificates to encrypt and digitally sign email messages at the client level?
+A) SPF (Sender Policy Framework)
+B) DKIM
+C) S/MIME
+D) STARTTLS
+Correct: C
+Explanation: S/MIME (Secure/Multipurpose Internet Mail Extensions) uses X.509 digital certificates to provide end-to-end encryption and digital signatures for email, ensuring both confidentiality and sender authentication at the application layer. SPF and DKIM are DNS-based anti-spoofing mechanisms that operate at the mail server level, not the end-user client. STARTTLS is a transport-layer mechanism that upgrades a plain-text connection to TLS but does not provide end-to-end message encryption.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user complains that their GPS navigation app shows their location several blocks away from their actual position, even with a strong GPS signal. Which additional technology, when enabled, can help improve location accuracy in urban environments?
+A) Bluetooth
+B) NFC
+C) Wi-Fi positioning and cellular tower triangulation
+D) Mobile hotspot
+Correct: C
+Explanation: Modern smartphones use a combination of GPS, Wi-Fi positioning (comparing detected SSIDs to a database of known access point locations), and cellular tower triangulation (A-GPS) to improve speed and accuracy of location fixes, particularly in urban canyons where satellite signals may be obstructed. Bluetooth is used in some indoor positioning systems but not broadly for outdoor GPS augmentation. NFC is a contact-range technology unrelated to location services.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: An MDM administrator needs to remotely erase all corporate data from an employee's personal smartphone when the employee resigns, without affecting personal photos and apps. Which MDM feature accomplishes this?
+A) Full device wipe
+B) Remote lock
+C) Selective wipe (container wipe)
+D) Remote password reset
+Correct: C
+Explanation: Selective wipe (or container wipe) removes only the managed corporate data, apps, and profiles from the device while leaving the user's personal data intact; this is a key feature of BYOD (Bring Your Own Device) MDM policies. A full device wipe erases all data, including personal content, which is inappropriate for a personal device. Remote lock restricts access but does not remove corporate data.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user wants to use Apple Pay on their iPhone at a retail checkout. What must be configured before Apple Pay can be used?
+A) A Lightning to USB cable must be connected to the payment terminal
+B) A payment card must be added to the Wallet app and Face ID or Touch ID must be set up
+C) Bluetooth must be enabled and paired with the payment terminal
+D) A mobile hotspot must be active to communicate with the payment processor
+Correct: B
+Explanation: Apple Pay requires that a credit or debit card be enrolled in the iOS Wallet app and that biometric authentication (Face ID or Touch ID) or a passcode be configured to authorise payments; the transaction then uses NFC to communicate with the terminal. No physical cable connection is used for NFC payments. Bluetooth is not involved in the Apple Pay NFC transaction process.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A smartphone is connected to a cellular network but websites load very slowly. The user's data plan is active. Which cellular data generation provides the fastest theoretical download speeds?
+A) 3G (HSPA)
+B) 4G LTE
+C) 5G NR
+D) 2G EDGE
+Correct: C
+Explanation: 5G NR (New Radio) provides theoretical peak download speeds exceeding 10 Gbps in mmWave configurations, far surpassing 4G LTE's theoretical maximum of approximately 1 Gbps. 4G LTE is faster than 3G HSPA, and 2G EDGE is the slowest. In practice, slow loading despite an active plan is more likely a coverage or congestion issue than a speed-generation limitation.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user needs to configure IMAP email on their mobile device. The incoming mail server is mail.example.com. Which port should be used for an unencrypted IMAP connection?
+A) 25
+B) 110
+C) 143
+D) 993
+Correct: C
+Explanation: Port 143 is the standard port for unencrypted (or STARTTLS-upgraded) IMAP connections. Port 993 is used for IMAP over SSL/TLS (IMAPS). Port 110 is used for POP3, and port 25 is used for SMTP mail transfer between servers.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A technician is enrolling a company-owned Android device into an MDM system. The device prompts the user to accept a device administrator profile. What is the primary purpose of accepting this profile?
+A) It allows the user to install apps from unofficial sources
+B) It grants the MDM system the ability to enforce security policies and manage the device remotely
+C) It upgrades the Android OS to the latest version automatically
+D) It enables Wi-Fi calling on the device
+Correct: B
+Explanation: Accepting the MDM device administrator profile grants the management server the necessary permissions to enforce password policies, encrypt storage, push app configurations, and perform remote wipe operations. It does not grant permission to sideload apps; in fact, MDM policies often restrict sideloading. OS updates may be managed through MDM but are not the purpose of the initial profile acceptance.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician must replace the keyboard on a business-class laptop. Before beginning, what is the most important safety precaution?
+A) Disable the touchpad in Device Manager
+B) Power off the laptop and remove or disconnect the battery
+C) Update the keyboard driver before the physical swap
+D) Back up the BIOS settings to a USB drive
+Correct: B
+Explanation: Disconnecting power (shutting down and removing/disconnecting the battery) prevents accidental short circuits and electric shock during any internal hardware work on a laptop. Disabling the touchpad in software does not remove the risk of electrical damage during hardware replacement. Driver updates and BIOS backups are software tasks that do not substitute for proper electrical safety precautions before opening the chassis.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A laptop has two SO-DIMM slots, currently populated with one 8 GB DDR4 module. The user wants to reach 16 GB and also enable dual-channel memory mode. What is the correct upgrade?
+A) Add one 8 GB DDR4 module in the second slot
+B) Replace the existing 8 GB module with a single 16 GB module
+C) Add two 4 GB modules to fill both slots
+D) Replace both modules with a single 16 GB DDR5 module
+Correct: A
+Explanation: Installing a matching 8 GB DDR4 module in the second slot gives 16 GB total and enables dual-channel operation (which requires matching modules in paired slots), improving memory bandwidth. A single 16 GB module in one slot provides the capacity but operates in single-channel mode. DDR5 modules are not backward-compatible with DDR4 slots, so option D is physically impossible.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: After replacing a laptop HDD with an SSD, the technician notices the SSD is significantly faster for reads but the OS takes the same time to shut down. What step was most likely skipped?
+A) Enabling AHCI mode in BIOS instead of IDE/Compatibility mode
+B) Formatting the SSD with FAT32
+C) Installing the SSD upside-down in the bay
+D) Disabling the paging file on the SSD
+Correct: A
+Explanation: Running an SSD in IDE/Compatibility mode disables native SATA command queuing and TRIM support, significantly reducing write performance and OS shutdown speed; switching to AHCI mode in BIOS (before OS installation for clean installs) unlocks full SSD features. FAT32 is inappropriate for a Windows system drive; NTFS is required. Disabling the paging file would affect virtual memory, not shutdown performance related to storage controller mode.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A user reports that their laptop's display shows a rainbow-like shimmer when viewed from the side. The display is otherwise functional. Which panel type is most associated with this characteristic?
+A) OLED
+B) TN
+C) IPS (IPS glow)
+D) VA
+Correct: B
+Explanation: TN panels exhibit extreme colour shift and contrast inversion when viewed off-axis; colours appear washed out, inverted, or with a colour-cast shimmer. IPS panels can show a uniform glow at extreme angles but not the rainbow shimmer typical of TN. OLED panels maintain colour accuracy across very wide viewing angles due to their emissive nature.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop display has a resolution of 1920x1080 on a 15.6-inch screen. A replacement panel is 1920x1080 on a 17.3-inch screen. If installed, what display issue will occur?
+A) The image will be compressed and appear zoomed in
+B) The image will appear correct because the resolution is the same
+C) The image will appear stretched and have lower pixel density (DPI), appearing less sharp
+D) The laptop BIOS will reject the incompatible panel
+Correct: C
+Explanation: The same resolution spread across a larger physical screen results in lower pixels per inch (PPI), meaning each pixel is physically larger and the image will appear less sharp or slightly blurry compared to the original panel. The image may fill the screen correctly (not stretched geometrically) but will simply look less crisp. The BIOS does not validate display size and will not reject a physically compatible panel connector.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: An NFC-enabled smartphone is brought within 4 cm of an NFC tag at a bus stop, and a URL automatically opens. What type of NFC operating mode is the phone using?
+A) Card emulation mode
+B) Peer-to-peer mode
+C) Reader/writer mode
+D) Host card emulation mode
+Correct: C
+Explanation: In reader/writer mode, the NFC-enabled device acts as a reader, detecting and interpreting data stored on a passive NFC tag (such as a smart poster at a bus stop). Card emulation mode makes the phone act like an NFC card (used for payments). Peer-to-peer mode enables two active NFC devices to exchange data with each other.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user wants to use wireless headphones with their laptop while also streaming from their phone simultaneously, connecting each to a different Bluetooth device. What Bluetooth feature allows one device to maintain two active audio connections?
+A) Bluetooth multipoint
+B) Bluetooth mesh
+C) Bluetooth classic BR/EDR
+D) Bluetooth tethering
+Correct: A
+Explanation: Bluetooth multipoint (supported in Bluetooth 5.0 and newer devices with compatible profiles) allows a single Bluetooth device, such as a headset, to maintain simultaneous connections to two source devices and switch audio between them. Bluetooth mesh is a networking topology for IoT devices to relay signals, not for simultaneous audio sources. BR/EDR (Basic Rate/Enhanced Data Rate) is the classic Bluetooth connection mode, not a multi-connection feature.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user's location services are enabled on their smartphone but apps cannot determine their location indoors. Which technology improves indoor positioning when GPS signals are unavailable?
+A) Cellular triangulation only
+B) Wi-Fi positioning using known access point locations
+C) Bluetooth FM radio triangulation
+D) NFC geofencing
+Correct: B
+Explanation: Wi-Fi positioning uses a database of known Wi-Fi access point locations (their GPS-mapped positions and signal strengths) to estimate the device's indoor location when satellite GPS signals cannot penetrate buildings. Cellular triangulation works indoors to a degree but is far less precise. NFC has a range of only a few centimetres and cannot be used for area positioning.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is replacing a laptop's internal wireless card. The old card is an 802.11ac (Wi-Fi 5) card. The replacement is an 802.11ax (Wi-Fi 6) card in the same M.2 A+E key form factor. What must the technician verify before completing the upgrade?
+A) That the laptop's BIOS supports Wi-Fi 6 frequencies
+B) That the antenna cables and M.2 slot key type are compatible with the new card
+C) That the user's router is also upgraded to Wi-Fi 6
+D) That the replacement card has the same MAC address as the original
+Correct: B
+Explanation: The physical M.2 key type (A+E key for wireless cards), slot length, and antenna connector compatibility must match between the old and new card; if the antenna leads or key type differ, the new card will not seat or will not achieve good signal despite being installed. The BIOS does not need updating specifically for a Wi-Fi generation change in most cases. The router upgrade improves speed but is not required for the new card to function; it will fall back to the highest mutually supported standard.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user configures their corporate email on a personal iPhone using Exchange ActiveSync. The MDM then pushes a policy requiring a 6-digit passcode. The user refuses to set the passcode. What will most likely happen?
+A) The MDM will quietly disable email sync without notifying the user
+B) The Exchange account will be automatically removed by the MDM policy until compliance is achieved
+C) The passcode requirement only applies to Android devices, not iOS
+D) The user can override the MDM policy from the iOS Settings app
+Correct: B
+Explanation: Exchange ActiveSync and MDM solutions can enforce compliance policies; if a device does not meet the requirements (such as having a passcode), the MDM can block email access or remove the account profile until the device becomes compliant. MDM policies apply equally to iOS and Android; they are not OS-specific. Users cannot override MDM-enforced policies from within device settings — that is the purpose of MDM.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A technician needs to replace a cracked laptop screen. The new panel must match the original. Besides resolution, which other specification is critical to verify for LCD compatibility?
+A) The panel's Wi-Fi standard support
+B) The connector type, pin count, and interface (LVDS vs. eDP)
+C) The panel's Bluetooth version
+D) The hard drive interface protocol
+Correct: B
+Explanation: Laptop LCD panels use either older LVDS or modern eDP video interfaces, and the connector type and pin count must match the motherboard's video output connector; installing a panel with a different interface or pin count will result in no image or a damaged connector. Wi-Fi standard, Bluetooth version, and hard drive interface are completely unrelated to display panel compatibility.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user's laptop has only one USB-C port. They want to connect a USB-A mouse, a USB-A keyboard, and an Ethernet cable simultaneously. What accessory provides the best solution?
+A) A USB-C to USB-A adapter (single port)
+B) A USB-C multiport hub or dock with USB-A ports and an Ethernet port
+C) A Bluetooth hub that converts USB-A to Bluetooth
+D) A USB-C to Thunderbolt converter
+Correct: B
+Explanation: A USB-C multiport hub or dock expands the single USB-C port into multiple ports (USB-A for peripherals, RJ-45 for Ethernet), which is exactly what the scenario requires. A single USB-C to USB-A adapter adds only one USB-A port. A Bluetooth hub does not provide a wired Ethernet connection. There is no such thing as a USB-C to Thunderbolt converter that adds Thunderbolt capability to a non-Thunderbolt USB-C port.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A laptop's SSD is confirmed healthy but boot times are slow. The BIOS shows the drive in the boot priority list but set to Legacy/BIOS boot mode. The SSD has a GPT partition table. What change in the BIOS should the technician make?
+A) Enable Secure Boot and set boot mode to UEFI
+B) Change the boot order to load the optical drive first
+C) Set the SATA controller to IDE mode
+D) Increase the RAM frequency in the XMP profile
+Correct: A
+Explanation: GPT partition tables require UEFI firmware to boot correctly; running a GPT-formatted SSD in Legacy (BIOS/MBR) mode causes slow boot or boot failure because Legacy mode cannot natively read GPT boot entries. Switching to UEFI boot mode enables full GPT support and, combined with Secure Boot, provides the fastest and most secure startup. Setting SATA to IDE mode would further degrade SSD performance. RAM XMP profiles affect memory speed, not boot mode compatibility.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user receives a digitally signed email. Their email client shows a certificate icon next to the message. What information does the digital signature provide?
+A) The message was encrypted and cannot be read by the mail server
+B) The sender's identity has been verified and the message has not been altered in transit
+C) The attachment in the email has been scanned and is free of malware
+D) The email was sent using a secure SMTP relay
+Correct: B
+Explanation: A digital signature (as used in S/MIME) uses the sender's private key to sign the message hash; the recipient's client verifies the signature using the sender's public key from their certificate, confirming both the sender's identity (non-repudiation) and that the message body was not modified after signing. A digital signature alone does not encrypt the message body — that requires the recipient's public key for encryption. Attachment scanning is performed by antivirus software, not digital signature certificates.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A technician sets up a mobile hotspot on a smartphone for a travelling executive. The hotspot is visible but other devices fail to connect. What is the most likely cause?
+A) The smartphone does not have an NFC chip
+B) The Wi-Fi password entered on the connecting device is incorrect
+C) The hotspot requires a wired connection to function
+D) The smartphone's Bluetooth is not paired with the connecting device
+Correct: B
+Explanation: The most common reason a visible hotspot fails to connect is an incorrectly entered Wi-Fi password on the client device; the hotspot network is visible (proving it is broadcasting) but authentication fails. NFC is unrelated to Wi-Fi hotspot operation. A hotspot is wireless by definition — no wired connection is required. Bluetooth pairing is not needed to connect to a Wi-Fi hotspot.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: An OLED laptop display develops a permanent discoloration in the shape of a taskbar at the bottom of the screen after extended use. What condition has occurred?
+A) Backlight bleed
+B) Dead pixel cluster
+C) Image retention / burn-in
+D) IPS glow
+Correct: C
+Explanation: OLED displays are susceptible to burn-in (permanent image retention) when static elements — such as a taskbar, status bar, or HUD — are displayed at high brightness for extended periods, causing uneven degradation of organic emitter materials. Backlight bleed is an LCD phenomenon caused by light escaping around the edges of the backlight and does not apply to OLED. IPS glow is a uniform near-edge luminance effect on IPS LCD panels, not OLED burn-in.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A user reports that their laptop runs significantly hotter after a RAM upgrade and the fans are constantly at full speed. No additional load has been added. What is the most likely cause?
+A) The new RAM modules are DDR5 and incompatible with DDR4 slots
+B) The RAM was not fully seated, causing the CPU to work harder compensating for memory errors
+C) Higher-capacity RAM always generates more heat regardless of workload
+D) The RAM upgrade triggered a BIOS update that changed the fan curve
+Correct: B
+Explanation: Partially seated RAM causes repeated memory errors that the CPU and memory controller must handle, increasing processor load and heat output; reseating the module firmly until the retaining clips snap into place resolves the issue. DDR5 and DDR4 use different, incompatible slots — if the wrong type were installed, the system would not POST at all. Higher RAM capacity does not inherently generate significant additional heat.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user's smartphone email is configured with POP3 and they want to access the same mailbox from a desktop computer without losing messages. What configuration change should the technician make?
+A) Switch the mobile client to use IMAP instead of POP3
+B) Enable S/MIME on the mobile client
+C) Change the SMTP port from 587 to 25
+D) Disable SSL on the incoming mail server connection
+Correct: A
+Explanation: IMAP leaves messages on the server and synchronises mailbox state across multiple devices, so switching from POP3 (which removes messages from the server after download) to IMAP allows both the phone and the desktop to access the same messages. S/MIME is an email security standard and does not affect where messages are stored. SMTP port settings and SSL configuration are outgoing-mail and encryption settings unrelated to message retention on the server.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user's Bluetooth device was working but has suddenly stopped connecting to their phone after the phone received a software update. What is the recommended first troubleshooting step?
+A) Purchase a new Bluetooth device
+B) Remove (forget) the device from the phone's Bluetooth list and re-pair it
+C) Replace the Bluetooth antenna inside the phone
+D) Downgrade the phone's OS to the previous version
+Correct: B
+Explanation: Software updates can corrupt or invalidate stored Bluetooth pairing data; removing the device from the paired list (forgetting it) and re-initiating the pairing process clears the old bond and establishes a fresh connection. Replacing the antenna is a hardware repair that is not indicated when the issue started after a software change. OS downgrading is disruptive and inappropriate as a first troubleshooting step.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A technician is configuring a company-owned iPhone for field use. The company requires that the device only connect to approved Wi-Fi networks and that all web traffic go through a corporate VPN. Which technology is used to push and enforce these configurations?
+A) iCloud Keychain
+B) MDM with a configuration profile
+C) Apple Configurator personal sync
+D) AirDrop policy
+Correct: B
+Explanation: MDM platforms deploy configuration profiles to Apple devices that enforce Wi-Fi settings (specifying allowed SSIDs and credentials), VPN configurations, and restrictions — all applied silently without requiring user interaction. iCloud Keychain stores passwords for the user but cannot enforce network or VPN policies. AirDrop is a peer-to-peer file-sharing feature and cannot distribute management policies.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A user wants to add a second storage device to their laptop that already has an NVMe SSD in the M.2 slot. The laptop manual shows a second M.2 slot labelled "M.2 SATA only." Which drive can be added to the second slot?
+A) Any M.2 NVMe drive
+B) An M.2 SATA SSD (B-key or B+M-key)
+C) A 2.5-inch PCIe SSD
+D) A Thunderbolt 4 drive
+Correct: B
+Explanation: A slot labelled "M.2 SATA only" supports only the SATA protocol over the M.2 connector; NVMe (PCIe) drives require PCIe lanes which this slot does not provide, so only an M.2 SATA drive will work. The M.2 key type for SATA-only slots is typically B-key or B+M-key, distinguishable from M-key NVMe slots. A 2.5-inch drive uses a different physical connector entirely and cannot be installed in an M.2 slot.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop has a touchscreen but the user prefers to use a stylus for precision drawing. The stylus works on the screen but there is a slight offset between where the tip touches and where the mark appears. What needs to be performed?
+A) A digitizer calibration
+B) A display resolution change
+C) A backlight brightness adjustment
+D) An HDMI output reconfiguration
+Correct: A
+Explanation: Offset between the stylus/touch input and the on-screen cursor indicates that the digitizer's coordinate mapping is misaligned with the display pixels; recalibrating the digitizer (typically found in OS settings or a manufacturer utility) corrects this offset. Changing resolution or brightness does not correct touch coordinate mapping. HDMI reconfiguration is irrelevant to the built-in touchscreen's calibration.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A technician needs to verify that a USB-C cable will support 100 W Power Delivery for charging a laptop. What labelling or specification should they look for on the cable?
+A) USB 2.0 certified
+B) USB-C with USB Power Delivery (PD) rating of 100 W (5A/20V or E-Marker chip)
+C) Thunderbolt 3 audio-only cable
+D) DisplayPort 1.2 certified cable
+Correct: B
+Explanation: USB Power Delivery 100 W requires a cable rated for 5 A current, which must contain an E-Marker (Electronically Marked) chip that communicates the cable's current capacity to the charger and device; cables without an E-Marker are limited to 3 A (60 W max). A USB 2.0 cable is limited to 5 V/0.5 A charging. DisplayPort certification relates to video signal quality, not power delivery capacity.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user's smartphone shows full LTE bars but they report that app downloads are very slow. Which setting should the technician check first?
+A) Whether the device is in Airplane mode
+B) Whether a data cap or throttling limit has been reached on the mobile plan
+C) Whether Bluetooth is interfering with the LTE signal
+D) Whether the SIM card needs to be re-inserted
+Correct: B
+Explanation: Many mobile carriers throttle data speeds after the user's high-speed data allowance is consumed; the device shows full signal bars (physical layer is fine) but application-layer throughput is severely limited by the carrier. Airplane mode disables all radios, so the device would show no signal bars at all. Bluetooth operates in the 2.4 GHz band and does not interfere with LTE bands.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: Which statement best describes the difference between LED backlighting and OLED in a laptop display?
+A) LED displays do not require electricity to produce an image
+B) LED backlighting illuminates a liquid crystal layer, while OLED pixels emit light individually
+C) OLED uses a fluorescent tube to provide backlight, while LED uses organic compounds
+D) Both technologies work identically but differ only in power connector type
+Correct: B
+Explanation: LED-backlit LCD displays shine LED light through a liquid crystal layer that selectively blocks or passes light; OLED displays have organic compounds in each pixel that emit light directly when current is applied, eliminating the need for a backlight. OLED cannot achieve true black with LED backlighting because the backlight always has some light leakage. CCFL fluorescent tubes were used in older laptop displays before LED backlighting became standard.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is asked to add a Kensington lock to a laptop for physical security in an open office. What is required for this to work?
+A) The laptop must have a Kensington Security Slot on its chassis
+B) The laptop must be connected to the corporate domain
+C) A Bluetooth proximity sensor must be configured
+D) The laptop BIOS must have the Kensington lock feature enabled
+Correct: A
+Explanation: The Kensington lock system requires a physical Kensington Security Slot (also called a K-slot) on the laptop's chassis; the lock cable's T-bar head inserts and locks into this slot. Many business laptops include this slot; many consumer thin-and-light models do not. No software, domain, or BIOS configuration is required — the lock is entirely a physical mechanism.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A company deploys an MDM policy that prevents employees from installing apps outside the corporate app store. Which MDM capability enforces this?
+A) Remote wipe
+B) Application allowlisting / managed distribution
+C) GPS tracking
+D) Email encryption enforcement
+Correct: B
+Explanation: Application allowlisting (or managed app distribution) within MDM restricts device users to installing only approved applications from the corporate app catalogue, preventing the installation of unapproved or potentially malicious software. Remote wipe is a data loss prevention tool, not an app installation control. GPS tracking monitors location but does not control software installation.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user wants to wirelessly transfer a large file from their smartphone to a nearby laptop without using Wi-Fi or cellular data. Which technology provides the highest transfer speeds for this scenario over short distances?
+A) NFC
+B) Bluetooth 4.0
+C) Wi-Fi Direct
+D) Infrared (IrDA)
+Correct: C
+Explanation: Wi-Fi Direct creates a peer-to-peer Wi-Fi connection between devices without a router, achieving Wi-Fi speeds (hundreds of Mbps) over distances of up to 200 m. NFC is limited to a few centimetres and kilobits to low megabits per second, making it unsuitable for large files. Bluetooth 4.0 Classic offers a few Mbps, far slower than Wi-Fi Direct for large file transfers. IrDA (infrared) is an obsolete, line-of-sight technology rarely found on modern devices.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician installs a new 2.5-inch SSD in a laptop that previously had a hard drive. After installation, the BIOS recognises the drive but the system will not boot and shows "Operating System Not Found." What is the most likely cause?
+A) The SSD is faulty
+B) The SSD has not been formatted or has no OS installed on it
+C) The laptop requires an NVMe drive, not a SATA SSD
+D) The SATA cable is too long
+Correct: B
+Explanation: A new, unformatted SSD has no file system or operating system; the BIOS can detect it as a storage device but cannot boot from it because there is no bootable partition. The technician must install or clone an OS onto the SSD. A faulty drive would often not be detected by the BIOS at all. An NVMe requirement would be a slot compatibility issue, not a "no OS" error.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user configures outgoing email (SMTP) on their mobile device. The mail app requires an SMTP port that supports submission with authentication and encryption via STARTTLS. Which port should be used?
+A) 25
+B) 110
+C) 587
+D) 993
+Correct: C
+Explanation: Port 587 is the standard mail submission port; it requires SMTP AUTH (authentication) and typically uses STARTTLS to upgrade the connection to TLS, which is the recommended configuration for client-to-server email submission. Port 25 is used for server-to-server SMTP relay and is often blocked by ISPs for client use. Ports 110 and 993 are POP3 and IMAPS (incoming mail), not outgoing.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop display has a very narrow physical border around the screen (thin bezel design) and the webcam is located below the display rather than above. What is a practical disadvantage of this below-display webcam placement?
+A) The webcam cannot support HD resolution in this position
+B) Video call participants see an unflattering upward-angle view of the user's face and chin
+C) The webcam signal interferes with the Wi-Fi antenna when placed below the screen
+D) The digitizer layer blocks infrared signals from the webcam
+Correct: B
+Explanation: When the webcam is below the display (to accommodate the thin top bezel), it captures video from a low angle looking up at the user's face and chin, which most people find unflattering and gives the impression of the user looking downward, away from their audience. Webcam resolution is not affected by position within the chassis. Webcam and Wi-Fi antenna signals operate on completely different spectrum and do not interfere.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A user purchases a new M.2 2280 NVMe SSD but the laptop only has an M.2 slot that supports drives up to 2242 length. What should the technician do?
+A) Cut the SSD to fit the shorter slot
+B) Install the SSD anyway as the extra length will overhang the slot without issue
+C) Obtain an M.2 2242 NVMe SSD that fits the slot, or verify if an adapter bracket is available
+D) Use a USB-C to M.2 enclosure instead of internal installation
+Correct: C
+Explanation: M.2 slots have a mounting screw hole that corresponds to the supported drive length; a 2280 drive will not be secured and may not physically fit in a chassis designed for a maximum length of 2242. The correct solution is to use a drive of the supported length, or check if the manufacturer offers a bracket to extend support. Cutting an SSD would destroy it. Overhanging an unsecured drive risks damage from vibration or chassis closure.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user receives an email with a padlock icon next to the message, indicating the message body was encrypted. Which technology was most likely used to encrypt this email?
+A) STARTTLS
+B) S/MIME encryption using the recipient's public key
+C) SPF record validation
+D) WPA3 wireless encryption
+Correct: B
+Explanation: S/MIME encrypts the email message body using the recipient's public key certificate so only the recipient, who holds the corresponding private key, can decrypt and read the content; this is end-to-end encryption shown by the padlock icon in compatible mail clients. STARTTLS encrypts the transport connection between mail servers but does not encrypt the message itself end-to-end. SPF validates sender IP addresses at the DNS level and has no role in message body encryption.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A retail store uses small Bluetooth transmitters mounted throughout the store to send promotional notifications to customers' smartphones as they walk near products. What type of Bluetooth device are these transmitters?
+A) Bluetooth Classic headsets
+B) Bluetooth BLE beacons
+C) Bluetooth tethering access points
+D) Bluetooth A2DP speakers
+Correct: B
+Explanation: Bluetooth Low Energy (BLE) beacons are small, battery-powered transmitters that periodically broadcast a unique identifier packet; smartphones with compatible apps detect this signal and can trigger location-based actions such as displaying promotions. They use BLE due to its extremely low power consumption, allowing years of operation on a small battery. A2DP (Advanced Audio Distribution Profile) is a Bluetooth profile for high-quality audio streaming, not proximity broadcasting.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A user's laptop is connected to an external monitor via HDMI, but the laptop's built-in display is completely blank. The external monitor shows the desktop correctly. What is the most likely cause?
+A) The LCD panel is defective
+B) The display output is set to external-only (mirror/extend settings have the internal display disabled)
+C) The video cable inside the laptop lid is broken
+D) The GPU has failed
+Correct: B
+Explanation: Most operating systems and laptops allow users to configure display output to internal only, external only, or both (mirror/extend); if an external display is connected and the setting is external-only, the internal display is intentionally disabled and goes dark. A broken internal video cable would likely cause artifacts or intermittent display on the internal screen, but the external monitor would still work (as observed). GPU failure would typically affect all displays, including the external monitor.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A new employee needs their Android phone configured for work. The IT department uses Microsoft Intune for MDM. What is the correct first step for the employee to enrol their device?
+A) Root the device to allow Intune full access
+B) Download and install the Microsoft Intune Company Portal app and follow the enrolment prompts
+C) Manually enter the MDM server's IP address in the device's APN settings
+D) Disable Google Play Protect before installing the Company Portal
+Correct: B
+Explanation: Intune device enrolment for Android begins with the user installing the Intune Company Portal app from Google Play and signing in with their corporate credentials; the app guides the user through the enrolment and policy application process. Rooting (jailbreaking) a device typically violates corporate MDM policies and triggers non-compliance alerts. APN settings configure cellular data for the carrier, not MDM server connections.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is replacing a laptop's thermal paste during a cleaning service. Which best practice applies when applying new thermal paste to the CPU?
+A) Apply a thick, full-coverage layer to ensure maximum thermal transfer
+B) Apply a small pea-sized or thin uniform layer at the centre of the CPU heat spreader
+C) Mix two brands of thermal paste for a better compound
+D) Apply thermal paste to both the CPU and the heat sink contact surface separately
+Correct: B
+Explanation: A small, pea-sized application (or thin uniform spreading) at the centre of the CPU allows the heat sink mounting pressure to spread the paste evenly, filling microscopic surface imperfections without overflow that could contaminate nearby components. Too much paste can actually insulate rather than conduct heat. Mixing thermal paste brands can create chemical reactions that degrade performance. Applying paste to both surfaces doubles the thickness, which increases thermal resistance.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A corporate policy requires that all emails sent from mobile devices include a digital signature so recipients can verify the sender's identity. Which protocol must be configured on the email client?
+A) POP3 with SSL
+B) S/MIME with a user certificate
+C) IMAP IDLE
+D) Exchange ActiveSync with compression enabled
+Correct: B
+Explanation: S/MIME digital signatures use the sender's private key (from an X.509 certificate) to sign outgoing messages; the recipient uses the sender's public certificate to verify the signature, confirming identity and message integrity. POP3 with SSL encrypts the download connection but does not sign messages. IMAP IDLE is a push notification mechanism for receiving mail, unrelated to digital signing.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user's laptop has a USB-C port that supports Thunderbolt 3. They want to connect a 4K monitor and continue charging at 85 W simultaneously. Which single cable/adapter solution is appropriate?
+A) A passive USB-C to HDMI dongle
+B) A Thunderbolt 3 dock with HDMI output and USB-C Power Delivery passthrough
+C) A USB 2.0 hub with an HDMI port
+D) A USB-A to DisplayPort adapter
+Correct: B
+Explanation: A Thunderbolt 3 dock connects via a single Thunderbolt cable to the laptop, providing HDMI (or DisplayPort) for the 4K monitor and USB Power Delivery passthrough to charge the laptop simultaneously — all over the laptop's single Thunderbolt 3 port. A passive USB-C to HDMI dongle provides video but typically does not pass through charging power. USB 2.0 cannot carry the bandwidth needed for 4K video.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A laptop's BIOS shows the NVMe SSD as present, but after booting into Windows, the drive does not appear in Disk Management. What is the most likely cause?
+A) The drive is formatted with APFS and Windows cannot read it
+B) The NVMe drive is new and uninitialized — it needs to be initialized and have a partition created
+C) The SSD's firmware is outdated
+D) The drive is set to read-only mode in the BIOS
+Correct: B
+Explanation: A brand-new NVMe SSD appears in the BIOS (hardware level) but shows in Disk Management as unallocated or asks to be initialized because it has no partition table or file system; the technician must initialize it (MBR or GPT) and create a volume before Windows assigns it a drive letter and makes it accessible. APFS is an Apple file system that Windows cannot read, but a new drive would have no file system at all. The BIOS does not have a read-only setting for NVMe drives.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A technician quotes a laptop screen replacement and finds two replacement panels — one rated at 60 Hz and one at 144 Hz — with the same resolution. The user is a competitive gamer. Which panel should be recommended and why?
+A) 60 Hz, because higher refresh rates shorten display lifespan
+B) 144 Hz, because higher refresh rates reduce motion blur and improve gaming responsiveness
+C) 60 Hz, because the laptop GPU cannot support more than 60 Hz
+D) 144 Hz only if the panel is IPS — TN panels cannot achieve 144 Hz
+Correct: B
+Explanation: A 144 Hz display refreshes 144 times per second compared to 60 Hz, significantly reducing motion blur and perceived input lag in fast-paced games where frame rates exceed 60 FPS; this is a measurable competitive advantage for gaming. Higher refresh rates do not inherently shorten display lifespan. Whether the GPU supports 144 Hz output would need to be verified, but the question asks which panel to recommend for a gamer, and 144 Hz is the correct choice. Both IPS and TN panels are available at 144 Hz and above.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: An organisation issues employees smart cards for building access and PC login. A user's new laptop does not recognise their smart card even though the reader is built-in. What should the technician check first?
+A) Whether the smart card reader driver and middleware software (such as PC/SC driver) are installed
+B) Whether the user's Bluetooth is enabled
+C) Whether the smart card needs to be updated via NFC
+D) Whether the M.2 NVMe SSD has available space
+Correct: A
+Explanation: Smart card readers require a PC/SC (Personal Computer/Smart Card) driver stack and often manufacturer-specific middleware to communicate with the smart card and present credentials to the OS; without the correct software, the hardware reader is physically present but the OS cannot use it. Bluetooth is a wireless technology unrelated to contact smart card readers. NFC is a wireless card standard; contact smart cards do not use NFC.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user enrolls their personal iPad in a corporate MDM system. Later, they leave the company and the IT department performs a selective wipe. What is the expected outcome?
+A) All data, including personal photos and apps, is deleted
+B) Only corporate managed apps, data, and configuration profiles are removed; personal data remains
+C) The iPad is locked and can no longer be used without corporate credentials
+D) The MDM pushes a factory reset command that erases the entire device
+Correct: B
+Explanation: Selective (or managed) wipe targets only the corporate management profile and associated managed apps, data, and settings, leaving all personal content (photos, personal apps, personal accounts) untouched; this is the standard BYOD separation model. A full device wipe (factory reset) would erase all content and is typically reserved for company-owned devices. After selective wipe, the device is fully usable for personal purposes without any corporate restriction.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A technician is asked to install a solid-state drive in a legacy laptop that has only a standard 2.5-inch HDD bay. The buyer purchased an mSATA SSD by mistake. What should the technician recommend?
+A) Use an mSATA to 2.5-inch SATA adapter to mount the mSATA SSD in the HDD bay
+B) Install the mSATA SSD directly in the HDD bay using double-sided tape
+C) Return the mSATA SSD and purchase a 2.5-inch SATA SSD instead
+D) Use an M.2 to 2.5-inch adapter since mSATA and M.2 are the same
+Correct: C
+Explanation: An mSATA SSD requires an mSATA slot (a mini-PCIe-style connector); it cannot be directly installed in a 2.5-inch HDD bay. While mSATA-to-2.5-inch adapters exist (option A is technically possible), for most field scenarios the simplest and most reliable solution is to exchange for the correct drive type — a standard 2.5-inch SATA SSD. mSATA and M.2 are different standards with different connectors and are not interchangeable without an adapter.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user wants to configure their mobile email for a Google Workspace account using IMAP. What is the correct incoming mail server hostname?
+A) pop.google.com
+B) smtp.gmail.com
+C) imap.gmail.com
+D) exchange.google.com
+Correct: C
+Explanation: Google's IMAP incoming mail server is imap.gmail.com (port 993, SSL); this is the standard hostname used for configuring Gmail in third-party email clients on mobile devices. smtp.gmail.com is the outgoing mail server for sending. pop.google.com does not exist — Google's POP3 server is pop.gmail.com. Google does not operate an Exchange server.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A high-end laptop advertises a display with a 10-bit colour depth. What advantage does this provide over a standard 8-bit display?
+A) The display refreshes faster, reducing motion blur
+B) The display can produce over 1 billion colours versus 16.7 million, enabling smoother colour gradients
+C) The display uses less power because fewer colours are rendered
+D) The display resolution is four times higher than 8-bit panels
+Correct: B
+Explanation: 8-bit panels can display 256 shades per RGB channel (2^8 x 3 = 16.7 million colours), while 10-bit panels provide 1,024 shades per channel (2^10 x 3 = over 1 billion colours), resulting in smoother colour gradients with no visible banding — important for professional photo and video work. Colour bit depth is independent of refresh rate, power consumption, and resolution.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A user's laptop has a port with a small symbol resembling a trident (three-pronged). What port type does this symbol represent?
+A) USB Type-A
+B) Thunderbolt
+C) HDMI
+D) eSATA
+Correct: B
+Explanation: The Thunderbolt interface is identified by a lightning bolt or, specifically on Thunderbolt 1 and 2, a symbol resembling a lightning bolt with a thunderbolt, sometimes colloquially called a trident; Thunderbolt 3 and 4 share the USB-C physical connector but are still identified by the lightning bolt icon. USB Type-A has a standard rectangular connector with no special symbol on the port. HDMI uses the HDMI logo and eSATA uses an eSATA symbol on its port.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: During a RAM upgrade, a technician installs a DDR5 SO-DIMM into a DDR4 laptop. The laptop will not POST. What is the most likely reason?
+A) The DDR5 module needs to be configured in the BIOS before it will operate
+B) DDR5 and DDR4 SO-DIMMs are physically incompatible — the notch positions differ, preventing incorrect insertion
+C) The DDR5 module requires a higher voltage that damaged the motherboard
+D) DDR5 requires dual-channel configuration to POST
+Correct: B
+Explanation: DDR5 SO-DIMMs have a notch in a different position than DDR4 SO-DIMMs to prevent physical insertion into incompatible slots; in most cases the DDR5 module simply cannot be fully seated in a DDR4 slot. If forced, it would not POST or could damage the slot. No BIOS configuration can bridge the generational hardware incompatibility between DDR4 and DDR5.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A hospital requires that patient data on employee smartphones be inaccessible if the device is left idle for more than 5 minutes. Which MDM policy enforces this?
+A) Remote wipe after idle timeout
+B) Screen lock / auto-lock timeout policy with passcode enforcement
+C) Geofencing restriction
+D) Application sandboxing policy
+Correct: B
+Explanation: An MDM screen lock / auto-lock timeout policy forces the device to lock after a specified period of inactivity and requires a passcode or biometric to unlock, protecting sensitive data from unauthorised access if the device is left unattended. Remote wipe deletes data but does not restrict access after a short idle period. Geofencing restricts or enables features based on location, not idle time.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.3 — Given a scenario, set up and configure accessories and ports of mobile devices
+Question: A technician configures a laptop to accept connections from a USB 3.0 flash drive. The flash drive is inserted but Windows reports a "USB device not recognised" error. What should the technician check first?
+A) Whether NFC is enabled on the laptop
+B) Whether the USB port is disabled in the BIOS or the USB controller driver needs to be reinstalled
+C) Whether the flash drive needs to be formatted with NTFS using Disk Management
+D) Whether the user's MDM profile blocks all USB storage
+Correct: B
+Explanation: "USB device not recognised" commonly indicates a driver issue with the USB host controller or the device itself; the technician should verify the USB controller is enabled in BIOS and that the controller driver is installed correctly in Device Manager. If MDM is blocking USB storage (option D), the error would typically be "access denied" or the device would appear as blocked, not "not recognised." NFC has no relationship to USB device recognition.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.2 — Compare and contrast display components of mobile devices
+Question: A laptop screen is cracked and the user observes black spreading ink-like patches across the display. What physical component is damaged?
+A) The digitizer layer
+B) The LCD panel's liquid crystal layer (broken LCD)
+C) The LED backlight strip
+D) The display inverter
+Correct: B
+Explanation: The spreading black "ink" pattern is liquid crystal fluid leaking from the broken cells within the LCD matrix after the panel is cracked; this damage is irreversible and requires full panel replacement. The digitizer is a transparent capacitive layer that does not produce visible colour — its damage would not cause spreading discolouration. Backlight failure causes dimness or complete darkness, not ink-like spreading patches.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.4 — Given a scenario, configure basic mobile-device network connectivity and application support
+Question: A user travelling internationally wants to avoid roaming charges but still use data apps on their smartphone. What is the simplest option using the device's built-in features?
+A) Enable VPN to route data through the home country
+B) Purchase and insert a local SIM card, or use an eSIM with a local carrier profile
+C) Enable Bluetooth tethering from a second phone
+D) Configure the device to use Wi-Fi calling only and disable all data
+Correct: B
+Explanation: Installing a local SIM card (or activating a local eSIM profile on supported devices) gives the phone a local number and data plan at local rates, eliminating international roaming charges while providing full data access. A VPN routes traffic securely but does not eliminate roaming data charges — the cellular carrier still bills for international data use. Disabling all data (option D) would prevent internet use, which is the opposite of what the user wants.
+
+Domain: 1.0 Mobile Devices
+Sub-objective: 1.1 — Given a scenario, install and configure laptop hardware and components
+Question: A user reports that after cleaning their laptop's keyboard, several keys are sticking and not registering presses. The keyboard was cleaned with a wet cloth while the laptop was powered on. What is the most likely cause, and what should be done?
+A) The keyboard driver became corrupted; reinstall the driver
+B) Moisture entered the keyboard membrane or keyswitches; power off immediately and allow the keyboard to dry fully before reuse
+C) The keyboard backlight intensity was changed during cleaning
+D) The ZIF connector loosened during cleaning; reseat it
+Correct: B
+Explanation: Cleaning electronics with a wet cloth while powered on introduces moisture into the keyboard mechanism, causing keys to stick, miss presses, or short out; the safest immediate action is to power off and remove the battery if possible, then allow complete drying (often 24–48 hours) before powering on again. Keyboard driver corruption would cause keys to not register but would not cause physical sticking. Keyboard backlight changes are a software/settings issue unrelated to physical sticking.

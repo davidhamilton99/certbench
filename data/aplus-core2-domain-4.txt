@@ -1,0 +1,1099 @@
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A technician receives a call from a user who cannot access the internet. What is the first step the technician should take when creating a support ticket?
+A) Assign a priority level and route it to the network team
+B) Document the user's name, contact information, and a description of the issue
+C) Close the ticket and ask the user to call back later
+D) Escalate the ticket to a senior technician immediately
+Correct: B
+Explanation: The first step in creating a support ticket is to collect and document identifying information such as the user's name, contact details, and a clear description of the problem. This baseline information ensures the issue can be tracked, assigned, and referenced throughout the resolution process. Proper documentation from the start reduces confusion and supports accountability.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: Which document defines what employees are and are not permitted to do when using company computing resources?
+A) Network topology diagram
+B) Knowledge base article
+C) Acceptable Use Policy (AUP)
+D) Incident report
+Correct: C
+Explanation: An Acceptable Use Policy (AUP) outlines the rules governing how employees may use company-owned technology, including computers, networks, and internet access. It sets boundaries to protect the organisation from legal liability and security risks. All employees typically must acknowledge and sign the AUP as part of onboarding.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A company needs to maintain an inventory of all hardware devices, including serial numbers and assigned users. Which type of system should be implemented?
+A) Ticketing system
+B) Asset management system
+C) Knowledge base
+D) Change management log
+Correct: B
+Explanation: An asset management system tracks the physical and logical attributes of IT equipment such as serial numbers, model numbers, purchase dates, warranty information, and assigned users. This inventory is essential for lifecycle management, audits, and compliance. Without it, organisations struggle to account for hardware during incidents or audits.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A support technician resolves a recurring printer connectivity issue by documenting the steps in a searchable internal resource so other technicians can quickly find the solution. What type of document was created?
+A) Incident report
+B) Change request form
+C) Knowledge base article
+D) Network topology diagram
+Correct: C
+Explanation: A knowledge base (KB) article captures solutions to known issues in a structured, searchable format for reuse by support staff. This reduces resolution time and ensures consistent outcomes when the same problem occurs again. KB articles are a cornerstone of efficient IT support operations.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: Under GDPR, a company that processes the personal data of EU residents is required to do which of the following?
+A) Store all data on servers physically located in the United States
+B) Obtain explicit consent before collecting personal data and provide the right to erasure
+C) Share all collected data with government agencies upon request
+D) Retain customer data indefinitely for audit purposes
+Correct: B
+Explanation: The General Data Protection Regulation (GDPR) requires organisations to obtain clear, informed consent before collecting personal data from EU residents. It also grants individuals the right to access, correct, and request deletion of their data. Non-compliance can result in significant financial penalties.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A network diagram that shows the logical layout of all routers, switches, firewalls, and their interconnections is known as which type of documentation?
+A) Asset inventory
+B) Service level agreement
+C) Network topology diagram
+D) Standard operating procedure
+Correct: C
+Explanation: A network topology diagram visually represents the logical or physical arrangement of network components and their connections. It is a critical reference document for troubleshooting, capacity planning, and onboarding new staff. Keeping this diagram up to date is essential after any infrastructure change.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A retail company that processes customer credit card payments must comply with which security standard?
+A) HIPAA
+B) FERPA
+C) GDPR
+D) PCI-DSS
+Correct: D
+Explanation: The Payment Card Industry Data Security Standard (PCI-DSS) applies to any organisation that stores, processes, or transmits cardholder data. It defines technical and operational controls to protect payment card information from theft and fraud. Non-compliance can result in fines, increased transaction fees, and loss of payment processing privileges.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: After resolving a major server outage, the IT team writes a formal record that includes the timeline, root cause, affected systems, and corrective actions taken. What is this document called?
+A) Change request
+B) Incident report
+C) Knowledge base article
+D) Acceptable Use Policy
+Correct: B
+Explanation: An incident report documents the full details of a significant IT event, including when it was detected, its cause, its impact, and the steps taken to resolve it. This document is important for post-incident review, regulatory compliance, and preventing recurrence. It also provides a historical record for audit purposes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A technician notices that tickets are being closed without confirmed resolution, causing the same issues to reopen repeatedly. Which ticketing system practice should be enforced?
+A) Auto-close tickets after 24 hours
+B) Require user confirmation before closing a ticket
+C) Assign all tickets to senior technicians only
+D) Merge all related tickets into one
+Correct: B
+Explanation: Best practice requires end-user confirmation that the issue is resolved before a ticket is officially closed. This prevents premature closure and ensures the root cause has been addressed to the user's satisfaction. It also improves customer satisfaction metrics and helps identify recurring problems.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A healthcare company must protect patient medical records under which regulatory framework?
+A) PCI-DSS
+B) SOX
+C) HIPAA
+D) GDPR
+Correct: C
+Explanation: The Health Insurance Portability and Accountability Act (HIPAA) sets the standard for protecting sensitive patient health information (PHI) in the United States. It applies to healthcare providers, insurers, and their business associates. Violations can result in substantial civil and criminal penalties.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A technician documents the steps to perform a software installation in a repeatable, step-by-step format that anyone can follow. What type of document is this?
+A) Incident report
+B) Knowledge base article
+C) Acceptable Use Policy
+D) Standard operating procedure (SOP)
+Correct: D
+Explanation: A Standard Operating Procedure (SOP) provides detailed, step-by-step instructions for performing a specific task consistently and correctly. SOPs are used to ensure uniformity across technicians and reduce errors during routine or complex operations. They are fundamental to quality control in IT environments.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: An IT department tracks ticket volume, resolution times, and first-call resolution rates. What is the primary purpose of monitoring these metrics?
+A) To determine which technicians should be terminated
+B) To evaluate and improve the efficiency of the support process
+C) To automatically escalate unresolved tickets to vendors
+D) To satisfy PCI-DSS compliance requirements
+Correct: B
+Explanation: Tracking support metrics such as average resolution time, first-call resolution rate, and ticket volume helps management identify bottlenecks, measure performance, and implement improvements. These metrics provide objective data for staffing decisions, training needs, and process optimisation. Continuous improvement of support operations ultimately leads to better user satisfaction.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: Before deploying a new software update to all workstations, the IT team tests it in an isolated environment that mirrors production. What is this environment called?
+A) Production server
+B) Sandbox
+C) Backup server
+D) Domain controller
+Correct: B
+Explanation: A sandbox is an isolated test environment that replicates production conditions but prevents any changes from affecting live systems. Testing in a sandbox allows the team to identify issues such as compatibility problems or performance impacts before wider deployment. This practice is a fundamental change management control.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A change management process requires that before any significant system change is approved, a specific group reviews and authorises it. What is this group called?
+A) Help desk team
+B) Change advisory board (CAB)
+C) Security operations centre
+D) Asset management committee
+Correct: B
+Explanation: A Change Advisory Board (CAB) is a cross-functional group responsible for evaluating, approving, or rejecting proposed changes to IT systems. The CAB assesses the risk, impact, and benefit of changes before authorisation. This formal review process reduces the likelihood of unplanned outages or disruptions.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A proposed network configuration change is approved but later causes unexpected outages. The team needs to revert the environment to its previous working state. What should the change documentation have included?
+A) An end-user survey
+B) A sandbox test report only
+C) A rollback plan
+D) A vendor support contract
+Correct: C
+Explanation: A rollback plan documents the specific steps needed to undo a change and restore the system to its previous state if the change causes problems. Having a rollback plan is a mandatory element of responsible change management. Without it, recovery from a failed change can be slow and error-prone.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: Which of the following BEST describes the primary purpose of a change management process in an IT organisation?
+A) To speed up software deployments by skipping approvals
+B) To control modifications to IT infrastructure in a structured way to minimise risk
+C) To document user complaints about system performance
+D) To assign blame when systems fail after updates
+Correct: B
+Explanation: Change management exists to ensure that modifications to IT systems are planned, reviewed, tested, and approved before implementation. The structured process minimises the risk of unplanned outages, data loss, and security vulnerabilities. It creates accountability and a clear audit trail for all changes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: After a major application upgrade, the IT team wants to verify that business users can perform their daily tasks effectively with the new version. What type of acceptance is this?
+A) Change board approval
+B) Sandbox validation
+C) End-user acceptance
+D) Regulatory compliance sign-off
+Correct: C
+Explanation: End-user acceptance confirms that affected users can successfully perform their work using the updated system and that it meets their expectations. This step ensures the change delivers business value and is functionally correct from the user's perspective. Skipping this step can result in deploying changes that technically work but fail to meet operational needs.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A technician makes an undocumented change to a router configuration after hours, and it causes a network outage the next morning. What change management principle was violated?
+A) End-user acceptance testing
+B) Documented business processes and change authorisation
+C) Sandbox testing frequency
+D) Asset inventory requirements
+Correct: B
+Explanation: Making undocumented, unauthorised changes violates the core principle of change management, which requires all changes to follow documented processes and receive proper approval. Undocumented changes make troubleshooting extremely difficult because there is no record of what changed. This is often referred to as an "unauthorised change" and is a common cause of preventable outages.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: Which document formally requests permission to make a specific change to an IT system and includes the scope, risk assessment, and implementation plan?
+A) Incident report
+B) Change request form
+C) Knowledge base article
+D) Acceptable Use Policy
+Correct: B
+Explanation: A change request form initiates the formal change management process by describing the proposed modification, its justification, risk level, affected systems, and implementation steps. It provides the information that the change advisory board needs to make an informed approval decision. Completed change request forms also create a traceable audit history.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A company's change management policy requires that only a designated person is accountable for each change from initiation to completion. This person is known as the:
+A) Change architect
+B) System owner
+C) Responsible staff member (change owner)
+D) Security officer
+Correct: C
+Explanation: Designating a responsible staff member (change owner) ensures there is a single point of accountability for planning, executing, and verifying each change. This person coordinates with all stakeholders, monitors the change during implementation, and confirms successful completion. Clear ownership prevents tasks from falling through the cracks.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A technician wants to deploy a patch immediately due to a critical vulnerability. Which change management consideration is most important in this emergency scenario?
+A) Skipping change board review entirely and documenting afterward
+B) Requesting sandbox-only testing for 30 days before deployment
+C) Following an expedited emergency change process while still documenting the change
+D) Waiting for the next scheduled CAB meeting before taking action
+Correct: C
+Explanation: Even in emergencies, changes should follow an expedited or emergency change process that includes documentation and post-implementation review, even if pre-approval is abbreviated. Most mature change management frameworks include an emergency change path that allows rapid action while maintaining accountability. Skipping documentation entirely creates risk and audit gaps.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A technician receives a completed and approved change request and notices it lacks a specific maintenance window. Why is scheduling a maintenance window important?
+A) It ensures the change advisory board approves the request faster
+B) It defines a low-impact time period to perform changes and notify affected users
+C) It guarantees the change will succeed without a rollback
+D) It removes the need for sandbox testing
+Correct: B
+Explanation: A maintenance window is a pre-scheduled time, usually during off-peak hours, when changes are implemented to minimise disruption to users and business operations. Communicating the window in advance allows users to plan around any potential downtime. It is a critical element of responsible change execution.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: After completing a system upgrade, the change owner should perform which activity to formally close out the change?
+A) Submit a new change request for the next upgrade
+B) Archive all change documentation and conduct a post-implementation review
+C) Delete all sandbox test results to save storage space
+D) Notify only the change board that the work is done
+Correct: B
+Explanation: Post-implementation review verifies that the change achieved its intended goals, documents any issues encountered, and captures lessons learned for future improvements. Archiving documentation ensures there is a complete audit trail. Formal closure also releases any resources that were allocated to the change.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A technician performs a backup that copies all data regardless of when it was last backed up. What type of backup is this?
+A) Incremental
+B) Differential
+C) Full
+D) Synthetic
+Correct: C
+Explanation: A full backup copies all selected data every time it runs, regardless of whether files have changed since the last backup. It provides the simplest and fastest recovery since all data is contained in a single backup set. The trade-off is that full backups require the most storage space and take the longest to complete.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A backup strategy copies only the files that have changed since the last full OR incremental backup. The backup clears the archive bit after each run. What type of backup is this?
+A) Full
+B) Differential
+C) Incremental
+D) Synthetic full
+Correct: C
+Explanation: An incremental backup only captures files that have changed since the last backup of any type (full or incremental) and resets the archive bit after each run. This results in smaller, faster backups, but recovery requires the last full backup plus all incremental backups since then. The recovery process takes longer as more incremental sets must be applied in sequence.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A company runs a full backup every Sunday and differential backups Monday through Saturday. On Thursday, a server fails. How many backup sets are needed to restore the system?
+A) Five backup sets: Sunday full plus Monday, Tuesday, Wednesday, and Thursday differentials
+B) One backup set: Thursday's differential only
+C) Two backup sets: Sunday's full backup and Thursday's differential
+D) Four backup sets: Monday, Tuesday, Wednesday, and Thursday differentials
+Correct: C
+Explanation: A differential backup captures all changes since the last full backup and does not reset the archive bit. To restore, you only need the last full backup (Sunday) and the most recent differential (Thursday). This makes differential recovery faster than incremental recovery, though differential backups grow larger each day.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A technician creates a full backup by consolidating the last full backup with all subsequent incremental backups, without accessing the production system. What type of backup is this?
+A) Mirror backup
+B) Differential backup
+C) Snapshot backup
+D) Synthetic full backup
+Correct: D
+Explanation: A synthetic full backup is assembled from a previous full backup and subsequent incremental backups, creating a new full backup without running against the live production system. This approach reduces the impact on production during backup windows while maintaining a complete restorable copy. It is commonly used in enterprise environments with large datasets.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: The 3-2-1 backup rule is considered a best practice. What does this rule specify?
+A) Three backups on two media types, one kept off-site
+B) Three backups on one media type, two kept off-site
+C) Three backup windows per day, two systems backed up, one administrator responsible
+D) Three copies on two systems, one encrypted
+Correct: A
+Explanation: The 3-2-1 rule states that you should maintain three copies of data, store them on two different types of media, and keep one copy off-site. This approach protects against hardware failure, media-specific failure (e.g., tape degradation), and local disasters like fire or flood. It is one of the most widely recommended data protection strategies.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A company rotates backup tapes using a scheme where daily tapes are overwritten weekly, weekly tapes monthly, and monthly tapes are kept for a year. What backup rotation scheme is this?
+A) 3-2-1 rule
+B) Mirror rotation
+C) Grandfather-father-son (GFS)
+D) Round-robin rotation
+Correct: C
+Explanation: The Grandfather-Father-Son (GFS) scheme uses three sets of backups: daily (son), weekly (father), and monthly (grandfather), each with different retention periods. This provides a layered history of data at different points in time while managing media costs. It is one of the most widely used tape rotation strategies in business environments.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A technician restores data from a backup but discovers the files are corrupted and cannot be opened. What backup practice would have prevented this situation?
+A) Using only cloud-based backups
+B) Performing regular backup restoration tests
+C) Running more frequent full backups
+D) Storing backups on the same drive as the original data
+Correct: B
+Explanation: Regularly testing backup restores verifies that backup data is valid, complete, and recoverable. A backup that has never been tested is not a reliable backup, since corruption, misconfiguration, or media failure may go undetected. Testing should be scheduled periodically and documented to confirm recoverability.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A small business keeps all its backups in a storage room next to the servers. A flood damages the server room and the backup storage simultaneously. Which backup best practice did the company fail to follow?
+A) Using differential backups instead of full backups
+B) Storing at least one backup copy off-site
+C) Using the grandfather-father-son rotation scheme
+D) Encrypting backup media
+Correct: B
+Explanation: Keeping all backup copies in the same physical location as the production systems violates the principle of off-site storage, which is fundamental to disaster recovery planning. A local disaster such as fire, flood, or theft can destroy both primary and backup data simultaneously. Off-site or cloud storage ensures data survival in such scenarios.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A company wants to be able to restore individual files from any point in the last 30 days. Which backup strategy BEST supports this requirement?
+A) Weekly full backups with no incrementals
+B) Daily incremental backups retained for 30 days
+C) Monthly full backups only
+D) Differential backups run once per month
+Correct: B
+Explanation: Daily incremental backups retained for 30 days provide granular point-in-time recovery, allowing restoration of individual files from any day within that period. This meets the requirement for flexible file-level recovery over a month-long window. The strategy balances storage efficiency with recovery flexibility.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: Which type of backup typically requires the MOST storage space but provides the FASTEST recovery time?
+A) Incremental
+B) Differential
+C) Full
+D) Synthetic full
+Correct: C
+Explanation: A full backup copies all data every time it runs, making it the most storage-intensive option. However, since all data is in a single backup set, recovery is the fastest because only one backup needs to be restored. Organisations often schedule full backups less frequently (such as weekly) to balance storage costs and recovery speed.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A technician is configuring backup software and must choose a media type for on-site backups. Which storage medium is MOST commonly used for on-site workstation backups in small business environments?
+A) Punch cards
+B) External USB hard drives
+C) Optical discs (Blu-ray)
+D) Magnetic tape reels
+Correct: B
+Explanation: External USB hard drives are the most practical and widely used on-site backup medium for small businesses due to their high capacity, low cost, portability, and ease of use. They support fast backup and restore speeds compared to tape. However, they must be stored securely and rotated off-site regularly to meet best practice standards.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A company uses cloud storage as one of its backup destinations. What is the PRIMARY advantage of cloud-based backup over local tape-only backups?
+A) Cloud backups are always faster to restore than local tape
+B) Cloud backups satisfy off-site storage requirements automatically
+C) Cloud backups eliminate the need for any on-site backups
+D) Cloud backups are not subject to any data protection regulations
+Correct: B
+Explanation: Cloud-based backup inherently satisfies the off-site storage requirement because data is stored in geographically remote data centres. This protects against local disasters that could destroy on-site backups. Cloud storage also offers scalability and accessibility, though restoration speed depends on internet bandwidth.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician is about to handle a RAM module. Which safety measure should be taken FIRST to prevent damage from static electricity?
+A) Wear insulated rubber gloves
+B) Use an ESD wrist strap connected to a grounded surface
+C) Work on a carpeted floor to reduce static buildup
+D) Hold the RAM by its gold contacts to discharge any static
+Correct: B
+Explanation: An ESD (Electrostatic Discharge) wrist strap grounds the technician to the same electrical potential as the equipment, preventing static electricity from discharging through sensitive components. Static discharge can permanently damage integrated circuits even when the zap is too small to feel. The wrist strap should be connected to a proper ground point before touching any components.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: Which type of fire extinguisher is safe to use on an electrical fire involving energised computer equipment?
+A) Type A (water)
+B) Type B (foam)
+C) Type C (CO2 or dry chemical)
+D) Type D (dry powder for metals)
+Correct: C
+Explanation: Class C fire extinguishers use non-conductive agents such as CO2 or dry chemical and are specifically rated for electrical fires. Using a water or foam extinguisher on an energised electrical fire creates a serious electrocution hazard. Knowing the correct extinguisher type is critical for personal safety in an IT environment.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician needs to move a large tower server to a different rack. What is the safest lifting technique?
+A) Bend at the waist, keep legs straight, and lift quickly
+B) Bend at the knees, keep the back straight, and lift using leg muscles
+C) Ask a colleague to hold the server from one side while you drag it
+D) Tilt the server and slide it along the floor without lifting
+Correct: B
+Explanation: Proper lifting technique requires bending at the knees with feet shoulder-width apart, keeping the back straight, and using the strong muscles of the legs to do the lifting. This minimises the risk of back injury, which is one of the most common workplace injuries in IT roles. Heavy equipment should also be moved with a hand truck whenever possible.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: An ESD mat is placed on a workbench where components are repaired. What is the purpose of an ESD mat?
+A) To insulate components from ground and prevent shorts
+B) To provide a grounded surface that dissipates static charge before it can damage components
+C) To absorb heat from components during testing
+D) To prevent dust from accumulating on sensitive parts
+Correct: B
+Explanation: An ESD mat provides a controlled, grounded work surface that slowly dissipates static charges, preventing sudden electrostatic discharge from reaching sensitive electronic components. The mat is bonded to earth ground, and a technician wearing a wrist strap connected to the same ground creates an equipotential environment. Together, they are the primary defence against ESD damage.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician is replacing a power supply in a desktop computer. The computer has been shut down but is still plugged in. What should the technician do before opening the case?
+A) Press the power button once to discharge residual power
+B) Unplug the power cord from the wall outlet before working inside the case
+C) Leave the power cord connected to ensure proper grounding of the chassis
+D) Turn off the power strip but leave the power cord attached to the computer
+Correct: B
+Explanation: Before working inside any computer, the power cord must be fully disconnected from the wall outlet to eliminate the risk of electrical shock. Even when the computer is off, components such as the power supply retain charge, and the motherboard may still receive standby voltage. Disconnecting the power cord is a non-negotiable electrical safety step.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: Cables running across walkways in a server room pose which safety risk?
+A) ESD buildup on network cables
+B) Trip hazards that can cause personal injury and equipment damage
+C) Electromagnetic interference with nearby routers
+D) Increased risk of data packet loss
+Correct: B
+Explanation: Cables crossing foot traffic areas create trip hazards that can cause injuries to personnel and damage to equipment. Proper cable management — including the use of cable trays, raceways, and floor grommets — keeps cables organised and out of walkways. Good cable management also improves airflow, simplifies troubleshooting, and supports a professional work environment.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: When handling a CRT monitor that is being decommissioned, what safety precaution is MOST critical?
+A) Wearing an ESD wrist strap to protect the CRT circuits
+B) Discharging the high-voltage capacitor before touching internal components
+C) Placing the CRT face-down on an ESD mat
+D) Removing the electron gun before transport
+Correct: B
+Explanation: CRT monitors contain high-voltage capacitors that can retain a lethal charge of tens of thousands of volts even years after the unit has been unplugged. Before any internal work is performed, this capacitor must be properly discharged by a trained technician using appropriate tools. Untrained individuals should never attempt to open a CRT.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician is installing expansion cards and repeatedly reaches into the case to adjust components. What safety concern does this create, and what is the solution?
+A) Heat buildup; take breaks every 5 minutes
+B) ESD damage to components; consistently use an ESD wrist strap throughout the process
+C) Cable interference; route cables before installing cards
+D) Driver conflicts; install drivers before inserting hardware
+Correct: B
+Explanation: Every time a technician handles internal components without ESD protection, there is a risk of electrostatically damaging sensitive chips on expansion cards or the motherboard. Wearing an ESD wrist strap consistently throughout the procedure ensures continuous grounding and eliminates this risk. The strap should remain connected at all times while working inside the case.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: An organisation requires technicians to comply with government safety regulations when disposing of electronic equipment. Which agency provides relevant workplace safety regulations in the United States?
+A) FCC
+B) EPA
+C) OSHA
+D) NIST
+Correct: C
+Explanation: The Occupational Safety and Health Administration (OSHA) establishes and enforces workplace safety standards in the United States, including those relevant to electronics handling and disposal. The EPA handles environmental disposal regulations, but OSHA governs worker safety procedures. Technicians must be familiar with both when handling hazardous materials.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician must replace a laptop battery in a shared workspace. Beyond ESD precautions, what personal safety measure is most important when handling lithium-ion batteries?
+A) Wearing a face shield and thick rubber gloves at all times
+B) Avoiding puncturing, bending, or exposing the battery to excessive heat
+C) Placing the battery in a grounded ESD bag immediately
+D) Connecting the battery to a discharge circuit before installation
+Correct: B
+Explanation: Lithium-ion batteries can undergo thermal runaway if punctured, bent, short-circuited, or exposed to high temperatures, potentially causing fire or explosion. Technicians should handle them carefully, avoid mechanical stress, and never use damaged batteries. Proper disposal through approved channels is also required due to the hazardous materials inside.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: Which of the following actions BEST demonstrates proper equipment grounding practice in an IT workspace?
+A) Placing all equipment on rubber mats to isolate it from the floor
+B) Connecting equipment chassis to an earth ground via a three-prong outlet
+C) Using two-prong power adapters to avoid overcrowding circuits
+D) Taping all power cables to the desk surface
+Correct: B
+Explanation: Proper equipment grounding is achieved through three-prong power outlets where the third prong connects the equipment chassis to earth ground. This provides a safe path for fault current to flow, protecting users from electric shock if a fault occurs inside the equipment. Bypassing the ground prong by using two-prong adapters or breaking off the ground pin is extremely dangerous.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A technician is about to dispose of old toner cartridges from a laser printer. What is the correct disposal method?
+A) Place them in the regular office trash
+B) Return them to the manufacturer or use a certified recycling programme
+C) Bury them in an approved landfill
+D) Incinerate them in a facility waste bin
+Correct: B
+Explanation: Toner cartridges contain fine chemical particles that are harmful to the environment and human health if improperly disposed of. Most manufacturers offer take-back programmes, and many office supply retailers accept used cartridges for recycling. Local regulations may also prohibit toner disposal in general waste.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: What document provides information about the hazards, handling, storage, and emergency response procedures for a chemical substance used in the workplace?
+A) SLA (Service Level Agreement)
+B) MSDS / SDS (Material Safety Data Sheet / Safety Data Sheet)
+C) AUP (Acceptable Use Policy)
+D) EULA (End User License Agreement)
+Correct: B
+Explanation: A Material Safety Data Sheet (MSDS), now commonly called a Safety Data Sheet (SDS), provides comprehensive information about chemical substances, including health hazards, safe handling procedures, storage requirements, and emergency response steps. OSHA requires that SDS documents be accessible to employees working with hazardous materials. Technicians should consult the SDS before using chemical solvents for cleaning equipment.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A data centre is experiencing intermittent hardware failures. Monitoring reveals that humidity levels are consistently below 20%. What is the MOST likely cause of the hardware failures?
+A) Excessive heat from high humidity causing solder joint failure
+B) Increased electrostatic discharge due to low humidity
+C) Condensation forming on circuit boards from moisture
+D) Corrosion of metal contacts from high humidity
+Correct: B
+Explanation: Low humidity reduces the conductivity of air, making it easier for static electricity to build up and discharge through sensitive electronic components. ESD events increase significantly when relative humidity drops below 35–40%. Data centres should maintain humidity between 45–55% relative humidity to minimise ESD risk while also preventing condensation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A company experiences a brief power dip that causes workstations to restart and lose unsaved work, but does not cause a complete outage. What type of power event occurred?
+A) Power surge
+B) Brownout (under-voltage event)
+C) Complete power failure
+D) Electromagnetic interference
+Correct: B
+Explanation: A brownout is a reduction in voltage below normal levels, which can cause systems to restart, behave erratically, or shut down, even though power is not completely lost. Brownouts are often caused by high demand on the power grid. A UPS (Uninterruptible Power Supply) with voltage regulation can protect equipment from brownout conditions.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: What device provides battery backup power to allow a graceful system shutdown during a complete power failure?
+A) Surge protector
+B) Power Distribution Unit (PDU)
+C) Uninterruptible Power Supply (UPS)
+D) Automatic Transfer Switch (ATS)
+Correct: C
+Explanation: A UPS contains a battery that provides clean, continuous power to connected equipment when the main power source fails, allowing time for a controlled shutdown or for a generator to come online. It also conditions the power to protect against surges and sags. UPS devices are essential for servers, networking equipment, and other critical systems.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A technician is setting up a small server room and wants to protect equipment from voltage spikes caused by lightning storms. The budget does not allow for a UPS. What is the minimum protection that should be installed?
+A) A standard power strip
+B) A surge protector rated for the equipment's wattage
+C) An isolation transformer
+D) A line conditioner with voltage regulation
+Correct: B
+Explanation: A surge protector contains components that absorb or divert voltage spikes, protecting connected equipment from damage caused by power surges. While not as comprehensive as a UPS, a quality surge protector rated appropriately for the load provides meaningful protection against common power events. A standard power strip provides no surge protection whatsoever.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A technician notices condensation forming on server hardware in the morning. What environmental condition is MOST likely causing this?
+A) Insufficient power supplied to the servers
+B) Rapid temperature fluctuations causing moisture to condense on cool equipment surfaces
+C) ESD discharge events damaging cooling components
+D) Excessive dust buildup blocking ventilation
+Correct: B
+Explanation: Condensation forms when warm, moist air contacts a cooler surface whose temperature is at or below the dew point. In server rooms, this can occur when cold outside air enters a warm room, or when cooling systems create temperature differentials. Maintaining consistent temperature and humidity within recommended ranges prevents condensation and the corrosion or short circuits it can cause.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: How should depleted alkaline or nickel-cadmium batteries from laptops and portable devices be disposed of?
+A) Dispose of them in regular trash since they are non-hazardous
+B) Flush them down a utility sink with running water
+C) Take them to a certified battery recycling facility or drop-off location
+D) Incinerate them with other combustible office waste
+Correct: C
+Explanation: Many types of batteries, particularly nickel-cadmium and lithium-ion, contain toxic or reactive materials that must be disposed of at certified recycling facilities or approved drop-off points. Even alkaline batteries, while less hazardous, are subject to disposal regulations in many jurisdictions. Retailers and municipalities often provide battery collection programmes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: Why must CRT monitors be disposed of through approved e-waste programmes rather than regular refuse collection?
+A) They contain high-value rare earth magnets that require specialist recovery
+B) They contain lead and other toxic materials in the glass that are hazardous to the environment
+C) Their high-voltage capacitors can cause fires in compactor trucks
+D) They are too physically large for standard refuse collection
+Correct: B
+Explanation: CRT monitors contain significant quantities of lead in the picture tube glass, along with other hazardous materials. When CRTs are crushed in landfills, these toxins can leach into soil and groundwater. Regulations in most jurisdictions require CRTs to be processed through certified e-waste recycling programmes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A server room is overheating. After checking the cooling systems, a technician discovers that hot and cold airflow is mixing before it reaches the server intakes. What is the solution?
+A) Install additional surge protectors on each server
+B) Implement hot aisle/cold aisle containment to separate airflow
+C) Reduce the number of servers in the room
+D) Increase the UPS capacity to handle additional cooling load
+Correct: B
+Explanation: Hot aisle/cold aisle containment arranges server racks so that cool air intakes face one aisle and hot air exhausts face the opposing aisle, preventing hot and cold air from mixing. This significantly improves cooling efficiency and reduces energy costs. Blanking panels in empty rack spaces and physical containment barriers further improve the airflow separation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A technician uses a chemical solvent to clean circuit boards but is unsure of its toxicity and disposal requirements. What resource should be consulted first?
+A) The equipment manufacturer's warranty card
+B) The MSDS/SDS for the solvent
+C) The IT department's acceptable use policy
+D) The vendor's change management documentation
+Correct: B
+Explanation: The Material Safety Data Sheet (MSDS/SDS) for any chemical contains all the information needed about toxicity, safe handling, required PPE, storage, and proper disposal methods. Consulting the SDS before use is both a legal requirement in many jurisdictions and a fundamental safety practice. It ensures technicians handle and dispose of chemicals in compliance with regulations.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A technician discovers a collection of illegal images on a user's workstation during routine maintenance. What should the technician do FIRST?
+A) Delete the files immediately to protect the company from liability
+B) Confront the user directly about the discovered content
+C) Report the discovery to management and law enforcement without altering the data
+D) Copy the files to a personal drive for safekeeping as evidence
+Correct: C
+Explanation: When prohibited or illegal content is discovered, the technician's first obligation is to report it to management and, where required, to law enforcement, without altering or destroying the evidence. Deleting or moving files could constitute evidence tampering and obstruction of justice. The integrity of the digital evidence must be preserved for any subsequent investigation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: Which term describes the documented sequence of custody and handling of digital evidence to ensure its integrity in a legal proceeding?
+A) Incident response plan
+B) Chain of custody
+C) Data classification policy
+D) Evidence seizure warrant
+Correct: B
+Explanation: Chain of custody is the chronological documentation showing who collected, handled, transferred, and examined digital evidence from the point of discovery through legal proceedings. Any break in the chain of custody can render evidence inadmissible in court. Proper chain of custody requires detailed records, secure packaging, and limited access to evidence.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A company installs more copies of a licensed software application than are permitted under its licence agreement. What violation has occurred?
+A) Breach of the acceptable use policy
+B) Software licence violation (over-deployment)
+C) HIPAA data privacy violation
+D) Breach of the EULA's data collection clause
+Correct: B
+Explanation: Installing software on more systems than permitted by the licence agreement is a software licence violation, commonly called piracy or over-deployment. The End User Licence Agreement (EULA) specifies exactly how many installations are authorised per licence. This can result in significant legal and financial penalties, including audits by software vendors and industry organisations.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: An employee's name, home address, phone number, and social security number are collectively classified as which type of regulated data?
+A) Protected Health Information (PHI)
+B) Payment Card Industry data (PCI)
+C) Personally Identifiable Information (PII)
+D) Intellectual property (IP)
+Correct: C
+Explanation: Personally Identifiable Information (PII) is any data that can be used to identify a specific individual, including name, address, phone number, social security number, date of birth, and email address. PII is protected under various regulations including GDPR and HIPAA where applicable. Organisations must implement controls to protect PII from unauthorised access or disclosure.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A patient's medical records, diagnosis history, and prescription information stored in an electronic health system are classified as which type of regulated data?
+A) PII (Personally Identifiable Information)
+B) PCI (Payment Card Industry) data
+C) PHI (Protected Health Information)
+D) Classified government data
+Correct: C
+Explanation: Protected Health Information (PHI) encompasses any individually identifiable health information, including medical records, diagnoses, treatment plans, and billing information related to healthcare. PHI is specifically regulated under HIPAA in the United States. Unauthorised disclosure of PHI carries severe civil and criminal penalties.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A software company distributes its product and includes a legal agreement that the user must accept before installation, outlining permitted uses and restrictions. What is this agreement called?
+A) Service Level Agreement (SLA)
+B) Non-Disclosure Agreement (NDA)
+C) End User Licence Agreement (EULA)
+D) Acceptable Use Policy (AUP)
+Correct: C
+Explanation: An End User Licence Agreement (EULA) is a legal contract between a software publisher and the end user that specifies the terms under which the software may be used. It outlines restrictions such as prohibitions on copying, reverse engineering, and redistribution. By accepting the EULA, the user agrees to these terms as a condition of using the software.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: During an incident response, the first technician on the scene should prioritise which of the following actions?
+A) Immediately wipe and reimage the affected system
+B) Document the current state of the system and preserve evidence before making changes
+C) Disconnect the system from the network and power it down immediately
+D) Run a full antivirus scan and email the results to management
+Correct: B
+Explanation: The first responder's priority is to document the current state of the system — including running processes, open connections, and file timestamps — and preserve evidence before any remediation actions are taken. Hasty actions like powering down or wiping a system can destroy volatile evidence and violate chain of custody requirements. Documentation at first response is the foundation of any subsequent investigation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: An organisation uses Digital Rights Management (DRM) on its digital content. What is the PRIMARY purpose of DRM?
+A) To encrypt data in transit between servers
+B) To prevent unauthorised copying, distribution, or use of digital content
+C) To manage user access credentials in Active Directory
+D) To monitor employee internet usage
+Correct: B
+Explanation: Digital Rights Management (DRM) consists of technologies that control how digital content such as music, video, software, and e-books can be accessed, copied, and distributed. It allows content creators and publishers to enforce licencing terms and protect intellectual property. DRM typically works through encryption, licence keys, and usage tracking.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A technician is working on a user's computer and notices personal financial files unrelated to the support issue. What is the appropriate action?
+A) Review the files to determine if they pose a security risk
+B) Copy the files to the company server for safekeeping
+C) Ignore the files and focus only on the task at hand
+D) Report the files to management as potential policy violations
+Correct: C
+Explanation: A technician should focus exclusively on the support task and not access, view, or use personal information that is unrelated to the issue being resolved. Accessing personal data without authorisation violates privacy principles and potentially applicable laws. Respecting user privacy is a cornerstone of professional IT conduct.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A company purchases a software licence that allows installation on a single workstation only. An employee installs it on both their work desktop and home laptop. What type of licence violation has occurred?
+A) Open source licence breach
+B) Single-user licence over-deployment
+C) OEM licence transfer violation
+D) Volume licence misuse
+Correct: B
+Explanation: A single-user licence authorises installation on only one device at a time. Installing the software on a second device, even for personal use, constitutes a licence violation and a breach of the EULA. Many commercial software auditing tools can detect over-deployment, and violations can result in legal action or financial penalties.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: When responding to a data breach incident, why is it important to avoid turning off the affected system immediately?
+A) The system may be needed for other users during the investigation
+B) Powering down the system destroys volatile memory evidence such as running processes and network connections
+C) Antivirus software requires the system to be running to complete its scan
+D) The operating system may corrupt files if shut down unexpectedly
+Correct: B
+Explanation: RAM and other volatile storage contain critical forensic evidence such as running processes, active network connections, encryption keys, and malware artefacts that are permanently lost when power is removed. Forensic first responders prioritise capturing volatile data before any shutdown. Premature power-off can significantly hamper the investigation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A user calls the help desk very frustrated because their computer has crashed for the third time this week. How should the technician respond initially?
+A) Immediately ask for the computer's serial number to start troubleshooting
+B) Acknowledge the user's frustration and express empathy before beginning to troubleshoot
+C) Inform the user that crashes are common and not serious
+D) Transfer the call to a senior technician without explanation
+Correct: B
+Explanation: Acknowledging the user's frustration and expressing empathy demonstrates that the technician values the user's experience and is taking the problem seriously. Jumping straight into technical questions without addressing the emotional state can escalate tension. Building rapport first creates a more cooperative interaction and leads to better outcomes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A technician is on a support call when the user begins to vent about unrelated workplace frustrations. What is the BEST way to handle this situation?
+A) Agree with the user's complaints to build rapport
+B) Hang up and create a new ticket for the original issue
+C) Politely refocus the conversation on the technical issue being resolved
+D) Listen silently until the user finishes, then end the call
+Correct: C
+Explanation: While empathy is important, a professional technician should politely guide the conversation back to the technical issue to make productive use of the user's time and the support queue. This can be done respectfully without dismissing the user's feelings. Keeping the conversation on topic ensures the technical problem gets resolved efficiently.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A user describes their issue using vague language: "My computer is just not working right." What communication technique should the technician use?
+A) Tell the user to restart and call back if the problem persists
+B) Ask open-ended and clarifying questions to understand the specific symptoms
+C) Assume the issue is a virus and begin malware removal
+D) Schedule an on-site visit without gathering more information
+Correct: B
+Explanation: When a user provides vague descriptions, the technician should ask clarifying, open-ended questions to gather specific details about what is not working, when it started, and what changed recently. Active listening and targeted questions lead to faster diagnosis and resolution. Never assume the nature of a problem based on insufficient information.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: After resolving a user's issue, what should the technician do before closing the ticket?
+A) Immediately move on to the next queued ticket to improve metrics
+B) Follow up with the user to confirm the issue is fully resolved and ask if they need further assistance
+C) Send the user a survey before confirming the fix
+D) Delete the ticket to reduce queue size
+Correct: B
+Explanation: Following up with the user to confirm resolution ensures the problem is truly fixed and demonstrates professionalism and customer care. This step also provides an opportunity to address any related concerns before closing the interaction. Following up consistently is a hallmark of high-quality technical support.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A technician is working on-site at a client's office. Which professional behaviour is MOST important?
+A) Wearing casual clothing to appear approachable and relaxed
+B) Maintaining a professional appearance and avoiding personal phone calls during the service visit
+C) Discussing other clients' technical problems to demonstrate experience
+D) Using highly technical jargon to demonstrate competence
+Correct: B
+Explanation: Professional appearance and conduct on-site reflect directly on the technician and the organisation they represent. Avoiding personal phone calls, dressing appropriately, and maintaining a respectful demeanour demonstrate respect for the client's workplace. Discussing other clients' details violates confidentiality and undermines trust.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A user insists that they did not change anything before their problem started. Experienced troubleshooting suggests otherwise. How should the technician handle this situation?
+A) Tell the user they are lying and escalate the ticket immediately
+B) Accept the user's statement and avoid questioning it further
+C) Diplomatically ask questions to explore recent activity without accusing the user
+D) Access the user's browser history to prove the user made a change
+Correct: C
+Explanation: Users often genuinely do not remember or realise they made a change that triggered the problem. A skilled technician asks gentle, non-accusatory questions to explore what may have changed without creating a confrontational atmosphere. Maintaining a non-judgmental tone preserves the working relationship and is more likely to uncover the actual root cause.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A user calls in a panic because they cannot access a business-critical application before an important meeting. What should the technician do first?
+A) Put the user on hold to read through the knowledge base
+B) Set a realistic expectation for how long the fix might take and begin troubleshooting promptly
+C) Tell the user to reboot and call back if it does not resolve
+D) Immediately escalate without attempting any troubleshooting
+Correct: B
+Explanation: Setting a realistic expectation for resolution time helps manage the user's stress and demonstrates that the technician is in control of the situation. Prompt, focused troubleshooting shows urgency while keeping the user informed. Unrealistic promises or unhelpful deflections increase frustration and erode trust.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: During a remote support session, the technician notices confidential financial spreadsheets open on the user's desktop. What is the appropriate action?
+A) Review the spreadsheets to check if they may be related to the issue
+B) Screenshot the spreadsheets for documentation purposes
+C) Avoid looking at or referencing the confidential material and focus only on the support task
+D) Mention the spreadsheets to the user and ask for an explanation
+Correct: C
+Explanation: Technicians must respect user and organisational confidentiality by not viewing, recording, or referencing information that is unrelated to the support task, even when it is visible during a session. Accessing or acknowledging confidential material without need is a privacy violation and a breach of professional ethics. Maintaining this boundary is essential to building and preserving user trust.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: When a technician is explaining a complex technical repair to a non-technical user, which communication approach is MOST effective?
+A) Use precise technical terminology to demonstrate expertise
+B) Use analogies and plain language appropriate to the user's technical level
+C) Provide a written technical report with error codes and log excerpts
+D) Recommend the user take a basic IT course before the next support call
+Correct: B
+Explanation: Effective communication adapts to the audience — plain language and relatable analogies make technical concepts accessible to non-technical users. Using jargon with users who are unfamiliar with it creates confusion and frustration. The goal of communication is mutual understanding, not demonstrating technical knowledge.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A technician arrives at a user's desk and overhears a private phone conversation. What is the correct response?
+A) Wait nearby and listen to gather context about potential IT needs
+B) Interrupt politely and state the reason for the visit immediately
+C) Wait at a respectful distance until the user finishes the call, then introduce the purpose of the visit
+D) Return later without informing the user of the attempted visit
+Correct: C
+Explanation: Waiting respectfully at a distance until the user finishes a private call demonstrates professional courtesy and respect for personal boundaries. Interrupting or eavesdropping is disrespectful and unprofessional. Communicating clearly about the purpose of the visit once the user is available ensures a productive interaction.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: Which communication technique involves repeating back what a user said to confirm understanding before proceeding with troubleshooting?
+A) Escalation
+B) Active listening with verification
+C) Cold transfer
+D) Ticket categorisation
+Correct: B
+Explanation: Active listening with verification involves paraphrasing or summarising what the user said to confirm the technician has correctly understood the problem before acting. This technique prevents wasted effort from working on the wrong issue and makes the user feel heard. It is one of the most effective communication skills in technical support.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A Windows administrator wants to automate the process of restarting the Print Spooler service each night. Which script file type is BEST suited for this task natively on Windows?
+A) .sh
+B) .py
+C) .ps1
+D) .js
+Correct: C
+Explanation: PowerShell scripts (.ps1) are the native automation scripting language for Windows systems and have extensive access to Windows services, processes, and the registry. They can easily stop and start services, schedule tasks, and interact with Active Directory. PowerShell is the preferred modern scripting tool for Windows administration.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician receives a .sh file from a colleague and attempts to run it on a Windows workstation without modification. What will most likely happen?
+A) The script will run successfully using Windows Script Host
+B) Windows will automatically convert it to a .bat file and execute it
+C) The script will not run natively; it requires a Unix/Linux shell or compatibility layer such as WSL
+D) The script will execute in PowerShell with reduced functionality
+Correct: C
+Explanation: Files with a .sh extension are shell scripts written for Unix/Linux environments (such as bash or sh). Windows does not natively execute .sh scripts; they require a compatibility layer like Windows Subsystem for Linux (WSL), Git Bash, or Cygwin. Running the wrong script type in the wrong environment results in errors or no execution.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: An administrator creates a script that automatically maps network drives for all users at logon. Which script use case does this represent?
+A) Initiating system updates
+B) Remapping network drives
+C) Gathering hardware inventory data
+D) Automated backup execution
+Correct: B
+Explanation: Remapping network drives is a classic scripting use case, commonly implemented through logon scripts in Windows environments. Rather than manually configuring each workstation, a single script can consistently apply drive mappings for all users. This reduces administrative overhead and ensures standardisation across the organisation.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A systems administrator downloads a PowerShell script from an internet forum to automate patch deployment. What is the MOST significant security risk of running this script without review?
+A) The script may not be compatible with the current PowerShell version
+B) The script could unintentionally introduce malware or backdoors into the environment
+C) The script may fail to run if the execution policy is set to AllSigned
+D) The script might use too many system resources during execution
+Correct: B
+Explanation: Scripts from untrusted sources can contain malicious code, such as malware downloaders, backdoors, or commands that exfiltrate data, which appear hidden within otherwise functional code. Any script should be carefully reviewed and tested in a sandbox before being run in a production environment. Code provenance and integrity verification are critical when using third-party scripts.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician needs to write a simple script to automate file backups on a Linux server. Which script type would be MOST appropriate?
+A) .bat
+B) .vbs
+C) .ps1
+D) .sh
+Correct: D
+Explanation: Shell scripts (.sh) are the standard automation tool for Unix/Linux environments, providing native access to system utilities, file operations, and scheduling via cron. They can perform complex file operations, compress archives, and transfer files using built-in Linux tools. A .bat file is Windows-only, and VBScript is a Windows-specific language.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: The PowerShell execution policy on a workstation is set to "Restricted." What does this mean for running scripts?
+A) Only scripts signed by a trusted publisher can run
+B) No PowerShell scripts can be executed; only interactive commands are allowed
+C) Scripts can run but only from the local filesystem
+D) Scripts from the internet are blocked, but local scripts run without restriction
+Correct: B
+Explanation: The "Restricted" execution policy is the most restrictive PowerShell setting and prevents all script files from running, regardless of their source or signature. Only individual commands typed interactively at the PowerShell prompt are permitted. Administrators must change the execution policy to allow script automation, using a less restrictive setting such as RemoteSigned or AllSigned.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician uses a Python script to collect hardware information — CPU, RAM, and storage details — from hundreds of workstations automatically. What scripting use case does this represent?
+A) Automated backup
+B) Installation of applications
+C) Gathering system information and data
+D) Remapping drives
+Correct: C
+Explanation: Scripts that collect system data — such as hardware specifications, installed software inventories, or event log entries — automate what would otherwise be a manual and time-consuming process across many machines. This use case is common in asset management and compliance auditing. Python is well-suited for this due to its cross-platform libraries and ease of use.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician writes a script that inadvertently modifies registry settings on all workstations, disabling the Windows Firewall. Which scripting risk does this illustrate?
+A) Script execution policy misconfiguration
+B) Inadvertently changing system settings with unintended consequences
+C) Browser crashes caused by JavaScript errors
+D) Malware introduced through a downloaded script
+Correct: B
+Explanation: Scripts that interact with system settings such as the registry, Group Policy, or security configurations can cause widespread, unintended changes when not carefully tested and scoped. This is why sandbox testing and thorough review are mandatory before deploying scripts to production systems. Broad permissions and untested logic in scripts can have serious security and stability consequences.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: Which script file extension is associated with the Windows Script Host (WSH) and uses a Microsoft-specific scripting language primarily for older Windows automation tasks?
+A) .py
+B) .sh
+C) .vbs
+D) .js
+Correct: C
+Explanation: VBScript files (.vbs) are executed by the Windows Script Host and were historically used for automating Windows administrative tasks, logon scripts, and application interactions. While largely superseded by PowerShell, VBS scripts remain in use in some legacy environments. Malicious VBS scripts are also a common attack vector and should be handled with care.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician wants to create a script that is compatible across multiple operating systems including Windows, macOS, and Linux. Which scripting language is MOST appropriate?
+A) VBScript (.vbs)
+B) Batch (.bat)
+C) Python (.py)
+D) PowerShell (.ps1) with Restricted policy
+Correct: C
+Explanation: Python is a cross-platform scripting language that runs natively on Windows, macOS, and Linux with minimal modification between environments. Its extensive standard library supports file operations, network communication, and system management. VBScript and .bat are Windows-only, and while PowerShell is now cross-platform, it is less universally available by default on non-Windows systems.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician notices that a JavaScript file (.js) emailed to users is causing browser crashes on multiple workstations. Which scripting risk does this BEST illustrate?
+A) Inadvertently changing registry settings
+B) Script execution policy blocking the file
+C) Browser crashes caused by malicious or buggy JavaScript
+D) Incompatibility between shell versions
+Correct: C
+Explanation: JavaScript running in a browser context can cause browser instability, crashes, or hangs if it contains infinite loops, excessive resource consumption, or exploits browser vulnerabilities. Malicious JavaScript can also be used to deliver malware through drive-by downloads or cross-site scripting attacks. Users should be cautious about running JavaScript files received via email or from untrusted sources.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician needs to remotely control a Windows workstation's graphical desktop to troubleshoot an application. Which protocol is natively built into Windows for this purpose?
+A) SSH
+B) VNC
+C) RDP (Remote Desktop Protocol)
+D) MSRA
+Correct: C
+Explanation: Remote Desktop Protocol (RDP) is Microsoft's proprietary protocol that provides a full graphical desktop session to a remote Windows machine. It operates on TCP port 3389 by default and supports audio, clipboard sharing, and drive redirection. RDP is built into all modern Windows editions and is the standard enterprise tool for remote Windows administration.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A remote worker needs secure command-line access to a Linux server to manage files and run commands. Which remote access technology is MOST appropriate?
+A) RDP
+B) VNC
+C) SSH (Secure Shell)
+D) MSRA
+Correct: C
+Explanation: SSH provides encrypted, authenticated command-line access to remote systems over TCP port 22. It is the standard tool for securely managing Unix/Linux servers remotely. SSH supports file transfers via SCP and SFTP, tunnelling, and key-based authentication, making it secure and versatile.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician needs to connect a remote user's Windows 10 PC to provide real-time hands-on support but the user does not have Remote Desktop enabled. What built-in Windows tool allows the user to invite the technician to view and control their desktop?
+A) RDP
+B) VNC
+C) Microsoft Remote Assistance (MSRA)
+D) TeamViewer
+Correct: C
+Explanation: Microsoft Remote Assistance (MSRA) allows a user to send an invitation to a helper who can then view and optionally control the user's desktop. Unlike RDP, which requires the remote machine to be configured as a Remote Desktop server, MSRA uses an invitation model that works well for user-initiated support sessions. It is built into Windows and requires the user's explicit consent for each session.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: An employee working from home needs to securely access the company's internal network resources as if they were on-site. Which technology should be used?
+A) RDP
+B) VPN (Virtual Private Network)
+C) VNC
+D) MSRA
+Correct: B
+Explanation: A VPN creates an encrypted tunnel between the remote user's device and the company network, allowing secure access to internal resources such as file servers, printers, and internal applications. Unlike RDP, which connects to a specific machine, a VPN extends full network access to the remote device. VPN is the standard solution for secure remote network access.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician needs to remotely access a workstation running Linux with a graphical desktop. No SSH or RDP is available. Which technology would allow graphical remote access?
+A) VPN
+B) VNC (Virtual Network Computing)
+C) MSRA
+D) Telnet
+Correct: B
+Explanation: VNC (Virtual Network Computing) is a cross-platform graphical desktop sharing protocol that works on Linux, macOS, and Windows. It transmits keyboard and mouse events and sends screen updates back to the client. While not as secure as RDP by default, VNC can be tunnelled through SSH for encryption, making it a flexible remote access option across operating systems.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A company uses a third-party platform such as Zoom or Microsoft Teams for IT support sessions that include screen sharing. What category of remote access technology does this represent?
+A) VPN client
+B) File transfer software
+C) Video-conferencing tool with screen sharing
+D) Desktop management software
+Correct: C
+Explanation: Video-conferencing platforms like Zoom and Microsoft Teams include screen-sharing capabilities that allow technicians to see a user's screen in real time, often with the ability to request remote control. These tools are commonly used for collaborative troubleshooting when installing dedicated remote access software is impractical. They also support voice and video communication, improving support quality.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician needs to transfer a large diagnostic log file from a remote server to their local workstation securely. Which tool is MOST appropriate?
+A) RDP clipboard copy
+B) SFTP (SSH File Transfer Protocol)
+C) VNC
+D) MSRA invitation
+Correct: B
+Explanation: SFTP provides encrypted file transfer over an SSH connection, making it the secure standard for transferring files between systems over a network. It supports directory navigation, recursive transfers, and resumable transfers. SFTP is far more secure than legacy FTP, which transmits credentials and data in plain text.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A help desk team manages hundreds of workstations and needs to remotely push software, run scripts, and apply settings across all machines from a central console. What type of remote access technology BEST supports this requirement?
+A) VPN
+B) Microsoft Remote Assistance
+C) Desktop management software
+D) VNC
+Correct: C
+Explanation: Desktop management software (such as Microsoft Endpoint Configuration Manager, formerly SCCM, or similar platforms) provides centralised tools for deploying software, applying policies, running scripts, and managing assets across large numbers of devices from a single console. This goes beyond one-to-one remote control to enable large-scale IT operations. It is the backbone of enterprise endpoint management.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: Which remote access protocol transmits data in plain text and should NOT be used for remote administration of servers because of significant security risks?
+A) SSH
+B) RDP
+C) Telnet
+D) SFTP
+Correct: C
+Explanation: Telnet transmits all data, including usernames and passwords, in plain text that can be intercepted by network sniffers. It has been replaced by SSH, which provides encrypted communication. Any environment using Telnet for remote server management is exposing credentials and sensitive data to potential interception.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: An RDP session to a remote workstation is connecting successfully, but a technician is concerned about security. Which of the following is a BEST practice for securing RDP access?
+A) Leave RDP on its default port 3389 with no additional configuration
+B) Disable encryption and use plain-text mode for faster connections
+C) Change the default RDP port, use Network Level Authentication (NLA), and restrict access via firewall
+D) Allow RDP access from all IP addresses to ensure technicians can connect from any location
+Correct: C
+Explanation: Securing RDP involves multiple layers: changing the default port reduces automated scanning attacks, Network Level Authentication (NLA) requires credentials before a full session is established, and firewall rules restrict which IP addresses can initiate RDP connections. Together, these measures significantly reduce the attack surface of an exposed RDP service. RDP exposed directly to the internet without these controls is a leading vector for ransomware attacks.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician uses a software tool to establish an encrypted connection to a remote workstation in another building without requiring a VPN. The tool allows full keyboard, mouse, and screen control. Which type of technology is being used?
+A) Video conferencing
+B) File transfer client
+C) Third-party remote desktop software (e.g., TeamViewer, AnyDesk)
+D) Microsoft Remote Assistance only
+Correct: C
+Explanation: Third-party remote desktop software such as TeamViewer or AnyDesk establishes encrypted peer-to-peer or server-mediated connections for full remote control without requiring VPN configuration. These tools are commonly used in both business and consumer support environments due to their ease of setup and cross-platform support. They offer features such as unattended access, file transfer, and session recording.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.1 — Given a scenario, implement best practices associated with documentation and support systems management
+Question: A technician resolves a high-severity ticket that affected multiple users. After resolution, the manager asks for a formal written summary of the event for executive review. What is this document called?
+A) Knowledge base article
+B) Change request form
+C) Post-incident report (PIR)
+D) Acceptable use policy update
+Correct: C
+Explanation: A Post-Incident Report (PIR), sometimes called a post-mortem, documents the full timeline, business impact, root cause, and corrective actions of a significant incident for management review. It is distinct from a knowledge base article in that it analyses the specific event and recommends preventative measures. PIRs are critical inputs to continuous improvement and risk management processes.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.2 — Explain basic change-management best practices
+Question: A new firewall rule is being deployed to block a range of IP addresses. During sandbox testing, the rule inadvertently blocks legitimate business traffic. What should occur next before the change proceeds to production?
+A) Deploy to production and monitor for complaints
+B) Revise the rule, re-test in the sandbox, and obtain re-approval before deploying
+C) Submit an exception request and proceed immediately
+D) Roll back the change and cancel the project permanently
+Correct: B
+Explanation: When sandbox testing reveals a problem, the proposed change must be corrected and re-tested before proceeding to production. The change management process requires that only tested, validated changes receive production deployment approval. Skipping re-approval after revisions bypasses the governance controls designed to protect the environment.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.3 — Given a scenario, implement workstation backup and recovery methods
+Question: A technician is reviewing a company's backup strategy and notices that the most recent backup is always overwritten by the next backup cycle, with no historical copies retained. What critical limitation does this strategy have?
+A) It uses too much storage space
+B) It provides no ability to recover from data corruption that existed at the time of the last backup
+C) It violates the 3-2-1 rule by using too many backup locations
+D) It only works with full backup types
+Correct: B
+Explanation: A strategy that overwrites the only backup every cycle means that if data becomes corrupted before the corruption is noticed, the backup itself will contain the corrupted data after the next run. Retaining multiple generations of backups (such as through grandfather-father-son rotation) allows recovery to a point before the corruption occurred. A single overwriting backup provides minimal protection against gradual data corruption.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.4 — Given a scenario, use common safety procedures
+Question: A technician accidentally drops a CPU onto a carpeted floor. The room is very dry and the technician feels a slight tingle when retrieving it. What is the MOST likely concern?
+A) The CPU pins have been damaged beyond repair
+B) The CPU has been exposed to ESD that may have caused internal damage
+C) The carpet fibres have contaminated the CPU's thermal interface
+D) The capacitors in the CPU have discharged on impact
+Correct: B
+Explanation: Carpet combined with low humidity is an ideal environment for generating static electricity. A perceptible tingle indicates a static discharge event, which may have subjected the CPU to thousands of volts even if the technician only felt a mild sensation. ESD damage to a CPU may not cause immediate failure but can lead to intermittent issues or premature failure later.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.5 — Summarize environmental impacts and local environmental controls
+Question: A UPS alarm indicates that its battery capacity has dropped to 20% during a power outage, and the runtime remaining is less than 2 minutes. What should the technician do immediately?
+A) Continue working and trust that the UPS will sustain the system
+B) Initiate a graceful shutdown of all connected systems before the UPS is exhausted
+C) Disconnect the UPS to preserve battery life for a future outage
+D) Replace the UPS battery while the system is still running
+Correct: B
+Explanation: When a UPS signals critically low battery, the priority is to perform a controlled shutdown of all connected systems before power is lost entirely. An unexpected power cutoff when the UPS dies can cause data corruption, filesystem damage, and hardware failure. Most UPS units can be configured to trigger an automatic graceful shutdown when battery reaches a defined threshold.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.6 — Explain the importance of prohibited content/activity and privacy, licensing, and policy concepts
+Question: A technician discovers that a user has installed unlicensed software on a company workstation without authorisation. What should the technician do?
+A) Ignore it since the software is not causing performance issues
+B) Uninstall the software immediately and document the incident per company policy
+C) Purchase a licence retroactively and add it to the asset management system
+D) Grant the user a temporary exception and monitor the situation
+Correct: B
+Explanation: Unauthorised or unlicensed software must be removed immediately to protect the organisation from legal liability and potential security risks (unlicensed software may lack updates or contain malware). The incident should be documented and reported to management in accordance with the company's software use policy. Asset management records should be updated to reflect the change.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.7 — Given a scenario, use proper communication techniques and professionalism
+Question: A user with limited technical knowledge asks why their computer is running slowly. What is the BEST way for a technician to explain that the hard drive is nearly full?
+A) Tell the user to Google "disk cleanup" and handle it themselves
+B) Explain that "the storage drive is almost out of room, similar to a filing cabinet that's nearly full, which slows everything down"
+C) Show the user the disk management utility and leave them to interpret the data
+D) Use the technical term "disk I/O bottleneck" to precisely describe the problem
+Correct: B
+Explanation: Using a relatable analogy — comparing a full hard drive to a full filing cabinet — makes the technical concept immediately understandable to a non-technical user. Effective communication adapts to the audience's level of understanding, building confidence and rapport. Technical jargon without explanation creates confusion and makes the user feel patronised.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.8 — Identify the basics of scripting
+Question: A technician writes a batch (.bat) script to automatically install a software package on new workstations using silent install switches. Which scripting use case does this BEST represent?
+A) Gathering hardware information
+B) Automated application installation
+C) Remapping network drives
+D) Initiating operating system updates
+Correct: B
+Explanation: Batch scripts are commonly used to automate software deployments using vendor-provided silent install switches that suppress user prompts and automatically accept defaults. This eliminates the need for manual installation on each workstation and reduces deployment time at scale. Automating application installation is one of the most common and valuable scripting use cases in IT operations.
+
+Domain: 4.0 Operational Procedures
+Sub-objective: 4.9 — Given a scenario, use remote access technologies
+Question: A technician working from home needs to access a remote workstation in the office, but the company's firewall blocks inbound RDP connections from the internet. A VPN is not available. Which alternative approach would allow the technician to connect?
+A) Use Telnet to bypass the firewall on port 23
+B) Use a reverse connection tool or cloud-based relay remote desktop solution
+C) Ask the office user to email the desktop screenshot regularly
+D) Enable RDP on port 80 to pass through as web traffic
+Correct: B
+Explanation: Cloud-based relay remote desktop tools (such as TeamViewer or AnyDesk) establish outbound connections from the target machine to a cloud relay server, allowing the remote technician to connect through the relay without requiring inbound firewall rules. This model is specifically designed to work through NAT and firewalls that block inbound connections. Using port 80 for RDP would be a security policy violation and may not be reliable.

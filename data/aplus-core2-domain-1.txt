@@ -1,0 +1,1551 @@
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 edition is the only one that supports joining a corporate Active Directory domain?
+A) Home
+B) Pro
+C) Pro for Workstations
+D) All editions support domain join
+Correct: B
+Explanation: Windows 10 Pro, Pro for Workstations, and Enterprise all support Active Directory domain join, but Home does not. Windows 10 Home is limited to workgroup networking only and cannot authenticate against a domain controller. Remember: "Pro = Professional environment = domain access."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: A technician needs to deploy a Windows 10 edition that supports up to 6 TB of RAM for a high-end CAD workstation. Which edition should be selected?
+A) Enterprise
+B) Pro
+C) Pro for Workstations
+D) Home
+Correct: C
+Explanation: Windows 10 Pro for Workstations supports up to 6 TB of RAM, making it ideal for memory-intensive workloads like CAD or 3D rendering. Windows 10 Enterprise supports up to 2 TB of RAM, and Pro supports up to 2 TB as well. "Workstations need more — Pro for Workstations goes to 6 TB."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 edition includes BitLocker drive encryption as a built-in feature?
+A) Home
+B) Home and Pro
+C) Pro and Enterprise
+D) All editions
+Correct: C
+Explanation: BitLocker full-drive encryption is available in Windows 10 Pro, Pro for Workstations, and Enterprise, but not in Windows 10 Home. Home edition includes Device Encryption (a limited version), not full BitLocker. Remember: BitLocker is a business/professional feature requiring at minimum the Pro edition.
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: A user wants to run the Group Policy Editor (gpedit.msc) on their personal laptop running Windows 10 Home. What will happen?
+A) gpedit.msc will open with limited options
+B) gpedit.msc is not available and will not run
+C) gpedit.msc will run but changes will not apply
+D) gpedit.msc requires a reboot to enable
+Correct: B
+Explanation: The Group Policy Editor (gpedit.msc) is not included in Windows 10 Home; attempting to run it will produce an error stating the file cannot be found. This feature is only available in Pro, Pro for Workstations, and Enterprise editions. Remember: "No Pro = No Group Policy Editor."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 edition is specifically designed for large enterprise organisations and is typically distributed via volume licensing, including features like AppLocker and DirectAccess?
+A) Pro
+B) Pro for Workstations
+C) Enterprise
+D) Home
+Correct: C
+Explanation: Windows 10 Enterprise is targeted at large organisations, distributed through volume licensing, and includes advanced security features like AppLocker (application control) and DirectAccess (VPN-less remote access). Pro for Workstations is optimised for high-performance hardware rather than enterprise management features. "Enterprise = large org features = volume licensing."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: What is the maximum RAM supported by Windows 10 Pro (64-bit)?
+A) 128 GB
+B) 512 GB
+C) 2 TB
+D) 6 TB
+Correct: C
+Explanation: Windows 10 Pro (64-bit) supports up to 2 TB of RAM, which is the same limit as Enterprise. Pro for Workstations uniquely extends this to 6 TB. Home (64-bit) is limited to 128 GB. "Pro caps at 2 TB; Workstations goes to 6 TB."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: A small business has 8 computers that need to share files and printers without a dedicated server. Which network model is most appropriate?
+A) Active Directory domain
+B) Workgroup
+C) Homegroup
+D) Federation
+Correct: B
+Explanation: A workgroup is a peer-to-peer network model where each computer manages its own user accounts and resources, suitable for small environments without a dedicated server. Active Directory domains require a domain controller (server) and are intended for larger managed environments. "Small office, no server = workgroup."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which feature in Windows 10 Pro allows a user to remotely connect to the desktop of another Windows PC over a network?
+A) Remote Assistance
+B) Remote Desktop Protocol (RDP)
+C) VPN
+D) DirectAccess
+Correct: B
+Explanation: Remote Desktop Protocol (RDP) allows a user to take full remote control of another Windows PC; in Windows 10, the ability to host an RDP session (Remote Desktop Host) requires Pro or higher. Remote Assistance allows a helper to view and optionally control a user's session but requires the user's invitation. "RDP Host = Pro or higher; Home can only be a client."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 edition supports the Resilient File System (ReFS) volume creation?
+A) Home
+B) Pro
+C) Enterprise
+D) Pro for Workstations
+Correct: D
+Explanation: Windows 10 Pro for Workstations is the only desktop edition that supports creating ReFS volumes natively, making it suitable for environments requiring high data integrity and fault tolerance. Pro and Enterprise can read ReFS volumes but cannot create them. "Pro for Workstations = ReFS creation support."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: A technician is comparing Windows 10 Home and Pro for a small business purchase. Which capability is exclusive to Pro that the business will need for centralised management?
+A) Microsoft Store access
+B) Windows Update
+C) Group Policy management via gpedit.msc
+D) OneDrive integration
+Correct: C
+Explanation: The Group Policy Editor (gpedit.msc) and the ability to apply local group policies are exclusive to Pro, Pro for Workstations, and Enterprise — Home does not include this tool. Microsoft Store access, Windows Update, and OneDrive are available on all Windows 10 editions. "Centralised management = Group Policy = needs Pro."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: What is a key difference between a workgroup and an Active Directory domain in Windows networking?
+A) Workgroups require a dedicated server; domains do not
+B) Domains require a dedicated server; workgroups do not
+C) Workgroups support more users than domains
+D) Domains are only available on Windows 10 Home
+Correct: B
+Explanation: An Active Directory domain requires at least one domain controller (a dedicated server) to authenticate users and manage resources centrally. A workgroup is a peer-to-peer model where each machine manages its own accounts without a dedicated server. "Domain = needs a server; workgroup = no server needed."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 feature requires at minimum the Pro edition and allows administrators to encrypt entire drives including the OS volume?
+A) EFS (Encrypting File System)
+B) BitLocker
+C) Device Encryption
+D) Windows Defender Credential Guard
+Correct: B
+Explanation: BitLocker provides full-volume encryption including the OS drive and requires Windows 10 Pro or higher. EFS (Encrypting File System) encrypts individual files and folders and is available in Pro but not the same as full-disk encryption. "BitLocker = full drive encryption = Pro minimum."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: A user on Windows 10 Home complains they cannot find the option to join a domain in System Properties. What is the correct explanation?
+A) The domain option is hidden and needs to be enabled via registry
+B) Domain join requires a network adapter to be installed first
+C) Windows 10 Home does not support Active Directory domain join
+D) The user needs administrator privileges to see the domain option
+Correct: C
+Explanation: Windows 10 Home fundamentally lacks the domain join capability at the OS level; it is not a matter of permissions or hidden settings. Upgrading to Pro is the only supported path to enable domain join on a Home edition machine. "Home = home use = no domain join available."
+
+Domain: 1.0
+Sub-objective: 1.1
+Question: Which Windows 10 Pro for Workstations exclusive feature provides faster data access by using NVMe drives in a striped configuration?
+A) Storage Spaces
+B) RAID 0 via Disk Management
+C) Persistent memory (NVMe as RAM) support
+D) ReFS with data deduplication
+Correct: C
+Explanation: Windows 10 Pro for Workstations supports persistent memory (NVDIMM-N) devices that can be used as very fast storage or memory extensions, a feature not available in standard Pro or Enterprise desktop editions. Storage Spaces is available in multiple editions and does not specifically leverage NVMe persistent memory. "Pro for Workstations = persistent memory/NVMe RAM support."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician wants to check the IP address, subnet mask, and default gateway of a Windows workstation from the command line. Which command should be used?
+A) netstat
+B) nslookup
+C) ipconfig
+D) tracert
+Correct: C
+Explanation: The ipconfig command displays the IP configuration of all network adapters, including IP address, subnet mask, and default gateway. netstat shows active network connections and listening ports, not adapter configuration. "ipconfig = IP configuration display."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which command-line tool is used to check the integrity of Windows system files and repair them using cached copies?
+A) chkdsk
+B) sfc /scannow
+C) dism /online /cleanup-image
+D) diskpart
+Correct: B
+Explanation: The System File Checker (sfc /scannow) scans protected Windows system files and replaces corrupted files with cached copies from the Windows component store. chkdsk checks the file system and disk for errors, not Windows system file integrity. "sfc = System File Checker = /scannow to run it."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician needs to copy a large directory tree from one server to another while preserving timestamps, permissions, and only copying changed files. Which command is best suited for this task?
+A) xcopy
+B) copy
+C) robocopy
+D) move
+Correct: C
+Explanation: robocopy (Robust File Copy) is designed for reliable, large-scale file copying with support for mirroring directory trees, preserving NTFS permissions and timestamps, and resuming interrupted copies. xcopy is older and lacks the robustness and full NTFS attribute support of robocopy. "robocopy = Robust Copy = enterprise-grade file mirroring."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which command forces an immediate update of Group Policy settings on a Windows 10 workstation without waiting for the standard refresh interval?
+A) gpresult
+B) gpupdate /force
+C) secedit /refresh
+D) netsh policy update
+Correct: B
+Explanation: gpupdate /force immediately refreshes all Group Policy settings (both user and computer) regardless of whether they have changed. gpresult is used to display the Resultant Set of Policy (RSoP) — what policies are applied — not to update them. "gpupdate /force = force Group Policy refresh now."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician wants to view all active TCP connections and the ports each process is listening on. Which command provides this information?
+A) ipconfig /all
+B) netstat -an
+C) nslookup
+D) pathping
+Correct: B
+Explanation: netstat -an displays all active TCP/UDP connections and listening ports with numeric addresses, giving a full picture of network activity on the machine. ipconfig /all shows adapter configuration, not connection states. "netstat = network statistics = connection and port info."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which command-line utility combines the functions of ping and tracert, providing both hop-by-hop latency statistics and packet loss information?
+A) netstat
+B) nslookup
+C) pathping
+D) arp
+Correct: C
+Explanation: pathping sends packets to each hop along the route and collects statistics over time, showing both the route (like tracert) and packet loss/latency at each hop (like ping). tracert only shows hop-by-hop latency but does not calculate packet loss statistics per hop. "pathping = path + ping = route AND packet loss stats."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician suspects DNS is not resolving hostnames correctly. Which command-line tool allows manual DNS queries to test name resolution?
+A) ipconfig /flushdns
+B) nslookup
+C) netstat
+D) tracert
+Correct: B
+Explanation: nslookup is a command-line tool that allows you to query DNS servers directly to resolve hostnames, look up records, and test DNS server responses. ipconfig /flushdns clears the local DNS cache but does not test DNS resolution against a server. "nslookup = name server lookup = DNS testing tool."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which diskpart command sequence correctly prepares a new disk by selecting it, creating a primary partition, formatting it, and assigning a drive letter?
+A) select disk → clean → create partition primary → format fs=ntfs quick → assign
+B) select disk → format → partition → assign → active
+C) clean → select disk → format fs=ntfs → create partition → assign
+D) select disk → create partition → active → format → letter
+Correct: A
+Explanation: The correct diskpart workflow is: select disk (to target the correct disk), clean (remove partition table), create partition primary, format fs=ntfs quick, then assign (to give it a drive letter). The order matters — you cannot format before creating a partition, and clean before create is required for a fresh setup. "diskpart order: select → clean → create → format → assign."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: What does the command "shutdown /r /t 0" do on a Windows system?
+A) Shuts down the computer immediately with no restart
+B) Restarts the computer immediately with no delay
+C) Schedules a restart in 0 hours
+D) Hibernates the computer immediately
+Correct: B
+Explanation: shutdown /r specifies a restart (as opposed to /s for shutdown) and /t 0 sets the timeout to 0 seconds, causing the restart to happen immediately. shutdown /s /t 0 would shut down (not restart) immediately. "shutdown /r = restart, /t 0 = no delay."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician uses chkdsk /f /r on a volume. What do the /f and /r switches do respectively?
+A) /f formats the disk; /r removes bad sectors
+B) /f fixes errors on the disk; /r locates bad sectors and recovers readable data
+C) /f forces a scan; /r repairs the file system
+D) /f fixes the file table; /r reformats bad sectors
+Correct: B
+Explanation: The /f switch fixes errors found on the disk's file system, and /r locates bad sectors and attempts to recover any readable data from them. /r implies /f, so using both ensures errors are fixed and bad sectors are handled. "chkdsk /f /r = Fix errors and Recover bad sector data."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: In PowerShell, what naming convention do all cmdlets follow?
+A) Object-Action (e.g., Service-Get)
+B) Verb-Noun (e.g., Get-Service)
+C) Noun-Verb (e.g., Service-Start)
+D) Action-Object (e.g., Start-theService)
+Correct: B
+Explanation: PowerShell cmdlets always follow the Verb-Noun naming convention (e.g., Get-Service, Stop-Process, Set-ExecutionPolicy), making them predictable and discoverable. This is the opposite of how some may intuitively guess (Noun-Verb), but the standard is consistent across all built-in and third-party cmdlets. "PowerShell: Verb first, then Noun — Get-Help, not Help-Get."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which PowerShell cmdlet displays help information about a specific cmdlet, including syntax, parameters, and examples?
+A) Get-Command
+B) Get-Help
+C) Show-Info
+D) Describe-Cmdlet
+Correct: B
+Explanation: Get-Help [CmdletName] displays the documentation for any cmdlet, including its description, syntax, parameters, and usage examples. Get-Command is used to discover which cmdlets are available, not to read their documentation. "Get-Help = PowerShell's built-in manual pages."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician needs to allow PowerShell scripts to run on a workstation where execution is currently restricted. Which command changes the policy to allow locally created scripts?
+A) Set-ExecutionPolicy Unrestricted
+B) Set-ExecutionPolicy RemoteSigned
+C) Set-ExecutionPolicy AllSigned
+D) Enable-PSRemoting
+Correct: B
+Explanation: Set-ExecutionPolicy RemoteSigned allows locally created scripts to run without a signature while requiring scripts downloaded from the internet to be digitally signed, striking a balance between usability and security. RemoteSigned is more secure than Unrestricted, which allows all scripts regardless of origin or signature. "RemoteSigned = local scripts OK, remote scripts must be signed."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which PowerShell feature allows the output of one cmdlet to be used as the input to another cmdlet?
+A) Redirection
+B) Scripting
+C) Pipeline
+D) Chaining
+Correct: C
+Explanation: The PowerShell pipeline (|) passes objects from one cmdlet to the next, allowing complex operations to be built from simple commands (e.g., Get-Process | Sort-Object CPU). Unlike Linux pipelines that pass text, PowerShell passes full .NET objects, preserving their properties. "Pipeline = | symbol = chain commands together."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: A technician uses "tracert google.com" from a command prompt. What does this command show?
+A) The DNS records for google.com
+B) Each router hop between the local machine and google.com with round-trip times
+C) The open ports on google.com
+D) The MAC address of the default gateway
+Correct: B
+Explanation: tracert (Trace Route) sends ICMP packets with increasing TTL values to reveal each router (hop) along the path to a destination, displaying the IP address and round-trip time for each hop. nslookup would be used for DNS records, while netstat would show port information. "tracert = trace the route = see every hop to destination."
+
+Domain: 1.0
+Sub-objective: 1.2
+Question: Which ipconfig switch clears the local DNS resolver cache on a Windows workstation?
+A) ipconfig /release
+B) ipconfig /renew
+C) ipconfig /flushdns
+D) ipconfig /registerdns
+Correct: C
+Explanation: ipconfig /flushdns purges the local DNS resolver cache, which forces Windows to query DNS servers fresh on the next name resolution request. ipconfig /release releases the current DHCP-assigned IP address, which is a different operation. "Flush = empty the DNS cache — /flushdns does it."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A technician needs to see real-time CPU, memory, disk, and network usage for all running processes in Windows 10. Which tool provides this information in a single interface?
+A) Resource Monitor
+B) Event Viewer
+C) Device Manager
+D) Services.msc
+Correct: A
+Explanation: Resource Monitor provides real-time, detailed views of CPU, memory, disk, and network activity per process, with filtering and graph capabilities. Task Manager also shows performance but Resource Monitor provides more granular per-resource breakdowns, especially for disk and network activity by process. "Resource Monitor = deep real-time resource analysis."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 tool allows an administrator to view application crashes, security audit events, and system errors organised by category and severity?
+A) Task Manager
+B) Event Viewer
+C) Performance Monitor
+D) System Information (msinfo32)
+Correct: B
+Explanation: Event Viewer logs and displays Windows events categorised into Application, Security, System, and Setup logs, with severity levels (Information, Warning, Error, Critical). Performance Monitor tracks performance counters over time but does not show logged events like crashes or errors. "Event Viewer = Windows event logs = find crashes and errors."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A user wants to add a new hard drive partition and format it without using the command line. Which GUI tool in Windows 10 accomplishes this?
+A) Device Manager
+B) Disk Management
+C) Disk Cleanup
+D) Storage Spaces
+Correct: B
+Explanation: Disk Management (diskmgmt.msc) is the graphical interface for creating, deleting, and formatting partitions, assigning drive letters, and converting between disk types. Device Manager handles hardware drivers and devices, not disk partitioning. "Disk Management = GUI tool for disk partitioning and volumes."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 tool allows an administrator to schedule tasks to run automatically at specified times or triggered by events?
+A) Services.msc
+B) Task Scheduler
+C) Event Viewer
+D) msconfig
+Correct: B
+Explanation: Task Scheduler allows administrators to create and manage tasks that run automatically based on time schedules, system events, logon events, or other triggers. Services.msc manages background services but does not schedule time-based automated tasks. "Task Scheduler = automate tasks based on time or triggers."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A technician opens msconfig on a Windows 10 computer. What is the primary purpose of this utility?
+A) Manage disk partitions and volumes
+B) Configure startup options, boot settings, and startup programs
+C) Monitor real-time system performance
+D) View and manage event logs
+Correct: B
+Explanation: msconfig (System Configuration) is used to control startup options (Normal, Diagnostic, Selective), manage boot configuration, enable/disable startup services, and access other tools. Real-time performance monitoring is done through Task Manager or Resource Monitor, not msconfig. "msconfig = System Configuration = startup and boot settings."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 snap-in, accessible through the Microsoft Management Console (MMC), allows administrators to view and manage digital certificates for users, computers, and services?
+A) Certificate Manager (certmgr.msc)
+B) Device Manager
+C) Security Policy Editor
+D) Credential Manager
+Correct: A
+Explanation: Certificate Manager (certmgr.msc) provides a GUI to view, import, export, and delete digital certificates stored in the certificate store for users, and certlm.msc covers the local computer store. Credential Manager stores saved usernames and passwords but does not manage digital certificates. "certmgr.msc = Certificate Manager = manage digital certificates."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A technician needs to view the Registry hives for HKEY_LOCAL_MACHINE and make changes to a startup entry. Which tool is used?
+A) msconfig
+B) regedit
+C) gpedit.msc
+D) services.msc
+Correct: B
+Explanation: The Registry Editor (regedit) provides direct access to the Windows Registry, including all hives (HKLM, HKCU, HKCR, HKU, HKCC), allowing viewing and modification of registry keys and values. msconfig can also show startup items but does not provide direct registry editing access. "regedit = Registry Editor = direct Windows Registry access."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: In Task Manager, which tab shows the CPU usage, memory usage, disk activity, and network usage in real-time graph form?
+A) Processes
+B) Details
+C) Performance
+D) Services
+Correct: C
+Explanation: The Performance tab in Task Manager displays live graphs for CPU, memory, disk, GPU, and network utilization with summary statistics. The Processes tab lists running processes with their current resource usage but does not show historical graphs. "Task Manager Performance tab = real-time resource graphs."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 tool allows an administrator to view hardware information, installed drivers, and resolve hardware conflicts for connected devices?
+A) System Information (msinfo32)
+B) Device Manager
+C) Disk Management
+D) Computer Management
+Correct: B
+Explanation: Device Manager displays all hardware devices installed in the system, their driver status, and allows enabling/disabling devices and updating or rolling back drivers. System Information (msinfo32) shows detailed hardware and software inventory but does not allow driver management. "Device Manager = manage hardware and drivers."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A technician uses the Microsoft Management Console (MMC) to build a custom administrative tool. How are additional management tools added to a blank MMC console?
+A) By installing separate software packages
+B) By adding snap-ins via File > Add/Remove Snap-in
+C) By importing .reg files into the console
+D) By running the respective .msc files and embedding them
+Correct: B
+Explanation: MMC snap-ins are added to a custom console via File > Add/Remove Snap-in, where administrators can choose from a list of available snap-ins such as Event Viewer, Disk Management, or Device Manager. Individual .msc files launch pre-configured MMC instances but cannot be "embedded" into another MMC via import. "MMC snap-ins = added via File > Add/Remove Snap-in."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 feature allows performance data to be recorded over time and alerts to be set when resource thresholds are exceeded?
+A) Task Manager
+B) Resource Monitor
+C) Performance Monitor
+D) Event Viewer
+Correct: C
+Explanation: Performance Monitor (perfmon) allows administrators to add specific performance counters, record data sets over time using Data Collector Sets, and configure alerts when metrics exceed defined thresholds. Resource Monitor shows real-time data but does not support historical logging or alerting. "Performance Monitor = long-term performance data logging + alerts."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A technician wants to see a comprehensive summary of the hardware, OS version, installed memory, and processor information for a Windows 10 PC without opening Device Manager or Settings. Which tool provides this?
+A) msconfig
+B) winver
+C) System Information (msinfo32)
+D) dxdiag
+Correct: C
+Explanation: System Information (msinfo32) provides a comprehensive report covering hardware resources, components (display, sound, network), and software environment (OS version, installed drivers, running tasks). winver only shows the Windows version number and build, with no hardware detail. "msinfo32 = full system inventory at a glance."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: In Windows 10, which built-in tool provides the ability to manage local user accounts, groups, shared folders, device manager, and event viewer all from a single unified console?
+A) Control Panel
+B) Computer Management
+C) Administrative Tools
+D) Windows Settings
+Correct: B
+Explanation: Computer Management (compmgmt.msc) is a consolidated MMC console that includes Task Scheduler, Event Viewer, Shared Folders, Local Users and Groups, Performance, Device Manager, Disk Management, and Services in one interface. Administrative Tools is a folder that contains shortcuts to individual tools, not a unified console. "Computer Management = one console for many admin tasks."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: Which Windows 10 tool allows a technician to enable or disable individual startup services and control which services launch at boot, while also providing tabs for Boot and Tools?
+A) Services.msc
+B) Task Manager
+C) msconfig
+D) Group Policy Editor
+Correct: C
+Explanation: msconfig (System Configuration) includes a Services tab to enable/disable services at startup and a Boot tab for advanced boot options, plus a Tools tab with shortcuts to other administrative utilities. Services.msc manages services comprehensively but does not include the Boot configuration or Tools shortcuts. "msconfig = startup troubleshooting hub with Services and Boot tabs."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to configure the default browser, manage add-ons, and set security zone settings for Internet Explorer on Windows 10. Which Control Panel utility provides these options?
+A) Network and Sharing Center
+B) Internet Options
+C) Programs and Features
+D) Windows Defender Firewall
+Correct: B
+Explanation: Internet Options in Control Panel manages Internet Explorer settings including the default home page, security zones, privacy settings, content filters, connections, and advanced browser settings. Programs and Features handles application installation/uninstallation, not browser configuration. "Internet Options = IE/legacy browser settings in Control Panel."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility allows a user to uninstall applications, turn Windows features on or off, and view installed updates?
+A) Devices and Printers
+B) Programs and Features
+C) System
+D) Administrative Tools
+Correct: B
+Explanation: Programs and Features (appwiz.cpl) is the Control Panel applet for uninstalling or changing installed programs, turning Windows features on or off, and viewing installed Windows updates. Devices and Printers manages hardware devices, not software applications. "Programs and Features = manage installed software from Control Panel."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to view the computer's workgroup name, processor type, installed RAM, and access System Protection settings. Which Control Panel utility provides this?
+A) Administrative Tools
+B) Device Manager
+C) System
+D) Performance Information
+Correct: C
+Explanation: The System Control Panel applet (sysdm.cpl) displays the Windows edition, processor, installed RAM, and computer name/workgroup, and provides tabs for Computer Name, Hardware (Device Manager link), Advanced (Performance, User Profiles, Startup), and System Protection. Device Manager shows hardware and drivers but not the system's basic identity information. "System Control Panel = computer specs, name, and protection settings."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility is used to add a new local or network printer, view printer queues, and manage print jobs on a Windows 10 machine?
+A) Programs and Features
+B) Devices and Printers
+C) Network and Sharing Center
+D) Administrative Tools
+Correct: B
+Explanation: Devices and Printers displays all printers (local and network), scanners, and other connected devices, and allows adding new devices, viewing print queues, and setting default printers. Network and Sharing Center manages network adapter settings and sharing, not printers. "Devices and Printers = your hardware peripherals hub."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to configure inbound and outbound firewall rules for a specific application on Windows 10. Which Control Panel utility provides advanced rule management?
+A) Network and Sharing Center
+B) Internet Options
+C) Windows Defender Firewall with Advanced Security
+D) System
+Correct: C
+Explanation: Windows Defender Firewall with Advanced Security (wf.msc) provides full control over inbound and outbound rules, connection security rules, and monitoring of active firewall policies. The standard Windows Defender Firewall Control Panel applet allows basic on/off and exception management but not granular rule creation. "Firewall with Advanced Security = granular inbound/outbound rules."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility controls disk indexing for faster file and email searches in Windows 10?
+A) File Explorer Options
+B) Indexing Options
+C) Search (in Settings)
+D) Administrative Tools
+Correct: B
+Explanation: Indexing Options in Control Panel allows administrators to add or remove indexed locations, modify which file types are indexed, and rebuild the search index to improve search performance. File Explorer Options controls how files and folders are displayed in Explorer, not search indexing. "Indexing Options = control what Windows Search indexes."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A user reports that hidden files and file extensions are not visible in File Explorer. Which Control Panel utility should be adjusted to change this behaviour?
+A) System
+B) Indexing Options
+C) File Explorer Options (Folder Options)
+D) Display Settings
+Correct: C
+Explanation: File Explorer Options (previously called Folder Options) controls View settings such as showing hidden files/folders, displaying file extensions, and other file display preferences in Explorer. System Properties controls computer name and performance settings, not file display preferences. "Folder Options/File Explorer Options = control how files appear in Explorer."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility provides access to User Account Control (UAC) settings, account type management, and the ability to link a Microsoft account?
+A) System
+B) User Accounts
+C) Windows Defender Firewall
+D) Credential Manager
+Correct: B
+Explanation: User Accounts in Control Panel allows changing UAC notification levels, switching between Microsoft and local accounts, changing account types (Standard/Administrator), and managing passwords. Credential Manager stores saved network credentials and website passwords but does not manage local account settings. "User Accounts Control Panel = account type, UAC, and Microsoft account linking."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to configure the default sound playback device and adjust recording levels on a Windows 10 workstation. Which Control Panel utility is used?
+A) Devices and Printers
+B) Sound
+C) System
+D) Ease of Access
+Correct: B
+Explanation: The Sound Control Panel applet (mmsys.cpl) manages playback and recording devices, allowing the selection of the default audio device, volume levels, and advanced settings for each device. Devices and Printers can show audio devices but does not provide the same level of audio configuration. "Sound Control Panel = audio device management and levels."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility contains shortcuts to tools like Event Viewer, Task Scheduler, Computer Management, and Performance Monitor?
+A) System
+B) Programs and Features
+C) Administrative Tools
+D) Network and Sharing Center
+Correct: C
+Explanation: Administrative Tools is a Control Panel folder containing shortcuts to common Windows administrative utilities including Event Viewer, Task Scheduler, Computer Management, Services, Performance Monitor, and more. System provides computer identity and protection settings, not shortcuts to administrative tools. "Administrative Tools = shortcut folder for Windows admin utilities."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A laptop user wants to configure what happens when the lid is closed and set a custom power plan. Which Control Panel utility provides these options?
+A) System
+B) Ease of Access
+C) Power Options
+D) Devices and Printers
+Correct: C
+Explanation: Power Options (powercfg.cpl) in Control Panel allows selecting and customising power plans (Balanced, Power Saver, High Performance), configuring what happens when the power button or lid is activated, and setting screen/sleep timeouts. System Properties does not contain power management settings. "Power Options = power plans, sleep settings, and lid behaviour."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility in Windows 10 provides configuration options for features like the Narrator, Magnifier, and on-screen keyboard to assist users with disabilities?
+A) User Accounts
+B) Ease of Access
+C) Personalisation
+D) System
+Correct: B
+Explanation: Ease of Access in Control Panel provides accessibility tools including Narrator (screen reader), Magnifier, on-screen keyboard, high contrast settings, and sticky/filter keys. Personalisation controls themes, colours, and wallpapers, not accessibility features. "Ease of Access = accessibility tools for users with disabilities."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to configure how Windows 10 handles sharing folders and discovers that the Network and Sharing Center is the appropriate tool. What key function does this utility serve?
+A) Managing installed network drivers
+B) Configuring network adapter IP settings and viewing network topology
+C) Installing VPN clients
+D) Blocking incoming network connections
+Correct: B
+Explanation: Network and Sharing Center provides a graphical view of network connections, access to adapter settings (IP, DNS configuration), sharing settings, and HomeGroup (older versions). Blocking connections is handled by Windows Defender Firewall, not Network and Sharing Center. "Network and Sharing Center = network status, adapter settings, and sharing config."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: Which Control Panel utility should a technician use to configure email accounts for the Windows Mail app?
+A) Internet Options
+B) User Accounts
+C) Mail
+D) Programs and Features
+Correct: C
+Explanation: The Mail Control Panel applet (present when Outlook or other MAPI-compatible mail clients are installed) allows configuration of email profiles, accounts, and data file locations. Internet Options configures Internet Explorer browser settings, not email accounts. "Mail Control Panel = configure Outlook/MAPI email profiles."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A user wants to change the display language and keyboard input method on their Windows 10 PC. Which Settings category should they navigate to?
+A) Personalisation
+B) Ease of Access
+C) Time & Language
+D) Devices
+Correct: C
+Explanation: Time & Language in Windows Settings covers region, time zone, date/time format, display language, and keyboard/input methods. Ease of Access focuses on accessibility features like Narrator and Magnifier, not language selection. "Time & Language Settings = language, region, and keyboard input settings."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: Where in Windows 10 Settings would a technician configure Windows Update settings, such as pausing updates or setting active hours?
+A) System > About
+B) Update & Security
+C) Privacy
+D) Apps
+Correct: B
+Explanation: Update & Security in Windows Settings contains all Windows Update configuration options, including checking for updates, pausing updates, setting active hours, configuring delivery optimisation, and accessing Windows Security and Recovery. System > About shows OS version info but does not control update settings. "Update & Security = Windows Update control panel in Settings."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A user wants to change the desktop wallpaper, lock screen image, and system colour scheme in Windows 10. Which Settings section handles these customisations?
+A) System
+B) Personalisation
+C) Ease of Access
+D) Accounts
+Correct: B
+Explanation: Personalisation in Windows Settings controls the desktop background, colours (accent colour, dark/light mode), lock screen, themes, fonts, and Start menu layout. System settings handle display resolution, multi-monitor setup, and notifications. "Personalisation = visual appearance and themes in Settings."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: Which Windows 10 Settings category allows a user to manage startup apps, set default apps, and configure optional features?
+A) Devices
+B) System
+C) Apps
+D) Accounts
+Correct: C
+Explanation: The Apps section in Windows Settings provides control over installed apps, default apps for file types and protocols, optional features (like OpenSSH), startup apps, and offline maps. System handles display and notification settings, not application management. "Apps Settings = manage installed apps, defaults, and startup programs."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A user is concerned about which apps can access their camera and microphone. Where in Windows 10 Settings can app permissions be reviewed and changed?
+A) Update & Security
+B) Accounts
+C) Privacy
+D) Apps
+Correct: C
+Explanation: The Privacy section in Windows Settings allows granular control over which apps can access device hardware (camera, microphone, location, contacts) and personal data. Update & Security covers Windows Update and Windows Defender settings, not app permission management. "Privacy Settings = control app access to hardware and personal data."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A technician needs to configure multi-monitor display settings, adjust screen resolution, and change the display scale. Which Settings section is used?
+A) Personalisation
+B) System > Display
+C) Devices
+D) Ease of Access > Display
+Correct: B
+Explanation: System > Display in Windows Settings handles screen resolution, orientation, multiple monitor arrangement, brightness, night light, and display scaling. Devices handles printers, Bluetooth, and other connected peripherals, not display resolution. "System > Display = resolution, scaling, and multi-monitor setup."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: Which Windows 10 Settings section is used to add a Microsoft account, set up Windows Hello PIN/fingerprint, and manage sign-in options?
+A) Privacy
+B) Update & Security
+C) Accounts
+D) System
+Correct: C
+Explanation: The Accounts section in Windows Settings manages Microsoft and local accounts, sign-in options (password, PIN, fingerprint, face recognition), family and other users, and synchronisation settings. Update & Security handles Windows Hello in the context of security but account-level configuration is in Accounts. "Accounts Settings = user accounts and sign-in options."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A technician wants to configure Bluetooth devices and manage printers and scanners from the modern Settings app. Which section contains these options?
+A) System
+B) Network & Internet
+C) Devices
+D) Apps
+Correct: C
+Explanation: The Devices section in Windows Settings manages Bluetooth, printers and scanners, mouse, touchpad, pen, AutoPlay, and USB device settings. Network & Internet handles network connections, VPN, and proxy settings, not peripheral devices. "Devices Settings = Bluetooth, printers, mouse, and peripherals."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: Where in Windows 10 Settings would a technician go to configure VPN connections, set up a proxy server, and manage Wi-Fi and Ethernet settings?
+A) Devices
+B) Network & Internet
+C) Update & Security
+D) System
+Correct: B
+Explanation: Network & Internet in Windows Settings covers Wi-Fi, Ethernet, dial-up, VPN, proxy, airplane mode, and mobile hotspot configuration. Devices settings cover peripheral devices like Bluetooth and printers, not network connections. "Network & Internet Settings = all network connection and proxy settings."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: Which Windows 10 Settings section includes options for Xbox Game Bar, game mode, and captures (recording game clips)?
+A) Apps
+B) Privacy
+C) Gaming
+D) System
+Correct: C
+Explanation: The Gaming section in Windows Settings controls Xbox Game Bar, Game Mode (which prioritises system resources for gaming), game clip recording and screenshots, and broadcasting settings. Apps settings handle application management but not gaming-specific performance features. "Gaming Settings = Game Bar, Game Mode, and clip recording."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A user complains that Windows 10 shows too many notification pop-ups from apps. Which Settings section should the technician use to manage notification behaviour per application?
+A) Personalisation
+B) System > Notifications & Actions
+C) Privacy
+D) Accounts
+Correct: B
+Explanation: System > Notifications & Actions in Windows Settings allows enabling/disabling notifications globally or per application, and customising which actions appear in the Action Center. Privacy settings control data access permissions, not notification display preferences. "System > Notifications = control which apps show pop-ups."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A Windows 10 computer needs to join a corporate Active Directory domain. Where in Windows 10 does a technician initiate this process?
+A) Control Panel > Network and Sharing Center
+B) Settings > Accounts > Access work or school > Connect
+C) Settings > System > About > Rename this PC
+D) Control Panel > System > Workgroup
+Correct: B
+Explanation: In Windows 10, joining a domain is done through Settings > Accounts > Access work or school > Connect, which also supports Azure AD join and MDM enrollment. While older methods using System Properties still work, the modern approach is through the Settings app. "Domain join in modern Windows 10 = Settings > Accounts > Access work or school."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician maps a network drive on a Windows 10 workstation so a shared folder appears as a drive letter (e.g., Z:). Where is the "Map Network Drive" option most easily accessed?
+A) Settings > Network & Internet
+B) File Explorer > This PC > Map Network Drive
+C) Control Panel > Network and Sharing Center
+D) Computer Management > Shared Folders
+Correct: B
+Explanation: Map Network Drive is accessible in File Explorer by right-clicking on "This PC" or using the Computer tab in the ribbon, where you can specify the UNC path (\\server\share) and drive letter. Network and Sharing Center does not directly provide drive mapping functionality. "Map Network Drive = File Explorer > This PC > Map Network Drive."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician configures a Windows 10 PC to use a proxy server for all web traffic. Where in Windows 10 is this setting configured?
+A) Control Panel > Internet Options > LAN Settings
+B) Settings > Network & Internet > Proxy
+C) Control Panel > Network and Sharing Center > Advanced
+D) Settings > Privacy > Proxy
+Correct: B
+Explanation: Proxy server settings in Windows 10 are found in Settings > Network & Internet > Proxy, where both automatic and manual proxy configurations can be set. While Control Panel > Internet Options > LAN Settings also configures proxy settings for IE/legacy apps, the modern unified location is the Settings app. "Proxy settings = Settings > Network & Internet > Proxy."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: Which UNC path format is used to access a shared folder named "Data" on a server named "FileServer01"?
+A) http://FileServer01/Data
+B) \\FileServer01\Data
+C) //FileServer01/Data
+D) ftp://FileServer01/Data
+Correct: B
+Explanation: Universal Naming Convention (UNC) paths use double backslashes followed by the server name and share name: \\ServerName\ShareName. This is the standard Windows format for accessing network shares and is required when mapping drives or accessing resources. "UNC path = \\ServerName\ShareName — always double backslash."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician needs to share a printer connected to a Windows 10 workstation with other users on the network. What is the correct location to enable printer sharing?
+A) Settings > Devices > Printers & Scanners > Manage
+B) Control Panel > Devices and Printers > Printer Properties > Sharing tab
+C) Control Panel > Network and Sharing Center > Advanced Sharing Settings
+D) Settings > Network & Internet > Sharing
+Correct: B
+Explanation: To share a printer from a Windows 10 workstation, right-click the printer in Devices and Printers, select Printer Properties, and enable sharing on the Sharing tab. Network and Sharing Center's Advanced Sharing Settings controls file and printer sharing globally (must also be enabled there), but the per-printer share configuration is in Printer Properties. "Share a printer = Printer Properties > Sharing tab."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician manually configures a static IP address on a Windows 10 PC. Where is the IPv4 address, subnet mask, and default gateway entered?
+A) Settings > Network & Internet > Status
+B) Network adapter Properties > Internet Protocol Version 4 (TCP/IPv4) Properties
+C) Control Panel > Internet Options > Connections
+D) Command prompt using ipconfig /setip
+Correct: B
+Explanation: Static IP configuration is done by opening Network Connections, right-clicking the adapter, selecting Properties, then selecting Internet Protocol Version 4 (TCP/IPv4) and entering the IP address, subnet mask, gateway, and DNS servers. Settings > Network & Internet > Status provides a link to this configuration. "Static IP = Adapter Properties > TCP/IPv4 Properties > manual entry."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A Windows 10 computer is in a workgroup and cannot see other computers on the network. Which setting in Advanced Sharing Settings must be enabled?
+A) Public folder sharing
+B) Network discovery
+C) Password protected sharing
+D) Printer sharing
+Correct: B
+Explanation: Network Discovery must be enabled for a Windows 10 computer in a workgroup to see other devices on the network and be visible to them. Public folder sharing is a separate option for sharing the public folder, not required for basic network visibility. "Network Discovery = must be ON to see and be seen on the network."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician sets up a VPN connection on a Windows 10 laptop to connect to a corporate network remotely. Where is the VPN connection created?
+A) Control Panel > Network and Sharing Center > Set up a new connection or network
+B) Settings > Network & Internet > VPN > Add a VPN connection
+C) Settings > Accounts > Access work or school
+D) Control Panel > Internet Options > Connections > VPN
+Correct: B
+Explanation: VPN connections in Windows 10 are added through Settings > Network & Internet > VPN > Add a VPN connection, where you can configure the provider, server address, VPN type (PPTP, L2TP, IKEv2, SSTP), and credentials. The older Control Panel path also works but the modern Settings app is the preferred location. "VPN setup = Settings > Network & Internet > VPN."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: Which Windows 10 feature allows users to access corporate resources without a traditional VPN by using an always-on, encrypted connection to a DirectAccess server?
+A) RemoteApp
+B) DirectAccess
+C) Remote Desktop Gateway
+D) Always On VPN
+Correct: B
+Explanation: DirectAccess (available with Windows Enterprise editions) provides seamless, always-on connectivity to corporate resources using IPv6 and IPsec without requiring the user to manually connect a VPN. Always On VPN is a newer feature that achieves similar goals but uses traditional VPN protocols. "DirectAccess = automatic VPN-less corporate access = Enterprise feature."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A workstation is configured with an APIPA address (169.254.x.x). What does this indicate?
+A) The DNS server is not responding
+B) The workstation has a static IP configured incorrectly
+C) The DHCP server could not be reached during startup
+D) The workstation is in a different subnet than the router
+Correct: C
+Explanation: An APIPA (Automatic Private IP Addressing) address in the 169.254.0.0/16 range is automatically assigned by Windows when a DHCP server cannot be reached, allowing limited local communication. DNS resolution failure would still show a valid IP address, not an APIPA address. "169.254.x.x = APIPA = no DHCP server found."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A technician needs to configure a Windows 10 client to resolve hostnames using the corporate DNS server at 10.1.1.53. Where is this DNS server address entered?
+A) ipconfig /setdns 10.1.1.53
+B) Adapter Properties > TCP/IPv4 > Preferred DNS server
+C) Settings > Network & Internet > DNS
+D) Control Panel > Internet Options > Connections > DNS
+Correct: B
+Explanation: DNS server addresses are configured in the network adapter's TCP/IPv4 Properties (or TCP/IPv6 for IPv6 DNS), entered in the "Preferred DNS server" and "Alternate DNS server" fields. There is no direct Settings app DNS per-adapter configuration in Windows 10 (only available in Windows 11). "DNS server = Adapter Properties > TCP/IPv4 > enter DNS server address."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A user cannot connect to a secured Wi-Fi network after moving to a new office. The technician needs to forget the old network profile and reconnect. Where is "Forget" a Wi-Fi network in Windows 10?
+A) Control Panel > Network and Sharing Center > Manage Wireless Networks
+B) Settings > Network & Internet > Wi-Fi > Manage known networks
+C) Settings > Devices > Wi-Fi
+D) Network adapter Properties > Wi-Fi settings
+Correct: B
+Explanation: In Windows 10, known Wi-Fi networks can be forgotten by going to Settings > Network & Internet > Wi-Fi > Manage known networks, selecting the network, and clicking Forget. The legacy "Manage Wireless Networks" is not available in Windows 10. "Forget Wi-Fi = Settings > Network & Internet > Wi-Fi > Manage known networks."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: What is the purpose of configuring alternate IP settings on a Windows 10 laptop's network adapter?
+A) To enable the use of two IP addresses simultaneously
+B) To provide a static IP fallback when DHCP is not available
+C) To configure a secondary DNS server
+D) To set up a teamed network connection
+Correct: B
+Explanation: The Alternate Configuration tab in TCP/IPv4 Properties allows specifying a static IP to be used when the adapter cannot obtain a DHCP lease, useful for laptops that move between a corporate DHCP environment and a network without DHCP. This is different from setting a primary static IP; it only applies when DHCP fails. "Alternate IP = fallback static IP when DHCP unavailable."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A user tries to install a 32-bit application on a 64-bit Windows 10 system. What happens?
+A) The application cannot be installed on a 64-bit system
+B) The application installs and runs in a compatibility layer (WOW64)
+C) The application installs but cannot access more than 2 GB of RAM
+D) The application must be recompiled for 64-bit first
+Correct: B
+Explanation: Windows 64-bit systems include WOW64 (Windows-on-Windows 64-bit), a compatibility subsystem that allows 32-bit applications to run on 64-bit Windows without modification. 32-bit apps install to C:\Program Files (x86) by convention. "32-bit on 64-bit Windows = WOW64 compatibility layer."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A technician is deploying applications to 50 workstations using a software image. Which application distribution method involves copying a pre-configured disk image to multiple machines simultaneously?
+A) Physical media installation
+B) Internet download
+C) ISO mounting
+D) Image deployment
+Correct: D
+Explanation: Image deployment involves creating a master disk image (e.g., with Sysprep + WDS or Ghost) and pushing it to multiple machines, which is efficient for large-scale deployments. Physical media installation requires manual intervention for each machine and does not scale well. "Image deployment = one image, many machines = efficient mass deployment."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: Which Windows security feature prompts the user for confirmation or administrator credentials when an action requires elevated privileges?
+A) Windows Defender SmartScreen
+B) BitLocker
+C) User Account Control (UAC)
+D) Windows Firewall
+Correct: C
+Explanation: User Account Control (UAC) is a Windows security mechanism that prevents unauthorised changes by requiring confirmation or admin credentials when processes attempt to perform tasks requiring elevated privileges. BitLocker is drive encryption, not an elevation mechanism. "UAC = prompt for permission when elevation is needed."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A company wants to deploy an application to workstations over the network using PXE boot without physical media. What is this distribution method called?
+A) Remote network installation
+B) Physical media
+C) ISO download
+D) Recovery partition restore
+Correct: A
+Explanation: Remote network installation (using technologies like WDS — Windows Deployment Services) allows OS and application deployment over the network using PXE boot, without needing physical media or USB drives at each machine. ISO download refers to downloading a disk image file, not the PXE-based remote deployment process. "Network/remote installation = PXE boot + WDS = no physical media needed."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A 64-bit application requires a minimum of 8 GB RAM, a 2 GHz dual-core processor, and DirectX 12. Before installation, a technician should verify these against what?
+A) The OS license terms
+B) The application's system requirements
+C) The BIOS version
+D) The Windows edition
+Correct: B
+Explanation: Before installing any application, the system must meet the application's minimum system requirements (CPU, RAM, GPU, storage, OS version) to ensure proper functionality. While OS edition can sometimes matter (e.g., server apps needing Server OS), the primary check is against the documented system requirements. "Before installing: check system requirements for hardware compatibility."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A technician downloads an ISO file for a software application. What must be done before the application can be installed from the ISO?
+A) The ISO must be burned to a USB drive only
+B) The ISO must be mounted as a virtual drive or burned to physical media
+C) The ISO must be extracted to a folder and run Setup.exe
+D) The ISO must be converted to an EXE format
+Correct: B
+Explanation: An ISO file is a disk image that can be mounted as a virtual drive (in Windows 10, double-clicking mounts it), burned to a DVD, or written to a USB drive to access the installation files. ISOs cannot simply be extracted like a ZIP and run from a folder (they require mounting or burning for the installer to function properly). "ISO = mount it or burn it to access installer files."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: Why can a 32-bit application only use up to approximately 4 GB of RAM on a Windows system?
+A) Windows restricts 32-bit apps to 4 GB for stability
+B) 32-bit memory addressing has a maximum of 2^32 bytes = ~4 GB address space
+C) 32-bit apps cannot access extended memory on 64-bit systems
+D) Windows Defender limits 32-bit app memory to protect security
+Correct: B
+Explanation: A 32-bit process uses 32-bit memory addressing, giving a theoretical maximum address space of 2^32 = ~4 GB, and Windows typically allocates half of this to the OS kernel, leaving ~2 GB for the application. This is a fundamental architectural limitation, not a Windows policy. "32-bit = 32-bit address space = maximum ~4 GB total, ~2 GB user space."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A user purchases a software application on a USB drive at a retail store. This is an example of which application distribution method?
+A) Internet download
+B) Image deployment
+C) Physical media
+D) Remote installation
+Correct: C
+Explanation: Physical media distribution involves delivering software on tangible media such as USB drives, DVDs, or CD-ROMs purchased at retail. Internet downloads and image deployment are digital distribution methods that do not require physical media. "USB/DVD at retail store = physical media distribution."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Which OS type is specifically designed for server hardware, optimised for serving requests from multiple clients simultaneously, and often runs without a graphical user interface?
+A) Workstation OS
+B) Embedded OS
+C) Server OS
+D) Mobile OS
+Correct: C
+Explanation: A Server OS (like Windows Server or Linux server distributions) is optimised for handling multiple concurrent client requests, running services, and often operates headlessly (without GUI) for performance. Workstation OS is optimised for a single-user interactive experience with GUI-focused workflows. "Server OS = handles many clients, often no GUI, runs services."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Which OS type is used in devices like ATMs, point-of-sale terminals, and industrial control systems, characterised by a single-purpose design and often running on specialised hardware?
+A) Workstation OS
+B) Embedded OS
+C) Mobile OS
+D) Server OS
+Correct: B
+Explanation: Embedded OS (e.g., Windows Embedded, VxWorks, custom Linux) is designed for single-purpose devices with constrained resources, running a specific application without the flexibility of a general-purpose OS. Mobile OS (iOS, Android) is designed for smartphones/tablets, not typically for ATMs or industrial controls. "Embedded OS = single-purpose device, constrained hardware."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Android and iOS are examples of which OS type, optimised for touch interfaces and cellular connectivity?
+A) Workstation OS
+B) Server OS
+C) Embedded OS
+D) Mobile OS
+Correct: D
+Explanation: Android and iOS are mobile operating systems specifically designed for smartphones and tablets, optimised for touch interfaces, battery efficiency, app distribution via curated stores, and cellular/wireless connectivity. Embedded OS is for single-purpose devices without the full app ecosystem of a mobile platform. "Android/iOS = Mobile OS = touch, apps, cellular."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: A Chromebook runs ChromeOS, which is primarily designed around which concept?
+A) Local application installation and offline use
+B) Cloud-based applications accessed through a web browser
+C) Enterprise server workloads
+D) Gaming and high-performance graphics
+Correct: B
+Explanation: ChromeOS is designed around the Google Chrome browser and Google's cloud ecosystem, with most applications being web-based and data stored in Google's cloud (Drive, Docs). While ChromeOS has gained some Android app and Linux support, its core design philosophy is cloud-first. "ChromeOS/Chromebook = cloud-first, browser-centric OS."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Which term describes software stored on a non-volatile chip within a device that provides low-level hardware control, such as the BIOS/UEFI on a motherboard?
+A) Driver
+B) Embedded OS
+C) Firmware
+D) Hypervisor
+Correct: C
+Explanation: Firmware is software permanently stored in read-only or flash memory chips on hardware devices, providing basic low-level control (like UEFI/BIOS on a motherboard). An embedded OS is more comprehensive than firmware; firmware is typically just the boot and hardware initialisation layer. "Firmware = software in a chip = BIOS/UEFI is a classic example."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: A workstation OS is distinguished from a server OS primarily by which characteristic?
+A) Workstation OS supports more simultaneous users
+B) Workstation OS is optimised for a single-user interactive desktop experience
+C) Workstation OS cannot run server applications
+D) Workstation OS requires more RAM than server OS
+Correct: B
+Explanation: Workstation OS (like Windows 10 or macOS) is optimised for a single-user interactive experience with GUI-focused applications, games, and productivity tools. Server OS is optimised for multi-user concurrent access, high uptime, and running background services. "Workstation OS = single interactive user; server OS = many concurrent clients."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: iPad OS and Android tablets are examples of which OS category?
+A) Server OS
+B) Workstation OS
+C) Smartphone/tablet OS
+D) Embedded OS
+Correct: C
+Explanation: iPadOS and Android are tablet/smartphone operating systems, which is a subcategory of mobile OS, optimised for touch input, portable form factors, and app store distribution. Server OS runs on rack-mounted hardware serving networked clients. "Tablets/phones = smartphone/tablet OS category."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: A technician is configuring a network router. The router runs a lightweight OS in read-only memory that handles packet routing functions only. This is an example of what?
+A) Server OS
+B) Hypervisor
+C) Embedded OS/Firmware
+D) Mobile OS
+Correct: C
+Explanation: Network devices like routers and switches run embedded OS (often considered firmware) stored in non-volatile memory, executing only the specific functions required for that device. A server OS like Linux could theoretically run a router, but consumer/enterprise routers use dedicated embedded systems. "Router OS = embedded/firmware = single-purpose in read-only memory."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Which type of OS is Windows 10 Pro classified as?
+A) Server OS
+B) Mobile OS
+C) Workstation OS
+D) Embedded OS
+Correct: C
+Explanation: Windows 10 Pro is a workstation OS designed for individual users with full GUI, productivity applications, and desktop hardware support. Windows Server editions are the corresponding server OS. "Windows 10 = desktop/workstation OS for individual users."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: A company deploys thin clients that boot from the network and run all applications on a centralised server. The thin clients have no local OS installation. What describes the thin client's boot environment?
+A) Embedded OS
+B) Mobile OS
+C) Firmware with PXE-based network boot
+D) Workstation OS
+Correct: C
+Explanation: Thin clients typically use firmware (UEFI/BIOS) with PXE (Preboot Execution Environment) to boot from a network server, loading a lightweight environment or directing all processing to the server. They do not run a full local workstation OS. "Thin client boot = firmware + PXE network boot, no local OS."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician wants to install Windows 10 on a new computer with no operating system. The BIOS is set to UEFI mode with Secure Boot enabled. Which boot method should be used?
+A) Optical disc (DVD)
+B) Bootable USB drive formatted as FAT32 with UEFI-compatible boot
+C) PXE boot from a legacy BIOS WDS server
+D) External hard drive with MBR partition
+Correct: B
+Explanation: UEFI boot requires the installation media to be formatted as FAT32 with a GPT partition table and proper EFI boot files; a USB drive prepared with the Windows Media Creation Tool satisfies these requirements. Optical discs can also work but USB is more common and faster; a legacy PXE server would conflict with Secure Boot requirements. "UEFI + Secure Boot = GPT/FAT32 USB bootable media."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: During a Windows 10 installation on a new system, a technician must choose between GPT and MBR partition styles. What is the key limitation of MBR compared to GPT?
+A) MBR does not support NTFS volumes
+B) MBR is limited to 4 primary partitions and 2 TB disk size
+C) MBR cannot be used with UEFI firmware
+D) MBR does not support dynamic disks
+Correct: B
+Explanation: MBR (Master Boot Record) supports a maximum of 4 primary partitions and disks up to 2 TB in size. GPT (GUID Partition Table) overcomes both limitations by supporting up to 128 partitions and disk sizes greater than 2 TB. MBR can be used with legacy BIOS as well as some UEFI implementations (in CSM/compatibility mode). "MBR = 4 partitions max, 2 TB disk max; GPT removes both limits."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician performs a clean installation of Windows 10, which involves what key difference from an upgrade installation?
+A) Clean installation preserves all user data and applications
+B) Clean installation requires the previous OS to be running
+C) Clean installation formats the drive and installs fresh without preserving data
+D) Clean installation can only be performed from within Windows
+Correct: C
+Explanation: A clean (or fresh) installation formats the target partition and installs Windows from scratch, removing all previous data, applications, and settings. An upgrade installation preserves user files and applications while replacing the OS version. "Clean install = fresh start = format + install, no data preserved."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A corporate IT team deploys Windows 10 to 200 new laptops using a WDS server with a pre-configured image. This deployment method is called:
+A) Clean installation
+B) Upgrade installation
+C) Unattended/image deployment
+D) Repair installation
+Correct: C
+Explanation: Image-based (unattended) deployment using WDS (Windows Deployment Services) pushes a pre-configured master image to many machines simultaneously over the network, making it highly efficient for large-scale deployments. A clean installation is done manually one machine at a time. "Image/unattended deployment = mass deploy via network image."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: Which boot installation method is used in enterprise environments to boot computers over the network from a WDS or SCCM server without any physical media?
+A) USB boot
+B) Optical disc boot
+C) Internet-based installation
+D) PXE (Preboot Execution Environment) boot
+Correct: D
+Explanation: PXE boot allows a computer's network adapter to contact a DHCP/WDS/TFTP server and download a boot environment over the network, enabling OS installation without any local media. USB and optical disc boots require physical media to be inserted. "PXE boot = boot from network = no physical media, enterprise deployment."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician needs to upgrade a Windows 10 Home machine to Windows 10 Pro without losing user data or applications. Which option should be used?
+A) Clean installation from USB
+B) In-place upgrade using a Pro product key via Settings > Update & Security > Activation
+C) Recovery partition restore
+D) Image deployment from WDS
+Correct: B
+Explanation: Upgrading from Home to Pro on the same machine can be done in-place through Settings > Update & Security > Activation by entering a Pro product key, which upgrades the edition without wiping data. A clean install would remove all user data and applications. "Home to Pro upgrade = enter Pro key in Activation settings = in-place, data preserved."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: What file system is required for a Windows 10 installation partition?
+A) FAT32
+B) exFAT
+C) NTFS
+D) ext4
+Correct: C
+Explanation: Windows 10 must be installed on an NTFS-formatted partition because it requires NTFS features like file permissions, journaling, large file support, and security attributes. FAT32 is often used for the EFI System Partition but cannot host the Windows OS itself. "Windows OS partition = must be NTFS."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician uses a recovery partition to restore a laptop to its factory state. What is the outcome of this process?
+A) Only the Windows system files are restored; user data is preserved
+B) The OS and pre-installed software are restored to factory defaults, and user data is removed
+C) The laptop's firmware is updated to the latest version
+D) Only user data is erased; applications remain
+Correct: B
+Explanation: A factory reset using a recovery partition returns the system to its original factory configuration, including the OS and pre-installed manufacturer software, while erasing all user data, additional installed applications, and settings. This is equivalent to a clean install of the manufacturer's original image. "Recovery partition = factory reset = OS restored, all user data lost."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: Which file system is commonly used for USB drives and memory cards that need to be compatible with both Windows and macOS while supporting files larger than 4 GB?
+A) FAT32
+B) NTFS
+C) exFAT
+D) ext4
+Correct: C
+Explanation: exFAT (Extended FAT) is a Microsoft file system designed for flash storage that supports files larger than 4 GB (FAT32's limitation) and is compatible with both Windows and macOS. NTFS supports large files but has limited write support on macOS without third-party software. "exFAT = FAT32 upgraded for large files, cross-platform USB."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician uses Windows 10's "Reset this PC" feature with the "Keep my files" option. What does this operation do?
+A) Reinstalls Windows and preserves all installed applications and user data
+B) Reinstalls Windows and preserves user files but removes all installed applications
+C) Reinstalls Windows and removes all user files and applications
+D) Restores Windows to a previous restore point
+Correct: B
+Explanation: "Reset this PC > Keep my files" reinstalls Windows 10 while preserving user files in the user profile directories, but removes all installed applications and settings. The "Remove everything" option removes user data as well. "Reset > Keep files = fresh Windows + user files preserved, but apps removed."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician is replacing a Windows 10 machine's hard drive. The new drive is 4 TB. Which partition style must be used to utilise the full capacity of the drive?
+A) MBR with dynamic disk
+B) GPT
+C) MBR with extended partition
+D) FAT32 with MBR
+Correct: B
+Explanation: GPT (GUID Partition Table) is required for drives larger than 2 TB because MBR's addressing scheme cannot accommodate volumes beyond 2 TB. GPT also allows up to 128 partitions on a single disk. "4 TB drive = must use GPT — MBR stops at 2 TB."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: Which valid Windows 10 upgrade path allows a user to upgrade directly from Windows 10 Home to Windows 10 Pro?
+A) This upgrade path is not supported; a clean install is required
+B) The upgrade can be performed in-place via Settings using a Pro license key
+C) The user must roll back to Windows 7 first
+D) The upgrade requires a Windows 10 Enterprise key
+Correct: B
+Explanation: Microsoft supports direct in-place upgrade from Windows 10 Home to Pro by purchasing a Pro upgrade license and entering the key in Settings > Update & Security > Activation. No clean install or intermediate version is needed. "Home to Pro = in-place with Pro license key, no reinstall required."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: On macOS, which application serves as the primary file manager, equivalent to Windows File Explorer?
+A) Spotlight
+B) Finder
+C) Terminal
+D) System Preferences
+Correct: B
+Explanation: Finder is the macOS file manager that allows users to browse the file system, manage files and folders, connect to network shares, and open applications. Spotlight is macOS's system-wide search feature, not a file manager. "Finder = macOS file manager = equivalent to Windows File Explorer."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: Which macOS utility provides an encrypted backup of the Mac to an external drive, allowing the system to be restored to any point in time?
+A) Disk Utility
+B) FileVault
+C) Time Machine
+D) iCloud Backup
+Correct: C
+Explanation: Time Machine is macOS's built-in backup application that automatically creates hourly, daily, and weekly backups to an external drive, allowing restoration of the entire system or individual files to any backed-up state. FileVault provides full-disk encryption, not backup functionality. "Time Machine = automated, versioned backups for macOS."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A user's macOS application becomes unresponsive. What is the equivalent of Windows Task Manager for force-quitting a frozen app?
+A) Activity Monitor
+B) Console
+C) Force Quit (Cmd+Option+Esc)
+D) Terminal kill command
+Correct: C
+Explanation: Force Quit (accessed via Cmd+Option+Esc or the Apple menu > Force Quit) is the macOS equivalent of ending a process in Task Manager, allowing users to terminate unresponsive applications without rebooting. Activity Monitor shows process resource usage (like Task Manager's Performance tab) but Force Quit is the immediate action for frozen apps. "Frozen Mac app = Cmd+Option+Esc = Force Quit."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: Which macOS feature provides full-disk encryption to protect data on the Mac's startup drive?
+A) Time Machine
+B) Keychain
+C) Gatekeeper
+D) FileVault
+Correct: D
+Explanation: FileVault is macOS's built-in full-disk encryption feature that encrypts the entire startup disk using XTS-AES-128, protecting data if the Mac is lost or stolen. Keychain is a password and certificate storage system, not disk encryption. "FileVault = macOS full-disk encryption = like BitLocker on Windows."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A new employee needs to set up their corporate Mac. Which account must be created or linked to access the App Store, iCloud services, and other Apple ecosystem services?
+A) Local user account
+B) Apple ID
+C) Microsoft account
+D) Google account
+Correct: B
+Explanation: An Apple ID is required to access the Mac App Store, iCloud services (Drive, iCloud Backup, Find My Mac), and other Apple ecosystem services. A local user account is needed for Mac login but does not provide access to Apple's online services. "Apple ID = required for App Store and all Apple cloud services on Mac."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: Which macOS command-line application provides direct access to the Unix shell underlying macOS?
+A) Console
+B) Activity Monitor
+C) Terminal
+D) Automator
+Correct: C
+Explanation: Terminal provides access to the macOS command-line interface (bash or zsh), allowing users to execute Unix/Linux commands, run scripts, and perform system administration tasks. Console is for viewing system logs, similar to Windows Event Viewer. "Terminal = macOS command line = access to Unix shell."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: Where are system-wide settings like network, display, users, and security configured on macOS?
+A) Finder Preferences
+B) System Preferences (or System Settings in macOS Ventura+)
+C) Activity Monitor
+D) Keychain Access
+Correct: B
+Explanation: System Preferences (System Settings in macOS Ventura and later) is the central location for configuring macOS system settings including network, display, users & groups, security, accessibility, and more — equivalent to Windows Control Panel/Settings. Finder Preferences only controls Finder-specific display options. "System Preferences = macOS equivalent of Control Panel/Settings."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: Which macOS built-in utility is used to partition, format, verify, and repair disks and volumes?
+A) Time Machine
+B) Terminal
+C) FileVault
+D) Disk Utility
+Correct: D
+Explanation: Disk Utility provides a graphical interface to partition disks, format volumes, verify and repair disk permissions, create disk images, and manage RAID sets on macOS. Time Machine handles backup, not disk management. "Disk Utility = macOS disk management GUI = partition, format, repair."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: What is Keychain Access on macOS used for?
+A) Encrypting the startup disk
+B) Storing and managing passwords, certificates, and private keys
+C) Controlling app permissions to sensitive data
+D) Syncing files between Macs via iCloud
+Correct: B
+Explanation: Keychain Access is macOS's built-in password manager that securely stores passwords, Wi-Fi credentials, digital certificates, encryption keys, and other secrets. Gatekeeper controls app permissions and source verification, not password storage. "Keychain = macOS secure password and certificate vault."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A user wants to quickly find a file, application, or web search result without opening any application on their Mac. Which macOS feature provides this system-wide search capability?
+A) Finder
+B) Siri
+C) Spotlight
+D) Mission Control
+Correct: C
+Explanation: Spotlight (activated by Cmd+Space) is macOS's system-wide search tool that indexes files, apps, emails, contacts, and can perform calculations and web searches from any context. Finder is the file manager, not a system-wide search launcher. "Spotlight = Cmd+Space = quick search everything on the Mac."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A corporate Mac user cannot install apps downloaded from outside the App Store due to a restriction. Which macOS feature enforces this control?
+A) FileVault
+B) Gatekeeper
+C) Time Machine
+D) System Integrity Protection
+Correct: B
+Explanation: Gatekeeper is a macOS security feature that verifies apps are from identified developers or the App Store before allowing them to run, and corporate administrators can restrict this to App Store only. System Integrity Protection protects system files from modification, not app source control. "Gatekeeper = controls which app sources macOS will allow to run."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: On macOS, where are most applications installed and uninstalled from?
+A) Applications folder via drag-and-drop from .dmg files or App Store
+B) A package manager like apt-get
+C) The System Preferences installer
+D) Program Files folder
+Correct: A
+Explanation: macOS application installation typically involves dragging the .app bundle from a mounted .dmg disk image into the Applications folder, or using the Mac App Store. Uninstallation is similarly done by dragging the app to Trash. apt-get is a Linux package manager not native to macOS. "macOS apps: drag .app to Applications folder to install; drag to Trash to uninstall."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A macOS user's computer is shared with multiple employees. An administrator wants to restrict what software standard users can install. Where is this configured?
+A) System Preferences > App Store
+B) System Preferences > Users & Groups > Parental Controls/Content & Privacy
+C) Finder Preferences > Restrictions
+D) System Preferences > Security > Allow all apps
+Correct: B
+Explanation: Corporate restrictions and parental controls on macOS are configured in System Preferences > Users & Groups (or Screen Time/Parental Controls depending on version), where access to App Store, websites, and specific applications can be restricted. System Preferences > App Store only controls update preferences. "User restrictions on Mac = System Preferences > Users & Groups > restrictions/parental controls."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: What best practice involves configuring a Mac to automatically create versioned backups to a dedicated external drive?
+A) Enabling FileVault
+B) Configuring Time Machine to an external drive
+C) Enabling iCloud Drive sync for all folders
+D) Using Disk Utility to clone the startup drive
+Correct: B
+Explanation: Configuring Time Machine to back up to a dedicated external drive is the recommended macOS backup best practice, creating automatic hourly backups and allowing restoration of individual files or the entire system to any backup point. FileVault encrypts the drive but does not create backups. "Best practice backup on Mac = enable Time Machine to external drive."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: How does macOS handle accessibility features for users with disabilities such as visual or motor impairments?
+A) Through the Accessibility pane in System Preferences/System Settings
+B) Through Control Panel > Ease of Access
+C) Through Finder > Accessibility
+D) Through Terminal commands only
+Correct: A
+Explanation: macOS provides accessibility features (VoiceOver screen reader, Zoom, keyboard accessibility, switch control) through System Preferences > Accessibility (System Settings in newer versions). "Ease of Access" is the Windows term; the macOS equivalent is the Accessibility pane in System Preferences. "macOS accessibility = System Preferences > Accessibility."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: On a Linux system, which command displays the current working directory path?
+A) ls
+B) cd
+C) pwd
+D) whoami
+Correct: C
+Explanation: pwd (Print Working Directory) displays the full absolute path of the current directory the user is working in. ls lists the contents of a directory, and cd changes the directory. "pwd = Print Working Directory = where am I right now?"
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux administrator needs to install a package on an Ubuntu system from the command line. Which command is most appropriate?
+A) yum install packagename
+B) apt-get install packagename
+C) rpm -i packagename
+D) pkg install packagename
+Correct: B
+Explanation: apt-get install (or the newer apt install) is the package manager command for Debian-based Linux distributions like Ubuntu. yum (or dnf) is used on Red Hat-based distributions like CentOS and Fedora. "apt-get = Debian/Ubuntu package manager; yum/dnf = Red Hat/CentOS."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux command is used to search for a specific text pattern within a file or command output?
+A) cat
+B) ls
+C) grep
+D) man
+Correct: C
+Explanation: grep (Global Regular Expression Print) searches for lines matching a specified pattern within files or piped input, making it essential for filtering command output or searching log files. cat displays the entire contents of a file without filtering. "grep = search/filter text = find lines matching a pattern."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux technician needs to change the permissions on a file so that the owner can read and write, the group can read, and others have no permissions. Which command achieves this?
+A) chown 640 filename
+B) chmod 640 filename
+C) chown rw-r----- filename
+D) chmod ug+rw filename
+Correct: B
+Explanation: chmod 640 sets the permissions using octal notation: 6 (rw- for owner), 4 (r-- for group), 0 (--- for others). chown is used to change the file owner and group, not the permission bits. "chmod = change mode (permissions); 640 = owner rw, group r, others none."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux command changes the owner of a file from user "alice" to user "bob"?
+A) chmod bob filename
+B) chown bob filename
+C) su bob filename
+D) sudo bob filename
+Correct: B
+Explanation: chown (Change Owner) changes the user and/or group ownership of a file or directory. chmod changes permissions (not ownership), and su switches the current user but does not change file ownership. "chown = Change Ownership of files."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux user needs to read the built-in documentation for the ls command. Which command displays its manual page?
+A) help ls
+B) ls --doc
+C) man ls
+D) info --ls
+Correct: C
+Explanation: man (Manual) displays the built-in reference documentation for any Linux command, including description, syntax, options, and examples. help is typically for shell built-in commands in some shells, not all external commands. "man = manual pages = built-in Linux documentation for any command."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A standard Linux user needs to run a command with administrator (root) privileges without switching to the root account. Which command prefix should be used?
+A) su -
+B) admin
+C) sudo
+D) root
+Correct: C
+Explanation: sudo (Superuser Do) allows a permitted user to run a specific command with root privileges without fully switching to the root account, and all sudo usage is logged. su - switches completely to the root user account, which is less auditable and more risky. "sudo = run one command as root; su = become root."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux command displays the contents of a text file to the terminal without opening an editor?
+A) nano
+B) ls
+C) grep
+D) cat
+Correct: D
+Explanation: cat (Concatenate) reads and displays the contents of files to standard output, making it useful for viewing file contents quickly. nano is a text editor that opens the file interactively for editing. "cat = display file contents to terminal."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux technician needs to edit a configuration file from the command line in an environment where no graphical editor is available. Which two text editors are most commonly available on Linux systems?
+A) Word and Notepad
+B) vim and gedit
+C) nano and vi (vim)
+D) emacs and kate
+Correct: C
+Explanation: nano and vi (or its enhanced version vim) are the most universally available terminal-based text editors on Linux systems; nano is more beginner-friendly while vi/vim is more powerful but has a steeper learning curve. gedit is a GUI editor that requires a desktop environment. "Terminal text editors on Linux: nano (easy) and vi/vim (powerful)."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux file system, native to Linux, supports journaling, is the default for most modern Linux distributions, and supports volumes up to 1 EB?
+A) FAT32
+B) NTFS
+C) exFAT
+D) ext4
+Correct: D
+Explanation: ext4 is the fourth extended file system, the default for most Linux distributions (Ubuntu, Debian, CentOS), supporting journaling for crash recovery, volumes up to 1 EB, and files up to 16 TB. FAT32 and exFAT are designed for cross-platform compatibility with Windows. "ext4 = Linux native default file system with journaling."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux command lists the files and directories in the current directory, including hidden files?
+A) ls
+B) ls -a
+C) ls -l
+D) dir -h
+Correct: B
+Explanation: ls -a shows all files including hidden files (those beginning with a dot, like .bashrc). ls without -a omits hidden files, and ls -l shows a detailed long listing but still hides dot files without -a. "ls -a = all files including hidden dot files."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux technician installs packages on a Red Hat Enterprise Linux (RHEL) or CentOS system. Which package manager command is used on these distributions?
+A) apt-get
+B) pacman
+C) yum or dnf
+D) dpkg
+Correct: C
+Explanation: yum (Yellowdog Updater Modified) and its replacement dnf (Dandified YUM) are the package managers for Red Hat-based distributions including RHEL, CentOS, and Fedora. apt-get and dpkg are Debian/Ubuntu package managers. "Red Hat/CentOS = yum or dnf; Debian/Ubuntu = apt-get."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux administrator uses the shell (terminal). What is the shell's primary role in a Linux system?
+A) It is the graphical desktop environment
+B) It is the command-line interpreter that processes user commands
+C) It is the Linux kernel
+D) It is a text editor for system configuration files
+Correct: B
+Explanation: The shell (bash, zsh, sh, etc.) is a command-line interpreter that reads user commands, passes them to the OS kernel for execution, and returns results. The desktop environment (GNOME, KDE) provides the GUI, separate from the shell. "Shell = command-line interpreter = bash/zsh processes your commands."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux system uses the btrfs file system on the data partition. What is one key advantage of btrfs over ext4?
+A) btrfs supports smaller partition sizes
+B) btrfs supports built-in snapshots and copy-on-write
+C) btrfs is faster for sequential reads on spinning disks
+D) btrfs is the default file system for all Linux distributions
+Correct: B
+Explanation: btrfs (B-Tree File System) supports built-in snapshots, copy-on-write (CoW), built-in RAID, and self-healing checksums, which are features not natively available in ext4. ext4 is more widely supported and is the default for most distributions, but lacks btrfs's advanced data management features. "btrfs = advanced features: snapshots, CoW, built-in RAID."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: Which Linux permission number corresponds to the following permission string: rwxr-xr-- ?
+A) 755
+B) 754
+C) 744
+D) 764
+Correct: B
+Explanation: rwxr-xr-- breaks down as: owner rwx = 4+2+1 = 7, group r-x = 4+0+1 = 5, others r-- = 4+0+0 = 4, giving 754. chmod 755 would give rwxr-xr-x (others can execute), not rwxr-xr--. "Permission to octal: r=4, w=2, x=1; add them per group for the 3-digit number."
+
+Domain: 1.0
+Sub-objective: 1.11
+Question: A Linux user wants to switch from their regular account to the root account to perform a series of administrative tasks. Which command opens a root shell session?
+A) sudo command
+B) su -
+C) chmod root
+D) runlevel root
+Correct: B
+Explanation: su - (Switch User with login environment) switches the current session to the root user, loading root's environment variables and home directory. sudo runs only a single command as root and returns to the regular user session. "su - = switch to root user session; sudo = one command as root."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A user in an office needs to access a shared printer located on a Windows 10 workstation named "WKSTN01" and shared as "HPLaser". Which address is entered in the Add Printer wizard?
+A) http://WKSTN01/HPLaser
+B) \\WKSTN01\HPLaser
+C) //WKSTN01/HPLaser
+D) ftp://WKSTN01/HPLaser
+Correct: B
+Explanation: To add a network printer shared from another Windows machine, the UNC path \\ComputerName\ShareName is entered in the Add Printer wizard. HTTP and FTP paths are used for web-based printer interfaces or printer management pages, not Windows shared printers. "Network printer UNC = \\ComputerName\PrinterShareName."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: A user downloads an application installer from the internet. When they double-click the installer, a UAC prompt appears asking for administrator credentials. What does this prompt indicate?
+A) The application contains malware and should not be installed
+B) The installer requires elevated privileges to modify system resources
+C) The application is not compatible with the current Windows version
+D) The user's hard drive is full and installation cannot proceed
+Correct: B
+Explanation: A UAC elevation prompt appears when an installer needs to make system-level changes (writing to Program Files, modifying registry hives) that require administrator privileges. This is normal behaviour for software installations and does not indicate malware. "UAC prompt during install = installer needs admin rights to modify the system."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician uses the Windows Media Creation Tool to prepare a USB drive for installing Windows 10 on a new computer. The target computer uses UEFI firmware. Which file system should the USB drive be formatted as for UEFI compatibility?
+A) NTFS
+B) FAT16
+C) exFAT
+D) FAT32
+Correct: D
+Explanation: UEFI firmware requires the EFI System Partition and boot media to be formatted as FAT32 because the UEFI specification only reads FAT-formatted volumes. Windows Media Creation Tool automatically formats the USB as FAT32 when creating UEFI-compatible media. "UEFI boot USB = must be FAT32 formatted."
+
+Domain: 1.0
+Sub-objective: 1.10
+Question: A macOS user wants to check the available disk space, reformat an external drive, and run First Aid to check a drive for errors. Which macOS utility provides all of these functions?
+A) Time Machine
+B) Activity Monitor
+C) Disk Utility
+D) Console
+Correct: C
+Explanation: Disk Utility handles all disk-related tasks on macOS: viewing disk capacity and available space, reformatting and partitioning drives, running First Aid (disk verification and repair), and creating disk images. Time Machine manages backups but does not perform disk repair or reformatting. "Disk Utility = all macOS disk tasks: format, partition, repair, info."
+
+Domain: 1.0
+Sub-objective: 1.3
+Question: A Windows 10 administrator needs to configure a task that runs a script every Monday at 3:00 AM to clear temporary files. Which tool is used to create this scheduled task with a GUI?
+A) Services.msc
+B) Event Viewer
+C) Task Scheduler
+D) Group Policy Editor
+Correct: C
+Explanation: Task Scheduler provides a GUI wizard to create tasks triggered by time (including specific days/times), system events, or user logon, and is specifically designed for this type of automated scheduling. Services.msc manages services that run continuously, not one-time or weekly scheduled tasks. "Automate a weekly script = Task Scheduler."
+
+Domain: 1.0
+Sub-objective: 1.4
+Question: A technician needs to change the default application that opens PDF files on a Windows 10 machine using the Control Panel. Which approach is most direct?
+A) Control Panel > Programs and Features > Set Default Programs
+B) Control Panel > Internet Options > Programs > Default
+C) Right-click a PDF file > Open with > Choose another app > set as default
+D) Control Panel > System > Default Programs
+Correct: C
+Explanation: The most direct way to change a file type's default application is to right-click a file of that type, select Open with > Choose another app, select the desired application, and check "Always use this app." While Settings > Apps > Default apps is the modern method, right-click is consistently direct and available. "Change default app: right-click the file > Open with > Always use this app."
+
+Domain: 1.0
+Sub-objective: 1.5
+Question: A Windows 10 user wants to enable dark mode for the system UI and apps. Where is this configured?
+A) Settings > System > Display
+B) Settings > Personalisation > Colours > Choose your colour > Dark
+C) Settings > Ease of Access > High Contrast
+D) Settings > Update & Security > Themes
+Correct: B
+Explanation: Dark mode in Windows 10 is enabled in Settings > Personalisation > Colours, where "Choose your colour" can be set to "Dark" (dark mode for apps and system UI) or "Custom." High Contrast in Ease of Access is a different accessibility feature for users with visual impairments, not the same as dark mode. "Dark mode = Settings > Personalisation > Colours > Dark."
+
+Domain: 1.0
+Sub-objective: 1.6
+Question: A Windows 10 workstation configured with a static IP cannot browse the internet but can access local network resources. Which setting is most likely misconfigured?
+A) Subnet mask
+B) Default gateway
+C) MAC address
+D) DNS server
+Correct: B
+Explanation: The default gateway is the router address that forwards traffic to networks outside the local subnet (including the internet); without a correct gateway, a machine can communicate locally but cannot reach external destinations. DNS server issues would prevent hostname resolution but not all internet connectivity. "No internet, local OK = check the default gateway setting."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: An IT department distributes application updates by downloading an ISO file from the vendor's website and mounting it on each workstation. This describes which distribution method?
+A) Physical media
+B) Image deployment
+C) Internet download + ISO mounting
+D) PXE network boot
+Correct: C
+Explanation: Downloading an ISO file from the internet and mounting it as a virtual drive on each workstation is a digital distribution method combining internet download (obtaining the ISO) with ISO mounting (accessing the installer). Physical media requires a tangible disc or USB device. "ISO from internet = internet download + mount to install."
+
+Domain: 1.0
+Sub-objective: 1.8
+Question: Smart TVs, digital signage displays, and medical imaging devices typically run which type of operating system?
+A) Workstation OS
+B) Mobile OS
+C) Embedded OS
+D) Server OS
+Correct: C
+Explanation: Smart TVs, digital signage, and medical devices run embedded operating systems tailored for their specific hardware and single-purpose function, often with restricted user access and running from ROM or flash storage. Mobile OS like Android is sometimes used in smart TVs, but the category for purpose-built devices is Embedded. "Smart TV/appliance/medical device = embedded OS."
+
+Domain: 1.0
+Sub-objective: 1.9
+Question: A technician performs a network-based Windows installation using a WDS server. What protocol does the client use to obtain the boot image from the server before the OS loads?
+A) HTTP
+B) FTP
+C) TFTP over PXE
+D) SMB
+Correct: C
+Explanation: PXE boot uses DHCP to locate the boot server and then uses TFTP (Trivial File Transfer Protocol) to download the network boot program (NBP) and Windows PE boot image from the WDS server. SMB is used after booting to access the WDS installation share, not for the initial boot image transfer. "PXE boot = DHCP to find server + TFTP to download boot image."
+
+Domain: 1.0
+Sub-objective: 1.7
+Question: Which statement correctly describes the difference between a 32-bit and 64-bit operating system installation?
+A) A 64-bit OS can run 32-bit applications but a 32-bit OS cannot run 64-bit applications natively
+B) A 32-bit OS can run 64-bit applications in compatibility mode
+C) Both OS types support the same maximum RAM
+D) 64-bit applications run on 32-bit OS using WOW64
+Correct: A
+Explanation: A 64-bit OS can run both 32-bit (via WOW64) and 64-bit applications, but a 32-bit OS can only run 32-bit applications — 64-bit apps cannot run on a 32-bit OS. WOW64 is a subsystem of 64-bit Windows that enables 32-bit apps to run, not the reverse. "64-bit OS = runs both; 32-bit OS = 32-bit apps only."
+
+

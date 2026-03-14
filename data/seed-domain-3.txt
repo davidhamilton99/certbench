@@ -1,0 +1,1249 @@
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which cloud service model places the MOST security responsibility on the cloud provider?
+A) IaaS
+B) PaaS
+C) SaaS
+D) Hybrid cloud
+Correct: C
+Explanation: In SaaS, the cloud provider manages the application, runtime, OS, storage, and infrastructure, leaving the customer responsible only for data and user access. In IaaS, the customer manages everything from the OS upward. Hybrid cloud is a deployment model, not a service model.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A company hosts its own servers in a dedicated facility that is not shared with other organisations. Which cloud deployment model does this describe?
+A) Public cloud
+B) Community cloud
+C) Hybrid cloud
+D) Private cloud
+Correct: D
+Explanation: A private cloud is dedicated exclusively to one organisation and can be hosted on-premises or in a third-party facility. A public cloud shares infrastructure across many tenants. A community cloud is shared among organisations with common interests. Hybrid cloud combines private and public models.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: In the shared responsibility model for IaaS, which of the following is the customer's responsibility?
+A) Physical security of the data centre
+B) Hypervisor patching
+C) Guest operating system patching
+D) Network cable plant maintenance
+Correct: C
+Explanation: In IaaS, the provider manages physical infrastructure, hardware, and the hypervisor. The customer is responsible for the guest OS, applications, and data running on the virtual machines. Physical security and network hardware are always the provider's responsibility in IaaS.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which architecture model uses templates and code to provision and manage infrastructure consistently and repeatably?
+A) Containerization
+B) Infrastructure as Code (IaC)
+C) Serverless computing
+D) Software-defined networking
+Correct: B
+Explanation: Infrastructure as Code (IaC) uses declarative or imperative definition files (e.g., Terraform, CloudFormation) to provision infrastructure consistently. A key security benefit is version control and auditability of infrastructure changes. Containerization packages applications; serverless abstracts server management; SDN virtualises network control.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A security risk unique to Infrastructure as Code environments is that a single misconfigured template can be:
+A) Rolled back automatically by the hypervisor
+B) Deployed identically across hundreds of systems simultaneously
+C) Detected by endpoint detection and response tools
+D) Isolated to a single availability zone
+Correct: B
+Explanation: IaC allows rapid, consistent deployment — but this also means a security misconfiguration (e.g., open S3 bucket policy, missing encryption setting) is replicated at scale before it can be caught. This amplification risk is the primary security concern with IaC templates. EDR tools operate at the endpoint level, not at the IaC deployment level.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following BEST describes a serverless architecture from a security perspective?
+A) The customer manages the underlying OS and runtime patches
+B) The provider abstracts server management, shifting runtime security responsibility to the provider
+C) All compute nodes are owned and operated by the customer
+D) Network segmentation is not required because functions are stateless
+Correct: B
+Explanation: In serverless (e.g., AWS Lambda, Azure Functions), the provider manages all infrastructure including the OS and runtime. The customer is responsible for the function code and its logic, including input validation and secrets management. Network segmentation may still apply depending on how functions interact with VPCs and other resources.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A microservices architecture improves security isolation primarily because:
+A) Each service shares a common database schema, reducing attack surface
+B) Services communicate only through encrypted hardware channels
+C) Compromise of one service does not automatically grant access to all other services
+D) Microservices eliminate the need for API gateways
+Correct: C
+Explanation: Microservices decompose applications into small, independently deployable services. This limits the blast radius of a breach — an attacker who compromises one service must separately attack others. The tempting distractor is the shared database model; in practice, microservices should use separate data stores to maintain this isolation.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Containers differ from virtual machines in that containers:
+A) Provide stronger hardware-level isolation between workloads
+B) Share the host OS kernel, making kernel vulnerabilities a shared risk
+C) Cannot be deployed on public cloud infrastructure
+D) Always include a full OS image in each container
+Correct: B
+Explanation: Containers share the host OS kernel, so a kernel exploit can potentially affect all containers on that host. VMs have their own kernel within a guest OS, providing stronger isolation. This shared kernel model is the key security distinction. Containers do include application dependencies but not a full OS.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A hospital system uses a cloud environment shared with several other healthcare organisations to meet HIPAA requirements collectively. This is an example of which deployment model?
+A) Hybrid cloud
+B) Community cloud
+C) Public cloud
+D) Private cloud
+Correct: B
+Explanation: A community cloud is shared by organisations with common regulatory or operational concerns — in this case, multiple healthcare organisations sharing HIPAA compliance obligations. A hybrid cloud combines private and public resources. A public cloud is open to any tenant without regard to regulatory alignment.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following is a PRIMARY security concern when an organisation uses third-party cloud vendors?
+A) Inability to use encryption for data at rest
+B) Loss of direct visibility and control over security controls applied to data
+C) Automatic elevation of the organisation's attack surface to nation-state levels
+D) Prohibition of multi-factor authentication by the vendor
+Correct: B
+Explanation: When relying on third-party vendors, an organisation must trust that the vendor applies appropriate security controls — controls the organisation cannot directly observe or enforce. This loss of visibility is the core third-party risk. Encryption and MFA are available in virtually all enterprise cloud services; nation-state threat levels are not automatically increased.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Software-defined networking (SDN) separates which two planes to enable centralised management?
+A) Data plane and management plane
+B) Control plane and data plane
+C) Application plane and forwarding plane
+D) Physical plane and virtual plane
+Correct: B
+Explanation: SDN separates the control plane (decision-making about how traffic is routed) from the data plane (actual packet forwarding). This separation allows centralised, programmable network management. The security implication is that the SDN controller becomes a high-value target — its compromise could affect the entire network.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: An organisation runs critical applications on-premises but uses public cloud for burst capacity during peak loads. This is BEST described as:
+A) Community cloud
+B) Multi-cloud
+C) Hybrid cloud
+D) Private cloud extension
+Correct: C
+Explanation: Hybrid cloud combines on-premises (private) infrastructure with public cloud resources, often connected by a secure network link. Multi-cloud refers to using multiple public cloud providers. The key indicator here is the combination of on-premises and public cloud.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following BEST characterises a security risk specific to IoT devices?
+A) They always require high-bandwidth network connections
+B) They commonly lack update mechanisms and ship with hardcoded credentials
+C) They are typically managed through centralised identity providers
+D) They use proprietary encryption that is difficult for attackers to break
+Correct: B
+Explanation: IoT devices frequently ship with default or hardcoded credentials and lack robust firmware update mechanisms, making long-term patching infeasible. This combination leaves devices persistently vulnerable. They do not typically integrate with enterprise identity providers and do not use particularly strong proprietary encryption.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: SCADA systems used in industrial environments present unique security challenges because they:
+A) Were originally designed with security as the primary requirement
+B) Often run legacy protocols that were not designed for IP networks or authenticated communications
+C) Cannot be connected to any IP network by regulatory requirement
+D) Use real-time operating systems that automatically patch vulnerabilities
+Correct: B
+Explanation: SCADA and ICS systems were originally designed for isolated, air-gapped environments with proprietary protocols (e.g., Modbus, DNP3) that lack authentication and encryption. As these systems have been connected to IP networks for remote management, their original design assumptions have become critical vulnerabilities.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A Real-Time Operating System (RTOS) used in an embedded medical device differs from a general-purpose OS in that it prioritises:
+A) Feature richness and user interface complexity
+B) Deterministic timing and response guarantees over security features
+C) Frequent security patches and updates
+D) Integration with cloud identity management services
+Correct: B
+Explanation: RTOS systems are designed to guarantee predictable, deterministic timing — critical for safety in medical, aviation, or industrial contexts. Security features like memory isolation, ASLR, or dynamic patching are often sacrificed to meet real-time constraints. This makes RTOS devices difficult to secure using traditional methods.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which architectural approach BEST reduces the attack surface exposed when an application is compromised?
+A) Centralised monolithic architecture
+B) Decentralised microservices with least-privilege inter-service communication
+C) Shared-nothing architecture with a single administrative domain
+D) Serverless architecture without network access controls
+Correct: B
+Explanation: Decentralised microservices with least-privilege communication limits what an attacker can reach after compromising one service. A monolithic architecture means a single compromise can expose the entire application. Serverless without network controls can increase exposure. The key principle is blast radius reduction through segmentation and least privilege.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A PaaS environment allows developers to deploy applications without managing servers. The PRIMARY residual security responsibility for the developer is:
+A) Hypervisor configuration
+B) Physical data centre access controls
+C) Application code security and data protection
+D) Network routing table management
+Correct: C
+Explanation: In PaaS, the provider manages infrastructure through the runtime. The developer is responsible for secure application code (e.g., avoiding injection vulnerabilities) and protecting the data the application processes. Hypervisor, physical controls, and network routing are all provider-managed in PaaS.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A security architect is evaluating risks of using a public cloud provider. Which of the following represents a UNIQUE risk not present with on-premises infrastructure?
+A) Physical hardware failures
+B) Network latency between services
+C) Multi-tenant data isolation failures
+D) Software vulnerabilities in the OS
+Correct: C
+Explanation: Multi-tenancy — multiple customers sharing the same physical infrastructure — creates a risk unique to public cloud: a vulnerability in the hypervisor or container runtime could allow one tenant to access another's data. Physical hardware failures, network latency, and OS vulnerabilities all exist in on-premises environments too.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following is an advantage of a decentralised architecture from a resilience and security perspective?
+A) Simpler access control administration
+B) No single point of failure or compromise
+C) Reduced need for encryption between components
+D) Easier log aggregation and monitoring
+Correct: B
+Explanation: Decentralised architectures distribute authority and resources so that no single node or component represents a single point of failure or a single point of compromise. The tradeoffs are complexity in administration and monitoring — making A and D incorrect. Encryption needs increase, not decrease, in decentralised environments.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A company's security team discovers that a container image in use contains a critical OS-level vulnerability. Which mitigation is MOST appropriate for containerised environments?
+A) Patch the running container in place
+B) Rebuild the container image with an updated base image and redeploy
+C) Migrate the workload to a virtual machine
+D) Apply a host-based firewall rule to the container
+Correct: B
+Explanation: Containers are treated as immutable — rather than patching a running container, the correct approach is to rebuild the image from a patched base image and redeploy. This is a core principle of container security and IaC: replace rather than repair. Host-based firewalls address network exposure, not OS vulnerabilities.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: An organisation wants to ensure that workloads running in a public cloud meet the same security standards as their on-premises environment. Which approach BEST achieves this?
+A) Rely on the cloud provider's default security settings
+B) Implement policy-as-code enforced through automated compliance checks in the CI/CD pipeline
+C) Perform annual manual audits of cloud configuration
+D) Restrict all cloud workloads to a single region
+Correct: B
+Explanation: Policy-as-code, enforced through automated checks in the CI/CD pipeline, ensures that every deployment is validated against security standards before reaching production. Annual manual audits are too infrequent for dynamic cloud environments. Default settings rarely meet enterprise security requirements. Single-region restriction addresses sovereignty, not security standards.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A scenario: A financial services firm deploys trading algorithms on embedded systems with RTOS. A security audit finds that the RTOS cannot support standard endpoint protection agents. What is the MOST appropriate compensating control?
+A) Replace all RTOS devices with general-purpose Linux servers
+B) Implement network-based monitoring and strict network segmentation around the RTOS environment
+C) Disable all network interfaces on the RTOS devices
+D) Install a lightweight antivirus agent on each RTOS device
+Correct: B
+Explanation: When endpoint agents cannot be installed (a common RTOS constraint), compensating controls shift to the network layer: monitoring traffic to and from RTOS devices and isolating them in tightly controlled network segments. Disabling network interfaces may not be operationally feasible for trading systems. Replacing hardware is expensive and may not meet real-time requirements.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which protocol provides secure remote management of network devices by encrypting the entire session, including authentication?
+A) Telnet
+B) SNMPv1
+C) SSH
+D) TFTP
+Correct: C
+Explanation: SSH (Secure Shell) encrypts the entire session including credentials and commands. Telnet transmits everything in plaintext. SNMPv1 lacks authentication and encryption. TFTP (Trivial FTP) provides no authentication or encryption and is unsuitable for remote management.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A company needs to protect DNS queries and responses from tampering and spoofing. Which protocol should be implemented?
+A) DNSSEC
+B) LDAPS
+C) FTPS
+D) SNMPv3
+Correct: A
+Explanation: DNSSEC (DNS Security Extensions) adds cryptographic signatures to DNS records, allowing resolvers to verify that responses have not been tampered with. It protects against DNS spoofing and cache poisoning. LDAPS secures LDAP directory queries; FTPS secures file transfers; SNMPv3 secures network device management.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A network administrator wants to replace SNMPv1 for device monitoring to gain authentication and encryption. Which protocol is the appropriate replacement?
+A) SNMP with community strings
+B) SNMPv2c
+C) SNMPv3
+D) ICMP
+Correct: C
+Explanation: SNMPv3 adds authentication (using HMAC-MD5 or HMAC-SHA) and optional encryption (DES or AES) to SNMP. SNMPv1 and SNMPv2c rely on plaintext community strings for authentication, which are trivially intercepted. ICMP is a diagnostic protocol, not a management protocol.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following BEST describes the purpose of a jump server (bastion host)?
+A) To load balance traffic across multiple web servers
+B) To provide a single, hardened access point into a secure network segment
+C) To filter malicious traffic using signature-based detection
+D) To terminate VPN connections from remote users
+Correct: B
+Explanation: A jump server is a hardened, monitored system that serves as the sole access point for administrators entering a secure or sensitive network zone. All administrative traffic routes through it, enabling centralised logging and access control. It is not a load balancer, IDS, or VPN concentrator.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A network-based intrusion detection system (NIDS) is placed at which location to provide MAXIMUM visibility into traffic?
+A) On each endpoint's loopback interface
+B) Behind the firewall, monitoring only internal traffic
+C) At a network tap or span port that mirrors all traffic crossing a key segment
+D) Inside the application server's operating system
+Correct: C
+Explanation: A NIDS requires visibility into network traffic, achieved by mirroring traffic to it via a network tap or switch SPAN port. Placement at a key boundary (e.g., between internet and internal network, or at a DMZ boundary) provides maximum visibility. Loopback and OS-level placement are host-based approaches.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A stateful firewall differs from a packet filter firewall in that it:
+A) Operates at Layer 7 and inspects application payloads
+B) Tracks the state of network connections and allows return traffic automatically
+C) Requires a proxy to intercept all connections
+D) Can only filter traffic based on IP address ranges
+Correct: B
+Explanation: A stateful firewall maintains a connection state table, tracking TCP/UDP sessions. Return traffic for established connections is automatically permitted without needing explicit rules. A packet filter evaluates each packet independently. Layer 7 inspection is characteristic of next-generation or application firewalls, not stateful firewalls.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which type of firewall provides the DEEPEST inspection of application traffic, including the ability to identify and block specific application content?
+A) Packet filter
+B) Stateful inspection firewall
+C) Next-generation firewall (NGFW)
+D) Circuit-level gateway
+Correct: C
+Explanation: A next-generation firewall (NGFW) combines stateful inspection with deep packet inspection (DPI), application awareness, user identity tracking, and integrated IPS. Circuit-level gateways verify TCP handshakes without inspecting content. Packet filters and stateful firewalls do not inspect application-layer content.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: SRTP is used to provide confidentiality and authentication for which type of traffic?
+A) Web application sessions
+B) Real-time voice and video communications
+C) Encrypted file transfers
+D) LDAP directory queries
+Correct: B
+Explanation: SRTP (Secure Real-time Transport Protocol) provides encryption, message authentication, and replay protection for RTP streams — the protocol used to carry voice and video in VoIP and video conferencing. It is not used for web sessions (TLS handles those), file transfers, or directory queries.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A security engineer needs to ensure that email messages are encrypted and digitally signed end-to-end between senders and recipients. Which protocol achieves this?
+A) TLS
+B) DKIM
+C) S/MIME
+D) STARTTLS
+Correct: C
+Explanation: S/MIME (Secure/Multipurpose Internet Mail Extensions) provides end-to-end encryption and digital signing of email content using public key certificates. TLS and STARTTLS protect the SMTP transport session between mail servers but not the message content itself. DKIM signs email headers to verify the sending domain, not message content.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: An organisation wants to secure LDAP communications between its application servers and Active Directory. Which configuration achieves this?
+A) Enable SNMPv3 on the domain controllers
+B) Configure LDAPS (LDAP over SSL/TLS) on port 636
+C) Enable Kerberos authentication on port 389
+D) Use SSH tunnelling for all LDAP queries
+Correct: B
+Explanation: LDAPS wraps LDAP traffic in SSL/TLS, encrypting directory queries and responses including credentials. It operates on TCP port 636 by default. Standard LDAP on port 389 transmits credentials in plaintext. Kerberos handles authentication tickets but does not encrypt the LDAP channel itself.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which VPN protocol provides both authentication and encryption at the IP layer and operates in either transport or tunnel mode?
+A) SSL/TLS VPN
+B) PPTP
+C) IPSec
+D) GRE
+Correct: C
+Explanation: IPSec operates at Layer 3 and provides authentication (AH) and encryption (ESP) in either transport mode (protecting the payload) or tunnel mode (encapsulating the entire IP packet). PPTP is deprecated due to weak encryption. SSL/TLS VPNs operate at Layer 5/7. GRE provides tunnelling without built-in encryption or authentication.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: An administrator notices that an unknown device has connected to a switch port and is sending traffic on the internal network. Which port-level control would have PREVENTED this access?
+A) VLAN tagging
+B) 802.1X port-based Network Access Control
+C) Spanning Tree Protocol
+D) Link aggregation
+Correct: B
+Explanation: 802.1X (NAC) requires devices to authenticate before being granted network access at the switch port level. Until authentication succeeds, the port remains in an unauthorised state, blocking unknown devices. VLAN tagging segments authorised traffic but does not prevent an unauthorised device from connecting. STP prevents loops; link aggregation bundles ports.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A forward proxy server provides security benefit by:
+A) Terminating inbound connections from external clients on behalf of internal servers
+B) Filtering outbound user requests, providing content inspection and internet access control
+C) Distributing inbound traffic across multiple web servers
+D) Providing redundant routing paths between autonomous systems
+Correct: B
+Explanation: A forward proxy sits between internal users and the internet, intercepting and filtering outbound requests. It enables URL filtering, SSL inspection, and user activity logging. A reverse proxy sits in front of servers and handles inbound connections. Load balancers distribute traffic; routing protocols handle path selection.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following BEST describes the security benefit of placing a load balancer in front of web servers?
+A) It encrypts all traffic between clients and servers
+B) It hides the real IP addresses and topology of backend servers
+C) It performs intrusion detection on HTTP traffic
+D) It enforces multi-factor authentication for all sessions
+Correct: B
+Explanation: A load balancer (especially a reverse proxy load balancer) conceals the actual IP addresses and architecture of backend servers from external clients, reducing the attack surface. It does not inherently encrypt traffic (that requires TLS configuration), perform IDS, or enforce MFA.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: An organisation is implementing SD-WAN to connect branch offices. Which security capability does SD-WAN provide that traditional WAN does not?
+A) Physical cable redundancy between branch locations
+B) Centralised policy-based traffic steering with integrated encryption across WAN links
+C) Automatic certificate rotation for all connected devices
+D) Hardware-enforced network segmentation at each branch
+Correct: B
+Explanation: SD-WAN provides centralised management of WAN policies with dynamic traffic steering based on application requirements, and can integrate encryption (IPSec) across commodity internet links. Traditional WAN relies on static MPLS circuits without built-in application-awareness. Physical redundancy and hardware segmentation are not inherent SD-WAN capabilities.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A security architect is designing network zones. Which zone should contain servers that must be accessible from both the internet and the internal network?
+A) Intranet zone
+B) DMZ (demilitarised zone)
+C) Air-gapped zone
+D) Management VLAN
+Correct: B
+Explanation: The DMZ is a network segment between the internet and the internal network, designed for servers that need to be accessible externally (e.g., web servers, email gateways). Firewalls on both sides of the DMZ control traffic flow. An air-gapped zone has no external connectivity; a management VLAN is for device administration; an intranet zone is internal only.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: A healthcare network connects medical imaging devices to the clinical network. These devices run outdated Windows XP and cannot be patched. What is the BEST security control?
+A) Deploy endpoint antivirus on each imaging device
+B) Place the devices on an isolated VLAN with firewall rules permitting only required clinical traffic
+C) Require all imaging devices to authenticate via 802.1X
+D) Enable host-based firewalls on each imaging device
+Correct: B
+Explanation: When legacy devices cannot be patched or support endpoint security software, network segmentation with strict firewall rules is the appropriate compensating control. Isolating them in a dedicated VLAN limits lateral movement if they are compromised. 802.1X and host firewalls may not be supported by legacy medical devices running Windows XP.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following is the PRIMARY security function of a host-based intrusion prevention system (HIPS)?
+A) Monitoring network traffic between hosts for anomalies
+B) Blocking malicious activity on an individual endpoint by analysing system calls and process behaviour
+C) Filtering inbound email for phishing content
+D) Providing centralised log collection from multiple endpoints
+Correct: B
+Explanation: A HIPS operates on an individual endpoint, monitoring and intercepting system calls, process behaviour, and file system changes to block malicious activity in real time. It differs from a NIPS (network-based), which analyses traffic between hosts. HIPS is not responsible for email filtering or centralised log collection.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: FTPS differs from SFTP in that FTPS:
+A) Is based on the SSH protocol
+B) Uses a completely different transport than standard FTP
+C) Adds SSL/TLS encryption to the traditional FTP protocol
+D) Operates exclusively on port 22
+Correct: C
+Explanation: FTPS (FTP Secure) extends the existing FTP protocol by adding SSL/TLS encryption, operating on ports 990 (implicit) or 21 (explicit). SFTP, despite the similar name, is a completely separate protocol built on SSH that operates on port 22. FTPS still uses FTP's multi-channel design (control and data channels), which creates firewall complexity.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: Users in a financial institution are connecting to internal applications via a VPN, but security monitoring shows that personal browsing traffic is also routed through the corporate network. Which VPN configuration change reduces this risk?
+A) Switch from IPSec to SSL VPN
+B) Enable split tunnelling to route only corporate traffic through the VPN
+C) Implement full-tunnel VPN to increase visibility
+D) Deploy a NIDS at the VPN concentrator
+Correct: B
+Explanation: Split tunnelling routes only corporate-bound traffic through the VPN tunnel, while internet traffic goes directly to the internet. This reduces bandwidth consumption and the risk of internet threats entering the corporate network through the VPN. Full-tunnel VPN is the CURRENT configuration being described as a problem — it routes all traffic through the corporate network.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which placement of a sensor in a network architecture provides data about threats that have already bypassed the perimeter firewall?
+A) Outside the perimeter firewall, facing the internet
+B) Inside the internal network segment, east-west between hosts
+C) On the ISP uplink before the perimeter router
+D) On the management VLAN only
+Correct: B
+Explanation: Sensors placed inside the internal network (east-west traffic) detect threats that have already passed through the perimeter — including lateral movement from a compromised internal host. Perimeter-facing sensors detect inbound threats but cannot see post-breach activity. Management VLAN monitoring is too narrow in scope.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which data classification label is MOST appropriate for information that, if disclosed, would cause serious harm to national security?
+A) Confidential
+B) Sensitive
+C) Restricted
+D) Top Secret
+Correct: D
+Explanation: In government classification schemes, Top Secret applies to information whose disclosure could cause exceptionally grave damage to national security. Confidential and Secret have lower damage thresholds. In commercial contexts, Restricted typically refers to the most sensitive internal information, but Top Secret is the highest formal government classification.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A company's customer database contains names, email addresses, and Social Security numbers. The Social Security numbers are MOST accurately classified as:
+A) Trade secret
+B) Intellectual property
+C) Personally Identifiable Information (PII)
+D) Legal hold data
+Correct: C
+Explanation: Social Security numbers combined with names constitute PII — information that can identify an individual. PII is subject to regulations such as GDPR and various US state privacy laws. Trade secrets and intellectual property refer to business-sensitive technical or commercial information. Legal hold data is information preserved for potential litigation.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A hospital's electronic health records contain patient diagnoses, treatment plans, and prescription history. This data is classified as:
+A) PII only
+B) Protected Health Information (PHI)
+C) Confidential trade secret
+D) Regulated financial data
+Correct: B
+Explanation: PHI (Protected Health Information) under HIPAA encompasses health information linked to an individual — including diagnoses, treatment, and prescriptions. While PHI can overlap with PII, the HIPAA-specific classification is PHI, which carries its own regulatory requirements for protection and breach notification.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Data sovereignty refers to:
+A) The encryption standard applied to data at rest in cloud storage
+B) The principle that data is subject to the laws of the country where it is stored or processed
+C) An organisation's ownership rights over customer-generated data
+D) The classification level assigned to government data
+Correct: B
+Explanation: Data sovereignty means that data stored or processed in a specific country is subject to that country's laws — including surveillance, disclosure requirements, and privacy regulations. This is a critical consideration when selecting cloud regions. It is not an encryption concept, an ownership concept, or a classification level.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which data protection method replaces sensitive data with a non-sensitive placeholder that maps back to the original value via a secure lookup table?
+A) Encryption
+B) Hashing
+C) Masking
+D) Tokenisation
+Correct: D
+Explanation: Tokenisation substitutes a sensitive value (e.g., a credit card number) with a token — a randomly generated non-sensitive value — stored in a secure token vault. The original value can be retrieved by authorised processes using the vault. Encryption produces a ciphertext that can be decrypted with a key. Hashing is one-way. Masking partially obscures data (e.g., showing only the last four digits).
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A development team requests a copy of the production customer database for testing. Which technique BEST protects customer data while preserving the database's utility for testing?
+A) Provide the full production database with a non-disclosure agreement
+B) Encrypt the entire database and provide the decryption key to the development team
+C) Apply data masking to replace sensitive fields with realistic but fictitious values
+D) Delete all records before exporting the database
+Correct: C
+Explanation: Data masking replaces sensitive values with realistic, structurally valid but fictitious data, preserving the format needed for testing while protecting actual customer information. Providing the production database with an NDA does not technically protect the data. Encryption still exposes data once the key is shared. Deleting records defeats the purpose of testing with realistic data.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following correctly describes data in use?
+A) Data stored on a hard drive or SSD in an encrypted volume
+B) Data being transmitted across a network between two systems
+C) Data actively being processed in memory by an application
+D) Data archived to offline tape storage
+Correct: C
+Explanation: Data in use refers to data actively being processed in RAM or CPU registers. It is the most difficult state to protect because it is necessarily in plaintext during processing. Data at rest is on storage media; data in transit is crossing a network. Emerging technologies like confidential computing aim to protect data in use through hardware-based trusted execution environments.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Hashing is used to verify data integrity rather than provide confidentiality because:
+A) Hash functions use symmetric encryption keys
+B) Hash functions are one-way — the original data cannot be derived from the hash value
+C) Hash outputs are always the same length as the input
+D) Hash functions require a public/private key pair
+Correct: B
+Explanation: Cryptographic hash functions are one-way transforms — given a hash value, it is computationally infeasible to reconstruct the original input. This makes hashing useful for integrity verification (e.g., verifying a downloaded file) but not for confidentiality, since you cannot recover the data from the hash. Hashing does not use encryption keys or key pairs.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A legal team places a hold on all emails related to a pending lawsuit. The IT team must ensure this data is:
+A) Encrypted with a customer-managed key and archived offsite
+B) Classified as public and moved to a shared repository
+C) Preserved in its original, unaltered form for the duration of the legal proceeding
+D) Deleted from production systems and moved to cold storage
+Correct: C
+Explanation: Legal hold requires that data be preserved in its original, unaltered state for potential use in litigation or regulatory investigation. Data must not be deleted, modified, or overwritten during the hold period. Encryption for archiving is acceptable, but preservation of original content and metadata integrity are the primary requirements.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which method BEST protects data confidentiality when a hard drive containing sensitive data must be decommissioned?
+A) Deleting all files and formatting the drive
+B) Applying data masking to all files on the drive
+C) Cryptographic erasure by destroying the encryption key for a pre-encrypted drive
+D) Overwriting the drive once with zeros
+Correct: C
+Explanation: Cryptographic erasure (destroying the encryption key for a fully encrypted drive) renders all data unrecoverable instantly and completely, and is the fastest and most effective method for modern self-encrypting drives. Simple deletion and formatting do not remove data from drive platters or flash memory. A single overwrite pass may not be effective on SSDs due to wear-levelling.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A company wants to restrict access to customer data so that employees in the US office cannot access records stored in EU data centres due to regulatory requirements. Which concept does this implement?
+A) Data masking
+B) Geolocation-based access restrictions
+C) Data tokenisation
+D) Obfuscation
+Correct: B
+Explanation: Geolocation-based access restrictions use the physical or network location of a user or system to enforce data access policies — for example, blocking access to EU personal data from non-EU locations to comply with GDPR data localisation requirements. Masking and tokenisation alter the data itself; obfuscation makes data harder to understand.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following data types is MOST likely to be considered a trade secret?
+A) A customer's home address
+B) The proprietary formula for a company's flagship product
+C) An employee's medical records
+D) A publicly filed patent application
+Correct: B
+Explanation: A trade secret is confidential business information that provides a competitive advantage — such as a proprietary formula, manufacturing process, or algorithm. Customer addresses are PII. Medical records are PHI. A filed patent application is, by definition, public information.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Data segmentation as a protection strategy involves:
+A) Encrypting data during transmission between network segments
+B) Dividing data into separate repositories accessible only to authorised roles
+C) Splitting a cryptographic key into multiple parts held by different custodians
+D) Backing up data to multiple geographic locations
+Correct: B
+Explanation: Data segmentation separates data into distinct repositories or systems, each accessible only to those with a legitimate need. This limits the blast radius of a data breach — an attacker who accesses one segment cannot automatically access others. Key splitting describes secret sharing schemes. Geographic distribution relates to resilience, not segmentation.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: A payment processor stores credit card numbers in its database. To comply with PCI DSS, the processor replaces stored card numbers with tokens and stores the mapping in a separate, hardened vault. An application breach exposes the token database. What is the impact?
+A) All credit card numbers are compromised
+B) The tokens are useless to attackers without access to the vault
+C) The encryption keys for the card numbers are exposed
+D) All customer PII is exposed
+Correct: B
+Explanation: Tokens are meaningless random values without the corresponding lookup in the secure vault. If an attacker obtains tokens but not the vault, they have no usable payment data. This is the core security benefit of tokenisation: the token database alone has no value. Card numbers are not stored in the token database; they remain protected in the vault.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which classification level is typically assigned to data that is approved for public release, such as marketing materials?
+A) Restricted
+B) Confidential
+C) Public
+D) Sensitive
+Correct: C
+Explanation: The Public classification applies to data explicitly approved for external distribution — marketing materials, press releases, and public-facing web content. Restricted, Confidential, and Sensitive are all non-public classification levels with various degrees of access control requirements.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: An organisation wants to prevent sensitive data from being stored in a cloud provider's region outside of the European Union. Which strategy DIRECTLY addresses this?
+A) Implementing data loss prevention (DLP) policies
+B) Configuring geographic restrictions in the cloud provider's policy settings
+C) Encrypting all data before uploading to the cloud
+D) Using a private cloud instead of a public cloud
+Correct: B
+Explanation: Cloud providers (AWS, Azure, GCP) offer policy controls that restrict resource creation to specific geographic regions. Configuring these controls directly prevents data from being stored outside approved regions, addressing data sovereignty requirements. DLP prevents data exfiltration but not regional placement. Encryption protects data but does not control where it resides.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: An analyst finds that a database column labelled "ssn" contains values formatted as "XXX-XX-6789" where only the last four digits are visible. Which data protection technique is in use?
+A) Tokenisation
+B) Encryption
+C) Masking
+D) Hashing
+Correct: C
+Explanation: Partial obscuring of a sensitive value — revealing only the last four digits and replacing the rest with X characters — is data masking. Unlike tokenisation, a masked value cannot be reversed to the original. Unlike hashing, the format of the original data is preserved. The value is still human-readable but the sensitive portion is hidden.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Obfuscation as a data protection method differs from encryption in that:
+A) Obfuscation uses a key that can be used to reverse the transformation
+B) Obfuscation makes data harder to understand without a guarantee that it cannot be reversed
+C) Obfuscation is always stronger than encryption
+D) Obfuscation produces a fixed-length output regardless of input size
+Correct: B
+Explanation: Obfuscation deliberately makes data confusing or difficult to understand (e.g., code obfuscation, variable renaming) but does not provide cryptographic guarantees of confidentiality. An attacker with sufficient time and skill may reverse it. Encryption with a strong key provides mathematical guarantees that data cannot be read without the key. Obfuscation does not use a formal key.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following represents data at rest?
+A) A file being copied over an SFTP session
+B) An email message in transit between mail servers
+C) A database stored on an encrypted SSD in a server room
+D) A video streaming between a CDN and a user's browser
+Correct: C
+Explanation: Data at rest is data stored on a medium — hard drives, SSDs, tapes, or cloud storage — that is not actively being transmitted or processed. Files being copied via SFTP and email in transit are data in transit. Streaming video is also data in transit. Encryption of stored data (e.g., an encrypted SSD) is a key protection for data at rest.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A company's intellectual property includes source code, product designs, and proprietary algorithms. Which data classification BEST applies to this category of information?
+A) Public
+B) Restricted
+C) Regulated
+D) Critical
+Correct: D
+Explanation: Intellectual property that forms the competitive foundation of a business — source code, trade secrets, product designs — is typically classified as Critical or Highly Confidential, reflecting that its loss or exposure would cause severe business harm. Regulated data refers to data subject to external regulatory requirements (PII, PHI). Public and Restricted are inappropriate for core IP.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Permission restrictions as a data protection control primarily reduce risk by:
+A) Encrypting all data that is accessed by unauthorised users
+B) Ensuring only users with a legitimate business need can access specific datasets
+C) Masking sensitive fields in all database queries automatically
+D) Converting sensitive data to tokens before it reaches user interfaces
+Correct: B
+Explanation: Permission restrictions implement least privilege for data access — limiting each user, role, or system to only the data it needs for its function. This reduces the impact of credential theft, insider threats, and accidental disclosure. It is an access control, not an encryption, masking, or tokenisation control.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which site recovery option provides the FASTEST recovery time because it is fully operational with up-to-date data at all times?
+A) Cold site
+B) Warm site
+C) Hot site
+D) Mobile site
+Correct: C
+Explanation: A hot site is a fully operational duplicate of the production environment, with real-time or near-real-time data replication. It can take over within minutes to hours of a failure. A warm site has hardware but requires data restoration and configuration. A cold site is an empty facility requiring full setup and data restore, with the longest recovery time.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: An organisation's RTO is 4 hours and its RPO is 1 hour. Which backup strategy BEST satisfies the RPO requirement?
+A) Daily full backups with weekly off-site tape rotation
+B) Continuous data replication with snapshots every 30 minutes
+C) Weekly full backups with monthly offsite transfer
+D) Cold site with manual data restoration from tape
+Correct: B
+Explanation: The RPO of 1 hour means no more than 1 hour of data can be lost. Continuous replication with 30-minute snapshots satisfies this — the maximum data loss is 30 minutes. Daily backups could result in up to 24 hours of data loss. Weekly backups are far outside the 1-hour RPO. A cold site addresses RTO, not RPO.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following BEST describes the purpose of a UPS (Uninterruptible Power Supply) in a resilience architecture?
+A) To provide long-term backup power during extended outages lasting days
+B) To condition power and provide immediate battery backup during brief outages or until a generator starts
+C) To distribute power from a generator across server racks evenly
+D) To prevent voltage spikes from reaching the data centre's cooling systems
+Correct: B
+Explanation: A UPS provides immediate battery-backed power to bridge the gap between a power failure and generator startup (typically 10–30 seconds), and conditions power to protect against sags, surges, and noise. Generators provide sustained power but have a startup delay. PDUs distribute power from a UPS or generator to rack equipment. Surge protectors handle voltage spikes.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: High availability (HA) is achieved primarily through:
+A) Increasing the processing speed of individual servers
+B) Eliminating single points of failure through redundancy and failover mechanisms
+C) Encrypting all data in transit to prevent service disruptions from attacks
+D) Performing daily backups to offsite storage
+Correct: B
+Explanation: High availability focuses on eliminating single points of failure through redundant components, clustering, and automatic failover. If one component fails, another takes over without (or with minimal) service interruption. Backups support recovery but do not prevent service disruption. Encryption addresses confidentiality, not availability.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A tabletop exercise differs from a full failover test in that a tabletop exercise:
+A) Involves actually switching production traffic to the disaster recovery site
+B) Is a discussion-based walkthrough of the disaster recovery plan without activating systems
+C) Tests backup restoration time under real production load
+D) Requires all employees to physically relocate to the alternate site
+Correct: B
+Explanation: A tabletop exercise is a discussion-based scenario review where participants talk through their response to a hypothetical disaster without activating systems or relocating. It identifies gaps in plans and trains personnel at low cost. A failover test actually redirects traffic to the DR site. Simulation and parallel processing tests involve activating DR systems to various degrees.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which backup strategy provides the fastest restore time while minimising storage requirements?
+A) Multiple full backups taken daily
+B) One full backup plus incremental backups
+C) One full backup plus differential backups
+D) Incremental-only backups without a full backup baseline
+Correct: C
+Explanation: Differential backups back up all changes since the last full backup. Restore requires only two sets: the last full backup and the latest differential. Incremental backups are smaller but require the full backup plus every incremental set in sequence to restore, increasing restore time. Full backups daily consume the most storage.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Geographic dispersion of backup sites mitigates which PRIMARY risk?
+A) Ransomware encrypting locally stored backup files
+B) A regional disaster (flood, earthquake, hurricane) destroying both production and backup simultaneously
+C) Backup data being accessed by unauthorised internal users
+D) Backup media degrading faster than expected
+Correct: B
+Explanation: Geographic dispersion ensures that a regional disaster cannot destroy both production and backup data simultaneously. If both sites are in the same city, a single event can affect both. Ransomware encrypting local backups is mitigated by offsite storage and air-gapping, but geographic dispersion specifically addresses regional disasters.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following BEST describes the purpose of journaling in a file system or database from a resilience perspective?
+A) Recording user activity for security audit purposes
+B) Maintaining a sequential log of changes so the system can recover to a consistent state after a crash
+C) Encrypting all write operations before committing to disk
+D) Compressing data blocks to increase available storage capacity
+Correct: B
+Explanation: Journaling maintains a write-ahead log of pending changes. If a system crashes mid-write, the journal allows recovery to a consistent state by replaying or rolling back incomplete transactions. This provides crash consistency — a critical resilience property distinct from security auditing or encryption.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Multi-cloud strategy improves resilience by:
+A) Reducing the cost of cloud services through vendor negotiation leverage
+B) Ensuring workloads can continue if a single cloud provider experiences an outage
+C) Simplifying security management by consolidating vendors
+D) Automatically replicating data between providers in real time without configuration
+Correct: B
+Explanation: A multi-cloud architecture distributes workloads across multiple cloud providers so that a single provider's outage does not bring down all operations. It increases resilience at the cost of added complexity in security management, monitoring, and data governance — making C incorrect. Automatic replication between providers requires deliberate configuration.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A Power Distribution Unit (PDU) in a data centre primarily serves to:
+A) Provide battery backup power during outages
+B) Generate power from diesel fuel during extended outages
+C) Distribute and monitor electrical power from a UPS or generator to rack-mounted equipment
+D) Condition raw utility power to protect against voltage fluctuations
+Correct: C
+Explanation: A PDU distributes power from a source (generator or UPS) to individual servers and devices in a rack, often with metering to monitor power consumption per device. A UPS provides battery backup. A generator provides extended backup power. Power conditioning is typically handled by the UPS.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A simulation test of a disaster recovery plan involves:
+A) A verbal walkthrough of the plan without activating any systems
+B) Partially activating DR systems to test specific components under realistic conditions
+C) Permanently migrating production to the DR site
+D) Testing backup integrity by checking checksums only
+Correct: B
+Explanation: A simulation (also called a functional exercise or structured walkthrough with system activation) partially or fully activates DR components to test them under realistic but controlled conditions. It goes further than a tabletop exercise (discussion-only) but may not redirect live production traffic. Parallel processing tests run DR and production simultaneously.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Snapshot-based backups are MOST effective when used to:
+A) Replace full backups entirely in a long-term retention strategy
+B) Capture point-in-time copies of a system or volume for rapid recovery from recent failures
+C) Archive data permanently to offline tape storage
+D) Provide encrypted offsite backups for regulatory compliance
+Correct: B
+Explanation: Snapshots capture the state of a system or volume at a specific point in time and can be used to rapidly roll back to that state — ideal for recovering from accidental changes, ransomware, or application errors that occurred recently. They are not suitable as standalone long-term retention solutions, as they typically reside on the same storage system as production data.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following BEST describes the purpose of capacity planning in security architecture resilience?
+A) Ensuring sufficient cryptographic key length for future-proofing encryption
+B) Ensuring that systems have adequate resources to maintain operations under peak load and during recovery events
+C) Planning the number of security analysts needed for a SOC
+D) Calculating the number of backup tapes required per year
+Correct: B
+Explanation: Capacity planning ensures that infrastructure (compute, storage, network bandwidth) has sufficient headroom to handle peak loads and continue operations during failure scenarios — for example, ensuring a DR site can handle full production load if the primary site fails. It is a resilience function, not purely a security or HR function.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A company runs identical servers in an active-active cluster configuration. This provides:
+A) Redundancy where only one server handles traffic at a time
+B) Load sharing across all nodes with automatic failover if any node fails
+C) A passive standby that activates only when the primary fails
+D) Backup storage replication between nodes
+Correct: B
+Explanation: Active-active clustering means all nodes simultaneously handle traffic, sharing the load. If one node fails, the others absorb its traffic without interruption. Active-passive (standby) clustering keeps one node idle until the primary fails. Active-active provides better utilisation and faster failover but requires session synchronisation between nodes.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Platform diversity in a resilience strategy means:
+A) Supporting multiple user device types (iOS, Android, Windows)
+B) Using different vendor implementations of critical systems to reduce the risk of a common vulnerability affecting all systems simultaneously
+C) Deploying applications in multiple programming languages
+D) Purchasing hardware from multiple vendors to get better pricing
+Correct: B
+Explanation: Platform diversity means running different OS versions, hardware vendors, or software implementations for critical functions. If all systems run the same OS and a critical vulnerability is discovered, all are affected simultaneously. Diversity ensures that a single vulnerability or failure mode does not compromise all redundant systems at once.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Replication differs from traditional backup in that replication:
+A) Creates compressed archive files of data at scheduled intervals
+B) Continuously or near-continuously copies data to a secondary location, minimising data loss
+C) Stores backup data on write-once media for compliance
+D) Requires manual initiation by a system administrator
+Correct: B
+Explanation: Replication continuously or near-continuously copies data changes to a secondary system or site, providing very low RPO (seconds to minutes). Traditional backups are periodic (hourly, daily) and can result in hours of data loss. Replication also propagates ransomware or corruption if not carefully managed — a key tradeoff versus isolated backups.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: A company performs a parallel processing test of its disaster recovery plan. Which statement BEST describes what occurs?
+A) The production environment is shut down and traffic is routed entirely to the DR site
+B) The DR environment is activated alongside production, and both systems run simultaneously to verify DR capability
+C) Only network connectivity to the DR site is tested without activating any servers
+D) A subset of users is permanently migrated to the DR site
+Correct: B
+Explanation: In a parallel processing (parallel operation) test, the DR environment is brought online simultaneously with production. Actual workloads or representative test transactions are processed in both environments, and results are compared. Production continues uninterrupted, making this a lower-risk test than a full failover. It verifies DR functionality without impacting live users.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following represents the BEST practice for backup encryption?
+A) Encrypt backups only when storing them offsite
+B) Use the same encryption key for backups as for production data to simplify key management
+C) Encrypt all backups and store encryption keys separately from the backup media
+D) Encrypt only full backups; incremental backups do not require encryption
+Correct: C
+Explanation: All backups should be encrypted, and the encryption keys must be stored separately from the backup media. If keys are stored with the backups (e.g., on the same tape), theft of the media grants access to both. Using the same keys as production creates a single point of failure. All backup types — full, incremental, differential — should be encrypted.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Continuity of Operations Planning (COOP) primarily focuses on:
+A) Ensuring that critical business functions continue during and after a disruptive event
+B) Maintaining IT infrastructure uptime above 99.99%
+C) Training IT staff on disaster recovery procedures
+D) Securing backup media from physical theft
+Correct: A
+Explanation: COOP is a broader business continuity concept that ensures essential functions — not just IT systems — continue during disruptions. This includes personnel, alternate facilities, communications, and essential records. IT disaster recovery is a subset of COOP. COOP covers the entire organisation's ability to operate, not just technical systems.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A warm site recovery facility is BEST characterised as:
+A) A facility with no existing infrastructure, requiring full build-out before use
+B) A fully operational duplicate of the production environment with real-time data replication
+C) A facility with pre-installed hardware and connectivity, requiring data restoration before going live
+D) A mobile trailer with generators and satellite connectivity for temporary use
+Correct: C
+Explanation: A warm site has pre-installed hardware, networking, and power, but requires restoration of recent backups before production can resume. Recovery time is typically hours to days. A hot site is immediately operational. A cold site requires full hardware and software installation. A warm site balances cost and recovery time between hot and cold options.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A scenario: A company migrates from a traditional three-tier web application to a container-based microservices architecture. The security team is concerned about visibility. Which challenge is MOST likely to increase?
+A) Physical hardware vulnerability management
+B) East-west traffic inspection between containers
+C) Managing SSL certificates for the external load balancer
+D) Applying operating system patches to the database tier
+Correct: B
+Explanation: Microservices dramatically increase the volume of internal (east-west) service-to-service traffic. Without dedicated tools (service meshes, container network policies), this traffic is difficult to inspect and monitor. Traditional architectures have far less internal traffic to analyse. Certificate management and OS patching are challenges but not specific increases from microservices migration.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following is a security advantage of a hybrid cloud model over a fully public cloud model?
+A) The organisation can keep the most sensitive workloads on private infrastructure under its direct control
+B) The organisation eliminates all shared-tenancy risks
+C) The cloud provider assumes full responsibility for all security controls
+D) All data is automatically encrypted by the private infrastructure component
+Correct: A
+Explanation: A hybrid cloud allows organisations to keep sensitive workloads (e.g., regulated data, critical IP) on private infrastructure while using public cloud for less sensitive workloads. This does not eliminate shared-tenancy risk for the public cloud portion. The shared responsibility model still applies. Encryption is not automatic in either environment.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following actions MOST effectively reduces the attack surface of a newly deployed server?
+A) Enabling all available services to ensure no user requests are blocked
+B) Disabling or removing all services, protocols, and accounts not required for the server's function
+C) Installing a host-based IDS alongside all default services
+D) Connecting the server to all VLANs so it can communicate with any system
+Correct: B
+Explanation: Reducing attack surface means removing everything that is not needed. Unnecessary services, open ports, and accounts each represent potential entry points. A host-based IDS may detect attacks but does not reduce the number of attack vectors. Installing all services maximises attack surface. VLAN connectivity should be restricted to required segments only.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: A penetration tester discovers that the company's web application firewall is deployed in monitoring mode rather than prevention mode. What is the PRIMARY security implication?
+A) The WAF will block more legitimate traffic than in prevention mode
+B) Attacks will be logged but not blocked, providing no active protection
+C) The WAF will forward attack traffic to the intrusion detection system for blocking
+D) The WAF will automatically switch to prevention mode after detecting three attacks
+Correct: B
+Explanation: In monitoring (detection) mode, a WAF logs traffic matching attack signatures but does not block it. This provides visibility but no active defence. Prevention mode blocks matching traffic. Monitor mode is commonly used during initial deployment to tune rules before enabling blocking. It should not be left in monitor mode in production against active threats.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which protocol provides encrypted and authenticated file transfer as an extension of SSH?
+A) FTPS
+B) TFTP
+C) SFTP
+D) SCP only
+Correct: C
+Explanation: SFTP (SSH File Transfer Protocol) is a full-featured file transfer protocol built on SSH, providing encryption and authentication for all file transfer operations. It uses a single TCP connection (port 22), simplifying firewall rules. FTPS extends FTP with TLS but is a different protocol. TFTP has no authentication or encryption. SCP also uses SSH but is more limited in functionality than SFTP.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: An e-commerce company stores customer credit card data. A security review finds that the data is stored in plaintext in the database. Which combination of controls BEST protects this data to meet PCI DSS requirements?
+A) Apply data masking in the application layer and store plaintext in the database
+B) Encrypt the credit card data at rest using AES-256 and implement strict access controls on the decryption keys
+C) Hash the credit card numbers so they can be used for future transactions
+D) Store only the card expiry date and mask the card number in application logs
+Correct: B
+Explanation: PCI DSS requires that stored cardholder data be protected using strong cryptography (AES-256 or equivalent). Access to decryption keys must be strictly controlled. Hashing is inappropriate because credit card numbers must be recoverable for transaction processing. Masking in the application layer does not protect the database. Storing only partial data does not meet full PCI DSS cardholder data protection requirements.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which data state presents the GREATEST challenge for traditional encryption solutions?
+A) Data at rest on encrypted SSDs
+B) Data in transit protected by TLS
+C) Data in use being processed by an application in memory
+D) Data archived on encrypted tape
+Correct: C
+Explanation: Data in use is necessarily decrypted in memory for processing, meaning traditional encryption does not protect it in this state. Technologies such as homomorphic encryption and hardware-based trusted execution environments (e.g., Intel SGX) address this challenge, but they are not yet widely deployed. Data at rest and in transit are well-addressed by AES and TLS respectively.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: Following a ransomware attack, a company discovers that its online backups were also encrypted by the malware. Which backup practice would have PREVENTED this outcome?
+A) Increasing the frequency of incremental backups
+B) Storing an air-gapped or offline backup copy that cannot be reached over the network
+C) Encrypting backups with the same key as production data
+D) Replicating backups to a second online storage pool
+Correct: B
+Explanation: Ransomware that has network access can encrypt or delete accessible backup shares. An air-gapped or offline backup (physically disconnected or write-protected) cannot be reached by malware traversing the network. The 3-2-1 backup rule — three copies, two different media types, one offsite — addresses this. Increasing backup frequency does not protect against encryption of accessible backups.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A company uses a centralised architecture where all security policy decisions are made by a single system. What is the PRIMARY security risk of this approach?
+A) Policies are inconsistently applied across the network
+B) The central policy system becomes a high-value single point of failure and compromise
+C) Network traffic must traverse multiple policy engines, increasing latency
+D) Individual systems can override central policies at runtime
+Correct: B
+Explanation: Centralised architectures concentrate risk: if the central policy system is compromised or fails, all systems dependent on it are affected. This makes the central system an extremely high-value target. Decentralised architectures distribute this risk. The latency concern applies to enforcement traversal, not centralised policy decisions, and is less critical than the security risk.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: A company's security team wants to ensure that all network management traffic (SSH, SNMP, syslog) is isolated from production user traffic. Which approach achieves this?
+A) Encrypting all management traffic with TLS
+B) Implementing a dedicated out-of-band management network or management VLAN with strict ACLs
+C) Requiring MFA for all management access
+D) Deploying a proxy server to handle all management connections
+Correct: B
+Explanation: A dedicated out-of-band management network (or management VLAN with ACLs) physically or logically separates management traffic from production traffic. Even if the production network is compromised, management interfaces remain isolated. Encryption protects confidentiality but doesn't prevent a compromised production host from reaching management interfaces. MFA is an access control, not a network segmentation control.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: A company operates globally and stores European user data in US-based servers to reduce latency. A European regulatory authority issues a ruling that personal data of EU residents must be stored within the EU. The company must address:
+A) Data sovereignty requirements
+B) Data classification requirements
+C) Data masking requirements
+D) Data retention requirements
+Correct: A
+Explanation: Data sovereignty dictates that data is subject to the laws of the jurisdiction where it is processed or stored. An EU regulatory requirement to store EU resident data within the EU is a data sovereignty compliance requirement. Data classification governs sensitivity levels; masking protects specific fields; retention governs how long data is kept.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: An organisation has a Recovery Time Objective (RTO) of 2 hours. This means:
+A) The organisation can afford to lose no more than 2 hours of data
+B) The system must be fully operational again within 2 hours of a disruption
+C) Backups must be performed every 2 hours
+D) A secondary site must be activated within 2 hours of a planned maintenance window
+Correct: B
+Explanation: RTO defines the maximum acceptable time for restoring a service after a disruption. An RTO of 2 hours means the system must be back online within 2 hours of the incident. RPO (Recovery Point Objective) defines the maximum acceptable data loss. RTO drives recovery infrastructure choices; RPO drives backup frequency choices.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: An analyst identifies that attackers are conducting DNS cache poisoning attacks against the organisation's recursive resolvers. Which protocol deployment BEST mitigates this threat?
+A) DNSSEC validation on the recursive resolver
+B) Deploying LDAPS for all directory queries
+C) Enabling STARTTLS on all mail servers
+D) Implementing SNMPv3 for network device management
+Correct: A
+Explanation: DNSSEC adds cryptographic signatures to DNS records. A resolver configured to validate DNSSEC signatures will reject forged or poisoned DNS responses, directly mitigating cache poisoning. LDAPS, STARTTLS, and SNMPv3 address different protocols and attack vectors — they do not protect DNS.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following BEST describes the security implication of using Infrastructure as Code templates stored in a public code repository?
+A) Templates in public repositories are automatically scanned by cloud providers for vulnerabilities
+B) Hardcoded credentials or sensitive configuration in templates become publicly exposed
+C) Public repositories encrypt all template content at rest by default
+D) Using public repositories eliminates the need for version control of IaC templates
+Correct: B
+Explanation: Storing IaC templates in public repositories risks exposing hardcoded secrets (API keys, passwords, connection strings) embedded in the templates. This is a common source of credential compromise. Developers should use secrets management tools (e.g., HashiCorp Vault, AWS Secrets Manager) rather than hardcoding values. Public repositories do not encrypt or scan content by default.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A data loss prevention (DLP) system detects that an employee is attempting to email a file containing credit card numbers to a personal email account. Which data state is being protected at the moment of detection?
+A) Data at rest
+B) Data in use
+C) Data in transit
+D) Data in archive
+Correct: C
+Explanation: At the moment of email transmission, the data is in transit — moving from the corporate email system to an external destination. DLP systems can inspect data at rest (files on endpoints or servers), in use (data being opened or modified), and in transit (email, web uploads, and other outbound channels). Email exfiltration is a transit-state protection scenario.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: An organisation's primary data centre loses power. The UPS provides 15 minutes of power, but the diesel generator fails to start. After 15 minutes, all systems go offline. Which resilience control was MISSING?
+A) Daily backup testing
+B) Generator load testing and regular maintenance to verify reliable startup
+C) Deployment of additional UPS units
+D) Implementation of a hot site
+Correct: B
+Explanation: Generator startup reliability depends on regular load testing and maintenance — a generator that has not been tested under load may fail when needed. The scenario describes a generator that fails to start, which regular testing and maintenance would have identified and resolved. Additional UPS units extend battery time but do not fix a failing generator.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: An organisation wants to prevent users from downloading malicious content from the internet while also providing detailed logs of web activity. Which control BEST achieves both goals?
+A) Deploying a host-based IPS on each endpoint
+B) Implementing an explicit web proxy with SSL inspection and URL filtering
+C) Enabling DNS-based content filtering on the perimeter router
+D) Configuring firewall rules to block known malicious IP addresses
+Correct: B
+Explanation: An explicit web proxy intercepts all HTTP/HTTPS traffic, enables SSL inspection (decrypting and re-encrypting HTTPS to inspect content), applies URL and content category filtering, and logs all web activity by user. A host-based IPS operates at the endpoint but does not provide centralised logging. DNS filtering blocks domains but not specific content, and cannot log full URLs. IP blocklists are reactive and incomplete.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A scenario: A critical water treatment facility connects its SCADA systems to a corporate network for remote monitoring. Security researchers identify that the SCADA protocol in use has no authentication. What is the MOST serious risk?
+A) Remote administrators will experience higher latency when monitoring the systems
+B) Unauthenticated commands could be sent to the SCADA system, potentially manipulating physical processes
+C) SCADA log files will be larger than expected due to additional network traffic
+D) Corporate users may accidentally access SCADA monitoring dashboards
+Correct: B
+Explanation: SCADA protocols like Modbus and DNP3 (in their base forms) have no authentication, meaning any device on the connected network can send commands. If the corporate network is compromised, an attacker could send unauthenticated commands that manipulate physical industrial processes — a safety and national security risk. This illustrates the critical importance of network segmentation for OT/ICS environments.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following backup frequency approaches BEST balances operational overhead with a 4-hour RPO?
+A) Weekly full backups only
+B) Automated backups every 2 hours with 30-day retention
+C) Manual backups performed once per business day
+D) Continuous replication with no scheduled backups
+Correct: B
+Explanation: A 4-hour RPO requires that no more than 4 hours of data be lost. Automated backups every 2 hours provide a comfortable margin. Weekly or daily backups would far exceed the 4-hour RPO. Continuous replication alone without scheduled backups means that corruption or ransomware propagates in real time — scheduled backups provide point-in-time recovery that replication alone cannot.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: A company collects personal data from EU residents for a mobile app. The legal team discovers that analytics data is being sent to a third-party service in the United States without user consent and without a data transfer agreement. This primarily violates:
+A) PCI DSS payment card data requirements
+B) GDPR requirements for lawful data transfer outside the EU
+C) HIPAA requirements for PHI handling
+D) SOC 2 Type II audit requirements
+Correct: B
+Explanation: GDPR restricts the transfer of EU resident personal data to third countries (outside the EU/EEA) unless specific safeguards are in place (e.g., Standard Contractual Clauses, adequacy decisions, or explicit user consent). Sending analytics data to a US third party without a transfer mechanism violates GDPR's Chapter V requirements. PCI DSS governs payment card data; HIPAA governs health data; SOC 2 is an audit framework.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: A security engineer is designing the network for a new branch office that will access corporate resources over the internet. The engineer must ensure that all branch traffic is encrypted and that split tunnelling is disabled. Which solution BEST meets these requirements?
+A) Site-to-site IPSec VPN with full-tunnel configuration
+B) SSL VPN with split tunnelling enabled for internal resources only
+C) MPLS circuit with no additional encryption
+D) SD-WAN with unencrypted internet breakout
+Correct: A
+Explanation: A site-to-site IPSec VPN with full-tunnel (no split tunnelling) encrypts all branch traffic and routes it through the corporate network, ensuring centralised security inspection. SSL VPN with split tunnelling would send non-corporate traffic directly to the internet, bypassing corporate controls. MPLS without encryption is plaintext. SD-WAN with unencrypted internet breakout does not meet the encryption requirement.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: An organisation's DR plan has never been tested. During an actual disaster, staff are unable to locate the most current backup tapes and are unsure of the restore procedure. Which testing method, if performed regularly, would MOST directly have prevented this situation?
+A) Tabletop exercise reviewing the DR plan document
+B) Full failover test activating the hot site
+C) Actual backup restoration tests verifying procedures, media, and recovery time
+D) Parallel processing test running DR and production simultaneously
+Correct: C
+Explanation: Regularly testing backup restoration procedures — actually restoring data and systems from backup media — validates that media is accessible, labelled correctly, and that staff understand the procedure. Tabletop exercises review plans conceptually but do not verify physical media or procedural muscle memory. Failover tests address site switchover, not backup media location or restore procedures.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: An organisation's e-commerce application experiences periodic traffic spikes during promotions that exceed its fixed server capacity, causing outages. Which architectural control BEST addresses both availability and security during these spikes?
+A) Deploy additional static servers and keep them idle between promotions
+B) Implement auto-scaling with a cloud-based load balancer and WAF to handle burst traffic securely
+C) Reduce the security scanning on web traffic during peak periods to improve performance
+D) Increase the timeout values on database connections to handle higher load
+Correct: B
+Explanation: Auto-scaling automatically provisions additional capacity during traffic spikes and scales down afterward, maintaining availability. A WAF ensures security controls remain in place during scale-out. Idle static servers are expensive and don't scale dynamically. Disabling security scanning during peak periods creates an attack window. Database timeout changes address symptoms, not capacity.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following BEST explains why a one-way hash cannot be used as a substitute for encryption when data confidentiality is required?
+A) Hashes are slower to compute than symmetric encryption
+B) A hash cannot be reversed to recover the original data, making it useless for confidentiality when data must be retrieved
+C) Hash outputs are too short to represent meaningful data
+D) Hashes require a secret key that must be shared between parties
+Correct: B
+Explanation: Hashing is a one-way function — the original data cannot be recovered from the hash. This is valuable for integrity verification but makes hashes completely unsuitable for confidentiality when the original data needs to be read. Encryption is reversible using a key. The computational speed comparison and key requirements are not the core reason hashing cannot substitute for encryption.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: An organisation implements a clustering solution where two database servers continuously synchronise data. If the primary server fails, the secondary automatically takes over without manual intervention. This describes:
+A) A warm standby with manual failover
+B) Active-passive clustering with automatic failover
+C) Active-active clustering with load sharing
+D) Geographic replication with cold standby
+Correct: B
+Explanation: Active-passive clustering has one active node handling all traffic and one passive standby continuously receiving synchronised data. When the active node fails, the passive node automatically promotes itself (automatic failover) without manual intervention. Active-active means both nodes handle traffic simultaneously. A warm standby typically requires manual activation.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A scenario: A development team stores application secrets (database passwords, API keys) directly in container environment variables. A security audit identifies this as a vulnerability. What is the RECOMMENDED remediation?
+A) Encrypt the environment variables using Base64 encoding
+B) Use a dedicated secrets management system (e.g., HashiCorp Vault, AWS Secrets Manager) to inject secrets at runtime
+C) Store secrets in the container image and restrict image access
+D) Rotate secrets annually to reduce exposure
+Correct: B
+Explanation: Secrets should never be stored in environment variables (which are visible in process listings and logs), container images (which can be extracted), or source code. A dedicated secrets management system provides encrypted storage, access auditing, and dynamic secret injection at runtime. Base64 encoding is not encryption. Annual rotation does not protect secrets that are already exposed.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: Which of the following BEST describes the 3-2-1 backup rule?
+A) Perform backups 3 times per day, on 2 different schedules, with 1 offsite copy
+B) Keep 3 copies of data, on 2 different media types, with 1 copy stored offsite
+C) Retain backups for 3 months, test 2 restores per quarter, and keep 1 air-gapped copy
+D) Use 3 backup tools, 2 encryption algorithms, and 1 cloud provider
+Correct: B
+Explanation: The 3-2-1 backup rule is a widely accepted best practice: maintain 3 copies of data (1 production + 2 backups), stored on 2 different media types (e.g., disk and tape), with 1 copy stored offsite (or in the cloud). This protects against single media failure, site disasters, and reduces the risk of ransomware affecting all copies simultaneously.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following is the MOST significant security consideration when deploying an out-of-band management network?
+A) The out-of-band network must use higher bandwidth than the production network
+B) The out-of-band network must itself be secured, as its compromise would grant access to all managed devices
+C) Out-of-band management requires a dedicated internet connection
+D) All devices on the out-of-band network must support IPv6
+Correct: B
+Explanation: The out-of-band management network provides access to device console ports, BMCs (Baseboard Management Controllers), and management interfaces for every critical system. If this network is compromised, an attacker gains administrative access to all connected infrastructure. Securing the OOB network — including strong authentication, encryption, and strict access controls — is paramount. Bandwidth, IPv6, and internet connectivity are not the primary considerations.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: A company wants to allow data analysts to query production customer data for business intelligence purposes without exposing actual personal information. Which approach BEST achieves this?
+A) Provide analysts with read-only access to the production database
+B) Create a data warehouse populated with dynamically masked or de-identified versions of production data
+C) Require analysts to sign a non-disclosure agreement before accessing the database
+D) Enable row-level security in the production database for each analyst's queries
+Correct: B
+Explanation: Creating a separate data warehouse with masked or de-identified data protects actual personal information while providing analysts with realistic, usable data for business intelligence. Read-only access to production still exposes real personal data. NDAs are administrative controls, not technical protections. Row-level security limits which rows are visible but still exposes actual field values.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: After a major earthquake destroys an organisation's primary data centre, the organisation discovers its hot site is in the same metropolitan area and also sustains significant damage. Which resilience planning failure does this represent?
+A) Insufficient backup frequency
+B) Failure to account for geographic co-location risk in site selection
+C) Inadequate UPS capacity at the hot site
+D) Lack of encryption for data replicated to the hot site
+Correct: B
+Explanation: Placing a hot site within the same geographic area as the primary site creates co-location risk: a regional disaster (earthquake, hurricane, flood) can simultaneously affect both sites. DR site selection should consider sufficient geographic separation to avoid common disaster scenarios. Backup frequency and UPS capacity are secondary concerns if both sites are physically destroyed.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: Which of the following is the PRIMARY security challenge introduced by edge computing architectures?
+A) Edge nodes use significantly more bandwidth than centralised data centres
+B) Security controls and patching must be applied to a large number of geographically dispersed, often physically unprotected nodes
+C) Edge computing eliminates the need for encryption between nodes
+D) All edge processing results must be validated by the central data centre before use
+Correct: B
+Explanation: Edge computing pushes processing to devices located at or near the data source — often in physically unsecured locations (factories, retail stores, vehicles). Managing security updates, certificates, and monitoring across potentially thousands of distributed nodes is significantly more challenging than securing a centralised data centre. Physical access controls are also harder to enforce at edge locations.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A scenario: An attacker compromises a web server in the DMZ and attempts to pivot to internal database servers. Which control BEST prevents this lateral movement?
+A) Installing antivirus software on the web server
+B) Enforcing firewall rules that deny all traffic from the DMZ to the internal network except specific required ports and destination IPs
+C) Enabling DNSSEC on the internal DNS server
+D) Requiring SSH key authentication for all administrator logins
+Correct: B
+Explanation: Strict firewall rules between the DMZ and the internal network — allowing only the specific ports and destinations required (e.g., the web server to the database server on port 3306) — prevent an attacker who has compromised a DMZ host from reaching internal systems freely. This is the principle of least connectivity between network zones. Antivirus, DNSSEC, and SSH authentication do not address network-layer lateral movement.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following types of data would MOST likely be subject to a legal hold?
+A) Marketing campaign performance metrics
+B) Emails and documents related to an ongoing employment discrimination lawsuit
+C) System performance logs older than 90 days
+D) Customer purchase history used for product recommendations
+Correct: B
+Explanation: Legal hold preserves data that is potentially relevant to ongoing or anticipated litigation, regulatory investigations, or legal proceedings. Emails and documents related to an employment discrimination lawsuit are the classic legal hold scenario. The other data types — marketing metrics, old performance logs, and purchase history — have no indicated legal relevance requiring preservation under litigation hold.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: An organisation's disaster recovery plan specifies that a cold site will be activated in the event of a primary site failure. Which statement BEST characterises the tradeoff of this choice?
+A) Cold sites provide the fastest recovery but at the highest cost
+B) Cold sites have the lowest ongoing cost but the longest recovery time, requiring full hardware procurement and setup
+C) Cold sites include pre-installed hardware, reducing recovery time to a few hours
+D) Cold sites automatically synchronise data from the primary site in real time
+Correct: B
+Explanation: A cold site is essentially an empty facility with power, cooling, and connectivity but no pre-installed equipment. The cost is low (no hardware maintenance required), but recovery requires procuring, installing, and configuring all hardware and software, plus restoring backups — potentially taking days to weeks. Hot sites provide the fastest recovery at the highest cost.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: A company is evaluating deployment of an application delivery controller (load balancer) with SSL offloading enabled. Which security consideration must be addressed?
+A) SSL offloading improves performance but means traffic from the load balancer to backend servers is decrypted unless re-encrypted
+B) SSL offloading prevents the load balancer from inspecting HTTP headers
+C) SSL offloading eliminates the need for certificates on the load balancer
+D) SSL offloading is only supported with TLS 1.0 and earlier versions
+Correct: A
+Explanation: SSL/TLS offloading terminates the client's encrypted session at the load balancer, decrypting traffic before forwarding to backend servers. If the backend segment is unencrypted, traffic between the load balancer and servers travels in plaintext. This is acceptable only if the backend network is trusted and isolated. Best practice is to re-encrypt traffic from the load balancer to backend servers (SSL bridging).
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: Which of the following BEST describes the concept of data minimisation as a privacy and security strategy?
+A) Storing all data in the smallest possible file format to reduce storage costs
+B) Collecting and retaining only the personal data that is strictly necessary for a defined purpose
+C) Encrypting data to reduce its effective size
+D) Masking data fields that are not needed by end users
+Correct: B
+Explanation: Data minimisation is a core privacy principle (mandated by GDPR and other regulations) that limits data collection and retention to what is genuinely necessary for the stated purpose. Holding less data reduces the impact of a breach. It is not a file format or encryption concept. Masking restricts visibility of existing data but does not reduce how much data is collected.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: An organisation's security team is tasked with testing the disaster recovery plan for the first time. Executive leadership is concerned about risk to production systems. Which testing method provides the BEST insight into plan effectiveness with the LOWEST risk to production?
+A) Full failover test immediately switching production to the DR site
+B) Tabletop exercise followed by a simulation test using non-production data
+C) Immediate parallel processing test with live production data
+D) Deploying the DR site as a permanent secondary production environment
+Correct: B
+Explanation: Starting with a tabletop exercise identifies plan gaps and trains personnel at zero operational risk. Following this with a simulation test (activating DR systems without redirecting live traffic) validates technical procedures without risking production. A full failover test carries the highest risk and should follow lower-risk tests. Parallel processing with live data is also higher risk for a first test.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.1 — Compare and contrast security implications of different architecture models
+Question: A scenario: A developer pushes a Terraform template that creates an S3 bucket with public access enabled. The template is automatically deployed to 50 environments via a CI/CD pipeline. This scenario demonstrates which IaC security risk?
+A) Configuration drift between environments
+B) Misconfiguration propagation at scale through automated deployment
+C) Lack of version control for infrastructure changes
+D) Insufficient developer access to production environments
+Correct: B
+Explanation: IaC enables rapid, consistent deployment — but a security error in a template propagates to every environment it is applied to. In this case, 50 environments receive a publicly accessible S3 bucket. This amplification of misconfiguration at scale is the defining security risk of IaC without automated policy validation in the pipeline. The solution is policy-as-code gates in the CI/CD pipeline.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.2 — Apply security principles to secure enterprise infrastructure
+Question: Which of the following network security controls operates at Layer 7 and can make forwarding decisions based on application identity and user identity rather than IP addresses and ports alone?
+A) ACL-based packet filter
+B) Stateful inspection firewall
+C) Next-generation firewall with application awareness
+D) Layer 3 router with extended ACLs
+Correct: C
+Explanation: Next-generation firewalls (NGFW) use deep packet inspection to identify applications regardless of port, and can incorporate user identity from directory services. This allows policies like "Block Facebook for all users except Marketing." Traditional packet filters and stateful firewalls operate on IP/port combinations. Layer 3 routers use extended ACLs based on IP and protocol, not application identity.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.3 — Compare and contrast concepts and strategies to protect data
+Question: A scenario: A retailer wants to allow customer service representatives to verify a customer's credit card without seeing the full number. The system shows only the last four digits. Which technique provides this capability while ensuring the full card number is still available for transaction processing?
+A) Hashing the card number
+B) Encrypting the card number with asymmetric encryption
+C) Tokenising the card number, with the full number retrievable from the vault by authorised payment systems only
+D) Masking the card number for all system users including payment processors
+Correct: C
+Explanation: Tokenisation replaces the card number with a token for display/storage. Authorised payment systems can exchange the token for the real card number via the vault for transaction processing. Hashing is irreversible, making transaction processing impossible. Full masking for all users, including payment processors, would break transaction capability. Asymmetric encryption alone does not provide the controlled access model of tokenisation.
+
+Domain: 3.0 Security Architecture
+Sub-objective: 3.4 — Explain the importance of resilience and recovery in security architecture
+Question: A scenario: An organisation currently relies on a single cloud provider for all compute, storage, and networking. A risk assessment identifies cloud provider lock-in and provider outage as significant risks. Which resilience strategy MOST directly addresses both risks?
+A) Implementing a hot site at a colocation facility
+B) Adopting a multi-cloud strategy distributing workloads across two or more cloud providers
+C) Increasing the redundancy of resources within the existing single provider
+D) Negotiating a more comprehensive SLA with the current provider
+Correct: B
+Explanation: A multi-cloud strategy across multiple providers directly addresses both lock-in risk (workloads can be migrated or run on alternative providers) and outage risk (a single provider's outage does not affect workloads on other providers). Increasing redundancy within a single provider or negotiating a better SLA does not eliminate provider-level outage risk. A colocation hot site addresses on-premises recovery, not cloud provider risk.

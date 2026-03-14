@@ -1,0 +1,1529 @@
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which Ethernet cable category supports speeds up to 10 Gbps at distances up to 55 meters?
+A) Cat 5e
+B) Cat 6
+C) Cat 6a
+D) Cat 7
+Correct: B
+Explanation: Cat 6 cable supports 10 Gbps at distances up to 55 meters using its tighter twist specifications. Cat 5e is limited to 1 Gbps, while Cat 6a extends 10 Gbps to 100 meters. Cat 7 uses shielded pairs and proprietary connectors not part of standard TIA cabling.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician needs to run cable through an air-handling space above a drop ceiling. Which cable jacket type is required?
+A) PVC
+B) Plenum
+C) Riser
+D) Direct burial
+Correct: B
+Explanation: Plenum-rated cable uses a special low-smoke, flame-retardant jacket approved for air-handling spaces such as above drop ceilings. PVC jacket produces toxic fumes when burned and is not permitted in plenum spaces. Riser-rated cable is approved for vertical runs between floors but not for air-handling spaces.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which coaxial cable type is most commonly used for cable television (CATV) distribution to homes?
+A) RG-59
+B) RG-6
+C) RG-8
+D) RG-58
+Correct: B
+Explanation: RG-6 coaxial cable is the standard for cable television and satellite distribution because it supports higher frequencies with lower signal loss than RG-59. RG-59 has a thinner center conductor and higher attenuation, making it unsuitable for modern CATV. RG-8 and RG-58 are used in radio frequency and older networking applications.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician is connecting a workstation to a switch in a data center requiring maximum bandwidth over a 1-kilometer run without signal repeaters. Which cable type should be used?
+A) Cat 6a
+B) Single-mode fiber
+C) Multi-mode fiber
+D) Cat 8
+Correct: B
+Explanation: Single-mode fiber uses a narrow 9-micron core and a laser light source, supporting distances of tens of kilometers with minimal signal loss. Multi-mode fiber is limited to approximately 550 meters at 10 Gbps. Copper cable standards like Cat 6a and Cat 8 are limited to 100 meters and 30 meters respectively.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: What is the maximum data transfer rate of USB 3.1 Gen 2?
+A) 480 Mbps
+B) 5 Gbps
+C) 10 Gbps
+D) 20 Gbps
+Correct: C
+Explanation: USB 3.1 Gen 2 (also marketed as USB 3.2 Gen 2) transfers data at 10 Gbps using SuperSpeed+ technology. USB 3.0 and USB 3.1 Gen 1 operate at 5 Gbps, while USB 2.0 is limited to 480 Mbps. USB 4.0 achieves speeds of 20 Gbps or higher.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which USB connector type is reversible and used on both hosts and devices in USB 3.1 and later standards?
+A) USB-A
+B) USB-B
+C) USB Micro-B
+D) USB-C
+Correct: D
+Explanation: USB-C features a symmetrical oval connector that can be inserted in either orientation, eliminating the need to orient the plug correctly. USB-A is the rectangular host connector found on computers and is not reversible. USB-B and Micro-B are device-side connectors with specific orientations required for insertion.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Thunderbolt 3 uses which physical connector type?
+A) USB-A
+B) DisplayPort
+C) USB-C
+D) Mini DisplayPort
+Correct: C
+Explanation: Thunderbolt 3 uses the USB-C physical connector, allowing it to share ports and cables with USB-C devices. It provides 40 Gbps bandwidth and can carry USB, DisplayPort, and PCIe signals simultaneously. Thunderbolt 1 and 2 used the Mini DisplayPort connector form factor.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which video connector carries both audio and video signals and is the most common display interface on modern consumer televisions?
+A) VGA
+B) DVI
+C) HDMI
+D) DisplayPort
+Correct: C
+Explanation: HDMI (High-Definition Multimedia Interface) carries both digital audio and digital video over a single cable, making it the standard interface for consumer televisions and home theater equipment. VGA is an analog-only video signal. DVI can carry audio only in some proprietary implementations and is primarily a video-only standard.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician needs to connect an older monitor using a 15-pin D-sub connector. Which interface is being used?
+A) DVI-D
+B) VGA
+C) HDMI
+D) DisplayPort
+Correct: B
+Explanation: VGA (Video Graphics Array) uses a 15-pin DE-15 D-sub connector and transmits an analog video signal. DVI connectors have a different pin layout with a flat pin and a grid of round pins. HDMI and DisplayPort use entirely different connector form factors with no pin-and-socket arrangement.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which DVI variant supports only digital signals and is identified by a connector with only round pins and no flat blade?
+A) DVI-A
+B) DVI-I
+C) DVI-D
+D) DVI-P
+Correct: C
+Explanation: DVI-D carries only digital video signals and has a connector consisting of round pins arranged in a grid without the flat four-pin cluster used for analog. DVI-I (Integrated) supports both analog and digital signals and includes the flat blade plus surrounding pins. DVI-A carries only analog signals and is rarely used.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: What is the maximum theoretical bandwidth of Thunderbolt 4?
+A) 20 Gbps
+B) 40 Gbps
+C) 80 Gbps
+D) 10 Gbps
+Correct: B
+Explanation: Thunderbolt 4 operates at a maximum bandwidth of 40 Gbps, the same as Thunderbolt 3 but with stricter minimum requirements for video output and PCIe tunneling. Thunderbolt 5 doubles this to 80 Gbps. Thunderbolt 4 also mandates support for two 4K displays or one 8K display.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which cable type uses an LC or SC connector and a 62.5-micron or 50-micron core to carry light signals over shorter distances?
+A) Single-mode fiber
+B) Multi-mode fiber
+C) Coaxial RG-6
+D) Cat 8
+Correct: B
+Explanation: Multi-mode fiber uses a larger core (50 or 62.5 microns) that allows multiple light modes to propagate simultaneously, suitable for distances up to about 550 meters at 10 Gbps. Single-mode fiber uses a 9-micron core and a single light path for much longer distances. RG-6 and Cat 8 are copper-based cables that do not use optical connectors.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A user's iPhone needs to be connected to a laptop that only has standard USB-A ports. Which cable is needed?
+A) USB-C to USB-A
+B) Lightning to USB-A
+C) Micro-USB to USB-A
+D) Mini-USB to USB-A
+Correct: B
+Explanation: Apple iPhones (pre-USB-C models) use the proprietary Lightning connector, so a Lightning-to-USB-A cable is required to connect to a standard USB-A port. USB-C and Micro-USB are used on Android and other devices. Mini-USB is an older connector no longer used on smartphones.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which cable standard supports data rates up to 40 Gbps using Cat 8 copper and is designed for data center top-of-rack switch connections?
+A) Cat 6a
+B) Cat 7
+C) Cat 8
+D) Cat 5e
+Correct: C
+Explanation: Cat 8 cable supports 25 Gbps and 40 Gbps Ethernet at distances up to 30 meters, specifically designed for short data center runs. Cat 7 uses shielded twisted pairs but is not part of the TIA standard and tops out at 10 Gbps in most implementations. Cat 6a reaches 10 Gbps at up to 100 meters but cannot match Cat 8 speeds.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which interface standard uses a 7-pin connector for internal storage devices and replaced the older parallel ATA standard?
+A) eSATA
+B) SCSI
+C) SATA
+D) IDE
+Correct: C
+Explanation: SATA (Serial ATA) uses a 7-pin data connector and a 15-pin power connector, replacing the 40-pin ribbon cables of parallel ATA/IDE. eSATA is the external version of SATA using a shielded connector. SCSI uses wide 68-pin or narrow 50-pin connectors for enterprise storage.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician is working on a legacy server with a 68-pin wide connector used for hard drives and tape drives. Which interface is this?
+A) IDE
+B) SATA
+C) SCSI
+D) eSATA
+Correct: C
+Explanation: Wide SCSI (Small Computer System Interface) uses a 68-pin connector and supports multiple devices on a single bus, commonly found in servers and workstations. IDE/PATA uses a 40-pin ribbon connector. SATA uses a narrow 7-pin connector, and eSATA is a shielded external variant of SATA.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: What is the maximum data transfer rate of USB 2.0?
+A) 12 Mbps
+B) 480 Mbps
+C) 5 Gbps
+D) 1.5 Mbps
+Correct: B
+Explanation: USB 2.0 Hi-Speed operates at 480 Mbps, a significant improvement over USB 1.1's 12 Mbps Full Speed mode. USB 3.0 and later standards far exceed this with SuperSpeed rates of 5 Gbps and above. USB 1.0 Low Speed operated at only 1.5 Mbps.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician is setting up a serial console connection to a managed switch using a 9-pin D-sub connector. Which interface is being used?
+A) VGA
+B) RS-232
+C) SCSI
+D) eSATA
+Correct: B
+Explanation: RS-232 serial connections use a DB-9 (DE-9) 9-pin D-sub connector and are commonly used for console management of network equipment. VGA also uses a D-sub connector but has 15 pins and carries video signals. SCSI and eSATA use entirely different connector types for storage connectivity.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A workstation motherboard has four memory slots and is populated with two DDR4 sticks in slots 1 and 3. What memory configuration is active?
+A) Single channel
+B) Dual channel
+C) Quad channel
+D) ECC mode
+Correct: B
+Explanation: Populating two matching DIMMs in slots 1 and 3 (or 2 and 4) on a four-slot motherboard activates dual-channel mode, doubling the memory bus width from 64 to 128 bits. Single channel uses only one DIMM or DIMMs not in matching pairs. Quad channel requires four matching DIMMs and is supported only on HEDT and server platforms.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: Which RAM type is used in laptops and features a smaller form factor with 260 pins for DDR4?
+A) DIMM
+B) SO-DIMM
+C) RIMM
+D) ECC DIMM
+Correct: B
+Explanation: SO-DIMM (Small Outline DIMM) is the compact RAM module used in laptops, small form factor desktops, and some printers, with 260 pins for DDR4. Full-size DIMMs have 288 pins for DDR4 and are used in desktop and server motherboards. RIMMs were the proprietary Rambus memory modules used in late 1990s systems.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A server administrator needs RAM that can detect and correct single-bit memory errors to ensure data integrity. Which RAM type is required?
+A) DDR4 non-ECC
+B) DDR3 SO-DIMM
+C) ECC RAM
+D) DDR5 XMP
+Correct: C
+Explanation: ECC (Error Correcting Code) RAM uses additional chips to detect and correct single-bit errors and detect (but not correct) double-bit errors, essential for servers and workstations requiring high data integrity. Non-ECC RAM has no error correction capability. XMP is an Intel overclocking profile for desktop DDR memory.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: Which DDR generation introduced a maximum speed of 3200 MT/s as its top standard speed and operates at 1.2V?
+A) DDR3
+B) DDR4
+C) DDR5
+D) DDR2
+Correct: B
+Explanation: DDR4 operates at 1.2V (compared to DDR3's 1.5V) and standard speeds range from DDR4-1600 up to DDR4-3200 MT/s. DDR3 tops out at around DDR3-2133 MT/s at 1.5V. DDR5 begins at 4800 MT/s and operates at 1.1V with on-die ECC.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician is upgrading RAM in a gaming desktop. The motherboard supports DDR5. The user wants to maximize bandwidth. What configuration should the technician recommend?
+A) One DDR5 stick of 32 GB
+B) Two DDR5 sticks of 16 GB each in dual-channel slots
+C) Four DDR4 sticks in quad-channel configuration
+D) Two DDR4 sticks in dual-channel slots
+Correct: B
+Explanation: Two matching DDR5 sticks installed in the correct dual-channel slots doubles the effective memory bandwidth compared to a single stick. DDR4 modules cannot be installed in a DDR5 motherboard as the keying notch positions are different. Quad-channel requires a platform specifically supporting it such as Intel HEDT or AMD Threadripper.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: What does the CAS latency value in a RAM specification such as CL16 represent?
+A) The number of memory channels supported
+B) The clock cycles between a read command and data output
+C) The operating voltage of the module
+D) The number of ranks on the module
+Correct: B
+Explanation: CAS (Column Address Strobe) latency is the number of clock cycles that elapse between a memory controller issuing a read command and the data becoming available. Lower CAS latency values indicate faster response times. Voltage and rank count are separate specifications listed alongside CAS latency.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician installs two 8 GB DDR4 sticks alongside two existing 4 GB DDR4 sticks for a total of 24 GB. The system boots but reports instability. What is the most likely cause?
+A) The motherboard does not support more than 16 GB
+B) Mixing different capacity modules disabled dual-channel operation
+C) DDR4 modules cannot be mixed with other DDR4 modules
+D) The PSU wattage is insufficient for additional RAM
+Correct: B
+Explanation: Mixing different-capacity RAM modules can prevent the system from running in dual-channel mode and may cause instability due to differing timings and speeds between the modules. While technically functional in some cases, mixed-capacity kits often require the system to run in single-channel or flex mode. For best stability and performance, matched pairs of identical modules should be used.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: DDR5 RAM introduces which major architectural change compared to DDR4?
+A) Higher operating voltage of 1.5V
+B) On-die ECC and on-module power management IC
+C) Support for the 240-pin DIMM slot standard
+D) Single-channel only operation
+Correct: B
+Explanation: DDR5 moves the power management circuitry onto the module itself (PMIC) and incorporates on-die ECC for improved data integrity, both significant changes from DDR4. DDR5 actually operates at a lower voltage of 1.1V compared to DDR4's 1.2V. DDR5 DIMMs use 288 pins but with a different notch position than DDR4.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: Which RAM form factor would a technician install into a standard full-tower desktop motherboard?
+A) SO-DIMM
+B) MicroDIMM
+C) DIMM
+D) RIMM
+Correct: C
+Explanation: Standard desktop motherboards use full-size DIMMs (Dual Inline Memory Modules), which have 288 pins for DDR4 or DDR5. SO-DIMMs are the compact variant for laptops and SFF systems with 260 pins for DDR4. RIMMs were proprietary Rambus modules discontinued over two decades ago.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A workstation RAM module is labeled DDR4-3200. What does 3200 refer to?
+A) Module capacity in megabytes
+B) Data transfer rate in megatransfers per second
+C) Module latency in nanoseconds
+D) Clock frequency in MHz
+Correct: B
+Explanation: The number in DDR4-3200 refers to the effective data transfer rate of 3200 megatransfers per second (MT/s), which is double the actual clock speed of 1600 MHz due to DDR's double data rate operation. The "DDR" prefix itself indicates data is transferred on both the rising and falling edges of the clock. Module capacity is expressed in gigabytes separately.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A user wants the fastest possible storage for their new workstation build. Which interface and form factor combination provides the highest sequential read performance?
+A) SATA SSD in 2.5-inch form factor
+B) mSATA SSD
+C) NVMe SSD in M.2 form factor
+D) 7200 RPM SATA HDD
+Correct: C
+Explanation: NVMe (Non-Volatile Memory Express) SSDs using the M.2 form factor connect directly to PCIe lanes, achieving sequential read speeds of 3,500 MB/s or higher on PCIe Gen 3 and over 7,000 MB/s on PCIe Gen 4. SATA SSDs are limited to approximately 550 MB/s due to the SATA III interface. Traditional HDDs top out around 200 MB/s sequentially.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A laptop hard drive uses a 2.5-inch form factor spinning at 5400 RPM. A technician wants to upgrade for better performance without changing form factor. What is the best upgrade?
+A) Replace with a 3.5-inch 7200 RPM HDD
+B) Replace with a 2.5-inch SATA SSD
+C) Add an mSATA SSD as a second drive
+D) Replace with a 3.5-inch NVMe SSD
+Correct: B
+Explanation: A 2.5-inch SATA SSD fits the same drive bay as the existing HDD and uses the same SATA connector, making it a direct drop-in replacement with dramatically improved performance. A 3.5-inch HDD does not fit in a laptop bay. NVMe SSDs in 3.5-inch form do not exist; NVMe uses M.2 or PCIe add-in card form factors.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: Which RAID level stripes data across multiple drives for maximum performance with no redundancy, requiring at least two drives?
+A) RAID 1
+B) RAID 5
+C) RAID 0
+D) RAID 10
+Correct: C
+Explanation: RAID 0 stripes data across all member drives, multiplying sequential throughput by the number of drives, but offers no redundancy — a single drive failure loses all data. RAID 1 mirrors data across two drives for redundancy without a performance gain. RAID 5 stripes with distributed parity, balancing performance and fault tolerance.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A small business needs storage that can survive a single drive failure while using space on three drives efficiently. Which RAID level is most appropriate?
+A) RAID 0
+B) RAID 1
+C) RAID 5
+D) RAID 10
+Correct: C
+Explanation: RAID 5 uses distributed parity across all three drives, allowing the array to survive a single drive failure while providing a usable capacity of n-1 drives (two-thirds of total raw capacity in a three-drive set). RAID 1 requires two drives but mirrors only one drive's worth of data. RAID 10 requires at least four drives and combines mirroring and striping.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: Which RAID level requires a minimum of four drives and combines the performance of striping with the fault tolerance of mirroring?
+A) RAID 0
+B) RAID 5
+C) RAID 6
+D) RAID 10
+Correct: D
+Explanation: RAID 10 (also called RAID 1+0) mirrors pairs of drives and then stripes across the mirrors, requiring a minimum of four drives, offering both high performance and the ability to survive multiple drive failures as long as no mirror pair loses both drives. RAID 5 requires only three drives but uses parity rather than mirroring. RAID 6 uses dual parity and can survive two simultaneous drive failures.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: An enterprise server uses 15,000 RPM hard drives. What is the primary benefit of this rotation speed compared to 7200 RPM drives?
+A) Lower power consumption
+B) Reduced seek time and higher IOPS
+C) Larger storage capacity
+D) Compatibility with SATA III interface
+Correct: B
+Explanation: 15,000 RPM drives have significantly faster rotational speed, reducing rotational latency and improving random I/O operations per second (IOPS), critical for database workloads. Higher RPM drives consume more power and generate more heat than slower drives. Enterprise 15K drives typically use SAS rather than SATA and are not as large-capacity as 7200 RPM NL-SAS drives.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A technician is installing an M.2 drive and notices the slot is labeled "M.2 2280." What do the numbers 2280 represent?
+A) The drive's maximum speed in MB/s
+B) The width and length of the module in millimeters
+C) The PCIe generation and lane count
+D) The SATA revision number
+Correct: B
+Explanation: M.2 module naming uses the format where the first two digits are the width (22mm) and the remaining digits are the length (80mm), so 2280 is 22mm wide and 80mm long — the most common M.2 size. Other common lengths include 2242 and 2260. The naming does not indicate speed or interface type.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A user needs portable storage to transfer large video files between editing workstations. Which removable storage medium offers the highest capacity and transfer speed for this use case?
+A) USB flash drive
+B) SD card
+C) Optical Blu-ray disc
+D) External NVMe SSD via Thunderbolt
+Correct: D
+Explanation: An external NVMe SSD connected via Thunderbolt 3/4 can achieve speeds exceeding 2,500 MB/s, making it the fastest option for transferring large video files. USB flash drives and SD cards are limited by their NAND controller and USB interface speeds. Blu-ray discs have slow write speeds and relatively limited capacity compared to modern SSDs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: Which storage interface is used by mSATA drives and is now largely replaced by M.2?
+A) PCIe x4
+B) SATA III
+C) IDE
+D) USB 3.0
+Correct: B
+Explanation: mSATA (mini-SATA) drives use the SATA III interface and deliver the same throughput as 2.5-inch SATA SSDs (up to 600 MB/s), just in a smaller form factor. M.2 replaced mSATA because it supports both SATA and NVMe/PCIe interfaces in a more versatile slot. PCIe x4 is used by full-size NVMe add-in cards.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A technician configures four 2 TB drives in RAID 10. What is the total usable storage capacity?
+A) 8 TB
+B) 6 TB
+C) 4 TB
+D) 2 TB
+Correct: C
+Explanation: RAID 10 mirrors pairs of drives and then stripes the mirrors, so exactly half the total raw capacity is usable. With four 2 TB drives (8 TB raw), the usable capacity is 4 TB. RAID 5 with four drives would yield 6 TB (n-1 drives usable). RAID 0 would yield 8 TB but with no redundancy.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A technician is asked to install an optical drive that supports reading and writing to both DVD and Blu-ray media. What type of drive is needed?
+A) DVD±RW drive
+B) CD-RW drive
+C) Blu-ray combo drive
+D) BD-RE drive
+Correct: C
+Explanation: A Blu-ray combo drive reads and writes Blu-ray discs while also supporting DVD and CD read/write, making it the appropriate choice for both disc types. A DVD±RW drive cannot read or write Blu-ray media. A BD-RE drive is a Blu-ray rewritable drive but the term "combo" specifically indicates cross-format read/write capability.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: Which motherboard form factor measures 12 × 9.6 inches and is the most common standard for full-size desktop builds?
+A) Mini-ITX
+B) Micro-ATX
+C) ATX
+D) E-ATX
+Correct: C
+Explanation: ATX (Advanced Technology eXtended) motherboards measure 12 × 9.6 inches (305 × 244 mm) and are the standard form factor for full-size desktop and tower cases. Micro-ATX is smaller at 9.6 × 9.6 inches. Mini-ITX is even smaller at 6.7 × 6.7 inches, designed for compact builds.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician is building a home theater PC that must fit in a very small enclosure. Which motherboard form factor is most appropriate?
+A) ATX
+B) Micro-ATX
+C) Mini-ITX
+D) E-ATX
+Correct: C
+Explanation: Mini-ITX measures only 6.7 × 6.7 inches and is designed specifically for compact builds such as home theater PCs and small form factor systems. ATX and Micro-ATX are too large for very small enclosures. E-ATX is even larger than standard ATX and is used for high-end workstation and server builds.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: Which CPU socket type uses a Land Grid Array (LGA) design where the pins are located on the motherboard socket rather than on the processor?
+A) AMD AM5
+B) Intel LGA 1700
+C) AMD sTRX40
+D) Intel BGA
+Correct: B
+Explanation: Intel uses LGA (Land Grid Array) sockets where the delicate pins are on the motherboard socket and the processor has flat contact pads, protecting the CPU from pin damage. AMD uses PGA (Pin Grid Array) on older sockets like AM4 and has transitioned to LGA with AM5. BGA (Ball Grid Array) is a permanently soldered package used in laptops, not a user-installable socket.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician powers on a newly built system and gets a single long beep followed by two short beeps. Where should the technician look to decode this POST beep code?
+A) The operating system event log
+B) The motherboard manual or manufacturer's BIOS documentation
+C) The CPU manufacturer's website
+D) The Windows Device Manager
+Correct: B
+Explanation: POST (Power-On Self-Test) beep codes are specific to the BIOS/UEFI manufacturer (AMI, Award, Phoenix) and the motherboard model, so the motherboard manual is the authoritative reference for decoding them. Beep codes indicate hardware-level errors that occur before the OS loads, so event logs and Device Manager are inaccessible at this stage. The CPU manufacturer's site would not document motherboard beep codes.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: What is the purpose of thermal paste (thermal compound) when installing a CPU cooler?
+A) To bond the heatsink permanently to the CPU
+B) To fill microscopic air gaps and improve heat transfer between the CPU and heatsink
+C) To protect the CPU from electrostatic discharge
+D) To lubricate the CPU fan bearings
+Correct: B
+Explanation: Thermal paste is a thermally conductive compound applied between the CPU integrated heat spreader and the heatsink base to fill microscopic surface imperfections and eliminate air gaps, which are poor heat conductors. It does not create a permanent bond — heatsinks can be removed after application. Thermal paste has no ESD protection or lubricating properties.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A workstation needs to capture HDMI video input from a game console for streaming. Which type of expansion card should be installed?
+A) Sound card
+B) Network interface card (NIC)
+C) Video capture card
+D) GPU
+Correct: C
+Explanation: A video capture card has HDMI or other video input connectors that receive an external video signal and pass it to the CPU/GPU for processing, recording, or streaming. A GPU outputs video signals but does not accept external video input in consumer configurations. A sound card handles audio processing, and a NIC handles network connectivity.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: Which BIOS/UEFI feature stores cryptographic keys and can be used to support BitLocker drive encryption on a Windows system?
+A) Secure Boot
+B) TPM (Trusted Platform Module)
+C) UEFI CSM
+D) XMP profile
+Correct: B
+Explanation: TPM (Trusted Platform Module) is a dedicated security chip or firmware component that stores cryptographic keys, certificates, and passwords in a tamper-resistant manner, and is required for Windows 11 and BitLocker encryption. Secure Boot verifies the bootloader's digital signature but does not store encryption keys. XMP is a memory overclocking profile.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician needs to install a high-end GPU that requires an x16 PCIe slot. The motherboard has slots labeled x1, x4, x8, and x16. Which slot should the GPU be installed in?
+A) PCIe x1
+B) PCIe x4
+C) PCIe x8
+D) PCIe x16
+Correct: D
+Explanation: High-end GPUs require the full bandwidth of a PCIe x16 slot to prevent a performance bottleneck, as they are designed to use all 16 lanes. While a GPU can physically fit in an x8 or x4 slot (if open-ended), the reduced lane count limits bandwidth. PCIe x1 slots are too short to physically seat a full-size GPU.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: Which cooling method circulates liquid through a water block mounted on the CPU to transfer heat to a radiator with fans?
+A) Heat pipe passive cooling
+B) All-in-one (AIO) liquid cooling
+C) Phase-change cooling
+D) Vapor chamber cooling
+Correct: B
+Explanation: AIO (All-in-One) liquid cooling systems use a pump in the CPU water block to circulate coolant through sealed tubing to a radiator mounted in the case, where fans dissipate the heat. Heat pipes are sealed passive devices used in heatsinks that use evaporation/condensation internally. Phase-change cooling uses a compressor and refrigerant like an air conditioner.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A user wants to use an older operating system that requires legacy BIOS boot mode, but the motherboard only shows UEFI in its settings. What feature allows UEFI firmware to support legacy BIOS boot?
+A) Secure Boot
+B) Fast Boot
+C) CSM (Compatibility Support Module)
+D) TPM 2.0
+Correct: C
+Explanation: CSM (Compatibility Support Module) is a UEFI feature that emulates a legacy BIOS environment, allowing older operating systems and bootloaders that do not support UEFI to boot. Secure Boot is a UEFI security feature that verifies boot software signatures. Fast Boot reduces POST time by skipping some hardware checks.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: What is the function of a chipset on a motherboard?
+A) To provide primary processing power for application software
+B) To manage communication between the CPU, memory, and peripherals
+C) To store the BIOS/UEFI firmware
+D) To regulate voltage delivered to the CPU
+Correct: B
+Explanation: The chipset acts as the traffic controller on a motherboard, managing data flow between the CPU, RAM, storage controllers, USB controllers, PCIe slots, and other peripherals. The CPU handles application processing. BIOS/UEFI is stored in a separate flash memory chip. Voltage regulation is handled by the VRM (Voltage Regulator Module).
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician installs a new sound card but Windows does not recognize it. The device shows an exclamation mark in Device Manager. What is the most likely first step to resolve this?
+A) Replace the PCIe slot
+B) Install the correct driver for the sound card
+C) Enable Secure Boot in UEFI
+D) Reseat the CPU
+Correct: B
+Explanation: An exclamation mark in Device Manager typically indicates a driver issue — the hardware is detected but lacks a proper driver for Windows to use it. Installing the manufacturer's driver for the sound card resolves this in most cases. Secure Boot and CPU reseating would not affect device driver recognition, and PCIe slots rarely fail.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: Which PSU connector provides the primary power to an ATX motherboard and has 24 pins?
+A) EPS 8-pin
+B) 24-pin ATX main connector
+C) PCIe 8-pin
+D) Molex 4-pin
+Correct: B
+Explanation: The 24-pin ATX main power connector (evolved from the original 20-pin connector) is the primary power connection to the motherboard, providing multiple voltage rails including +3.3V, +5V, and +12V. The EPS 8-pin connector provides additional +12V power specifically to the CPU. The PCIe 6/8-pin connectors power discrete graphics cards.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician is installing a high-end CPU in a workstation motherboard. The CPU power connector slot on the motherboard has 8 pins. What cable from the PSU is needed?
+A) 24-pin ATX
+B) PCIe 6-pin
+C) EPS 8-pin (or 4+4-pin)
+D) SATA power
+Correct: C
+Explanation: The EPS (Entry-Level Power Supply) 8-pin connector (also available as a 4+4-pin split cable for compatibility) provides dedicated +12V power to the CPU voltage regulator. The 24-pin ATX connector powers the motherboard but does not supply adequate current for the CPU alone. PCIe connectors power graphics cards, not CPUs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A user in Europe needs to connect a US-purchased computer to the local power grid. What voltage difference must be addressed?
+A) 12V vs 5V
+B) 110V vs 220V
+C) 60 Hz vs 50 Hz
+D) AC vs DC conversion
+Correct: B
+Explanation: The US uses 110-120V AC power while Europe uses 220-240V AC, a significant voltage difference that can damage a non-universal PSU. Many modern PSUs have auto-sensing universal voltage capability, but older units may require a manual voltage selector switch to be set correctly. Operating a 110V PSU on 220V without proper adjustment can destroy the power supply and connected components.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: Which type of PSU allows the user to attach only the cables needed for their build, reducing cable clutter?
+A) Non-modular PSU
+B) Semi-modular PSU
+C) Fully modular PSU
+D) Passive PSU
+Correct: C
+Explanation: A fully modular PSU has no permanently attached cables — all cables connect via sockets on the PSU itself, so only the cables actually needed are installed. A non-modular PSU has all cables permanently attached. A semi-modular PSU has essential cables (24-pin, EPS) permanently attached with additional cables being removable.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A discrete GPU requires a PCIe 8-pin power connector. The technician's PSU only has a PCIe 6-pin connector. What should be done?
+A) Use the 6-pin connector; the GPU will use the available pins
+B) Use a PCIe 6-pin to 8-pin adapter cable
+C) Use two SATA power connectors bridged together
+D) Connect the GPU to the 24-pin ATX connector instead
+Correct: B
+Explanation: PCIe 6-to-8-pin adapter cables are commonly included with GPUs or PSUs to allow a 6-pin source to connect to an 8-pin GPU connector, though this should only be used within the wattage limits of the PSU and connector. Using only a 6-pin on an 8-pin connector can cause the GPU to throttle or fail to operate. SATA-to-PCIe adapters exist but are considered fire hazards under high load.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician is calculating PSU requirements for a system with a CPU rated at 125W, a GPU rated at 250W, and other components totaling 100W. What minimum PSU wattage should be selected?
+A) 475W
+B) 550W
+C) 650W
+D) 350W
+Correct: C
+Explanation: The total component power draw is 475W, but PSUs should be sized with a 20-30% headroom for efficiency and longevity, bringing the recommended minimum to approximately 570-615W. A 650W PSU provides adequate headroom and keeps the PSU operating in its most efficient range (typically 50-80% load). A 475W or 550W PSU would be running near its maximum capacity under load.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: Which PSU connector uses a 4-pin design with yellow (+12V), black (ground), red (+5V), and black wires and was historically used for IDE hard drives and optical drives?
+A) SATA power connector
+B) EPS 4-pin
+C) Molex 4-pin
+D) Berg connector
+Correct: C
+Explanation: The Molex 4-pin peripheral connector has been used for decades to power IDE hard drives, optical drives, and case fans, providing +12V and +5V rails. SATA power connectors use a 15-pin flat connector. EPS 4-pin connectors are used for CPU power. Berg connectors are the smaller 4-pin floppy drive connectors.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A data center requires that servers continue operating if a single power supply fails. Which PSU feature fulfills this requirement?
+A) Modular cabling
+B) 80 Plus certification
+C) Redundant power supply (hot-swap)
+D) High wattage single-rail design
+Correct: C
+Explanation: Redundant hot-swap power supplies allow a failed PSU to be removed and replaced while the server continues operating, using the second PSU to carry the full load. 80 Plus certification indicates power efficiency ratings but provides no fault tolerance. Modular cabling reduces clutter but does not provide redundancy.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: What does 80 Plus Gold certification indicate about a power supply?
+A) It can output 80W of power guaranteed
+B) It operates at 87-90% efficiency at 20%, 50%, and 100% loads
+C) It has gold-plated connectors for reliability
+D) It uses a single +12V rail architecture
+Correct: B
+Explanation: 80 Plus Gold certification means the PSU achieves at least 87% efficiency at 20% load and 90% efficiency at 50% load, reducing wasted energy as heat. The certification has nothing to do with connector materials or output wattage limits. Higher tiers (Platinum, Titanium) achieve even greater efficiency percentages.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician notices a system randomly powers off under heavy gaming load but operates normally under light use. What component is most likely failing?
+A) RAM module
+B) CPU thermal paste
+C) Power supply unit
+D) GPU driver
+Correct: C
+Explanation: Random shutdowns specifically under heavy load are a classic symptom of an underpowered or failing PSU that cannot maintain stable voltage rails under peak demand. Thermal paste degradation would cause thermal throttling before shutdown and would affect all workloads. RAM failures typically manifest as blue screens or memory errors, not load-dependent power cutoffs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: Which printer technology uses a laser beam to create an electrostatic image on a photosensitive drum, which then attracts toner powder?
+A) Inkjet
+B) Thermal
+C) Laser
+D) Impact
+Correct: C
+Explanation: Laser printers use a laser to discharge specific areas of a charged photosensitive drum, creating an electrostatic pattern that attracts oppositely charged toner particles, which are then fused to paper with heat. Inkjet printers spray liquid ink droplets through microscopic nozzles. Thermal printers use heat-sensitive paper or a thermal printhead to apply ink.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A receipt printer at a retail store uses heat-sensitive paper and has no ink cartridges. Which printer type is this?
+A) Inkjet
+B) Laser
+C) Impact
+D) Thermal
+Correct: D
+Explanation: Thermal printers use a heated printhead to activate heat-sensitive coating on special paper, producing images without ink cartridges or ribbons. They are widely used for receipts, shipping labels, and tickets due to their speed and low maintenance. Inkjet and laser printers require ink or toner consumables.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A printing environment requires hard-copy forms with multiple carbon copies simultaneously. Which printer type is required?
+A) Laser
+B) Inkjet
+C) Thermal
+D) Impact (dot matrix)
+Correct: D
+Explanation: Impact printers (dot matrix) use a print head with pins that physically strike an ink ribbon against the paper, creating impressions that can pass through multiple carbon copy layers simultaneously. No other printer technology can create carbon copies because they require physical pressure. Laser and inkjet print only the top sheet.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user wants to print on both sides of each page automatically without manually flipping the paper. Which printer feature is needed?
+A) Collating
+B) Duplex printing
+C) Orientation setting
+D) Print quality selection
+Correct: B
+Explanation: Duplex printing (automatic double-sided printing) allows the printer to print on both sides of the paper automatically using a duplexer mechanism. Collating determines the order of pages in a multi-page print job. Orientation controls whether the page prints in portrait or landscape.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A small office needs to share a single printer among five Windows computers without a dedicated print server. What is the simplest method to accomplish this?
+A) Configure each computer with a unique static IP for the printer
+B) Enable printer sharing on the computer connected to the printer
+C) Install a network card in the printer
+D) Purchase five separate printers
+Correct: B
+Explanation: Windows printer sharing allows the computer hosting the printer via USB to share it over the network, so other computers on the same network can connect to and print through the host computer. This requires the host computer to be powered on when others need to print. A network card in the printer would make it a direct network printer, which is a valid but more complex and expensive solution.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A multifunction printer (MFP) is connected to the network. A user wants to scan a document and send it directly to an email address. Which MFP feature enables this?
+A) Fax over IP
+B) Scan to email
+C) Pull printing
+D) Cloud print
+Correct: B
+Explanation: Scan to email is a built-in MFP feature that scans a document and sends it as an email attachment using a configured SMTP server, allowing users to digitize and distribute documents without first sending to a computer. Fax over IP sends faxes over internet connections. Pull printing holds jobs in a queue until authenticated at the printer.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: After replacing a laser printer's toner cartridge, prints show faint horizontal lines at regular intervals across the page. What component is most likely causing this?
+A) Fuser assembly
+B) Transfer belt
+C) Imaging drum
+D) Pickup roller
+Correct: C
+Explanation: Regular horizontal bands or lines repeating at intervals corresponding to the drum circumference indicate a damaged or worn imaging (photosensitive) drum that is not holding the electrostatic charge uniformly. The fuser assembly causes issues like toner smearing or not fusing. Pickup roller problems cause paper feed failures.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A 3D printer uses spools of plastic filament that is melted and deposited layer by layer. Which 3D printing technology is this?
+A) Stereolithography (SLA)
+B) Selective Laser Sintering (SLS)
+C) Fused Deposition Modeling (FDM)
+D) Digital Light Processing (DLP)
+Correct: C
+Explanation: FDM (Fused Deposition Modeling) is the most common consumer 3D printing technology, using a heated nozzle to melt plastic filament (PLA, ABS, PETG) and deposit it layer by layer. SLA uses a UV laser to cure liquid photopolymer resin. SLS uses a laser to sinter powdered material without a liquid binder.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user prints a test page successfully but cannot print from any application. Documents appear in the print queue and then disappear without printing. What is the most likely cause?
+A) The printer is out of toner
+B) The printer driver is corrupted or incompatible
+C) The paper tray is empty
+D) The printer IP address has changed
+Correct: B
+Explanation: When test pages print successfully but application-generated jobs disappear from the queue without output, a corrupted or incompatible printer driver is the most common cause, as the driver handles translation of application print data. A toner or paper issue would also prevent the test page from printing. If the IP changed, the printer would be offline and no jobs would be sent.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A network printer is assigned an IP address by DHCP and its IP address changes frequently, disrupting printing for all users. What is the best solution?
+A) Reinstall printer drivers on all computers weekly
+B) Assign the printer a static IP address or DHCP reservation
+C) Connect the printer via USB to each workstation
+D) Disable the printer's wireless adapter
+Correct: B
+Explanation: Assigning a static IP address or creating a DHCP reservation ties a fixed IP to the printer's MAC address so it never changes, eliminating the need to reconfigure client computers. Reinstalling drivers is a workaround, not a solution. USB connections would not scale for a shared network printer environment.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud service model provides virtualized computing infrastructure (servers, storage, networking) over the internet, where the customer manages the OS and applications?
+A) SaaS
+B) PaaS
+C) IaaS
+D) DaaS
+Correct: C
+Explanation: IaaS (Infrastructure as a Service) provides raw computing infrastructure — virtual machines, storage, and networking — that the customer manages from the OS level up. PaaS provides a development platform where the provider manages the OS and middleware. SaaS delivers fully managed applications accessible via a web browser.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A development team needs a platform to build and deploy web applications without managing the underlying servers or OS. Which cloud model is most appropriate?
+A) IaaS
+B) PaaS
+C) SaaS
+D) Private cloud
+Correct: B
+Explanation: PaaS (Platform as a Service) provides a managed environment including the OS, runtime, and middleware, allowing developers to focus on writing and deploying code without managing infrastructure. IaaS requires the team to manage the OS and server configuration. SaaS provides finished applications rather than a development platform.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Microsoft 365 and Google Workspace are examples of which cloud service model?
+A) IaaS
+B) PaaS
+C) SaaS
+D) CaaS
+Correct: C
+Explanation: SaaS (Software as a Service) delivers fully functional applications over the internet that users access through a browser or thin client, with the provider managing everything from infrastructure to the application itself. Microsoft 365 and Google Workspace provide email, documents, and collaboration tools as a service. IaaS and PaaS are lower-level cloud models requiring more customer management.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud deployment model is owned and operated exclusively by a single organization and hosted either on-premises or by a third party?
+A) Public cloud
+B) Hybrid cloud
+C) Community cloud
+D) Private cloud
+Correct: D
+Explanation: A private cloud is dedicated to a single organization, providing greater control, security, and customization compared to public cloud services. A public cloud is shared infrastructure available to any paying customer. A hybrid cloud combines public and private cloud environments. A community cloud is shared among organizations with common requirements.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A company uses AWS for some workloads while maintaining on-premises servers for sensitive data. Which cloud deployment model describes this arrangement?
+A) Public cloud
+B) Private cloud
+C) Hybrid cloud
+D) Community cloud
+Correct: C
+Explanation: A hybrid cloud combines on-premises or private cloud resources with public cloud services, allowing organizations to keep sensitive workloads in-house while leveraging public cloud scalability for other tasks. A public cloud uses entirely third-party infrastructure. A community cloud is shared among multiple organizations with shared concerns.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud characteristic allows a user to automatically provision computing resources as needed without requiring human interaction from the service provider?
+A) Measured service
+B) Rapid elasticity
+C) On-demand self-service
+D) Resource pooling
+Correct: C
+Explanation: On-demand self-service is the cloud characteristic that allows users to provision resources (virtual machines, storage, bandwidth) automatically through a portal or API without needing to contact the provider. Measured service (metered utilization) tracks resource consumption for billing. Rapid elasticity refers to the ability to quickly scale resources up or down.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud characteristic describes the provider's ability to serve multiple customers using the same physical infrastructure while keeping each customer's data logically separated?
+A) On-demand self-service
+B) Resource pooling
+C) Rapid elasticity
+D) Broad network access
+Correct: B
+Explanation: Resource pooling means the provider uses a multi-tenant model to serve multiple customers from the same shared physical resources (compute, storage, network), with logical isolation between tenants. Rapid elasticity is the ability to scale resources quickly. Broad network access means services are available over the network via standard client devices.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A company's cloud provider charges based on the exact amount of CPU time, storage, and bandwidth consumed each month. Which cloud characteristic is being applied?
+A) Rapid elasticity
+B) Resource pooling
+C) On-demand self-service
+D) Measured service (metered utilization)
+Correct: D
+Explanation: Measured service (metered utilization) means cloud resource usage is monitored, controlled, and reported, enabling the pay-as-you-go billing model where customers pay only for what they consume. Rapid elasticity refers to scaling capacity. Resource pooling refers to shared physical infrastructure serving multiple tenants.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Several healthcare organizations share a cloud environment built specifically to meet HIPAA compliance requirements. Which cloud deployment model is this?
+A) Private cloud
+B) Public cloud
+C) Hybrid cloud
+D) Community cloud
+Correct: D
+Explanation: A community cloud is shared infrastructure used by organizations that have common concerns such as regulatory compliance, security requirements, or mission. Healthcare organizations sharing HIPAA-compliant infrastructure is a textbook community cloud example. A private cloud serves only one organization. A public cloud is open to any customer and may not meet specific regulatory needs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud characteristic describes the ability to quickly increase or decrease compute resources in response to changing demand?
+A) On-demand self-service
+B) Measured service
+C) Rapid elasticity
+D) Broad network access
+Correct: C
+Explanation: Rapid elasticity allows cloud resources to be provisioned and released quickly — sometimes automatically — to match demand, appearing as unlimited capacity to the user. On-demand self-service is the ability to provision without provider intervention. Measured service refers to metered usage billing.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician needs to connect a new monitor that supports 144 Hz refresh rate at 2560x1440 resolution. Which cable interface can reliably support this without an adapter?
+A) VGA
+B) DVI-D Single Link
+C) DisplayPort 1.2
+D) HDMI 1.4
+Correct: C
+Explanation: DisplayPort 1.2 supports bandwidth sufficient for 2560x1440 at 144 Hz (QHD 144 Hz), making it the appropriate choice. HDMI 1.4 is limited to 1080p at 120 Hz or 4K at 30 Hz. DVI-D Single Link supports only up to 1920x1200 at 60 Hz. VGA is analog and cannot support high refresh rates at modern resolutions.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: What is the maximum length of a standard USB 2.0 cable without a signal repeater?
+A) 3 meters
+B) 5 meters
+C) 10 meters
+D) 1 meter
+Correct: B
+Explanation: The USB 2.0 specification defines a maximum cable length of 5 meters (approximately 16.4 feet) before signal degradation exceeds acceptable limits. USB 3.0 cables have a shorter maximum length of about 3 meters. Active USB extension cables or hubs can be used to extend the distance beyond these limits.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which connector is found on the device end of a standard USB cable connecting a printer or scanner to a computer?
+A) USB-A
+B) USB-B
+C) USB-C
+D) USB Micro-A
+Correct: B
+Explanation: USB-B (Type-B) is the square-shaped connector used on the device end (printers, scanners, hubs) of a standard USB cable, while USB-A connects to the host computer. USB-C is a newer reversible connector replacing both USB-A and USB-B in newer devices. USB Micro-A is a specialized connector for OTG applications.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician is installing RAM in a server that must correct single-bit errors automatically during operation. The server motherboard supports ECC. Which modules should be purchased?
+A) DDR4 non-ECC unbuffered (UDIMM)
+B) DDR4 ECC registered (RDIMM)
+C) DDR4 SO-DIMM
+D) DDR5 non-ECC
+Correct: B
+Explanation: Server environments requiring ECC and high memory capacity use Registered (Buffered) DIMMs (RDIMMs), which include a register chip between the memory controller and the DRAM chips, improving signal integrity at high capacities. Unbuffered ECC DIMMs exist but are limited in capacity and channel count. SO-DIMMs are for laptops, not servers.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A user reports that after installing new RAM, the system only recognizes half the installed capacity. The new sticks are installed in slots 1 and 2 instead of the recommended slots 2 and 4. What should the technician do?
+A) Replace the RAM modules
+B) Move the RAM to the correct dual-channel slots as specified in the motherboard manual
+C) Update the BIOS to recognize the new RAM
+D) Enable XMP in BIOS settings
+Correct: B
+Explanation: Most dual-channel motherboards require DIMMs to be installed in specific slots (often color-coded) to enable dual-channel mode; installing in adjacent slots 1 and 2 instead of 1 and 3 (or 2 and 4) may result in single-channel operation or only partial recognition. The motherboard manual specifies the correct slot population order. XMP enables overclocking profiles, not dual-channel mode.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: An NVMe SSD in a workstation shows an M.2 key type of "M." The motherboard has an M.2 slot with an "M" key. Which statement about this installation is correct?
+A) The drive will not fit because the key types don't match
+B) The M-keyed slot supports NVMe PCIe drives and the installation is correct
+C) An adapter is needed to convert M-key to B-key
+D) M-key slots only support SATA M.2 drives
+Correct: B
+Explanation: The M key (single notch on the right side) is used for NVMe PCIe M.2 drives and is the correct slot for NVMe SSDs. B+M keyed drives have notches on both sides and fit in either B-key or M-key slots but typically run SATA. An M-keyed drive and M-keyed slot are a matching, compatible combination requiring no adapter.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A RAID 5 array consists of five 4 TB drives. One drive fails and is replaced. During the rebuild, a second drive fails. What is the result?
+A) The array rebuilds using the parity from the remaining drives
+B) The array continues operating in degraded mode
+C) All data on the array is lost
+D) The second failed drive's data is preserved on the hot spare
+Correct: C
+Explanation: RAID 5 can tolerate only a single drive failure at a time; a second drive failure during rebuild results in complete data loss because parity information from the first failed drive is still being reconstructed. This is why the rebuild window on large drives is considered a risk period. RAID 6 tolerates two simultaneous failures using dual parity.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician is building a compact workstation using a Mini-ITX motherboard. How many PCIe expansion slots does a standard Mini-ITX board typically provide?
+A) None
+B) One
+C) Two
+D) Four
+Correct: B
+Explanation: Due to its compact 6.7 × 6.7-inch size, a Mini-ITX motherboard typically provides only one PCIe expansion slot (usually x16 for a GPU). ATX boards can accommodate up to seven expansion slots. This limitation is a key trade-off when choosing Mini-ITX for space-constrained builds.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A workstation's BIOS does not recognize an NVMe SSD installed in the M.2 slot. The drive is known to be functional. What BIOS setting should the technician check?
+A) Secure Boot mode
+B) TPM configuration
+C) M.2 slot PCIe/NVMe mode vs. SATA mode
+D) Memory XMP profile
+Correct: C
+Explanation: Some M.2 slots can operate in either SATA or PCIe/NVMe mode, and the BIOS may need to be configured to recognize an NVMe drive if the default mode is set to SATA. Secure Boot and TPM settings do not affect drive detection during POST. XMP is a memory overclocking setting unrelated to storage detection.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician applies too much thermal paste to a CPU and the excess spreads onto the motherboard socket. What is the most likely consequence?
+A) Improved heat dissipation
+B) Potential short circuits from conductive thermal paste bridging contacts
+C) The CPU will run at lower clock speeds
+D) The heatsink will not seat properly due to excess thickness
+Correct: B
+Explanation: Many thermal pastes contain metallic particles (silver-based compounds) that can conduct electricity; if such paste contacts the CPU socket pins or surrounding circuitry, it can cause short circuits. Non-conductive pastes are safer if spread occurs, but all excess paste should be cleaned immediately. Too much paste also creates a thicker thermal barrier that can actually worsen heat transfer.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician replaces a PSU in a system, but after installation the system powers on for 2 seconds then shuts off. What should the technician check first?
+A) Whether the 24-pin ATX connector is fully seated on the motherboard
+B) Whether the case fans are spinning
+C) Whether the monitor is connected
+D) Whether the hard drive is recognized
+Correct: A
+Explanation: A system that powers on briefly then immediately shuts off often has an improperly seated ATX main power connector, causing the motherboard to detect a power fault. This is one of the first checks after a PSU replacement. Monitor connection and HDD recognition would not cause an immediate power cutoff, and fans spinning indicates the system did receive power momentarily.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A laser printer produces output with toner that smears when touched immediately after printing. Which component is most likely defective?
+A) Imaging drum
+B) Toner cartridge
+C) Fuser assembly
+D) Transfer corona wire
+Correct: C
+Explanation: The fuser assembly uses heat and pressure rollers to permanently bond toner to the paper; if the fuser is defective or not reaching operating temperature, toner will not be fused and will smear when touched. An imaging drum problem causes banding or ghost images. A toner cartridge issue causes light or missing output, not smearing.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user prints a 50-page document and the pages come out in reverse order (page 50 first). Which print setting controls the order pages are output?
+A) Duplex
+B) Orientation
+C) Collation
+D) Print quality
+Correct: C
+Explanation: Collation settings control whether multi-page and multi-copy documents are assembled in the correct page order. Printing in reverse order is a collation issue, often correctable by selecting "Reverse page order" or adjusting the collation option in the printer properties. Duplex controls double-sided printing, and orientation controls portrait vs. landscape.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A company's cloud infrastructure automatically provisions additional web server instances during peak traffic and removes them when demand drops. Which cloud characteristic is this?
+A) Measured service
+B) On-demand self-service
+C) Rapid elasticity
+D) Resource pooling
+Correct: C
+Explanation: Rapid elasticity is the cloud capability that allows resources to be provisioned and released quickly — often automatically — to align with workload demand, appearing to the user as limitless capacity. Measured service tracks usage for billing. On-demand self-service is user-initiated provisioning without provider assistance.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician is installing network cable in a building and needs to run it vertically between floors through the building's internal pathways. Which cable rating is required for this vertical run?
+A) Plenum
+B) PVC
+C) Riser
+D) Direct burial
+Correct: C
+Explanation: Riser-rated cable (CMR) is designed for vertical runs between floors through conduit or cable risers and has fire-retardant properties to prevent flames from spreading between floors. Plenum cable is required for air-handling spaces and exceeds riser requirements. Direct burial cable is designed for underground outdoor runs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which USB version introduced the blue-colored Type-A connector to visually distinguish it from USB 2.0 ports on devices?
+A) USB 1.1
+B) USB 2.0
+C) USB 3.0
+D) USB 4.0
+Correct: C
+Explanation: USB 3.0 introduced the blue color coding for Type-A connectors and ports to help users visually distinguish SuperSpeed USB 3.0 ports from the older black or white USB 2.0 ports. USB 4.0 uses the USB-C connector form factor. USB 1.1 ports were typically white or gray.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician needs to install RAM into a system where the CPU has a dual-channel memory controller and the motherboard has four slots. For maximum performance, how many sticks and in which configuration should be installed?
+A) One stick in slot 1
+B) Two sticks of the same capacity in the dual-channel slots (e.g., A1 and B1)
+C) Three sticks in slots 1, 2, and 3
+D) Four sticks of different capacities
+Correct: B
+Explanation: To activate dual-channel mode with a four-slot motherboard, two identical capacity sticks should be installed in the manufacturer-specified paired slots (typically A1/B1 or A2/B2, often color-coded), which doubles the effective memory bus width to 128 bits. Odd numbers of sticks cannot form symmetric channel pairs. Mixed-capacity configurations may fall back to single-channel or flex mode.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A storage administrator wants to implement a RAID configuration that can sustain two simultaneous drive failures across a six-drive array. Which RAID level provides this tolerance?
+A) RAID 5
+B) RAID 6
+C) RAID 10
+D) RAID 1
+Correct: B
+Explanation: RAID 6 uses dual distributed parity, allowing the array to sustain any two simultaneous drive failures without data loss, making it suitable for large arrays where the risk of a second failure during rebuild is significant. RAID 5 tolerates only a single drive failure. RAID 10 can tolerate multiple failures only if they are not both drives in the same mirrored pair.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A content creation studio needs storage with the highest sequential write performance for recording uncompressed 4K video. Which option is best?
+A) 5400 RPM 3.5-inch HDD RAID 1
+B) 7200 RPM HDD RAID 5
+C) NVMe SSD RAID 0
+D) SATA SSD single drive
+Correct: C
+Explanation: NVMe SSDs in RAID 0 stripe data across multiple drives, combining the high sequential throughput of NVMe (3,500+ MB/s per drive) to achieve maximum write speeds needed for uncompressed 4K video. SATA SSDs and HDDs cannot match NVMe's sequential performance. RAID 1 and RAID 5 with HDDs would be far below the bandwidth requirements for uncompressed 4K.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: An HSM (Hardware Security Module) in an enterprise environment serves what primary purpose?
+A) Monitoring CPU temperatures and fan speeds
+B) Storing and managing cryptographic keys in a tamper-resistant device
+C) Providing hardware-level RAID functionality
+D) Filtering network traffic at the hardware level
+Correct: B
+Explanation: An HSM (Hardware Security Module) is a physical device dedicated to securely generating, storing, and managing cryptographic keys and performing cryptographic operations in a tamper-resistant, certified environment. Unlike software key storage, HSMs provide physical protection against key extraction. RAID controllers and temperature monitoring are handled by separate hardware components.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician configures UEFI Secure Boot on a new workstation. What does Secure Boot prevent?
+A) Unauthorized users from changing BIOS settings
+B) Unsigned or untrusted bootloaders and OS kernels from loading
+C) The system from booting from USB drives
+D) Overclocking of the CPU beyond rated specifications
+Correct: B
+Explanation: Secure Boot is a UEFI feature that verifies the digital signatures of bootloaders and OS kernels against a database of trusted certificates, preventing malware, rootkits, and unsigned software from loading during the boot process. It does not prevent USB booting by itself (boot order settings do that). Password-protecting UEFI settings is a separate security feature.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician is installing a SATA SSD in a desktop that currently only has Molex connectors available from the PSU. What is needed to connect the SSD?
+A) A SATA to Molex power adapter cable
+B) A Molex to SATA power adapter cable
+C) An additional PSU
+D) A PCIe to SATA power cable
+Correct: B
+Explanation: A Molex-to-SATA power adapter converts the 4-pin Molex peripheral connector output to the 15-pin SATA power connector required by SATA drives. Note the direction matters — converting Molex (source) to SATA (destination). Using a SATA-to-Molex cable in the opposite direction would require a SATA power source, which the PSU doesn't provide.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user prints a landscape-oriented spreadsheet but the output is cut off on the right side. Which print setting needs to be adjusted?
+A) Paper quality
+B) Collation
+C) Page orientation
+D) Print resolution
+Correct: C
+Explanation: Changing the page orientation from portrait to landscape in the print settings ensures the printer formats the output to match the document's horizontal layout, preventing cutoff. Collation affects page ordering in multi-copy jobs. Resolution affects print quality, not how content fits on the page.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: Which printing method places inkjet cartridges in the printer and works by heating ink to create bubbles that force droplets onto the page?
+A) Continuous ink tank
+B) Thermal inkjet
+C) Piezoelectric inkjet
+D) Solid ink
+Correct: B
+Explanation: Thermal inkjet technology (used in Canon and HP printers) uses tiny resistors to superheat ink, creating a vapor bubble that forces a droplet through the nozzle onto the paper. Piezoelectric inkjet (used in Epson printers) uses electrically stimulated crystals to eject ink without heat. Continuous ink tank printers use reservoirs rather than cartridges but still use one of these methods.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: An organization uses Amazon Web Services (AWS) for cloud computing. AWS is an example of which cloud deployment model?
+A) Private cloud
+B) Community cloud
+C) Public cloud
+D) Hybrid cloud
+Correct: C
+Explanation: AWS, Microsoft Azure, and Google Cloud Platform are public cloud providers that offer shared infrastructure to any paying customer over the internet. A private cloud is exclusively used by a single organization. A hybrid cloud combines on-premises or private cloud with a public cloud provider.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician needs to connect a laptop's USB-C port to an older projector with only a VGA input. What is required?
+A) No adapter is needed; USB-C natively supports VGA
+B) A USB-C to VGA adapter or dock
+C) A DisplayPort to HDMI cable
+D) A Thunderbolt to DVI adapter
+Correct: B
+Explanation: USB-C does not natively output VGA signals, requiring an active USB-C to VGA adapter that converts the digital DisplayPort Alt Mode signal to the analog VGA format. Thunderbolt 3/4 also uses USB-C and can use the same adapters. A DisplayPort-to-HDMI cable would not help connect to a VGA projector.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Cat 5e cable is rated for which maximum Ethernet speed over 100 meters?
+A) 100 Mbps
+B) 1 Gbps
+C) 10 Gbps
+D) 2.5 Gbps
+Correct: B
+Explanation: Cat 5e (Category 5 enhanced) is rated for 1000BASE-T (Gigabit Ethernet) over 100 meters, using all four wire pairs with crosstalk improvements over original Cat 5. Cat 5e cannot reliably support 10 Gbps at full 100-meter distances. Cat 6 introduced improved shielding and twist rates for 10 Gbps support.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A motherboard has a maximum RAM capacity of 64 GB across four DDR4 slots. The user wants to maximize memory while remaining under this limit. Which RAM configuration achieves this?
+A) Four sticks of 8 GB
+B) Two sticks of 16 GB
+C) Four sticks of 16 GB
+D) Two sticks of 32 GB
+Correct: C
+Explanation: Four sticks of 16 GB = 64 GB total, exactly reaching the motherboard's maximum capacity while using all four slots for potential dual-channel operation across both channel pairs. Two sticks of 32 GB also equals 64 GB but leaves two slots empty; while functional, four sticks can improve bandwidth on boards that support it. Four sticks of 8 GB is only 32 GB.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A system builder is creating a budget gaming PC and wants to use two SSDs — one for the OS and one for game storage. The motherboard has one M.2 slot and two SATA ports. What is the most cost-effective configuration?
+A) Two NVMe M.2 SSDs
+B) One NVMe M.2 SSD for the OS and one SATA SSD for game storage
+C) Two SATA HDDs
+D) One SATA SSD for the OS and one HDD for games
+Correct: B
+Explanation: Using an NVMe M.2 SSD for the OS provides fast boot and load times, while a larger SATA SSD in the SATA port provides cost-effective game storage capacity, maximizing the available interfaces on the motherboard. Two NVMe SSDs would require two M.2 slots which are unavailable. SATA HDDs would bottleneck game loading compared to SSDs.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: After installing a new PCIe NIC in a workstation, the existing onboard NIC is no longer available. What BIOS setting likely needs to be checked?
+A) Enable virtualization support
+B) Disable onboard NIC or set PCIe NIC as primary
+C) Enable fast boot
+D) Set SATA to AHCI mode
+Correct: B
+Explanation: Many motherboards automatically disable the onboard NIC when a PCIe NIC is installed, or the BIOS may need to be configured to enable both. Checking the BIOS/UEFI network controller settings allows the technician to re-enable the onboard NIC or configure which adapter is primary. Virtualization, boot speed, and SATA mode settings are unrelated to NIC availability.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician is installing a CPU and notes the AMD AM4 socket. What socket characteristic describes AM4?
+A) LGA — pins on the motherboard socket
+B) PGA — pins on the CPU package
+C) BGA — permanently soldered to the board
+D) ZIF — requires tools to insert the CPU
+Correct: B
+Explanation: AMD AM4 uses a PGA (Pin Grid Array) design where the pins are on the CPU itself and insert into holes in the motherboard socket, which uses a ZIF (Zero Insertion Force) lever mechanism. Intel's LGA sockets have the pins on the motherboard. BGA packages are soldered and non-removable, used in mobile processors.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A PSU label reads "Input: 100-240V~, 50/60Hz." What does this indicate?
+A) The PSU requires a step-down transformer for 240V use
+B) The PSU automatically adjusts to both US (110V) and European (220V) power standards
+C) The PSU can only be used at 100V
+D) The PSU requires manual voltage selection before use
+Correct: B
+Explanation: A dual-voltage or universal input range of 100-240V indicates the PSU contains auto-sensing circuitry that automatically adjusts to incoming voltage between 100V and 240V at 50 or 60 Hz, making it compatible worldwide without switches or transformers. Older PSUs with fixed-voltage designs require a manual selection switch and are not universal.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A technician installs a new printer on a Windows workstation. The printer uses a manufacturer-specific driver. Why is installing the correct driver important?
+A) Drivers determine the printer's physical paper tray capacity
+B) Drivers enable communication between the OS and printer hardware, enabling full feature access
+C) Drivers set the printer's IP address on the network
+D) Drivers physically adjust print head alignment
+Correct: B
+Explanation: Printer drivers translate OS print commands into the printer's native language (PCL, PostScript, or proprietary), and they expose the printer's features such as duplex, paper type selection, and resolution options to the user and applications. Generic drivers may work for basic printing but will not expose manufacturer-specific features. IP address configuration is done through network settings, not drivers.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud service model requires the least management responsibility from the customer, as the provider handles infrastructure, platform, runtime, and the application itself?
+A) IaaS
+B) PaaS
+C) SaaS
+D) DaaS
+Correct: C
+Explanation: In the SaaS model, the cloud provider manages everything from the physical infrastructure through the application layer; the customer only manages user access and data. IaaS requires the customer to manage OS, middleware, runtime, and applications. PaaS requires management of applications and data.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician identifies an orange fiber optic cable on a patch panel. What type of fiber is this most likely?
+A) Single-mode fiber (9/125 µm)
+B) Multi-mode OM1 or OM2 fiber (62.5 or 50 µm)
+C) Plastic optical fiber (POF)
+D) Photonic crystal fiber
+Correct: B
+Explanation: Orange jacket color is the standard designation for OM1 (62.5 µm) and OM2 (50 µm) multi-mode fiber optic cable. Aqua or blue jackets indicate OM3 and OM4 multi-mode fiber. Single-mode fiber typically uses a yellow jacket. Color-coding helps technicians identify fiber type without testing.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: Which video connector standard supports daisy-chaining multiple monitors from a single output port?
+A) HDMI 2.1
+B) DVI-D
+C) DisplayPort (with MST)
+D) VGA
+Correct: C
+Explanation: DisplayPort supports Multi-Stream Transport (MST), which allows multiple monitors to be daisy-chained from a single DisplayPort output using MST-capable hubs or monitors. HDMI does not support daisy-chaining in consumer implementations. VGA and DVI are single-display analog and digital interfaces respectively.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician is installing DDR4 RAM but the module will not seat in the slot despite firm pressure. What is the most likely cause?
+A) The module is defective
+B) The module is being inserted in the wrong direction due to misaligned notch
+C) The slot is covered by the CPU cooler
+D) DDR4 is incompatible with this motherboard's chipset
+Correct: B
+Explanation: DDR4 DIMMs have a single notch off-center that acts as a key to ensure correct orientation; if the module is reversed, the notch will not align with the ridge in the slot and it will not seat. Each DDR generation has the notch in a different position to prevent cross-generation installation. A defective module or chipset incompatibility would not cause a physical seating issue.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A home user needs to back up 500 GB of data to removable optical media. Which modern optical disc format can store up to 50 GB per disc and would minimize the number of discs needed?
+A) CD-R
+B) DVD+R DL
+C) BD-R DL (Dual Layer Blu-ray)
+D) DVD-R
+Correct: C
+Explanation: Dual-layer Blu-ray (BD-R DL) can store up to 50 GB per disc, requiring 10 discs to store 500 GB of data. DVD+R DL holds only 8.5 GB per disc, requiring nearly 60 discs. Single-layer Blu-ray holds 25 GB. CDs hold only 700 MB. Blu-ray DL is the most efficient optical backup choice.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A Micro-ATX motherboard is being installed in an ATX mid-tower case. Is this compatible?
+A) No, Micro-ATX requires a Micro-ATX specific case
+B) Yes, ATX cases support Micro-ATX and Mini-ITX boards using the standardized mounting hole positions
+C) No, the IO shield will not fit
+D) Yes, but an adapter bracket is required
+Correct: B
+Explanation: ATX cases are designed with mounting holes that accommodate ATX, Micro-ATX, and Mini-ITX motherboards, as all form factors use a common subset of mounting hole positions. The IO shield is motherboard-specific and included with the motherboard, fitting the case's IO cutout. No adapter bracket is needed for this common compatibility.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A desktop's CPU temperature consistently reaches 95°C under moderate load. Which corrective action should be performed first?
+A) Underclock the CPU in BIOS
+B) Replace the thermal paste and reseat the heatsink
+C) Add more RAM
+D) Replace the power supply
+Correct: B
+Explanation: Excessive CPU temperatures are most commonly caused by degraded or improperly applied thermal paste creating poor thermal contact between the CPU and heatsink. Reapplying quality thermal paste and ensuring the heatsink is properly seated is the first corrective action. Adding RAM does not affect CPU temperature, and PSU replacement would not resolve thermal issues.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A server farm needs power supplies that can deliver power even when one PSU fails, and the failed unit must be replaceable during operation. What type of PSU configuration is required?
+A) High-wattage single PSU
+B) 80 Plus Titanium certified PSU
+C) Fully modular PSU
+D) Hot-swap redundant PSU
+Correct: D
+Explanation: Hot-swap redundant power supplies allow a failed unit to be removed and a replacement inserted while the system continues running on the remaining PSU(s), critical for server uptime requirements. 80 Plus Titanium is an efficiency rating unrelated to redundancy. Modular cabling reduces clutter but does not provide fault tolerance. A single high-wattage PSU creates a single point of failure.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user needs to print a brochure with photos at the highest possible print quality. Which setting should be selected in the printer properties?
+A) Draft mode
+B) Normal quality
+C) Economy mode
+D) Best or photo quality
+Correct: D
+Explanation: Best or photo quality settings use the highest resolution DPI (dots per inch) and finer ink application, producing the most detailed output suitable for photographs and professional brochures. Draft and economy modes use less ink and lower resolution for faster, cheaper text printing. Normal quality is a middle ground not optimized for photo output.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: An inkjet printer produces output where colors appear shifted, with cyan lines appearing where black text should be. What is the most likely cause?
+A) Empty magenta cartridge
+B) Misaligned print heads
+C) Corrupted printer driver
+D) Wrong paper type selected
+Correct: B
+Explanation: Color shifting and misaligned output in inkjet printers is typically caused by misaligned print heads, which can occur after a cartridge replacement, transport, or mechanical impact. Print head alignment calibration prints a test pattern and adjusts the head positions electronically. Empty cartridges would cause missing color output, not color shifting.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A startup wants to avoid capital expenditure on physical servers and instead pay monthly for computing resources that scale with their user growth. Which cloud benefit best describes this model?
+A) Resource pooling
+B) Rapid elasticity
+C) On-demand self-service
+D) Metered utilization with pay-as-you-go pricing
+Correct: D
+Explanation: Metered utilization with pay-as-you-go pricing converts capital expenditure (CapEx) into operating expenditure (OpEx), allowing startups to avoid large upfront hardware investments and pay only for resources consumed. Rapid elasticity is the ability to scale, which complements but is distinct from the billing model. Resource pooling describes shared infrastructure across tenants.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A gaming enthusiast wants to connect a monitor supporting 8K resolution at 60 Hz. Which cable interface is required?
+A) HDMI 1.4
+B) DisplayPort 1.2
+C) HDMI 2.1
+D) DVI-D Dual Link
+Correct: C
+Explanation: HDMI 2.1 supports up to 10K resolution and 8K at 60 Hz with a maximum bandwidth of 48 Gbps, making it the cable of choice for 8K displays. DisplayPort 1.2 maxes out at 4K/60 Hz in practice. HDMI 1.4 supports only 4K at 30 Hz. DVI-D Dual Link tops out at 2560x1600 at 60 Hz.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: An eSATA cable is used to connect which type of device?
+A) An internal 3.5-inch desktop hard drive
+B) An external SATA hard drive or SSD enclosure
+C) A SCSI tape drive
+D) An NVMe external SSD
+Correct: B
+Explanation: eSATA (External SATA) uses a shielded connector variant of the SATA interface designed for external storage devices such as hard drive enclosures, providing SATA-speed connectivity without the USB overhead. Internal SATA drives use the standard 7-pin SATA connector. NVMe external drives use USB 3.x or Thunderbolt interfaces, not eSATA.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A user wants to enable XMP (Extreme Memory Profile) for their DDR4 kit rated at DDR4-3600. What does enabling XMP accomplish?
+A) Enables ECC error correction on non-ECC modules
+B) Sets the RAM to its rated overclock speed and timings
+C) Converts the RAM to dual-channel mode automatically
+D) Increases the RAM's voltage to dangerous levels
+Correct: B
+Explanation: XMP is an Intel specification (AMD calls their version EXPO) that stores overclock profiles on the RAM module's SPD chip; enabling XMP in BIOS applies the manufacturer-validated frequency, timing, and voltage settings for the rated speed. By default, DDR4 runs at JEDEC standard speeds (typically 2133 or 2400 MHz) regardless of the rated speed. XMP does not affect error correction or channel configuration.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A database server requires storage with the lowest possible random read latency for transaction processing. Which storage solution is best?
+A) 15,000 RPM SAS HDD
+B) SATA SSD
+C) NVMe SSD (PCIe Gen 4)
+D) RAID 5 array of 7200 RPM HDDs
+Correct: C
+Explanation: NVMe SSDs on PCIe Gen 4 achieve random read latencies of under 100 microseconds and extremely high IOPS, far exceeding SATA SSDs and spinning disks for database transaction workloads. SATA SSDs offer much better latency than HDDs but are constrained by the SATA interface. RAID 5 with HDDs improves sequential throughput but does not address the inherent rotational latency of spinning disks.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician is upgrading a CPU. The new processor requires a socket that is different from the existing motherboard socket. What must also be replaced?
+A) The RAM modules only
+B) The power supply unit
+C) The motherboard
+D) The GPU
+Correct: C
+Explanation: CPU sockets are specific to a processor generation and manufacturer; if the new CPU requires a different socket, a new compatible motherboard must be purchased. RAM may also need to be replaced if the new platform requires a different DDR generation. The PSU and GPU are generally not socket-dependent.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: Which PSU connector type is used to power PCIe graphics cards and comes in 6-pin and 8-pin variants?
+A) EPS CPU connector
+B) Molex peripheral connector
+C) PCIe power connector
+D) SATA power connector
+Correct: C
+Explanation: PCIe power connectors (6-pin providing 75W and 8-pin providing 150W) are used to supply additional power to discrete graphics cards beyond the 75W available from the PCIe slot itself. The EPS connector powers the CPU. Molex connectors power older peripherals. SATA power connectors power storage devices.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user needs to send a physical document to a remote office using a multifunction device. The remote office can only receive faxes. Which MFP function should be used?
+A) Scan to email
+B) Copy
+C) Fax
+D) Cloud print
+Correct: C
+Explanation: The fax function on an MFP transmits a scanned document over a telephone line (PSTN or VoIP) to a receiving fax machine or fax server at the remote office. Scan to email requires the recipient to have email capability, not fax. Copy produces a local physical copy. Cloud print sends a job to a networked printer, not to a remote fax machine.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: A government agency builds a cloud environment exclusively for use by federal agencies with shared security and compliance controls. Which deployment model is this?
+A) Public cloud
+B) Private cloud
+C) Community cloud
+D) Hybrid cloud
+Correct: C
+Explanation: A community cloud is a shared infrastructure built for a specific group of organizations with common requirements such as government security classifications, compliance standards, or regulatory frameworks. It is not open to the general public like a public cloud, and it is not exclusive to a single organization like a private cloud. Multiple government agencies sharing infrastructure is a textbook community cloud.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician measures the attenuation of a fiber optic cable run and finds it exceeds acceptable limits. Which factor most likely caused this?
+A) Using Cat 6a instead of Cat 8
+B) Excessive bend radius violations in the fiber run
+C) Connecting two different RG-6 segments with a barrel connector
+D) Running the fiber parallel to power cables
+Correct: B
+Explanation: Fiber optic cable is sensitive to bending; exceeding the minimum bend radius causes light to escape the core (macrobending loss), significantly increasing signal attenuation. Electromagnetic interference from parallel power cables affects copper cables but not fiber, which is immune to EMI. RG-6 and Cat 6a are copper standards, not fiber.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: USB 4.0 is based on which protocol and achieves a maximum speed of how much?
+A) USB 3.2, 20 Gbps
+B) Thunderbolt 3, 40 Gbps
+C) FireWire 800, 800 Mbps
+D) eSATA, 6 Gbps
+Correct: B
+Explanation: USB 4.0 is based on the Thunderbolt 3 protocol and specification, achieving a maximum speed of 40 Gbps while maintaining backward compatibility with USB 3.2, USB 2.0, and Thunderbolt 3 devices. It uses the USB-C connector exclusively. This integration essentially made Thunderbolt 3 an open standard through USB 4.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: A technician needs to upgrade the RAM in a Mac Mini with soldered memory. What should the technician advise the user?
+A) Replace the logic board with one that has removable RAM
+B) The RAM cannot be upgraded as it is permanently attached to the board
+C) Install a RAM upgrade kit through the bottom access panel
+D) Use an external RAM expansion over Thunderbolt
+Correct: B
+Explanation: Many modern compact computers, including certain Mac Mini, MacBook, and thin-and-light laptop models, use BGA (Ball Grid Array) soldered RAM that is permanently attached to the logic board and cannot be upgraded. Users must select the desired RAM capacity at the time of purchase. External Thunderbolt RAM expansion devices do not exist as a consumer product.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A field technician installs flash storage into an industrial device that must withstand vibration and shock that would damage spinning drives. Which storage type is most appropriate?
+A) 2.5-inch 5400 RPM HDD
+B) 3.5-inch 7200 RPM HDD
+C) Solid-state flash storage (SSD or eMMC)
+D) 10,000 RPM SAS HDD
+Correct: C
+Explanation: Solid-state storage has no moving parts, making it inherently resistant to vibration and physical shock that would cause read/write head crashes in spinning HDDs. Industrial SSDs and eMMC storage are designed specifically for rugged environments. HDDs at any RPM use mechanical components susceptible to vibration-induced failure.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician builds a system and the POST completes, but the system will not boot from the new NVMe SSD. The BIOS shows the drive in the storage list. What should be checked next?
+A) Replace the NVMe drive
+B) Check that the boot order places the NVMe drive first and Secure Boot is compatible
+C) Install a SATA SSD instead
+D) Update the graphics card driver
+Correct: B
+Explanation: If the drive is detected but the system won't boot from it, the boot order may have the NVMe drive listed below other bootable devices, or Secure Boot may be rejecting an unsigned bootloader on a freshly installed OS. Setting the NVMe drive first in the boot priority and confirming Secure Boot settings resolves this in most cases. Replacing the drive is premature when it is detected by the BIOS.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A technician measures voltages on a running PSU using a multimeter. The +12V rail reads 11.4V under load. What does this indicate?
+A) Normal operation within ATX tolerance
+B) PSU is failing — voltage is out of ATX specification
+C) The multimeter requires calibration
+D) The CPU is overclocked too aggressively
+Correct: B
+Explanation: The ATX specification allows ±5% tolerance on the +12V rail, meaning acceptable range is 11.4V to 12.6V; however, 11.4V is right at the edge of tolerance and indicates the PSU is struggling under load, a sign of aging or undersized PSU. Voltages consistently below 11.4V are definitively out of specification. This symptom warrants PSU replacement to prevent instability.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A laser printer repeatedly jams at the paper input tray. The paper is the correct size and type. Which component is the most likely cause?
+A) Fuser assembly
+B) Imaging drum
+C) Pickup roller
+D) Transfer belt
+Correct: C
+Explanation: The pickup roller is the rubber roller that grabs paper from the tray and feeds it into the printer; when worn or dirty, it slips and fails to pick up paper consistently, causing paper jams at the input. The fuser is located at the output end and causes jams or smearing there. The imaging drum and transfer belt are involved in toner application, not paper feeding.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: An organization's IT team manages virtual machines on cloud infrastructure but the cloud provider manages the physical servers, networking, and storage hardware. Which cloud model is the organization using?
+A) SaaS
+B) PaaS
+C) IaaS
+D) On-premises
+Correct: C
+Explanation: In the IaaS model, the cloud provider owns and manages the physical infrastructure (servers, network, storage) while the customer is responsible for the virtual machines, OS, middleware, runtime, applications, and data running on that infrastructure. SaaS manages everything including the application. PaaS manages up through the runtime, leaving only application and data to the customer.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A technician needs to cable a rack of servers to a top-of-rack switch using very short high-speed copper links. Which cable type is specifically designed for this use case?
+A) Cat 6a patch cables
+B) Direct Attach Copper (DAC) cables with SFP+ connectors
+C) Multi-mode fiber with LC connectors
+D) eSATA cables
+Correct: B
+Explanation: Direct Attach Copper (DAC) cables with SFP+ or QSFP connectors are passive copper cables used for very short (1-7 meter) server-to-switch connections in data centers, providing 10, 25, or 40 Gbps connectivity at lower cost than fiber optic solutions. Cat 6a supports 10 Gbps at 100 meters but uses RJ-45 connectors incompatible with SFP ports. DAC cables are the standard short-range data center interconnect.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.2 — Given a scenario, install the appropriate RAM
+Question: Which characteristic distinguishes DDR5 from DDR4 in terms of on-module design?
+A) DDR5 uses a 288-pin connector identical to DDR4
+B) DDR5 integrates a power management IC (PMIC) directly on the module
+C) DDR5 requires a higher 1.5V operating voltage
+D) DDR5 uses a 240-pin connector for backward compatibility
+Correct: B
+Explanation: DDR5 moves the voltage regulator circuitry onto the module itself as a PMIC (Power Management Integrated Circuit), shifting power regulation from the motherboard to each DIMM for better stability and more precise voltage control. DDR5 uses 288 pins but with a different notch position than DDR4, preventing cross-installation. DDR5 operates at 1.1V, lower than DDR4's 1.2V.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A technician configures a RAID 1 array with two 4 TB drives. What is the total usable storage capacity?
+A) 8 TB
+B) 6 TB
+C) 4 TB
+D) 2 TB
+Correct: C
+Explanation: RAID 1 mirrors the same data on both drives, providing fault tolerance but using only half the total raw capacity for usable storage. With two 4 TB drives (8 TB raw), only 4 TB is usable. The remaining 4 TB is used for the redundant mirror copy. RAID 0 would yield 8 TB usable but with no redundancy.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: A technician replaces a CPU cooler. When removing the old heatsink, the CPU comes out of the socket attached to the heatsink. Which type of socket does this system use?
+A) LGA (Land Grid Array)
+B) BGA (Ball Grid Array)
+C) ZIF (Zero Insertion Force) — PGA
+D) FCLGA (Flip Chip LGA)
+Correct: C
+Explanation: In PGA (Pin Grid Array) sockets used by AMD, the CPU has pins that insert into the socket; if thermal paste has become adhesive over time, the CPU can lift out of the socket attached to the heatsink rather than remaining in the socket. LGA sockets (used by Intel) have the pins on the socket, and the CPU typically stays on the motherboard since there are no pins to pull it up. ZIF is the lever mechanism used with PGA sockets.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user reports their wireless printer disconnects frequently and must be reconnected manually. The printer is near the router. What is the most effective long-term solution?
+A) Reinstall the printer driver weekly
+B) Assign the printer a static IP or DHCP reservation and ensure the wireless signal is on a consistent channel
+C) Move the printer to a USB connection on a nearby workstation
+D) Replace the printer's ink cartridges
+Correct: B
+Explanation: Wireless printer disconnections are often caused by IP address changes (DHCP lease expiration) or wireless channel interference causing the connection to drop. Assigning a static IP or DHCP reservation ensures the printer's address doesn't change, while optimizing wireless channel reduces interference-related drops. USB connection is a workaround that eliminates wireless functionality. Ink cartridges are unrelated to network connectivity.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: Which cloud characteristic means services are available to users over the network and accessible through standard client devices such as laptops, tablets, and smartphones?
+A) Resource pooling
+B) Rapid elasticity
+C) Broad network access
+D) Measured service
+Correct: C
+Explanation: Broad network access means cloud services are accessible over the network using standard mechanisms, available on diverse client platforms (thin clients, laptops, smartphones) without requiring specialized hardware. Resource pooling refers to shared physical infrastructure. Rapid elasticity refers to scalability. Measured service refers to pay-per-use billing.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.1 — Explain basic cable types and their connectors, features, and purposes
+Question: A network engineer is troubleshooting a Cat 6a cable installation rated for 10GBase-T. The cable runs 95 meters and includes 3 meters of patch cable at each end. What concern should the engineer have?
+A) None; the total run is well within the 100-meter limit
+B) The combined length of 101 meters exceeds the 100-meter channel limit, potentially causing errors
+C) Cat 6a cannot support 10GBase-T; Cat 7 is required
+D) Patch cables must be Cat 8 to maintain 10GBase-T certification
+Correct: B
+Explanation: The 100-meter channel limit for 10GBase-T includes all cable segments (horizontal run plus patch cables at both ends). A 95-meter horizontal run plus 3 meters at each end equals 101 meters total, technically exceeding the specification. The engineer should shorten the horizontal run or use shorter patch cables to stay within 100 meters total. Cat 6a fully supports 10GBase-T.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.4 — Given a scenario, install and configure motherboards, CPUs, and add-on cards
+Question: Which expansion card type would a technician install to add 10 Gigabit Ethernet connectivity to a workstation that only has a 1 Gigabit onboard NIC?
+A) Sound card
+B) 10GbE NIC (Network Interface Card)
+C) RAID controller card
+D) Video capture card
+Correct: B
+Explanation: A 10 Gigabit Ethernet NIC installed in a PCIe slot provides the 10GbE port needed for high-bandwidth network connectivity, replacing or supplementing the onboard 1GbE NIC. Sound cards add audio processing capability. RAID controllers add storage interface functionality. Video capture cards handle external video input.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.5 — Given a scenario, install or replace the appropriate power supply
+Question: A small form factor (SFF) desktop uses a TFX-style power supply rather than a standard ATX PSU. A technician needs to replace it. What must they consider?
+A) TFX PSUs use different voltage rails than ATX PSUs
+B) TFX PSUs have the same form factor as ATX and are interchangeable
+C) The replacement must be a TFX form factor to fit the SFF case
+D) TFX PSUs only support up to 250W output
+Correct: C
+Explanation: TFX (Thin Form Factor) power supplies have a specific smaller physical footprint designed for SFF cases; the replacement must match the TFX form factor to physically fit. TFX PSUs use the same ATX connector specifications and voltage rails as standard ATX PSUs. TFX PSUs are available in various wattage ratings, not limited to 250W.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.3 — Given a scenario, select and install storage devices
+Question: A system builder installs a new M.2 NVMe SSD and a SATA SSD simultaneously. After installation, only the SATA SSD appears in the BIOS. What is most likely the cause?
+A) The NVMe SSD is defective
+B) The M.2 slot shares lanes with a SATA port and enabling both creates a conflict
+C) NVMe SSDs require a device driver installed before the BIOS can detect them
+D) SATA and NVMe cannot coexist in the same system
+Correct: B
+Explanation: On many consumer motherboards, the M.2 slot shares PCIe or SATA lanes with physical SATA ports; enabling both devices simultaneously can cause a conflict where the motherboard disables one interface. The motherboard manual documents which SATA ports are disabled when the M.2 slot is populated. Drivers are not required for BIOS-level drive detection, and SATA/NVMe coexistence is normally supported if lane conflicts are avoided.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.6 — Given a scenario, deploy and configure multifunction devices/printers and settings
+Question: A user needs to print a confidential document and wants to ensure it is not printed until they authenticate at the printer. Which feature provides this capability?
+A) Cloud printing
+B) Secure/PIN printing (pull printing)
+C) Duplex printing
+D) Collation
+Correct: B
+Explanation: Secure printing (also called PIN printing or pull printing) holds the print job in the printer's memory queue until the user enters a PIN or authenticates at the printer's control panel, preventing sensitive documents from sitting unattended in the output tray. Cloud printing sends jobs to a remote print queue. Duplex and collation are output formatting features.
+
+Domain: 3.0 Hardware
+Sub-objective: 3.7 — Summarize cloud-computing concepts
+Question: An organization wants to migrate some workloads to the cloud while keeping others on-premises due to data sovereignty requirements. Which cloud model enables this?
+A) Public cloud only
+B) SaaS
+C) Hybrid cloud
+D) Community cloud
+Correct: C
+Explanation: A hybrid cloud integrates on-premises infrastructure with public or private cloud resources, allowing the organization to keep sensitive data on-premises for compliance or data sovereignty reasons while leveraging cloud scalability for other workloads. A pure public cloud model would move all workloads off-premises. Community cloud is shared among organizations with common concerns rather than a mix of on-prem and cloud.

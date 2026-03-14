@@ -1,0 +1,729 @@
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: Which category of security control is best described as a policy, procedure, or guideline that is implemented by people rather than technology or physical means?
+A) Technical control
+B) Physical control
+C) Managerial control
+D) Operational control
+Correct: D
+Explanation: Operational controls are implemented and executed by people through procedures, training, and day-to-day security practices rather than through technology or physical barriers. Managerial controls are often confused here, but managerial controls focus on oversight, risk management, and governance — the administrative framework that guides security decisions. Operational controls are the human-executed activities that carry out the intent of managerial controls.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A security team installs motion-activated lights around the perimeter of a data centre and posts signs warning that the area is under surveillance. What control type do these measures best represent?
+A) Preventive
+B) Corrective
+C) Detective
+D) Deterrent
+Correct: D
+Explanation: Deterrent controls are designed to discourage potential attackers from attempting to breach security by making the environment appear risky or well-monitored, without necessarily stopping an attack if one is attempted. Preventive controls would actually block unauthorised access, whereas deterrent controls rely on psychological discouragement. Lighting and warning signs are classic deterrent examples used in physical security.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: After a malware infection is discovered on a workstation, the IT team re-images the machine using a known-good baseline image and restores the user's files from a clean backup. Which control type does this response best represent?
+A) Directive
+B) Compensating
+C) Detective
+D) Corrective
+Correct: D
+Explanation: Corrective controls are applied after a security incident to restore systems to their normal, secure state and limit the damage caused. Detective controls identify that an incident has occurred but do not repair the damage. Re-imaging and restoring from backup are textbook corrective actions taken in response to a confirmed compromise.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A company's security policy requires that all employees complete annual security awareness training. Which control category does this requirement fall under?
+A) Technical
+B) Physical
+C) Managerial
+D) Operational
+Correct: C
+Explanation: Managerial controls encompass policies, procedures, and governance structures that provide oversight and direction for the security programme, including requirements for training and awareness activities. Operational controls are easy to confuse here, but operational controls are the actual execution of training itself, while the policy mandating it is managerial. Security awareness training requirements are a governance-level management decision.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A healthcare organisation cannot yet meet a regulatory requirement to encrypt all laptops because of legacy software compatibility issues. As a temporary measure, they implement strict physical access controls and require that laptops never leave the building. Which control type does this represent?
+A) Corrective
+B) Compensating
+C) Directive
+D) Deterrent
+Correct: B
+Explanation: Compensating controls are alternative measures put in place when the primary, preferred control cannot be implemented, providing an equivalent or acceptable level of risk reduction. This is not a directive control, which is one that instructs or mandates behaviour. Compensating controls are explicitly recognised in frameworks such as PCI-DSS and are always tied to an inability to meet a specific requirement.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: An intrusion detection system (IDS) monitors network traffic and generates an alert when it identifies a port scan originating from an internal host. What control type does the IDS represent in this scenario?
+A) Preventive
+B) Deterrent
+C) Detective
+D) Corrective
+Correct: C
+Explanation: Detective controls identify and alert on security events or policy violations after they occur or while they are in progress, but do not prevent the activity from happening. An IDS does not block the port scan — that would be the role of an intrusion prevention system (IPS), which is preventive. The distinction between IDS (detective) and IPS (preventive) is a frequently tested concept on the Security+ exam.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A security manager publishes an acceptable use policy (AUP) that outlines the rules employees must follow when using company IT resources. Which control type does the AUP represent?
+A) Directive
+B) Compensating
+C) Detective
+D) Preventive
+Correct: A
+Explanation: Directive controls provide instructions, mandates, or guidance that direct individuals toward secure behaviour, such as policies, standards, and procedures. Preventive controls would technically block prohibited behaviour through enforcement mechanisms, whereas a policy simply instructs and sets expectations. Directive and managerial controls often overlap conceptually, but the control type "directive" specifically describes the instructional nature of the control.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A firewall that blocks all inbound connections on port 23 (Telnet) is best classified under which combination of control category and control type?
+A) Physical / Preventive
+B) Technical / Preventive
+C) Operational / Detective
+D) Managerial / Directive
+Correct: B
+Explanation: A firewall is a technical (technology-based) control, and blocking inbound connections makes it preventive — it stops an undesired action from occurring in the first place. Operational controls are human-executed, and physical controls involve tangible barriers. Understanding the category-versus-type matrix is essential: category describes the nature of the control (technical, managerial, operational, physical) while type describes its function (preventive, detective, corrective, etc.).
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A company installs mantraps at the entrance to its server room, requiring badge access to open both doors and allowing only one person to enter at a time. Which control category do mantraps belong to?
+A) Technical
+B) Managerial
+C) Physical
+D) Operational
+Correct: C
+Explanation: Physical controls are tangible, real-world barriers and mechanisms designed to restrict physical access to assets and facilities, such as locks, mantraps, fences, and security guards. Mantraps specifically prevent tailgating and piggybacking by physically enforcing single-occupancy entry. Technical controls involve hardware or software solutions, whereas physical controls involve the built environment and physical objects.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: An organisation discovers that terminated employees' accounts are not being disabled promptly, posing an insider threat risk. The security team implements an automated process that disables accounts the same day HR processes a termination. What control type does this automated account disabling represent?
+A) Detective
+B) Corrective
+C) Preventive
+D) Compensating
+Correct: C
+Explanation: Preventive controls are designed to stop security incidents from occurring by eliminating or reducing the opportunity for a threat to materialise — automatically disabling accounts prevents unauthorised access before it can happen. This is not compensating because it is the intended, primary control rather than a substitute. Preventive controls are considered the most desirable control type as they reduce risk proactively.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A security audit reveals that a company uses a combination of biometric readers, access control logs, and security guards at its data centre entrance. Which statement best describes these controls?
+A) They are all technical controls because they restrict access to IT assets
+B) Biometric readers are technical, logs are detective, and guards are operational
+C) They are all physical controls because they secure a physical location
+D) Biometric readers and logs are technical controls; guards are a physical control
+Correct: B
+Explanation: Control classification requires looking at both category and type together. Biometric readers are technical controls (technology-based), access logs function as detective controls that record who entered and when, and security guards are operational controls executed by people. It is common to conflate all data-centre entrance controls as "physical," but the category depends on whether the mechanism is technology, people, process, or a tangible barrier. Understanding how multiple control types work together in layers is a core security architecture concept.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: Which of the following control types is specifically designed to restore the confidentiality, integrity, or availability of a system after a security event?
+A) Deterrent
+B) Directive
+C) Corrective
+D) Compensating
+Correct: C
+Explanation: Corrective controls are applied after a security incident to repair damage, restore functionality, and return systems to their pre-incident state. Compensating controls are alternative measures used when a primary control cannot be applied — they are not responses to incidents. Examples of corrective controls include patch application after exploitation, system restoration from backup, and incident response procedures.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A company requires that all developers sign a code of conduct and complete a background check before being granted access to source code repositories. Which control category do these requirements represent?
+A) Technical
+B) Physical
+C) Operational
+D) Managerial
+Correct: D
+Explanation: Background checks and signed codes of conduct are administrative governance measures — they represent managerial controls that establish the framework within which security operates, including personnel security requirements. Operational controls would be the day-to-day enforcement activities that flow from these policies. Managerial controls set direction and oversight rather than directly preventing or detecting specific technical events.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: After a ransomware attack encrypts critical files, a company restores its data from offline backups and applies a security patch to close the exploited vulnerability. What is the correct classification of applying the security patch in this context?
+A) Preventive — it stops future attacks of the same type
+B) Corrective — it is applied in response to an incident to reduce further risk
+C) Detective — it identifies vulnerabilities that enabled the attack
+D) Compensating — it replaces the primary control that failed
+Correct: B
+Explanation: Applying a patch after an incident is a corrective control because it is a remediation action taken in response to a known compromise to fix the underlying weakness and prevent recurrence. While a patch can also serve a preventive function when applied proactively, in the context of a post-incident response it is classified as corrective. The timing and intent of a control determine its type classification, which is why scenario context matters on the exam.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A CISO implements a risk management framework and conducts quarterly security reviews to assess the organisation's security posture. Which control category do these activities best represent?
+A) Technical
+B) Operational
+C) Physical
+D) Managerial
+Correct: D
+Explanation: Risk management frameworks and periodic security reviews are governance-level activities that fall under managerial controls, which provide administrative oversight and strategic direction for the security programme. Operational controls are the human-executed activities within daily operations, not the high-level governance framework that oversees them. Managerial controls include risk assessments, security planning, and audit activities that guide overall security posture.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A user sends a digitally signed email to a colleague. Several months later, a dispute arises about whether the user actually sent the message. The digital signature on the email is used as proof that the user sent it. Which security principle does this scenario demonstrate?
+A) Integrity
+B) Confidentiality
+C) Non-repudiation
+D) Availability
+Correct: C
+Explanation: Non-repudiation ensures that a party cannot deny having performed an action, such as sending a message, because cryptographic evidence (a digital signature) ties the action to their identity in a way they cannot plausibly dispute. Integrity ensures data has not been altered in transit, which is different from proving origin. Digital signatures provide both integrity and non-repudiation simultaneously, but the key principle illustrated by inability to deny authorship is non-repudiation.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: An organisation deploys a system that requires users to provide a username (identification), a password (authentication), and be assigned specific permissions based on their role (authorisation), with all actions logged for review (accounting). Which framework does this describe?
+A) CIA Triad
+B) Zero Trust
+C) AAA
+D) Defence-in-depth
+Correct: C
+Explanation: The AAA framework — Authentication, Authorisation, and Accounting (or Auditing) — describes the three-part process of verifying identity, granting appropriate access, and recording activity for accountability. The CIA triad addresses confidentiality, integrity, and availability, which is a different foundational framework. AAA is foundational to access control systems including RADIUS and TACACS+.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A company performs a structured comparison of its current security controls against the requirements of NIST SP 800-53 to identify areas where its programme falls short of the desired security posture. This process is best described as which of the following?
+A) Risk assessment
+B) Gap analysis
+C) Threat modelling
+D) Vulnerability scanning
+Correct: B
+Explanation: A gap analysis is a formal comparison of the current state of security controls against a target or desired state (such as a compliance framework), producing a list of identified deficiencies and remediation priorities. A risk assessment evaluates threats and their potential impact rather than measuring compliance against a baseline. Gap analysis is used to drive security improvement roadmaps and is a required activity in many compliance programmes.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: Which security concept is violated when an attacker intercepts database backups during transfer and reads the sensitive customer data they contain without authorisation?
+A) Availability
+B) Integrity
+C) Confidentiality
+D) Non-repudiation
+Correct: C
+Explanation: Confidentiality ensures that information is accessible only to those who are authorised to view it; an attacker reading sensitive data without authorisation is a direct violation of confidentiality. Integrity would be violated if the attacker modified the data. Encryption of data in transit is the primary control used to protect confidentiality during data transfer.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A security architect designs a network where every device must authenticate before communicating with any other device, no implicit trust is granted based on network location, and all traffic is inspected regardless of whether it originates inside or outside the corporate perimeter. Which security model does this describe?
+A) Defence-in-depth
+B) Least privilege
+C) Zero trust
+D) Need-to-know
+Correct: C
+Explanation: Zero trust is a security model that eliminates implicit trust based on network location and instead requires continuous verification of every entity (user, device, service) before granting access to any resource. Defence-in-depth involves layering multiple security controls but does not eliminate the concept of trusted internal networks. The core principle of zero trust is "never trust, always verify," regardless of whether a connection originates inside or outside the traditional network perimeter.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A security team deploys a server that appears to be a legitimate, unpatched database server on the internal network but is actually monitored and isolated. Its sole purpose is to attract and track attackers who have already breached the perimeter. This system is best described as which of the following?
+A) Honeynet
+B) Honeyfile
+C) Honeytoken
+D) Honeypot
+Correct: D
+Explanation: A honeypot is a decoy system designed to attract attackers, allow their activities to be observed, and gather threat intelligence while keeping them away from real production systems. A honeynet is a network of multiple honeypots, not a single server. Honeypots are a key deception and disruption technology used to detect lateral movement by attackers who have already bypassed perimeter defences.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A security administrator places a fake credentials file named "employee_credentials_backup.csv" in a network share. The file contains tracked API tokens that will generate an alert if used. What type of deception technology does this represent?
+A) Honeypot
+B) Honeynet
+C) Honeyfile
+D) Sinkhole
+Correct: C
+Explanation: A honeyfile is a decoy document or file placed in a location where an attacker might look for valuable data; when the file is accessed or its contents are used, an alert is triggered. A honeypot is an entire decoy system, not a file. Honeyfiles (and the embedded tracked tokens within them, called honeytokens) are valuable for detecting insider threats and attackers conducting reconnaissance on file shares.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A ransom demand is received claiming that sensitive files were stolen from the company. The security team suspects the attacker is bluffing. They search their file servers and discover that a specific fake document with a unique, trackable identifier — placed there deliberately — has been accessed. What did the team use to confirm the breach?
+A) Honeypot
+B) Honeytoken
+C) Honeyfile
+D) Honeynet
+Correct: B
+Explanation: A honeytoken is a digital artefact (such as a fake credential, a unique URL, a database entry, or a trackable identifier in a document) that has no legitimate use but generates an alert or provides forensic evidence when accessed. A honeyfile is the decoy document itself, while a honeytoken is the specific trackable artefact embedded within it. Honeytokens can be placed in databases, documents, and code repositories to detect both external attackers and malicious insiders.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: An organisation installs concrete bollards at the entrance to its server facility parking area. Which primary security function do the bollards serve?
+A) Deterrence — they discourage vehicle-based attacks through visible hardening
+B) Physical prevention — they block vehicle-ramming attacks from reaching the building
+C) Detection — they alert guards to approaching vehicles
+D) Directive — they instruct drivers to remain outside the secure perimeter
+Correct: B
+Explanation: Bollards are physical preventive controls specifically designed to block vehicles from ramming into or approaching secured buildings, preventing vehicle-borne improvised explosive device (VBIED) attacks and unauthorised vehicle access. While they may have some deterrent effect, their primary function is to physically stop vehicles, not merely discourage them. Bollards are commonly required by government security standards around critical infrastructure.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A user logs in to a corporate application using their employee ID number. The system then prompts for a password. What security process does entering the employee ID number represent?
+A) Authentication
+B) Authorisation
+C) Identification
+D) Accounting
+Correct: C
+Explanation: Identification is the process of claiming an identity, such as providing a username or employee ID number, before any verification has taken place. Authentication is the subsequent step where the claimed identity is verified through a credential such as a password or biometric. The exam frequently tests the distinction between identification (claiming who you are) and authentication (proving who you are).
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A database server experiences a distributed denial-of-service (DDoS) attack that renders it unable to respond to legitimate queries for four hours. Which principle of the CIA triad is primarily violated?
+A) Confidentiality
+B) Non-repudiation
+C) Integrity
+D) Availability
+Correct: D
+Explanation: Availability ensures that authorised users can access systems and data when needed; a DDoS attack that prevents legitimate access directly violates availability. Integrity would be violated if data were altered, and confidentiality if data were exposed without authorisation. Availability attacks are often overlooked compared to confidentiality breaches but can cause significant business disruption and financial harm.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: An organisation interconnects multiple honeypots into a dedicated isolated network segment to create a more realistic environment for studying advanced attacker behaviour and lateral movement techniques. This environment is best described as a:
+A) Demilitarised zone (DMZ)
+B) Honeynet
+C) Sandbox
+D) Dark web
+Correct: B
+Explanation: A honeynet is a network of multiple interconnected honeypots designed to simulate a realistic production environment, allowing researchers and defenders to observe sophisticated attacker techniques including lateral movement, privilege escalation, and data exfiltration. A sandbox is an isolated environment for testing potentially malicious code, not for luring attackers. Honeynets provide significantly richer threat intelligence than a single honeypot because attackers can move between systems as they would in a real network.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A security consultant reviews an organisation's security programme and determines that while its technical controls are strong, there is no formal process for reviewing security controls annually, no documented risk acceptance criteria, and no defined security roles. Which gap does this assessment most directly identify?
+A) Lack of physical security controls
+B) Absence of managerial and governance controls
+C) Insufficient technical preventive controls
+D) Missing operational security procedures
+Correct: B
+Explanation: The absence of formal review processes, risk acceptance criteria, and defined security roles points to a gap in managerial controls — the governance layer that provides oversight, direction, and administrative structure for the security programme. Technical controls address technology-based protections, which were noted as strong. Effective security requires all three categories (technical, managerial, and operational) to function together.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A company requires that all proposed changes to production systems be submitted with a description of the change, its business justification, a risk assessment, a rollback plan, and approval from the change advisory board (CAB) before implementation. What is this process called?
+A) Configuration management
+B) Patch management
+C) Change management
+D) Release management
+Correct: C
+Explanation: Change management is the formal process that governs how modifications to IT systems and infrastructure are proposed, reviewed, approved, scheduled, and documented to minimise risk and unintended disruption. Configuration management tracks the current state of system settings, while patch management specifically addresses software updates. The Change Advisory Board (CAB) is a key component of formal change management frameworks such as ITIL.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: An administrator applies an emergency patch to a critical web server during business hours without following the change management process. The patch causes a misconfiguration that takes the server offline for two hours. Which change management component would most likely have prevented this outcome?
+A) Version control
+B) Scheduled maintenance windows and rollback planning
+C) Allow listing
+D) Documentation of legacy systems
+Correct: B
+Explanation: Maintenance windows define pre-approved time periods for making changes, reducing the impact on users, while rollback plans ensure that if a change fails it can be quickly reversed, limiting downtime. Version control tracks changes to code and configurations but would not have prevented the unplanned deployment. Following the change management process — including scheduling changes during maintenance windows and having a tested rollback plan — is specifically designed to prevent unplanned outages caused by poorly planned changes.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A company maintains a list of approved applications that are permitted to run on employee workstations. Any application not on this list is automatically blocked from executing. What is this security mechanism called?
+A) Blacklisting
+B) Deny listing
+C) Allow listing
+D) Application sandboxing
+Correct: C
+Explanation: Allow listing (also called whitelisting) is a security control that only permits pre-approved applications to execute, blocking everything else by default; this is a default-deny posture. Deny listing (blacklisting) takes the opposite approach — it blocks specific known-bad applications but allows everything else, which is a weaker security posture. Allow listing is considerably more secure than deny listing but requires more administrative overhead to maintain the approved application catalogue.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: During a change management review, the team identifies that a proposed update to a middleware component will require restarting several dependent services. The restart will cause a 30-minute service interruption. Which change management consideration does this best illustrate?
+A) Version control requirements
+B) Legacy application compatibility
+C) Allow list updates
+D) Downtime planning and impact assessment
+Correct: D
+Explanation: Identifying that a change will cause service interruptions and planning how to communicate, schedule, and minimise that downtime is a key part of the impact assessment component of change management. Version control tracks software changes but does not address service interruptions. Downtime planning ensures that stakeholders are informed, business impact is minimised, and maintenance windows are chosen appropriately to reduce disruption to operations.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A developer checks updated application code into a central repository. The repository automatically records who made the change, what was changed, and when. This provides a complete audit trail of all modifications to the codebase. What technology is being described?
+A) Configuration management database (CMDB)
+B) Version control system
+C) Change advisory board (CAB)
+D) Document management system
+Correct: B
+Explanation: Version control systems (such as Git) track all changes to source code and configurations, recording the author, timestamp, and content of each change, providing an authoritative audit trail and enabling rollback to previous versions. A CMDB tracks the inventory and relationships of IT assets, not code changes. Version control is essential for both change management and security, as it enables forensic investigation of when and how malicious or erroneous code was introduced.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: An organisation upgrades its ERP system but discovers that a critical business application built in 2008 is incompatible with the new version. The application vendor is no longer in business and no source code is available. What change management consideration does this scenario best illustrate?
+A) Downtime impact
+B) Rollback planning failure
+C) Legacy application dependencies
+D) Allow list violations
+Correct: C
+Explanation: Legacy application dependencies are a significant change management concern because older, unsupported applications may be incompatible with modern system updates, creating difficult trade-offs between modernisation and business continuity. Rollback planning involves reverting a failed change, which is different from dealing with ongoing compatibility constraints. Legacy applications often prevent organisations from applying security patches and upgrades, leaving known vulnerabilities unaddressed.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A change management policy requires that for every approved change, the technical team must produce a document describing exactly what was done, who performed it, and the outcome of the change including any deviations from the original plan. What is the purpose of this requirement?
+A) To satisfy allow list policy requirements
+B) To enable future rollback of all changes
+C) To maintain documentation and accountability for change activities
+D) To update the organisation's risk register
+Correct: C
+Explanation: Requiring post-change documentation creates accountability, supports audit trails, enables troubleshooting of problems introduced by the change, and provides institutional knowledge for future similar changes. While this documentation may support rollback planning in the future, its primary purpose is accountability and accurate recordkeeping. Good change documentation is a critical component of both security and operational governance frameworks.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A security team is reviewing a proposed firewall rule change. Before approving it, they require that the requestor provide written business justification, obtain sign-off from the data owner, and demonstrate that the change does not violate the organisation's security baseline. This review is conducted by the:
+A) Incident response team
+B) Change advisory board (CAB)
+C) Security operations centre (SOC)
+D) Vulnerability management team
+Correct: B
+Explanation: The Change Advisory Board (CAB) is a cross-functional group responsible for reviewing, approving, or rejecting proposed changes to IT systems, ensuring that security, business, and operational considerations are all addressed before implementation. The SOC monitors for threats and incidents, not pre-implementation change governance. The CAB is a cornerstone of formal IT change management frameworks and plays a critical role in preventing security weaknesses introduced through unauthorised or poorly planned changes.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: An administrator needs to update the allow list on a web application firewall (WAF) to permit traffic from a new third-party service. The change management process for this update would most likely need to include which of the following steps?
+A) Generating a new TLS certificate for the third-party connection
+B) Documenting the business justification, testing in a staging environment, and scheduling the change
+C) Revoking existing firewall rules using the CRL process
+D) Requiring the third party to undergo a penetration test before being allowed
+Correct: B
+Explanation: A change to a WAF allow list is a standard configuration change that must go through the full change management process: documenting the business need, testing the change in a non-production environment to verify it works as intended, and scheduling the deployment during an appropriate maintenance window. TLS certificates and CRL processes relate to cryptographic infrastructure, not firewall rule change management. Testing in staging before production deployment is critical to avoid unintended disruptions or security gaps.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A company experiences a critical zero-day exploit actively targeting its production web servers. The security team needs to deploy a hotfix immediately but cannot wait for the standard two-week change management approval cycle. What process should they invoke?
+A) Standard change process with expedited approval
+B) Emergency change process
+C) Normal change process with CAB waiver
+D) Unauthorised change with post-implementation review
+Correct: B
+Explanation: Most change management frameworks define an emergency change process that allows expedited approval and implementation when a critical, time-sensitive security issue — such as an active zero-day exploit — requires immediate action to prevent or contain harm. An unauthorised change (bypassing the process entirely) is never acceptable because it lacks accountability and creates audit gaps. Emergency changes still require documentation and a post-implementation review, but the approval cycle is compressed to match the urgency of the threat.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: After deploying a new security configuration to 500 workstations, an administrator discovers that the change has caused an unexpected conflict with an endpoint security agent, causing the agent to crash. Before making any further changes, which step should the administrator take first?
+A) Submit a new change request to fix the conflict
+B) Execute the rollback plan to return workstations to the previous known-good state
+C) Update the configuration management database to reflect the failed change
+D) Escalate to the CAB for an emergency meeting
+Correct: B
+Explanation: When a change causes an unintended negative outcome, the rollback plan (which should have been prepared before the change was deployed) should be executed immediately to restore systems to the previous stable state, limiting impact and downtime. Submitting a new change request is a subsequent step taken after systems have been stabilised. Having a tested, documented rollback plan before deploying changes is one of the most important risk mitigation steps in change management.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: An organisation discovers that several critical changes to its network infrastructure were made over the past six months without any documentation, approvals, or notifications. These changes have created an unknown network topology that makes incident investigation difficult. This situation best illustrates which risk of inadequate change management?
+A) Excessive allow listing
+B) Loss of configuration integrity and audit trail
+C) Violation of the CIA triad's availability requirement
+D) Non-compliance with cryptographic key management policies
+Correct: B
+Explanation: When changes are made without following a change management process, the organisation loses configuration integrity — the accurate, documented knowledge of the current state of its systems — and the audit trail required to investigate incidents or understand how the environment changed over time. While availability may also be impacted, the core problem illustrated is the absence of documentation and accountability. Configuration drift caused by undocumented changes is one of the leading contributors to security incidents.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A company's security policy states that no software may be installed on production servers without prior approval from the change management committee, a completed risk assessment, and sign-off from the system owner. An employee installs a monitoring tool without following this process. What type of change has occurred?
+A) Emergency change
+B) Standard change
+C) Unauthorised change
+D) Pre-approved change
+Correct: C
+Explanation: An unauthorised change is any modification made to a system outside the approved change management process, regardless of the intent or the nature of the change. Emergency changes are still submitted through a defined process — they differ only in having an expedited approval cycle. Unauthorised changes pose significant security risks because they may introduce vulnerabilities, violate compliance requirements, and create undocumented changes to the environment.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A company needs to encrypt large volumes of data at rest on its file servers. The encryption solution must be fast enough to handle high-throughput operations. Which type of encryption algorithm is most appropriate for this use case?
+A) Asymmetric encryption using RSA
+B) Symmetric encryption using AES
+C) Hashing using SHA-256
+D) Asymmetric encryption using ECC
+Correct: B
+Explanation: Symmetric encryption algorithms such as AES use a single shared key for both encryption and decryption, making them significantly faster than asymmetric algorithms and well-suited to encrypting large volumes of data at rest or in transit. Asymmetric encryption such as RSA is computationally expensive and is typically used only to encrypt small data items or to exchange symmetric keys. AES-256 is the current gold standard for symmetric encryption and is used in virtually all modern file and disk encryption solutions.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A user wants to send a confidential message to a colleague using asymmetric encryption. Which key should the sender use to encrypt the message so that only the intended recipient can decrypt it?
+A) The sender's private key
+B) The sender's public key
+C) The recipient's private key
+D) The recipient's public key
+Correct: D
+Explanation: In asymmetric encryption, a message intended for a specific recipient is encrypted with the recipient's public key; only the recipient's corresponding private key — which only they possess — can decrypt it, ensuring confidentiality. Encrypting with the sender's private key produces a digital signature (proving origin), not a confidential message. The asymmetric key pair relationship is a foundational concept: public key encrypts, private key decrypts (for confidentiality); private key signs, public key verifies (for authentication).
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A developer needs to verify that a file downloaded from an update server has not been corrupted or tampered with during transmission. Which cryptographic mechanism should the developer use?
+A) Symmetric encryption with AES-256
+B) Digital signature verification
+C) Hashing with SHA-256
+D) Asymmetric encryption with RSA
+Correct: C
+Explanation: Hashing produces a fixed-length digest (fingerprint) of a file's contents; if even a single bit of the file changes, the hash value changes, allowing the developer to detect corruption or tampering by comparing the hash of the downloaded file against a known-good hash value. Digital signature verification also uses hashing but additionally verifies the signer's identity, which is more complex than simply checking file integrity. SHA-256 is the current recommended hashing algorithm, as MD5 and SHA-1 are considered cryptographically broken.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An organisation's PKI infrastructure includes a list that is periodically published and contains the serial numbers of certificates that have been revoked before their scheduled expiry date. What is this list called?
+A) Online Certificate Status Protocol (OCSP) response
+B) Certificate Signing Request (CSR)
+C) Certificate Revocation List (CRL)
+D) Certificate Trust Store
+Correct: C
+Explanation: The Certificate Revocation List (CRL) is a digitally signed list published by a Certificate Authority (CA) that contains the serial numbers of certificates that have been revoked and should no longer be trusted. OCSP is a real-time protocol for checking the revocation status of a single certificate, which is an alternative to downloading the full CRL. CRLs can become large and have a latency issue (they are only updated periodically), which is why OCSP and OCSP stapling were developed as improvements.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A company's security team is concerned that the CRL-based certificate revocation checking they use creates a window of vulnerability between revocation and the next CRL publication. They want to implement real-time revocation checking. Which protocol should they implement?
+A) LDAP
+B) OCSP
+C) CRL delta
+D) DNSSEC
+Correct: B
+Explanation: OCSP (Online Certificate Status Protocol) allows a client to query a CA's OCSP responder in real time to check whether a specific certificate has been revoked, eliminating the time delay inherent in waiting for the next CRL publication. CRL delta is an incremental CRL update that reduces download size but still has a publication delay. OCSP stapling is a further optimisation where the server pre-fetches and attaches the OCSP response to the TLS handshake, reducing latency and improving privacy.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: Two parties need to establish a shared secret key over an insecure channel without having exchanged any secret information beforehand. Which cryptographic protocol is specifically designed for this purpose?
+A) RSA key exchange
+B) AES key wrapping
+C) Diffie-Hellman key exchange
+D) SHA-256 key derivation
+Correct: C
+Explanation: Diffie-Hellman is a key agreement protocol that allows two parties to independently compute a shared secret over an insecure channel without transmitting that secret, using mathematical operations on public values. RSA can also be used for key exchange but requires the recipient to have a public/private key pair established beforehand. Diffie-Hellman is the basis for Perfect Forward Secrecy (PFS) in TLS, ensuring that session keys are ephemeral and compromise of long-term keys does not expose past sessions.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A Certificate Authority (CA) issues a digital certificate to a web server. The certificate binds the server's public key to its domain name and is signed by the CA. A user's browser trusts the CA. What does the browser verify when it checks this certificate during a TLS handshake?
+A) That the server's private key matches the CA's public key
+B) That the CA's signature on the certificate is valid and the certificate has not been revoked
+C) That the server has previously communicated with the CA via LDAP
+D) That the certificate uses symmetric encryption for the server's identity
+Correct: B
+Explanation: During a TLS handshake, the browser validates the server's certificate by checking that the CA's digital signature on the certificate is valid (using the CA's public key from the browser's trust store) and that the certificate has not been revoked via CRL or OCSP. The private key is never transmitted; the browser verifies the CA's signature on the certificate, not a match between keys. This chain of trust — from the root CA through any intermediate CAs to the end-entity certificate — is the foundation of the web's PKI system.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An organisation stores user passwords by combining each password with a unique random value before hashing, so that identical passwords produce different hash values in the database. What is this random value called, and what attack does this technique primarily protect against?
+A) Pepper; protects against brute-force attacks
+B) Salt; protects against rainbow table attacks
+C) Nonce; protects against replay attacks
+D) Initialisation vector; protects against dictionary attacks
+Correct: B
+Explanation: A salt is a unique random value added to each password before hashing, ensuring that identical passwords produce different hash outputs, which defeats rainbow table attacks (pre-computed hash lookup tables). A pepper is a secret value added to all passwords (shared, not unique per user) and stored separately from the database. Salting is a mandatory practice for secure password storage, and its absence is a critical vulnerability frequently exploited after database breaches.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A financial institution requires that copies of employees' private encryption keys be stored in a secure, third-party controlled vault, accessible only under specific legally authorised circumstances such as litigation or regulatory investigation. What is this practice called?
+A) Key rotation
+B) Key stretching
+C) Key escrow
+D) Key splitting
+Correct: C
+Explanation: Key escrow is the practice of depositing copies of encryption keys with a trusted third party (an escrow agent) so that keys can be recovered under authorised circumstances, such as legal proceedings or employee departure. Key stretching is a technique for making weak passwords more resistant to brute-force attacks by applying many iterations of a hashing function. Key escrow is controversial because it creates a high-value target for attackers and raises privacy concerns, but it is required in some regulatory environments.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A security engineer notes that PBKDF2 and bcrypt are used to hash user passwords. Both algorithms apply the hashing operation thousands of times iteratively before producing the final output. What is the security benefit of this approach?
+A) It ensures password uniqueness across the database
+B) It increases the computational cost of brute-force and dictionary attacks
+C) It eliminates the need for password salting
+D) It provides asymmetric encryption for stored passwords
+Correct: B
+Explanation: Key stretching algorithms like PBKDF2, bcrypt, and scrypt deliberately introduce computational expense by repeating the hashing operation many thousands of times, making offline brute-force and dictionary attacks against stolen password hashes significantly slower and costlier. Salting and stretching address different problems and are used together, not as alternatives. Increasing the iteration count scales the defence over time as hardware becomes more powerful, maintaining the cost of cracking relative to legitimate authentication.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A digital signature on a document is created using which of the following processes?
+A) Hashing the document, then encrypting the hash with the sender's private key
+B) Encrypting the document with the recipient's public key
+C) Hashing the document, then encrypting the hash with the recipient's public key
+D) Encrypting the document with the sender's private key
+Correct: A
+Explanation: A digital signature is created by hashing the document to produce a digest, then encrypting that digest with the sender's private key; the recipient decrypts the hash with the sender's public key and compares it to a freshly computed hash of the document to verify both integrity and origin. Encrypting with the recipient's public key achieves confidentiality, not a digital signature. The two-step process (hash then asymmetric encrypt) is necessary because asymmetric encryption is too slow to process large documents directly.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A company is evaluating cryptographic algorithms for use in IoT devices with extremely limited processing power and battery life. They require strong security with minimal computational overhead. Which asymmetric algorithm is best suited for this environment?
+A) RSA-4096
+B) 3DES
+C) ECC
+D) Diffie-Hellman with 2048-bit parameters
+Correct: C
+Explanation: Elliptic Curve Cryptography (ECC) provides equivalent security to RSA with significantly smaller key sizes and far less computational overhead, making it ideal for resource-constrained devices such as IoT sensors, smart cards, and mobile devices. RSA-4096 requires much more computational power for the same security level. ECC's efficiency advantage over RSA increases as the required security level grows, which is why it has become the preferred asymmetric algorithm in modern constrained-device and mobile applications.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A security analyst is reviewing an older system that uses MD5 to hash passwords. The analyst recommends replacing MD5 with SHA-256. Why is MD5 considered inadequate for password hashing in modern security practice?
+A) MD5 produces output that is too long to store efficiently in databases
+B) MD5 is a symmetric algorithm and cannot be used for password hashing
+C) MD5 is cryptographically broken due to collision vulnerabilities and is too fast for password hashing
+D) MD5 does not support salting, making it inherently insecure
+Correct: C
+Explanation: MD5 is considered cryptographically broken because researchers have demonstrated practical collision attacks (where two different inputs produce the same hash), and its speed — while useful for checksums — makes it trivially easy for attackers to perform billions of brute-force attempts per second using commodity hardware. MD5 does support salting technically, but its fundamental weaknesses make it unsuitable regardless. SHA-256 is a stronger general-purpose hash, but purpose-built password hashing algorithms like bcrypt, scrypt, or Argon2 are preferred for password storage due to their intentional computational expense.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An investigator suspects that a corporate spy has been hiding confidential documents inside image files shared through the company's official photo gallery. The spy embeds the documents in a way that does not visibly alter the images. What technique is the spy using?
+A) Encryption
+B) Steganography
+C) Obfuscation
+D) Digital watermarking
+Correct: B
+Explanation: Steganography is the practice of hiding secret information within an ordinary, non-secret carrier file (such as an image, audio file, or video) in a way that conceals the very existence of the hidden data. Encryption makes data unreadable but does not conceal its presence. Steganography is particularly dangerous in a corporate espionage context because traditional data loss prevention (DLP) tools that scan for obviously sensitive content may not detect data hidden within innocent-looking files.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A blockchain-based system is used to record land ownership transactions. Each transaction block contains a cryptographic hash of the previous block. An attempt to alter a historical transaction record would require recalculating every subsequent block's hash. Which property of blockchain does this describe?
+A) Confidentiality through asymmetric encryption
+B) Tamper-evidence through hash chaining
+C) Non-repudiation through digital signatures only
+D) Availability through distributed consensus
+Correct: B
+Explanation: Blockchain achieves tamper-evidence by chaining blocks together using cryptographic hashes — each block contains the hash of the previous block, so altering any historical record invalidates all subsequent hashes, making unauthorised modification immediately detectable. Digital signatures also provide non-repudiation in blockchain transactions, but the chained-hash structure is the mechanism responsible for tamper-evidence. Blockchain's immutability relies on both hash chaining and distributed consensus making it computationally infeasible to rewrite history.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A company uses a hierarchical PKI where a root CA signs the certificates of several intermediate CAs, which in turn sign end-entity certificates for users and servers. Why is it a best practice to keep the root CA offline?
+A) Root CAs cannot process certificate signing requests while online
+B) Keeping the root CA offline prevents its private key from being compromised, which would invalidate the entire chain of trust
+C) Regulatory frameworks require root CAs to be physically isolated from all network infrastructure
+D) Online root CAs cannot support OCSP revocation checking
+Correct: B
+Explanation: The root CA's private key is the ultimate anchor of trust in the PKI hierarchy; if it were compromised, every certificate issued under that root — including all intermediate and end-entity certificates — would need to be considered untrusted and reissued, causing catastrophic operational disruption. Intermediate CAs handle the day-to-day certificate issuance workload, absorbing operational risk while protecting the root. This is why public root CA keys are stored in hardware security modules (HSMs) and kept air-gapped in physically secured facilities.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An organisation encrypts its data using a symmetric key. To securely transmit that symmetric key to a remote party over an untrusted network, they encrypt the symmetric key using the remote party's public RSA key. What is this approach called?
+A) Key rotation
+B) Key escrow
+C) Hybrid encryption
+D) Key stretching
+Correct: C
+Explanation: Hybrid encryption combines the speed of symmetric encryption for bulk data with the security of asymmetric encryption for key exchange — the data is encrypted symmetrically, and the symmetric key itself is encrypted asymmetrically for secure transmission. Key escrow involves depositing keys with a third party, not encrypting a symmetric key for transmission. TLS uses hybrid encryption: asymmetric cryptography is used during the handshake to establish a shared symmetric session key, after which all data is encrypted symmetrically.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: During a security review, an auditor notes that the organisation's web server certificate was issued by the organisation's own internal CA. A customer's browser, which does not have this internal CA in its trust store, displays a certificate warning. What must the organisation do to resolve this for external customers?
+A) Switch to a self-signed certificate, which all browsers trust by default
+B) Obtain a certificate from a publicly trusted CA whose root certificate is in browser trust stores
+C) Deploy OCSP stapling to push the internal CA certificate to customer browsers
+D) Issue the internal CA certificate to all customers via email
+Correct: B
+Explanation: Browser trust stores contain the root certificates of publicly trusted Certificate Authorities whose vetting and operational practices meet standards set by the browser vendors; only certificates issued by these CAs are automatically trusted. Internal CAs are appropriate for internal systems where the organisation can push its CA certificate to managed devices, but they cannot be trusted by external, unmanaged browsers. Obtaining a certificate from a publicly trusted CA (such as DigiCert or Let's Encrypt) is the correct solution for public-facing services.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A security administrator is comparing AES and 3DES for encrypting sensitive data. Which statement most accurately describes the difference between these two symmetric encryption algorithms?
+A) AES uses asymmetric keys while 3DES uses symmetric keys
+B) 3DES applies the DES algorithm three times with multiple keys and is slower; AES is more efficient and provides stronger security
+C) AES produces a 64-bit block size, making it faster than 3DES's 128-bit block size
+D) 3DES is the current NIST standard and AES is considered deprecated
+Correct: B
+Explanation: 3DES (Triple DES) applies the older DES cipher three times with different keys, resulting in a 112-bit effective key strength and relatively slow performance due to its small 64-bit block size. AES was selected by NIST specifically to replace 3DES, offering 128-bit block size, key lengths of 128, 192, or 256 bits, and significantly better performance. 3DES is now deprecated by NIST (as of 2023 guidance) and should no longer be used for new implementations.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A security policy states that all encryption keys must be replaced at regular intervals and that old keys must be destroyed after the transition period. This practice most directly mitigates which risk?
+A) The risk of a certificate being issued by an untrusted CA
+B) The risk that a compromised or stolen key can be used indefinitely to decrypt sensitive data
+C) The risk that hash collisions will expose plaintext passwords
+D) The risk that asymmetric keys become too short as computing power increases
+Correct: B
+Explanation: Regular key rotation limits the window of exposure if a key is compromised — an attacker who obtains a rotated, retired key cannot use it to decrypt current or future communications, and the damage from past decryption is bounded by the rotation period. While key length concerns are also valid over time, the primary purpose of periodic rotation is limiting the blast radius of a key compromise. Key rotation is a fundamental key management discipline required by most security frameworks and regulations.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A company deploys a network access control (NAC) system that checks whether connecting devices have up-to-date antivirus software and current operating system patches before allowing them to join the corporate network. What control type does NAC represent?
+A) Detective
+B) Corrective
+C) Preventive
+D) Compensating
+Correct: C
+Explanation: NAC prevents devices that do not meet security policy requirements from accessing the network in the first place, making it a preventive control that stops non-compliant or potentially compromised endpoints from introducing risk. A detective control would identify problems after the device had already connected. Preventive controls that enforce policy at the point of entry are preferred in a zero-trust architecture, and NAC is a common implementation of this principle at the network layer.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A security team adds a fake row to a production database table containing a fictitious customer record with a unique, fake email address monitored by the security team. If any communication is ever sent to that email address, it indicates that the database has been accessed by an unauthorised party. What type of deception technology does this represent?
+A) Honeyfile
+B) Honeypot
+C) Honeytoken
+D) Honeynet
+Correct: C
+Explanation: A honeytoken is a specific decoy artefact — such as a fake database record, a fake credential, a canary URL, or a unique identifier — that has no legitimate business use but generates an alert or forensic evidence when accessed or used. A honeyfile is a decoy file (the container), while a honeytoken is the specific trackable item within it or embedded elsewhere. Honeytokens are highly effective for detecting both database exfiltration and insider threats because legitimate users have no reason to access or use the fake record.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A network engineer wants to add a new firewall rule to allow traffic from a recently approved SaaS vendor. The organisation's change management policy classifies recurring, low-risk, pre-approved firewall changes for vetted SaaS vendors as a specific type of change that does not require individual CAB review. What is this type of change called?
+A) Emergency change
+B) Standard change
+C) Normal change
+D) Unauthorised change
+Correct: B
+Explanation: A standard change is a pre-approved, low-risk, well-understood change that follows a documented procedure and does not require individual CAB review each time it is performed, because the risk and steps have already been evaluated and accepted. A normal change is a routine change that still requires CAB review and approval. Standard changes improve operational efficiency by removing bureaucratic overhead from repetitive, low-risk activities while still maintaining documentation and accountability.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: An organisation enforces a policy that each user account must only have the minimum permissions necessary to perform the user's assigned job duties and nothing more. Which principle does this policy implement?
+A) Separation of duties
+B) Need-to-know
+C) Least privilege
+D) Defence-in-depth
+Correct: C
+Explanation: The principle of least privilege states that users, applications, and systems should be granted only the permissions required to perform their specific functions and no more, reducing the potential damage from account compromise, insider threats, and errors. Need-to-know is a related but distinct concept applied primarily to classified information access — it governs whether someone should have access to specific information based on their mission. Least privilege is a foundational access control principle and is a key requirement in virtually every security framework.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An organisation wants to implement a PKI solution for issuing certificates to internal users and servers. They establish a root CA and several intermediate CAs. A user's certificate is signed by Intermediate CA 2, which is signed by Intermediate CA 1, which is signed by the root CA. This hierarchical structure is known as what?
+A) A certificate revocation chain
+B) A chain of trust
+C) A key escrow hierarchy
+D) A certificate transparency log
+Correct: B
+Explanation: A chain of trust (or certificate chain) is the hierarchical sequence of certificates from a trusted root CA through zero or more intermediate CAs down to the end-entity certificate, where each certificate is signed by the certificate above it, allowing any party who trusts the root CA to verify the end-entity certificate. Certificate transparency logs are public records of all issued certificates used for detecting mis-issuance, which is separate from the chain of trust concept. Understanding the chain of trust is essential for troubleshooting TLS certificate errors and PKI design.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.1 — Compare and contrast various types of security controls
+Question: A security operations team reviews system logs daily to identify unusual patterns of access, such as a user account logging in at 3 AM from a foreign country. Which control category and type combination best describes this activity?
+A) Technical / Preventive
+B) Operational / Detective
+C) Physical / Corrective
+D) Managerial / Directive
+Correct: B
+Explanation: Log review performed by security operations staff is an operational control (executed by people) and functions as a detective control (identifies security events after they occur). Technical detective controls such as a SIEM automate the log analysis, but human review of those logs is the operational layer on top. Many detective controls involve both a technical component (log collection, alerting) and an operational component (human investigation), and understanding which layer is being described is important for exam questions.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: A company's new security architecture document states that the organisation will "never trust, always verify" and requires micro-segmentation, multi-factor authentication for all resource access, and continuous monitoring of all sessions regardless of network location. Which security model does this architecture implement?
+A) Defence-in-depth
+B) Zero trust
+C) Perimeter security
+D) Security through obscurity
+Correct: B
+Explanation: Zero trust is defined by the elimination of implicit trust based on network location, replacing it with continuous verification of all entities through principles including micro-segmentation, strong identity verification (MFA), and real-time monitoring of all sessions. Perimeter security (castle-and-moat) is the legacy model that zero trust replaces — it grants implicit trust to traffic inside the network boundary. Zero trust is driven by the reality that perimeters have become increasingly meaningless with cloud services, remote work, and sophisticated attackers who can bypass perimeter defences.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.3 — Explain the importance of change management processes and the impact to security
+Question: A development team adopts a practice where all source code changes are committed to a central repository with the developer's name, timestamp, and a written description of what was changed and why. Prior to merging, a second developer must review and approve the changes. What security benefit does mandatory code review in version control provide?
+A) It prevents attackers from accessing the source code repository
+B) It provides a four-eyes principle that can detect malicious or erroneous code insertions before they reach production
+C) It encrypts the source code in transit to prevent interception
+D) It satisfies the PKI certificate requirements for signed commits
+Correct: B
+Explanation: Mandatory code review implements the four-eyes (two-person integrity) principle, requiring that at least two developers review changes before they are merged, which significantly reduces the risk of malicious code insertions (supply chain attacks), errors, and backdoors reaching production systems. This does not prevent access to the repository itself — that is handled by access controls. Code review is a critical control in software supply chain security and is required by many secure development lifecycle frameworks.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A server presents a TLS certificate to a client during a handshake. The certificate contains the server's public key, validity period, and domain name. It is signed by an intermediate CA. Which entity is responsible for verifying that this certificate is legitimate and has not been revoked before the connection proceeds?
+A) The web server presenting the certificate
+B) The intermediate CA that signed the certificate
+C) The client (browser or application) establishing the connection
+D) The root CA that anchors the chain of trust
+Correct: C
+Explanation: It is the responsibility of the client (browser, application, or API consumer) to validate the certificate chain, check that all certificates are within their validity periods, and verify revocation status via CRL or OCSP before trusting the connection. The server simply presents its certificate — it does not validate it. This is why a client with an outdated trust store or disabled revocation checking cannot properly protect its users, making regular client-side trust store maintenance a security-critical task.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.2 — Summarize fundamental security concepts
+Question: After a security incident, forensic analysts need to prove that an administrator executed a specific privileged command on a critical server at a particular time. The administrators argue they did not perform the action. Which security principle, if properly implemented, would provide the strongest technical evidence to resolve the dispute?
+A) Availability — ensuring the logging system was online at the time
+B) Integrity — ensuring the log files have not been altered
+C) Non-repudiation — ensuring actions are cryptographically bound to identities through secure audit logs
+D) Confidentiality — ensuring the log files are encrypted at rest
+Correct: C
+Explanation: Non-repudiation provides the technical ability to prove that a specific entity performed a specific action in a way they cannot credibly deny, typically through cryptographically signed audit logs or digital signatures that bind actions to identities. Integrity ensures logs have not been tampered with (necessary but not sufficient on its own for non-repudiation). True non-repudiation requires both integrity of the evidence and cryptographic binding of the action to the identity, making it a more complete legal and technical standard.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: An organisation wants to implement encrypted communications between its microservices using certificates. Rather than each service obtaining a certificate from a public CA, the organisation wants to manage certificate issuance internally at no per-certificate cost. What should the organisation deploy?
+A) A public CA subscription
+B) A private (internal) PKI with an internal Certificate Authority
+C) A Certificate Transparency log
+D) An OCSP responder purchased from a commercial vendor
+Correct: B
+Explanation: A private (internal) PKI allows organisations to operate their own Certificate Authority, issue unlimited certificates to internal services at no incremental cost, and maintain full control over certificate policies — ideal for internal service-to-service (mTLS) communication in microservice architectures. A public CA is appropriate for external-facing services that need to be trusted by browsers and third parties. Internal PKI requires that all clients be configured to trust the organisation's root CA, which is feasible for managed internal systems.
+
+Domain: 1.0 General Security Concepts
+Sub-objective: 1.4 — Explain the importance of using appropriate cryptographic solutions
+Question: A security architect is evaluating block cipher modes of operation for encrypting a large database. They want to ensure that two identical plaintext blocks in the database produce different ciphertext blocks, preventing pattern analysis. Which mode of operation satisfies this requirement?
+A) ECB (Electronic Codebook)
+B) CBC (Cipher Block Chaining)
+C) ROT13
+D) MD5
+Correct: B
+Explanation: CBC (Cipher Block Chaining) XORs each plaintext block with the previous ciphertext block before encryption, ensuring that identical plaintext blocks produce different ciphertext output, preventing statistical pattern analysis. ECB (Electronic Codebook) encrypts each block independently, so identical plaintext blocks always produce identical ciphertext blocks — the infamous "ECB penguin" vulnerability. CBC (and modern modes such as GCM) are strongly preferred over ECB for any application where data patterns must be concealed.

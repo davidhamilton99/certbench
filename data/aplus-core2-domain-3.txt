@@ -1,0 +1,1099 @@
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician receives a call from a user who says their Windows 10 PC displays a blue screen with the stop code "MEMORY_MANAGEMENT" and then restarts. Which is the most appropriate first step?
+A) Reinstall the operating system immediately
+B) Run the Windows Memory Diagnostic tool to test RAM
+C) Replace the hard drive
+D) Disable Windows Update
+Correct: B
+Explanation: The MEMORY_MANAGEMENT BSOD stop code directly indicates a RAM-related fault, so running Windows Memory Diagnostic is the logical first step to confirm whether RAM is defective. Replacing the hard drive addresses storage, not memory, and would not resolve a RAM-related stop code. Think "MEMORY_MANAGEMENT = check the memory first."
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user reports that their Windows PC is extremely sluggish. Task Manager shows CPU usage at 3% and RAM at 40%, but disk activity is consistently at 100%. What is the most likely cause?
+A) Overheating CPU
+B) Failing or slow hard drive causing I/O bottleneck
+C) Insufficient RAM
+D) Corrupted Windows registry
+Correct: B
+Explanation: Persistent 100% disk utilization with low CPU and RAM usage is a classic symptom of a failing or slow mechanical hard drive creating an I/O bottleneck that stalls all processes. Insufficient RAM would show high memory usage in Task Manager, not low memory with high disk. The phrase "disk pegged at 100% = drive bottleneck" is a reliable memory anchor.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: After installing a new application, a Windows 10 computer no longer boots and displays "No operating system found." Which tool should the technician use first to attempt repair?
+A) System Restore from a recovery drive
+B) DISM
+C) Windows Startup Repair from the installation media
+D) Disk Cleanup
+Correct: C
+Explanation: "No operating system found" indicates the boot sector or BCD is corrupted, and Windows Startup Repair automatically detects and repairs boot-related issues. System Restore could help but requires first booting into a recovery environment where Startup Repair is the dedicated boot-fix tool. Remember: boot errors → Startup Repair first.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows workstation continuously reboots within seconds of reaching the desktop. Which setting should the technician disable to allow the BSOD stop code to be read?
+A) Fast Startup
+B) Automatic restart on system failure
+C) Windows Error Reporting
+D) Hibernate mode
+Correct: B
+Explanation: By default, Windows restarts automatically after a BSOD, hiding the stop code; disabling "Automatic restart on system failure" in Advanced System Settings allows the blue screen to remain on screen. Fast Startup affects boot speed, not crash restart behavior. Navigate to System Properties → Advanced → Startup and Recovery to find this option.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user complains that Windows takes 10 minutes to display the desktop after login and then runs slowly for another 5 minutes. Event Viewer shows no errors. What is the most likely culprit?
+A) Corrupt user profile
+B) Too many startup programs loading on sign-in
+C) Failing CPU fan
+D) Incorrect display resolution
+Correct: B
+Explanation: Slow profile load followed by gradual performance improvement is the classic symptom of excessive startup programs delaying available system resources. A corrupt profile typically results in a temporary profile being loaded or an outright login failure, not a slow-but-functional desktop. Use Task Manager → Startup tab to review and disable unnecessary startup items.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician notices that a Windows PC's system clock loses approximately 10 minutes per day even after being corrected. Which component is most likely failing?
+A) Network Interface Card
+B) CMOS battery
+C) RAM module
+D) CPU heatsink
+Correct: B
+Explanation: The CMOS battery maintains BIOS settings and the real-time clock when the PC is powered off; a failing battery causes persistent time drift. A NIC failure would affect network connectivity, not timekeeping. Remember: time keeps slipping → CMOS battery is dripping (losing charge).
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user reports receiving a certificate warning every time they visit their company's internal website, but only on their PC—not on coworkers' machines. What should the technician check first?
+A) The website's SSL certificate expiration date
+B) The system date and time on the user's PC
+C) The user's browser version
+D) The network firewall rules
+Correct: B
+Explanation: An incorrect system date and time is the most common PC-specific cause of certificate warnings because SSL/TLS certificates are only valid within their date range. If the website worked for others, the certificate itself is valid; the problem is local to this PC. Always check date/time before escalating certificate issues.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows service required by a line-of-business application fails to start and logs error 1053 in Event Viewer. What does this error code indicate?
+A) The service binary is missing
+B) The service did not respond to the start or control request in a timely fashion
+C) Insufficient disk space to start the service
+D) The service account password has expired
+Correct: B
+Explanation: Error 1053 specifically means the service failed to respond to the SCM start request within the timeout period, often caused by a deadlock, missing dependency, or misconfigured service. A missing binary would produce a different error (7023 or 2). Think of 1053 as a "time-out" error—the service ignored Windows's start signal.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician is troubleshooting frequent application crashes on a Windows 10 machine. Which built-in tool provides application crash logs including faulting module names?
+A) Resource Monitor
+B) Performance Monitor
+C) Event Viewer (Application log)
+D) Task Scheduler
+Correct: C
+Explanation: Event Viewer's Application log records crash events with the faulting module, exception code, and timestamp, making it the primary diagnostic tool for application crashes. Resource Monitor shows real-time resource usage but does not log historical crash data. Event Viewer → Windows Logs → Application is the go-to path for crash forensics.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user reports a balloon notification stating "Your computer is low on memory" even though only a few applications are open. Which action is most appropriate first?
+A) Add a second monitor
+B) Increase the virtual memory page file size
+C) Disable Windows Firewall
+D) Run Disk Cleanup
+Correct: B
+Explanation: Expanding the virtual memory (page file) provides additional addressable memory space immediately and is the correct first response to low-memory warnings when physical RAM cannot be upgraded right away. Disk Cleanup frees storage space, not addressable memory. Virtual memory acts as a RAM overflow buffer—more page file equals more headroom.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: After connecting several USB devices to a PC, a yellow exclamation mark appears in Device Manager for the USB host controller with a "Code 12" error. What does Code 12 indicate?
+A) The driver is corrupted
+B) The device cannot find enough free resources (IRQ/memory range conflict)
+C) The device has been disabled by the administrator
+D) Windows Update has blocked the driver
+Correct: B
+Explanation: Device Manager Code 12 means the device cannot find sufficient free resources such as IRQ, I/O port, or memory range, a common issue when many USB devices compete for limited resources. Code 43 indicates the driver has reported a problem with the device, not a resource conflict. Code 12 = "12 resources needed, none available."
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user's Windows PC installs updates but reverts them on every restart with the message "Undoing changes made to your computer." What is the most likely cause?
+A) Antivirus is blocking Windows Update
+B) Insufficient disk space on the system drive for update staging
+C) Windows Defender Firewall is enabled
+D) The user account lacks administrator rights to browse the web
+Correct: B
+Explanation: Windows requires adequate free disk space to stage, apply, and clean up updates; when space is insufficient the update rolls back automatically. Antivirus interference would typically cause update download failures, not successful installs that roll back. The fix: free space on the C: drive before retrying the update.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows 10 computer experiences random reboots without a BSOD. CPU temperature reported by the BIOS is consistently 95°C under load. What is the most likely cause?
+A) Corrupt Windows Update files
+B) Thermal shutdown due to overheating CPU
+C) Failing RAM
+D) Outdated network driver
+Correct: B
+Explanation: CPUs have a thermal protection threshold (typically 90–100°C) that triggers an immediate shutdown or reboot to prevent damage, which occurs without generating a BSOD. Corrupt update files cause installation failures or rollbacks, not random reboots under load. "Hot CPU = hard reboot, no BSOD" is the distinguishing symptom pattern.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician uses the command "sfc /scannow" on a Windows 10 machine. What does this command do?
+A) Scans for malware and removes it
+B) Scans and repairs corrupted Windows system files
+C) Defragments the system drive
+D) Resets all network adapter settings
+Correct: B
+Explanation: System File Checker (sfc /scannow) compares system files against a cached copy in the WinSxS folder and repairs any that are corrupted or missing. It does not perform malware scanning—that is the role of Windows Defender or third-party antivirus. SFC = "System File Check"—your go-to for mysteriously broken Windows components.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician suspects a recently installed driver is causing system instability. After attempting to boot normally, the PC crashes immediately. Which Windows boot option is best suited for removing the problematic driver?
+A) Boot Logging
+B) Safe Mode
+C) Last Known Good Configuration
+D) Debugging Mode
+Correct: B
+Explanation: Safe Mode loads a minimal set of drivers, allowing the technician to access Device Manager and uninstall the problematic driver without it crashing the system. Last Known Good Configuration restores the last successful registry hive but is only available before the desktop loads and may not always revert a recently installed driver. Safe Mode = minimal drivers = safe to operate.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that their browser homepage has changed to an unfamiliar search engine and they are being redirected to advertisement sites when clicking search results. What type of threat is most likely responsible?
+A) Ransomware
+B) Browser hijacker
+C) Rootkit
+D) Keylogger
+Correct: B
+Explanation: Browser hijackers modify browser settings such as the default homepage and search engine to redirect traffic to attacker-controlled sites for ad revenue. Ransomware encrypts files and demands payment—it does not redirect web traffic. "Homepage hijacked + redirected = browser hijacker" is the defining symptom pair.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A technician notices that critical Windows system files have been renamed with random characters and the originals are missing. Which type of malware is most likely responsible?
+A) Adware
+B) Spyware
+C) Rootkit
+D) Cryptominer
+Correct: C
+Explanation: Rootkits often rename or replace legitimate system files to hide their presence and maintain persistence while avoiding detection by security tools. Adware generates unwanted advertisements and does not typically modify system file names. The phrase "renamed system files = rootkit hiding in plain sight" is a reliable anchor.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that they shared their password with a coworker over email so the coworker could access a shared folder. The security team flags this as a policy violation. What category of security issue does this represent?
+A) Social engineering
+B) Inadvertent credential sharing
+C) Insider threat
+D) Phishing
+Correct: B
+Explanation: Inadvertent credential sharing occurs when users unknowingly or carelessly expose their credentials without malicious intent, as in sharing a password via unencrypted email. Social engineering involves manipulation techniques used by attackers, not the user voluntarily sharing credentials with a trusted party. Training users to use shared service accounts or permission-based access prevents inadvertent credential sharing.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: After visiting a website, a user's browser begins generating frequent pop-up advertisements even when the browser is closed. What is the most likely cause?
+A) The user's display adapter is failing
+B) Malicious browser extension or adware installed from the website
+C) The Windows firewall is misconfigured
+D) A corrupt browser cache
+Correct: B
+Explanation: Adware or a malicious browser extension can inject advertisements and persist even after the browser window is closed by running as a background process. A corrupt browser cache causes page-rendering issues, not pop-ups outside the browser. Check installed browser extensions and run an adware scan when pop-ups persist after the browser is closed.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports they can no longer access files in a shared network folder they could access yesterday. Event Viewer on the file server shows a security audit failure for the user's account. What has most likely changed?
+A) The network switch port was disabled
+B) The user's NTFS or share permissions were modified
+C) The server's IP address changed
+D) The user's profile is corrupt
+Correct: B
+Explanation: A security audit failure event on the file server combined with sudden loss of access indicates a change in NTFS or share permissions that now denies the user access. A changed server IP would cause all users to lose access, not just one. Audit failure + one user = permissions changed for that user.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A technician investigates a Windows 10 workstation and finds that the Windows Security Center reports antivirus is turned off and Windows Update is disabled, yet the user insists they did not make these changes. What is the most likely explanation?
+A) A Windows feature update reset the settings
+B) Malware modified security settings to reduce defenses
+C) A Group Policy was applied by the domain controller
+D) The user account does not have administrator rights
+Correct: B
+Explanation: Malware commonly disables antivirus and Windows Update to prevent detection and removal, making this a hallmark infection indicator. A Group Policy change would affect all machines in the OU, not a single workstation. "Security tools disabled without user action = malware self-preservation tactic."
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that files are disappearing from their desktop and Documents folder without any action on their part. Antivirus software has been recently disabled. What should the technician investigate first?
+A) Hard drive failure
+B) Malware that deletes or exfiltrates files
+C) Disk quota exceeded
+D) Corrupt file system
+Correct: B
+Explanation: Disappearing files combined with disabled antivirus strongly suggests malware activity—certain malware strains delete or exfiltrate files to conceal evidence or perform sabotage. A disk quota being exceeded causes write failures, not deletion of existing files. Disabled AV + vanishing files = active malware infection in progress.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user receives a Windows Security Alert pop-up urging them to call a phone number to remove a detected virus. The alert cannot be closed. What type of threat is this?
+A) Boot sector virus
+B) Tech support scam / scareware
+C) Ransomware
+D) Spyware
+Correct: B
+Explanation: Scareware (tech support scam) uses alarming fake alerts to panic users into calling fraudulent numbers where attackers charge for fake services or gain remote access. Ransomware actually encrypts files and demands cryptocurrency—it does not display fake phone numbers. Uncloseable pop-ups with phone numbers = scareware, not a legitimate Windows alert.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A technician finds that a user's Windows PC performance degrades significantly only when the PC is connected to the internet, and the CPU spikes to 90%+ at idle. What type of malware is most likely running?
+A) Keylogger
+B) Cryptominer
+C) Rootkit
+D) Browser hijacker
+Correct: B
+Explanation: Cryptominers use the victim's CPU and GPU to mine cryptocurrency for the attacker, causing extreme CPU usage particularly when bandwidth is available to communicate with mining pools. Keyloggers have minimal CPU impact because they only record keystrokes. High idle CPU + internet = cryptominer using your hardware for profit.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that access denied errors appear when they try to open files they created yesterday. Another user account on the same machine can open those files. What is most likely responsible?
+A) The files are stored on a FAT32 partition
+B) Malware changed the file ownership or NTFS permissions
+C) The hard drive has bad sectors
+D) Windows is in Safe Mode
+Correct: B
+Explanation: NTFS permissions are per-account; malware can alter file ownership or ACLs to lock out the legitimate owner while other accounts remain unaffected. FAT32 does not support per-user NTFS permissions at all, so this scenario would not occur on a FAT32 volume. If you own a file but get access denied, check NTFS permissions for malware-driven changes.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: According to CompTIA A+ best practice, what is the FIRST step a technician should take when malware is identified on a workstation?
+A) Run a full antivirus scan
+B) Identify and research the malware symptoms
+C) Disable System Restore
+D) Educate the end user
+Correct: B
+Explanation: The CompTIA 7-step malware removal process begins with identifying and researching malware symptoms to understand the threat before taking remediation action. Disabling System Restore is step 3, after quarantine; doing it first could eliminate a restore point needed for recovery. Investigate first so you know what you're fighting—then contain, then remediate.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician has identified malware on a networked workstation. After identifying the malware, what should the technician do NEXT according to best practice?
+A) Educate the end user about safe browsing
+B) Quarantine the infected system
+C) Schedule a follow-up antivirus scan
+D) Re-enable System Restore
+Correct: B
+Explanation: Step 2 of the CompTIA 7-step process is to quarantine the infected system—typically by disconnecting it from the network—to prevent lateral spread to other machines. Educating the end user is the final step after the system is fully remediated. Quarantine first = contain the threat before it spreads.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: Why must a technician disable System Restore before attempting malware remediation?
+A) System Restore consumes too many CPU resources during scanning
+B) Malware can be preserved in restore points and re-infect the system after removal
+C) Antivirus software cannot run while System Restore is active
+D) System Restore files are encrypted and prevent antivirus access
+Correct: B
+Explanation: Restore points can contain copies of malware; if System Restore remains enabled and is later used, it can reintroduce the infection. Antivirus software can run while System Restore is active—the two are not mutually exclusive. Disable System Restore before remediation, then re-enable it after to create clean restore points.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is performing malware removal. After disabling System Restore, the next step is to remediate the infected system. Which action is part of the remediation step?
+A) Notify the user's manager of the infection
+B) Run antivirus and anti-malware scans to remove the detected threats
+C) Change all user passwords on the domain
+D) Perform a clean OS installation immediately
+Correct: B
+Explanation: Remediation involves using antivirus and anti-malware tools to remove detected threats; a clean OS install is a last resort, not the first remediation action. Notifying management may be required by policy but is not a technical remediation step in the 7-step process. Remediate = scan, quarantine malware, remove; reinstall only if remediation fails.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: After successfully remediating a malware infection, a technician re-enables System Restore and creates a new restore point. What is the NEXT step in the CompTIA 7-step process?
+A) Reformat the hard drive as a precaution
+B) Schedule follow-up scans to confirm the system remains clean
+C) Immediately reinstall all user applications
+D) Report the incident to law enforcement
+Correct: B
+Explanation: Step 5 of the 7-step process is to schedule follow-up scans—both immediate and recurring—to verify the system stays clean after remediation. Reformatting is a last resort taken during remediation, not after a successful removal. Schedule scans after re-enabling System Restore to catch any remnants that initial scans missed.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A user's files have been encrypted and a ransom note appears on the desktop demanding Bitcoin payment. Which type of malware is responsible?
+A) Spyware
+B) Trojan
+C) Ransomware
+D) Worm
+Correct: C
+Explanation: Ransomware encrypts victim files and demands payment for the decryption key, which is the exact behavior described. A Trojan disguises itself as legitimate software to gain access but does not typically encrypt files for ransom. Encrypted files + ransom demand + cryptocurrency = ransomware signature.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician discovers software that records every keystroke the user makes and periodically sends the log to an external IP address. Which malware category best describes this?
+A) Adware
+B) Keylogger
+C) Rootkit
+D) Boot sector virus
+Correct: B
+Explanation: A keylogger is specifically designed to capture and exfiltrate keystrokes, making it ideal for harvesting credentials, credit card numbers, and personal messages. Adware generates advertisements and does not capture keystrokes. "Keys logged and sent out = keylogger"—the name literally describes the function.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A PC cannot boot into Windows and antivirus tools on a bootable USB do not detect any threats, yet the system behaves abnormally at the firmware level. Which malware type is most likely present?
+A) Spyware
+B) Boot sector virus
+C) Cryptominer
+D) Browser hijacker
+Correct: B
+Explanation: A boot sector virus infects the Master Boot Record or Volume Boot Record, running before the OS and antivirus tools that rely on the OS may miss it entirely. Spyware operates within the OS and would be detectable by standard tools. Boot-level anomalies + OS-based tools can't detect it = suspect a boot sector virus.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A user inadvertently installed what appeared to be a legitimate PDF reader. Shortly after, the IT team detects unauthorized remote access sessions on the machine. Which malware type was most likely bundled in the fake application?
+A) Rootkit
+B) Trojan
+C) Worm
+D) Adware
+Correct: B
+Explanation: A Trojan disguises itself as legitimate software (like a PDF reader) to trick users into installing it, then opens backdoors or performs malicious activity covertly. A worm self-replicates across networks without requiring user installation. "Trojan horse = malware disguised as something useful"—classic Greek mythology memory aid.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: During a malware investigation, a technician finds that system processes are hidden from Task Manager and standard directory listings, yet consume CPU resources visible only in kernel-level tools. Which malware type is most likely present?
+A) Ransomware
+B) Adware
+C) Rootkit
+D) Keylogger
+Correct: C
+Explanation: Rootkits operate at the kernel or hypervisor level to hide their processes, files, and network connections from standard OS tools like Task Manager. Ransomware does not hide its processes—it actively displays ransom notes to demand payment. Hidden processes + kernel-level activity = rootkit behavior.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: What is the FINAL step in the CompTIA A+ 7-step malware removal process?
+A) Re-enable System Restore
+B) Schedule follow-up antivirus scans
+C) Educate the end user about safe computing habits
+D) Reconnect the system to the network
+Correct: C
+Explanation: The 7-step process concludes with educating the end user on how to avoid future infections through safe browsing, not clicking suspicious links, and recognizing phishing. Scheduling follow-up scans is step 5, not the final step. End with education because prevention is the best long-term defense.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is using an antivirus tool in the remediation phase and the tool detects a threat but cannot remove it because the malware is actively running. What is the best approach?
+A) Ignore the warning and run the scan again later
+B) Boot into Safe Mode or use a bootable antivirus drive and scan from there
+C) Restore the system using a restore point
+D) Disable Windows Firewall and rescan
+Correct: B
+Explanation: Active malware can lock its own files preventing removal while running; booting into Safe Mode or using a bootable offline scanner allows scanning before the malware loads. Restoring from a restore point could reintroduce malware if it was present when the restore point was created. Can't remove active malware? Go offline or Safe Mode to catch it off-guard.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports that a recently downloaded app on their Android phone crashes immediately upon launch. Other apps work normally. What should the technician recommend first?
+A) Perform a factory reset of the phone
+B) Clear the app's cache and data, then restart the app
+C) Remove the SIM card and reinsert it
+D) Disable mobile data and use Wi-Fi only
+Correct: B
+Explanation: Clearing the app's cache and data resolves the majority of single-app crash issues caused by corrupt cached files or corrupted saved state without affecting other apps or data. A factory reset is an extreme last resort for a single misbehaving app. Clear cache first → restart → reinstall → factory reset: always escalate gradually.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's iOS device battery drains from 100% to 10% in less than two hours of light use. The device is two years old. What is the most likely cause?
+A) A pending software update
+B) Degraded battery capacity due to charge cycle aging
+C) The NFC radio is always on
+D) Too many widgets on the home screen
+Correct: B
+Explanation: Lithium-ion batteries degrade with each charge cycle, and significant capacity loss after two years of use is normal and is the most common cause of dramatically shortened battery life. Pending software updates do not cause battery drain until installed. iOS Settings → Battery → Battery Health shows degradation percentage; below 80% warrants replacement.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports their Android smartphone randomly restarts several times a day. The issue began after the most recent OS update. What is the best initial troubleshooting step?
+A) Replace the battery immediately
+B) Boot into safe mode to determine if a third-party app causes the restarts
+C) Perform an immediate factory reset
+D) Enable airplane mode permanently
+Correct: B
+Explanation: Safe Mode on Android disables all third-party apps, so if random restarts cease in Safe Mode, a third-party app (possibly one that became incompatible after the update) is the culprit. Replacing the battery is appropriate for hardware-related restarts but should not be the first step without software ruling-out. Safe Mode = third-party apps disabled = great diagnostic sandbox.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A mobile user reports their phone screen does not rotate when the device is physically rotated from portrait to landscape. Which setting should the technician check first?
+A) Display brightness level
+B) Auto-rotate is disabled in the quick settings or accessibility settings
+C) The GPS is turned off
+D) The phone case is too thick
+Correct: B
+Explanation: Auto-rotate is controlled by a software toggle in quick settings (and can also be disabled in Accessibility); accidentally toggling it off is the most common and easily fixed cause. GPS controls location services, not screen orientation. Auto-rotate off = screen stays portrait; swipe down to quick settings and toggle it back on.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports that their iPhone cannot connect to any Bluetooth accessory, even after unpairing and re-pairing. Other phones pair to the accessory successfully. What should the technician do next?
+A) Replace the accessory
+B) Toggle Bluetooth off and on, then reset network settings on the iPhone
+C) Update the iPhone's display firmware
+D) Disable Wi-Fi to reduce interference
+Correct: B
+Explanation: Toggling Bluetooth off/on clears transient radio state issues, and resetting network settings clears all stored Bluetooth pairing data, resolving persistent pairing failures. Replacing the accessory is not warranted because other phones pair to it successfully, ruling out an accessory defect. Reset network settings = nuclear option for Bluetooth; it wipes all saved networks and pairings.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A field technician's Android phone GPS shows incorrect location data even in open outdoor areas with clear sky view. The phone's compass app also shows errors. What should be checked first?
+A) Disable and re-enable Airplane Mode
+B) Check if location mode is set to "Device only" (GPS only) and toggle GPS off/on
+C) Replace the SIM card
+D) Clear the camera app cache
+Correct: B
+Explanation: GPS-only mode without network assistance can produce inaccurate or slow fixes; toggling GPS off and back on forces a cold re-acquisition and switching to "High Accuracy" mode (GPS + Wi-Fi + mobile network) typically resolves the inaccuracy. The SIM card handles cellular voice/data, not GPS satellite reception. GPS wrong? Toggle it off/on and switch to High Accuracy mode.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports that app updates on their iPhone always fail with "Unable to Download App." The device shows 20 GB of free space. What should the technician check next?
+A) The screen resolution settings
+B) The Apple ID payment method or account status in the App Store
+C) The volume settings
+D) iCloud backup settings
+Correct: B
+Explanation: App Store update failures are most commonly caused by an Apple ID with an expired payment method, billing hold, or account issue even for free updates. Adequate free space has already been confirmed, making storage the eliminated variable. App Store won't update? Check Apple ID account status and payment method first.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user says their mobile phone's Wi-Fi connection is extremely slow while standing next to the router, but their laptop gets full speed at the same location. What should the technician investigate on the phone?
+A) The phone's cellular data plan
+B) The phone's Wi-Fi band selection—it may be connected to the 2.4 GHz band instead of 5 GHz
+C) The laptop's firewall settings
+D) The router's DHCP lease table
+Correct: B
+Explanation: When a device connects to the congested 2.4 GHz band while the router also broadcasts a faster 5 GHz band, it will experience slow speeds even at close range where 5 GHz excels. The laptop's firewall settings are on a separate device and irrelevant to the phone's speed. Near the router = 5 GHz is best; if the phone auto-selects 2.4 GHz, manually select 5 GHz.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports that their Android phone cannot use AirDrop to share files with a coworker. What is the actual problem?
+A) AirDrop is disabled in Android settings
+B) AirDrop is an Apple-only feature and is not available on Android devices
+C) The Android phone needs a software update to enable AirDrop
+D) AirDrop requires a paid subscription on Android
+Correct: B
+Explanation: AirDrop is a proprietary Apple feature available only on iOS and macOS; Android uses Nearby Share (now Quick Share) as its equivalent. There is no AirDrop setting or update that enables it on Android because the protocol does not exist on that platform. AirDrop = Apple only; Android equivalent = Quick Share (Nearby Share).
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: An app on a user's Android device repeatedly fails to load and displays "App not installed" even after multiple reinstall attempts from the Play Store. What is most likely causing this?
+A) The app requires a newer Android version than the device runs
+B) The Wi-Fi password was recently changed
+C) The device has too many contacts saved
+D) The phone's ringer is set to silent
+Correct: A
+Explanation: "App not installed" after reinstall attempts typically indicates the app's minimum Android API level is higher than the device's current OS version, making it incompatible. A Wi-Fi password change affects connectivity, not app installation compatibility. Check the app's minimum OS requirement against the device's current Android version in Settings → About phone.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's smartphone consistently shows "No Service" after traveling internationally. The phone worked normally before departure. What should the technician verify first?
+A) The phone's screen protector
+B) Whether the phone is carrier-locked and whether international roaming is enabled on the account
+C) Whether Bluetooth is enabled
+D) The phone's ring volume
+Correct: B
+Explanation: Carrier-locked phones may not connect to foreign networks, and international roaming must be explicitly enabled on the carrier account; both are the most common causes of "No Service" after international travel. Bluetooth and screen protectors have no effect on cellular service. "No Service abroad = check carrier lock and roaming plan first."
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user reports unusual data usage spikes on their Android phone occurring at 3 AM when the phone is idle and charging. What type of mobile threat is most consistent with this behavior?
+A) Phishing
+B) Malware performing data exfiltration during off-hours
+C) A failing battery causing data errors
+D) Auto-brightness adjustment
+Correct: B
+Explanation: Malware often schedules data exfiltration for off-hours when users are less likely to notice unusual network activity or high data usage. Battery issues cause power problems, not unexpected network traffic. Unexplained data usage at odd hours = background malware communicating with a command-and-control server.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A technician notices a mobile device is continuously scanning for and auto-connecting to open Wi-Fi networks without the user's knowledge. What security risk does this create?
+A) Reduced screen brightness
+B) Exposure to man-in-the-middle attacks on untrusted networks
+C) Slower app launch times
+D) Increased iCloud storage usage
+Correct: B
+Explanation: Automatically joining unknown open Wi-Fi networks exposes the device to man-in-the-middle attacks where an attacker intercepts unencrypted traffic. Slower app launches are a performance issue, not a security consequence of unintended Wi-Fi connections. Auto-connect to open Wi-Fi = attacker's opportunity for traffic interception; disable auto-join for unknown networks.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user reports their mobile device paired with an unknown Bluetooth device they did not authorize. Which security measure would have prevented this?
+A) Enabling Wi-Fi hotspot
+B) Keeping Bluetooth in non-discoverable mode when not actively pairing
+C) Disabling location services
+D) Increasing screen timeout
+Correct: B
+Explanation: Bluetooth in discoverable mode broadcasts the device's presence to all nearby devices, enabling unauthorized pairing attempts; non-discoverable mode prevents this. Location services control GPS and geolocation, not Bluetooth discoverability. "Not discoverable = not a target"—turn off Bluetooth discoverability when not actively pairing.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user's contact list and photos were found published on a website without consent. The user had granted an app "Contacts" and "Photos" permissions. What type of mobile security issue occurred?
+A) GPS spoofing
+B) Unauthorized data exfiltration via excessive app permissions
+C) SIM cloning
+D) Ransomware
+Correct: B
+Explanation: Granting broad permissions to a malicious or poorly vetted app allows it to access and exfiltrate private data such as contacts and photos to remote servers. SIM cloning duplicates a SIM to intercept calls and texts, not to steal locally stored files. Review app permissions regularly—an app only needs the permissions necessary for its core function.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A technician finds a mobile app that was granted microphone permission and is transmitting audio data to an external server without the user's knowledge. What type of threat is this?
+A) Cryptominer
+B) Unauthorized microphone activation / spyware
+C) Boot sector virus
+D) Browser hijacker
+Correct: B
+Explanation: Spyware with microphone access covertly records and transmits audio, representing unauthorized microphone activation—a serious privacy violation. A cryptominer uses CPU/GPU resources for mining and has no interest in audio data. Review microphone permissions in device settings and revoke access for apps that have no legitimate need for a microphone.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user's mobile device shows extremely high CPU and battery usage even when idle, and the device runs hot. No obvious apps are running in the foreground. What mobile security threat should the technician suspect?
+A) Screen refresh rate set too high
+B) Mobile cryptominer running as a background service
+C) Too many saved Wi-Fi networks
+D) Airplane mode was recently disabled
+Correct: B
+Explanation: Mobile cryptominers run as background services, consuming significant CPU resources (causing heat and battery drain) to mine cryptocurrency for the attacker. Screen refresh rate affects battery modestly but not to the extreme described. High CPU + heat + fast battery drain at idle = cryptominer signature on mobile.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user notices their mobile device's GPS location is being accessed by an app in the background without their knowledge. What type of mobile security threat does this describe?
+A) Denial of service
+B) Unauthorized location tracking
+C) NFC skimming
+D) Wi-Fi deauthentication attack
+Correct: B
+Explanation: Unauthorized location tracking occurs when an app accesses GPS data in the background without a legitimate use case or user consent, enabling stalking, profiling, or targeted advertising. NFC skimming involves reading payment card data via near-field communication, not GPS access. Audit location permissions regularly and set apps to "only while using" rather than "always."
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A corporate user's mobile device connects to a rogue Wi-Fi access point that mimics the company network's SSID. The user's email credentials are subsequently stolen. What attack type occurred?
+A) Bluejacking
+B) Evil twin attack leading to credential theft
+C) SMS phishing (smishing)
+D) Shoulder surfing
+Correct: B
+Explanation: An evil twin access point spoofs a legitimate SSID to lure devices into connecting, then intercepts traffic to steal credentials. Bluejacking sends unsolicited Bluetooth messages and does not involve Wi-Fi or credential theft. Evil twin = fake AP with real SSID; use VPN and verify network certificates to mitigate.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A mobile device management (MDM) alert shows a managed phone has been jailbroken. Why is jailbreaking a mobile security concern in a corporate environment?
+A) It improves battery life, which increases data usage
+B) It removes OS-enforced security controls, allowing unauthorized apps and exposing corporate data
+C) It automatically enables Bluetooth discoverability
+D) It disables the camera app
+Correct: B
+Explanation: Jailbreaking (iOS) or rooting (Android) removes the OS sandbox and security restrictions, allowing installation of unsigned apps that can access corporate data, MDM profiles, or device credentials. Improved battery life is not an outcome of jailbreaking; it typically degrades stability and security. Jailbroken/rooted = sandbox removed = corporate data at risk.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user reports their phone is sending texts to unknown numbers without their action, and their contacts are receiving spam links. What type of mobile malware is responsible?
+A) Ransomware
+B) SMS-spreading mobile worm or trojan
+C) Keylogger
+D) Adware
+Correct: B
+Explanation: Mobile worms and certain trojans self-propagate by sending malicious SMS messages to contacts, using the infected device as a relay without the user's awareness. Ransomware encrypts data and demands payment—it does not focus on spreading via SMS. Texts sent without user action + spam links to contacts = SMS worm behavior.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A company policy requires that all employee mobile devices have screen lock enabled with a PIN or biometric. A user disables the screen lock for convenience. What is the primary security risk?
+A) Increased battery consumption
+B) Unauthorized physical access to corporate data if the device is lost or stolen
+C) Reduced Wi-Fi signal strength
+D) Slower app performance
+Correct: B
+Explanation: Screen locks are the primary physical access control on mobile devices; without one, anyone who picks up the device gains immediate access to email, corporate apps, and sensitive data. Battery consumption is not meaningfully affected by screen lock settings. No screen lock = no barrier between a stolen device and all its data.
+
+Domain: 3.1
+Sub-objective: 3.1
+Question: A Windows 10 machine displays the error "INACCESSIBLE_BOOT_DEVICE" at startup. Which of the following is the most likely cause?
+A) The monitor cable is loose
+B) A storage controller driver is missing or corrupted after a Windows update
+C) The keyboard is not connected
+D) Bluetooth is disabled
+Correct: B
+Explanation: INACCESSIBLE_BOOT_DEVICE means Windows cannot read from the storage device during boot, most commonly due to a missing or corrupted storage controller driver, often triggered by a bad update. A loose monitor cable would produce no display but not this specific stop code. Storage driver issue = INACCESSIBLE_BOOT_DEVICE; use startup repair or roll back the update.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician runs "chkdsk /f /r" on a Windows drive. What does this command accomplish?
+A) Repairs corrupt Windows system files from the WinSxS cache
+B) Checks the disk for file system errors and attempts recovery of readable data from bad sectors
+C) Defragments the drive to improve read performance
+D) Resets all network adapter settings
+Correct: B
+Explanation: chkdsk /f fixes file system errors and /r additionally locates bad sectors and attempts to recover readable data, making it essential for diagnosing storage hardware problems. sfc /scannow (not chkdsk) repairs Windows system files from the cache. Remember: chkdsk = "check disk" health; sfc = "system file check" integrity.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user's Windows 10 PC shows the desktop but applications refuse to open and Task Manager shows no high resource usage. The system clock shows the correct time. What should the technician try first?
+A) Replace the hard drive
+B) Restart the Windows Explorer shell process via Task Manager
+C) Run chkdsk
+D) Reinstall all applications
+Correct: B
+Explanation: When the desktop appears but applications refuse to launch and resources appear normal, the Windows Explorer shell is often in a hung state; restarting explorer.exe via Task Manager resolves this without a full reboot. Running chkdsk is appropriate for storage errors, not a frozen shell with no resource spikes. Explorer.exe frozen = restart it in Task Manager → File → Run new task.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user clicks a link in an email and is redirected to a page that looks like their bank's login page. After entering credentials, nothing happens. What type of attack occurred?
+A) Cryptominer injection
+B) Phishing / credential harvesting
+C) Denial of service
+D) Ransomware deployment
+Correct: B
+Explanation: A spoofed bank login page that captures entered credentials and then does nothing is a classic phishing credential harvesting attack. A cryptominer would not require the user to enter credentials—it silently uses CPU resources. Fake login page + credentials entered + nothing happens = phishing site that harvested the password.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that their browser shows a padlock icon with a red X and a warning that the website's certificate is issued to a different domain. What does this indicate?
+A) The website is running slowly due to high server load
+B) A potential man-in-the-middle attack or a misconfigured certificate not matching the domain
+C) The user's internet connection is metered
+D) The website uses HTTP instead of HTTPS
+Correct: B
+Explanation: A certificate issued to a different domain indicates either a misconfiguration (wrong cert bound to the site) or a man-in-the-middle attack presenting its own certificate. A slow server would not trigger a certificate domain mismatch warning. Domain mismatch certificate warning = verify you're on the correct URL and suspect MITM if unexpected.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is remediating a ransomware infection. The antivirus removes the ransomware executable, but encrypted files remain inaccessible. What is the correct next step for file recovery?
+A) Run sfc /scannow to repair the encrypted files
+B) Restore files from a known-clean backup taken before the infection
+C) Pay the ransom to receive the decryption key
+D) Run chkdsk to recover encrypted files as bad sectors
+Correct: B
+Explanation: Once ransomware encrypts files, only the attacker's private key or a pre-infection backup can restore them; sfc and chkdsk operate on file system structure, not encrypted file content. Paying the ransom is not a guaranteed recovery and funds criminal activity. The best ransomware defense is a tested, offline, pre-infection backup—restore from there.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician finds spyware on a workstation that is part of a corporate domain. After completing malware removal, which action related to credentials is most critical before returning the device to the user?
+A) Change the desktop wallpaper
+B) Have the user change all passwords, as credentials may have been captured by the spyware
+C) Reinstall the printer drivers
+D) Disable Windows Hello
+Correct: B
+Explanation: Spyware is designed to capture credentials; any password entered on an infected machine must be considered compromised and should be changed after remediation. Reinstalling printer drivers and changing wallpaper are unrelated to the security impact of spyware. Post-spyware = assume all credentials compromised; change them all.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's tablet experiences sluggish performance after installing a large number of apps. Available storage shows only 500 MB remaining of 32 GB. What is the most appropriate recommendation?
+A) Replace the tablet's battery
+B) Uninstall unused apps and clear app caches to free storage space
+C) Disable Wi-Fi to improve performance
+D) Enable developer mode
+Correct: B
+Explanation: Low available storage on mobile devices directly causes sluggish performance because the OS needs free space for swap, temporary files, and app operations; freeing space resolves the issue. Replacing the battery addresses power issues, not storage-related slowdowns. Mobile rule of thumb: keep at least 10–15% of storage free for healthy performance.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports that NFC payments are not working on their Android phone at the point-of-sale terminal. The phone has Google Pay configured. What should the technician check first?
+A) Whether the phone has an active cellular data connection
+B) Whether NFC is enabled in the phone's settings and the back of the phone is positioned near the reader
+C) Whether Bluetooth is turned on
+D) Whether the phone is in developer mode
+Correct: B
+Explanation: NFC payments require NFC to be enabled in device settings and proper positioning (back of phone, within centimeters of the reader); both are the most common causes of failed tap-to-pay. Cellular data is not required for NFC transactions at point-of-sale. NFC = short-range radio; check it's on and that the phone's NFC antenna (typically on the back) is near the reader.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A security analyst notices a managed mobile device is transmitting gigabytes of data to an overseas IP address overnight. Which mobile threat is most consistent with this finding?
+A) Screen timeout misconfiguration
+B) Data exfiltration by mobile malware or a malicious app
+C) Excessive cloud photo backup
+D) OS update downloading in the background
+Correct: B
+Explanation: Large volumes of data transmitted to foreign IPs during off-hours is a hallmark of mobile malware performing data exfiltration of contacts, messages, photos, or corporate documents. Cloud backup typically goes to known provider IP ranges, not overseas unidentified IPs. Overseas IP + bulk data at night = data exfiltration, not routine backup.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows 10 workstation loads the user profile very slowly and eventually logs in to a "temporary profile" instead of the user's regular profile. What is the most likely cause?
+A) The hard drive is full
+B) The user profile is corrupt or the profile registry hive failed to load
+C) The user account is locked out
+D) Windows Update is currently running
+Correct: B
+Explanation: A temporary profile is loaded when Windows cannot mount the normal profile's registry hive (NTUSER.DAT), indicating corruption of the profile. A locked-out account would prevent login entirely rather than logging in with a temporary profile. Event ID 1511 in the Application log confirms the temporary profile was loaded due to a profile load error.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that their antivirus software icon has disappeared from the system tray and the Windows Security Center reports no antivirus protection. The user did not uninstall it. What should the technician suspect?
+A) Windows automatically removed conflicting antivirus software
+B) Malware disabled or uninstalled the antivirus to avoid detection
+C) A Windows update changed the system tray settings
+D) The user changed their display resolution
+Correct: B
+Explanation: Malware frequently targets and disables security software as a first action to avoid removal; unexplained disappearance of AV protection is a strong infection indicator. A Windows update might restart the tray icon but would not silently remove antivirus protection entirely. AV gone without user action = malware self-preservation behavior.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is following the CompTIA 7-step malware removal process and has just completed scheduled follow-up scans confirming the system is clean. What step comes immediately next?
+A) Quarantine the system again
+B) Re-enable System Restore and create a new restore point
+C) Educate the end user about safe computing practices
+D) Disable Windows Update
+Correct: C
+Explanation: After confirming the system is clean via follow-up scans (step 5) and having already re-enabled System Restore (step 6), the final step (step 7) is educating the end user. Quarantine is step 2 and is not repeated after remediation. End the 7-step process with education: an informed user is the best prevention against re-infection.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's iOS app crashes only when the device is connected to a specific corporate Wi-Fi network. The app works normally on other networks. What should the technician investigate?
+A) The app's icon cache
+B) Whether the corporate network uses content filtering or a proxy that blocks required app endpoints
+C) Whether iCloud backup is enabled
+D) The screen brightness setting
+Correct: B
+Explanation: If an app crashes only on a specific network, a corporate proxy, firewall, or content filter is likely blocking the app's required API endpoints, causing it to fail. The app's icon cache affects display, not network-dependent functionality. Network-specific app crash = firewall/proxy blocking app traffic; check with the network administrator.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user's smartphone camera app activates its indicator light randomly when the device is idle and no camera app is open. What security issue should the technician investigate?
+A) A display calibration error causing LED flicker
+B) An app with unauthorized camera permissions accessing the camera in the background
+C) The front flash being set to automatic
+D) A software update for the camera app
+Correct: B
+Explanation: Camera indicator lights are hardware-controlled and activate whenever the camera sensor is accessed; random activation with no foreground camera app indicates a background app has unauthorized camera access. A display calibration error would affect the screen, not the camera indicator. Camera light on with no app open = background app spying; audit camera permissions immediately.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows workstation displays "Bootmgr is missing. Press Ctrl+Alt+Del to restart." What is the correct tool to repair this from Windows installation media?
+A) DISM /RestoreHealth
+B) Bootrec /fixmbr and Bootrec /fixboot from the Recovery Command Prompt
+C) sfc /scannow
+D) diskpart /clean
+Correct: B
+Explanation: "Bootmgr is missing" indicates a damaged or missing boot manager; bootrec /fixmbr rewrites the Master Boot Record and bootrec /fixboot rewrites the boot sector, both executed from the recovery command prompt. sfc /scannow repairs Windows system files but cannot run without a functional boot environment. Bootrec = boot record repair; use it from recovery media when Windows won't start.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that every time they open their browser, it navigates to a different search engine than the one they configured. Resetting browser settings temporarily fixes it, but the hijack returns. What is the most likely cause?
+A) Corrupt browser installation
+B) A malicious browser extension or persistent adware reinstating the hijack
+C) DNS server settings changed on the router
+D) The operating system language settings are incorrect
+Correct: B
+Explanation: If browser reset temporarily resolves the hijack but settings revert, a malicious extension or installed adware is actively resetting the browser configuration each session. DNS changes would redirect all devices on the network, not just one browser's homepage. Persistent hijack after reset = extension or adware; remove extensions and run anti-malware.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's Android phone displays "Unfortunately, [App] has stopped" frequently for a productivity app they use daily. The phone has 4 GB of free storage and adequate RAM. What is the next best troubleshooting step?
+A) Replace the phone
+B) Uninstall and reinstall the application
+C) Reset the mobile network settings
+D) Disable Bluetooth
+Correct: B
+Explanation: After confirming storage and RAM are sufficient, uninstalling and reinstalling the app replaces potentially corrupt application files and resets app data that may have caused the crash. Network settings affect connectivity, not app stability for locally functioning apps. Clear cache → reinstall → contact app developer: the escalation path for persistent app crashes.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user reports receiving targeted advertisements on their phone for a product they discussed verbally near their phone but never searched for online. They are concerned the phone is listening. What should the technician investigate?
+A) The phone's IMEI number
+B) Which apps have been granted microphone permissions, and review their privacy policies
+C) Whether the phone's SIM tray is properly seated
+D) The phone's display resolution
+Correct: B
+Explanation: Apps with microphone access can theoretically capture ambient audio; auditing microphone permissions and restricting them to apps with a legitimate need (calls, voice assistant) is the correct investigation step. The IMEI identifies the device but is unrelated to microphone surveillance. Settings → App Permissions → Microphone: revoke access from any app that doesn't need it.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user reports that a Windows application crashes immediately on launch and Event Viewer shows "Faulting module: ntdll.dll." What does this indicate?
+A) The application's installer is corrupted
+B) A core Windows library has a conflict; this often indicates malware or corrupted system files
+C) The application requires an internet connection to launch
+D) The user's account lacks administrator rights
+Correct: B
+Explanation: ntdll.dll is a core Windows NT library; when it is the faulting module, it typically indicates system file corruption, a .NET runtime issue, or malware that has injected into the process. The user account privileges would produce an "access denied" error, not a faulting module crash. ntdll.dll faults = run sfc /scannow and check for malware injection.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user receives an email warning from "Microsoft Support" that their account has been compromised and they must click a link to verify their identity immediately. The email domain is "microsofft-support.net." What type of attack is this?
+A) Vishing
+B) Phishing via email spoofing
+C) Bluejacking
+D) Ransomware delivery
+Correct: B
+Explanation: A fake urgent email from a domain mimicking a legitimate company designed to trick users into clicking a malicious link is a textbook phishing attack. Vishing uses voice calls, not email, for social engineering. Typosquatted domains like "microsofft" are a phishing red flag—always check the sender domain carefully.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is using an offline bootable antivirus USB drive to scan a heavily infected machine. Why is this approach more effective than scanning from within the infected Windows environment?
+A) Bootable USB drives have faster scanning algorithms
+B) Malware cannot load its self-protection mechanisms before the OS, so the scanner can detect and remove files that would be locked or hidden in a live system
+C) Windows antivirus cannot scan FAT32 volumes
+D) Offline scanners bypass Windows licensing requirements
+Correct: B
+Explanation: When scanning from outside the OS, malware rootkits and self-protection drivers never load, making hidden and locked malicious files visible and removable to the offline scanner. In-OS scanners can be blinded by rootkits that hook OS calls to hide themselves. Offline scanner = malware sleeping = easier to find and remove.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A mobile user's OS update fails repeatedly at 75% with an error message. The phone has 3 GB of free storage. What should the technician verify next?
+A) Whether the phone case needs to be removed
+B) Whether the battery is above 50% and the phone is connected to a charger
+C) Whether Bluetooth is paired to any devices
+D) Whether the phone's ringtone is set correctly
+Correct: B
+Explanation: Mobile OS updates require a minimum battery level (commonly 50%) and often require the device to be on charge to prevent a failed update from bricking the device due to power loss mid-install. Paired Bluetooth devices do not affect OS update success. Charge the phone before updating: most phones block or fail updates below 50% battery.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A managed mobile device's MDM console shows it is transmitting location data to a non-corporate server every 15 minutes. The device owner is unaware of this. What type of mobile security threat does this represent?
+A) Wi-Fi deauthentication
+B) Unauthorized location tracking by a rogue or malicious app
+C) NFC data theft
+D) Bluejacking
+Correct: B
+Explanation: Regular background transmission of GPS coordinates to an unauthorized server is unauthorized location tracking, a form of mobile spyware behavior. NFC data theft requires physical proximity and targets payment/contactless data, not GPS coordinates. Location data sent to non-corporate server every 15 minutes = mobile stalkerware or rogue app.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows 10 PC was working normally until a power outage. Now it boots to a black screen with a blinking cursor after the BIOS POST. Which recovery tool should the technician use first?
+A) Windows Defender Offline Scan
+B) Startup Repair from Windows installation media
+C) System Configuration (msconfig)
+D) Device Manager
+Correct: B
+Explanation: A blinking cursor after POST with no OS loading indicates boot sector or BCD corruption, which is exactly what Startup Repair is designed to fix. msconfig requires a functioning Windows environment to run. Power outage + blinking cursor = likely BCD corruption; Startup Repair is the correct first response.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that a window appeared on their desktop displaying fake antivirus scan results showing hundreds of viruses, with a button to "Clean Now" that leads to a purchase page. Which threat type is this?
+A) Trojan horse
+B) Scareware / rogueware
+C) Boot sector virus
+D) Keylogger
+Correct: B
+Explanation: Scareware (rogueware) fabricates alarming security alerts to panic users into purchasing fake security software; the "Clean Now" purchase button is the definitive indicator. A trojan disguises itself as legitimate software but does not typically generate fake scan results with purchase prompts. Fake virus count + "buy to fix" button = scareware.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician is about to run anti-malware tools on an infected Windows machine. The malware is known to kill antivirus processes. What should the technician do before scanning?
+A) Upgrade the hard drive to an SSD
+B) Boot into Safe Mode with Networking to prevent the malware from loading and killing the scanner
+C) Disable Windows Firewall
+D) Log in as a standard user
+Correct: B
+Explanation: Safe Mode with Networking loads only essential drivers and services, preventing the malware from auto-starting and terminating the antivirus scanner. Logging in as a standard user does not prevent malware that has already established persistence from running. Safe Mode = malware startup disabled = scanner can run unimpeded.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's iPhone stops responding to touch input but the display remains on and shows content. Which step should the technician perform first?
+A) Send the phone for depot repair immediately
+B) Perform a force restart by pressing the appropriate button combination for the iPhone model
+C) Replace the screen
+D) Restore the iPhone via iTunes
+Correct: B
+Explanation: An unresponsive touchscreen with a functional display is most commonly a software freeze resolvable by a force restart (e.g., Volume Up, Volume Down, then hold Side button on iPhone 8+). Restoring via iTunes is appropriate only if force restart fails and is a more destructive option. Force restart = soft hardware reset; it clears RAM without erasing data.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user's Android phone begins connecting to a specific Wi-Fi network they have never manually joined every time they enter a coffee shop. The network SSID matches one they used previously at a different location. What is occurring?
+A) The phone's GPS is malfunctioning
+B) The device is auto-connecting to a network with the same SSID, potentially a rogue access point
+C) The phone's Bluetooth is pairing automatically
+D) The NFC reader is triggering a network join
+Correct: B
+Explanation: Android and iOS save Wi-Fi credentials by SSID; an evil twin or coincidentally named rogue AP with the same SSID causes automatic reconnection and enables potential traffic interception. GPS malfunctions affect location accuracy, not Wi-Fi joining behavior. Same SSID = automatic connection; rename or remove saved networks you no longer trust.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A technician discovers that a Windows 10 machine's Event Viewer shows Event ID 41 (Kernel-Power, Task Category 63) repeatedly before random shutdowns. What does Event ID 41 indicate?
+A) A Windows Update completed successfully
+B) The system was shut down without a clean shutdown sequence, indicating unexpected power loss or hard crash
+C) A scheduled antivirus scan ran and found threats
+D) A user account was locked out
+Correct: B
+Explanation: Kernel-Power Event ID 41 is logged when the system reboots or shuts down without first completing a clean shutdown, indicating a crash, power loss, or forced power-off. Event ID 4625 indicates an account lockout, not a power event. Event 41 = "system died without saying goodbye"—investigate PSU, overheating, or BSOD for root cause.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user accidentally emailed a spreadsheet containing employee salary data to the entire company distribution list. Which security term describes this event?
+A) Data breach by external attacker
+B) Inadvertent data disclosure / data leak
+C) Insider threat with malicious intent
+D) Social engineering
+Correct: B
+Explanation: Inadvertent data disclosure is an accidental exposure of sensitive data without malicious intent, which is exactly what occurred when the user mistakenly used the wrong recipient. Insider threat implies deliberate malicious intent, which is not present here. Accidents happen; DLP (Data Loss Prevention) tools help prevent accidental mass email of sensitive files.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: Which of the following best describes the difference between a virus and a worm?
+A) A virus uses encryption while a worm does not
+B) A virus requires a host file to attach to and user action to spread; a worm self-replicates across networks without a host file
+C) A worm encrypts files; a virus only displays advertisements
+D) A virus targets mobile devices; a worm targets only desktops
+Correct: B
+Explanation: Viruses attach themselves to executable host files and spread when an infected file is executed by a user; worms are standalone programs that self-replicate automatically across networks. Encryption is used by ransomware, not as a distinguishing feature between viruses and worms. Virus = needs a host + user action; worm = self-contained + self-spreading.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's tablet displays "No SIM card detected" after dropping the device. The SIM card slot is on the side of the device. What should the technician check first?
+A) Reinstall the OS on the tablet
+B) Remove and reseat the SIM card, checking for physical damage to the card and tray
+C) Perform a factory reset
+D) Disable Wi-Fi calling
+Correct: B
+Explanation: A physical drop can dislodge the SIM card from its tray; reseating it is the simplest, first-line fix before assuming hardware damage. A factory reset does not affect SIM card seating—it erases user data and cannot fix a physical connection issue. Dropped phone + no SIM = reseat first; hardware damage assumed only if reseating fails.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A corporate security team discovers an employee's personal Android phone, which is connected to the corporate Wi-Fi, is running an app that was sideloaded (installed outside the Play Store). Why is sideloading a security concern?
+A) It prevents the phone from receiving OS updates
+B) Apps installed outside official stores bypass security vetting and may contain malware
+C) It permanently disables the device's fingerprint reader
+D) Sideloaded apps always require root access to run
+Correct: B
+Explanation: Official app stores perform security scanning on submitted apps; sideloaded APKs bypass this vetting entirely and may contain malware, spyware, or trojans. Sideloading does not affect OS update delivery or the fingerprint sensor. Sideloaded = unvetted = unknown risk; corporate MDM policies often prohibit sideloading.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows 10 laptop that dual-boots with Linux shows the error "NTLDR is missing" upon startup after a Linux update. What is the most likely cause?
+A) The laptop's battery is dead
+B) The Linux GRUB bootloader overwrote the Windows MBR, breaking the Windows boot path
+C) The Wi-Fi driver was uninstalled
+D) The RAM became unseated
+Correct: B
+Explanation: Linux GRUB updates can overwrite or misconfigure the MBR, removing the Windows boot entry and causing NTLDR/BOOTMGR missing errors on the Windows side. A dead battery would prevent POST entirely, not produce a specific boot error message. Dual-boot issues + NTLDR missing after Linux update = MBR overwritten; repair with bootrec /fixmbr.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user notices that the Windows Hosts file has been modified to redirect their bank's URL to a different IP address. What type of attack does this represent?
+A) Phishing
+B) DNS poisoning / pharming via hosts file hijack
+C) ARP spoofing
+D) Keylogging
+Correct: B
+Explanation: Modifying the hosts file to redirect legitimate domain names to attacker-controlled IPs is a local pharming attack, a form of DNS-level redirection that bypasses external DNS servers. ARP spoofing redirects network-layer traffic at the MAC address level and does not modify the hosts file. Hosts file modified = local pharming; check C:\Windows\System32\drivers\etc\hosts regularly.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A technician suspects a rootkit is present on a Windows workstation. Standard antivirus scans show no threats. Which approach is most likely to successfully detect the rootkit?
+A) Running Windows Defender from within the normal Windows session
+B) Using a specialized bootable rootkit detector or offline scanner that operates outside the suspect OS
+C) Increasing the antivirus scan priority in Task Manager
+D) Running sfc /scannow from the command prompt
+Correct: B
+Explanation: Rootkits hook into the OS kernel and hide themselves from tools running within that OS; an offline or bootable scanner operates outside the infected OS, bypassing the rootkit's hooks and revealing hidden files. sfc /scannow also runs within the OS and may be defeated by a kernel-level rootkit. Rootkits hide from their own OS; boot outside it to see what's hidden.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's iPhone shows Wi-Fi connected with full signal bars but web pages refuse to load and apps requiring internet do not function. Other devices on the same Wi-Fi network work normally. What should the technician try first?
+A) Restart the Wi-Fi router
+B) Toggle Wi-Fi off and on, then try forgetting and rejoining the network on the iPhone
+C) Replace the iPhone
+D) Update the router's firmware
+Correct: B
+Explanation: If the phone shows Wi-Fi connected but no traffic flows while other devices work, the phone has a stale or incorrect IP configuration; toggling Wi-Fi or forgetting the network forces DHCP re-acquisition and resolves this. Restarting the router would affect all users, not just this one device. Connected but no internet on one device = DHCP issue; forget and rejoin the network.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: An MDM policy alert notifies the IT team that a managed iOS device has disabled the MDM profile. What does this most likely indicate, and what action should be taken?
+A) The phone battery died; recharge and the MDM profile will return automatically
+B) The user removed the MDM profile, bypassing corporate controls; remotely wipe or lock the device per policy
+C) The iOS update overwrote the MDM settings; restore from backup
+D) The SIM card was changed; reissue the SIM and MDM will reinstall
+Correct: B
+Explanation: Removing an MDM profile is a deliberate action requiring Steps in the device settings; it removes all corporate controls and policies, representing a policy violation requiring immediate response. A battery death or OS update does not remove MDM profiles; they persist unless explicitly deleted. MDM profile removed = intentional bypass; lock or wipe per corporate BYOD policy.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A user reports that Windows Update always fails with error code 0x80070422. Research indicates this error means "The service cannot be started." Which Windows service must be verified to be running?
+A) Print Spooler
+B) Windows Update service (wuauserv)
+C) Bluetooth Support Service
+D) Remote Desktop Services
+Correct: B
+Explanation: Error 0x80070422 specifically means the Windows Update service (wuauserv) is stopped or disabled; starting it via services.msc resolves the error. The Print Spooler handles printing and has no role in Windows Update. 0x80070422 = "Update service is off"; start wuauserv in services.msc to fix it.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A technician discovers that a user has been storing their Windows login password in a sticky note on their monitor. What category of security risk does this represent?
+A) Phishing
+B) Physical security vulnerability and inadvertent credential exposure
+C) Brute force vulnerability
+D) SQL injection risk
+Correct: B
+Explanation: Storing passwords in plain sight on a physical note is an inadvertent credential exposure and a physical security failure that allows anyone with visual access to the workspace to obtain the credentials. Brute force attacks guess passwords programmatically—a sticky note gives an attacker an instant, no-effort credential. Physical credential exposure = no technical attack needed; a glance is enough to compromise the account.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: After malware removal, a technician verifies the system is clean and re-enables System Restore. Which action creates a clean baseline restore point for future use?
+A) Allowing System Restore to automatically create a restore point at the next scheduled time only
+B) Manually creating a new restore point immediately after confirming the system is clean
+C) Deleting all previous restore points without creating a new one
+D) Disabling System Restore again after 24 hours
+Correct: B
+Explanation: Manually creating a restore point immediately after confirming a clean system establishes a known-good baseline; previous restore points may contain the malware and should also be purged. Waiting for an auto restore point risks having no clean restore point if the system re-infects before the schedule runs. Clean system confirmed → create restore point NOW as your known-good baseline.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A mobile user reports their Android phone becomes very hot and restarts unexpectedly during phone calls. The device is six months old. What is the most likely cause?
+A) The microphone is malfunctioning
+B) A defective or swollen battery generating excess heat and triggering thermal protection
+C) The phone's speaker volume is set too high
+D) Too many contacts in the address book
+Correct: B
+Explanation: A defective or swollen lithium-ion battery generates heat under load (like during a call), and the device's thermal protection triggers an emergency restart. Microphone issues cause audio problems during calls, not heat and restarts. Six-month-old device + heat + call-triggered restart = suspect a defective battery; inspect and replace.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user reports receiving a text message from their bank requesting they click a link to verify their account. The user is unsure if it is legitimate. What type of attack does this describe, and what should they do?
+A) Vishing; call the number in the text to verify
+B) Smishing (SMS phishing); do not click the link and contact the bank directly using the number on the back of their card
+C) Bluejacking; disable Bluetooth immediately
+D) Spear phishing via email; forward it to IT
+Correct: B
+Explanation: SMS-based phishing is called smishing; the correct response is to never click links in unsolicited texts and to contact the institution directly using a verified phone number. Vishing uses voice calls, not text messages. Smishing = SMS + phishing; always call the institution directly using a number from their official website or card, never the one in the message.
+
+Domain: 3.0
+Sub-objective: 3.1
+Question: A Windows 10 computer displays the message "Your PC ran into a problem and needs to restart" with stop code "CRITICAL_PROCESS_DIED." What does this stop code indicate?
+A) The hard drive is full
+B) A critical Windows process terminated unexpectedly, requiring the OS to stop to prevent data corruption
+C) The graphics driver failed
+D) A Windows Update is pending
+Correct: B
+Explanation: CRITICAL_PROCESS_DIED occurs when a core process (like csrss.exe, winlogon.exe, or lsass.exe) terminates unexpectedly, making the OS unable to continue safely. A graphics driver failure typically shows TDR_FAILURE. Critical process stopped = OS must stop too; investigate recent software changes, malware, and run sfc.
+
+Domain: 3.0
+Sub-objective: 3.2
+Question: A user reports that their Windows PC is running slowly and they notice an unfamiliar process consuming 70% CPU in Task Manager. The process name is spelled similarly to "svchost.exe" but with a subtle difference. What should the technician suspect?
+A) A legitimate Windows optimization process
+B) A malware process masquerading as a legitimate Windows process using a typosquatted name
+C) A Windows Update component
+D) A third-party antivirus scan
+Correct: B
+Explanation: Malware frequently mimics legitimate Windows process names with subtle misspellings (e.g., "svch0st.exe" or "svchost32.exe") to evade casual inspection; a suspicious process name with high CPU should be investigated immediately. Legitimate Windows processes run from System32 and appear with exact correct spellings. Typosquatted process name + high CPU = malware impersonating a system process.
+
+Domain: 3.0
+Sub-objective: 3.3
+Question: A user's Windows PC is infected with malware that prevents internet access, blocking antivirus definition updates. What should the technician do to obtain updated definitions?
+A) Reinstall the OS without downloading definitions
+B) Download updated definitions on a clean machine, transfer via USB, and update manually
+C) Connect the infected PC to a mobile hotspot to bypass the block
+D) Disable the network adapter and scan without definitions
+Correct: B
+Explanation: Downloading definitions on an uninfected machine and transferring via USB bypasses the malware's network block and ensures the scanner has current signatures to detect the malware. A mobile hotspot may also be blocked if the malware targets all network interfaces. Malware blocking the internet? Bring definitions to the PC on a USB rather than trying to reach the internet through it.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user's tablet screen shows "ghost touches"—random taps registering on the screen without the user touching it. Which troubleshooting step should the technician try first?
+A) Replace the digitizer immediately
+B) Clean the screen with a dry cloth and remove any screen protector to rule out interference
+C) Perform a factory reset
+D) Disable the accelerometer
+Correct: B
+Explanation: Contaminants, moisture, or a damaged screen protector can cause capacitive touchscreens to register false touches; cleaning the screen and removing the protector is the simplest first step. Replacing the digitizer is appropriate only after confirming software and surface factors are ruled out. Ghost touches = capacitive interference; clean the screen before assuming hardware failure.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A technician reviews mobile app permissions and finds a flashlight app requesting access to Contacts, Camera, Microphone, Location, and SMS. Which principle should guide the technician's recommendation?
+A) Grant all requested permissions to ensure the app functions correctly
+B) Apply the principle of least privilege—grant only the permissions necessary for the app's core function
+C) Uninstall Android and replace with a custom ROM
+D) Enable developer mode to override the permission requests
+Correct: B
+Explanation: A flashlight app legitimately needs only the camera (to control the LED flash); requests for Contacts, Microphone, Location, and SMS are excessive and indicate potential spyware or data harvesting behavior. Granting all permissions to any app violates least privilege and exposes unnecessary data. Least privilege on mobile = if the app doesn't need it for its stated purpose, don't grant it.
+
+Domain: 3.0
+Sub-objective: 3.4
+Question: A user reports their mobile phone displays full signal bars for both Wi-Fi and cellular, but voice calls drop repeatedly. What should the technician investigate?
+A) Screen brightness
+B) Network carrier congestion or VoLTE/Wi-Fi calling configuration issues
+C) Whether Do Not Disturb mode is enabled
+D) The contacts app cache
+Correct: B
+Explanation: Signal bars indicate radio signal strength, not call quality; dropped calls with strong signal often point to network congestion, VoLTE misconfigurations, or Wi-Fi calling handoff issues. Do Not Disturb sends calls to voicemail rather than dropping active calls mid-conversation. Full bars + dropped calls = quality issue, not signal strength; check carrier settings and VoLTE toggle.
+
+Domain: 3.0
+Sub-objective: 3.5
+Question: A user installs a free VPN app from an unknown developer on their personal phone used for corporate email. The IT team flags this as a security risk. Why?
+A) VPN apps increase screen brightness and battery drain
+B) A rogue VPN app can intercept and log all network traffic including corporate credentials transmitted through the device
+C) VPN apps prevent the phone from receiving calls
+D) VPN apps disable the phone's GPS permanently
+Correct: B
+Explanation: A malicious VPN app has full visibility into all device network traffic, enabling it to capture corporate credentials, emails, and sensitive data transmitted by other apps. Legitimate VPNs from vetted providers are secure, but unknown-developer VPNs represent a significant trust and data interception risk. Rogue VPN = man-in-the-middle you installed yourself.

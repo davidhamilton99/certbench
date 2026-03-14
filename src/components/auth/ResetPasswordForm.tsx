@@ -6,27 +6,37 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export function LoginForm() {
+export function ResetPasswordForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+    const { error: updateError } = await supabase.auth.updateUser({
       password,
     });
 
-    if (signInError) {
-      setError(signInError.message);
+    if (updateError) {
+      setError(updateError.message);
       setLoading(false);
       return;
     }
@@ -38,22 +48,22 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Input
-        label="Email"
-        type="email"
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-      />
-      <Input
-        label="Password"
+        label="New password"
         type="password"
-        placeholder="Your password"
+        placeholder="At least 8 characters"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
-        autoComplete="current-password"
+        autoComplete="new-password"
+      />
+      <Input
+        label="Confirm password"
+        type="password"
+        placeholder="Re-enter your password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+        autoComplete="new-password"
       />
 
       {error && (
@@ -62,25 +72,9 @@ export function LoginForm() {
         </p>
       )}
 
-      <div className="flex justify-end -mt-1">
-        <a
-          href="/forgot-password"
-          className="text-[13px] text-primary hover:underline"
-        >
-          Forgot password?
-        </a>
-      </div>
-
       <Button type="submit" loading={loading} className="mt-2">
-        Sign in
+        Update password
       </Button>
-
-      <p className="text-[13px] text-text-muted text-center">
-        Don&apos;t have an account?{" "}
-        <a href="/register" className="text-primary hover:underline">
-          Create one
-        </a>
-      </p>
     </form>
   );
 }

@@ -1,0 +1,1449 @@
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician receives a call from a user who says their computer won't turn on. According to CompTIA's best practice troubleshooting methodology, what should the technician do FIRST?
+A) Establish a theory of probable cause
+B) Identify the problem by gathering information
+C) Test the theory to determine the cause
+D) Implement the solution and verify functionality
+Correct: B
+Explanation: The first step in CompTIA's troubleshooting methodology is to identify the problem, which involves gathering information from the user, asking open-ended and closed-ended questions, and reviewing logs or error messages. Establishing a theory of probable cause is the second step, which comes only after the problem has been clearly identified. Think "Identify Before Theorize" — you cannot form a useful hypothesis without first knowing what the actual problem is.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: Which CompTIA troubleshooting step involves asking the user "Has anything changed recently on your system?"
+A) Test the theory to determine cause
+B) Establish a plan of action
+C) Identify the problem
+D) Document findings and outcomes
+Correct: C
+Explanation: Identifying the problem includes asking the user about recent changes, which is a key part of gathering information to understand the scope and nature of the issue. Testing the theory is a later step that requires a hypothesis to already be in place. Remember: "Identify" includes questioning the user about environmental and configuration changes that may have triggered the problem.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: After gathering information, a technician suspects that a faulty RAM module is causing random reboots. This action represents which step in the troubleshooting methodology?
+A) Identify the problem
+B) Verify full system functionality
+C) Establish a theory of probable cause
+D) Document findings
+Correct: C
+Explanation: Formulating a hypothesis about the root cause — such as suspecting faulty RAM — is the definition of establishing a theory of probable cause. Identifying the problem occurs before this step and involves gathering facts, not forming conclusions. The acronym I-T-T-P-V-D (Identify, Theory, Test, Plan, Verify, Document) can help remember the sequence.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician hypothesizes that a loose power cable is causing intermittent shutdowns. The technician reseats the cable, and the problem is resolved. Which step does reseating the cable represent?
+A) Identify the problem
+B) Establish a theory of probable cause
+C) Test the theory to determine the cause
+D) Implement preventive measures
+Correct: C
+Explanation: Testing the theory involves taking the simplest corrective action to confirm or deny the hypothesis, such as reseating a cable to see if it resolves the issue. Establishing the theory is the prior step where the technician suspected the loose cable without acting on it yet. If the quick test resolves the problem, the technician can move directly to the plan of action and verification steps.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: After testing a theory and confirming the root cause of a problem, what is the NEXT step in CompTIA's troubleshooting methodology?
+A) Document the findings
+B) Verify full system functionality
+C) Establish a plan of action and implement the solution
+D) Identify the problem
+Correct: C
+Explanation: Once the theory is confirmed, the technician should establish a plan of action to resolve the problem and implement the fix, which may include escalating if beyond their skill level. Verification comes after the solution has been implemented, not before. The order is Test → Plan → Implement → Verify → Document.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician fixes a printer driver issue and wants to make sure no other functionality has been affected. Which troubleshooting step is the technician performing?
+A) Establish a plan of action
+B) Document findings and outcomes
+C) Test the theory to determine the cause
+D) Verify full system functionality and implement preventive measures
+Correct: D
+Explanation: After implementing a solution, the technician must verify that the fix worked and that no other system functions were inadvertently disrupted. Documentation is the final step and comes after verification. Always verify before documenting — a repair is not complete until the system is confirmed to be fully functional.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: Which step of the CompTIA troubleshooting methodology is the LAST to be performed?
+A) Verify full system functionality
+B) Implement the solution
+C) Document findings, actions, and outcomes
+D) Establish preventive measures
+Correct: C
+Explanation: Documentation is the final step and serves as a record of the problem, the steps taken, and the resolution for future reference. Implementing preventive measures occurs just before documentation, as part of the verify-and-prevent step. Documentation creates an institutional knowledge base that helps future technicians resolve similar issues faster.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A user reports that their monitor displays no image. The technician checks the power and video cable connections before anything else. Which principle does this approach reflect?
+A) Testing the most complex theory first
+B) Questioning the user before touching the system
+C) Starting with the most obvious and simplest possible causes
+D) Documenting the problem before investigating
+Correct: C
+Explanation: Best practice troubleshooting methodology encourages starting with the simplest and most likely causes before moving to complex solutions, saving time and avoiding unnecessary work. Questioning the user is part of identifying the problem but does not preclude also checking obvious physical issues first. The guiding principle is "quick wins first" — simple checks like cables eliminate obvious causes with minimal effort.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician cannot determine the root cause of a problem after initial testing. According to CompTIA's methodology, what should the technician do?
+A) Immediately escalate the issue to a vendor
+B) Document the issue and close the ticket
+C) Establish a new theory and test again
+D) Implement a workaround without investigating further
+Correct: C
+Explanation: If the initial theory is not confirmed, the technician should establish a new theory and test it, iterating until the root cause is found. Escalation is only appropriate when the issue is beyond the technician's skill or authority, not simply because the first theory was wrong. Troubleshooting is iterative — re-theorize and re-test until a confirmed root cause is found.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: Which of the following BEST describes the purpose of the "establish a plan of action" step in troubleshooting?
+A) Determining what caused the problem
+B) Outlining the steps needed to fix the problem and considering side effects
+C) Asking the user open-ended questions about the issue
+D) Confirming that the fix was successful
+Correct: B
+Explanation: The plan of action step involves deciding how to resolve the confirmed root cause, including evaluating risks, potential side effects, and whether escalation is needed. Determining the cause is part of testing the theory, which happens before the plan of action. A good plan considers what could go wrong with the fix, not just how to apply it.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: During troubleshooting, a technician changes multiple settings simultaneously to fix a problem faster. Why is this approach considered poor practice?
+A) It always damages the hardware
+B) It prevents documentation from being accurate
+C) It makes it impossible to determine which change resolved the issue
+D) It skips the verify step entirely
+Correct: C
+Explanation: Changing multiple variables at once means the technician cannot identify which specific change resolved the issue, making future troubleshooting harder and documentation unreliable. While documentation may be affected, the primary problem is the inability to isolate the root cause. Best practice is to change one variable at a time to maintain a clear cause-and-effect relationship.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician is troubleshooting a network issue but determines it requires vendor support. Which troubleshooting action is MOST appropriate?
+A) Document the issue and close the ticket without resolution
+B) Attempt to fix the issue beyond their skill level to avoid delay
+C) Escalate the issue to the appropriate level of support
+D) Replace the hardware immediately without further diagnosis
+Correct: C
+Explanation: When a problem exceeds a technician's skills or authority, escalation to an appropriate support tier or vendor is part of the plan of action step. Attempting a fix beyond one's skill level risks causing additional damage and violates safe troubleshooting practices. Knowing when to escalate is a professional responsibility, not a failure.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: After resolving a recurring software crash, a technician schedules automated backups and updates antivirus definitions. Which troubleshooting step does this represent?
+A) Identify the problem
+B) Test the theory
+C) Verify full system functionality and implement preventive measures
+D) Establish a plan of action
+Correct: C
+Explanation: Implementing preventive measures — such as configuring backups and keeping security software current — is part of the verify step to ensure the problem does not recur. The plan of action describes what will be done to fix the immediate problem, not ongoing prevention. Prevention is forward-looking: fix today's problem and reduce the chance of tomorrow's.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician is troubleshooting a slow computer. They ask the user when the problem started, how often it occurs, and whether any new software was installed. These are examples of which type of questions used during problem identification?
+A) Closed-ended questions only
+B) Both open-ended and closed-ended questions
+C) Leading questions to suggest causes
+D) Escalation questions for vendor support
+Correct: B
+Explanation: Effective problem identification uses both open-ended questions (e.g., "Describe what happens") and closed-ended questions (e.g., "Did you install new software recently?") to gather complete information. Leading questions can bias the investigation and are not recommended practice. Combining question types gives the technician a fuller picture of the problem's scope and context.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: Which action is part of "identifying the problem" in the CompTIA troubleshooting methodology?
+A) Replacing suspected faulty hardware
+B) Reviewing system event logs for error entries
+C) Verifying that the repair was successful
+D) Creating a theory about which component failed
+Correct: B
+Explanation: Reviewing system logs is part of information gathering during the identify-the-problem step, as logs often contain error codes or event entries that clarify what happened. Replacing hardware is a corrective action that belongs to the plan-and-implement step. Evidence-based identification — using logs, error messages, and user reports — leads to more accurate theories.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician resolves a user's issue and then walks them through what was done and how to avoid the problem in the future. Which step of the troubleshooting methodology does this BEST represent?
+A) Establish a theory of probable cause
+B) Implement the solution
+C) Verify full system functionality and educate the user
+D) Document findings and outcomes
+Correct: C
+Explanation: Educating the user on the resolution and preventive measures is part of the verify-and-prevent phase, ensuring the user understands what happened and how to avoid recurrence. Documentation is the subsequent step, which records the event for internal records rather than user education. User education turns a reactive fix into a proactive prevention effort.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: In CompTIA's troubleshooting methodology, what does it mean to "test the theory to determine the cause"?
+A) Run a full antivirus scan on all systems
+B) Apply a fix that completely resolves the problem
+C) Take a targeted action to confirm or deny the suspected root cause
+D) Document each action taken during the investigation
+Correct: C
+Explanation: Testing the theory means taking a minimal, targeted action — such as swapping a suspect cable — to confirm whether the hypothesis is correct before committing to a full fix. Applying a complete fix happens during the plan-and-implement step, which follows a confirmed theory. Testing is exploratory; implementing is corrective.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A technician repairs a network connectivity issue on one workstation and then checks that file sharing, printing, and internet access all work correctly. Which troubleshooting step is this?
+A) Identify the problem
+B) Establish a theory of probable cause
+C) Implement the solution
+D) Verify full system functionality
+Correct: D
+Explanation: Verifying full system functionality means confirming not only that the specific issue is resolved but that no other related functions were accidentally disrupted by the fix. Implementing the solution is the prior step where the repair is made. A thorough verification includes testing adjacent services to ensure the fix did not create new problems.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: A user's issue recurs three weeks after being resolved. A technician reviews the documentation from the previous ticket. Which benefit of documentation does this BEST illustrate?
+A) Faster hardware replacement
+B) Reduced cost of parts
+C) Identifying repeating patterns to find a permanent fix
+D) Avoiding the need to verify the fix
+Correct: C
+Explanation: Documentation of past incidents helps identify recurring problems and patterns, enabling technicians to find permanent solutions rather than applying repeated temporary fixes. Documentation does not reduce parts cost or eliminate the need for verification. A well-documented history is one of the most valuable troubleshooting tools in a support environment.
+
+Domain: 5.0
+Sub-objective: 5.1
+Question: Which of the following scenarios BEST illustrates the "identify the problem" step of the CompTIA troubleshooting methodology?
+A) A technician runs memory diagnostics on a computer with random reboots
+B) A technician asks the user to describe what happens, when it happens, and what changed recently
+C) A technician replaces the power supply after suspecting it is faulty
+D) A technician updates the driver after confirming the GPU is the cause
+Correct: B
+Explanation: Asking the user to describe the problem and any recent changes is the core activity of the identify-the-problem step. Running diagnostics is part of testing a theory, which comes later. Open-ended, information-gathering questions help define the problem boundaries before any hypothesis is formed.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A workstation emits two short beeps during POST and fails to boot. The technician has no video output. What does this POST beep code MOST likely indicate?
+A) CPU failure
+B) Keyboard not detected
+C) RAM error
+D) Power supply failure
+Correct: C
+Explanation: Two short beeps during POST on most BIOS implementations (especially AMI) indicate a RAM or memory parity error. A CPU failure typically results in no beep or a different pattern, and keyboard errors often produce other distinct codes. Beep codes are the system's way of communicating hardware errors before video is available.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user reports that their computer displays a Blue Screen of Death (BSOD) with the error "MEMORY_MANAGEMENT." Which component is MOST likely causing this error?
+A) Hard drive
+B) CPU
+C) RAM
+D) Power supply
+Correct: C
+Explanation: The MEMORY_MANAGEMENT BSOD stop code directly indicates a fault in memory operations, most commonly caused by faulty or incompatible RAM modules. A failing hard drive would more typically cause errors like UNMOUNTABLE_BOOT_VOLUME. When a BSOD error name contains "memory," check RAM first using tools like MemTest86.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician notices that a computer's CPU temperature is consistently at 95°C under normal load. What is the MOST likely consequence if this condition is not addressed?
+A) Increased fan noise only
+B) CPU throttling reducing performance and potential permanent damage
+C) Automatic BIOS update
+D) Increased RAM error rates
+Correct: B
+Explanation: At 95°C, the CPU will engage thermal throttling to reduce its clock speed to lower heat, causing significant performance degradation, and risks permanent damage if sustained. RAM errors are caused by different conditions, such as faulty DIMMs or voltage issues. Modern CPUs protect themselves by slowing down, but sustained extreme heat can permanently damage the processor or motherboard.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user reports that their desktop computer powers off randomly, sometimes after a few minutes of use, and the case feels very hot to the touch. What is the MOST likely cause?
+A) Corrupted operating system files
+B) Faulty RAM module
+C) Overheating due to inadequate cooling
+D) Failing network adapter
+Correct: C
+Explanation: Random shutdowns combined with an excessively hot case strongly indicate a thermal protection shutdown triggered by overheating, often caused by clogged fans, dried thermal paste, or blocked vents. Corrupted OS files typically cause crashes with error messages rather than thermal-triggered power-offs. When a system shuts down to protect itself, heat is always the first suspect.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician opens a desktop PC and observes several capacitors on the motherboard that appear swollen or leaking. What is the recommended course of action?
+A) Re-seat the RAM and reboot
+B) Replace the CMOS battery
+C) Replace the motherboard
+D) Reseat the CPU and reapply thermal paste
+Correct: C
+Explanation: Bulging or leaking capacitors are a sign of capacitor failure, which causes instability, crashes, and eventually complete motherboard failure — the motherboard must be replaced. Reseating RAM or replacing the CMOS battery will not fix physically damaged capacitors. Swollen capacitors are visually distinctive (domed or leaking tops) and are a reliable indicator of a failing motherboard.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: After replacing the CMOS battery, a technician notices that the system clock resets to a past date every time the computer is powered off. What does this indicate?
+A) The new CMOS battery is also faulty or not properly seated
+B) The RAM has a timing configuration error
+C) The CPU is misconfigured in BIOS
+D) The operating system has a time synchronization bug
+Correct: A
+Explanation: If the system clock resets after CMOS battery replacement, the new battery is either dead, installed incorrectly, or incompatible. RAM timing errors cause system instability or POST failures, not clock resets. The CMOS battery maintains BIOS settings including the system clock when main power is removed — a dead battery means settings are lost on every shutdown.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user reports that their computer produces a burning smell when powered on. What should the technician do FIRST?
+A) Open the case and inspect the components visually
+B) Run hardware diagnostics software
+C) Immediately power off the system and disconnect it from power
+D) Replace the power supply
+Correct: C
+Explanation: A burning smell indicates a potential electrical fire hazard, and the immediate priority is to shut down the system and disconnect power to prevent injury or damage. Running diagnostics while the system is powered risks compounding the damage or causing a fire. Safety always takes priority — never leave a burning-smelling system running while investigating.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician hears a continuous single long beep during POST on a system with an AMI BIOS. What does this MOST likely indicate?
+A) Successful POST completion
+B) RAM not detected or failed
+C) Video card failure
+D) CPU overheating
+Correct: B
+Explanation: On AMI BIOS systems, a continuous or single long beep typically indicates a RAM failure or memory not detected. A successful POST produces a single short beep on most systems. Beep codes are hardware-level diagnostics — a single long beep points to the memory subsystem as the area to investigate first.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A computer powers on and the fans spin, but there is no POST, no beeps, and no video output. The technician swaps the RAM with known-good modules, but the problem persists. What should the technician suspect NEXT?
+A) Corrupted OS
+B) Failed monitor
+C) Motherboard or CPU failure
+D) Faulty optical drive
+Correct: C
+Explanation: If known-good RAM does not resolve a no-POST, no-video, no-beep situation, the motherboard or CPU is the likely culprit since these are the components required for POST to begin. A corrupted OS would still allow POST to complete and would fail later in the boot process. No POST at all means the system cannot even begin self-testing, pointing to fundamental hardware failure.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user states their computer randomly reboots during gaming. A technician checks Event Viewer and finds no relevant entries, but notices the power supply unit (PSU) fan is not spinning. What is the MOST likely cause of the reboots?
+A) Overclocked RAM causing instability
+B) Insufficient power delivery from a failing PSU
+C) Corrupted GPU drivers
+D) Loose SATA data cable
+Correct: B
+Explanation: A non-spinning PSU fan indicates the PSU is either failing or has failed, and insufficient or unstable power delivery during high-load activities like gaming causes the system to reboot. Corrupted GPU drivers would typically cause display errors or BSODs with driver-related stop codes. A PSU that cannot cool itself will fail — random reboots under load with a dead PSU fan is a classic failure pattern.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician replaces the CPU in a desktop and the system starts normally but frequently crashes with BSOD errors after a few minutes. What should the technician check FIRST?
+A) Update the operating system
+B) Verify that thermal paste was properly applied and the cooler is seated correctly
+C) Replace the RAM modules
+D) Flash the motherboard BIOS to the latest version
+Correct: B
+Explanation: After a CPU replacement, improper thermal paste application or a poorly seated cooler will cause the CPU to overheat quickly, leading to thermal shutdowns or BSODs. BIOS updates may be needed for CPU compatibility but would typically prevent POST entirely, not cause timed crashes. Thermal paste and cooler seating are always the first check after any CPU installation.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user reports that their computer displays a "No Boot Device Found" error, but the system was working fine yesterday with no hardware changes. A technician opens BIOS and notices the CMOS settings have reverted to defaults. What is the MOST likely cause?
+A) The operating system became corrupted
+B) The CMOS battery has failed
+C) The RAM timings were changed automatically
+D) The hard drive failed
+Correct: B
+Explanation: CMOS settings reverting to defaults, including boot order, is a classic symptom of a dead CMOS battery, which can no longer maintain BIOS settings when main power is removed. A failed hard drive would cause a different error during boot, not a BIOS reset. When BIOS settings "forget" themselves repeatedly, replace the coin-cell CMOS battery (typically CR2032).
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: During a POST, a system displays the error code "0x000000D1" on a Blue Screen. Which category of component should the technician investigate FIRST?
+A) Hard drive
+B) RAM
+C) Drivers (especially network or storage drivers)
+D) Monitor
+Correct: C
+Explanation: The 0x000000D1 BSOD (DRIVER_IRQL_NOT_LESS_OR_EQUAL) indicates a driver attempted to access pageable memory at an improper interrupt level, pointing to a faulty driver as the root cause. RAM issues typically generate MEMORY_MANAGEMENT or PAGE_FAULT errors. Stop codes that include "DRIVER" or "IRQL" in their name almost always point to driver-level software issues.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician is called to a workstation that powers on briefly and then immediately powers off. All fans spin for less than a second before the system dies. What is the MOST likely cause?
+A) Corrupted BIOS settings
+B) Short circuit or power supply failure
+C) Failed optical drive
+D) Disconnected keyboard
+Correct: B
+Explanation: A system that powers on momentarily then immediately cuts off is a classic sign of a short circuit (often from a grounded motherboard standoff) or a severely failing PSU that cannot sustain power delivery. A corrupted BIOS would allow the system to remain powered but fail during POST. The "power on then immediately die" pattern strongly implicates the PSU or a short circuit as the source.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A workstation has been running fine for years but recently began exhibiting random lockups and the user reports they hear a grinding noise coming from the tower. What component is MOST likely failing?
+A) RAM module
+B) CPU fan or case fan bearing failing
+C) Video card
+D) CMOS battery
+Correct: B
+Explanation: A grinding noise from inside a tower typically indicates a fan bearing failing, which can cause overheating and lockups as the CPU or case temperature rises. RAM failure causes crashes and BSODs, not audible grinding noises. Grinding sounds from inside a PC almost always come from a spinning component — fans are the primary suspect before considering hard drives.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician is diagnosing a system where the computer boots into Windows but the performance is extremely poor. CPU-Z shows the CPU is running at 800 MHz instead of its rated 3.6 GHz. What is the MOST likely explanation?
+A) The CPU is permanently damaged
+B) The CPU is throttling due to high temperature
+C) The RAM speed is set too low in BIOS
+D) The operating system is limiting CPU speed
+Correct: B
+Explanation: A CPU running dramatically below its rated speed while the system is functional is the hallmark of thermal throttling, where the CPU reduces clock speed to prevent heat damage. If the CPU were permanently damaged, the system would likely not boot or would crash. Check the CPU cooler, thermal paste, and case airflow whenever a CPU runs significantly below its rated frequency.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician tests a suspect power supply using a multimeter. The 12V rail reads 10.8V under load. What should the technician conclude?
+A) The reading is within acceptable tolerance
+B) The power supply is functioning normally
+C) The power supply is failing and should be replaced
+D) The CPU requires reconfiguration
+Correct: C
+Explanation: ATX power supply voltage tolerances allow for ±5% deviation, meaning the 12V rail should stay between 11.4V and 12.6V; a reading of 10.8V is outside this range and indicates a failing PSU. A reading within ±5% (e.g., 11.5V) would be acceptable. The ±5% tolerance rule (sometimes called the 10% rule in older specs) is the standard for PSU voltage rail acceptance testing.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: After installing a second RAM kit in a new build, the system fails to POST and produces three long beeps. The technician reseats the RAM in the recommended slots per the motherboard manual and the system boots. What caused the original failure?
+A) Incompatible RAM speed
+B) RAM not fully seated or installed in incorrect slots
+C) Incorrect BIOS version for the RAM
+D) The RAM modules were damaged during installation
+Correct: B
+Explanation: Three long beeps typically indicate a memory error, and reseating RAM in the correct motherboard slots (dual-channel slots are often color-coded) resolves seating and channel configuration issues. Incompatible RAM speed would still allow POST in most cases, with XMP disabled. Always consult the motherboard manual for the correct RAM slot population order, especially for dual-channel configurations.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A user reports that their workstation randomly displays a Black Screen of Death (BKoD) with no error message, and the system must be hard-rebooted. Which component should the technician investigate FIRST?
+A) Network adapter
+B) GPU or display driver
+C) USB controller
+D) Sound card
+Correct: B
+Explanation: A black screen with no error message (as opposed to the blue screen with a stop code) is most commonly associated with GPU or display driver failures that cause the display pipeline to fail without generating a proper crash report. Network adapters and USB controllers rarely cause complete display failures. Black screens without error codes often indicate a display subsystem failure at the GPU or driver level.
+
+Domain: 5.0
+Sub-objective: 5.2
+Question: A technician notices visible smoke coming from inside a computer case when it is powered on. What is the CORRECT immediate response?
+A) Unplug the power and use a dry chemical fire extinguisher if flames appear
+B) Open the case and identify the burning component while powered on
+C) Run diagnostics to identify the failed component
+D) Power cycle the system to reset the component
+Correct: A
+Explanation: Visible smoke requires immediately disconnecting power, and if flames are present, a Class C (dry chemical or CO2) extinguisher appropriate for electrical fires should be used. Opening the case while smoke is present risks burn injury, and running diagnostics on a smoking system risks fire. Never use water on an electrical fire — Class C extinguishers are safe for energized electrical equipment.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician connects a replacement hard drive and hears a loud clicking noise when the drive is powered on. What does this indicate?
+A) Normal drive calibration during first power-on
+B) The drive has a failing read/write head — a condition known as the "click of death"
+C) The SATA cable is not properly connected
+D) The drive is performing a SMART self-test
+Correct: B
+Explanation: A repetitive clicking sound from a hard drive (called the "click of death") indicates that the read/write head is failing to find its home position, which is a sign of imminent or active mechanical failure. Normal drive calibration is nearly silent. If a drive clicks, power it off immediately — continued operation with a clicking drive risks complete data loss.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A user reports that their computer displays the error "No bootable device found" after what was a normal shutdown. The technician checks BIOS and the drive is not listed. What should the technician check FIRST?
+A) Reinstall the operating system
+B) Check the SATA/power cables and verify the drive is detected
+C) Replace the hard drive immediately
+D) Run chkdsk from the OS
+Correct: B
+Explanation: If a drive is not listed in BIOS, the first step is to verify physical connections — a loose SATA data or power cable is one of the most common causes of a drive suddenly disappearing. Reinstalling the OS or running chkdsk requires the drive to be detected first. Always check cables before suspecting hardware failure — a drive that "disappears" is often simply disconnected.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician runs a S.M.A.R.T. diagnostic on a hard drive and receives a "S.M.A.R.T. Status: FAIL" result. What is the MOST appropriate next action?
+A) Defragment the drive to improve performance
+B) Update the drive firmware
+C) Back up the user's data immediately and replace the drive
+D) Run chkdsk to repair file system errors
+Correct: C
+Explanation: A S.M.A.R.T. failure indicates the drive's own internal monitoring has detected conditions that predict imminent drive failure; the data must be backed up before the drive fails completely. Defragmenting a failing drive can accelerate its failure. S.M.A.R.T. failure is a red alert — data rescue takes priority over any repair attempts.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A user reports that file transfers that used to take seconds now take several minutes, and the system frequently freezes during disk activity. S.M.A.R.T. shows reallocated sectors increasing. What is the MOST likely cause?
+A) Virus infection affecting disk speed
+B) Hard drive mechanical failure with sectors being remapped
+C) Incorrect AHCI/IDE mode in BIOS
+D) File system fragmentation
+Correct: B
+Explanation: Increasing reallocated sector counts in S.M.A.R.T. data indicate the drive is remapping failed sectors to spare areas — a sign of active mechanical or media degradation leading to failure. Fragmentation causes slowdowns but does not produce S.M.A.R.T. warnings or freeze the system. Rising reallocated sectors are one of the strongest predictors of imminent hard drive failure.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician is troubleshooting a RAID 5 array where one drive has failed. The array is still operational but in a degraded state. What should the technician do to restore full redundancy?
+A) Rebuild the array from scratch using backup data
+B) Replace the failed drive and allow the controller to rebuild the array
+C) Add a second drive to the array to increase redundancy
+D) Format all remaining drives and restore from backup
+Correct: B
+Explanation: RAID 5 can tolerate one drive failure and remains operational in a degraded state; replacing the failed drive triggers an automatic array rebuild using parity data from the remaining drives. Adding a second drive would change the RAID configuration, not simply restore it. RAID 5 in a degraded state is vulnerable to a second failure — replace the failed drive as quickly as possible.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: An administrator notices that a RAID 1 array shows both drives as "active" but the data on the two drives does not match. What has occurred?
+A) A RAID 1 split-brain or sync failure
+B) Normal RAID 1 operation with minor timing differences
+C) A RAID controller firmware bug requiring an update
+D) File system corruption on both drives simultaneously
+Correct: A
+Explanation: RAID 1 requires both drives to be identical mirrors; if they diverge, a split-brain or synchronization failure has occurred, often caused by improper shutdown during a write operation. RAID 1 drives should always be bit-for-bit identical — any divergence is abnormal. A split-brain event requires manual intervention to designate which drive has the correct data and resync.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A user's OS drive is an NVMe SSD. After a Windows update, the drive no longer appears in the OS but is still listed in BIOS. What is the MOST likely cause?
+A) The NVMe drive has physically failed
+B) A driver was removed or corrupted during the update
+C) The BIOS boot order was changed
+D) The SATA cable became disconnected
+Correct: B
+Explanation: An NVMe SSD visible in BIOS but not the OS after a Windows update strongly suggests a driver issue, as the update may have removed or replaced the NVMe controller driver. A physical failure would typically make the drive invisible in BIOS too. NVMe drives require specific drivers; a missing or corrupt driver makes the drive inaccessible to the OS while the BIOS can still detect it at the hardware level.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician is replacing a failed drive in a RAID 0 array. What will the technician need to do to recover the data?
+A) Replace the drive and allow the controller to rebuild using parity
+B) Restore from backup, as RAID 0 has no redundancy
+C) Run chkdsk on the remaining drives to recover the data
+D) Replace both drives and rebuild the RAID from the remaining drive
+Correct: B
+Explanation: RAID 0 provides no redundancy — it stripes data across drives for performance, so a single drive failure results in complete data loss for the entire array. RAID 5 and 6 use parity for recovery, not RAID 0. Remember: RAID 0 = zero redundancy. If one drive in a RAID 0 fails, all data is lost without a backup.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A user reports receiving input/output (I/O) errors when accessing specific files on their hard drive. The drive is detected and S.M.A.R.T. shows pending sectors. What is the MOST likely cause?
+A) Corrupted file system requiring a format
+B) Bad sectors on the drive surface causing read failures
+C) Incompatible file system format
+D) Incorrect drive letter assignment
+Correct: B
+Explanation: I/O errors on specific files combined with S.M.A.R.T. pending sectors indicate physical bad sectors where the drive cannot reliably read the magnetic data. A corrupt file system would show different errors (e.g., repair prompts), not I/O errors tied to pending sector counts. Pending sectors in S.M.A.R.T. represent areas the drive is attempting to reread — I/O errors confirm the reads are failing.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A server technician checks a RAID 6 array and finds that two drives have failed simultaneously. Will the data be accessible?
+A) No, RAID 6 can only tolerate one simultaneous drive failure
+B) Yes, RAID 6 can tolerate up to two simultaneous drive failures
+C) No, any drive failure in RAID 6 makes data inaccessible
+D) Yes, RAID 6 can tolerate up to three simultaneous drive failures
+Correct: B
+Explanation: RAID 6 uses dual parity, which allows it to withstand up to two simultaneous drive failures while keeping data accessible in degraded mode. RAID 5 can only tolerate one failure, which is a key distinction. RAID 6 is preferred for large arrays where the rebuild time after a single failure increases the risk of a second failure.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: An OS reports a drive as "raw" rather than showing a file system type. What does this MOST likely indicate?
+A) The drive is brand new and has not been formatted
+B) The drive's partition table or file system is corrupted
+C) The drive is encrypted with BitLocker
+D) The drive is formatted with exFAT, which Windows cannot read
+Correct: B
+Explanation: A drive showing as "raw" in Windows means the OS cannot recognize a valid file system, typically because the partition table or file system structures are corrupted. A brand new drive would show as unallocated, not raw. BitLocker-encrypted drives prompt for a key rather than appearing raw. A "raw" file system error often means the partition table has been damaged.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A workstation's storage LED is continuously lit without any user activity. What does this indicate?
+A) The drive is in a power-saving sleep mode
+B) The system is experiencing high disk activity, possibly due to paging or malware
+C) The drive firmware is updating automatically
+D) The SATA cable is loose
+Correct: B
+Explanation: A continuously lit drive activity LED during periods of expected inactivity suggests heavy background disk activity, which can be caused by Windows indexing, updates, excessive paging due to low RAM, or malware. Drive sleep mode would turn off the LED, not keep it lit. Persistent disk activity with no visible user cause warrants investigation of background processes and potential malware scanning.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician hears a grinding noise from a tower PC that has both a hard drive and an SSD. The technician wants to determine which drive is making the noise. What is the BEST approach?
+A) Replace both drives simultaneously
+B) Power the system and disconnect one drive at a time to isolate the noise source
+C) Run S.M.A.R.T. diagnostics on both drives
+D) Listen for the noise pattern during POST before the OS loads
+Correct: B
+Explanation: Disconnecting drives one at a time while the system is powered (or during POST with power cycling) isolates which physical drive is producing the grinding noise. An SSD has no moving parts and cannot grind — the noise must come from the HDD, but systematic isolation confirms it. SSDs make no mechanical noise; any grinding from a storage device in a mixed system must come from the HDD.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician is setting up a RAID array for a small business requiring both redundancy and improved read performance with at least three drives. Which RAID level BEST meets these requirements?
+A) RAID 0
+B) RAID 1
+C) RAID 5
+D) RAID 10
+Correct: C
+Explanation: RAID 5 provides both redundancy (via distributed parity) and improved read performance using a minimum of three drives, making it ideal for the described scenario. RAID 0 provides no redundancy, and RAID 1 only mirrors two drives without performance gains. RAID 5 balances capacity, performance, and fault tolerance for small business storage environments.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: After accidentally deleting files from an NTFS drive, a user asks the technician how to recover them. The Recycle Bin has been emptied. What is the BEST next step?
+A) Run chkdsk /f to restore deleted files
+B) Use file recovery software immediately before any new data overwrites the sectors
+C) Reformat the drive and restore from backup
+D) Run SFC /scannow to recover the deleted files
+Correct: B
+Explanation: Deleted files on NTFS remain recoverable until their disk sectors are overwritten by new data; file recovery software (like Recuva) can recover them if used promptly. chkdsk repairs file system metadata, not deleted file content. Time is critical after deletion — every new write to the drive risks permanently overwriting recoverable data.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user connects a second monitor to their laptop via HDMI but the monitor displays "No Signal." The laptop screen works normally. What should the technician check FIRST?
+A) Update the graphics driver
+B) Verify that the correct input source is selected on the external monitor
+C) Replace the HDMI cable
+D) Restart the laptop in safe mode
+Correct: B
+Explanation: "No Signal" on an external monitor most commonly means the monitor is set to the wrong input source (e.g., set to DisplayPort while connected via HDMI). Updating the driver would not resolve a monitor set to the wrong input. Always check the monitor's input source selection before assuming a hardware or driver problem.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A technician observes a faint but visible image on a laptop screen that is otherwise appearing black. What component is MOST likely failing?
+A) The LCD backlight or inverter
+B) The video card GPU
+C) The LCD data cable
+D) The operating system display settings
+Correct: A
+Explanation: A faint image visible on a dark screen is the hallmark symptom of a failed backlight or (on older CCFL displays) a failed inverter — the image is present but not illuminated. A failed GPU or data cable would more likely result in no image at all or a distorted display. Shine a flashlight at the screen to confirm a backlight failure — if you can see the desktop faintly, the backlight is the culprit.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user complains that their LCD monitor shows persistent images of previously displayed content even when the screen content changes. What is this display defect called?
+A) Dead pixel
+B) Image burn-in (persistence)
+C) Pixel inversion
+D) Backlight bleed
+Correct: B
+Explanation: Image burn-in (or screen burn) occurs when static images are displayed for extended periods, causing permanent phosphor or organic material degradation that leaves ghost images. Dead pixels are single unresponsive dots, not persistent ghost images. To prevent burn-in on OLEDs and LCDs, use screensavers, auto-dimming, and avoid displaying static content for prolonged periods.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A projector that has been in use for a long time suddenly shuts off during a presentation and will not restart immediately. What is the MOST likely cause?
+A) A corrupted display driver on the connected laptop
+B) The projector bulb has overheated and triggered a thermal shutdown
+C) The HDMI cable has failed
+D) The projector's firmware needs updating
+Correct: B
+Explanation: Projectors have high-heat bulbs and require cooling fans; when the bulb or internal temperature exceeds safe limits, the projector shuts down automatically and will not restart until cooled. HDMI failures would cause a loss of image but not a complete shutdown. Projectors need cool-down time after use — allow 10-15 minutes before restarting a thermally-shutdown projector.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A monitor displays all images with a strong blue tint, regardless of the source or content. What is the MOST likely cause?
+A) The monitor is in eco power mode
+B) A monitor color profile setting or hardware miscalibration
+C) A dead pixel cluster in the blue subpixel layer
+D) A failing graphics card GPU
+Correct: B
+Explanation: A consistent color tint across all content regardless of source points to a misconfigured color profile, an incorrect color temperature setting, or a malfunctioning color circuit in the monitor. Dead pixels are localized, not full-screen. Check the monitor's OSD (On-Screen Display) settings and color profiles before assuming GPU failure when a color tint affects the entire display.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user reports that their monitor intermittently goes black for a second then returns to normal. This happens several times per day. What should the technician check FIRST?
+A) Test the graphics card under load
+B) Check for a loose or damaged video cable connection
+C) Replace the monitor
+D) Roll back the display driver
+Correct: B
+Explanation: Intermittent signal loss causing brief black screens is most commonly caused by a loose or damaged video cable that momentarily loses contact. Driver issues typically cause persistent problems rather than brief, recoverable signal drops. Wiggling the video cable while the system is on can reproduce cable-related dropouts, confirming the diagnosis.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A single pixel on an LCD monitor always appears white, regardless of the surrounding content. How is this defect classified?
+A) Stuck pixel (always-on)
+B) Dead pixel (always-off, appearing black)
+C) Burned-in pixel
+D) Subpixel inversion
+Correct: A
+Explanation: A pixel that is always lit (white or a fixed color) is a stuck pixel, where the pixel's transistor is locked in the on state. A dead pixel is always black because it receives no power. Stuck pixels may sometimes be "unstuck" using pixel-cycling software, while dead pixels typically cannot be fixed without display replacement.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A projector connected to a laptop shows the correct image but the laptop speaker produces no audio through the projector. What should the technician check FIRST?
+A) Replace the HDMI cable with a DisplayPort cable
+B) Verify the audio output device is set to the projector/HDMI output in the OS
+C) Update the projector firmware
+D) Check the laptop's display adapter settings
+Correct: B
+Explanation: When audio does not pass through HDMI to a projector, the OS audio output device is often still set to the laptop speakers rather than the HDMI output. Replacing the cable type would not resolve an audio routing configuration issue. HDMI carries both video and audio — if video works but audio doesn't, the audio device selection in the OS is the first place to look.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A technician notices that an LCD monitor's display has a bright area in one corner that appears brighter than the rest of the screen, especially visible on dark content. What is this condition?
+A) Dead pixel cluster
+B) Backlight bleed
+C) Image burn-in
+D) Color calibration error
+Correct: B
+Explanation: Backlight bleed occurs when light from the LCD backlight leaks through the edges or corners of the display, creating uneven brightness most visible on dark backgrounds. This is a hardware characteristic of LCD construction and differs from dead pixels, which are localized black dots. Some backlight bleed is considered normal on lower-quality LCDs; significant bleed may warrant a monitor replacement under warranty.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user reports that their widescreen monitor shows a stretched or distorted image with everything appearing too wide. What is the MOST likely cause?
+A) Incorrect screen resolution set in the OS display settings
+B) Failing GPU memory
+C) Damaged LCD panel
+D) Incorrect refresh rate
+Correct: A
+Explanation: A stretched or distorted image is most commonly caused by setting a resolution with an incorrect aspect ratio for the monitor (e.g., setting a 4:3 resolution on a 16:9 monitor). A failing GPU would cause corruption or artifacts, not a uniformly stretched image. Always set the display resolution to the monitor's native resolution to achieve proper aspect ratio and image clarity.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A classroom projector produces a flickering image with horizontal lines. The connected laptop displays normally on its own screen. What should the technician investigate?
+A) The projector bulb needs replacement
+B) There is an interference issue or damaged cable between the laptop and projector
+C) The laptop's GPU has failed
+D) The projector's refresh rate is set too high
+Correct: B
+Explanation: Flickering with horizontal lines on the projector while the laptop screen is normal indicates the problem is in the signal path between the laptop and projector, most likely a damaged or loose cable. A failing GPU would affect both the laptop screen and the projector output. Always isolate the signal source from the display to determine which side of the cable the problem originates on.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user reports their laptop display has vertical colored lines running from top to bottom and the lines remain even when an external monitor is used. What does this indicate?
+A) The LCD panel is damaged
+B) The GPU or video memory is failing
+C) The LCD data cable is loose
+D) The backlight inverter is failing
+Correct: B
+Explanation: If vertical lines appear both on the laptop display and on an external monitor connected to the same GPU, the fault must be in the GPU or its memory, since the signal is corrupted before reaching either display. A loose LCD cable or damaged panel would only affect the internal display, not the external monitor. When both outputs show the same artifact, the GPU is the common component causing the issue.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A projector's image appears trapezoidal (wider at the top than the bottom) when projected on a flat wall. What is the MOST likely cause and solution?
+A) The projector bulb is misaligned; replace the bulb
+B) The projector is not level; adjust the projector angle or use the keystone correction feature
+C) The display resolution is set incorrectly; change the resolution
+D) The HDMI cable is damaged; replace the cable
+Correct: B
+Explanation: A trapezoidal (keystone) distortion occurs when the projector is angled up or down relative to the projection surface; this is corrected by leveling the projector or using the electronic keystone correction feature. Resolution settings affect image sharpness and size, not geometric distortion. Keystone correction — named after the wedge shape of a keystone — electronically compensates for projector tilt.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A smartphone user reports that their battery drains from 100% to 0% in about two hours of light use. The phone is two years old. What is the MOST likely cause?
+A) A background application is using excessive CPU
+B) Poor battery health due to degradation from charge cycles
+C) The screen brightness is too high
+D) The phone's operating system has a memory leak
+Correct: B
+Explanation: Lithium-ion batteries degrade over charge cycles, and by two years of regular use, a battery can lose 20-40% of its original capacity, resulting in dramatically reduced runtime. While background apps can drain batteries, the scenario describes overall capacity loss rather than sudden unusual drain. Battery health tools (iOS Battery Health, Android battery settings) can confirm degraded capacity percentage.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user notices that their smartphone battery appears physically swollen and the back panel is slightly raised. What is the appropriate response?
+A) Continue using the phone until the battery dies, then replace it
+B) Place the phone in a freezer to stabilize the battery
+C) Immediately stop using the device and take it to a certified repair shop for safe battery replacement
+D) Attempt to puncture the battery to release the pressure
+Correct: C
+Explanation: A swollen lithium-ion battery is a safety hazard that can rupture, catch fire, or explode if punctured, compressed, or continued to be used; professional disposal and replacement are required. Freezing a swollen battery can cause it to rupture. A swollen battery is a fire risk — treat it as a hazard, not just a performance issue.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user spills liquid on their smartphone. What should the technician instruct the user to do IMMEDIATELY?
+A) Try to power the phone back on to check for damage
+B) Power off the device immediately and do not attempt to charge it
+C) Shake the device vigorously to remove liquid
+D) Connect the phone to a charger to prevent data loss
+Correct: B
+Explanation: Powering off immediately prevents electrical shorts from the liquid, which cause permanent component damage; attempting to charge or power on a wet device is extremely dangerous. Shaking the device can spread liquid further into the internals. The recovery sequence for liquid-damaged devices is: power off → remove battery if possible → dry thoroughly → assess damage.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A laptop user reports their device runs very hot and the fan runs at full speed continuously, but the CPU usage shown in Task Manager is low. What is the MOST likely cause?
+A) The thermal paste has dried out and needs to be replaced
+B) The laptop is in high-performance power mode
+C) The operating system is corrupted
+D) The RAM is generating excess heat
+Correct: A
+Explanation: Dried or degraded thermal paste fails to transfer heat from the CPU to the heatsink effectively, causing high temperatures and sustained maximum fan speed even with low CPU load. High-performance mode increases maximum performance but does not cause fan running at full speed under low CPU load. Reapplying quality thermal paste is a common maintenance task on laptops over 3-5 years old.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A mobile user reports that their phone shows full Wi-Fi bars but they cannot load any web pages. They can make calls and send texts normally. What is the MOST likely cause?
+A) The Wi-Fi radio has failed
+B) The Wi-Fi network has internet connectivity issues or incorrect DNS settings
+C) The phone's browser application is corrupted
+D) The phone needs to be restarted
+Correct: B
+Explanation: Full Wi-Fi signal with no internet access while cellular works normally indicates the Wi-Fi access point or network has internet connectivity issues, or the DNS configuration is incorrect. A failed Wi-Fi radio would show no bars, not full signal. Connected to Wi-Fi but no internet almost always means a problem with the network side (router, ISP, DNS) rather than the device itself.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports that the touchscreen on their smartphone responds to touches in the wrong location — tapping the left side activates elements on the right. What is this condition called and what should be done?
+A) Dead digitizer; replace the screen assembly
+B) Digitizer miscalibration; recalibrate or replace the digitizer
+C) LCD panel failure; replace the LCD
+D) Touch controller firmware bug; update the firmware
+Correct: B
+Explanation: A digitizer that registers touches in the wrong location is miscalibrated, meaning the touch coordinate mapping is offset; recalibration resolves this, or if hardware-based, the digitizer requires replacement. The LCD handles visual output, not touch input — LCD failure causes visual problems, not incorrect touch response. The digitizer is the transparent layer that translates physical touch into screen coordinates.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user's smartphone screen is cracked and the display shows visual artifacts including colored lines and black areas, but the digitizer still responds to touch. What has occurred?
+A) The digitizer has failed but the LCD is intact
+B) The LCD panel has been damaged by the physical impact
+C) The GPU has failed
+D) The backlight has failed
+Correct: B
+Explanation: Cracked screens with visual artifacts (lines, black areas, color distortion) indicate physical damage to the LCD panel beneath the glass. The digitizer can remain functional even when the LCD panel beneath is damaged. In modern smartphones, the LCD and digitizer are often bonded together — replacing the screen assembly replaces both.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A corporate smartphone cannot connect to the company's secured Wi-Fi network, even though other devices connect successfully. What should the technician check FIRST?
+A) Replace the phone's Wi-Fi antenna
+B) Verify the correct Wi-Fi password, certificates, and authentication settings are configured on the device
+C) Reset the company's Wi-Fi access point
+D) Update the phone's operating system
+Correct: B
+Explanation: When one device cannot connect to a secured network that other devices access successfully, the issue is almost certainly a configuration problem on that specific device — incorrect password, missing certificate, or wrong EAP authentication settings. Resetting the access point would disrupt all connected devices. A single-device connectivity failure on a shared network points to that device's configuration, not the network infrastructure.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports that their smartphone charging port appears loose and the phone only charges when the cable is held at a specific angle. What is the MOST likely cause?
+A) Incorrect charger wattage
+B) Physically damaged charging port requiring repair or replacement
+C) Software issue preventing charging
+D) A depleted battery that can no longer hold a charge
+Correct: B
+Explanation: A loose charging port that only connects at specific angles indicates physical damage or wear to the port's contact pins, requiring repair or replacement. Software issues and depleted batteries cause different symptoms (e.g., slow charging or no charging regardless of angle). Port damage from repeated insertion/removal or drops is a common physical failure mode in mobile devices.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user's tablet displays a notification that says "Charging Slowly" when connected to a charger. What is the MOST likely cause?
+A) The battery is defective
+B) An incompatible or lower-wattage charger is being used
+C) The tablet's charging port is damaged
+D) Background apps are drawing power faster than the charger can supply
+Correct: B
+Explanation: "Charging Slowly" notifications are triggered when the charger provides insufficient amperage for the device's fast charging standard, typically because a generic or low-wattage charger is being used. While port damage can cause slow charging, the notification specifically indicates a power supply inadequacy rather than a connection issue. Always use the manufacturer-recommended charger or one that meets the device's charging specification.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A mobile device shows no wireless connectivity for both Wi-Fi and Bluetooth simultaneously after a software update. What is the MOST likely cause?
+A) Both the Wi-Fi and Bluetooth radios have failed simultaneously
+B) A software update has disabled or misconfigured the wireless radios
+C) The device is in a location with no Wi-Fi or Bluetooth signals
+D) The antenna has been physically damaged
+Correct: B
+Explanation: Simultaneous failure of both Wi-Fi and Bluetooth after a software update strongly suggests the update affected the radio configuration or driver, since both radios share the same controller on most mobile devices. Physical antenna damage is possible but would not coincide precisely with an update. Try toggling Airplane Mode on and off, or performing a factory reset to restore radio functionality after a problematic update.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports that their phone's camera shows a dark smudge on all photos regardless of subject. The screen itself is clean. What is the MOST likely cause?
+A) The camera app has a software bug
+B) The camera lens cover is smudged or cracked
+C) The image sensor has failed
+D) The front camera is being used instead of the rear camera
+Correct: B
+Explanation: A consistent smudge appearing in all photos from the same camera is almost always caused by a dirty, smudged, or cracked lens cover over the camera, not a sensor failure. A failed sensor would produce a black image or significant distortion throughout the entire frame. Clean the camera lens cover first — it is the most accessible and common cause of photographic smudging.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A smartphone user reports that their device becomes extremely hot and the battery drains rapidly even when the phone is idle. What should the technician investigate FIRST?
+A) Replace the battery
+B) Check for malware or a runaway background application consuming resources
+C) Perform a factory reset immediately
+D) Replace the phone's CPU
+Correct: B
+Explanation: Excessive heat and rapid battery drain during idle are classic symptoms of a background process consuming CPU or network resources, which can be caused by malware or a runaway app. A new battery would not resolve excessive heat generated by software. Check running processes in the app manager and scan for malware before taking destructive steps like a factory reset.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user's phone was dropped in water. After drying it for 48 hours, the phone powers on but the speaker sounds muffled. What is the MOST likely cause?
+A) The speaker driver software was corrupted by the liquid
+B) Residual liquid or mineral deposits in the speaker grille
+C) The speaker has burned out from the electrical short
+D) The phone's audio settings were reset
+Correct: B
+Explanation: Muffled audio after liquid exposure typically means water or mineral deposits remain in or around the speaker grille, blocking sound output. Software corruption does not cause physical muffling; it would cause no audio or distorted digital sound. Gently cleaning the speaker grille and allowing additional drying time often resolves post-water-exposure muffled audio.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A corporate technician is deploying smartphones and needs to prevent users from disabling device encryption. Which technology should be implemented?
+A) Mobile Device Management (MDM) policy enforcement
+B) Full Disk Encryption manually applied
+C) Remote wipe capability
+D) Screen lock PIN enforcement only
+Correct: A
+Explanation: MDM solutions can enforce device encryption policies and prevent users from disabling encryption, ensuring compliance across the fleet. Manual encryption relies on user cooperation and cannot be enforced remotely. MDM policies provide centralized, enforceable controls — the only reliable way to mandate security settings across a fleet of mobile devices.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports their tablet's screen has stopped responding to touch in a specific corner of the screen, while the rest of the touchscreen works normally. What is the MOST likely cause?
+A) A localized digitizer failure in that region
+B) The LCD panel has failed in that area
+C) A software display driver error
+D) The touch sensitivity setting is too low
+Correct: A
+Explanation: A localized touch dead zone while the surrounding area remains responsive indicates a partial digitizer failure in that specific region, not an LCD or software issue. LCD failure causes visual problems, not touch issues. Digitizers can fail in specific zones due to physical impact, manufacturing defects, or ribbon cable damage affecting one section of the touch matrix.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer produces pages with a vertical black line running from top to bottom of every page. What is the MOST likely cause?
+A) Low toner level
+B) A scratch or foreign object on the photosensitive drum
+C) The fuser unit is failing
+D) Incorrect paper type selected in the driver
+Correct: B
+Explanation: A consistent vertical line on every laser-printed page is the classic symptom of a scratch, groove, or foreign particle on the photosensitive drum, which causes toner to deposit in the same location on every rotation. Low toner causes faded or streaky print, not a consistent vertical line. A scratch on the drum leaves its mark with every revolution — replace the drum or toner cartridge (which includes the drum) to resolve this.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer produces output where the text is blurry and smears when rubbed with a finger. What component is MOST likely failing?
+A) The toner cartridge
+B) The fuser unit
+C) The transfer roller
+D) The laser scanner assembly
+Correct: B
+Explanation: Smearing toner that rubs off the paper indicates the fuser unit is not generating sufficient heat to permanently bond the toner to the paper. The toner cartridge deposits toner, but the fuser is responsible for melting it into the paper fibers. The test: if print smears easily with a fingertip, the fuser is the culprit — it is not fusing the toner to the page.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer's output shows repeated small stains or dots at regular intervals down the page. What does this pattern indicate?
+A) A damaged fuser roller leaving marks at each revolution
+B) Low ink level in the cartridge
+C) A paper feed roller that needs cleaning
+D) Incorrect paper size detected by the printer
+Correct: A
+Explanation: Regular, evenly spaced marks or stains down a laser-printed page indicate a contaminated or damaged roller (drum, fuser, or transfer roller) leaving marks with each revolution. The spacing between marks corresponds to the roller's circumference, helping identify which roller is responsible. Measure the distance between repeated marks and compare to the roller circumferences to pinpoint the failing component.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A user reports that their inkjet printer produces output with horizontal banding — alternating light and dark stripes across the page. What is the MOST likely cause?
+A) The paper type setting is incorrect
+B) Clogged or misaligned print head nozzles
+C) Low ink level in a non-depleted cartridge
+D) A dirty fuser roller
+Correct: B
+Explanation: Horizontal banding in inkjet output is caused by clogged nozzles that skip entire rows of ink, creating the stripe pattern. Running the printer's print head cleaning utility resolves nozzle clogs in most cases. Inkjet printers have a print head cleaning function specifically for this reason — banding is their most common print quality failure mode.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer is producing a faded print on the right side of every page while the left side prints normally. What is the MOST likely cause?
+A) Low toner level with uneven toner distribution
+B) A partially failed laser scanner or dirty mirror
+C) Incorrect driver settings
+D) High humidity in the room
+Correct: A
+Explanation: Fading on one side of the page with a laser printer most commonly indicates low toner that is unevenly distributed within the cartridge — gently shaking the cartridge side to side sometimes temporarily restores even distribution. A dirty mirror would cause a consistent reduced-quality area, but low toner manifests as gradual fading often more pronounced on one side. Remove and gently rock the toner cartridge to redistribute remaining toner before replacing.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A printer's paper tray has paper loaded correctly, but the printer displays a paper jam error even though no paper is jammed. What should the technician check?
+A) Replace the toner cartridge
+B) Inspect and clean the paper feed rollers and jam detection sensors
+C) Update the printer firmware
+D) Recalibrate the printer driver
+Correct: B
+Explanation: False paper jam errors (where no paper is actually jammed) are typically caused by worn feed rollers that cannot grip paper properly or dirty optical jam-detection sensors that misread the paper path. Replacing toner cartridges has no effect on paper feed mechanisms. Ghost jam errors are a roller and sensor issue — clean rubber rollers with isopropyl alcohol and clean the sensor with compressed air.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: An office printer is shared by many users and frequently has multiple print jobs stuck in the queue. Some users' documents have not printed for over an hour. What is the MOST likely cause and solution?
+A) The printer is out of toner; replace the cartridge
+B) A stalled print job at the front of the queue is blocking all subsequent jobs; clear the queue
+C) The printer's IP address has changed; update all workstations
+D) The print server has run out of disk space; free up space
+Correct: B
+Explanation: In a shared print queue, a stalled or corrupted job at the front blocks all subsequent jobs, causing a backlog; clearing or canceling the stalled job restores normal printing. Out-of-toner conditions display an error message on the printer, not a silent queue buildup. The print queue follows FIFO (First In, First Out) — a single stuck job at the front stops all jobs behind it.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer produces a printed page where the image appears twice — once in the correct position and again as a lighter ghost image slightly lower on the same page. What component is causing this?
+A) Low toner level
+B) Transfer roller or drum not fully cleaning between pages
+C) Incorrect paper size setting
+D) Fuser temperature too high
+Correct: B
+Explanation: Ghost or echo images (double/shadow images) in laser printing are caused by residual toner remaining on the drum or transfer roller after the primary image is printed, which partially transfers again during the next print cycle. Low toner causes fading, not double images. Ghost images spaced at a drum-circumference interval are a cleaning system failure — the drum wiper blade is likely worn.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A printer is printing all text as garbled characters and symbols instead of readable text. The issue occurs with every document from every computer. What is the MOST likely cause?
+A) The printer has a hardware failure
+B) The printer driver is corrupted or an incorrect driver is installed
+C) The toner cartridge is empty
+D) The USB cable is the wrong version
+Correct: B
+Explanation: Garbled output across all documents from all connected computers typically indicates a fundamental driver or printer language mismatch — the printer is receiving data in a language it cannot interpret. An empty toner cartridge would produce blank pages, not garbled characters. If garbled output occurs from every source, reinstall the correct driver or reset the printer to factory defaults.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer produces pages with random black speckling (small black dots) scattered across the entire page. What is the MOST likely cause?
+A) The transfer roller is contaminated with loose toner particles
+B) The paper is damp or of poor quality
+C) The fuser temperature is too low
+D) The printer is using the wrong paper size
+Correct: A
+Explanation: Random black speckling across an entire laser-printed page is typically caused by loose toner particles on the transfer roller or drum contaminating the page during the transfer process. Damp paper causes other quality issues like poor toner adhesion, not random speckling. Speckling often resolves by cleaning the internal paper path and transfer components with a lint-free cloth.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A user selects "Letter" size paper in their document but the printer outputs to A4-sized paper, cutting off the bottom of the document. What is the MOST likely cause?
+A) The printer driver default paper size is set to A4
+B) The printer's fuser is set to A4 mode
+C) The document was created on a computer using metric settings
+D) The wrong toner cartridge is installed
+Correct: A
+Explanation: When printed output is on the wrong paper size, the driver's default paper size setting overrides the document settings — changing the driver default or the print dialog paper size to "Letter" resolves this. The fuser does not have paper size settings; paper size is controlled by driver and tray configuration. Check both the print dialog and the printer driver's default paper size settings to ensure they match the document.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A technician hears a grinding noise from a printer every time a print job is sent, but the output is normal. What should the technician investigate?
+A) The toner level
+B) A worn or misaligned gear in the paper feed mechanism
+C) The fuser temperature sensor
+D) The printer driver version
+Correct: B
+Explanation: Grinding noises from a printer during operation indicate mechanical wear or misalignment in the gear train or feed mechanism, which may eventually cause paper jams or feed failures. Grinding from a printer is always a mechanical problem — inspect the gear assembly for damaged or stripped teeth before the grinding becomes a complete mechanical failure.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A multifunction printer's paper feeds correctly for the first few pages, then begins feeding multiple sheets at once. What is the MOST likely cause?
+A) The paper is too heavy for the printer
+B) The separation roller or pad is worn, allowing multiple sheets to feed simultaneously
+C) The paper tray is overfilled
+D) The transfer roller needs replacement
+Correct: B
+Explanation: Misfeed of multiple pages (multipage misfeed) is caused by a worn separation roller or separation pad that can no longer prevent multiple sheets from entering the paper path simultaneously. While an overfilled tray can contribute, worn separation components are the primary cause of chronic multi-sheet feeding. The separation mechanism's job is to isolate a single sheet — when worn, it allows sheets to "stick together" and feed in multiples.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A color laser printer prints all documents in black and white only, even when a color document is sent. The color cartridges are full. What should the technician check FIRST?
+A) Replace all color toner cartridges
+B) Verify the print settings in the driver are not set to "Black & White" or "Grayscale"
+C) Run the printer's self-cleaning cycle
+D) Update the printer firmware
+Correct: B
+Explanation: Color printing on a printer with full color cartridges most commonly fails because the driver's print settings are configured to print in grayscale or black and white, overriding the document's color content. Full cartridges rule out a supply issue. Always check the most obvious software setting (color vs. grayscale in the print dialog) before investigating hardware for a color printing problem.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer finishes printing but the paper exits the printer unstapled, even though stapling was selected. The printer has a staple finishing unit installed. What should the technician check?
+A) The toner level
+B) The staple cartridge and the finishing unit for a staple jam or empty staple cartridge
+C) The paper size settings
+D) The printer driver color settings
+Correct: B
+Explanation: Failure to staple despite a finishing unit being installed and selected is almost always caused by an empty staple cartridge or a staple jam in the finishing unit. Toner levels and paper size have no effect on stapling. Finishing units have their own separate staple cartridges that must be loaded and maintained independently from toner and paper supplies.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A thermal printer (used for receipts) is producing blank receipts. The paper is correctly loaded. What is the MOST likely cause?
+A) The thermal heating element has failed
+B) The paper is loaded backwards (non-thermal side facing the heating element)
+C) The print driver is corrupted
+D) The paper feed roller is worn
+Correct: B
+Explanation: Thermal printers print by activating the heat-sensitive coating on one side of the paper — if the paper is loaded with the non-coated side facing the heating element, output will be blank. A failed heating element would also produce blank output, but paper being loaded backwards is far more common and easy to fix. Scratch the back of thermal paper with a fingernail — the side that darkens is the printable side.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer's output shows a consistent white vertical line running from top to bottom of every page. What is the MOST likely cause?
+A) An obstruction blocking the laser beam path to the drum in that position
+B) Low toner level
+C) A scratch on the fuser roller
+D) Static electricity buildup on the paper
+Correct: A
+Explanation: A white (missing) vertical line on every laser page indicates the laser beam is being blocked at that horizontal position, preventing toner from being charged away from the drum in that strip, so no toner deposits on the paper there. Low toner causes faded print overall, not a precise white line. Debris or a foreign object in the laser path creates a consistent white void — clean the laser scanner mirror or lens assembly.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A user reports the printer shows as "offline" on their Windows workstation, but the printer is powered on and connected to the network. Other users can print to it successfully. What is the MOST likely cause?
+A) The printer is out of paper
+B) The printer's IP address has changed, and the workstation's printer port needs updating
+C) The printer driver needs to be reinstalled on the printer
+D) The network switch port the printer is connected to has failed
+Correct: B
+Explanation: If the printer is online for other users but shows offline for one workstation, that workstation's printer configuration is pointing to an old IP address that no longer matches the printer's current address. A switch port failure would affect all users. Update the printer's TCP/IP port configuration on the affected workstation to match the current printer IP address, or configure the printer with a static IP.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A user complains that printed images from their inkjet printer look washed out with incorrect colors. They just replaced the ink cartridges. What should the technician do FIRST?
+A) Replace the newly installed cartridges with a different brand
+B) Run the printer's alignment and color calibration utility
+C) Reinstall the printer driver
+D) Update the printer firmware
+Correct: B
+Explanation: After replacing ink cartridges, running the print head alignment and color calibration utility ensures the new cartridges are correctly registered and color profiles are accurate. Reinstalling the driver would not address a calibration issue. Always run calibration after replacing ink cartridges — misregistration of color planes causes color inaccuracy and washed-out output.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: A laser printer displays an error indicating it cannot detect an installed toner cartridge. The cartridge was just installed. What should the technician try FIRST?
+A) Order a replacement cartridge
+B) Remove and reseat the toner cartridge, ensuring it is fully inserted and any protective seals are removed
+C) Update the printer firmware
+D) Perform a factory reset of the printer
+Correct: B
+Explanation: "Cartridge not detected" errors after installation are most commonly caused by an improperly seated cartridge or a forgotten pull-tab/protective seal that prevents proper electrical contact. Ordering a replacement is premature before confirming proper installation. Always check for and remove shipping seals and protective tabs before inserting a new toner cartridge.
+
+Domain: 5.0
+Sub-objective: 5.6
+Question: An inkjet printer has not been used for three months. When printing resumes, the output shows streaks and missing colors. What is the MOST likely cause and solution?
+A) The ink cartridges are empty; replace all cartridges
+B) The print heads have dried ink clogging the nozzles; run the print head cleaning cycle
+C) The printer driver has expired; reinstall the driver
+D) The paper has absorbed humidity; replace the paper
+Correct: B
+Explanation: Ink in inkjet print head nozzles dries and clogs when the printer is left unused for extended periods, causing streaks and missing colors. Running the manufacturer's cleaning cycle forces ink through the nozzles to clear the dried ink. Inkjet printers should be used regularly or the print heads will dry out — periodic cleaning cycles maintain nozzle health during storage.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user reports that file transfers on their wired network connection are extremely slow — averaging 10 Mbps instead of the expected 1 Gbps. The technician checks the switch port and sees the LED is amber rather than green. What does this MOST likely indicate?
+A) The port has a duplex mismatch and is operating at 10 Mbps
+B) The port has a security violation and has been shut down
+C) The switch port has failed and needs replacement
+D) The network cable exceeds the maximum length
+Correct: A
+Explanation: An amber port LED on many switches indicates the port has negotiated a lower speed (10 or 100 Mbps) rather than Gigabit (1000 Mbps), often due to a duplex mismatch or a cable with damaged pairs. A security violation would shut the port down entirely, not maintain a slow connection. Amber port LEDs are often the first visible indicator of a speed negotiation problem — check cable quality and NIC/switch duplex settings.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A network technician observes that a switch port is constantly going up and down in the log every few seconds. What is this condition called?
+A) Duplex mismatch
+B) Port flapping
+C) Broadcast storm
+D) Spanning Tree Protocol reconvergence
+Correct: B
+Explanation: A switch port that repeatedly transitions between up and down states is called port flapping, which is typically caused by a faulty cable, failing NIC, or a misconfigured interface. A duplex mismatch causes performance degradation, not rapid state transitions. Port flapping generates excessive log entries and can disrupt network stability — investigate the cable and NIC on the flapping port first.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user in a large open office reports intermittent wireless connectivity drops. A wireless survey shows their laptop is connecting to an AP 150 feet away instead of one 20 feet away. What is the MOST likely cause?
+A) The nearby AP has its radio disabled
+B) The laptop has poor wireless roaming behavior — it "sticks" to a distant AP instead of roaming to the closer one
+C) The distant AP has a stronger antenna
+D) The DHCP server is assigning the wrong gateway
+Correct: B
+Explanation: Wireless clients control roaming decisions, and some devices are aggressive about holding onto an existing connection even when a better AP is available — this is called "sticky client" behavior. Radio strength alone does not explain preferring a distant AP over a closer one if both are configured correctly. The solution is to implement band steering, 802.11r fast roaming, or minimum RSSI thresholds on the APs to force clients to roam appropriately.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: Multiple users on the same floor report intermittent Wi-Fi disconnections that began after new equipment was installed in the area. A channel scan shows high interference on the 2.4 GHz band. What is the MOST likely new source of interference?
+A) A new VoIP phone
+B) A new microwave oven or cordless phone operating in the 2.4 GHz range
+C) A new fiber optic network switch
+D) A new UPS (Uninterruptible Power Supply)
+Correct: B
+Explanation: Microwave ovens and older cordless phones operate in the 2.4 GHz frequency range, which directly overlaps with Wi-Fi channels 1-14, causing significant interference. Fiber optic switches and UPS units operate in the electrical domain and do not emit RF interference in the 2.4 GHz range. When 2.4 GHz Wi-Fi interference begins after new equipment arrives, consider appliances (microwaves, cordless phones, baby monitors) as likely RF sources.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user receives an IP address of 169.254.x.x on their workstation. What does this address indicate?
+A) The workstation is configured with a static IP address
+B) The workstation failed to receive a DHCP lease and assigned itself an APIPA address
+C) The workstation is connected to a IPv6-only network
+D) The DHCP server assigned a reserved address to this workstation
+Correct: B
+Explanation: The 169.254.0.0/16 range is the Automatic Private IP Addressing (APIPA) range, assigned automatically by Windows when no DHCP server responds to a lease request. A static IP would show a manually configured address, not a 169.254 address. An APIPA address means "I couldn't reach a DHCP server" — check the cable, switch port, and DHCP server availability.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician receives complaints from multiple users that they have network connectivity but cannot browse the internet or resolve hostnames. Ping to IP addresses works fine. What is the MOST likely cause?
+A) The default gateway is misconfigured
+B) DNS resolution is failing
+C) The DHCP server is down
+D) The network firewall is blocking HTTP traffic
+Correct: B
+Explanation: The ability to ping IP addresses while hostname resolution fails is the definitive symptom of DNS failure — network routing is working, but name-to-IP translation is not. A misconfigured gateway would prevent pinging external IP addresses. The diagnostic test "can you ping an IP address but not a hostname?" directly identifies DNS as the failing service.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A newly joined workstation on a network receives an IP address from a DHCP server but the address conflicts with another device. The user sees a "duplicate IP address conflict" notification. What has MOST likely occurred?
+A) The DHCP server assigned an address from outside the scope
+B) A device with a manually configured static IP is using an address within the DHCP pool
+C) The DHCP lease time has expired
+D) The DHCP server has failed over to a backup server
+Correct: B
+Explanation: IP address conflicts most commonly occur when a device is statically configured with an IP address that is also within the DHCP server's assignable pool, causing the DHCP server to assign that same address to another device. DHCP exclusions should be defined for all static IP addresses. Always exclude static IP ranges from the DHCP scope to prevent conflicts between dynamic and statically assigned addresses.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: New devices connecting to the network are receiving IP addresses in the 10.10.200.x range instead of the expected 192.168.1.x range. A technician traces the issue to an unauthorized wireless router plugged in by an employee. What has occurred?
+A) The authorized DHCP server has failed over to a backup scope
+B) A rogue DHCP server is distributing incorrect network configuration
+C) The network switch has a misconfigured VLAN
+D) The authorized DHCP server has exhausted its address pool
+Correct: B
+Explanation: An unauthorized device running DHCP services is a rogue DHCP server, which competes with the legitimate server and can assign incorrect IP addresses, gateways, and DNS settings to network clients. An exhausted scope would result in no IP assignment, not incorrect assignments. DHCP snooping on managed switches can prevent rogue DHCP servers by blocking DHCP offers on untrusted ports.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: Users on a network segment report that new devices cannot obtain IP addresses. Existing devices with leases continue to work normally. A technician checks the DHCP server and finds the scope has 0 available addresses remaining. What is this condition?
+A) A rogue DHCP server has stolen all available leases
+B) DHCP scope exhaustion — the pool of available addresses is fully allocated
+C) The DHCP server has crashed
+D) The DHCP lease time is set too long
+Correct: B
+Explanation: When a DHCP scope runs out of available IP addresses, new devices cannot receive leases while existing devices with valid leases continue functioning normally. A crashed DHCP server would prevent all devices from renewing leases, not just new devices. DHCP scope exhaustion is resolved by expanding the IP range, shortening lease times, or implementing subnetting to increase available addresses.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician uses `ping` to test connectivity between two hosts and observes high and variable response times (ranging from 5ms to 350ms). What networking issue does this describe?
+A) Packet loss
+B) Network jitter
+C) Bandwidth saturation
+D) Routing loop
+Correct: B
+Explanation: Jitter refers to the variation in packet delay over time — inconsistent latency rather than uniformly high latency. High jitter is particularly damaging for real-time applications like VoIP and video conferencing. Consistent high ping times indicate latency; variable, inconsistent ping times indicate jitter — both are measured but jitter specifically refers to the variance.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician runs `ipconfig` on a workstation and notes it has a valid IP address, subnet mask, and gateway, but cannot access network resources. The technician pings the gateway and gets a response. What should the technician check NEXT?
+A) Replace the network cable
+B) Test connectivity beyond the gateway by pinging an external IP and then a DNS name
+C) Reinstall the network adapter driver
+D) Check for duplicate IP addresses on the network
+Correct: B
+Explanation: With a valid IP, gateway connectivity confirmed, the next logical step is to test external connectivity (ping an external IP) to rule out routing issues, then test DNS resolution, to progressively isolate where connectivity breaks down. Replacing the cable is unnecessary since the gateway responds. Systematic network troubleshooting works layer by layer — local connectivity → gateway → external IP → DNS resolution.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A remote branch office can access internal resources but cannot access the internet. The main office has internet access. What is the MOST likely cause?
+A) The branch office DNS server is down
+B) A missing or incorrect default route on the branch office router
+C) The branch office's DHCP scope is exhausted
+D) The branch's NTP server is unreachable
+Correct: B
+Explanation: Internet access requires a default route (0.0.0.0/0) pointing toward the upstream internet gateway; if this route is missing or misconfigured on the branch router, internal routing works but internet-bound traffic has no path. A DNS failure would prevent name resolution but not connectivity to IP addresses. When a branch can reach internal but not external, the default route on the branch router is the first thing to verify.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: An employee connects their laptop to the corporate network via Ethernet and gets full connectivity. When they switch to the same office's Wi-Fi, they can see the network but cannot get beyond the local subnet. What is the MOST likely cause?
+A) The Wi-Fi access point is not configured with a default gateway
+B) The wireless network has an incorrect or missing gateway assignment in the DHCP scope
+C) The employee's wireless adapter driver is outdated
+D) The Wi-Fi password is incorrect
+Correct: B
+Explanation: If Ethernet (on the same network) works fully but Wi-Fi on the same segment cannot reach beyond the local subnet, the wireless DHCP scope is likely missing or has an incorrect default gateway configuration. An incorrect password would prevent the device from connecting to the Wi-Fi entirely. Compare the DHCP configuration of the wired and wireless scopes — the gateway is the most common misconfiguration that limits wireless clients to local-only connectivity.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician is troubleshooting slow file transfers between two workstations on the same Gigabit switch. Speedtest to the internet shows full speed. What should the technician investigate?
+A) The internet connection bandwidth
+B) Duplex mismatch between the two workstations and the switch
+C) The DHCP lease time
+D) The DNS resolution speed
+Correct: B
+Explanation: Slow LAN transfers between devices on the same switch, while internet speeds are normal, point to a local link issue such as a duplex mismatch causing half-duplex collision-avoidance to drastically reduce throughput. DNS speed and DHCP settings do not affect file transfer throughput. A duplex mismatch (one side full-duplex, one side half-duplex) causes significant throughput degradation while maintaining connectivity.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: After a network configuration change, a user can ping all local network hosts and the gateway, but cannot access any internet resources by IP or name. What should the technician check on the router or firewall?
+A) DHCP lease assignments
+B) ACL or firewall rules blocking outbound traffic
+C) DNS server configuration on client workstations
+D) Spanning Tree Protocol configuration
+Correct: B
+Explanation: If local connectivity and gateway access work but no internet traffic passes (neither by IP nor by name), the issue is likely a firewall ACL or NAT rule blocking outbound traffic after the configuration change. DNS failure would block name resolution but not ping by IP to the internet. After any firewall or router configuration change, verify that NAT and outbound ACL rules correctly permit internet-bound traffic.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user reports their wireless connection works fine for 10-15 minutes then drops, requiring them to reconnect. This happens every time on the corporate Wi-Fi. What should the technician investigate?
+A) The user's laptop wireless adapter power management settings
+B) The wireless channel width setting on the AP
+C) The SSID broadcast setting on the AP
+D) The user's IP lease renewal interval
+Correct: A
+Explanation: Wireless connections that drop at regular intervals are often caused by Windows' wireless adapter power management setting putting the adapter into a low-power sleep state, which drops the association with the AP. Channel width and SSID broadcast settings affect connection quality, not periodic disconnection. Disable the "Allow the computer to turn off this device to save power" option on the wireless adapter in Device Manager to resolve sleep-related disconnections.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician uses the `tracert` command and finds that packets reach a router three hops away but stop there with request timeouts for all subsequent hops. What does this indicate?
+A) The destination host is powered off
+B) There is a routing or firewall issue beyond the third hop that is dropping or blocking the traffic
+C) The tracert command is not supported beyond three hops
+D) The local DNS server is offline
+Correct: B
+Explanation: Tracert timeouts beyond a specific hop indicate a routing failure or firewall rule dropping ICMP packets at or beyond that router — the network path is broken or blocked at that point. A powered-off destination would show timeouts starting from the last routable hop, which aligns with this scenario but the primary cause is a routing or firewall issue. Tracert reveals exactly where in the path traffic stops, making it invaluable for identifying the location of routing problems.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician notices that a Wi-Fi network's performance is significantly better when laptops are near the access point but degrades sharply beyond 30 feet, even indoors. What could be causing the poor range?
+A) The access point is configured for 802.11b compatibility mode
+B) The DHCP scope is too small
+C) The access point's MAC filter is rejecting some clients
+D) The wireless security protocol is WPA3 only
+Correct: A
+Explanation: Enabling 802.11b compatibility mode (or legacy mode) on an access point reduces the entire network's performance to accommodate old 802.11b clients, dramatically reducing effective range and throughput. DHCP scope size affects address availability, not signal range. Legacy compatibility modes on APs protect old devices at the cost of dragging down the entire network — disable legacy modes unless 802.11b devices are present.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user reports that their VoIP calls are poor quality, with choppy audio and words cutting out. A network test shows 2% packet loss on their connection. What is the MOST likely impact of this packet loss?
+A) It is too low to affect VoIP quality
+B) 2% packet loss is sufficient to cause significant VoIP degradation
+C) It only affects large file transfers, not real-time communication
+D) It indicates full network congestion
+Correct: B
+Explanation: VoIP is highly sensitive to packet loss — even 1-2% packet loss causes noticeable audio degradation because each lost packet represents a gap in the audio stream with no retransmission (unlike TCP). Large file transfers use TCP and retransmit lost packets automatically, tolerating more packet loss without perceptible impact. For real-time UDP-based protocols like VoIP, 1% packet loss is the practical threshold for noticeable quality degradation.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A new employee cannot access any network resources. The technician checks the switch port and sees the port LED is off. The employee's laptop shows "network cable unplugged." What should the technician check FIRST?
+A) Verify the laptop's NIC drivers are installed
+B) Check that the network cable is properly connected at both the laptop and the wall jack/switch
+C) Check if the switch port is administratively disabled
+D) Verify the DHCP server is running
+Correct: B
+Explanation: A "network cable unplugged" message combined with an unlit switch port almost certainly means the physical cable is not properly connected at one or both ends. Administrative port shutdown typically still shows a port indicator or produces a different OS message. Physical connectivity is always the first check — link lights and the OS cable status message directly indicate whether a physical connection exists.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A small office recently upgraded from a 100 Mbps switch to a Gigabit switch. Users report that network speeds have not improved. What is the MOST likely cause?
+A) The Gigabit switch needs a firmware update
+B) The network cables are Cat 5 (not Cat 5e or higher), which cannot reliably support Gigabit speeds
+C) The DHCP server is limiting bandwidth
+D) The workstations need new IP addresses assigned
+Correct: B
+Explanation: Gigabit Ethernet requires Cat 5e or better cabling; original Cat 5 cable cannot reliably support 1000Base-T due to crosstalk specifications, so the ports will negotiate down to 100 Mbps. DHCP servers manage IP addresses, not network speed. Upgrading a switch alone achieves nothing if the cabling infrastructure cannot support the higher speed — check cable category when troubleshooting speed upgrades.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician discovers that two workstations on the network have the same IP address. One was recently given a static IP by another technician. What is the BEST long-term solution?
+A) Remove both workstations from the network
+B) Configure DHCP reservations for devices that need consistent addresses and remove the static configuration
+C) Expand the DHCP scope
+D) Implement NAT to hide the duplicate addresses
+Correct: B
+Explanation: DHCP reservations tie a specific IP address to a device's MAC address, providing a consistent address without risking conflicts with the dynamic pool, eliminating the need for manual static IP assignment. NAT does not resolve address conflicts on the same subnet. DHCP reservations are the best of both worlds — the device always gets the same IP, and the DHCP server knows not to assign that address to anyone else.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A user connects to a wireless network at a coffee shop and immediately begins receiving certificate errors when visiting HTTPS websites that were previously trusted. What security issue might this indicate?
+A) The coffee shop's DNS server is slow
+B) A man-in-the-middle or evil twin attack intercepting HTTPS traffic
+C) The user's wireless adapter is using an outdated driver
+D) The Wi-Fi network is using WEP security
+Correct: B
+Explanation: Unexpected certificate errors on previously trusted HTTPS sites on an untrusted public Wi-Fi network suggest a man-in-the-middle attack or evil twin AP intercepting and decrypting HTTPS traffic with a fraudulent certificate. WEP security and driver issues do not cause certificate errors on trusted websites. Certificate warnings on public Wi-Fi are a serious red flag — disconnect and use a VPN before accessing sensitive sites on untrusted networks.
+
+Domain: 5.0
+Sub-objective: 5.7
+Question: A technician needs to test whether a specific TCP port (port 443) is open on a remote server from a Windows workstation. Which command-line tool should be used?
+A) ping
+B) tracert
+C) netstat
+D) telnet or Test-NetConnection
+Correct: D
+Explanation: Telnet (e.g., `telnet servername 443`) or PowerShell's Test-NetConnection (e.g., `Test-NetConnection -ComputerName server -Port 443`) can test TCP port connectivity to a remote host. Ping uses ICMP and cannot test specific TCP ports. When ping succeeds but a service is unreachable, port testing with telnet or Test-NetConnection confirms whether the specific service port is accessible through the firewall.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A user reports their SSD-equipped laptop boots significantly slower than it used to. The SSD health tools show the drive is 98% full. What is the MOST likely cause of the slowdown?
+A) The SSD's NAND flash cells are worn out
+B) The SSD has insufficient free space for wear leveling and garbage collection operations
+C) The SATA interface is operating in IDE mode instead of AHCI
+D) The SSD's firmware is outdated
+Correct: B
+Explanation: SSDs require free space to perform wear leveling, garbage collection, and TRIM operations; when a drive is near capacity, these background processes are impaired, causing significant performance degradation. Worn NAND cells typically show up in S.M.A.R.T. data as increased error counts, not simply slow boot times. Keep SSDs below 80-85% capacity to maintain optimal performance — the last 15-20% of SSD capacity is critical for background maintenance operations.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician is setting up a RAID 10 array. What is the minimum number of drives required?
+A) Two drives
+B) Three drives
+C) Four drives
+D) Five drives
+Correct: C
+Explanation: RAID 10 (also called RAID 1+0) combines mirroring and striping, requiring a minimum of four drives arranged as two mirrored pairs that are then striped. RAID 1 requires two drives, but RAID 10 needs two mirrored pairs minimum. RAID 10 provides both performance (from striping) and redundancy (from mirroring), tolerating one drive failure per mirrored pair.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: After replacing a failed drive in a RAID 5 array, the rebuild process takes over 12 hours and the array remains in a degraded state during this time. What is the PRIMARY risk during this rebuild period?
+A) The remaining drives will be overloaded and fail from heat
+B) A second drive failure would result in complete data loss
+C) The RAID controller will corrupt the rebuild
+D) Users cannot access data while the rebuild is in progress
+Correct: B
+Explanation: During a RAID 5 rebuild, the array is in a degraded state with no redundancy; if any remaining drive fails before the rebuild completes, all data is permanently lost. Users can typically still access data during a RAID 5 rebuild in degraded mode, though at reduced performance. The longer the rebuild takes, the greater the window of vulnerability — large RAID 5 arrays with big drives have increasingly long rebuild times, which is why RAID 6 is preferred for high-capacity arrays.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A workstation running Windows shows a drive in Disk Management as "Foreign." What does this indicate?
+A) The drive is encrypted with a third-party tool
+B) The drive is a dynamic disk that was initialized on a different Windows computer
+C) The drive has an incompatible file system
+D) The drive has a hardware failure
+Correct: B
+Explanation: A "Foreign" disk in Windows Disk Management indicates a dynamic disk whose configuration database was created on a different Windows system — importing it restores access to its volumes. A drive with an incompatible file system shows as having a raw or unknown file system, not "Foreign." Dynamic disks track configuration in a hidden partition; when moved to a new system, Windows must import the disk to read that configuration.
+
+Domain: 5.0
+Sub-objective: 5.3
+Question: A technician is troubleshooting a server where one of four drives in a RAID 6 array shows a "predictive failure" warning in the RAID controller software. The array is currently healthy. What should the technician do?
+A) Wait until the drive actually fails before replacing it
+B) Proactively replace the drive while the array is healthy and initiate a rebuild
+C) Rebuild the entire array from backup immediately
+D) Ignore the warning since RAID 6 can tolerate two drive failures
+Correct: B
+Explanation: A predictive failure warning from the RAID controller indicates the drive's S.M.A.R.T. data predicts imminent failure; replacing it proactively while the array is healthy avoids the risk of a degraded-state rebuild. Waiting for actual failure means the rebuild must occur in a vulnerable state. Proactive replacement during a healthy array state is always safer than reactive replacement during a degraded state.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A laptop user opens the display to 90 degrees and notices the screen flickers, but at 45 degrees and 120 degrees the image is stable. What is the MOST likely cause?
+A) The GPU has a defective memory chip
+B) The LCD data cable is damaged or pinched at a specific hinge angle
+C) The backlight inverter is overheating
+D) The display driver has a bug triggered by display rotation
+Correct: B
+Explanation: Flickering that occurs only at specific hinge angles indicates the LCD ribbon cable is damaged, pinched, or has a partial break that makes or breaks contact as the lid is repositioned. A GPU memory issue would cause consistent corruption regardless of lid angle. LCD cable damage is common in heavily used laptops — the cable repeatedly bends at the hinge with every open/close cycle.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A conference room projector has been in storage for six months. When powered on, the image is significantly dimmer than expected, even at maximum brightness. What is the MOST likely cause?
+A) The projector's cooling fan has failed
+B) The projector lamp has aged and its luminosity has degraded
+C) The HDMI cable used is too long
+D) The projector's display settings were reset during storage
+Correct: B
+Explanation: Projector lamps (UHP or halogen bulbs) have a rated lamp life, typically 2,000-5,000 hours, after which brightness decreases significantly; a dim image even at maximum brightness indicates the lamp is at or near end of life. A failed cooling fan would trigger a thermal shutdown, not just reduced brightness. Projector lamps should be replaced when the brightness drops noticeably — check the lamp hours in the projector's menu.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: An external monitor connected to a laptop via USB-C DisplayPort shows no image, but the same monitor works when connected with HDMI. The USB-C cable is known good. What should the technician investigate?
+A) The monitor's HDMI port is defective
+B) The laptop's USB-C port may not support DisplayPort Alt Mode, or it needs a driver/firmware update
+C) The monitor does not support USB-C connections
+D) The USB-C cable does not support data transfer
+Correct: B
+Explanation: Not all USB-C ports support DisplayPort Alt Mode — only those specifically designed for video output do; connecting to a non-video USB-C port or one requiring a firmware update would produce no signal. The monitor working via HDMI confirms the monitor itself is functional. Always verify that the specific USB-C port on the laptop supports DisplayPort Alt Mode — it is often marked with a display icon or noted in the specs.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user reports that colors on their monitor appear oversaturated and unrealistic, with reds appearing very deep and blues appearing purple. The monitor was recently switched from Windows to a Mac and back. What is the MOST likely cause?
+A) The monitor's panel has degraded
+B) An incorrect ICC color profile is applied in the OS display settings
+C) The monitor's backlight color temperature has changed
+D) The video cable is not shielded properly
+Correct: B
+Explanation: Oversaturated or shifted colors that appeared after a system change are most commonly caused by an incorrect ICC color profile being applied — macOS and Windows use different color management approaches that can leave incorrect profiles when switching. A degraded panel would typically cause muted or faded colors, not oversaturation. Reset the color profile to the monitor's default sRGB profile in display settings to restore accurate color reproduction.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A user's external monitor shows the correct image but the image is shifted to the right, with a black bar on the left side and content cut off on the right. What should the technician adjust?
+A) The display refresh rate
+B) The monitor's horizontal position adjustment using the OSD controls
+C) The screen resolution in the OS
+D) The cable type from HDMI to DisplayPort
+Correct: B
+Explanation: An image shifted horizontally on a monitor with a black bar on one side indicates a horizontal position offset, which is corrected through the monitor's OSD (On-Screen Display) position controls. Changing resolution would alter image scaling, not shift the image position. Most monitors have OSD controls for horizontal and vertical position adjustment — this is a monitor-side setting, not an OS or GPU configuration.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A technician is called to troubleshoot a display that shows correct colors for the first few minutes but then gradually shifts to show a green tint as the display warms up. What is the MOST likely cause?
+A) The display driver has a memory leak causing color register corruption
+B) A failing analog component (capacitor or CRT aging effect) in the monitor's color circuit
+C) The ambient room temperature is affecting the display
+D) The HDMI cable is degraded
+Correct: B
+Explanation: A color shift that develops as the monitor warms up strongly suggests a thermal-dependent component failure in the monitor's color processing circuitry, such as a failing capacitor. Display driver issues cause immediate, consistent problems rather than temperature-dependent ones. Thermal-dependent failures that worsen as the device heats up almost always have a hardware root cause — the component changes behavior as it heats to operating temperature.
+
+Domain: 5.0
+Sub-objective: 5.4
+Question: A projector in a training room produces an image where the center is in focus but the edges appear blurry. What is the MOST likely cause?
+A) The projector resolution does not match the screen content resolution
+B) The projector lens needs cleaning or adjustment — possible lens shift or focus ring misadjustment
+C) The HDMI source is outputting at too high a frame rate
+D) The projector's keystone correction is enabled
+Correct: B
+Explanation: Center-sharp but edge-blurry projection indicates a lens alignment or focus issue, where the focal plane is not uniformly parallel to the projection screen. Resolution mismatches cause scaling artifacts across the whole image, not localized edge blur. Center-sharp with blurry edges is a lens issue — adjust the projector's focus ring and check that the projector is properly perpendicular to the screen surface.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports that their smartphone's GPS is inaccurate and takes several minutes to acquire a signal indoors. What is the MOST likely explanation?
+A) The GPS chip in the phone is defective
+B) GPS signals are attenuated by building materials and require clear sky view for fast acquisition
+C) The phone's location services have been disabled by a software update
+D) The cellular carrier is blocking GPS functionality
+Correct: B
+Explanation: GPS relies on line-of-sight signals from satellites, which are weakened or blocked by building materials like concrete, metal, and thick walls — slow acquisition indoors is normal behavior, not a hardware defect. A disabled location services setting would show no GPS signal at all regardless of location. GPS struggles indoors by design — modern phones use Assisted GPS (A-GPS) to speed up acquisition using cellular and Wi-Fi location data as supplements.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A corporate mobile device management (MDM) policy requires that employee smartphones have screen locks enabled. A user bypasses the lock by disabling it in their settings. What MDM feature should the IT administrator use to prevent this?
+A) Remote wipe
+B) Mandatory screen lock enforcement via MDM policy with compliance enforcement
+C) Full device encryption
+D) Application blacklisting
+Correct: B
+Explanation: MDM compliance policies can enforce screen lock requirements and prevent users from disabling them, automatically remediating or quarantining non-compliant devices. Remote wipe removes data but does not enforce screen lock. MDM compliance policies are the IT administrator's tool for mandating security settings across a fleet — devices that fall out of compliance can be blocked from accessing corporate resources.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user reports that their smartphone randomly restarts throughout the day. The battery is not swollen and temperatures are normal. What should the technician investigate FIRST?
+A) The phone's IMEI number validity
+B) Recent app installations that may be causing system instability
+C) The cellular carrier's network signal strength
+D) The microphone and speaker hardware
+Correct: B
+Explanation: Random restarts with no thermal or battery issues are most often caused by a recently installed app that is unstable or incompatible with the OS version, triggering system crashes. IMEI validity does not cause random reboots. Boot the device in safe mode (which disables third-party apps) to test whether the restarts continue — if they stop in safe mode, a third-party app is the culprit.
+
+Domain: 5.0
+Sub-objective: 5.5
+Question: A user's tablet has a cracked screen and the display works, but they notice the touch response has become unresponsive in a diagonal band across the screen. What is MOST likely damaged?
+A) The GPU processing pipeline
+B) The digitizer's touch sensor grid, broken along the crack line
+C) The LCD backlight array
+D) The front-facing camera
+Correct: B
+Explanation: When a cracked screen causes a band of unresponsive touch following the crack line, the digitizer's capacitive sensor grid has been physically severed along that path. The GPU handles rendering, not touch input. Digitizer grids are laid out in a matrix — a crack that severs row or column conductors creates a straight band of dead touch area corresponding to the crack location.

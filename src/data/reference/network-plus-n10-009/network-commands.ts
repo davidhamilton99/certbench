@@ -1,0 +1,36 @@
+import type { ReferenceTable } from "../types";
+
+export const networkCommands: ReferenceTable = {
+  id: "network-commands",
+  title: "Network Troubleshooting Commands",
+  description: "CLI commands for network diagnostics and troubleshooting, covering platforms tested on Network+ N10-009.",
+  columnHeaders: [
+    { key: "command", label: "Command", mono: true },
+    { key: "purpose", label: "Purpose" },
+    { key: "example", label: "Example", mono: true },
+    { key: "platform", label: "Platform" },
+  ],
+  entries: [
+    { columns: { command: "ipconfig", purpose: "Display IP address, subnet mask, default gateway, and DNS for Windows adapters", example: "ipconfig /all", platform: "Windows" } },
+    { columns: { command: "ifconfig", purpose: "Display or configure network interfaces on Unix/Linux (deprecated in favour of ip)", example: "ifconfig eth0", platform: "Linux / macOS" } },
+    { columns: { command: "ip", purpose: "Modern Linux command for IP addressing, routing, and link management", example: "ip addr show", platform: "Linux" } },
+    { columns: { command: "ping", purpose: "Send ICMP echo requests to test reachability and measure round-trip time", example: "ping -c 4 8.8.8.8", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "tracert", purpose: "Trace route to destination, revealing each hop — uses ICMP TTL-exceeded on Windows", example: "tracert 8.8.8.8", platform: "Windows" } },
+    { columns: { command: "traceroute", purpose: "Trace route to destination — uses UDP probes by default on Linux/macOS", example: "traceroute 8.8.8.8", platform: "Linux / macOS" } },
+    { columns: { command: "pathping", purpose: "Combines ping and tracert: shows per-hop packet loss statistics over time", example: "pathping 8.8.8.8", platform: "Windows" } },
+    { columns: { command: "mtr", purpose: "Continuous real-time traceroute with per-hop loss and latency — combines ping + traceroute", example: "mtr --report 8.8.8.8", platform: "Linux / macOS" } },
+    { columns: { command: "nslookup", purpose: "Query DNS servers for name-to-IP resolution and reverse lookups", example: "nslookup google.com 8.8.8.8", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "dig", purpose: "Detailed DNS query tool — shows full DNS response including TTL and record type", example: "dig A google.com @8.8.8.8", platform: "Linux / macOS" } },
+    { columns: { command: "netstat", purpose: "Display active TCP/UDP connections, listening ports, and routing table", example: "netstat -an", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "nmap", purpose: "Network scanner — discover hosts, open ports, OS fingerprinting, and service versions", example: "nmap -sV 192.168.1.0/24", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "arp", purpose: "Display or modify the ARP cache mapping IP addresses to MAC addresses", example: "arp -a", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "route", purpose: "Display or modify the IP routing table on a host", example: "route print", platform: "Windows (route add/delete)" } },
+    { columns: { command: "tcpdump", purpose: "Capture and analyse raw network packets on a live interface", example: "tcpdump -i eth0 port 80", platform: "Linux / macOS" } },
+    { columns: { command: "iperf", purpose: "Measure maximum achievable TCP/UDP bandwidth between two endpoints", example: "iperf3 -c 192.168.1.10", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "netcat", purpose: "TCP/UDP Swiss-army knife — port scanning, banner grabbing, data transfer", example: "nc -zv 192.168.1.1 22", platform: "Linux / macOS (ncat on Windows)" } },
+    { columns: { command: "hostname", purpose: "Display or set the hostname of the local machine", example: "hostname", platform: "Windows / Linux / macOS" } },
+    { columns: { command: "show interface", purpose: "Display interface status, errors (CRC, runts, giants), duplex, and speed on Cisco IOS", example: "show interfaces GigabitEthernet0/1", platform: "Cisco IOS" } },
+    { columns: { command: "show running-config", purpose: "Display the active (running) configuration stored in RAM on Cisco IOS devices", example: "show running-config | include ip address", platform: "Cisco IOS" } },
+    { columns: { command: "show ip route", purpose: "Display the IP routing table including static, connected, and dynamic routes", example: "show ip route", platform: "Cisco IOS" } },
+  ],
+};

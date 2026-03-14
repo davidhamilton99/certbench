@@ -1,0 +1,1319 @@
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: Which port number does FTP use to transfer data between a client and server?
+A) 20
+B) 21
+C) 22
+D) 23
+Correct: A
+Explanation: FTP uses two ports: port 21 for control (commands) and port 20 for active data transfer. The control connection on port 21 establishes the session and sends commands, while the actual file data travels over port 20 in active mode. Passive mode FTP uses ephemeral ports for data but still uses port 21 for control.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A technician needs to securely manage a remote Linux server from the command line. Which protocol and port should they use?
+A) Telnet on port 23
+B) RDP on port 3389
+C) SSH on port 22
+D) FTP on port 21
+Correct: C
+Explanation: SSH (Secure Shell) operates on port 22 and provides encrypted command-line access to remote systems. Telnet on port 23 provides similar functionality but transmits all data, including credentials, in plaintext. SSH has largely replaced Telnet in professional environments because of its strong encryption and authentication options.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: Which protocol is responsible for dynamically assigning IP addresses to client devices, and which ports does it use?
+A) DNS using ports 53 UDP and TCP
+B) DHCP using ports 67 and 68
+C) LDAP using port 389
+D) SMTP using port 25
+Correct: B
+Explanation: DHCP (Dynamic Host Configuration Protocol) uses port 67 on the server side to receive client requests and port 68 on the client side to receive responses. It operates over UDP because the four-step DORA process (Discover, Offer, Request, Acknowledge) requires broadcast communication before a client has an IP address. DNS uses port 53, not DHCP's ports.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A user complains they can receive emails but cannot send them. The help desk determines outbound SMTP is blocked. Which port is most likely being filtered by the ISP?
+A) 110
+B) 143
+C) 25
+D) 443
+Correct: C
+Explanation: SMTP uses port 25 for server-to-server mail transfer, and many ISPs block outbound port 25 to prevent spam from compromised client machines. Port 110 is POP3 (incoming mail retrieval) and port 143 is IMAP (incoming mail retrieval with folder sync). The user should configure their email client to use port 587 (SMTP with TLS) for authenticated outbound mail submission.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: Which port does HTTPS use to provide encrypted web browsing?
+A) 80
+B) 8080
+C) 443
+D) 3389
+Correct: C
+Explanation: HTTPS (HTTP Secure) operates on port 443 and uses TLS to encrypt web traffic between the browser and the server. Standard HTTP uses port 80 and sends data in plaintext, making it vulnerable to interception. Port 8080 is a common alternative HTTP port used in proxy and development environments, while 3389 is RDP.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: DNS queries are typically sent using which transport protocol and port?
+A) TCP port 53
+B) UDP port 53
+C) UDP port 67
+D) TCP port 443
+Correct: B
+Explanation: The vast majority of DNS queries use UDP on port 53 because the small query and response sizes fit within a single packet, and the speed of UDP is preferable for frequent lookups. DNS falls back to TCP on port 53 for responses larger than 512 bytes and for zone transfers between DNS servers. Both TCP and UDP port 53 are technically used by DNS, but UDP is the default for standard queries.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A user wants to access their email and keep messages synchronized across multiple devices with folder support. Which protocol should their email client be configured to use?
+A) SMTP on port 25
+B) POP3 on port 110
+C) IMAP on port 143
+D) LDAP on port 389
+Correct: C
+Explanation: IMAP (Internet Message Access Protocol) on port 143 keeps mail stored on the server and synchronizes folder structure and read status across all connected devices. POP3 on port 110 downloads messages to a single device and typically deletes them from the server, making multi-device access difficult. SMTP on port 25 handles outgoing mail, not retrieval.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A corporate environment uses Windows file shares that are accessible over the network. Which port must be open to allow SMB/CIFS traffic?
+A) 139
+B) 389
+C) 445
+D) 636
+Correct: C
+Explanation: SMB (Server Message Block), also known as CIFS, uses port 445 for direct TCP connections to Windows file and printer shares over modern networks. Port 139 was used by the older NetBIOS Session Service for SMB over NetBIOS, but modern Windows networks use port 445 directly. Ports 389 and 636 are used by LDAP and LDAPS for directory services.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A mail server administrator needs to configure clients to submit outgoing mail with authentication and encryption. Which port should be used?
+A) 25
+B) 110
+C) 465
+D) 587
+Correct: D
+Explanation: Port 587 is the designated mail submission port for authenticated SMTP with STARTTLS encryption, as defined by RFC 6409. Port 25 is used for server-to-server (MTA-to-MTA) mail relay and is often blocked by ISPs for client use to prevent spam. Port 110 is POP3, and while port 465 was historically used for SMTPS, port 587 is the current standard for authenticated submission.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: Which protocol and port does a technician use to connect to a Windows remote desktop session?
+A) SSH on port 22
+B) VNC on port 5900
+C) RDP on port 3389
+D) Telnet on port 23
+Correct: C
+Explanation: RDP (Remote Desktop Protocol) uses port 3389 and is Microsoft's built-in protocol for graphical remote desktop access to Windows systems. SSH on port 22 provides encrypted command-line access and is more common in Linux/Unix environments. VNC on port 5900 is a cross-platform graphical remote access protocol but is not built into Windows by default.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: LDAP is used for querying directory services. Which port does standard (unencrypted) LDAP use?
+A) 389
+B) 443
+C) 636
+D) 3268
+Correct: A
+Explanation: LDAP (Lightweight Directory Access Protocol) uses port 389 for standard unencrypted or STARTTLS-upgraded connections to directory services like Active Directory. LDAPS (LDAP over SSL/TLS) uses port 636 for encrypted connections. Port 443 is HTTPS and port 3268 is used for Active Directory Global Catalog queries.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A technician is setting up a legacy system that requires unencrypted remote terminal access. Which protocol operates on port 23?
+A) SSH
+B) FTP
+C) Telnet
+D) TFTP
+Correct: C
+Explanation: Telnet operates on port 23 and provides unencrypted terminal access to remote devices. It transmits all data including usernames and passwords in plaintext, making it a security risk on modern networks. SSH on port 22 is the secure replacement for Telnet and should be used whenever possible.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: Which of the following correctly pairs a protocol with its primary function and port?
+A) IMAP / 110 — download mail to single device
+B) SMTP / 587 — authenticated mail submission with encryption
+C) POP3 / 143 — synchronise mail across multiple devices
+D) DNS / 68 — resolve hostnames to IP addresses
+Correct: B
+Explanation: SMTP on port 587 is the correct port for authenticated mail submission using STARTTLS encryption, which is what modern email clients use to send outgoing mail. IMAP uses port 143 (not 110), and POP3 uses port 110 (not 143). DNS uses port 53, not port 68; port 68 is the DHCP client port.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A company deploys a secure directory service using SSL/TLS encryption. Which port should be used for LDAPS?
+A) 389
+B) 443
+C) 636
+D) 990
+Correct: C
+Explanation: LDAPS (LDAP Secure) uses port 636 to wrap LDAP traffic inside an SSL/TLS tunnel from the start of the connection. Standard LDAP on port 389 can also be upgraded with STARTTLS, but LDAPS on port 636 establishes the encrypted channel before any directory data is exchanged. Port 443 is HTTPS and port 990 is FTPS.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A network administrator needs to configure a router to allow web browsing. Which port must be permitted for standard HTTP traffic?
+A) 21
+B) 23
+C) 80
+D) 8443
+Correct: C
+Explanation: HTTP (Hypertext Transfer Protocol) uses port 80 for unencrypted web traffic. Port 21 is FTP control, port 23 is Telnet, and port 8443 is an alternative HTTPS port sometimes used by web applications. Firewalls and ACLs must allow outbound TCP connections to port 80 to permit standard web browsing.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A technician needs to connect multiple devices on a LAN so that traffic from one device is sent only to the intended destination device. Which device should be deployed?
+A) Hub
+B) Switch
+C) Repeater
+D) Bridge
+Correct: B
+Explanation: A managed or unmanaged switch uses MAC address tables to forward frames only to the port where the destination device resides, reducing unnecessary traffic on the network. A hub broadcasts all incoming traffic out every port regardless of destination, wasting bandwidth and creating collisions. Switches operate at OSI Layer 2 and are the standard device for modern LAN connectivity.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: Which device is responsible for directing traffic between different IP networks and determining the best path for data packets?
+A) Switch
+B) Hub
+C) Router
+D) Access Point
+Correct: C
+Explanation: A router operates at OSI Layer 3 and uses IP routing tables to forward packets between different networks, including connecting a LAN to the internet. Switches operate at Layer 2 and forward frames within the same network segment using MAC addresses. Hubs are Layer 1 devices that simply repeat signals to all connected ports without any intelligence.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A SOHO network needs to provide Wi-Fi connectivity to wireless clients while connecting to an existing wired switch infrastructure. Which device should be deployed?
+A) Modem
+B) Patch panel
+C) Wireless Access Point
+D) PoE switch
+Correct: C
+Explanation: A Wireless Access Point (WAP or AP) provides 802.11 Wi-Fi connectivity for wireless clients and bridges wireless traffic to the wired network. A modem converts signals between the ISP's medium and the local network but does not provide wireless client access on its own. A patch panel organises cabling but provides no active network functionality.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: What is the primary function of a patch panel in a structured cabling installation?
+A) Amplify network signals over long cable runs
+B) Provide a central termination point for horizontal cabling runs
+C) Route traffic between VLANs
+D) Convert digital signals to analog for DSL transmission
+Correct: B
+Explanation: A patch panel provides a fixed, organised termination point for horizontal cable runs from wall jacks, allowing flexible connections to switches via short patch cables. This makes moves, adds, and changes easier without disturbing the permanent cabling infrastructure. Patch panels are passive devices — they provide no amplification, routing, or signal conversion.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A company wants to power IP phones and wireless access points without running separate electrical cables to each device. Which technology enables this?
+A) ONT
+B) SDN
+C) Power over Ethernet (PoE)
+D) Cable modem
+Correct: C
+Explanation: Power over Ethernet (PoE) delivers electrical power alongside data over standard Ethernet cables, eliminating the need for separate power supplies for devices like IP phones, cameras, and wireless APs. IEEE 802.3af provides up to 15.4W per port, while 802.3at (PoE+) provides up to 30W. The PoE switch or injector supplies the power, and the powered device (PD) receives it.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: Which device converts the signal from a fiber optic line from an ISP into an Ethernet connection usable by a home router?
+A) Cable modem
+B) DSL modem
+C) Optical Network Terminal (ONT)
+D) Wireless access point
+Correct: C
+Explanation: An ONT (Optical Network Terminal) is the customer-premises device that terminates a fiber optic connection from the ISP's network and converts the optical signal to an electrical Ethernet signal. A cable modem converts DOCSIS signals from coaxial cable, while a DSL modem works over telephone lines. The ONT is typical in FTTH (Fiber to the Home) deployments.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A network administrator wants to implement software-defined networking to centralise control of network devices. Which component is central to SDN architecture?
+A) Hub
+B) SDN controller
+C) Patch panel
+D) Unmanaged switch
+Correct: B
+Explanation: In SDN (Software-Defined Networking), a centralised SDN controller separates the control plane from the data plane, allowing network behaviour to be programmatically managed rather than configured device by device. Network devices in an SDN environment become simple forwarding elements that receive instructions from the controller. This architecture enables rapid policy changes and automated network management across the entire infrastructure.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A technician notices that a legacy hub is causing performance problems because all devices share the same collision domain. Which replacement device would create individual collision domains for each connected device?
+A) Repeater
+B) Bridge
+C) Switch
+D) Passive splitter
+Correct: C
+Explanation: A switch places each port in its own collision domain, so devices can transmit simultaneously without collisions using full-duplex communication. A hub places all connected devices in a single collision domain, so only one device can transmit at a time using CSMA/CD. A repeater and bridge also reduce collision domains but a switch is the correct modern replacement that provides per-port isolation.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: Which device is used to connect a LAN to the internet via a cable TV infrastructure using the DOCSIS standard?
+A) DSL modem
+B) ONT
+C) Cable modem
+D) Satellite modem
+Correct: C
+Explanation: A cable modem uses the DOCSIS (Data Over Cable Service Interface Specification) standard to transmit data over coaxial cable television infrastructure. DSL modems use telephone lines (twisted pair) via ADSL or VDSL standards. An ONT is used for fiber optic connections, not cable TV coax.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A firewall is positioned at the network perimeter. Which primary function does it serve?
+A) Assign IP addresses to client devices dynamically
+B) Amplify Wi-Fi signals for extended coverage
+C) Inspect and filter traffic based on security rules
+D) Convert hostnames to IP addresses
+Correct: C
+Explanation: A firewall inspects network traffic and enforces security policies by permitting or denying packets based on rules related to IP addresses, ports, and protocols. Modern stateful firewalls also track connection state to make more intelligent filtering decisions. IP address assignment is DHCP's role, hostname resolution is DNS's role, and Wi-Fi amplification is done by range extenders or APs.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A technician must install a NIC in a desktop PC to enable wired network connectivity. At which OSI layer does a NIC primarily operate?
+A) Layer 1 — Physical
+B) Layer 2 — Data Link
+C) Layer 3 — Network
+D) Layer 4 — Transport
+Correct: B
+Explanation: A NIC (Network Interface Card) operates at OSI Layer 2 (Data Link), using a unique burned-in MAC address for frame-level identification and communication. It also interfaces with Layer 1 physical media (copper or fiber) to transmit and receive electrical or optical signals. The NIC does not make routing decisions (Layer 3) or manage connections (Layer 4).
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Which IEEE 802.11 standard introduced Wi-Fi 6 and operates on both 2.4 GHz and 5 GHz bands with OFDMA technology?
+A) 802.11ac
+B) 802.11n
+C) 802.11ax
+D) 802.11g
+Correct: C
+Explanation: 802.11ax, marketed as Wi-Fi 6, introduced OFDMA (Orthogonal Frequency Division Multiple Access) to improve efficiency in dense environments with many simultaneous clients. It operates on both 2.4 GHz and 5 GHz and significantly increases throughput and reduces latency compared to its predecessor 802.11ac (Wi-Fi 5). Wi-Fi 6E extends 802.11ax to the 6 GHz band as well.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A wireless AP is configured to use the 2.4 GHz band. What is one major advantage of the 2.4 GHz band over 5 GHz?
+A) Higher maximum throughput
+B) Less interference from neighbouring networks
+C) Greater range and better wall penetration
+D) More non-overlapping channels
+Correct: C
+Explanation: The 2.4 GHz band has longer wavelengths that penetrate walls and obstacles more effectively and travel greater distances than 5 GHz signals. However, 2.4 GHz is more congested because it is used by many devices including microwaves, baby monitors, and Bluetooth. The 5 GHz band offers more non-overlapping channels and higher throughput but with reduced range.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Which 802.11 standard was the first to support operation exclusively on the 5 GHz band, offering speeds up to 54 Mbps?
+A) 802.11b
+B) 802.11g
+C) 802.11a
+D) 802.11n
+Correct: C
+Explanation: 802.11a was released simultaneously with 802.11b and operated exclusively in the 5 GHz band with a maximum data rate of 54 Mbps. Because it operated at 5 GHz, it avoided interference from 2.4 GHz devices but had reduced range compared to 802.11b. 802.11g brought 54 Mbps to the 2.4 GHz band and was backward compatible with 802.11b.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A technician is troubleshooting interference on a 2.4 GHz wireless network with multiple neighbouring APs. Which channels should be used to avoid overlap?
+A) Channels 1, 5, and 9
+B) Channels 1, 6, and 11
+C) Channels 2, 7, and 12
+D) Channels 1, 4, and 8
+Correct: B
+Explanation: In the 2.4 GHz band, channels 1, 6, and 11 are the only three non-overlapping channels in North America (each 22 MHz wide with 5 MHz spacing requires channels separated by at least 5 channels to avoid overlap). Using overlapping channels causes co-channel interference that degrades performance for all affected networks. The 5 GHz band has many more non-overlapping channels, making channel planning easier.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Which wireless standard introduced MIMO (Multiple-Input Multiple-Output) and dual-band operation on both 2.4 GHz and 5 GHz?
+A) 802.11g
+B) 802.11a
+C) 802.11n
+D) 802.11ac
+Correct: C
+Explanation: 802.11n (Wi-Fi 4) introduced MIMO technology, which uses multiple antennas to transmit and receive multiple data streams simultaneously, significantly increasing throughput. It was also the first standard to support dual-band operation on both 2.4 GHz and 5 GHz. 802.11ac (Wi-Fi 5) extended MIMO with MU-MIMO on the 5 GHz band.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Bluetooth is commonly used for short-range personal area network connections. In which frequency band does Bluetooth operate?
+A) 900 MHz
+B) 2.4 GHz
+C) 5 GHz
+D) 60 GHz
+Correct: B
+Explanation: Bluetooth operates in the 2.4 GHz ISM (Industrial, Scientific, and Medical) band, the same band used by 802.11b/g/n wireless networks, which can cause interference between the two technologies. Bluetooth uses frequency-hopping spread spectrum (FHSS) to minimise interference by rapidly changing frequencies. Its range is typically up to 10 metres for Class 2 devices and up to 100 metres for Class 1 devices.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A retail store wants to implement a system for contactless payment using smartphones tapped to a payment terminal. Which wireless technology is most appropriate?
+A) Bluetooth
+B) Zigbee
+C) NFC
+D) Z-Wave
+Correct: C
+Explanation: NFC (Near Field Communication) operates at 13.56 MHz and is designed for very short-range communication (typically less than 4 cm), making it ideal for contactless payments, access badges, and device pairing. Bluetooth operates at up to 10-100 metres range and requires device pairing. Zigbee and Z-Wave are mesh networking protocols designed for IoT and home automation devices.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A smart home system uses a mesh protocol operating at 908 MHz (US) for connecting light switches, door locks, and thermostats. Which technology is being described?
+A) Zigbee
+B) Z-Wave
+C) NFC
+D) Bluetooth LE
+Correct: B
+Explanation: Z-Wave is a wireless mesh protocol designed for home automation that operates at 908.42 MHz in the US (868 MHz in Europe), which is below the 2.4 GHz band and thus avoids interference with Wi-Fi and Bluetooth. It supports mesh networking where devices relay signals, extending range throughout a home. Zigbee operates at 2.4 GHz and is a competing home automation standard.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Which wireless standard operates exclusively on the 5 GHz band and introduced MU-MIMO and beamforming for maximum theoretical speeds of nearly 7 Gbps?
+A) 802.11n
+B) 802.11g
+C) 802.11ac
+D) 802.11ax
+Correct: C
+Explanation: 802.11ac (Wi-Fi 5) operates exclusively on the 5 GHz band and introduced downlink MU-MIMO (Multi-User MIMO), allowing an AP to transmit to multiple clients simultaneously, along with beamforming to focus the signal toward specific clients. Maximum theoretical throughput on 802.11ac wave 2 reaches approximately 6.9 Gbps with 160 MHz channels and 8x8 MU-MIMO. 802.11ax (Wi-Fi 6) subsequently improved on this with OFDMA on both bands.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A company deploys a fixed wireless internet link between two buildings 3 km apart using directional antennas. Which category of wireless technology best describes this solution?
+A) WLAN
+B) PAN
+C) Long-range fixed wireless
+D) Bluetooth
+Correct: C
+Explanation: Long-range fixed wireless uses directional (point-to-point) antennas to create dedicated wireless links between fixed locations over distances from hundreds of metres to many kilometres. This is commonly used to connect buildings where laying physical cable is impractical or expensive. WLAN refers to local Wi-Fi networks, PAN covers personal area networks like Bluetooth, and both operate at much shorter ranges.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: Which generation of cellular technology introduced the first truly broadband mobile data experience with LTE?
+A) 3G
+B) 4G
+C) 5G
+D) 2G
+Correct: B
+Explanation: 4G LTE (Long Term Evolution) delivered mobile broadband speeds typically in the range of 10-100 Mbps, enabling streaming video, video calling, and cloud applications on mobile devices. 3G introduced mobile data but at much slower speeds (typically under 10 Mbps) with technologies like HSPA. 5G further increases speeds and dramatically reduces latency compared to 4G.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company deploys a server that stores employee files and allows authenticated users to access them from any network-connected device. What server role does this represent?
+A) Web server
+B) File server
+C) Mail server
+D) DNS server
+Correct: B
+Explanation: A file server stores and manages shared files and directories, allowing authorised network users to access, store, and retrieve documents from a central location. Web servers host and deliver website content using HTTP/HTTPS. Mail servers handle the sending, receiving, and storage of email messages.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: Which network appliance inspects traffic for malicious activity and can actively block detected threats in real time?
+A) IDS
+B) Proxy server
+C) IPS
+D) UTM
+Correct: C
+Explanation: An IPS (Intrusion Prevention System) sits inline with network traffic, inspects packets for known attack signatures and anomalies, and can actively drop or block malicious traffic in real time. An IDS (Intrusion Detection System) monitors and alerts on suspicious activity but does not block traffic itself. A UTM (Unified Threat Management) device combines multiple security functions including IPS capability in one appliance.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A UTM appliance is deployed at a company's network perimeter. Which combination of functions would a UTM typically provide?
+A) DHCP, DNS, and file sharing
+B) Firewall, IDS/IPS, content filtering, and antivirus
+C) Web hosting, email, and database services
+D) VoIP, video conferencing, and streaming
+Correct: B
+Explanation: A UTM (Unified Threat Management) device consolidates multiple security functions into a single appliance, typically including stateful firewall, IDS/IPS, content filtering, antivirus/antimalware scanning, and VPN capabilities. This simplifies security management for small and medium businesses that cannot afford separate specialised appliances for each function. DHCP and DNS are infrastructure services, not security functions associated with UTM.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A network proxy server is deployed to control employee internet access. What is a primary function of a proxy server?
+A) Assign IP addresses to client workstations
+B) Translate hostnames to IP addresses for web browsing
+C) Act as an intermediary between clients and external servers to filter and cache content
+D) Route packets between different network segments
+Correct: C
+Explanation: A proxy server acts as an intermediary for client requests, forwarding them to external servers on the client's behalf. This allows the proxy to filter content, cache frequently requested resources to improve performance, log user activity, and hide internal IP addresses. DHCP assigns IP addresses, DNS resolves hostnames, and routers route packets between segments.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: An industrial facility uses embedded controllers that run a proprietary real-time OS without regular security updates. How should these legacy/embedded systems be treated on the network?
+A) Place them on the main corporate network for easy monitoring
+B) Disable all network connectivity to prevent any risk
+C) Segment them onto isolated VLANs with strict firewall rules
+D) Install standard antivirus software to keep them secure
+Correct: C
+Explanation: Legacy and embedded systems that cannot be patched should be network-segmented onto isolated VLANs with strict ACLs and firewall rules that allow only the minimum required communication. This reduces the attack surface while keeping them operational, since disabling connectivity may render them non-functional in their operational role. Standard antivirus may not be compatible with specialised real-time operating systems used in industrial controllers.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company's DHCP server fails. What is the most immediate symptom users will experience?
+A) Web pages will display security certificate errors
+B) Network-connected devices will be unable to obtain IP addresses automatically
+C) Email delivery will be delayed
+D) DNS queries will return incorrect results
+Correct: B
+Explanation: If the DHCP server is unavailable, client devices that are configured to obtain their IP addresses automatically will fail to receive an address lease and will typically assign themselves an APIPA address (169.254.x.x), losing connectivity to network resources. Devices with statically configured IP addresses will be unaffected. Web certificate errors and DNS issues are separate from DHCP failure.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company's print server receives print jobs from users and manages the queue. What is the benefit of using a dedicated print server over direct printing?
+A) Eliminates the need for physical printers
+B) Centralises print queue management and reduces direct network connections to printers
+C) Encrypts all print jobs with TLS automatically
+D) Converts all documents to PDF before printing
+Correct: B
+Explanation: A print server centralises the management of multiple printers, queuing print jobs and distributing them efficiently without requiring each workstation to maintain a direct connection to every printer. This simplifies administration, enables accounting and auditing of print usage, and allows printers to be shared without leaving them exposed directly on the network. Print servers do not inherently encrypt jobs or convert document formats.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: IoT devices such as smart thermostats and IP cameras introduce security concerns on enterprise networks. What is the best practice for integrating these devices?
+A) Connect them directly to the primary VLAN for maximum bandwidth
+B) Use static IP addresses to track each device individually
+C) Place them on a separate IoT VLAN with restricted access to core systems
+D) Disable WPA2 to ensure maximum device compatibility
+Correct: C
+Explanation: IoT devices often have weak or unpatched security, making them attractive targets for attackers. Placing them on a dedicated, isolated VLAN with firewall rules that prevent lateral movement to core corporate systems limits the blast radius if a device is compromised. Using static IPs helps with tracking but does not prevent lateral movement. Disabling WPA2 would make the wireless network far less secure.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: When placing a wireless access point in a SOHO environment, which location provides the best coverage for a single-story office?
+A) In a corner of the building for maximum signal reflection
+B) Near the floor to minimise interference with desk equipment
+C) Centrally located, mounted high on the wall or ceiling
+D) Adjacent to the DSL modem to minimise cable length
+Correct: C
+Explanation: Mounting a wireless AP centrally and at height (ceiling or high on a wall) maximises omnidirectional signal coverage and reduces obstacles that could attenuate the signal. Placing an AP in a corner results in much of the signal radiating outside the building. The AP should be positioned to serve users, not necessarily near the modem — cable length between modem and AP is not a primary concern with structured cabling.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A SOHO router needs to allow an internal web server to be accessible from the internet. Which configuration is required?
+A) MAC address filtering
+B) Port forwarding
+C) DNS poisoning
+D) SSID broadcast disabling
+Correct: B
+Explanation: Port forwarding (also called destination NAT or DNAT) directs inbound traffic arriving on a specific external port to the internal IP address and port of the target server. Without port forwarding, inbound connections from the internet cannot reach devices behind NAT. MAC filtering controls which devices can connect to the wireless network and does not affect inbound internet access.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A technician is deploying IP phones on a SOHO network using a PoE switch. What must be verified before connecting the phones?
+A) That the switch supports the 802.11ac standard
+B) That the switch's PoE power budget is sufficient for all connected devices
+C) That each phone has a static IP address configured
+D) That the router has QoS disabled to prevent prioritisation conflicts
+Correct: B
+Explanation: Each PoE port can supply a limited wattage (15.4W for 802.3af or 30W for 802.3at), and the switch has an overall power budget shared across all PoE ports. If the total power demand of connected devices exceeds the switch's budget, some devices will not receive power. Static IPs are optional; phones can use DHCP, and QoS should typically be enabled, not disabled, for VoIP traffic.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: After setting up a SOHO router, a technician wants to ensure the firmware is current. Why is keeping router firmware updated important?
+A) Updated firmware increases the router's wireless transmission power
+B) Firmware updates improve compatibility with legacy protocols
+C) Firmware updates patch security vulnerabilities and fix bugs
+D) Updated firmware automatically reconfigures port forwarding rules
+Correct: C
+Explanation: Router firmware updates frequently include patches for security vulnerabilities, some of which can be exploited remotely to gain control of the device. Manufacturers release firmware updates to address known CVEs and stability issues. Firmware updates do not automatically change security configurations or increase transmission power, and they do not inherently improve legacy protocol compatibility.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A parent wants to prevent children from accessing inappropriate websites on a home network without installing software on each device. Which router feature should be configured?
+A) MAC address reservation
+B) DMZ hosting
+C) Content filtering
+D) WPS
+Correct: C
+Explanation: Content filtering configured on the router inspects and blocks DNS requests or HTTP/HTTPS connections to websites in prohibited categories, affecting all devices connected to the network without requiring per-device software installation. MAC address reservation assigns consistent IPs to devices but does not filter content. DMZ hosting exposes a device directly to the internet, which is the opposite of restricting access.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A SOHO cable installation requires that patch cables be run neatly along walls and through cable managers. What is the main purpose of proper cable management?
+A) Increase the maximum data rate of Cat5e cables
+B) Reduce electromagnetic interference by keeping cables grouped tightly
+C) Facilitate troubleshooting, airflow, and physical organisation
+D) Prevent MAC address conflicts between network devices
+Correct: C
+Explanation: Proper cable management improves physical organisation, making it easier to trace and troubleshoot connections, and also improves airflow in equipment racks, which is important for cooling. Keeping cables neatly routed reduces the risk of accidental disconnection and damage. Cable management does not change the electrical characteristics of the cables or affect MAC address assignments.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A SOHO firewall is being configured to protect the internal network. Which rule is the most fundamental security baseline?
+A) Allow all inbound traffic by default; block known malicious IPs
+B) Block all inbound traffic by default; allow only specific required services
+C) Allow all outbound traffic; block inbound HTTPS only
+D) Mirror inbound and outbound rules for symmetry
+Correct: B
+Explanation: The fundamental principle of firewall security is a default-deny stance for inbound traffic: block everything unless explicitly permitted. This minimises the attack surface by ensuring only intentionally opened ports are accessible. Allowing all inbound traffic by default is extremely dangerous, as it exposes every service running on internal devices to the internet.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A technician changes the default administrator password on a new SOHO router immediately after deployment. Why is this step critical?
+A) The default password enforces WPA3 encryption automatically
+B) Default credentials are publicly known and can be exploited to gain full router control
+C) Changing the password enables the router's firewall feature
+D) The router will not function without a custom password
+Correct: B
+Explanation: Router manufacturers ship devices with well-known default credentials (often "admin/admin" or "admin/password") that are documented online and exploited by attackers and botnets. Changing the default password is one of the first and most important hardening steps for any network device. Default passwords do not control encryption or firewall functionality, and the router functions normally with default credentials.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A host is configured with IP address 192.168.1.50 and subnet mask 255.255.255.0. What is the network address for this subnet in CIDR notation?
+A) 192.168.1.50/24
+B) 192.168.1.0/24
+C) 192.168.0.0/16
+D) 192.168.1.0/25
+Correct: B
+Explanation: A subnet mask of 255.255.255.0 corresponds to a /24 prefix in CIDR notation, meaning the first 24 bits are the network portion. The network address is formed by setting the host bits to zero: 192.168.1.0. The host address 192.168.1.50 falls within this /24 subnet, which has a range of 192.168.1.1 through 192.168.1.254 for usable hosts.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: Which technology allows multiple devices on a private LAN to share a single public IP address when accessing the internet?
+A) VLAN
+B) DHCP
+C) NAT/PAT
+D) DNS
+Correct: C
+Explanation: NAT (Network Address Translation) and specifically PAT (Port Address Translation, also called NAT overload) allow many private IP addresses to share a single public IP by mapping each internal session to a unique port number on the public IP. This conserves public IPv4 addresses and also provides a layer of obscurity for internal hosts. VLANs segment networks logically, DHCP assigns IPs, and DNS resolves hostnames.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A device is configured with the address 169.254.15.3. What does this address indicate?
+A) The device has a valid DHCP lease
+B) The device is using a manually configured static IP
+C) The device has failed to obtain a DHCP address and is using an APIPA address
+D) The device is a DHCP server
+Correct: C
+Explanation: Addresses in the 169.254.0.0/16 range are APIPA (Automatic Private IP Addressing) addresses, which a Windows device assigns itself when DHCP is unavailable. An APIPA address allows local link communication but does not provide internet access or connectivity to routers. This is a strong diagnostic indicator that the DHCP server is unreachable or the lease has expired.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A company wants to logically separate departments on the same physical switch infrastructure without purchasing additional hardware. Which technology enables this?
+A) VPN
+B) VLAN
+C) NAT
+D) DHCP
+Correct: B
+Explanation: VLANs (Virtual Local Area Networks) allow a single physical switch to be logically divided into multiple isolated broadcast domains, effectively separating departments such as HR, Finance, and Engineering without separate physical switches. Traffic between VLANs requires routing, which provides an additional security control point. VPNs provide encrypted tunnels over public networks, not LAN segmentation.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: What is the primary advantage of IPv6 over IPv4 in terms of addressing?
+A) IPv6 uses simpler subnet masks expressed in decimal
+B) IPv6 provides a vastly larger address space with 128-bit addresses
+C) IPv6 requires NAT to conserve addresses
+D) IPv6 is faster than IPv4 because it uses shorter headers
+Correct: B
+Explanation: IPv6 uses 128-bit addresses, providing approximately 3.4 × 10^38 unique addresses, which is astronomically more than IPv4's approximately 4.3 billion (2^32) addresses. This eliminates the need for NAT, as every device can have a unique globally routable address. IPv6 headers are actually larger than IPv4 headers, but they are more efficient because they eliminated optional fields that caused processing overhead.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A remote worker needs secure access to corporate network resources over the internet. Which technology creates an encrypted tunnel to accomplish this?
+A) VLAN
+B) VPN
+C) DHCP reservation
+D) Port forwarding
+Correct: B
+Explanation: A VPN (Virtual Private Network) creates an encrypted tunnel between the remote client and the corporate network, allowing the user to access internal resources as if they were physically on-site. Common VPN protocols include IPSec, SSL/TLS (OpenVPN), and WireGuard. VLANs segment on-premises networks, DHCP reservations assign consistent IPs, and port forwarding exposes services but does not create encrypted client access.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A network has been assigned the block 10.10.10.0/26. How many usable host addresses are available in this subnet?
+A) 30
+B) 62
+C) 126
+D) 254
+Correct: B
+Explanation: A /26 subnet mask leaves 6 host bits (32 - 26 = 6), giving 2^6 = 64 total addresses. Subtracting the network address and broadcast address leaves 62 usable host addresses. A /27 gives 30 usable hosts, /25 gives 126, and /24 gives 254 usable hosts.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A workstation is unable to reach hosts on other subnets but can communicate with devices on its own subnet. What configuration element is most likely missing or incorrect?
+A) Subnet mask
+B) DNS server address
+C) Default gateway
+D) DHCP lease time
+Correct: C
+Explanation: The default gateway is the router address that a host sends traffic to when the destination is outside its local subnet. Without a correct default gateway, the host has no way to forward traffic to remote networks. The subnet mask determines local vs. remote destinations; DNS resolves names but does not affect routing; and DHCP lease time controls how long an IP assignment is valid.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: Which IPv6 address type is equivalent to IPv4's APIPA (169.254.x.x) and is automatically configured on every IPv6-enabled interface?
+A) Global unicast address
+B) Multicast address
+C) Link-local address
+D) Anycast address
+Correct: C
+Explanation: IPv6 link-local addresses always start with the prefix FE80::/10 and are automatically configured on every IPv6-enabled interface using EUI-64 or random generation. Like IPv4 APIPA addresses, they are only valid for communication on the local link and are not routable beyond the local segment. Global unicast addresses (analogous to public IPv4 addresses) are needed for internet communication.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: Which internet connection type uses existing telephone lines and is typically limited to a few kilometres from the central office due to signal attenuation?
+A) Fiber optic
+B) Cable (DOCSIS)
+C) DSL
+D) Satellite
+Correct: C
+Explanation: DSL (Digital Subscriber Line) transmits data over standard copper telephone lines using frequencies above the voice band, and performance degrades significantly with distance from the ISP's DSLAM (Digital Subscriber Line Access Multiplexer) at the central office. Fiber optic connections use light and are not subject to the same distance limitations. Cable uses coaxial TV infrastructure, and satellite uses geostationary or LEO satellites.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: Which network type spans a geographic area such as a city or campus, larger than a LAN but smaller than a WAN?
+A) PAN
+B) LAN
+C) WAN
+D) MAN
+Correct: D
+Explanation: A MAN (Metropolitan Area Network) spans a geographic area such as a city or large campus, larger than a LAN (typically a single building or floor) but smaller than a WAN (wide area network that spans cities, countries, or globally). MANs are often used by municipalities, utilities, or large universities to connect multiple buildings across a city. A PAN is a very short-range personal area network (Bluetooth, NFC).
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A user in a rural area has no access to cable or DSL service. They subscribe to an internet service delivered by a dish antenna pointed at a geostationary satellite. What is a key disadvantage of this connection type?
+A) Very low data transfer speeds
+B) High latency due to the 35,000 km distance to the satellite
+C) Requires a fibre optic cable to the premise
+D) Only available in urban areas
+Correct: B
+Explanation: Geostationary satellites orbit at approximately 35,786 km above the equator, causing round-trip latency of approximately 600 ms or more, which negatively impacts real-time applications like VoIP and online gaming. Download speeds have improved significantly with modern satellite internet, but latency remains the primary limitation. Low Earth Orbit (LEO) satellite services like Starlink significantly reduce this latency to approximately 20-40 ms.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: Which connection type uses light pulses through glass or plastic strands to transmit data, offering the highest bandwidth and immunity to electromagnetic interference?
+A) DSL
+B) Coaxial cable
+C) Fiber optic
+D) Twisted pair copper
+Correct: C
+Explanation: Fiber optic cables transmit data using pulses of light rather than electrical signals, providing extremely high bandwidth (tens to hundreds of Gbps), very low latency, and complete immunity to electromagnetic interference (EMI). Unlike copper cables, fiber can span much greater distances without signal degradation. Its main disadvantages are higher installation cost and the delicate nature of glass fibre.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A WISP (Wireless Internet Service Provider) connects a rural customer's home using a directional antenna pointed at a tower. Which of the following best describes this service model?
+A) Fiber to the home
+B) Fixed broadband wireless access
+C) Mobile 5G cellular service
+D) Cable DOCSIS service
+Correct: B
+Explanation: A WISP provides fixed broadband wireless access by using point-to-point or point-to-multipoint wireless links between a transmission tower and customer premises antennas. This is a common solution for areas where running fiber or coaxial cable is economically unfeasible. Unlike cellular service, which supports mobile devices, fixed wireless from a WISP uses stationary directional equipment at the subscriber's location.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A user connects their laptop and smartphone together directly via Bluetooth to transfer a file. What type of network does this represent?
+A) LAN
+B) WAN
+C) MAN
+D) PAN
+Correct: D
+Explanation: A PAN (Personal Area Network) is a very short-range network connecting personal devices in the immediate vicinity of an individual, typically within 10 metres. Bluetooth and USB tethering are common PAN technologies. A LAN covers a building or campus, a MAN covers a city, and a WAN covers large geographic areas.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: Which internet connection type delivers data via coaxial cable using the DOCSIS standard and is shared among subscribers in a neighbourhood segment?
+A) DSL
+B) Fiber (FTTH)
+C) Cable broadband
+D) ISDN
+Correct: C
+Explanation: Cable broadband uses the DOCSIS standard over the same coaxial cable infrastructure used for cable TV. Bandwidth is shared among users in the same cable segment, so performance can degrade during peak hours in densely populated areas. DSL uses telephone lines, fiber uses optical cables, and ISDN is a legacy digital telephone circuit technology.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A national retail chain connects all of its stores to a central headquarters using dedicated leased lines and MPLS circuits. What type of network infrastructure does this describe?
+A) WLAN
+B) LAN
+C) PAN
+D) WAN
+Correct: D
+Explanation: A WAN (Wide Area Network) spans large geographic areas — cities, countries, or even globally — connecting multiple geographically dispersed sites such as retail branches to a headquarters. WANs typically use leased lines, MPLS, or internet-based VPNs from carriers. A LAN is confined to a single building or campus, and a WLAN is a wireless LAN.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician needs to terminate a Cat6 Ethernet cable with an RJ-45 connector. Which tool is required for this task?
+A) Punchdown tool
+B) Cable stripper
+C) Crimper
+D) Loopback plug
+Correct: C
+Explanation: A crimper (RJ-45 crimper) is used to attach an RJ-45 connector to the end of an Ethernet cable by pressing the connector's pins through the cable jacket to make electrical contact with each wire. A cable stripper removes the outer jacket to expose the individual wires before crimping. A punchdown tool is used to terminate cables into patch panels or keystone jacks, not RJ-45 connectors.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician needs to trace an unlabelled network cable through a wall to identify which patch panel port it terminates at. Which tool should be used?
+A) Cable tester
+B) Wi-Fi analyser
+C) Toner probe (tone generator and probe)
+D) Loopback plug
+Correct: C
+Explanation: A tone generator injects a signal onto the cable at one end, and the probe (inductive amplifier) is used at the patch panel or other suspected termination point to audibly detect the tone, identifying the correct cable without cutting into the wall. A cable tester verifies continuity and wiring order but cannot trace an unlabelled cable through walls. A Wi-Fi analyser is used for wireless networks, not physical cable tracing.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician wants to verify that a network card is functioning correctly without connecting it to any network device. Which tool should be used?
+A) Cable tester
+B) Punchdown tool
+C) Wi-Fi analyser
+D) Loopback plug
+Correct: D
+Explanation: A loopback plug connects a device's transmit pins directly to its receive pins, allowing the NIC or port to send and receive test data to itself, confirming the hardware is functional independently of any external network. A cable tester checks the continuity and pinout of a network cable, not a NIC. Wi-Fi analysers are for wireless network diagnostics.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: After installing a wireless network in a multi-tenant office building, a technician needs to identify neighbouring APs, their channels, and signal strengths. Which tool is appropriate?
+A) Toner probe
+B) Wi-Fi analyser
+C) Cable tester
+D) Network tap
+Correct: B
+Explanation: A Wi-Fi analyser (available as a software app or dedicated hardware device) scans the wireless environment and displays all visible access points, their SSIDs, channels, signal strength (RSSI), and security type. This information is essential for identifying channel conflicts and optimising AP placement and channel assignments. A toner probe is for physical cable tracing, and a cable tester checks wired cable integrity.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician is terminating horizontal cabling into a patch panel in a wiring closet. Which tool is used to seat the wires into the 110-style IDC (Insulation Displacement Connector) blocks?
+A) Crimper
+B) Cable stripper
+C) Punchdown tool
+D) Wire snips only
+Correct: C
+Explanation: A punchdown tool (also called an impact tool) seats individual wire strands into IDC connectors on 110-block patch panels and keystone jacks, cutting the excess wire simultaneously with a blade on the tool. Using wire snips alone does not seat the wire properly into the IDC contacts. A crimper is used for RJ-45 connectors, not IDC-type terminations.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician suspects a cable run has a wiring fault (reversed pairs or split pairs) after users report intermittent connectivity. Which tool will confirm this?
+A) Toner probe
+B) Loopback plug
+C) Cable tester
+D) Multimeter
+Correct: C
+Explanation: A cable tester sends a signal through each wire pair and displays the pinout mapping, immediately identifying faults such as opens (broken wires), shorts, reversed pairs, split pairs, or crossed connections. A toner probe identifies which cable is which but does not test wiring integrity. A loopback plug tests a port, not the cable run between two termination points.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A security engineer needs to capture and analyse all network traffic passing through a specific point on the network without interrupting data flow. Which device should be deployed?
+A) Loopback plug
+B) Network tap
+C) Patch panel
+D) Wi-Fi analyser
+Correct: B
+Explanation: A network tap (Test Access Point) is a passive or active hardware device that creates a copy of all traffic passing through a network link and sends it to a monitoring or analysis device such as a packet analyser, without interrupting the data flow on the live link. Unlike port mirroring on a switch, a hardware tap captures every packet including those that might be missed by software-based mirroring. A loopback plug tests individual ports, not live traffic flows.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician is creating a custom-length Cat6 patch cable. In the correct sequence of steps, which action immediately precedes using the crimper?
+A) Test the cable with a cable tester
+B) Strip the outer jacket with a cable stripper, untwist pairs, arrange wires, and insert into the RJ-45 connector
+C) Use the punchdown tool to seat wires
+D) Inject a tone signal with the tone generator
+Correct: B
+Explanation: The correct sequence for making a patch cable is: cut the cable to length, strip the outer jacket using a cable stripper, untwist and arrange the wire pairs in the correct T568A or T568B order, trim the wires to equal length, insert them fully into the RJ-45 connector, and then crimp with the crimper. The cable tester is used after crimping to verify the finished cable. A punchdown tool and tone generator are used for different tasks.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A technician is asked to explain why UDP is used for DNS queries instead of TCP. What is the primary reason?
+A) UDP provides guaranteed delivery for DNS responses
+B) UDP is faster for small transactions because it has no connection establishment overhead
+C) TCP does not support the DNS protocol
+D) UDP encrypts DNS traffic automatically
+Correct: B
+Explanation: UDP is connectionless, so it does not require the TCP three-way handshake before sending data, making it significantly faster for small request-response transactions like DNS queries that typically fit within a single packet. The overhead of establishing and tearing down a TCP connection would be disproportionate to the size of most DNS queries. DNS does use TCP as a fallback for large responses and zone transfers, so TCP does support DNS.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A technician is configuring firewall rules and needs to allow outbound POP3 traffic for email retrieval. Which port must be permitted?
+A) 25
+B) 110
+C) 143
+D) 587
+Correct: B
+Explanation: POP3 (Post Office Protocol version 3) uses port 110 for retrieving email from a mail server to the client device. Unlike IMAP, POP3 typically downloads and deletes messages from the server, storing them locally. Port 25 is SMTP (server-to-server), port 143 is IMAP, and port 587 is authenticated SMTP submission.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: An administrator needs to connect a new building to the existing network without purchasing a new switch. They have available a device that regenerates signals at Layer 1 but provides no filtering or MAC address learning. What device is this?
+A) Bridge
+B) Router
+C) Repeater
+D) Hub
+Correct: C
+Explanation: A repeater operates at OSI Layer 1 (Physical) and simply regenerates (amplifies and retimes) a signal to extend cable length, providing no intelligence such as MAC address learning or traffic filtering. A hub also operates at Layer 1 but has multiple ports; a bridge operates at Layer 2 and can learn MAC addresses and filter traffic between segments. A router operates at Layer 3.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A warehouse manager wants to deploy sensors on pallets to track inventory using a low-power mesh network. Which wireless technology is most suitable for battery-powered IoT sensors that need to communicate short distances?
+A) 802.11ac
+B) Zigbee
+C) 4G LTE
+D) Bluetooth Classic
+Correct: B
+Explanation: Zigbee is a low-power mesh networking protocol based on IEEE 802.15.4, designed specifically for IoT applications such as sensor networks, smart home devices, and industrial monitoring. It operates at 2.4 GHz with very low power consumption, enabling battery-powered devices to operate for months or years. 802.11ac consumes far more power, 4G LTE requires cellular service, and Bluetooth Classic is point-to-point rather than mesh.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company's internal website resolves correctly when accessed by name from inside the office but not from home. The DNS server is likely hosted internally. What type of DNS deployment does this describe?
+A) Public authoritative DNS
+B) Split-horizon (split-brain) DNS
+C) DNSSEC-enabled recursive resolver
+D) Anycast DNS
+Correct: B
+Explanation: Split-horizon (split-brain) DNS provides different DNS responses for internal and external queries, giving internal users the private IP address of a server while external users receive the public IP. In this scenario, internal DNS resolves the name correctly but the external DNS records may point elsewhere or may not exist. This is a common configuration for organisations hosting internal web applications.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A SOHO router's wireless network is set to WPA2-Personal. A security audit recommends upgrading to the latest standard. Which protocol should replace WPA2-Personal?
+A) WEP
+B) WPA
+C) WPA3-Personal
+D) TKIP
+Correct: C
+Explanation: WPA3-Personal is the current successor to WPA2-Personal, using SAE (Simultaneous Authentication of Equals) instead of the PSK handshake, which eliminates offline dictionary attacks. WEP is severely deprecated and broken. WPA (version 1) and TKIP were interim solutions with known vulnerabilities. WPA3 provides much stronger protection, especially against offline brute-force attacks.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A technician configures a DHCP reservation for a network printer so it always receives the same IP address. What does the DHCP server use to identify the printer and assign the reserved address?
+A) The printer's IP address
+B) The printer's MAC address
+C) The printer's hostname
+D) The printer's subnet mask
+Correct: B
+Explanation: DHCP reservations (also called static DHCP or DHCP binding) link a specific IP address to a client's unique MAC (hardware) address. When the printer sends a DHCP Discover, the server recognises its MAC address and always offers the reserved IP. The IP address is the result of the reservation, not the identifier. Hostnames may not be unique or reliably transmitted in all DHCP implementations.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A technician is asked to compare the latency characteristics of geostationary satellite internet versus 5G cellular for gaming applications. Which statement is accurate?
+A) Geostationary satellite has lower latency than 5G due to fewer network hops
+B) Both have equal latency since they use similar radio frequencies
+C) 5G has much lower latency than geostationary satellite, making it more suitable for gaming
+D) Geostationary satellite has lower latency than 5G because it operates at higher altitude
+Correct: C
+Explanation: Geostationary satellites orbit at approximately 35,786 km, causing round-trip latency of 550-700 ms, which is far too high for real-time gaming. 5G cellular networks target sub-10 ms latency (with theoretical minimums around 1 ms) due to the very short distance between the device and the nearest base station. High latency from geostationary satellite causes severe lag in online gaming, VoIP, and interactive applications.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician cannot determine where a cable jacket ends and the twisted pairs begin because the outer jacket is stuck. What tool is appropriate for removing the outer jacket of a network cable without damaging the inner wire insulation?
+A) Wire cutters
+B) Crimper
+C) Cable stripper
+D) Punchdown tool
+Correct: C
+Explanation: A cable stripper (also called a jacket stripper or wire stripper set for data cables) is specifically designed to cut through the outer jacket at a controlled depth, preventing the inner wire insulation from being nicked or damaged. Using regular wire cutters risks cutting too deep and nicking the wire conductors, which can cause intermittent faults. The crimper is used after stripping to attach the RJ-45 connector.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: An employee is configuring a network monitoring application that needs to receive SNMP trap messages. On which port should the application listen?
+A) 161
+B) 162
+C) 389
+D) 514
+Correct: B
+Explanation: SNMP (Simple Network Management Protocol) uses port 161 for polling (manager queries agents) and port 162 for trap messages (agents proactively send alerts to the manager). The application receiving traps must listen on UDP port 162. Port 389 is LDAP and port 514 is Syslog, both different network management-related protocols.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A network administrator needs to connect a 100Base-T device to a Gigabit Ethernet switch. The switch auto-negotiates the connection speed. What is the result?
+A) The connection fails because speeds cannot be mixed
+B) The switch port operates at 100 Mbps to match the slower device
+C) The switch forces the device to upgrade to 1 Gbps
+D) The device operates at half-duplex only
+Correct: B
+Explanation: Ethernet auto-negotiation (IEEE 802.3u) allows switch ports to detect the highest common speed and duplex setting supported by both ends and negotiate down to the lower capability. When a 100Base-T device connects, the switch port will negotiate to 100 Mbps full-duplex, which is the best common capability. The device will not be forced to a speed it does not support, and the connection will succeed at 100 Mbps.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A hospital wants to track medical equipment using passive tags that require no battery and are activated by a reader's electromagnetic field. Which technology is most appropriate?
+A) NFC
+B) Active Bluetooth
+C) RFID
+D) Zigbee
+Correct: C
+Explanation: RFID (Radio Frequency Identification) uses passive tags (no battery) that are energised by the electromagnetic field from an RFID reader, making them ideal for asset tracking where battery replacement would be impractical. Passive RFID tags can store unique identifiers that are read within a range of a few centimetres to several metres depending on the frequency used. NFC is a form of RFID but is typically limited to very short ranges (under 4 cm) and is used primarily for interactive applications.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A home user notices that when they access their router's admin page after setting up a SOHO network, WPS (Wi-Fi Protected Setup) is enabled by default. What is the security risk of WPS?
+A) WPS disables WPA2 encryption when enabled
+B) The WPS PIN method is vulnerable to brute-force attacks that can reveal the network password
+C) WPS broadcasts the Wi-Fi password over the network in plaintext
+D) WPS creates a secondary open SSID visible to nearby devices
+Correct: B
+Explanation: The WPS PIN method has a design flaw where the 8-digit PIN is verified in two halves, reducing the effective keyspace to only 11,000 combinations, making it vulnerable to a brute-force attack (the Pixie Dust attack and related exploits). An attacker who brute-forces the WPS PIN can retrieve the WPA2 passphrase. The recommended remediation is to disable WPS on the router entirely.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: An administrator uses CIDR notation 192.168.10.0/28 for a subnet. How many usable host addresses does this subnet provide?
+A) 6
+B) 14
+C) 30
+D) 62
+Correct: B
+Explanation: A /28 subnet mask leaves 4 host bits (32 - 28 = 4), giving 2^4 = 16 total addresses. Subtracting the network address and broadcast address leaves 14 usable host IP addresses. A /29 gives 6 usable hosts, /27 gives 30, and /26 gives 62 usable hosts.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: An organisation connects all wireless devices in its headquarters building to a centralised wired network via access points. What type of network does this wireless infrastructure represent?
+A) PAN
+B) MAN
+C) WAN
+D) WLAN
+Correct: D
+Explanation: A WLAN (Wireless Local Area Network) is a LAN that uses 802.11 wireless technology instead of (or in addition to) wired Ethernet to connect devices within a limited geographic area such as an office building. It provides the same local network connectivity as a wired LAN but uses radio waves. A PAN is personal area (Bluetooth), a MAN covers a city, and a WAN spans large geographic areas.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A company deploys a managed switch to separate voice and data traffic on the same physical infrastructure. Which feature of the switch is being used?
+A) PoE
+B) VLAN
+C) NAT
+D) STP
+Correct: B
+Explanation: Managed switches support VLANs, allowing voice and data traffic to be logically separated on the same physical switch. Voice traffic is placed on a dedicated voice VLAN (often called a voice VLAN or auxiliary VLAN on Cisco devices), while data traffic uses a separate data VLAN. This separation improves voice quality and security without requiring separate physical switches. PoE powers the IP phones; STP prevents loops.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company deploys a mail server that stores all employee email and allows access via IMAP from corporate devices. What server role is this?
+A) Web server
+B) Proxy server
+C) Mail server
+D) DNS server
+Correct: C
+Explanation: A mail server handles the sending (using SMTP), receiving, and storage of email messages, and provides client access via protocols such as IMAP or POP3. A web server hosts HTTP/HTTPS content, a proxy server acts as an intermediary for client requests, and a DNS server resolves hostnames. The IMAP access described is characteristic of a mail server configuration.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A security scan identifies port 23 open on a network switch. Why should this be considered a vulnerability?
+A) Port 23 is used for encrypted management and should always be open
+B) Port 23 (Telnet) transmits management credentials in cleartext, making it susceptible to interception
+C) Port 23 is used by SMTP and can be exploited for email relay attacks
+D) Port 23 is a high-numbered port that bypasses firewall rules
+Correct: B
+Explanation: Telnet on port 23 sends all data, including authentication credentials (username and password), in cleartext that can be captured by anyone with access to the network path using a packet sniffer. Network devices should be managed exclusively via SSH on port 22, which encrypts all session data. Discovering open Telnet on managed infrastructure is a high-priority finding in a security audit.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A conference centre upgrades its wireless network from 802.11ac to 802.11ax. Users in a crowded expo hall with hundreds of simultaneous wireless devices report significantly better performance. What 802.11ax feature is responsible for this improvement?
+A) Beamforming exclusive to 802.11ax
+B) OFDMA allowing the AP to serve multiple clients simultaneously in each transmission
+C) Operation on the 60 GHz band for higher throughput
+D) Elimination of the 2.4 GHz band to reduce interference
+Correct: B
+Explanation: OFDMA (Orthogonal Frequency Division Multiple Access) is a key feature of 802.11ax (Wi-Fi 6) that subdivides a channel into smaller resource units (RUs) and assigns different RUs to different clients in the same transmission, dramatically improving efficiency in high-density environments. 802.11ac uses OFDM which serves only one client per transmission. 802.11ax operates on both 2.4 GHz and 5 GHz, not 60 GHz (which is 802.11ad/WiGig).
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A company with a 192.168.50.0/24 network wants to create four equal-sized subnets. What subnet mask should be applied?
+A) 255.255.255.192
+B) 255.255.255.224
+C) 255.255.255.240
+D) 255.255.255.128
+Correct: A
+Explanation: To divide a /24 into 4 equal subnets, you need 2 additional subnet bits (2^2 = 4 subnets), making the mask a /26 or 255.255.255.192. Each /26 subnet contains 64 addresses (62 usable hosts). 255.255.255.128 (/25) creates only 2 subnets, 255.255.255.224 (/27) creates 8 subnets, and 255.255.255.240 (/28) creates 16 subnets.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A technician is setting up a SOHO router and notices it was shipped with a well-known default SSID that reveals the router's manufacturer. What is the security risk of leaving the default SSID?
+A) The default SSID disables WPA2 encryption
+B) The manufacturer's name in the SSID can help attackers identify the router model and exploit known vulnerabilities
+C) Default SSIDs broadcast on channels 1 and 6 simultaneously, causing interference
+D) Leaving the default SSID prevents devices from connecting at 5 GHz
+Correct: B
+Explanation: When the SSID reveals the router model or manufacturer, attackers can use that information to look up default credentials and known CVEs for that specific device, streamlining an attack. Changing the SSID to a non-descriptive name is a basic hardening step that reduces information disclosure. The SSID itself does not control encryption settings, channels, or band selection.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician runs a Wi-Fi analyser in an office and sees that channel 6 shows significant co-channel interference from seven neighbouring APs. The company's APs are also on channel 6. What should the technician do?
+A) Increase transmit power on all company APs to overpower the interference
+B) Move company APs to channel 3 to split the difference
+C) Reassign company APs to channels 1 and 11 to use non-overlapping spectrum
+D) Disable 2.4 GHz on all company APs and operate on 5 GHz only if possible
+Correct: C
+Explanation: In the 2.4 GHz band, channels 1, 6, and 11 are the three non-overlapping channels. Since channel 6 is severely congested, relocating to channels 1 and 11 places the company APs on channels with no spectral overlap to the congested channel 6 environment. Channel 3 would still partially overlap with both channels 1 and 6, creating additional interference rather than eliminating it. Moving to 5 GHz may also be appropriate but was not listed as a standalone option.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A technician configures a Layer 3 switch to route traffic between VLANs. What capability does a Layer 3 switch possess that a Layer 2 switch does not?
+A) The ability to learn MAC addresses and populate a forwarding table
+B) The ability to make routing decisions based on IP addresses
+C) Support for port-based VLANs
+D) The ability to provide PoE to connected devices
+Correct: B
+Explanation: A Layer 3 switch combines the hardware-based forwarding speed of a traditional switch with IP routing capabilities, allowing it to route packets between VLANs without requiring a separate external router. Layer 2 switches forward frames using MAC addresses only and cannot route between IP subnets. Both Layer 2 and Layer 3 switches can support VLANs and MAC address learning; Layer 3 is the differentiator for inter-VLAN routing.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company deploys a web server that hosts an e-commerce site. Which port must be open on the firewall to allow customers to access the site securely?
+A) 80
+B) 25
+C) 443
+D) 8080
+Correct: C
+Explanation: HTTPS on port 443 is required for secure (TLS-encrypted) web transactions, which is essential for any e-commerce site handling customer data and payment information. While port 80 is needed for HTTP, redirecting HTTP to HTTPS on port 443 is standard practice. Port 25 is SMTP for mail, and port 8080 is an alternative HTTP port not typically used for production e-commerce.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A technician assigns a workstation the IP 10.0.0.1 with subnet mask 255.0.0.0. What class and CIDR prefix does this represent?
+A) Class B, /16
+B) Class A, /8
+C) Class C, /24
+D) Class B, /24
+Correct: B
+Explanation: The 10.0.0.0/8 range is a Class A private address range defined in RFC 1918, where the first octet identifies the network and the remaining three octets are available for hosts. A /8 prefix (255.0.0.0) provides over 16 million host addresses. Class B uses a /16 (255.255.0.0) and the 172.16.0.0-172.31.255.255 private range; Class C uses /24 (255.255.255.0) for the 192.168.0.0/16 private range.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: A small business in a rural location uses a 5G cellular connection as its primary internet service. What is one limitation compared to fibre broadband?
+A) 5G cannot support multiple simultaneous users
+B) 5G data plans often include monthly data caps and are subject to network congestion
+C) 5G does not support TCP/IP protocols
+D) 5G is limited to 10 Mbps download speed
+Correct: B
+Explanation: Mobile data plans, including 5G business plans, frequently include monthly data caps or throttling thresholds above which speeds are reduced, and performance can be affected by local cell tower congestion during peak hours. Fibre broadband typically offers unmetered, consistent bandwidth without data caps. 5G supports multiple users and standard TCP/IP, and modern 5G can deliver hundreds of Mbps in good conditions.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A developer is testing an application that connects to an LDAP directory. The test environment uses port 636. What does this tell the developer about the connection?
+A) The connection uses STARTTLS on standard LDAP port 389
+B) The connection is unencrypted standard LDAP
+C) The connection uses LDAPS — LDAP over SSL/TLS from the start
+D) The connection uses Kerberos authentication on the LDAP channel
+Correct: C
+Explanation: Port 636 is the designated port for LDAPS (LDAP Secure), which establishes an SSL/TLS-encrypted connection before any directory data is exchanged. This is distinct from LDAP on port 389 with STARTTLS, which begins unencrypted and then upgrades to TLS. The developer can be assured the directory connection is encrypted from the outset when using port 636.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A store deploys a system where customers can tap their smartphone to a point-of-sale terminal to trigger a loyalty programme registration, not a payment. The system needs a very short range to prevent accidental triggers. Which technology is most appropriate?
+A) Bluetooth LE
+B) NFC
+C) Zigbee
+D) RFID at 13.56 MHz
+Correct: B
+Explanation: NFC operates at 13.56 MHz with an intentionally very short range of under 4 cm, making it ideal for deliberate tap-based interactions where accidental triggering must be minimised. While RFID also uses 13.56 MHz, NFC is the interactive, bidirectional standard built into modern smartphones for tap-to-interact use cases. Bluetooth LE has a much longer range (up to 100 metres) making accidental triggers far more likely.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A SOHO network user wants to host a game server at home that external friends can connect to. The router uses NAT. What configuration must be made on the router?
+A) Enable UPnP and disable the firewall entirely
+B) Configure port forwarding to map the game's external port to the internal server IP and port
+C) Assign the game server a public IP address from the ISP
+D) Create a VLAN for the game server on the router
+Correct: B
+Explanation: Port forwarding maps an inbound connection arriving on a specific external port to the correct internal (private) IP address and port of the game server behind NAT. Without this, the router has no way to know which internal device should receive unsolicited inbound game traffic. Disabling the firewall entirely would expose all devices, and assigning a public IP is typically not available or necessary in a SOHO setup.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A network engineer is designing a resilient network with redundant switch links but wants to prevent loops. Which protocol should be enabled on the switches?
+A) VLAN Trunking Protocol (VTP)
+B) Spanning Tree Protocol (STP)
+C) Link Aggregation Control Protocol (LACP)
+D) Dynamic Host Configuration Protocol (DHCP)
+Correct: B
+Explanation: STP (Spanning Tree Protocol, IEEE 802.1D) and its modern variants (RSTP, MSTP) detect and prevent switching loops by placing redundant ports in a blocking state, ensuring only one active path exists between any two network nodes. Without STP, redundant links would cause broadcast storms and MAC address table instability. VTP manages VLAN information, LACP bundles multiple links, and DHCP assigns IP addresses.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A network administrator notices that a device has been assigned the address fe80::1 on its network interface. What type of IPv6 address is this?
+A) Global unicast — routable on the internet
+B) Multicast — used for one-to-many communication
+C) Link-local — valid only on the local network segment
+D) Loopback — used for testing the local interface
+Correct: C
+Explanation: fe80::/10 is the IPv6 link-local prefix, and addresses in this range are automatically configured on every IPv6-enabled interface using EUI-64 or a random algorithm. Link-local addresses are non-routable and only valid for communication within the local network segment (link). The IPv6 loopback address is ::1, while global unicast addresses start with 2000::/3.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company's DHCP server is configured with a scope for the 192.168.1.0/24 network. The scope has an exclusion range of 192.168.1.1 through 192.168.1.20. Why would this exclusion be configured?
+A) To reserve addresses for wireless clients only
+B) To prevent DHCP from assigning addresses used by statically configured devices such as servers, printers, and the router
+C) To block those IP addresses from accessing the internet
+D) To implement NAT for the excluded address range
+Correct: B
+Explanation: DHCP exclusion ranges prevent the server from dynamically assigning IP addresses that are already in use by statically configured infrastructure devices such as the default gateway, servers, printers, and network equipment. Without exclusions, the DHCP server might assign an address already manually configured on another device, causing an IP conflict. Exclusions have no effect on internet access or NAT.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician uses a multimeter to test a Cat5e cable and measures continuity. The cable passes the continuity test but the network connection is still unreliable. Which dedicated tool would provide a more thorough diagnosis of the cable's wiring order and pair integrity?
+A) Wi-Fi analyser
+B) Loopback plug
+C) Cable tester
+D) Toner probe
+Correct: C
+Explanation: A dedicated cable tester (such as a Fluke MicroScanner or similar) checks not only continuity but also verifies correct pin-to-pin wiring order, identifies split pairs, reversed pairs, shorts, and crossed connections — faults that a simple multimeter continuity test cannot detect. Split pairs, for example, will pass a continuity test but cause significant crosstalk and performance degradation. A cable tester is the correct tool for comprehensive Ethernet cable diagnosis.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A company uses Active Directory for user authentication. Which protocol and port does Active Directory primarily use to allow clients to query the directory for user account information?
+A) LDAP on port 389
+B) SMTP on port 25
+C) SSH on port 22
+D) HTTPS on port 443
+Correct: A
+Explanation: Active Directory is based on LDAP and uses port 389 (or port 636 for LDAPS) for directory queries, including user authentication lookups, group membership queries, and attribute retrieval. Clients and services use LDAP to bind to Active Directory and search for objects. SMTP handles email, SSH handles secure terminal access, and HTTPS handles encrypted web traffic.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A technician compares 802.11b and 802.11g. Both operate on the 2.4 GHz band but differ in maximum speed. What are their respective maximum theoretical data rates?
+A) 802.11b: 11 Mbps; 802.11g: 54 Mbps
+B) 802.11b: 54 Mbps; 802.11g: 11 Mbps
+C) 802.11b: 11 Mbps; 802.11g: 300 Mbps
+D) 802.11b: 2 Mbps; 802.11g: 11 Mbps
+Correct: A
+Explanation: 802.11b, released in 1999, operates at 2.4 GHz with a maximum theoretical data rate of 11 Mbps using DSSS (Direct Sequence Spread Spectrum). 802.11g, released in 2003, also operates at 2.4 GHz but uses OFDM to achieve a maximum of 54 Mbps while maintaining backward compatibility with 802.11b. 802.11n increased speeds to 300+ Mbps on 2.4 GHz.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A technician needs to configure inter-VLAN routing on a router connected to a managed switch using a single physical interface. Which configuration method achieves this?
+A) Configure separate physical interfaces for each VLAN
+B) Use a router-on-a-stick configuration with 802.1Q sub-interfaces
+C) Configure the router as a DHCP server for all VLANs
+D) Enable spanning tree on the router interface
+Correct: B
+Explanation: Router-on-a-stick uses a single physical router interface connected to a trunk port on the switch, with logical 802.1Q sub-interfaces configured for each VLAN. Each sub-interface has an IP address that serves as the default gateway for its respective VLAN, and the 802.1Q encapsulation tags allow the router to identify and route traffic between VLANs. This approach requires only one physical cable and one switch trunk port.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: An ISP advertises an ADSL service with "up to 20 Mbps download and 1 Mbps upload." Why is the upload speed significantly lower than the download speed?
+A) ADSL encryption requires more bandwidth for uploads
+B) ADSL is asymmetric, allocating more downstream bandwidth to accommodate typical browsing usage patterns
+C) Upload traffic is routed through additional ISP infrastructure, adding latency
+D) ADSL cannot carry upload and download traffic simultaneously
+Correct: B
+Explanation: ADSL (Asymmetric Digital Subscriber Line) deliberately allocates much more bandwidth to the downstream direction (ISP to customer) than upstream (customer to ISP), reflecting typical usage where users consume more content than they produce. The word "Asymmetric" in the name describes this characteristic. SDSL (Symmetric DSL) provides equal upload and download speeds but is less common for residential customers.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A help desk receives reports that the company's internal website is unreachable by hostname but accessible by IP address. Which server role is most likely malfunctioning?
+A) DHCP server
+B) DNS server
+C) Mail server
+D) Proxy server
+Correct: B
+Explanation: If the site is reachable by IP but not by hostname, the DNS server is not resolving the hostname to the correct IP address — either the DNS server is down, misconfigured, or the DNS record for the internal site is missing or incorrect. DHCP failure would prevent IP assignment, not name resolution. Mail and proxy server failures would not affect web hostname resolution.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: An enterprise data centre uses a spine-leaf architecture with high-density switches. Each access layer switch connects to both spine switches. Which feature prevents the redundant uplinks from causing broadcast storms?
+A) DHCP snooping
+B) 802.1Q VLAN tagging
+C) Spanning Tree Protocol (STP) or equivalent loop prevention
+D) Port mirroring
+Correct: C
+Explanation: Spanning Tree Protocol (STP) or modern equivalents like RSTP and ECMP (in Layer 3 designs) prevent loops in redundant switch topologies by logically blocking redundant paths while keeping them available for failover. Without loop prevention, redundant physical paths create broadcast storms that can consume all network bandwidth. DHCP snooping is a security feature, 802.1Q tags VLANs, and port mirroring copies traffic for analysis.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: During a SOHO network installation, a technician needs to connect a wall outlet jack to a patch panel port. Which tool and procedure are used for this structured cabling task?
+A) Use a crimper to attach an RJ-45 connector to the horizontal run cable
+B) Use a punchdown tool to terminate the cable pairs into IDC connectors on the patch panel
+C) Use a cable tester to terminate the cable at both ends
+D) Use a tone generator to seat wires into the keystone jack
+Correct: B
+Explanation: Horizontal cabling runs are terminated into patch panels and keystone jacks using a punchdown tool, which forces each wire conductor into the IDC (Insulation Displacement Connector) contact and simultaneously trims the excess wire. The punchdown tool ensures a reliable gas-tight connection in the IDC slot. RJ-45 crimpers are for patch cable ends, not permanent structured cabling terminations.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A small business has one public IP address from its ISP. All internal hosts use private RFC 1918 addresses. When a host sends traffic to the internet, the router translates the private source IP to the public IP. What is this process called?
+A) VLAN tagging
+B) DNS resolution
+C) Network Address Translation (NAT)
+D) Dynamic Host Configuration
+Correct: C
+Explanation: NAT (specifically PAT/NAT overload) translates private source IP addresses to the router's single public IP address, enabling all internal hosts to share internet access. The router maintains a translation table mapping each internal session to a unique source port on the public IP so return traffic can be correctly forwarded to the originating internal host. This is the fundamental mechanism enabling private address use in SOHO and enterprise networks.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A network engineer is asked to explain the difference between TCP and UDP for the A+ exam. Which statement correctly describes TCP compared to UDP?
+A) TCP is connectionless and delivers data faster with no error checking
+B) TCP is connection-oriented and provides guaranteed delivery with sequencing and error correction
+C) TCP uses less overhead than UDP because it sends raw packets without headers
+D) TCP is used exclusively for real-time applications like VoIP and streaming
+Correct: B
+Explanation: TCP (Transmission Control Protocol) is a connection-oriented protocol that establishes a session via a three-way handshake and provides guaranteed, ordered delivery using sequence numbers, acknowledgements, and retransmission of lost segments. UDP (User Datagram Protocol) is connectionless, offers no delivery guarantees, and is preferred for real-time applications where low latency is more important than reliability, such as VoIP and video streaming. TCP's reliability mechanisms add overhead compared to UDP.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician needs to verify that a newly installed Cat6 cable run from a patch panel to a wall jack passes signal correctly on all eight conductors in the proper wiring order. What is the correct tool and its expected output for a properly wired cable?
+A) Toner probe — emits an audible tone at both ends when the cable is intact
+B) Cable tester — displays pins 1-8 mapping correctly between both ends (straight-through for T568B)
+C) Loopback plug — shows the port as active when inserted into the wall jack
+D) Wi-Fi analyser — detects the cable as a network segment
+Correct: B
+Explanation: A cable tester applies a test signal to each of the eight conductors sequentially and displays the pin mapping between the two ends, confirming that all eight wires are connected, in the correct order (T568A or T568B), with no opens, shorts, or crossed pairs. A toner probe identifies which cable is which but cannot verify pin mapping. A loopback plug tests a switch or NIC port, not a cable run. Wi-Fi analysers are for wireless, not wired cables.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A company deploys 5G as a backup WAN link. Which characteristic makes 5G suitable as a resilient failover connection compared to 4G?
+A) 5G operates exclusively on licensed spectrum, eliminating interference
+B) 5G offers significantly higher throughput and lower latency than 4G, making failover nearly seamless for most applications
+C) 5G uses fibre optic backhaul that cannot be disrupted by weather
+D) 5G is available without a data plan on public infrastructure
+Correct: B
+Explanation: 5G's significantly higher throughput (potentially multi-Gbps) and ultra-low latency (sub-10 ms) make it a much more capable failover WAN link than 4G, supporting enterprise workloads such as video conferencing, cloud applications, and VoIP during primary circuit outages. 5G does use licensed spectrum but still shares it among subscribers. 5G RAN (Radio Access Network) uses wireless, not fibre, for the last mile.
+
+Domain: 2.0 Networking
+Sub-objective: 2.4 — Summarize services provided by networked hosts
+Question: A company's IDS generates an alert that suspicious port scanning activity was detected originating from an internal workstation. What action does an IDS take upon detection?
+A) Automatically blocks the offending workstation at the switch port level
+B) Generates an alert and logs the event but does not block the traffic
+C) Quarantines the workstation on a separate VLAN automatically
+D) Sends a TCP reset to terminate all active connections from the workstation
+Correct: B
+Explanation: An IDS (Intrusion Detection System) operates in monitoring mode and generates alerts and logs when suspicious activity is detected, but it does not actively block or modify traffic. An IPS (Intrusion Prevention System) sits inline and can actively drop, block, or redirect malicious traffic. Automatic VLAN quarantine and TCP reset injection are active response mechanisms associated with IPS or NAC (Network Access Control) systems, not a passive IDS.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A technician is asked what the broadcast address is for the subnet 192.168.5.0/27. What is the correct answer?
+A) 192.168.5.31
+B) 192.168.5.255
+C) 192.168.5.32
+D) 192.168.5.30
+Correct: A
+Explanation: A /27 subnet has 5 host bits (2^5 = 32 addresses per subnet). Starting at 192.168.5.0, the subnet spans 192.168.5.0 through 192.168.5.31. The broadcast address is the last address in the range: 192.168.5.31. 192.168.5.255 is the broadcast for the /24 supernet, 192.168.5.32 is the start of the next /27 subnet, and 192.168.5.30 is the last usable host address.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A company implements SD-WAN to manage connectivity across multiple branch offices. Which benefit does SD-WAN provide over traditional WAN configurations?
+A) SD-WAN eliminates the need for routers entirely
+B) SD-WAN allows centralised policy management and can dynamically route traffic across multiple WAN links based on application requirements
+C) SD-WAN requires all WAN links to use the same ISP for consistency
+D) SD-WAN provides automatic IP address assignment across WAN links
+Correct: B
+Explanation: SD-WAN (Software-Defined Wide Area Network) extends SDN concepts to WAN connectivity, enabling centralised management of multiple WAN links (MPLS, broadband, LTE) with dynamic path selection based on application-level policies, link quality metrics, and cost. This improves resilience, performance, and cost efficiency compared to traditional static WAN routing. SD-WAN uses routers and gateways rather than eliminating them, and can use multiple ISPs simultaneously.
+
+Domain: 2.0 Networking
+Sub-objective: 2.7 — Compare and contrast internet connection types, network types, and their features
+Question: An organisation needs to connect two office campuses in different cities over a private, dedicated network path. Which WAN technology provides guaranteed bandwidth and is not shared with other customers?
+A) Public internet VPN
+B) Cable broadband
+C) Dedicated leased line (e.g., T1, E1, or dark fibre)
+D) 4G LTE cellular
+Correct: C
+Explanation: Dedicated leased lines (such as T1, E1, DS3, or dark fibre) provide a private, guaranteed-bandwidth circuit between two locations that is not shared with other customers, ensuring consistent latency and throughput. Public internet VPNs share internet infrastructure and are subject to variable congestion. Cable broadband is a shared medium within a neighbourhood segment. Cellular is shared wireless spectrum.
+
+Domain: 2.0 Networking
+Sub-objective: 2.5 — Install and configure basic wired/wireless SOHO networks
+Question: A technician is configuring a SOHO router to segment a guest wireless network from the main corporate network. Which feature should be enabled to prevent guest users from accessing internal resources?
+A) MAC address filtering on the guest SSID
+B) Guest network VLAN isolation / guest network mode
+C) WPS on the guest SSID
+D) DNS filtering on the main SSID
+Correct: B
+Explanation: Most SOHO routers with a guest network feature place guest SSID traffic on a separate VLAN that is isolated from the main LAN, allowing guests to access the internet while being blocked from seeing internal hosts, printers, and NAS devices. MAC filtering only controls which devices can connect, not what they can access after connecting. WPS is a connection convenience feature and DNS filtering affects web content, not network segmentation.
+
+Domain: 2.0 Networking
+Sub-objective: 2.1 — Compare and contrast TCP and UDP ports, protocols, and their purposes
+Question: A network administrator sees traffic destined for port 3389 being blocked by the perimeter firewall on inbound rules. A remote worker reports they cannot access their office desktop remotely. Which protocol requires port 3389 to be permitted?
+A) SSH
+B) VNC
+C) RDP
+D) Telnet
+Correct: C
+Explanation: RDP (Remote Desktop Protocol) uses TCP port 3389 for graphical remote desktop access to Windows systems. The firewall blocking inbound port 3389 prevents external RDP connections. The recommended approach is not to expose RDP directly to the internet (due to brute-force and exploit risk) but instead to use a VPN first and connect via RDP over the VPN tunnel. SSH uses port 22, VNC uses port 5900, and Telnet uses port 23.
+
+Domain: 2.0 Networking
+Sub-objective: 2.6 — Compare and contrast common network configuration concepts
+Question: A workstation receives its IP configuration from DHCP with a lease time of 8 hours. After 4 hours (50% of the lease), what does the DHCP client attempt to do?
+A) Release the IP address and request a new one
+B) Renew the lease by contacting the DHCP server directly with a unicast request
+C) Switch to an APIPA address as a backup
+D) Broadcast a new DHCP Discover to find an alternate server
+Correct: B
+Explanation: At 50% of the lease time (T1), the DHCP client attempts to renew its lease by sending a unicast DHCPREQUEST directly to the original DHCP server. If the server responds with a DHCPACK, the lease is renewed. If renewal fails at T1, the client tries a broadcast renewal at T2 (87.5% of lease time). The client only falls back to APIPA if the lease fully expires without successful renewal and no DHCP server is found.
+
+Domain: 2.0 Networking
+Sub-objective: 2.8 — Use networking tools
+Question: A technician is monitoring network traffic on a switch and needs to capture packets sent between a specific workstation and a server for analysis. The switch does not have a built-in packet capture feature. Which approach should the technician use?
+A) Install a Wi-Fi analyser on the workstation
+B) Use port mirroring (SPAN) on the switch to copy traffic to a monitoring port connected to a packet analyser
+C) Connect a loopback plug to the server's NIC
+D) Use a cable tester on the link between the workstation and switch
+Correct: B
+Explanation: Port mirroring (SPAN — Switched Port Analyser) configures the switch to copy all traffic from one or more source ports to a designated mirror (destination) port, where a device running a packet analyser (such as Wireshark) captures the traffic for analysis. A network hardware tap is an alternative that provides a similar function without relying on switch software. A loopback plug tests port functionality, and cable testers test physical cable integrity.
+
+Domain: 2.0 Networking
+Sub-objective: 2.3 — Compare and contrast protocols for wireless networking
+Question: A warehouse deploys a wireless network for barcode scanners that frequently roam between access points throughout the facility. Which feature ensures seamless handoff between APs without dropping the connection?
+A) SSID hiding
+B) MAC address filtering
+C) Fast BSS Transition (802.11r) / seamless roaming
+D) WPS push-button pairing
+Correct: C
+Explanation: 802.11r (Fast BSS Transition) enables fast secure roaming by pre-establishing the security keys with the target AP before the client fully transitions, dramatically reducing the handoff time compared to full re-authentication. This is critical for real-time applications and constantly roaming devices like warehouse scanners where even brief connection interruptions cause data loss. SSID hiding and MAC filtering are security configurations that do not affect roaming behaviour.
+
+Domain: 2.0 Networking
+Sub-objective: 2.2 — Compare and contrast common networking hardware
+Question: A network administrator is reviewing the benefits of using a managed switch over an unmanaged switch. Which capability is exclusive to a managed switch?
+A) Connecting multiple devices via Ethernet ports
+B) Forwarding frames based on MAC addresses
+C) Configuration of VLANs, port security, and SNMP monitoring
+D) Providing PoE power to connected devices
+Correct: C
+Explanation: Managed switches provide a full management interface (CLI, web GUI, or API) that allows administrators to configure VLANs, port security, QoS, SNMP monitoring, port mirroring, STP settings, and link aggregation. Unmanaged switches forward frames using MAC addresses and support PoE (if PoE-capable) but offer no configuration interface. The ability to segment, monitor, and control network behaviour is the primary value of managed switches in enterprise environments.

@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export function LoginForm() {
-  const router = useRouter();
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -20,19 +18,40 @@ export function LoginForm() {
 
     const supabase = createClient();
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
-      password,
-    });
+      {
+        redirectTo: `${window.location.origin}/reset-password`,
+      }
+    );
 
-    if (signInError) {
-      setError(signInError.message);
+    if (resetError) {
+      setError(resetError.message);
       setLoading(false);
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    setSent(true);
+    setLoading(false);
+  }
+
+  if (sent) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-[15px] text-text-primary mb-2">Check your email</p>
+        <p className="text-[13px] text-text-muted">
+          We sent a password reset link to{" "}
+          <span className="font-medium text-text-primary">{email}</span>. Click
+          the link in the email to set a new password.
+        </p>
+        <a
+          href="/login"
+          className="inline-block mt-4 text-[13px] text-primary hover:underline"
+        >
+          Back to sign in
+        </a>
+      </div>
+    );
   }
 
   return (
@@ -46,15 +65,6 @@ export function LoginForm() {
         required
         autoComplete="email"
       />
-      <Input
-        label="Password"
-        type="password"
-        placeholder="Your password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        autoComplete="current-password"
-      />
 
       {error && (
         <p className="text-[13px] text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -62,23 +72,14 @@ export function LoginForm() {
         </p>
       )}
 
-      <div className="flex justify-end -mt-1">
-        <a
-          href="/forgot-password"
-          className="text-[13px] text-primary hover:underline"
-        >
-          Forgot password?
-        </a>
-      </div>
-
       <Button type="submit" loading={loading} className="mt-2">
-        Sign in
+        Send reset link
       </Button>
 
       <p className="text-[13px] text-text-muted text-center">
-        Don&apos;t have an account?{" "}
-        <a href="/register" className="text-primary hover:underline">
-          Create one
+        Remember your password?{" "}
+        <a href="/login" className="text-primary hover:underline">
+          Sign in
         </a>
       </p>
     </form>
