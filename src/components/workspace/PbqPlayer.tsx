@@ -12,6 +12,7 @@ import type {
   CategorizationScenario,
 } from "@/data/pbq/types";
 import { gradeScenario } from "@/lib/pbq/grade";
+import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Main Player                                                        */
@@ -39,6 +40,11 @@ export function PbqPlayer({
     setResult(null);
     setUserAnswer(null);
   }, []);
+
+  /* Simulation scenarios use their own self-contained player */
+  if (scenario.type === "simulation") {
+    return <SimulationPlayer scenario={scenario} onBack={onBack} />;
+  }
 
   return (
     <div className="flex flex-col gap-4">

@@ -22,6 +22,9 @@ export function gradeScenario(
       return gradeMatching(scenario, userAnswer);
     case "categorization":
       return gradeCategorization(scenario, userAnswer);
+    case "simulation":
+      // Simulations use gradeSimulationScenario from grade-simulation.ts
+      return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeSimulationScenario for simulation scenarios."] };
   }
 }
 

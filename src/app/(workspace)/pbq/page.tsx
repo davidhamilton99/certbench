@@ -22,11 +22,11 @@ export default async function PbqPage({
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-          PBQ Scenarios
+          Hands-On Practice
         </h1>
         <p className="text-[15px] text-text-secondary">
-          Select a certification from the sidebar to access performance-based
-          question scenarios.
+          Select a certification from the sidebar to access hands-on practice
+          scenarios.
         </p>
       </div>
     );
@@ -38,11 +38,11 @@ export default async function PbqPage({
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-          Performance-Based Questions
+          Hands-On Practice
         </h1>
         <p className="text-[15px] text-text-secondary mt-1">
-          Practice interactive scenarios that mirror the hands-on questions
-          found on the actual exam.
+          Interactive scenarios that mirror the hands-on questions found on the
+          actual exam.
         </p>
       </div>
 
