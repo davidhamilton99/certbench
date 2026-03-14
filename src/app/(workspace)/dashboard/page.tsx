@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +22,22 @@ export default async function DashboardPage({
   } = await supabase.auth.getUser();
 
   if (!user) return null;
+
+  // If no cert param, redirect to the first active enrollment
+  if (!certSlug) {
+    const { data: firstEnrollment } = await supabase
+      .from("user_enrollments")
+      .select("certifications(slug)")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .limit(1)
+      .single();
+
+    const slug = (firstEnrollment?.certifications as any)?.slug;
+    if (slug) {
+      redirect(`/dashboard?cert=${slug}`);
+    }
+  }
 
   // Get active enrollment for the selected cert
   let enrollment = null;

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { BackLink } from "@/components/marketing/BackLink";
 
 export const metadata: Metadata = {
   title: "Terms of Service — CertBench",
@@ -9,12 +10,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-bg-page">
       <div className="max-w-3xl mx-auto px-4 py-16">
-        <a
-          href="/"
-          className="text-[13px] text-primary hover:underline mb-8 inline-block"
-        >
-          &larr; Back to home
-        </a>
+        <BackLink />
         <h1 className="text-[28px] font-bold text-text-primary tracking-tight mb-2">
           Terms of Service
         </h1>

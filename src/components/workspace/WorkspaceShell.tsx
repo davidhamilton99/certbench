@@ -129,7 +129,11 @@ export function WorkspaceShell({
         {/* Logo */}
         <div className="h-14 px-5 flex items-center border-b border-border">
           <Link
-            href="/dashboard"
+            href={
+              activeCertSlug
+                ? `/dashboard?cert=${activeCertSlug}`
+                : "/dashboard"
+            }
             className="text-[18px] font-bold text-text-primary tracking-tight"
           >
             CertBench
@@ -146,40 +150,48 @@ export function WorkspaceShell({
         </div>
 
         {/* Cert Tabs */}
-        {enrollments.length > 0 && (
-          <div className="px-3 pt-4 pb-2">
-            <p className="px-2 text-[12px] font-medium text-text-muted uppercase tracking-wider mb-2">
-              Certifications
-            </p>
-            <div className="flex flex-col gap-1">
-              {enrollments.map((enrollment) => {
-                const cert = enrollment.certifications;
-                const isActive = cert.slug === activeCertSlug;
-                return (
-                  <Link
-                    key={enrollment.certification_id}
-                    href={`/dashboard?cert=${cert.slug}`}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`
-                      px-3 py-2 rounded-md text-[13px] font-medium
-                      transition-colors duration-150
-                      ${
-                        isActive
-                          ? "bg-blue-50 text-primary"
-                          : "text-text-secondary hover:bg-bg-page hover:text-text-primary"
-                      }
-                    `}
-                  >
-                    <span className="block truncate">{cert.name}</span>
-                    <span className="block text-[11px] mt-0.5 opacity-70">
-                      {cert.exam_code}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+        <div className="px-3 pt-4 pb-2">
+          <p className="px-2 text-[12px] font-medium text-text-muted uppercase tracking-wider mb-2">
+            Certifications
+          </p>
+          <div className="flex flex-col gap-1">
+            {enrollments.map((enrollment) => {
+              const cert = enrollment.certifications;
+              const isActive = cert.slug === activeCertSlug;
+              return (
+                <Link
+                  key={enrollment.certification_id}
+                  href={`/dashboard?cert=${cert.slug}`}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    px-3 py-2 rounded-md text-[13px] font-medium
+                    transition-colors duration-150
+                    ${
+                      isActive
+                        ? "bg-blue-50 text-primary"
+                        : "text-text-secondary hover:bg-bg-page hover:text-text-primary"
+                    }
+                  `}
+                >
+                  <span className="block truncate">{cert.name}</span>
+                  <span className="block text-[11px] mt-0.5 opacity-70">
+                    {cert.exam_code}
+                  </span>
+                </Link>
+              );
+            })}
+            <Link
+              href="/add-certification"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium text-text-muted hover:bg-bg-page hover:text-text-primary transition-colors duration-150"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add certification
+            </Link>
           </div>
-        )}
+        </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 pt-2">
