@@ -39,10 +39,19 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="max-w-5xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-2">
           <p className="text-[13px] text-text-muted">
             CertBench — Certification preparation, simplified.
           </p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-[12px] text-text-muted hover:text-text-primary transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-[12px] text-text-muted">·</span>
+            <Link href="/terms" className="text-[12px] text-text-muted hover:text-text-primary transition-colors">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

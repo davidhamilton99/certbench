@@ -240,6 +240,11 @@ export function WorkspaceShell({
             </div>
             <span className="truncate">{displayName}</span>
           </Link>
+          <div className="flex items-center gap-3 px-3 pt-1">
+            <Link href="/privacy" className="text-[11px] text-text-muted hover:text-text-primary transition-colors">Privacy</Link>
+            <span className="text-[11px] text-text-muted">·</span>
+            <Link href="/terms" className="text-[11px] text-text-muted hover:text-text-primary transition-colors">Terms</Link>
+          </div>
         </div>
       </aside>
 
