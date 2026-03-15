@@ -77,15 +77,23 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
   );
 }
 
+interface CertOption {
+  slug: string;
+  name: string;
+}
+
 export function FlashcardImportForm({
-  certSlug,
+  certOptions,
 }: {
-  certSlug?: string;
+  certOptions?: CertOption[];
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("input");
   const [title, setTitle] = useState("");
   const [rawText, setRawText] = useState("");
+  const [selectedCertSlug, setSelectedCertSlug] = useState(
+    certOptions && certOptions.length === 1 ? certOptions[0].slug : ""
+  );
   const [parsedCards, setParsedCards] = useState<ParsedCard[]>([]);
   const [questions, setQuestions] = useState<MCQuestion[]>([]);
   const [error, setError] = useState("");
@@ -165,6 +173,7 @@ export function FlashcardImportForm({
   };
 
   const saveStudySet = async () => {
+    if (phase === "saving") return;
     if (!title.trim()) {
       setError("Please enter a title.");
       return;
@@ -181,7 +190,7 @@ export function FlashcardImportForm({
           title: title.trim(),
           category: "Imported Flashcards",
           questions,
-          certSlug,
+          certSlug: selectedCertSlug || undefined,
         }),
       });
 
@@ -234,12 +243,37 @@ export function FlashcardImportForm({
         <div className="flex flex-col gap-5">
           <Card padding="lg">
             <div className="flex flex-col gap-5">
-              <Input
-                label="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Security+ Chapter 4 Review"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Security+ Chapter 4 Review"
+                />
+
+                {certOptions && certOptions.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-medium text-text-primary">
+                      Certification
+                    </label>
+                    <select
+                      value={selectedCertSlug}
+                      onChange={(e) => setSelectedCertSlug(e.target.value)}
+                      className="h-[38px] px-3 rounded-md border border-border bg-bg-surface text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 focus:border-primary transition-colors duration-150"
+                    >
+                      <option value="">No certification</option>
+                      {certOptions.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[12px] text-text-muted">
+                      Tags this set for community sharing
+                    </p>
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-text-primary">

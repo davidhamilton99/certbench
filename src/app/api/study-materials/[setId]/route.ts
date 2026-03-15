@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod/v4";
+
+const patchSetSchema = z.object({
+  isPublic: z.boolean().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "No updates provided",
+});
 
 export async function DELETE(
   _req: NextRequest,
@@ -69,19 +76,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const { isPublic } = (await req.json()) as { isPublic?: boolean };
+  const body = await req.json();
+  const parsed = patchSetSchema.safeParse(body);
 
-  const updates: Record<string, unknown> = {};
-  if (typeof isPublic === "boolean") {
-    updates.is_public = isPublic;
-    // Reset popularity metrics when unpublishing to prevent gaming
-    if (!isPublic) {
-      updates.attempt_count = 0;
-    }
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message || "Invalid input" },
+      { status: 400 }
+    );
   }
 
-  if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ error: "No updates provided" }, { status: 400 });
+  const updates: Record<string, unknown> = {};
+  if (typeof parsed.data.isPublic === "boolean") {
+    updates.is_public = parsed.data.isPublic;
+    // Reset popularity metrics when unpublishing to prevent gaming
+    if (!parsed.data.isPublic) {
+      updates.attempt_count = 0;
+    }
   }
 
   const { error } = await supabase

@@ -15,37 +15,48 @@ export default async function NewStudyMaterialPage() {
 
   if (!user) redirect("/login");
 
-  // Get user's active certification slug for tagging
-  const { data: enrollment } = await supabase
+  // Get all enrolled certifications (not just active)
+  const { data: enrollments } = await supabase
     .from("user_enrollments")
-    .select("certification_id, certifications(slug)")
+    .select("certification_id, certifications(slug, name)")
     .eq("user_id", user.id)
-    .eq("is_active", true)
-    .limit(1)
-    .single();
+    .eq("is_active", true);
 
-  const cert = enrollment?.certifications as unknown as {
-    slug: string;
-  } | null;
-  const certSlug = cert?.slug;
+  type CertRow = { slug: string; name: string };
+  const certs: { id: string; slug: string; name: string }[] = (enrollments || [])
+    .map((e) => {
+      const cert = e.certifications as unknown as CertRow | null;
+      if (!cert) return null;
+      return { id: e.certification_id, slug: cert.slug, name: cert.name };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
 
-  // Get domains for the user's cert so they can tag their set
-  let domains: string[] = [];
-  if (enrollment?.certification_id) {
-    const { data: certDomains } = await supabase
+  // Fetch domains for all enrolled certs in one query
+  const certIds = certs.map((c) => c.id);
+  let domainsByCert: Record<string, string[]> = {};
+  if (certIds.length > 0) {
+    const { data: allDomains } = await supabase
       .from("cert_domains")
-      .select("code, name")
-      .eq("certification_id", enrollment.certification_id)
-      .order("code");
-    if (certDomains) {
-      domains = certDomains.map((d) => `${d.code} - ${d.name}`);
+      .select("certification_id, domain_number, title")
+      .in("certification_id", certIds)
+      .order("sort_order");
+
+    if (allDomains) {
+      for (const d of allDomains) {
+        const cert = certs.find((c) => c.id === d.certification_id);
+        if (!cert) continue;
+        if (!domainsByCert[cert.slug]) domainsByCert[cert.slug] = [];
+        domainsByCert[cert.slug].push(`${d.domain_number} - ${d.title}`);
+      }
     }
   }
 
+  const certOptions = certs.map((c) => ({ slug: c.slug, name: c.name }));
+
   return (
     <StudyMaterialForm
-      certSlug={certSlug || undefined}
-      domains={domains}
+      certOptions={certOptions}
+      domainsByCert={domainsByCert}
     />
   );
 }

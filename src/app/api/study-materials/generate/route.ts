@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod/v4";
 import {
   ANTHROPIC_MODEL,
   ANTHROPIC_API_URL,
@@ -8,7 +9,6 @@ import {
   type GeneratedQuestion,
   type Difficulty,
   type QuestionType,
-  ALLOWED_DIFFICULTIES,
   difficultyInstructions,
   isValidQuestion,
   getAnthropicApiKey,
@@ -18,7 +18,16 @@ import {
 import { getUserPlan, incrementGenerationUsage } from "@/lib/subscription";
 import { rateLimit } from "@/lib/rate-limit";
 
-const ALLOWED_COUNTS = [10, 25, 50];
+const DEFAULT_QUESTION_COUNT = 25;
+
+const generateSchema = z.object({
+  title: z.string().min(1).max(255),
+  content: z.string().min(1).max(500000),
+  questionCount: z.number().int().min(1).max(MAX_QUESTION_COUNT).optional(),
+  questionTypes: z
+    .array(z.enum(["multiple_choice", "true_false", "multiple_select", "ordering", "matching"]))
+    .optional(),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -52,39 +61,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const {
-    content,
-    questionCount,
-    title,
-    difficulty = "mixed",
-    questionTypes,
-  } = (await req.json()) as {
-    content: string;
-    questionCount: number;
-    title: string;
-    difficulty?: Difficulty;
-    questionTypes?: QuestionType[];
-  };
+  const body = await req.json();
+  const parsed = generateSchema.safeParse(body);
 
-  if (!content || !title) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Content and title are required" },
+      { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
       { status: 400 }
     );
   }
 
-  if (!ALLOWED_COUNTS.includes(questionCount)) {
-    return NextResponse.json(
-      { error: "Question count must be 10, 25, or 50" },
-      { status: 400 }
-    );
-  }
+  const { content, title, questionTypes } = parsed.data;
+  const questionCount = parsed.data.questionCount || DEFAULT_QUESTION_COUNT;
 
-  const validDifficulty: Difficulty = ALLOWED_DIFFICULTIES.includes(
-    difficulty as Difficulty
-  )
-    ? (difficulty as Difficulty)
-    : "mixed";
+  const validDifficulty: Difficulty = "mixed";
 
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
