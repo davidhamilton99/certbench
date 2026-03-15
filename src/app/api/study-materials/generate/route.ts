@@ -8,7 +8,6 @@ import {
   type GeneratedQuestion,
   type Difficulty,
   type QuestionType,
-  ALLOWED_DIFFICULTIES,
   difficultyInstructions,
   isValidQuestion,
   getAnthropicApiKey,
@@ -18,7 +17,7 @@ import {
 import { getUserPlan, incrementGenerationUsage } from "@/lib/subscription";
 import { rateLimit } from "@/lib/rate-limit";
 
-const ALLOWED_COUNTS = [10, 25, 50];
+const DEFAULT_QUESTION_COUNT = 25;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -54,15 +53,13 @@ export async function POST(req: NextRequest) {
 
   const {
     content,
-    questionCount,
+    questionCount: rawCount,
     title,
-    difficulty = "mixed",
     questionTypes,
   } = (await req.json()) as {
     content: string;
-    questionCount: number;
+    questionCount?: number;
     title: string;
-    difficulty?: Difficulty;
     questionTypes?: QuestionType[];
   };
 
@@ -73,18 +70,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!ALLOWED_COUNTS.includes(questionCount)) {
-    return NextResponse.json(
-      { error: "Question count must be 10, 25, or 50" },
-      { status: 400 }
-    );
-  }
+  // Default to 25 questions, clamp to valid range
+  const questionCount = Math.min(MAX_QUESTION_COUNT, Math.max(1, rawCount || DEFAULT_QUESTION_COUNT));
 
-  const validDifficulty: Difficulty = ALLOWED_DIFFICULTIES.includes(
-    difficulty as Difficulty
-  )
-    ? (difficulty as Difficulty)
-    : "mixed";
+  const validDifficulty: Difficulty = "mixed";
 
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {

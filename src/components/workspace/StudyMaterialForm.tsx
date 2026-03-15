@@ -53,19 +53,7 @@ const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string; desc: string;
   { value: "matching", label: "Matching", desc: "Pair related items", icon: "=" },
 ];
 
-const QUESTION_COUNTS = [
-  { value: 10, label: "10", desc: "Quick set" },
-  { value: 25, label: "25", desc: "Standard" },
-  { value: 50, label: "50", desc: "Comprehensive" },
-] as const;
-
-const DIFFICULTY_LEVELS = [
-  { value: "mixed" as const, label: "Mixed", desc: "Balanced mix of all levels" },
-  { value: "easy" as const, label: "Easy", desc: "Recall and definitions" },
-  { value: "medium" as const, label: "Medium", desc: "Understanding and comparison" },
-  { value: "hard" as const, label: "Hard", desc: "Application and scenarios" },
-];
-type Difficulty = "mixed" | "easy" | "medium" | "hard";
+const DEFAULT_QUESTION_COUNT = 25;
 
 const ACCEPTED_FILE_TYPES = ".txt,.md,.csv,.tsv,.pdf,.docx,.png,.jpg,.jpeg,.webp";
 const PLAIN_TEXT_EXTENSIONS = ["txt", "md", "csv", "tsv"];
@@ -74,8 +62,8 @@ const ALL_EXTENSIONS = [...PLAIN_TEXT_EXTENSIONS, ...SERVER_PARSED_EXTENSIONS];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const STEPS = [
-  { number: 1, label: "Source" },
-  { number: 2, label: "Configure" },
+  { number: 1, label: "Upload" },
+  { number: 2, label: "Generate" },
   { number: 3, label: "Review" },
 ];
 
@@ -143,8 +131,6 @@ export function StudyMaterialForm({
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
-  const [questionCount, setQuestionCount] = useState<number>(10);
-  const [difficulty, setDifficulty] = useState<Difficulty>("mixed");
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [sourcePreview, setSourcePreview] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -292,8 +278,6 @@ export function StudyMaterialForm({
         body: JSON.stringify({
           title,
           content,
-          questionCount,
-          difficulty,
           questionTypes: [...selectedTypes],
         }),
       });
@@ -386,7 +370,7 @@ export function StudyMaterialForm({
       setError("Network error. Please try again.");
       setPhase("form");
     }
-  }, [title, content, questionCount, difficulty, selectedTypes]);
+  }, [title, content, selectedTypes]);
 
   const removeQuestion = useCallback((index: number) => {
     setQuestions((prev) => prev.filter((_, i) => i !== index));
@@ -440,7 +424,8 @@ export function StudyMaterialForm({
 
   // ─── Generating / validating state ─────────────────────────────
   if (phase === "generating" || phase === "validating") {
-    const pct = questionCount > 0 ? Math.round((questions.length / questionCount) * 100) : 0;
+    const targetCount = DEFAULT_QUESTION_COUNT;
+    const pct = targetCount > 0 ? Math.min(100, Math.round((questions.length / targetCount) * 100)) : 0;
 
     return (
       <div className="flex flex-col gap-8 max-w-2xl">
@@ -479,7 +464,7 @@ export function StudyMaterialForm({
               </p>
               <p className="text-[14px] text-text-secondary">
                 {questions.length > 0
-                  ? `${questions.length} of ${questionCount} questions created`
+                  ? `${questions.length} questions created`
                   : "Analyzing your content..."}
               </p>
             </div>
@@ -907,46 +892,13 @@ export function StudyMaterialForm({
         </Card>
       </div>
 
-      {/* ── Section 3: Generation Settings ── */}
+      {/* ── Section 3: Question Types ── */}
       <div className="flex flex-col gap-4">
-        <SectionHeader title="Configuration" description="Choose how your questions should be generated." />
+        <SectionHeader title="Question Types" description="Choose which formats to include. AI picks the best mix for your content." />
 
-        {/* Question Count */}
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <label className="text-[13px] font-medium text-text-primary">
-              Number of Questions
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              {QUESTION_COUNTS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setQuestionCount(opt.value)}
-                  className={`flex flex-col items-center gap-1 py-3 px-4 rounded-lg border-2 transition-all ${
-                    questionCount === opt.value
-                      ? "border-primary bg-blue-50 ring-1 ring-primary/20"
-                      : "border-border bg-bg-surface hover:border-primary/30 hover:bg-blue-50/30"
-                  }`}
-                >
-                  <span className={`text-[20px] font-mono font-semibold tabular-nums ${
-                    questionCount === opt.value ? "text-primary" : "text-text-primary"
-                  }`}>
-                    {opt.label}
-                  </span>
-                  <span className="text-[11px] text-text-muted">{opt.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* Question Types */}
         <Card padding="lg">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-medium text-text-primary">
-                Question Types
-              </label>
               <span className="text-[12px] text-text-muted">
                 {selectedTypes.size === QUESTION_TYPE_OPTIONS.length
                   ? "All types selected"
@@ -995,37 +947,6 @@ export function StudyMaterialForm({
             </div>
           </div>
         </Card>
-
-        {/* Difficulty */}
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <label className="text-[13px] font-medium text-text-primary">
-              Difficulty Level
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {DIFFICULTY_LEVELS.map((level) => (
-                <button
-                  key={level.value}
-                  onClick={() => setDifficulty(level.value)}
-                  className={`flex flex-col items-center gap-1 py-3 px-3 rounded-lg border-2 transition-all ${
-                    difficulty === level.value
-                      ? "border-primary bg-blue-50 ring-1 ring-primary/20"
-                      : "border-border bg-bg-surface hover:border-primary/30 hover:bg-blue-50/30"
-                  }`}
-                >
-                  <span className={`text-[14px] font-medium ${
-                    difficulty === level.value ? "text-primary" : "text-text-primary"
-                  }`}>
-                    {level.label}
-                  </span>
-                  <span className="text-[11px] text-text-muted text-center leading-tight">
-                    {level.desc}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* Error */}
@@ -1039,18 +960,12 @@ export function StudyMaterialForm({
       <div className="sticky bottom-0 bg-bg-page border-t border-border -mx-6 px-6 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 text-[13px] text-text-muted">
           {hasTitle && hasContent && (
-            <>
-              <span className="flex items-center gap-1">
-                <svg className="w-3.5 h-3.5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                Ready to generate
-              </span>
-              <span>&middot;</span>
-              <span>{questionCount} questions</span>
-              <span>&middot;</span>
-              <span className="capitalize">{difficulty}</span>
-            </>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Ready to generate
+            </span>
           )}
         </div>
         <Button
