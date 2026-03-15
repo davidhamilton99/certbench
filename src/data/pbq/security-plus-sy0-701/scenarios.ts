@@ -70,7 +70,7 @@ export const securityPlusScenarios: PbqScenario[] = [
   /* ================================================================ */
   {
     type: "matching",
-    id: "ports-to-services",
+    id: "sp-ports-to-services",
     title: "Match Ports to Services",
     description:
       "Match each well-known port number to its corresponding service or protocol.",
@@ -205,5 +205,35 @@ export const securityPlusScenarios: PbqScenario[] = [
     ],
     explanation:
       "In IaaS, customers manage OS, middleware, and network config. In PaaS, customers manage their application code, runtime config, and database design. In SaaS, customers are responsible for user access, data classification, and client-side security. The provider handles lower layers in each model.",
+  },
+
+  /* ================================================================ */
+  /*  DOMAIN 4.0 — Security Operations                                */
+  /* ================================================================ */
+  {
+    type: "matching",
+    id: "sp-log-types-to-tools",
+    title: "Match Log Types to Analysis Tools",
+    description:
+      "Match each log type to the tool or system most commonly used to collect and analyse it.",
+    domain_number: "4.0",
+    domain_title: "Security Operations",
+    left: [
+      "Firewall logs",
+      "Authentication logs",
+      "DNS query logs",
+      "Endpoint detection alerts",
+      "Flow/NetFlow records",
+    ],
+    right: [
+      "SIEM (centralised correlation and alerting)",
+      "Directory service / RADIUS server logs",
+      "DNS sinkhole or passive DNS monitoring",
+      "EDR console (CrowdStrike, Defender for Endpoint)",
+      "Network traffic analyser (SolarWinds, ntopng)",
+    ],
+    correct_map: [0, 1, 2, 3, 4],
+    explanation:
+      "Firewall logs are typically fed into a SIEM for centralised correlation across multiple sources. Authentication events are found in directory service or RADIUS logs. DNS query logs are analysed with DNS sinkholes or passive DNS tools to detect C2 callbacks. EDR platforms collect and surface endpoint-level threat data. NetFlow and flow records are analysed by dedicated traffic analysers to identify bandwidth anomalies, DDoS patterns, and lateral movement.",
   },
 ];

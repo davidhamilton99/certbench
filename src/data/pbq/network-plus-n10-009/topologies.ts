@@ -194,19 +194,6 @@ export const networkPlusTopologies: TopologyScenario[] = [
             acceptedValues: ["203.0.113.1"],
             placeholder: "Enter the correct next-hop IP",
           },
-          {
-            type: "cli",
-            id: "router-fix-route",
-            label: "Fix the default route",
-            prompt: "R-Branch(config)#",
-            acceptedSequences: [
-              [
-                "no ip route 0.0.0.0 0.0.0.0 203.0.113.3",
-                "ip route 0.0.0.0 0.0.0.0 203.0.113.1",
-              ],
-            ],
-            hint: "The default route points to 203.0.113.3, which is outside the /30 WAN subnet. The ISP gateway is 203.0.113.1.",
-          },
         ],
         explanation:
           "The branch router had an incorrect default route pointing to 203.0.113.3, which doesn't exist in the /30 WAN subnet (203.0.113.0/30 has usable IPs .1 and .2 only). The correct ISP gateway is 203.0.113.1.",

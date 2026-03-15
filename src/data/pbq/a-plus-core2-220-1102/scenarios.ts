@@ -275,4 +275,28 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     explanation:
       "NTFS is the Windows file system of choice, supporting permissions, EFS encryption, and journaling for crash recovery. FAT32 is universally compatible but limited to a 4 GB maximum file size and 8 TB volume size. exFAT was designed to replace FAT32 for large flash media — it removes the 4 GB file size limit while retaining broad cross-platform compatibility. ext4 is the standard Linux file system, featuring journaling, large file support, and extended attributes not present in Windows file systems.",
   },
+
+  /* ================================================================ */
+  /*  DOMAIN 3.0 — Software Troubleshooting (additional)              */
+  /* ================================================================ */
+  {
+    type: "ordering",
+    id: "aplus-core2-app-install-troubleshooting",
+    title: "Application Installation Troubleshooting",
+    description:
+      "Arrange the steps for troubleshooting a failed application installation in the correct order.",
+    domain_number: "3.0",
+    domain_title: "Software Troubleshooting",
+    items: [
+      "Verify system meets minimum requirements (OS version, RAM, disk space)",
+      "Check for conflicting applications or previous installations",
+      "Run the installer as administrator",
+      "Review installation logs for specific error codes",
+      "Research error codes and apply vendor-recommended fixes",
+      "Test the application after successful installation",
+    ],
+    correct_order: [0, 1, 2, 3, 4, 5],
+    explanation:
+      "Always verify system requirements first — insufficient disk space or an incompatible OS version is the most common cause of failed installs. Next, check for conflicts (leftover registry entries, running services from previous installs). Running as administrator resolves permission-related failures. If installation still fails, the installer log files contain specific error codes that can be researched for targeted fixes. After resolving the issue and completing installation, verify the application functions correctly.",
+  },
 ];

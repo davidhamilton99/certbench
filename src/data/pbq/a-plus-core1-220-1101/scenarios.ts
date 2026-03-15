@@ -265,4 +265,51 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     explanation:
       "SATA, NVMe M.2, and PCIe slots are all internal interfaces found on motherboards with no external connector standard for storage. eSATA (external SATA) was designed specifically for external drives and is not used internally. USB 3.0 is used exclusively for external peripherals and storage in a PC context. Thunderbolt is unique as it connects to internal GPU/PCIe infrastructure while also serving as an external port for storage enclosures and docks.",
   },
+
+  /* ================================================================ */
+  /*  DOMAIN 1.0 — Mobile Devices, Laptops, and Small Form Factor     */
+  /* ================================================================ */
+  {
+    type: "matching",
+    id: "aplus-core1-mobile-connectivity",
+    title: "Match Mobile Connectivity Types to Descriptions",
+    description:
+      "Match each mobile device connectivity method to its correct description.",
+    domain_number: "1.0",
+    domain_title: "Mobile Devices",
+    left: ["NFC", "Bluetooth", "Hotspot/tethering", "Lightning", "USB-C", "Cellular (LTE/5G)"],
+    right: [
+      "Very short-range (≤10 cm) contactless data exchange, used for mobile payments",
+      "Short-range PAN (≤10 m typical) for peripherals like headsets and keyboards",
+      "Shares a mobile device's cellular data connection with other devices via Wi-Fi, USB, or Bluetooth",
+      "Apple-proprietary reversible connector used on iPhones through iPhone 14",
+      "Universal reversible connector adopted by most modern smartphones and tablets",
+      "Wide-area wireless providing mobile data access over carrier networks",
+    ],
+    correct_map: [0, 1, 2, 3, 4, 5],
+    explanation:
+      "NFC operates within centimetres for contactless payments (Apple Pay, Google Pay). Bluetooth creates personal area networks for peripherals. Hotspot/tethering shares cellular connectivity via Wi-Fi, USB, or Bluetooth PAN. Lightning is Apple's proprietary connector (replaced by USB-C on iPhone 15+). USB-C is the universal standard now used on most devices. Cellular (LTE/5G) provides wide-area data access through carrier towers.",
+  },
+  {
+    type: "categorization",
+    id: "aplus-core1-laptop-vs-desktop",
+    title: "Classify Components: Laptop vs Desktop Form Factor",
+    description:
+      "Sort each component or feature into whether it is specific to laptops, specific to desktops, or shared by both.",
+    domain_number: "1.0",
+    domain_title: "Mobile Devices",
+    categories: ["Laptop-Specific", "Desktop-Specific", "Both"],
+    items: [
+      { text: "SO-DIMM memory modules", category: 0 },
+      { text: "Full-size DIMM memory modules", category: 1 },
+      { text: "M.2 NVMe SSD storage", category: 2 },
+      { text: "Built-in keyboard and trackpad", category: 0 },
+      { text: "PCIe x16 expansion slot for GPU", category: 1 },
+      { text: "USB-C / Thunderbolt port", category: 2 },
+      { text: "Mini PCIe / M.2 wireless card", category: 0 },
+      { text: "ATX / mATX power supply unit", category: 1 },
+    ],
+    explanation:
+      "Laptops use SO-DIMM (small outline) memory, built-in input devices, and mini PCIe or M.2 wireless cards. Desktops use full-size DIMMs, ATX/mATX power supplies, and full-length PCIe slots. M.2 NVMe SSDs and USB-C/Thunderbolt are shared across both form factors. Understanding these differences is essential for hardware upgrades and repairs.",
+  },
 ];

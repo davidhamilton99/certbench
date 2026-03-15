@@ -7,6 +7,14 @@ interface CliTerminalProps {
   commands: string[];
   onChange: (commands: string[]) => void;
   label: string;
+  /** Shown when user types "?" or "help". Falls back to generic hint. */
+  helpText?: string;
+}
+
+/** Messages displayed in the terminal that aren't graded commands. */
+interface TerminalLine {
+  type: "command" | "output";
+  text: string;
 }
 
 export function CliTerminal({
@@ -14,26 +22,58 @@ export function CliTerminal({
   commands,
   onChange,
   label,
+  helpText,
 }: CliTerminalProps) {
   const [currentInput, setCurrentInput] = useState("");
   const [historyIdx, setHistoryIdx] = useState(-1);
+  /** Output lines interleaved with command history (for help, errors, etc.) */
+  const [outputLines, setOutputLines] = useState<TerminalLine[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when commands change
+  // Build display lines from commands + outputs
+  const displayLines: TerminalLine[] = [];
+  let cmdIdx = 0;
+  for (const line of outputLines) {
+    displayLines.push(line);
+    if (line.type === "command") cmdIdx++;
+  }
+  // Add any remaining commands not yet in outputLines
+  while (cmdIdx < commands.length) {
+    displayLines.push({ type: "command", text: commands[cmdIdx] });
+    cmdIdx++;
+  }
+
+  // Auto-scroll to bottom when content changes
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [commands]);
+  }, [commands, outputLines]);
 
   const handleSubmit = useCallback(() => {
     const trimmed = currentInput.trim();
     if (trimmed.length === 0) return;
+
+    // Handle help/? — show help text without recording as a graded command
+    if (trimmed === "?" || trimmed.toLowerCase() === "help") {
+      const helpOutput = helpText || "Type IOS commands and press Enter. Use ? for available commands.";
+      setOutputLines((prev) => [
+        ...prev,
+        { type: "command", text: trimmed },
+        { type: "output", text: helpOutput },
+      ]);
+      setCurrentInput("");
+      setHistoryIdx(-1);
+      return;
+    }
+
+    // Normal command — record for grading
+    setOutputLines((prev) => [...prev, { type: "command", text: trimmed }]);
     onChange([...commands, trimmed]);
     setCurrentInput("");
     setHistoryIdx(-1);
-  }, [currentInput, commands, onChange]);
+  }, [currentInput, commands, onChange, helpText]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -65,8 +105,34 @@ export function CliTerminal({
     [handleSubmit, commands, historyIdx]
   );
 
+  /** Handle paste — split by newlines and submit each line as a command. */
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const pasted = e.clipboardData.getData("text");
+      if (!pasted.includes("\n")) return; // Single-line paste, let default handle it
+
+      e.preventDefault();
+      const lines = pasted
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+      if (lines.length === 0) return;
+
+      const newOutputLines: TerminalLine[] = [];
+      for (const line of lines) {
+        newOutputLines.push({ type: "command", text: line });
+      }
+      setOutputLines((prev) => [...prev, ...newOutputLines]);
+      onChange([...commands, ...lines]);
+      setCurrentInput("");
+      setHistoryIdx(-1);
+    },
+    [commands, onChange]
+  );
+
   const handleClear = useCallback(() => {
     onChange([]);
+    setOutputLines([]);
     setCurrentInput("");
     setHistoryIdx(-1);
   }, [onChange]);
@@ -96,15 +162,28 @@ export function CliTerminal({
           ref={scrollRef}
           className="p-3 max-h-[240px] overflow-y-auto font-mono text-[13px] leading-relaxed"
         >
-          {/* History lines */}
-          {commands.map((cmd, i) => (
-            <div key={i} className="flex gap-1">
-              <span className="text-[#6b9fff] flex-shrink-0 select-none">
-                {prompt}
-              </span>
-              <span className="text-[#e0e0e0]">{cmd}</span>
+          {/* Placeholder when empty */}
+          {displayLines.length === 0 && currentInput === "" && (
+            <div className="text-[#555] italic text-[12px] mb-1">
+              Type a command and press Enter. Type ? for help.
             </div>
-          ))}
+          )}
+
+          {/* History lines */}
+          {displayLines.map((line, i) =>
+            line.type === "command" ? (
+              <div key={i} className="flex gap-1">
+                <span className="text-[#6b9fff] flex-shrink-0 select-none">
+                  {prompt}
+                </span>
+                <span className="text-[#e0e0e0]">{line.text}</span>
+              </div>
+            ) : (
+              <div key={i} className="text-[#aaa] pl-2 whitespace-pre-wrap">
+                {line.text}
+              </div>
+            )
+          )}
 
           {/* Active input line */}
           <div className="flex gap-1 items-center">
@@ -121,6 +200,8 @@ export function CliTerminal({
                   setHistoryIdx(-1);
                 }}
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                aria-label={`CLI input for ${label}`}
                 className="w-full bg-transparent text-[#e0e0e0] outline-none border-none text-[13px] font-mono p-0 caret-[#6b9fff]"
                 spellCheck={false}
                 autoComplete="off"
@@ -137,7 +218,7 @@ export function CliTerminal({
             {commands.length} command{commands.length !== 1 ? "s" : ""} entered
           </span>
           <span className="text-[11px] text-[#555] font-mono">
-            Enter to submit | Up/Down for history
+            Enter to submit | ? for help | Up/Down for history
           </span>
         </div>
       </div>

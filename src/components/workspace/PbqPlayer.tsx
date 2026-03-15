@@ -59,6 +59,7 @@ export function PbqPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
+          aria-label="Back to scenarios"
           className="text-text-secondary hover:text-text-primary transition-colors"
         >
           <svg

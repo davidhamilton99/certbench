@@ -220,6 +220,7 @@ export function TopologyPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
+          aria-label="Back to scenarios"
           className="text-text-secondary hover:text-text-primary transition-colors"
         >
           <svg
@@ -270,8 +271,8 @@ export function TopologyPlayer({
             </p>
           </Card>
 
-          {/* Topology + Config Panel layout */}
-          <div className="flex gap-0 relative">
+          {/* Topology + Config Panel layout (desktop: side-by-side, mobile: overlay) */}
+          <div className="hidden sm:flex gap-0 relative">
             {/* Diagram */}
             <div
               className={`transition-all duration-300 ${
@@ -305,9 +306,25 @@ export function TopologyPlayer({
             )}
           </div>
 
+          {/* Mobile: diagram always full-width */}
+          <div className="sm:hidden">
+            <TopologyDiagram
+              devices={scenario.devices}
+              connections={scenario.connections}
+              diagramTitle={scenario.diagramTitle}
+              selectedDeviceId={selectedDeviceId}
+              touchedDeviceIds={touchedDeviceIds}
+              onDeviceClick={(id) =>
+                setSelectedDeviceId(
+                  selectedDeviceId === id ? null : id
+                )
+              }
+            />
+          </div>
+
           {/* Mobile: full-width config panel overlay */}
           {selectedDevice && (
-            <div className="sm:hidden fixed inset-0 z-50 bg-bg-surface">
+            <div className="sm:hidden fixed inset-0 z-50 bg-bg-surface overflow-y-auto">
               <DeviceConfigPanel
                 device={selectedDevice}
                 answers={answers}

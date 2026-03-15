@@ -234,6 +234,8 @@ export function TopologyDiagram({
               className={isClickable ? "cursor-pointer" : "cursor-default"}
               role={isClickable ? "button" : undefined}
               tabIndex={isClickable ? 0 : undefined}
+              aria-label={`${device.label} (${device.type.replace("-", " ")})`}
+              aria-selected={isSelected || undefined}
               onKeyDown={(e) => {
                 if (isClickable && (e.key === "Enter" || e.key === " ")) {
                   onDeviceClick(device.id);
@@ -324,7 +326,7 @@ export function TopologyDiagram({
       </svg>
 
       {/* Legend */}
-      <div className="px-4 py-2 border-t border-border-light flex items-center gap-4 text-[11px] text-text-muted">
+      <div className="px-4 py-2 border-t border-border-light flex items-center flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#16a34a]" />
           Pre-configured (leave alone)

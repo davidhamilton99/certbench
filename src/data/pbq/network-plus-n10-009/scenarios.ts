@@ -92,7 +92,7 @@ export const networkPlusScenarios: PbqScenario[] = [
   /* ================================================================ */
   {
     type: "matching",
-    id: "ports-to-services",
+    id: "np-ports-to-services",
     title: "Match Port Numbers to Protocols",
     description:
       "Match each well-known port number to its corresponding network protocol or service.",
@@ -281,5 +281,36 @@ export const networkPlusScenarios: PbqScenario[] = [
     ],
     explanation:
       "In IaaS, the customer manages everything above the hypervisor: OS, storage volumes, and virtual networking. In PaaS, the provider manages the OS and infrastructure; the customer is responsible for their application code, runtime configuration, and database design. In SaaS, the provider manages nearly everything; the customer retains responsibility for user access management, data classification, and client endpoint security. Understanding the shared responsibility model is essential for cloud security on N10-009.",
+  },
+
+  /* ================================================================ */
+  /*  DOMAIN 5.0 — Network Troubleshooting                            */
+  /* ================================================================ */
+  {
+    type: "categorization",
+    id: "np-symptoms-to-network-layer",
+    title: "Classify Network Symptoms by OSI Layer",
+    description:
+      "Sort each network symptom into the OSI layer where the root cause most likely exists.",
+    domain_number: "5.0",
+    domain_title: "Network Troubleshooting",
+    categories: [
+      "Layer 1 — Physical",
+      "Layer 2 — Data Link",
+      "Layer 3 — Network",
+      "Layer 7 — Application",
+    ],
+    items: [
+      { text: "Cable tester shows intermittent signal loss", category: 0 },
+      { text: "Link light on switch port is not illuminated", category: 0 },
+      { text: "Speed/duplex mismatch causing late collisions", category: 1 },
+      { text: "MAC address table overflow on the switch", category: 1 },
+      { text: "Incorrect subnet mask prevents inter-VLAN routing", category: 2 },
+      { text: "TTL exceeded — traceroute shows a routing loop", category: 2 },
+      { text: "HTTPS certificate name mismatch error in browser", category: 3 },
+      { text: "DNS resolves but web page returns HTTP 503", category: 3 },
+    ],
+    explanation:
+      "Physical layer issues involve cables, connectors, and link signals. Data Link problems include duplex mismatches and MAC table issues. Network layer symptoms relate to IP addressing, subnetting, and routing. Application layer issues involve protocols that the end user directly interacts with, such as HTTP errors and certificate validation. Troubleshooting bottom-up (Layer 1 first) is the most efficient strategy.",
   },
 ];
