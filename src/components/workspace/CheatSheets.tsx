@@ -173,7 +173,7 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
             </p>
             <p className="text-[14px] text-text-secondary mt-1 max-w-md">
               Complete a diagnostic exam or practice session to generate
-              personalised cheat sheets for your weak areas.
+              personalised review notes for your weak areas.
             </p>
           </div>
           <Link href={`/certifications/${certSlug}/diagnostic`}>
@@ -456,7 +456,7 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
             <p className="text-[13px] text-text-muted">
-              Practice these domains to unlock their cheat sheets.
+              Practice these domains to unlock their review notes.
             </p>
           </div>
         </div>
