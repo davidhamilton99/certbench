@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-8">
+    <footer className="border-t border-border py-6 sm:py-8">
       <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-3">
         <p className="text-[13px] text-text-muted">
           CertBench — Certification preparation, simplified.

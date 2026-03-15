@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/Button";
 
 export function Hero() {
   return (
-    <section className="max-w-3xl mx-auto px-6 pt-24 pb-16 text-center">
-      <h1 className="text-[36px] sm:text-[44px] font-bold text-text-primary tracking-tight leading-[1.15]">
+    <section className="max-w-3xl mx-auto px-6 pt-16 sm:pt-24 pb-12 sm:pb-16 text-center">
+      <h1 className="text-[28px] sm:text-[36px] md:text-[44px] font-bold text-text-primary tracking-tight leading-[1.15]">
         Know exactly what to study.
         <br />
         Pass your certification.
@@ -21,14 +21,14 @@ export function Hero() {
       </div>
 
       {/* Quick facts */}
-      <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+      <div className="mt-14 sm:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-6 md:gap-12">
         {[
           { value: "2,000+", label: "Practice questions across 4 exams" },
           { value: "4", label: "CompTIA certifications supported" },
-          { value: "100%", label: "Free to start — no credit card" },
+          { value: "Free", label: "Full access — nothing held back" },
         ].map((fact) => (
           <div key={fact.value + fact.label}>
-            <p className="text-[36px] sm:text-[44px] font-bold font-mono text-text-primary tabular-nums">
+            <p className="text-[24px] sm:text-[28px] lg:text-[44px] font-bold font-mono text-text-primary tabular-nums">
               {fact.value}
             </p>
             <p className="text-[15px] text-text-secondary mt-1">

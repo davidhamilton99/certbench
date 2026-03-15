@@ -38,16 +38,16 @@ const features = [
     title: "AI Study Materials",
     description:
       "Paste your notes or textbook excerpts. AI generates practice questions from your own content — a personal question bank alongside the official one.",
-    metric: "50",
-    metricLabel: "questions per set",
+    metric: "AI",
+    metricLabel: "generated",
   },
 ];
 
 export function FeatureSection() {
   return (
     <section className="border-t border-border bg-bg-surface">
-      <div className="w-full max-w-[900px] mx-auto px-6 py-20">
-        <div className="text-center mb-16">
+      <div className="w-full max-w-[900px] mx-auto px-6 py-14 sm:py-20">
+        <div className="text-center mb-10 sm:mb-16">
           <p className="text-[12px] font-medium text-text-muted uppercase tracking-wider mb-3">
             How it works
           </p>

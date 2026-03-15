@@ -38,7 +38,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: "Yes. The full question bank (2,000+ questions), diagnostic exam, practice exams, spaced repetition, readiness score, cheat sheets, PBQ practice, and daily study plans are all free with no credit card required. There is an optional Pro plan at $8/month that unlocks unlimited AI quiz generation from your own notes — but the core product is completely free.",
+        a: "Yes. The full question bank (2,000+ questions), diagnostic exam, practice exams, spaced repetition, readiness score, cheat sheets, PBQ practice, and daily study plans are all completely free. There is an optional Pro plan at $8/month that unlocks unlimited AI quiz generation from your own notes — but the core product costs nothing.",
       },
       {
         q: "Is this an exam dump?",
@@ -257,10 +257,10 @@ export default function HelpPage() {
     <div className="min-h-screen bg-bg-page overflow-x-hidden">
       <MarketingHeader />
 
-      <main className="max-w-3xl mx-auto px-6 py-16">
+      <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         {/* Hero */}
         <div className="text-center mb-6">
-          <h1 className="text-[36px] sm:text-[40px] font-bold text-text-primary tracking-tight">
+          <h1 className="text-[28px] sm:text-[36px] md:text-[40px] font-bold text-text-primary tracking-tight">
             Help Centre
           </h1>
           <p className="text-[17px] text-text-secondary mt-3 max-w-xl mx-auto">

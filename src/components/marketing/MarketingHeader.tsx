@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/server";
+import { MobileMenuButton } from "@/components/marketing/MobileMenuButton";
 
 export async function MarketingHeader() {
   const supabase = await createClient();
@@ -17,7 +18,9 @@ export async function MarketingHeader() {
         >
           CertBench
         </Link>
-        <div className="flex items-center gap-3">
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-3">
           <Link href="/pricing">
             <Button variant="ghost" size="sm">
               Pricing
@@ -45,6 +48,9 @@ export async function MarketingHeader() {
             </>
           )}
         </div>
+
+        {/* Mobile menu */}
+        <MobileMenuButton isLoggedIn={!!user} />
       </div>
     </header>
   );

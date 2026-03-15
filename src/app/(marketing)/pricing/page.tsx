@@ -30,9 +30,9 @@ export default function PricingPage() {
     <div className="min-h-screen bg-bg-page overflow-x-hidden">
       <MarketingHeader />
 
-      <main className="max-w-3xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-[32px] font-bold text-text-primary tracking-tight">
+      <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-text-primary tracking-tight">
             Simple pricing
           </h1>
           <p className="text-[17px] text-text-secondary mt-2">

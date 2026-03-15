@@ -13,7 +13,7 @@ export default function AuthLayout({
             </h1>
           </a>
         </div>
-        <div className="bg-bg-surface border border-border rounded-lg p-6">
+        <div className="bg-bg-surface border border-border rounded-lg p-5 sm:p-6">
           {children}
         </div>
       </div>

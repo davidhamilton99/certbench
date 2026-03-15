@@ -73,13 +73,13 @@ function QuestionCard({ q, index }: { q: SampleQuestion; index: number }) {
   return (
     <div className="flex flex-col gap-3">
       {/* Cert badge + domain */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
         <span
           className={`text-[12px] font-medium uppercase tracking-wider ${q.certColor}`}
         >
           {q.cert}
         </span>
-        <span className="text-[11px] text-text-muted">&middot;</span>
+        <span className="text-[11px] text-text-muted hidden sm:inline">&middot;</span>
         <span className="text-[11px] text-text-muted">{q.domain}</span>
       </div>
 
@@ -161,7 +161,7 @@ function QuestionCard({ q, index }: { q: SampleQuestion; index: number }) {
 export function SampleQuestions() {
   return (
     <section className="border-t border-border">
-      <div className="max-w-[900px] mx-auto px-6 py-20">
+      <div className="max-w-[900px] mx-auto px-6 py-14 sm:py-20">
         <div className="text-center mb-12">
           <p className="text-[12px] font-medium text-text-muted uppercase tracking-wider mb-3">
             Try it now
