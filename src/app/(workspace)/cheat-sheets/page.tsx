@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Cheat Sheets — CertBench",
+  title: "Review — CertBench",
 };
 
 export default async function CheatSheetsPage({
@@ -29,7 +29,7 @@ export default async function CheatSheetsPage({
       <div className="flex flex-col gap-8">
         <div>
           <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-            Cheat Sheets
+            Review
           </h1>
           <p className="text-[14px] text-text-secondary mt-1">
             Personalised quick-reference notes based on your weakest areas.
@@ -47,7 +47,7 @@ export default async function CheatSheetsPage({
                 No certification selected
               </p>
               <p className="text-[14px] text-text-secondary mt-1">
-                Select a certification from the sidebar to view your cheat sheets.
+                Select a certification from the sidebar to view your review notes.
               </p>
             </div>
             <Link href="/add-certification">
@@ -63,7 +63,7 @@ export default async function CheatSheetsPage({
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-          Domain Cheat Sheets
+          Domain Review
         </h1>
         <p className="text-[14px] text-text-secondary mt-1">
           Quick-reference notes sorted by your weakest areas. Review before your exam.
