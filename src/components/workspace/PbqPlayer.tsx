@@ -10,9 +10,11 @@ import type {
   OrderingScenario,
   MatchingScenario,
   CategorizationScenario,
+  TopologyScenario,
 } from "@/data/pbq/types";
 import { gradeScenario } from "@/lib/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
+import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Main Player                                                        */
@@ -44,6 +46,11 @@ export function PbqPlayer({
   /* Simulation scenarios use their own self-contained player */
   if (scenario.type === "simulation") {
     return <SimulationPlayer scenario={scenario} onBack={onBack} />;
+  }
+
+  /* Topology scenarios use the topology player */
+  if (scenario.type === "topology") {
+    return <TopologyPlayer scenario={scenario} onBack={onBack} />;
   }
 
   return (

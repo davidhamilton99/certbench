@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import type { PbqScenario, SimulationScenario } from "@/data/pbq/types";
+import type { PbqScenario, SimulationScenario, TopologyScenario } from "@/data/pbq/types";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 
 /* ------------------------------------------------------------------ */
@@ -101,26 +101,32 @@ function ScenarioList({
                     <span className="text-[13px] text-text-secondary">
                       {scenario.type === "simulation"
                         ? (scenario as SimulationScenario).briefing.slice(0, 120) + "..."
+                        : scenario.type === "topology"
+                        ? (scenario as TopologyScenario).briefing.slice(0, 120) + "..."
                         : "description" in scenario
                         ? (scenario as { description: string }).description
                         : ""}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {scenario.type === "simulation" && (
+                    {(scenario.type === "simulation" || scenario.type === "topology") && (
                       <span className="text-[12px] text-text-muted font-mono">
-                        ~{(scenario as SimulationScenario).estimatedMinutes} min
+                        ~{scenario.type === "simulation"
+                          ? (scenario as SimulationScenario).estimatedMinutes
+                          : (scenario as TopologyScenario).estimatedMinutes} min
                       </span>
                     )}
                     <Badge
                       variant={
-                        scenario.type === "simulation"
+                        scenario.type === "simulation" || scenario.type === "topology"
                           ? "neutral"
                           : drillTypeVariant(scenario.type)
                       }
                     >
                       {scenario.type === "simulation"
                         ? "Simulation"
+                        : scenario.type === "topology"
+                        ? "Topology Lab"
                         : drillTypeLabel(scenario.type)}
                     </Badge>
                   </div>
@@ -153,11 +159,11 @@ export function PbqScenarios({
   );
 
   const drills = useMemo(
-    () => scenarios.filter((s) => s.type !== "simulation"),
+    () => scenarios.filter((s) => s.type !== "simulation" && s.type !== "topology"),
     [scenarios]
   );
   const simulations = useMemo(
-    () => scenarios.filter((s) => s.type === "simulation"),
+    () => scenarios.filter((s) => s.type === "simulation" || s.type === "topology"),
     [scenarios]
   );
 

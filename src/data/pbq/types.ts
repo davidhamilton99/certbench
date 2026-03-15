@@ -132,11 +132,105 @@ export type SimFieldAnswer =
   | { type: "select-many"; selectedIndices: number[] }
   | { type: "zone-placement"; placements: number[] };
 
+/* ================================================================ */
+/*  Topology Scenario Types                                          */
+/* ================================================================ */
+
+/** Position of a device on the SVG canvas (percentage-based, 0-100). */
+export interface TopoPosition {
+  x: number;
+  y: number;
+}
+
+/** Device categories — determines the SVG icon rendered. */
+export type TopoDeviceType =
+  | "router"
+  | "switch"
+  | "firewall"
+  | "server"
+  | "pc"
+  | "access-point"
+  | "cloud";
+
+/** A CLI command field — user types IOS/config-style commands. */
+export interface TopoCLIField {
+  type: "cli";
+  id: string;
+  label: string;
+  /** Prompt string shown (e.g., "Switch(config)#"). */
+  prompt: string;
+  /** Each accepted command sequence: array of command strings.
+   *  Order-sensitive. Multiple valid sequences allowed. */
+  acceptedSequences: string[][];
+  /** Hint shown after incorrect submission. */
+  hint?: string;
+}
+
+/** Union of fields available inside a topology device config panel. */
+export type TopoField =
+  | SimDropdownField
+  | SimTextInputField
+  | SimSelectManyField
+  | TopoCLIField;
+
+/** A connection line between two devices in the topology. */
+export interface TopoConnection {
+  from: string;
+  to: string;
+  label?: string;
+}
+
+/** A single device in the topology diagram. */
+export interface TopoDevice {
+  id: string;
+  type: TopoDeviceType;
+  label: string;
+  position: TopoPosition;
+  /** If true, device is already correctly configured.
+   *  Touching a pre-configured device incurs a grading penalty. */
+  preConfigured: boolean;
+  /** Fields shown when user clicks the device. */
+  fields: TopoField[];
+  /** Per-device explanation shown in results. */
+  explanation: string;
+  /** Optional read-only block showing current config (show commands output). */
+  currentConfig?: string;
+}
+
+export interface TopologyScenario {
+  type: "topology";
+  id: string;
+  title: string;
+  /** Scenario briefing — the situation description. */
+  briefing: string;
+  domain_number: string;
+  domain_title: string;
+  /** Network diagram title/label. */
+  diagramTitle: string;
+  /** All devices in the topology. */
+  devices: TopoDevice[];
+  /** Connection lines between devices. */
+  connections: TopoConnection[];
+  /** Overall explanation shown after grading. */
+  explanation: string;
+  estimatedMinutes: number;
+}
+
+/** Answer shape for a CLI field. */
+export interface TopoCLIFieldAnswer {
+  type: "cli";
+  commands: string[];
+}
+
+/** Extended field answer union for topology scenarios. */
+export type TopoFieldAnswer = SimFieldAnswer | TopoCLIFieldAnswer;
+
 export type PbqScenario =
   | OrderingScenario
   | MatchingScenario
   | CategorizationScenario
-  | SimulationScenario;
+  | SimulationScenario
+  | TopologyScenario;
 
 /** Grading result for a PBQ scenario. */
 export interface PbqGradeResult {
@@ -149,6 +243,16 @@ export interface PbqGradeResult {
 /** Per-task grading breakdown for simulations. */
 export interface SimTaskGradeResult {
   taskTitle: string;
+  totalFields: number;
+  correctFields: number;
+  feedback: string[];
+}
+
+/** Per-device grading breakdown for topologies. */
+export interface TopoDeviceGradeResult {
+  deviceLabel: string;
+  deviceId: string;
+  preConfigured: boolean;
   totalFields: number;
   correctFields: number;
   feedback: string[];

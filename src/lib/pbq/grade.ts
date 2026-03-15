@@ -25,6 +25,9 @@ export function gradeScenario(
     case "simulation":
       // Simulations use gradeSimulationScenario from grade-simulation.ts
       return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeSimulationScenario for simulation scenarios."] };
+    case "topology":
+      // Topologies use gradeTopologyScenario from grade-topology.ts
+      return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeTopologyScenario for topology scenarios."] };
   }
 }
 
