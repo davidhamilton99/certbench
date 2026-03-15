@@ -225,17 +225,17 @@ export function TopologyDiagram({
 
           const isSelected = device.id === selectedDeviceId;
           const isTouched = touchedDeviceIds.has(device.id);
-          const hasFields = device.fields.length > 0;
+          const isClickable = device.fields.length > 0 || !!device.currentConfig;
 
           return (
             <g
               key={device.id}
-              onClick={() => hasFields && onDeviceClick(device.id)}
-              className={hasFields ? "cursor-pointer" : "cursor-default"}
-              role={hasFields ? "button" : undefined}
-              tabIndex={hasFields ? 0 : undefined}
+              onClick={() => isClickable && onDeviceClick(device.id)}
+              className={isClickable ? "cursor-pointer" : "cursor-default"}
+              role={isClickable ? "button" : undefined}
+              tabIndex={isClickable ? 0 : undefined}
               onKeyDown={(e) => {
-                if (hasFields && (e.key === "Enter" || e.key === " ")) {
+                if (isClickable && (e.key === "Enter" || e.key === " ")) {
                   onDeviceClick(device.id);
                 }
               }}
@@ -255,7 +255,7 @@ export function TopologyDiagram({
               )}
 
               {/* Hover highlight (for clickable devices) */}
-              {hasFields && !isSelected && (
+              {isClickable && !isSelected && (
                 <circle
                   cx={pos.x}
                   cy={pos.y}

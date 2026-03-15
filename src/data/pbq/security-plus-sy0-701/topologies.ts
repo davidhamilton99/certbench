@@ -106,15 +106,9 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "AP-Guest",
         position: { x: 18, y: 78 },
         preConfigured: true,
-        fields: [
-          {
-            type: "dropdown",
-            id: "ap-guest-vlan",
-            label: "SSID VLAN assignment",
-            options: ["VLAN 10", "VLAN 20", "VLAN 50"],
-            correctIndex: 2,
-          },
-        ],
+        currentConfig:
+          "SSID: Guest-Apex\nVLAN: 50\nSecurity: WPA3-Personal\nChannel: Auto",
+        fields: [],
         explanation:
           "The guest AP is correctly assigned to VLAN 50. No change needed.",
       },
@@ -124,6 +118,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "DB-Server",
         position: { x: 82, y: 78 },
         preConfigured: true,
+        currentConfig:
+          "IP Address: 10.0.10.100\nSubnet Mask: 255.255.255.0\nDefault Gateway: 10.0.10.1\nVLAN: 10",
         fields: [],
         explanation:
           "The database server is correctly configured on VLAN 10 with appropriate IP settings.",
@@ -134,6 +130,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "Workstation-1",
         position: { x: 50, y: 88 },
         preConfigured: true,
+        currentConfig:
+          "IP Address: 10.0.20.15\nSubnet Mask: 255.255.255.0\nDefault Gateway: 10.0.20.1\nVLAN: 20",
         fields: [],
         explanation:
           "The workstation is correctly configured on VLAN 20. No changes needed.",
@@ -204,6 +202,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "RADIUS",
         position: { x: 82, y: 12 },
         preConfigured: true,
+        currentConfig:
+          "Authentication: EAP-TLS\nCertificate: Valid (expires 2027-01-15)\nClients: WLC-1 (shared secret configured)\nUser DB: Active Directory (LDAPS)",
         fields: [],
         explanation:
           "The RADIUS server is correctly configured with user certificates and EAP-TLS settings.",
@@ -224,15 +224,9 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "AP-Floor1",
         position: { x: 25, y: 68 },
         preConfigured: true,
-        fields: [
-          {
-            type: "dropdown",
-            id: "ap1-mode",
-            label: "AP Operation Mode",
-            options: ["Local (FlexConnect)", "Monitor", "Rogue Detector", "Sniffer"],
-            correctIndex: 0,
-          },
-        ],
+        currentConfig:
+          "Mode: Local (FlexConnect)\nRogue Detection: Enabled — Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
+        fields: [],
         explanation:
           "AP-Floor1 is correctly set to Local mode for normal client connectivity.",
       },
@@ -396,19 +390,9 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "FW-Internal",
         position: { x: 50, y: 75 },
         preConfigured: true,
-        fields: [
-          {
-            type: "dropdown",
-            id: "fw-int-policy",
-            label: "Default policy for DMZ-to-Internal traffic",
-            options: [
-              "Permit all",
-              "Deny all, allow specific",
-              "Permit established only",
-            ],
-            correctIndex: 1,
-          },
-        ],
+        currentConfig:
+          "Default Policy: Deny all, allow specific\naccess-list INSIDE-DMZ permit tcp host 172.16.1.10 host 192.168.1.50 eq 8443\naccess-list INSIDE-DMZ deny ip any any log",
+        fields: [],
         explanation:
           "The internal firewall correctly uses a deny-all default policy with specific allow rules for the application proxy.",
       },
@@ -418,6 +402,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "DB-Server",
         position: { x: 30, y: 92 },
         preConfigured: true,
+        currentConfig:
+          "IP Address: 192.168.1.100\nSubnet Mask: 255.255.255.0\nService: MySQL (TCP 3306)\nListening: 127.0.0.1, 192.168.1.100",
         fields: [],
         explanation:
           "The database server is correctly isolated in the internal zone.",
@@ -428,6 +414,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "App-Proxy",
         position: { x: 70, y: 92 },
         preConfigured: true,
+        currentConfig:
+          "IP Address: 192.168.1.50\nService: Reverse Proxy (TCP 8443)\nUpstream: DB-Server:3306\nTLS: Enabled (mutual auth)",
         fields: [],
         explanation:
           "The application proxy correctly mediates database requests from the DMZ web server.",

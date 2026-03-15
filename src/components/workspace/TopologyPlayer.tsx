@@ -320,7 +320,7 @@ export function TopologyPlayer({
           {/* Progress indicator */}
           <div className="flex items-center justify-between">
             <span className="text-[13px] text-text-muted">
-              {touchedDeviceIds.size} of {scenario.devices.filter((d) => d.fields.length > 0).length} devices
+              {touchedDeviceIds.size} of {configurableDevices.length} devices
               configured
             </span>
             <span className="text-[12px] text-text-muted font-mono">

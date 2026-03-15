@@ -31,15 +31,9 @@ export const networkPlusTopologies: TopologyScenario[] = [
         label: "SW-Dist",
         position: { x: 50, y: 32 },
         preConfigured: true,
-        fields: [
-          {
-            type: "dropdown",
-            id: "sw-dist-trunk-mode",
-            label: "Gi0/1 (uplink to R-Core) — Port Mode",
-            options: ["Access", "Trunk", "Dynamic Auto", "Dynamic Desirable"],
-            correctIndex: 1,
-          },
-        ],
+        currentConfig:
+          "interface Gi0/1\n description Uplink to R-Core\n switchport mode trunk\n switchport trunk allowed vlan 100,200,300\n!\ninterface Gi0/2\n switchport mode trunk\n!\ninterface Gi0/3\n switchport mode trunk",
+        fields: [],
         explanation:
           "The distribution switch trunk to the core router is correctly configured as a trunk port allowing all VLANs.",
       },
@@ -233,29 +227,9 @@ export const networkPlusTopologies: TopologyScenario[] = [
         label: "PC-Office1",
         position: { x: 18, y: 78 },
         preConfigured: true,
-        fields: [
-          {
-            type: "text",
-            id: "pc1-ip",
-            label: "IP Address",
-            acceptedValues: ["10.20.1.10"],
-            placeholder: "IP",
-          },
-          {
-            type: "text",
-            id: "pc1-mask",
-            label: "Subnet Mask",
-            acceptedValues: ["255.255.255.0"],
-            placeholder: "Subnet mask",
-          },
-          {
-            type: "text",
-            id: "pc1-gw",
-            label: "Default Gateway",
-            acceptedValues: ["10.20.1.1"],
-            placeholder: "Gateway",
-          },
-        ],
+        currentConfig:
+          "IP Address: 10.20.1.10\nSubnet Mask: 255.255.255.0\nDefault Gateway: 10.20.1.1",
+        fields: [],
         explanation:
           "PC-Office1 is correctly configured with IP 10.20.1.10, mask 255.255.255.0, and gateway 10.20.1.1.",
       },
@@ -351,15 +325,9 @@ export const networkPlusTopologies: TopologyScenario[] = [
         label: "AP-Hall-L",
         position: { x: 18, y: 60 },
         preConfigured: true,
-        fields: [
-          {
-            type: "dropdown",
-            id: "ap-l-channel",
-            label: "2.4 GHz Channel",
-            options: ["Channel 1", "Channel 3", "Channel 6", "Channel 9", "Channel 11"],
-            correctIndex: 0,
-          },
-        ],
+        currentConfig:
+          "Radio: 2.4 GHz\nChannel: 1\nTx Power: Medium\nSSID: Summit-Event\nBand Steering: Disabled",
+        fields: [],
         explanation:
           "AP-Hall-L is correctly set to Channel 1, a non-overlapping 2.4 GHz channel.",
       },

@@ -299,13 +299,39 @@ export function DeviceConfigPanel({
           </Card>
         )}
 
-        {/* Fields */}
-        {device.fields.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-[14px] text-text-muted">
-              No configuration needed for this device.
+        {/* Pre-configured notice */}
+        {device.preConfigured && (
+          <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-md px-3 py-2.5">
+            <svg
+              className="w-4 h-4 text-success flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-[12px] text-text-secondary">
+              This device appears to be correctly configured. Review the
+              current configuration below. Modifying a correctly-configured
+              device will count against your score.
             </p>
           </div>
+        )}
+
+        {/* Fields */}
+        {device.fields.length === 0 ? (
+          !device.currentConfig && (
+            <div className="text-center py-6">
+              <p className="text-[14px] text-text-muted">
+                No configuration available for this device.
+              </p>
+            </div>
+          )
         ) : (
           device.fields.map((field) => (
             <FieldRenderer
