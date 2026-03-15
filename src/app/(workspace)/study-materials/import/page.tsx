@@ -15,17 +15,21 @@ export default async function ImportFlashcardsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: enrollment } = await supabase
+  // Get all enrolled certifications
+  const { data: enrollments } = await supabase
     .from("user_enrollments")
-    .select("certification_id, certifications(slug)")
+    .select("certification_id, certifications(slug, name)")
     .eq("user_id", user.id)
-    .eq("is_active", true)
-    .limit(1)
-    .single();
+    .eq("is_active", true);
 
-  const cert = enrollment?.certifications as unknown as {
-    slug: string;
-  } | null;
+  type CertRow = { slug: string; name: string };
+  const certOptions: { slug: string; name: string }[] = (enrollments || [])
+    .map((e) => {
+      const cert = e.certifications as unknown as CertRow | null;
+      if (!cert) return null;
+      return { slug: cert.slug, name: cert.name };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
 
-  return <FlashcardImportForm certSlug={cert?.slug || undefined} />;
+  return <FlashcardImportForm certOptions={certOptions} />;
 }
