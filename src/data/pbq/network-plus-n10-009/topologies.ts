@@ -9,7 +9,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
     id: "np-topo-vlan-trunk",
     title: "VLAN Configuration & Inter-Switch Trunking",
     briefing:
-      "Brightline Manufacturing has expanded their office with a new access switch (SW-Access2). Hosts connected to SW-Access2 cannot communicate with hosts on the same VLAN connected to SW-Access1. The network engineer suspects a trunking or VLAN misconfiguration between the switches. Review the topology, identify the misconfigured devices, and fix the VLAN/trunk setup. Engineering is on VLAN 100 (10.10.100.0/24), Sales is on VLAN 200 (10.10.200.0/24), and Management is on VLAN 300 (10.10.300.0/24). Do not modify devices that are already correctly configured.",
+      "Brightline Manufacturing has expanded their office with a new access switch (SW-Access2). Hosts connected to SW-Access2 cannot communicate with hosts on the same VLAN connected to SW-Access1. The network engineer suspects a trunking or VLAN misconfiguration between the switches. Review the topology, identify the misconfigured devices, and fix the VLAN/trunk setup. Engineering is on VLAN 100 (10.10.100.0/24), Sales is on VLAN 200 (10.10.200.0/24), and Management is on VLAN 300 (10.10.30.0/24). Do not modify devices that are already correctly configured.",
     domain_number: "2.0",
     domain_title: "Network Implementation",
     diagramTitle: "Brightline Manufacturing — LAN Topology",

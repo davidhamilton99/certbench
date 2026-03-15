@@ -546,11 +546,10 @@ export const aPlusCore2Simulations: SimulationScenario[] = [
               "Full Control",
               "Modify",
               "Read & Execute + Write",
-              "Read Only",
               "No Access / Deny",
             ],
             zones: ["Domain Admins / SYSTEM", "Marketing-Managers", "Marketing-Staff", "All-Employees (others)"],
-            correctZones: [0, 1, 2, 3, 3],
+            correctZones: [0, 1, 2, 3],
           },
           {
             type: "dropdown",

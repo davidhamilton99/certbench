@@ -81,24 +81,30 @@ export const securityPlusTopologies: TopologyScenario[] = [
             prompt: "Core-SW1(config)#",
             acceptedSequences: [
               [
-                "access-list 10 deny 10.0.10.0 0.0.0.255",
-                "access-list 10 permit any",
+                "access-list 100 deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
+                "access-list 100 permit ip any any",
                 "interface vlan 50",
-                "ip access-group 10 in",
+                "ip access-group 100 in",
               ],
               [
-                "ip access-list standard BLOCK-GUEST",
-                "deny 10.0.10.0 0.0.0.255",
-                "permit any",
+                "ip access-list extended BLOCK-GUEST",
+                "deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
+                "permit ip any any",
                 "interface vlan 50",
                 "ip access-group BLOCK-GUEST in",
               ],
+              [
+                "access-list 100 deny ip any 10.0.10.0 0.0.0.255",
+                "access-list 100 permit ip any any",
+                "interface vlan 50",
+                "ip access-group 100 in",
+              ],
             ],
-            hint: "Create an ACL that denies the server subnet (10.0.10.0/24) and permits everything else, then apply it inbound on VLAN 50 SVI.",
+            hint: "Create an extended ACL that denies guest traffic (10.0.50.0/24) from reaching the server subnet (10.0.10.0/24) and permits everything else, then apply it inbound on VLAN 50 SVI.",
           },
         ],
         explanation:
-          "The core switch needed an ACL applied inbound on the VLAN 50 SVI to prevent guest traffic from being routed to the server VLAN. The ACL denies 10.0.10.0/24 and permits all other traffic.",
+          "The core switch needed an extended ACL applied inbound on the VLAN 50 SVI to prevent guest traffic from being routed to the server VLAN. An extended ACL (100+) is required because standard ACLs can only match source addresses. The ACL denies traffic from 10.0.50.0/24 to 10.0.10.0/24 and permits all other traffic.",
       },
       {
         id: "ap-guest",
