@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod/v4";
 import {
   type QuestionType,
   isValidQuestion,
@@ -7,6 +8,14 @@ import {
   callClaude,
   getAnthropicApiKey,
 } from "@/lib/ai/config";
+
+const patchQuestionSchema = z.object({
+  aiImprove: z.literal(true).optional(),
+  questionText: z.string().min(1).max(5000).optional(),
+  options: z.array(z.unknown()).min(2).max(10).optional(),
+  correctIndex: z.number().int().optional(),
+  explanation: z.string().max(5000).optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Type-specific improve prompts
@@ -191,7 +200,17 @@ export async function PATCH(
     );
   }
 
-  const body = await req.json();
+  const rawBody = await req.json();
+  const parsed = patchQuestionSchema.safeParse(rawBody);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
+      { status: 400 }
+    );
+  }
+
+  const body = parsed.data;
 
   // -----------------------------------------------------------------------
   // AI Improve mode — return improved version without saving
@@ -290,7 +309,7 @@ export async function PATCH(
 
   if (Object.keys(updateData).length === 0) {
     return NextResponse.json(
-      { error: "No fields to update" },
+      { error: "No fields to update. Provide questionText, options, correctIndex, or explanation." },
       { status: 400 }
     );
   }

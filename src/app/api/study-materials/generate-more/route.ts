@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod/v4";
 import {
   CONTENT_CHAR_LIMIT,
   type GeneratedQuestion,
   type Difficulty,
-  ALLOWED_DIFFICULTIES,
   difficultyInstructions,
   isValidQuestion,
   getAnthropicApiKey,
@@ -14,7 +14,13 @@ import {
 import { getUserPlan, incrementGenerationUsage } from "@/lib/subscription";
 import { rateLimit } from "@/lib/rate-limit";
 
-const ALLOWED_COUNTS = [5, 10, 15];
+const generateMoreSchema = z.object({
+  setId: z.string().uuid(),
+  questionCount: z.number().int().refine((n) => [5, 10, 15].includes(n), {
+    message: "questionCount must be 5, 10, or 15",
+  }),
+  additionalContent: z.string().max(200000).optional(),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -48,30 +54,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { setId, questionCount, additionalContent, difficulty = "mixed" } =
-    (await req.json()) as {
-      setId: string;
-      questionCount: number;
-      additionalContent?: string;
-      difficulty?: Difficulty;
-    };
+  const body = await req.json();
+  const parsed = generateMoreSchema.safeParse(body);
 
-  if (!setId) {
-    return NextResponse.json({ error: "setId is required" }, { status: 400 });
-  }
-
-  if (!ALLOWED_COUNTS.includes(questionCount)) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "questionCount must be 5, 10, or 15" },
+      { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
       { status: 400 }
     );
   }
 
-  const validDifficulty: Difficulty = ALLOWED_DIFFICULTIES.includes(
-    difficulty as Difficulty
-  )
-    ? (difficulty as Difficulty)
-    : "mixed";
+  const { setId, questionCount, additionalContent } = parsed.data;
+  const validDifficulty: Difficulty = "mixed";
 
   // Verify ownership
   const { data: studySet } = await supabase

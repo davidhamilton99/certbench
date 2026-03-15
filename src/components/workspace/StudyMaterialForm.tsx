@@ -385,6 +385,7 @@ export function StudyMaterialForm({
   }, []);
 
   const saveToLibrary = useCallback(async () => {
+    if (saving) return;
     if (questions.length === 0) {
       setError("No questions to save.");
       return;
@@ -420,7 +421,7 @@ export function StudyMaterialForm({
     } finally {
       setSaving(false);
     }
-  }, [questions, title, category, sourcePreview, selectedCertSlug, domainTag, router]);
+  }, [saving, questions, title, category, sourcePreview, selectedCertSlug, domainTag, router]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;

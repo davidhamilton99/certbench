@@ -173,6 +173,7 @@ export function FlashcardImportForm({
   };
 
   const saveStudySet = async () => {
+    if (phase === "saving") return;
     if (!title.trim()) {
       setError("Please enter a title.");
       return;
