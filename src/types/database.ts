@@ -396,6 +396,7 @@ export interface Database {
           question_count: number;
           is_featured: boolean;
           attempt_count: number;
+          bookmark_count: number;
           created_at: string;
           updated_at: string;
         };
@@ -410,6 +411,7 @@ export interface Database {
           question_count?: number;
           is_featured?: boolean;
           attempt_count?: number;
+          bookmark_count?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -422,6 +424,7 @@ export interface Database {
           question_count?: number;
           is_featured?: boolean;
           attempt_count?: number;
+          bookmark_count?: number;
         };
       };
       user_study_questions: {
@@ -487,9 +490,42 @@ export interface Database {
           domain_tag?: string | null;
         };
       };
+      community_reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          study_set_id: string;
+          reason: string;
+          status: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes: string | null;
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          study_set_id: string;
+          reason: string;
+          status?: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes?: string | null;
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          reason?: string;
+          status?: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes?: string | null;
+          reviewed_at?: string | null;
+        };
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      increment_attempt_count: {
+        Args: { set_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
   };
 }

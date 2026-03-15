@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -44,11 +44,12 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "most_questions", label: "Most Questions" },
 ];
 
+const PAGE_SIZE = 24;
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Shorten cert names for compact badges */
 function certShortName(slug: string): string {
   const map: Record<string, string> = {
     "security-plus": "Security+",
@@ -96,10 +97,16 @@ export function CommunityList({
     new Map(sets.map((s) => [s.id, s.bookmarkCount]))
   );
 
+  // Debounce: track which bookmark toggles are in-flight
+  const inflightRef = useRef<Set<string>>(new Set());
+
   // Filters & search
   const [search, setSearch] = useState("");
   const [certFilter, setCertFilter] = useState<string>("all");
   const [sort, setSort] = useState<SortOption>("popular");
+
+  // Pagination
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Filtered and sorted sets
   const filteredSets = useMemo(() => {
@@ -162,10 +169,20 @@ export function CommunityList({
     return result;
   }, [sets, search, certFilter, sort, counts]);
 
+  const paginatedSets = useMemo(
+    () => filteredSets.slice(0, visibleCount),
+    [filteredSets, visibleCount]
+  );
+  const hasMore = visibleCount < filteredSets.length;
+
   const toggleBookmark = useCallback(
     async (setId: string, e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // Debounce: skip if already in-flight for this set
+      if (inflightRef.current.has(setId)) return;
+      inflightRef.current.add(setId);
 
       const wasBookmarked = bookmarks.get(setId) || false;
 
@@ -202,10 +219,28 @@ export function CommunityList({
             (prev.get(setId) || 0) + (wasBookmarked ? 1 : -1)
           )
         );
+      } finally {
+        inflightRef.current.delete(setId);
       }
     },
     [bookmarks]
   );
+
+  // Reset pagination when filters change
+  const handleCertFilter = useCallback((value: string) => {
+    setCertFilter(value);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleSort = useCallback((value: SortOption) => {
+    setSort(value);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
 
   return (
     <div>
@@ -240,7 +275,8 @@ export function CommunityList({
             type="text"
             placeholder="Search sets..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
+            aria-label="Search community study sets"
             className="w-full pl-9 pr-3 h-9 rounded-lg border border-border bg-bg-surface text-[14px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
@@ -248,7 +284,8 @@ export function CommunityList({
         {/* Cert filter */}
         <select
           value={certFilter}
-          onChange={(e) => setCertFilter(e.target.value)}
+          onChange={(e) => handleCertFilter(e.target.value)}
+          aria-label="Filter by certification"
           className="h-9 px-3 rounded-lg border border-border bg-bg-surface text-[14px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
         >
           <option value="all">All Certifications</option>
@@ -262,7 +299,8 @@ export function CommunityList({
         {/* Sort */}
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as SortOption)}
+          onChange={(e) => handleSort(e.target.value as SortOption)}
+          aria-label="Sort study sets"
           className="h-9 px-3 rounded-lg border border-border bg-bg-surface text-[14px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
         >
           {SORT_OPTIONS.map((o) => (
@@ -279,7 +317,7 @@ export function CommunityList({
           <span>{filteredSets.length} result{filteredSets.length !== 1 ? "s" : ""}</span>
           {certFilter !== "all" && (
             <button
-              onClick={() => setCertFilter("all")}
+              onClick={() => handleCertFilter("all")}
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-bg-page border border-border hover:bg-bg-surface transition-colors"
             >
               {certifications.find((c) => c.slug === certFilter)?.name || certFilter}
@@ -290,7 +328,7 @@ export function CommunityList({
           )}
           {search.trim() && (
             <button
-              onClick={() => setSearch("")}
+              onClick={() => handleSearch("")}
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-bg-page border border-border hover:bg-bg-surface transition-colors"
             >
               &ldquo;{search.trim()}&rdquo;
@@ -318,101 +356,118 @@ export function CommunityList({
           />
         )
       ) : (
-        <div className="flex flex-col gap-3">
-          {filteredSets.map((set) => {
-            const isBookmarked = bookmarks.get(set.id) || false;
-            const count = counts.get(set.id) || 0;
+        <>
+          <div className="flex flex-col gap-3">
+            {paginatedSets.map((set) => {
+              const isBookmarked = bookmarks.get(set.id) || false;
+              const count = counts.get(set.id) || 0;
+              const isInflight = inflightRef.current.has(set.id);
 
-            return (
-              <Link key={set.id} href={`/community/${set.id}`}>
-                <Card
-                  padding="md"
-                  className="hover:bg-bg-page transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex flex-col gap-1.5 min-w-0">
-                      {/* Title row */}
-                      <div className="flex items-center gap-2">
-                        {set.is_featured && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            Featured
-                          </span>
-                        )}
-                        <h3 className="text-[15px] font-semibold text-text-primary truncate">
-                          {set.title}
-                        </h3>
-                      </div>
-
-                      {/* Meta row */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[13px] text-text-muted">
-                          by {set.creatorName}
-                        </span>
-                        <span className="text-[13px] text-text-muted">
-                          ·
-                        </span>
-                        <span className="text-[13px] font-mono text-text-muted">
-                          {set.question_count}q
-                        </span>
-                        <span className="text-[13px] text-text-muted">
-                          ·
-                        </span>
-                        <span className="text-[13px] text-text-muted">
-                          {timeAgo(set.created_at)}
-                        </span>
-                        {set.attempt_count > 0 && (
-                          <>
-                            <span className="text-[13px] text-text-muted">
-                              ·
-                            </span>
-                            <span className="text-[13px] text-text-muted">
-                              {set.attempt_count} attempt{set.attempt_count !== 1 ? "s" : ""}
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Tags row */}
-                      {(set.certTags.length > 0 || set.category) && (
-                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                          {set.certTags.map((t) => (
-                            <Badge key={t.slug} variant="neutral">
-                              {certShortName(t.slug)}
-                              {t.domain && ` · ${t.domain}`}
-                            </Badge>
-                          ))}
-                          {set.category && (
-                            <span className="text-[12px] text-text-muted px-1.5 py-0.5 rounded bg-bg-page border border-border">
-                              {set.category}
+              return (
+                <Link key={set.id} href={`/community/${set.id}`}>
+                  <Card
+                    padding="md"
+                    className="hover:bg-bg-page transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        {/* Title row */}
+                        <div className="flex items-center gap-2">
+                          {set.is_featured && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              Featured
                             </span>
                           )}
+                          <h3 className="text-[15px] font-semibold text-text-primary truncate">
+                            {set.title}
+                          </h3>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Save button */}
-                    <button
-                      onClick={(e) => toggleBookmark(set.id, e)}
-                      className={`flex-shrink-0 text-[13px] font-medium px-2.5 py-1 rounded transition-colors ${
-                        isBookmarked
-                          ? "text-primary bg-blue-50"
-                          : "text-text-muted hover:text-text-secondary"
-                      }`}
-                    >
-                      {isBookmarked ? "Saved" : "Save"}{" "}
-                      {count > 0 && (
-                        <span className="font-mono">({count})</span>
-                      )}
-                    </button>
-                  </div>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+                        {/* Meta row */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[13px] text-text-muted">
+                            by {set.creatorName}
+                          </span>
+                          <span className="text-[13px] text-text-muted">
+                            ·
+                          </span>
+                          <span className="text-[13px] font-mono text-text-muted">
+                            {set.question_count}q
+                          </span>
+                          <span className="text-[13px] text-text-muted">
+                            ·
+                          </span>
+                          <span className="text-[13px] text-text-muted">
+                            {timeAgo(set.created_at)}
+                          </span>
+                          {set.attempt_count > 0 && (
+                            <>
+                              <span className="text-[13px] text-text-muted">
+                                ·
+                              </span>
+                              <span className="text-[13px] text-text-muted">
+                                {set.attempt_count} attempt{set.attempt_count !== 1 ? "s" : ""}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Tags row */}
+                        {(set.certTags.length > 0 || set.category) && (
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                            {set.certTags.map((t) => (
+                              <Badge key={t.slug} variant="neutral">
+                                {certShortName(t.slug)}
+                                {t.domain && ` · ${t.domain}`}
+                              </Badge>
+                            ))}
+                            {set.category && (
+                              <span className="text-[12px] text-text-muted px-1.5 py-0.5 rounded bg-bg-page border border-border">
+                                {set.category}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Save button */}
+                      <button
+                        onClick={(e) => toggleBookmark(set.id, e)}
+                        disabled={isInflight}
+                        aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this set"}
+                        className={`flex-shrink-0 text-[13px] font-medium px-2.5 py-1 rounded transition-colors disabled:opacity-50 ${
+                          isBookmarked
+                            ? "text-primary bg-blue-50"
+                            : "text-text-muted hover:text-text-secondary"
+                        }`}
+                      >
+                        {isBookmarked ? "Saved" : "Save"}{" "}
+                        {count > 0 && (
+                          <span className="font-mono">({count})</span>
+                        )}
+                      </button>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Load More */}
+          {hasMore && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+                className="text-[14px] font-medium text-primary hover:text-primary/80 px-4 py-2 rounded-lg border border-border hover:bg-bg-page transition-colors"
+              >
+                Load More ({filteredSets.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

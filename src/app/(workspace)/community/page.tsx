@@ -35,15 +35,15 @@ export default async function CommunityPage() {
     .select("slug, name")
     .order("name");
 
-  // Fetch all public community sets (increased limit)
+  // Fetch all public community sets with denormalized bookmark_count
   const { data: sets } = await supabase
     .from("user_study_sets")
     .select(
-      "id, user_id, title, category, question_count, is_public, is_featured, attempt_count, created_at"
+      "id, user_id, title, category, question_count, is_public, is_featured, attempt_count, bookmark_count, created_at"
     )
     .eq("is_public", true)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(500);
 
   // Get cert tags for all sets
   const setIds = (sets || []).map((s) => s.id);
@@ -84,23 +84,6 @@ export default async function CommunityPage() {
     (bookmarks || []).map((b) => b.study_set_id)
   );
 
-  // Get bookmark counts
-  let bookmarkCounts = new Map<string, number>();
-  if (setIds.length > 0) {
-    const { data: counts } = await supabase
-      .from("study_set_bookmarks")
-      .select("study_set_id")
-      .in("study_set_id", setIds);
-    if (counts) {
-      for (const c of counts) {
-        bookmarkCounts.set(
-          c.study_set_id,
-          (bookmarkCounts.get(c.study_set_id) || 0) + 1
-        );
-      }
-    }
-  }
-
   const enrichedSets = (sets || []).map((s) => ({
     id: s.id,
     user_id: s.user_id,
@@ -111,7 +94,7 @@ export default async function CommunityPage() {
     attempt_count: s.attempt_count,
     created_at: s.created_at,
     creatorName: creatorMap.get(s.user_id) || "Unknown",
-    bookmarkCount: bookmarkCounts.get(s.id) || 0,
+    bookmarkCount: s.bookmark_count ?? 0,
     isBookmarked: bookmarkedIds.has(s.id),
     certTags: certTagMap.get(s.id) || [],
   }));

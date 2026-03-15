@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { z } from "zod/v4";
+import { rateLimit } from "@/lib/rate-limit";
+
+const attemptSchema = z.object({
+  studySetId: z.string().uuid(),
+});
 
 function getAdminSupabase() {
   return createServiceClient(
@@ -20,27 +26,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { studySetId } = (await req.json()) as { studySetId: string };
+  // Rate limit: 30 attempts per user per minute
+  const { limited } = rateLimit(`attempt:${user.id}`, 30, 60_000);
+  if (limited) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
-  if (!studySetId) {
+  const parsed = attemptSchema.safeParse(await req.json());
+
+  if (!parsed.success) {
     return NextResponse.json({ error: "Missing studySetId" }, { status: 400 });
   }
 
-  // Use service role to bypass RLS — we need to update another user's set
+  const { studySetId } = parsed.data;
+
+  // Use service role for atomic increment on another user's set
   const admin = getAdminSupabase();
 
-  // Only increment on public sets (safety check)
-  const { data: set } = await admin
-    .from("user_study_sets")
-    .select("attempt_count, is_public")
-    .eq("id", studySetId)
-    .single();
+  // Atomic increment — only on public sets
+  const { error } = await admin.rpc("increment_attempt_count", {
+    set_id: studySetId,
+  });
 
-  if (set && set.is_public) {
-    await admin
+  if (error) {
+    // Fallback: non-atomic increment (if RPC not yet deployed)
+    const { data: set } = await admin
       .from("user_study_sets")
-      .update({ attempt_count: (set.attempt_count ?? 0) + 1 })
-      .eq("id", studySetId);
+      .select("attempt_count, is_public")
+      .eq("id", studySetId)
+      .single();
+
+    if (set && set.is_public) {
+      await admin
+        .from("user_study_sets")
+        .update({ attempt_count: (set.attempt_count ?? 0) + 1 })
+        .eq("id", studySetId);
+    }
   }
 
   return NextResponse.json({ ok: true });
