@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, category, questions, sourcePreview, isPublic, certSlug } =
+  const { title, category, questions, sourcePreview, isPublic, certSlug, domainTag } =
     (await req.json()) as {
       title: string;
       category?: string;
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       sourcePreview?: string;
       isPublic?: boolean;
       certSlug?: string;
+      domainTag?: string;
     };
 
   if (!title || !questions?.length) {
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
     await supabase.from("study_set_cert_tags").insert({
       study_set_id: studySet.id,
       certification_slug: certSlug,
+      domain_tag: domainTag || null,
     });
   }
 

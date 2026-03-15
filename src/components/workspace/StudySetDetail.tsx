@@ -282,7 +282,16 @@ export function StudySetDetail({
     const firstQ = localQuestions[0];
     if (firstQ) initQuestionState(firstQ);
     setPhase("practicing");
-  }, [resetAnswerState, initQuestionState, localQuestions]);
+
+    // Track attempt (fire-and-forget, non-owner only)
+    if (!isOwner) {
+      fetch("/api/community/attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studySetId: studySet.id }),
+      }).catch(() => {});
+    }
+  }, [resetAnswerState, initQuestionState, localQuestions, isOwner, studySet.id]);
 
   // -----------------------------------------------------------------------
   // Set management handlers

@@ -69,8 +69,10 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export function StudyMaterialForm({
   certSlug,
+  domains,
 }: {
   certSlug?: string;
+  domains?: string[];
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +86,7 @@ export function StudyMaterialForm({
   const [sourcePreview, setSourcePreview] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [domainTag, setDomainTag] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<Set<QuestionType>>(
     new Set(QUESTION_TYPE_OPTIONS.map((t) => t.value))
   );
@@ -352,6 +355,7 @@ export function StudyMaterialForm({
           questions,
           sourcePreview,
           certSlug,
+          domainTag: domainTag || undefined,
         }),
       });
 
@@ -368,7 +372,7 @@ export function StudyMaterialForm({
     } finally {
       setSaving(false);
     }
-  }, [questions, title, category, sourcePreview, certSlug, router]);
+  }, [questions, title, category, sourcePreview, certSlug, domainTag, router]);
 
   // Generating / validating state
   if (phase === "generating" || phase === "validating") {
@@ -587,6 +591,29 @@ export function StudyMaterialForm({
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
+
+          {domains && domains.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-medium text-text-primary">
+                Exam Domain (optional)
+              </label>
+              <p className="text-[12px] text-text-muted">
+                Tag this set with an exam domain so others can find it more easily.
+              </p>
+              <select
+                value={domainTag}
+                onChange={(e) => setDomainTag(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-border bg-bg-surface text-[14px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                <option value="">No domain tag</option>
+                {domains.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-medium text-text-primary">

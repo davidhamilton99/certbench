@@ -394,6 +394,8 @@ export interface Database {
           is_public: boolean;
           source_material_preview: string | null;
           question_count: number;
+          is_featured: boolean;
+          attempt_count: number;
           created_at: string;
           updated_at: string;
         };
@@ -406,6 +408,8 @@ export interface Database {
           is_public?: boolean;
           source_material_preview?: string | null;
           question_count?: number;
+          is_featured?: boolean;
+          attempt_count?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -416,6 +420,8 @@ export interface Database {
           is_public?: boolean;
           source_material_preview?: string | null;
           question_count?: number;
+          is_featured?: boolean;
+          attempt_count?: number;
         };
       };
       user_study_questions: {
@@ -468,14 +474,17 @@ export interface Database {
         Row: {
           study_set_id: string;
           certification_slug: string;
+          domain_tag: string | null;
         };
         Insert: {
           study_set_id: string;
           certification_slug: string;
+          domain_tag?: string | null;
         };
         Update: {
           study_set_id?: string;
           certification_slug?: string;
+          domain_tag?: string | null;
         };
       };
     };
