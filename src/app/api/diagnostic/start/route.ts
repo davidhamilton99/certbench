@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { selectDiagnosticQuestions } from "@/lib/question-selection/select-diagnostic";
 import type { CertQuestion, DomainWeight } from "@/lib/question-selection/types";
 import { DIAGNOSTIC_QUESTION_COUNT } from "@/constants/exam-config";
+import { z } from "zod/v4";
+
+const startSchema = z.object({
+  certificationId: z.string().uuid(),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -15,14 +20,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { certificationId } = await req.json();
+  const parsed = startSchema.safeParse(await req.json());
 
-  if (!certificationId) {
+  if (!parsed.success) {
     return NextResponse.json(
       { error: "certificationId is required" },
       { status: 400 }
     );
   }
+
+  const { certificationId } = parsed.data;
 
   // Verify enrollment
   const { data: enrollment } = await supabase

@@ -10,6 +10,16 @@ import {
   FULL_EXAM_QUESTION_COUNT,
   DOMAIN_DRILL_QUESTION_COUNT,
 } from "@/constants/exam-config";
+import { z } from "zod/v4";
+
+const startSchema = z.object({
+  certificationId: z.string().uuid(),
+  examType: z.enum(["full", "domain_drill", "weak_points"]).optional().default("full"),
+  domainId: z.string().uuid().optional(),
+}).refine(
+  (data) => data.examType !== "domain_drill" || !!data.domainId,
+  { message: "domainId is required for domain drills" }
+);
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -22,28 +32,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { certificationId, examType = "full", domainId } = await req.json();
+  const parsed = startSchema.safeParse(await req.json());
 
-  if (!certificationId) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "certificationId is required" },
+      { error: parsed.error.issues[0]?.message || "Invalid input" },
       { status: 400 }
     );
   }
 
-  if (!["full", "domain_drill", "weak_points"].includes(examType)) {
-    return NextResponse.json(
-      { error: "Invalid exam type" },
-      { status: 400 }
-    );
-  }
-
-  if (examType === "domain_drill" && !domainId) {
-    return NextResponse.json(
-      { error: "domainId is required for domain drills" },
-      { status: 400 }
-    );
-  }
+  const { certificationId, examType, domainId } = parsed.data;
 
   // Verify enrollment
   const { data: enrollment } = await supabase
