@@ -856,7 +856,7 @@ export function StudyMaterialForm({
           <Button
             size="lg"
             onClick={generate}
-            disabled={!title.trim() || !content.trim() || (userPlan !== null && !userPlan.canGenerate)}
+            disabled={!title.trim() || !content.trim() || fileLoading || (userPlan !== null && !userPlan.canGenerate)}
           >
             Generate Questions
           </Button>
