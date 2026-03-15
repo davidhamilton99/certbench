@@ -9,8 +9,9 @@ export function CTASection() {
           Stop studying blind
         </h2>
         <p className="text-[16px] text-text-secondary mt-3 max-w-md mx-auto">
-          Take the diagnostic, get your readiness score, and start following a
-          plan built from your actual gaps.
+          Use alongside your favourite video course or textbook. CertBench
+          handles the practice — so you know exactly when you&apos;re ready to
+          sit your exam.
         </p>
         <div className="mt-8">
           <Link href="/register">
@@ -28,6 +29,7 @@ export function CTASection() {
               "CompTIA Security+ SY0-701",
               "CompTIA Network+ N10-009",
               "CompTIA A+ 220-1101",
+              "CompTIA A+ 220-1102",
             ].map((cert) => (
               <span
                 key={cert}
@@ -37,6 +39,18 @@ export function CTASection() {
               </span>
             ))}
           </div>
+        </div>
+
+        {/* Founder note */}
+        <div className="mt-16 pt-8 border-t border-border">
+          <p className="text-[14px] text-text-secondary italic max-w-md mx-auto leading-relaxed">
+            &ldquo;I built CertBench because I got tired of studying blind —
+            practising hundreds of questions with no idea whether I was actually
+            ready. This is the tool I wished I had.&rdquo;
+          </p>
+          <p className="text-[13px] text-text-muted mt-2">
+            — David, founder of CertBench
+          </p>
         </div>
       </div>
     </section>
