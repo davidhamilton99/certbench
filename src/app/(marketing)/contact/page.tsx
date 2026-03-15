@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { Footer } from "@/components/marketing/Footer";
+import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 
 export const metadata = {
   title: "Contact — CertBench",
@@ -11,32 +11,7 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-bg-page overflow-x-hidden">
-      {/* Header */}
-      <header className="border-b border-border bg-bg-surface">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-[18px] font-bold text-text-primary tracking-tight"
-          >
-            CertBench
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/pricing">
-              <Button variant="ghost" size="sm">
-                Pricing
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                Sign in
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm">Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
