@@ -57,7 +57,7 @@ const navItems = [
     ),
   },
   {
-    label: "Cheat Sheets",
+    label: "Review",
     href: "/cheat-sheets",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
