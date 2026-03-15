@@ -74,6 +74,10 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (typeof isPublic === "boolean") {
     updates.is_public = isPublic;
+    // Reset popularity metrics when unpublishing to prevent gaming
+    if (!isPublic) {
+      updates.attempt_count = 0;
+    }
   }
 
   if (Object.keys(updates).length === 0) {

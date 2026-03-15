@@ -86,6 +86,12 @@ export function StudySetDetail({
   const [toggling, setToggling] = useState(false);
   const [isPublic, setIsPublic] = useState(studySet.is_public);
 
+  // --- Report state ---
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportResult, setReportResult] = useState<"success" | "already" | "error" | null>(null);
+
   const [localQuestions, setLocalQuestions] =
     useState<StudyQuestion[]>(initialQuestions);
 
@@ -282,7 +288,16 @@ export function StudySetDetail({
     const firstQ = localQuestions[0];
     if (firstQ) initQuestionState(firstQ);
     setPhase("practicing");
-  }, [resetAnswerState, initQuestionState, localQuestions]);
+
+    // Track attempt (fire-and-forget, non-owner only)
+    if (!isOwner) {
+      fetch("/api/community/attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studySetId: studySet.id }),
+      }).catch(() => {});
+    }
+  }, [resetAnswerState, initQuestionState, localQuestions, isOwner, studySet.id]);
 
   // -----------------------------------------------------------------------
   // Set management handlers
@@ -316,6 +331,32 @@ export function StudySetDetail({
       setToggling(false);
     }
   }, [studySet.id, isPublic]);
+
+  const handleReport = useCallback(async () => {
+    if (reportReason.trim().length < 5) return;
+    setReportSubmitting(true);
+    try {
+      const res = await fetch("/api/community/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studySetId: studySet.id,
+          reason: reportReason.trim(),
+        }),
+      });
+      if (res.ok) {
+        setReportResult("success");
+      } else if (res.status === 409) {
+        setReportResult("already");
+      } else {
+        setReportResult("error");
+      }
+    } catch {
+      setReportResult("error");
+    } finally {
+      setReportSubmitting(false);
+    }
+  }, [studySet.id, reportReason]);
 
   // -----------------------------------------------------------------------
   // Export to PDF
@@ -1336,7 +1377,7 @@ export function StudySetDetail({
             {shareCopied ? "Link Copied" : "Copy Share Link"}
           </Button>
         )}
-        {isOwner && (
+        {isOwner ? (
           <>
             <Button
               variant="secondary"
@@ -1353,8 +1394,98 @@ export function StudySetDetail({
               Delete Set
             </Button>
           </>
+        ) : (
+          <Button
+            variant="ghost"
+            onClick={() => setShowReportModal(true)}
+          >
+            Report
+          </Button>
         )}
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <Card padding="lg" className="w-full max-w-md mx-4">
+            {reportResult === "success" ? (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-[16px] font-semibold text-text-primary">
+                  Report Submitted
+                </h3>
+                <p className="text-[14px] text-text-secondary">
+                  Thank you for your report. We&#39;ll review this study set.
+                </p>
+                <Button onClick={() => { setShowReportModal(false); setReportResult(null); setReportReason(""); }}>
+                  Close
+                </Button>
+              </div>
+            ) : reportResult === "already" ? (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-[16px] font-semibold text-text-primary">
+                  Already Reported
+                </h3>
+                <p className="text-[14px] text-text-secondary">
+                  You&#39;ve already reported this study set. We&#39;ll review it soon.
+                </p>
+                <Button onClick={() => { setShowReportModal(false); setReportResult(null); }}>
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-[16px] font-semibold text-text-primary">
+                  Report Study Set
+                </h3>
+                <p className="text-[14px] text-text-secondary">
+                  Why are you reporting &ldquo;{studySet.title}&rdquo;?
+                </p>
+                <div className="flex flex-col gap-2">
+                  {["Inappropriate or offensive content", "Spam or low quality", "Incorrect or misleading information", "Copyright violation"].map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setReportReason(reason)}
+                      className={`text-left text-[14px] px-3 py-2 rounded-lg border transition-colors ${
+                        reportReason === reason
+                          ? "border-primary bg-blue-50 text-primary"
+                          : "border-border bg-bg-surface text-text-primary hover:bg-bg-page"
+                      }`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Describe the issue (required)..."
+                  rows={3}
+                  maxLength={1000}
+                  className="w-full px-3 py-2 text-[14px] text-text-primary bg-bg-surface border border-border rounded-lg placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                {reportResult === "error" && (
+                  <p className="text-[13px] text-danger">Failed to submit report. Please try again.</p>
+                )}
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="secondary"
+                    onClick={() => { setShowReportModal(false); setReportResult(null); setReportReason(""); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleReport}
+                    loading={reportSubmitting}
+                    disabled={reportReason.trim().length < 5}
+                  >
+                    Submit Report
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Question list */}
       <div>

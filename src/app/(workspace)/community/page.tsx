@@ -15,7 +15,7 @@ export default async function CommunityPage() {
 
   if (!user) redirect("/login");
 
-  // Get user's active certification for contextual filtering
+  // Get user's active certification for default filter
   const { data: enrollment } = await supabase
     .from("user_enrollments")
     .select("certification_id, certifications(slug, name)")
@@ -28,18 +28,39 @@ export default async function CommunityPage() {
     slug: string;
     name: string;
   } | null;
-  const certSlug = cert?.slug;
-  const certName = cert?.name;
 
-  // Fetch all public community sets
+  // Get all certifications for filter dropdown
+  const { data: allCerts } = await supabase
+    .from("certifications")
+    .select("slug, name")
+    .order("name");
+
+  // Fetch all public community sets with denormalized bookmark_count
   const { data: sets } = await supabase
     .from("user_study_sets")
     .select(
-      "id, user_id, title, category, question_count, is_public, created_at"
+      "id, user_id, title, category, question_count, is_public, is_featured, attempt_count, bookmark_count, created_at"
     )
     .eq("is_public", true)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(500);
+
+  // Get cert tags for all sets
+  const setIds = (sets || []).map((s) => s.id);
+  let certTagMap = new Map<string, { slug: string; domain: string | null }[]>();
+  if (setIds.length > 0) {
+    const { data: tags } = await supabase
+      .from("study_set_cert_tags")
+      .select("study_set_id, certification_slug, domain_tag")
+      .in("study_set_id", setIds);
+    if (tags) {
+      for (const t of tags) {
+        const existing = certTagMap.get(t.study_set_id) || [];
+        existing.push({ slug: t.certification_slug, domain: t.domain_tag });
+        certTagMap.set(t.study_set_id, existing);
+      }
+    }
+  }
 
   // Get creators' display names
   const creatorIds = [...new Set((sets || []).map((s) => s.user_id))];
@@ -63,45 +84,32 @@ export default async function CommunityPage() {
     (bookmarks || []).map((b) => b.study_set_id)
   );
 
-  // Get bookmark counts
-  const setIds = (sets || []).map((s) => s.id);
-  let bookmarkCounts = new Map<string, number>();
-  if (setIds.length > 0) {
-    const { data: counts } = await supabase
-      .from("study_set_bookmarks")
-      .select("study_set_id")
-      .in("study_set_id", setIds);
-    if (counts) {
-      for (const c of counts) {
-        bookmarkCounts.set(
-          c.study_set_id,
-          (bookmarkCounts.get(c.study_set_id) || 0) + 1
-        );
-      }
-    }
-  }
-
   const enrichedSets = (sets || []).map((s) => ({
-    ...s,
+    id: s.id,
+    user_id: s.user_id,
+    title: s.title,
+    category: s.category,
+    question_count: s.question_count,
+    is_featured: s.is_featured,
+    attempt_count: s.attempt_count,
+    created_at: s.created_at,
     creatorName: creatorMap.get(s.user_id) || "Unknown",
-    bookmarkCount: bookmarkCounts.get(s.id) || 0,
+    bookmarkCount: s.bookmark_count ?? 0,
     isBookmarked: bookmarkedIds.has(s.id),
+    certTags: certTagMap.get(s.id) || [],
   }));
 
-  // Sort by bookmark count desc, then date desc
-  enrichedSets.sort((a, b) => {
-    if (b.bookmarkCount !== a.bookmarkCount)
-      return b.bookmarkCount - a.bookmarkCount;
-    return (
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  });
+  const certifications = (allCerts || []).map((c) => ({
+    slug: c.slug,
+    name: c.name,
+  }));
 
   return (
     <CommunityList
       sets={enrichedSets}
-      certName={certName || null}
-      certSlug={certSlug || null}
+      certifications={certifications}
+      activeCertSlug={cert?.slug || null}
+      activeCertName={cert?.name || null}
     />
   );
 }

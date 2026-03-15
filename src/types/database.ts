@@ -394,6 +394,9 @@ export interface Database {
           is_public: boolean;
           source_material_preview: string | null;
           question_count: number;
+          is_featured: boolean;
+          attempt_count: number;
+          bookmark_count: number;
           created_at: string;
           updated_at: string;
         };
@@ -406,6 +409,9 @@ export interface Database {
           is_public?: boolean;
           source_material_preview?: string | null;
           question_count?: number;
+          is_featured?: boolean;
+          attempt_count?: number;
+          bookmark_count?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -416,6 +422,9 @@ export interface Database {
           is_public?: boolean;
           source_material_preview?: string | null;
           question_count?: number;
+          is_featured?: boolean;
+          attempt_count?: number;
+          bookmark_count?: number;
         };
       };
       user_study_questions: {
@@ -468,19 +477,55 @@ export interface Database {
         Row: {
           study_set_id: string;
           certification_slug: string;
+          domain_tag: string | null;
         };
         Insert: {
           study_set_id: string;
           certification_slug: string;
+          domain_tag?: string | null;
         };
         Update: {
           study_set_id?: string;
           certification_slug?: string;
+          domain_tag?: string | null;
+        };
+      };
+      community_reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          study_set_id: string;
+          reason: string;
+          status: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes: string | null;
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          study_set_id: string;
+          reason: string;
+          status?: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes?: string | null;
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          reason?: string;
+          status?: "pending" | "reviewed" | "actioned" | "dismissed";
+          admin_notes?: string | null;
+          reviewed_at?: string | null;
         };
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      increment_attempt_count: {
+        Args: { set_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
   };
 }

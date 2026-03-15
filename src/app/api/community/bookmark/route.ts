@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod/v4";
+import { rateLimit } from "@/lib/rate-limit";
+
+const bookmarkSchema = z.object({
+  studySetId: z.string().uuid(),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -12,14 +18,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { studySetId } = (await req.json()) as { studySetId: string };
+  // Rate limit: 20 bookmark toggles per user per minute
+  const { limited } = rateLimit(`bookmark:${user.id}`, 20, 60_000);
+  if (limited) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
-  if (!studySetId) {
+  const parsed = bookmarkSchema.safeParse(await req.json());
+
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "studySetId is required" },
+      { error: "studySetId must be a valid UUID" },
       { status: 400 }
     );
   }
+
+  const { studySetId } = parsed.data;
 
   // Check if already bookmarked
   const { data: existing } = await supabase

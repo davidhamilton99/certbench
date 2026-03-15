@@ -29,5 +29,23 @@ export default async function NewStudyMaterialPage() {
   } | null;
   const certSlug = cert?.slug;
 
-  return <StudyMaterialForm certSlug={certSlug || undefined} />;
+  // Get domains for the user's cert so they can tag their set
+  let domains: string[] = [];
+  if (enrollment?.certification_id) {
+    const { data: certDomains } = await supabase
+      .from("cert_domains")
+      .select("code, name")
+      .eq("certification_id", enrollment.certification_id)
+      .order("code");
+    if (certDomains) {
+      domains = certDomains.map((d) => `${d.code} - ${d.name}`);
+    }
+  }
+
+  return (
+    <StudyMaterialForm
+      certSlug={certSlug || undefined}
+      domains={domains}
+    />
+  );
 }
