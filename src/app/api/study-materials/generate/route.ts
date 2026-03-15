@@ -16,6 +16,7 @@ import {
   buildValidationPrompt,
 } from "@/lib/ai/config";
 import { getUserPlan, incrementGenerationUsage } from "@/lib/subscription";
+import { rateLimit } from "@/lib/rate-limit";
 
 const ALLOWED_COUNTS = [10, 25, 50];
 
@@ -28,6 +29,15 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit before expensive AI call — 2 per minute per user
+  const { limited } = rateLimit(`ai_gen:${user.id}`, 2, 60_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Please wait before generating again." },
+      { status: 429 }
+    );
   }
 
   // Check subscription & usage limits

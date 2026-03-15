@@ -72,24 +72,9 @@ export async function incrementGenerationUsage(
 ): Promise<void> {
   const month = currentMonth();
 
-  // Upsert: insert if missing, increment if exists
-  const { data: existing } = await supabase
-    .from("ai_generation_usage")
-    .select("id, generation_count")
-    .eq("user_id", userId)
-    .eq("month", month)
-    .single();
-
-  if (existing) {
-    await supabase
-      .from("ai_generation_usage")
-      .update({ generation_count: existing.generation_count + 1 })
-      .eq("id", existing.id);
-  } else {
-    await supabase.from("ai_generation_usage").insert({
-      user_id: userId,
-      month,
-      generation_count: 1,
-    });
-  }
+  // Atomic upsert via RPC — INSERT ... ON CONFLICT DO UPDATE SET count = count + 1
+  await supabase.rpc("increment_generation_count", {
+    p_user_id: userId,
+    p_month: month,
+  });
 }
