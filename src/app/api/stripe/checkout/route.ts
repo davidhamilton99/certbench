@@ -34,10 +34,14 @@ export async function POST() {
 
     // Create Stripe customer if needed
     if (!customerId) {
-      const customer = await getStripe().customers.create({
-        email: user.email,
-        metadata: { supabase_user_id: user.id },
-      });
+      // Use idempotency key to prevent duplicate customers from concurrent requests
+      const customer = await getStripe().customers.create(
+        {
+          email: user.email,
+          metadata: { supabase_user_id: user.id },
+        },
+        { idempotencyKey: `create-customer-${user.id}` }
+      );
       customerId = customer.id;
 
       // Upsert subscription record with customer ID

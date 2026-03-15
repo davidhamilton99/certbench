@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
 
   const { attemptId, answers } = parsed.data;
 
+  try {
   // Verify attempt belongs to user and is not complete
   const { data: attempt } = await supabase
     .from("diagnostic_attempts")
@@ -282,4 +283,12 @@ export async function POST(req: NextRequest) {
     correctCount,
     totalQuestions: answers.length,
   });
+
+  } catch (err) {
+    console.error("Diagnostic submit error:", err);
+    return NextResponse.json(
+      { error: "Failed to process diagnostic submission" },
+      { status: 500 }
+    );
+  }
 }

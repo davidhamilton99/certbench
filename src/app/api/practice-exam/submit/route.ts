@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
 
   const { attemptId, answers } = parsed.data;
 
+  try {
   // Verify attempt belongs to user and is not complete
   const { data: attempt } = await supabase
     .from("practice_exam_attempts")
@@ -279,4 +280,12 @@ export async function POST(req: NextRequest) {
       isCorrect: r.is_correct,
     })),
   });
+
+  } catch (err) {
+    console.error("Practice exam submit error:", err);
+    return NextResponse.json(
+      { error: "Failed to process exam submission" },
+      { status: 500 }
+    );
+  }
 }

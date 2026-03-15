@@ -113,6 +113,18 @@ export async function POST(req: NextRequest) {
         .eq("stripe_customer_id", customerId);
       break;
     }
+
+    case "invoice.payment_failed": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = invoice.customer as string;
+
+      // Mark subscription as past_due so the app can show a billing warning
+      await supabase
+        .from("user_subscriptions")
+        .update({ status: "past_due" })
+        .eq("stripe_customer_id", customerId);
+      break;
+    }
   }
 
   return NextResponse.json({ received: true });

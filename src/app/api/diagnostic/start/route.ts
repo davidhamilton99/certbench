@@ -47,18 +47,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Check if diagnostic already completed
-  const { data: completed } = await supabase
+  // Check if diagnostic already completed or in progress
+  const { data: existing } = await supabase
     .from("diagnostic_attempts")
-    .select("id")
+    .select("id, is_complete")
     .eq("user_id", user.id)
     .eq("certification_id", certificationId)
-    .eq("is_complete", true)
     .limit(1);
 
-  if (completed && completed.length > 0) {
+  if (existing && existing.length > 0) {
+    if (existing[0].is_complete) {
+      return NextResponse.json(
+        { error: "Diagnostic already completed" },
+        { status: 409 }
+      );
+    }
+    // Return the existing in-progress attempt instead of creating a new one
     return NextResponse.json(
-      { error: "Diagnostic already completed" },
+      { error: "Diagnostic already in progress", attemptId: existing[0].id },
       { status: 409 }
     );
   }
