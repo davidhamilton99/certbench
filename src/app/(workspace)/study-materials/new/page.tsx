@@ -18,7 +18,7 @@ export default async function NewStudyMaterialPage() {
   // Get user's active certification slug for tagging
   const { data: enrollment } = await supabase
     .from("user_enrollments")
-    .select("certification_id, certifications(slug)")
+    .select("certification_id, certifications(slug, name)")
     .eq("user_id", user.id)
     .eq("is_active", true)
     .limit(1)
@@ -26,8 +26,10 @@ export default async function NewStudyMaterialPage() {
 
   const cert = enrollment?.certifications as unknown as {
     slug: string;
+    name: string;
   } | null;
   const certSlug = cert?.slug;
+  const certName = cert?.name;
 
   // Get domains for the user's cert so they can tag their set
   let domains: string[] = [];
@@ -45,6 +47,7 @@ export default async function NewStudyMaterialPage() {
   return (
     <StudyMaterialForm
       certSlug={certSlug || undefined}
+      certName={certName || undefined}
       domains={domains}
     />
   );
