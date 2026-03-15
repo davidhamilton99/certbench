@@ -21,6 +21,11 @@ export default function LandingPage() {
                 Pricing
               </Button>
             </Link>
+            <Link href="/help">
+              <Button variant="ghost" size="sm">
+                Help
+              </Button>
+            </Link>
             <Link href="/login">
               <Button variant="ghost" size="sm">
                 Sign in

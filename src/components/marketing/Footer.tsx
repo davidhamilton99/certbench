@@ -7,7 +7,21 @@ export function Footer() {
         <p className="text-[13px] text-text-muted">
           CertBench — Certification preparation, simplified.
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap justify-center">
+          <Link
+            href="/help"
+            className="text-[12px] text-text-muted hover:text-text-primary transition-colors"
+          >
+            Help Centre
+          </Link>
+          <span className="text-[12px] text-text-muted">&middot;</span>
+          <Link
+            href="/contact"
+            className="text-[12px] text-text-muted hover:text-text-primary transition-colors"
+          >
+            Contact
+          </Link>
+          <span className="text-[12px] text-text-muted">&middot;</span>
           <Link
             href="/privacy"
             className="text-[12px] text-text-muted hover:text-text-primary transition-colors"
@@ -21,13 +35,6 @@ export function Footer() {
           >
             Terms of Service
           </Link>
-          <span className="text-[12px] text-text-muted">&middot;</span>
-          <a
-            href="mailto:support@certbench.com"
-            className="text-[12px] text-text-muted hover:text-text-primary transition-colors"
-          >
-            Contact
-          </a>
         </div>
         <p className="text-[11px] text-text-muted text-center max-w-lg leading-relaxed">
           CompTIA, Security+, Network+, and A+ are registered trademarks of
