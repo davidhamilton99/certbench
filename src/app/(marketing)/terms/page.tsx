@@ -83,10 +83,10 @@ export default function TermsPage() {
               <li>
                 Notify us immediately at{" "}
                 <a
-                  href="mailto:support@certbench.com"
+                  href="mailto:support@certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  support@certbench.com
+                  support@certbench.dev
                 </a>{" "}
                 if you suspect unauthorized access to your account
               </li>
@@ -126,10 +126,10 @@ export default function TermsPage() {
               billing periods. If you believe you were charged in error, contact
               us at{" "}
               <a
-                href="mailto:support@certbench.com"
+                href="mailto:support@certbench.dev"
                 className="text-primary hover:underline"
               >
-                support@certbench.com
+                support@certbench.dev
               </a>{" "}
               within 14 days of the charge.
             </p>
@@ -247,10 +247,10 @@ export default function TermsPage() {
               believe that content available through the Service infringes your
               copyright, please send a notice to{" "}
               <a
-                href="mailto:support@certbench.com"
+                href="mailto:support@certbench.dev"
                 className="text-primary hover:underline"
               >
-                support@certbench.com
+                support@certbench.dev
               </a>{" "}
               containing:
             </p>
@@ -367,10 +367,10 @@ export default function TermsPage() {
               <strong>Informal resolution.</strong> Before filing any formal
               claim, you agree to first contact us at{" "}
               <a
-                href="mailto:support@certbench.com"
+                href="mailto:support@certbench.dev"
                 className="text-primary hover:underline"
               >
-                support@certbench.com
+                support@certbench.dev
               </a>{" "}
               and attempt to resolve the dispute informally for at least 30
               days.
@@ -447,19 +447,19 @@ export default function TermsPage() {
               <li>
                 <strong>Email:</strong>{" "}
                 <a
-                  href="mailto:support@certbench.com"
+                  href="mailto:support@certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  support@certbench.com
+                  support@certbench.dev
                 </a>
               </li>
               <li>
                 <strong>Website:</strong>{" "}
                 <a
-                  href="https://certbench.com"
+                  href="https://certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  certbench.com
+                  certbench.dev
                 </a>
               </li>
             </ul>

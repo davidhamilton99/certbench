@@ -43,7 +43,7 @@ export default function OGImage() {
               color: "#64748b",
             }}
           >
-            certbench.vercel.app
+            certbench.dev
           </span>
         </div>
 
@@ -95,7 +95,7 @@ export default function OGImage() {
           {[
             { value: "2,000+", label: "Practice questions" },
             { value: "4", label: "CompTIA certifications" },
-            { value: "Free", label: "No credit card required" },
+            { value: "Free", label: "Full access — nothing held back" },
           ].map((stat) => (
             <div
               key={stat.label}

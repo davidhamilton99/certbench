@@ -311,10 +311,10 @@ export default function PrivacyPage() {
             <p>
               To exercise any of these rights, contact us at{" "}
               <a
-                href="mailto:privacy@certbench.com"
+                href="mailto:privacy@certbench.dev"
                 className="text-primary hover:underline"
               >
-                privacy@certbench.com
+                privacy@certbench.dev
               </a>
               . We will respond to your request within 30 days. We may ask you
               to verify your identity before processing your request.
@@ -349,10 +349,10 @@ export default function PrivacyPage() {
             <p>
               To submit a CCPA request, contact us at{" "}
               <a
-                href="mailto:privacy@certbench.com"
+                href="mailto:privacy@certbench.dev"
                 className="text-primary hover:underline"
               >
-                privacy@certbench.com
+                privacy@certbench.dev
               </a>
               .
             </p>
@@ -367,10 +367,10 @@ export default function PrivacyPage() {
               information. If you believe a child under 16 has provided us with
               personal data, please contact us at{" "}
               <a
-                href="mailto:privacy@certbench.com"
+                href="mailto:privacy@certbench.dev"
                 className="text-primary hover:underline"
               >
-                privacy@certbench.com
+                privacy@certbench.dev
               </a>
               .
             </p>
@@ -423,28 +423,28 @@ export default function PrivacyPage() {
               <li>
                 <strong>General inquiries:</strong>{" "}
                 <a
-                  href="mailto:support@certbench.com"
+                  href="mailto:support@certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  support@certbench.com
+                  support@certbench.dev
                 </a>
               </li>
               <li>
                 <strong>Privacy-specific requests:</strong>{" "}
                 <a
-                  href="mailto:privacy@certbench.com"
+                  href="mailto:privacy@certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  privacy@certbench.com
+                  privacy@certbench.dev
                 </a>
               </li>
               <li>
                 <strong>Website:</strong>{" "}
                 <a
-                  href="https://certbench.com"
+                  href="https://certbench.dev"
                   className="text-primary hover:underline"
                 >
-                  certbench.com
+                  certbench.dev
                 </a>
               </li>
             </ul>

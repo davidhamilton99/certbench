@@ -53,10 +53,10 @@ export default function ContactPage() {
                   anything that needs a back-and-forth conversation.
                 </p>
                 <a
-                  href="mailto:support@certbench.com"
+                  href="mailto:support@certbench.dev"
                   className="inline-block mt-3 text-[15px] text-primary hover:underline font-medium"
                 >
-                  support@certbench.com
+                  support@certbench.dev
                 </a>
               </div>
             </div>

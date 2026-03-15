@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/dashboard", "/profile", "/study-materials/", "/practice/", "/community/", "/cheat-sheets/", "/upgrade"],
       },
     ],
-    sitemap: "https://certbench.vercel.app/sitemap.xml",
+    sitemap: "https://certbench.dev/sitemap.xml",
   };
 }

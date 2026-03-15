@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: "CertBench — Know exactly what to study",
     description:
       "Personalised study plans, adaptive practice exams, and spaced repetition for CompTIA certifications.",
-    url: "https://certbench.vercel.app",
+    url: "https://certbench.dev",
     siteName: "CertBench",
     type: "website",
     locale: "en_US",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  metadataBase: new URL("https://certbench.vercel.app"),
+  metadataBase: new URL("https://certbench.dev"),
 };
 
 export default function RootLayout({
