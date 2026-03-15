@@ -174,6 +174,8 @@ export const networkPlusTopologies: TopologyScenario[] = [
         label: "ISP",
         position: { x: 50, y: 8 },
         preConfigured: true,
+        currentConfig:
+          "ISP Gateway: 203.0.113.1\nSubnet: 203.0.113.0/30\nCustomer-assigned WAN IP: 203.0.113.2",
         fields: [],
         explanation:
           "ISP connection is correctly configured with 203.0.113.1/30 as the gateway.",
