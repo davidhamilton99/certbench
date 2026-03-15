@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { DashboardPlan } from "@/components/workspace/DashboardPlan";
 import Link from "next/link";
 
@@ -35,14 +34,13 @@ export default async function DashboardPage({
       .limit(1)
       .single();
 
-    const slug = (firstEnrollment?.certifications as any)?.slug;
+    const slug = (firstEnrollment?.certifications as unknown as { slug: string } | null)?.slug;
     if (slug) {
       redirect(`/dashboard?cert=${slug}`);
     }
   }
 
-  // Get active enrollment for the selected cert
-  let enrollment = null;
+  // Get certification and domains for the selected cert
   let certification = null;
   let domains = null;
 
@@ -56,16 +54,6 @@ export default async function DashboardPage({
     certification = certData;
 
     if (certification) {
-      const { data: enrollmentData } = await supabase
-        .from("user_enrollments")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("certification_id", certification.id)
-        .eq("is_active", true)
-        .single();
-
-      enrollment = enrollmentData;
-
       const { data: domainData } = await supabase
         .from("cert_domains")
         .select("*")
