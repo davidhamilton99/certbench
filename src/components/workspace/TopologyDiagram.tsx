@@ -160,7 +160,7 @@ export function TopologyDiagram({
     <div className="bg-bg-surface border border-border rounded-lg overflow-hidden">
       {/* Diagram title */}
       <div className="px-4 py-2 border-b border-border-light">
-        <span className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider">
+        <span className="text-[13px] font-semibold text-text-primary uppercase tracking-wider">
           {diagramTitle}
         </span>
       </div>
@@ -169,7 +169,7 @@ export function TopologyDiagram({
         viewBox="0 0 1000 600"
         className="w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
-        style={{ maxHeight: "460px" }}
+        style={{ maxHeight: "520px" }}
       >
         {/* Connection lines */}
         {connections.map((conn, i) => {
@@ -194,21 +194,21 @@ export function TopologyDiagram({
               {conn.label && (
                 <>
                   <rect
-                    x={midX - conn.label.length * 3.5 - 4}
-                    y={midY - 8}
-                    width={conn.label.length * 7 + 8}
-                    height={16}
-                    rx={3}
+                    x={midX - conn.label.length * 5 - 8}
+                    y={midY - 13}
+                    width={conn.label.length * 10 + 16}
+                    height={26}
+                    rx={4}
                     fill="white"
-                    stroke="#e2e2e6"
+                    stroke="#d0d0d6"
                     strokeWidth={1}
                   />
                   <text
                     x={midX}
-                    y={midY + 4}
+                    y={midY + 5}
                     textAnchor="middle"
-                    className="text-[10px] fill-[#8a8a95]"
-                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px" }}
+                    className="fill-[#1a1a1f] font-semibold"
+                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "15px" }}
                   >
                     {conn.label}
                   </text>
@@ -300,12 +300,12 @@ export function TopologyDiagram({
               {/* Label */}
               <text
                 x={pos.x}
-                y={pos.y + 34}
+                y={pos.y + 36}
                 textAnchor="middle"
-                className={`text-[12px] font-medium ${
+                className={`font-medium ${
                   isSelected ? "fill-[#2563eb]" : "fill-[#1a1a1f]"
                 }`}
-                style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: "12px" }}
+                style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: "16px" }}
               >
                 {device.label}
               </text>
@@ -313,10 +313,10 @@ export function TopologyDiagram({
               {/* Device type subtitle */}
               <text
                 x={pos.x}
-                y={pos.y + 47}
+                y={pos.y + 53}
                 textAnchor="middle"
-                className="fill-[#8a8a95]"
-                style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px" }}
+                className="fill-[#3a3a45] font-medium"
+                style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "14px" }}
               >
                 {device.type.replace("-", " ")}
               </text>

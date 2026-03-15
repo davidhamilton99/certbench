@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type {
   TopologyScenario,
   TopoFieldAnswer,
@@ -192,11 +193,13 @@ export function TopologyPlayer({
         if (!ans) return false;
         if (ans.type === "dropdown" && ans.selectedIndex === -1) return false;
         if (ans.type === "text" && ans.value.trim() === "") return false;
-        if (ans.type === "cli" && ans.commands.length === 0) return false;
       }
     }
     return true;
   }, [answers, configurableDevices]);
+
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const handleSubmit = useCallback(() => {
     const graded = gradeTopologyScenario(scenario, answers);
@@ -210,16 +213,49 @@ export function TopologyPlayer({
     setGradeResult(null);
   }, []);
 
+  const hasAnyAnswer = Object.keys(answers).length > 0;
+
+  const handleBack = useCallback(() => {
+    if (hasAnyAnswer && !gradeResult) {
+      setShowBackConfirm(true);
+    } else {
+      onBack();
+    }
+  }, [hasAnyAnswer, gradeResult, onBack]);
+
   const selectedDevice = selectedDeviceId
     ? scenario.devices.find((d) => d.id === selectedDeviceId) || null
     : null;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Confirmation dialogs */}
+      <ConfirmDialog
+        open={showBackConfirm}
+        title="Leave scenario?"
+        message="Your progress will be lost. Are you sure you want to go back?"
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        onConfirm={onBack}
+        onCancel={() => setShowBackConfirm(false)}
+      />
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit configuration?"
+        message="Once submitted, your configuration will be graded and you cannot change it. Make sure you have reviewed all devices."
+        confirmLabel="Submit"
+        cancelLabel="Review"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          handleSubmit();
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={onBack}
+          onClick={handleBack}
           aria-label="Back to scenarios"
           className="text-text-secondary hover:text-text-primary transition-colors"
         >
@@ -348,7 +384,7 @@ export function TopologyPlayer({
           {/* Submit */}
           <Button
             variant="primary"
-            onClick={handleSubmit}
+            onClick={() => setShowSubmitConfirm(true)}
             disabled={!allRequiredFilled}
           >
             Submit Configuration

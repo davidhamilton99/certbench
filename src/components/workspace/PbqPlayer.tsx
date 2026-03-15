@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type {
   PbqScenario,
   PbqGradeResult,
@@ -15,6 +16,25 @@ import type {
 import { gradeScenario } from "@/lib/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+/** Fisher-Yates shuffle that guarantees the result differs from the input order. */
+function shuffleGuaranteed(length: number): number[] {
+  const indices = Array.from({ length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  // If the shuffle accidentally produced the identity (correct) order, swap the first two
+  const isIdentity = indices.every((v, i) => v === i);
+  if (isIdentity && indices.length > 1) {
+    [indices[0], indices[1]] = [indices[1], indices[0]];
+  }
+  return indices;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Main Player                                                        */
@@ -29,6 +49,8 @@ export function PbqPlayer({
 }) {
   const [result, setResult] = useState<PbqGradeResult | null>(null);
   const [userAnswer, setUserAnswer] = useState<number[] | null>(null);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const handleSubmit = useCallback(
     (answer: number[]) => {
@@ -41,7 +63,16 @@ export function PbqPlayer({
   const handleRetry = useCallback(() => {
     setResult(null);
     setUserAnswer(null);
+    setHasInteracted(false);
   }, []);
+
+  const handleBack = useCallback(() => {
+    if (hasInteracted && !result) {
+      setShowBackConfirm(true);
+    } else {
+      onBack();
+    }
+  }, [hasInteracted, result, onBack]);
 
   /* Simulation scenarios use their own self-contained player */
   if (scenario.type === "simulation") {
@@ -55,10 +86,21 @@ export function PbqPlayer({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Back confirmation */}
+      <ConfirmDialog
+        open={showBackConfirm}
+        title="Leave scenario?"
+        message="Your progress will be lost. Are you sure you want to go back?"
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        onConfirm={onBack}
+        onCancel={() => setShowBackConfirm(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={onBack}
+          onClick={handleBack}
           aria-label="Back to scenarios"
           className="text-text-secondary hover:text-text-primary transition-colors"
         >
@@ -102,15 +144,24 @@ export function PbqPlayer({
       ) : (
         <>
           {scenario.type === "ordering" && (
-            <OrderingPlayer scenario={scenario} onSubmit={handleSubmit} />
+            <OrderingPlayer
+              scenario={scenario}
+              onSubmit={handleSubmit}
+              onInteract={() => setHasInteracted(true)}
+            />
           )}
           {scenario.type === "matching" && (
-            <MatchingPlayer scenario={scenario} onSubmit={handleSubmit} />
+            <MatchingPlayer
+              scenario={scenario}
+              onSubmit={handleSubmit}
+              onInteract={() => setHasInteracted(true)}
+            />
           )}
           {scenario.type === "categorization" && (
             <CategorizationPlayer
               scenario={scenario}
               onSubmit={handleSubmit}
+              onInteract={() => setHasInteracted(true)}
             />
           )}
         </>
@@ -220,28 +271,29 @@ function ResultView({
 function OrderingPlayer({
   scenario,
   onSubmit,
+  onInteract,
 }: {
   scenario: OrderingScenario;
   onSubmit: (answer: number[]) => void;
+  onInteract: () => void;
 }) {
-  // Start with shuffled order
-  const initialOrder = useMemo(() => {
-    const indices = scenario.items.map((_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  }, [scenario.items]);
+  // Shuffle — guaranteed to differ from identity order
+  const initialOrder = useMemo(
+    () => shuffleGuaranteed(scenario.items.length),
+    [scenario.items.length]
+  );
 
   const [order, setOrder] = useState<number[]>(initialOrder);
+  const [hasMoved, setHasMoved] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   const moveUp = (pos: number) => {
     if (pos === 0) return;
     const next = [...order];
     [next[pos - 1], next[pos]] = [next[pos], next[pos - 1]];
     setOrder(next);
+    setHasMoved(true);
+    onInteract();
   };
 
   const moveDown = (pos: number) => {
@@ -249,10 +301,25 @@ function OrderingPlayer({
     const next = [...order];
     [next[pos], next[pos + 1]] = [next[pos + 1], next[pos]];
     setOrder(next);
+    setHasMoved(true);
+    onInteract();
   };
 
   return (
     <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit answer?"
+        message="Once submitted, your answer will be graded and you cannot change it."
+        confirmLabel="Submit"
+        cancelLabel="Review"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          onSubmit(order);
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
       <p className="text-[13px] text-text-muted">
         Use the arrows to arrange items in the correct order.
       </p>
@@ -315,9 +382,18 @@ function OrderingPlayer({
         ))}
       </div>
 
-      <Button variant="primary" onClick={() => onSubmit(order)}>
+      <Button
+        variant="primary"
+        onClick={() => setShowSubmitConfirm(true)}
+        disabled={!hasMoved}
+      >
         Submit Answer
       </Button>
+      {!hasMoved && (
+        <p className="text-[12px] text-text-muted text-center">
+          Rearrange at least one item before submitting.
+        </p>
+      )}
     </div>
   );
 }
@@ -329,14 +405,16 @@ function OrderingPlayer({
 function MatchingPlayer({
   scenario,
   onSubmit,
+  onInteract,
 }: {
   scenario: MatchingScenario;
   onSubmit: (answer: number[]) => void;
+  onInteract: () => void;
 }) {
-  // Initialize with -1 (no match selected)
   const [selections, setSelections] = useState<number[]>(
     () => new Array(scenario.left.length).fill(-1)
   );
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Shuffle right column display order
   const shuffledRight = useMemo(() => {
@@ -348,16 +426,33 @@ function MatchingPlayer({
     return indices;
   }, [scenario.right]);
 
+  // Track which right-side options are already used
+  const usedRightIndices = new Set(selections.filter((s) => s !== -1));
+
   const updateSelection = (leftIdx: number, rightIdx: number) => {
     const next = [...selections];
     next[leftIdx] = rightIdx;
     setSelections(next);
+    onInteract();
   };
 
   const allSelected = selections.every((s) => s !== -1);
 
   return (
     <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit answer?"
+        message="Once submitted, your answer will be graded and you cannot change it."
+        confirmLabel="Submit"
+        cancelLabel="Review"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          onSubmit(selections);
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
       <p className="text-[13px] text-text-muted">
         Select the correct match for each item on the left.
       </p>
@@ -393,11 +488,21 @@ function MatchingPlayer({
                 className="flex-1 bg-bg-page border border-border rounded-md px-3 py-2 text-[13px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               >
                 <option value={-1}>— Select match —</option>
-                {shuffledRight.map((rightIdx) => (
-                  <option key={rightIdx} value={rightIdx}>
-                    {scenario.right[rightIdx]}
-                  </option>
-                ))}
+                {shuffledRight.map((rightIdx) => {
+                  const isUsedByOther =
+                    usedRightIndices.has(rightIdx) &&
+                    selections[leftIdx] !== rightIdx;
+                  return (
+                    <option
+                      key={rightIdx}
+                      value={rightIdx}
+                      disabled={isUsedByOther}
+                    >
+                      {scenario.right[rightIdx]}
+                      {isUsedByOther ? " (used)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -406,7 +511,7 @@ function MatchingPlayer({
 
       <Button
         variant="primary"
-        onClick={() => onSubmit(selections)}
+        onClick={() => setShowSubmitConfirm(true)}
         disabled={!allSelected}
       >
         Submit Answer
@@ -422,14 +527,16 @@ function MatchingPlayer({
 function CategorizationPlayer({
   scenario,
   onSubmit,
+  onInteract,
 }: {
   scenario: CategorizationScenario;
   onSubmit: (answer: number[]) => void;
+  onInteract: () => void;
 }) {
-  // Track which category each item is placed in (-1 = unplaced)
   const [placements, setPlacements] = useState<number[]>(
     () => new Array(scenario.items.length).fill(-1)
   );
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Shuffled item display order
   const shuffledItems = useMemo(() => {
@@ -445,12 +552,34 @@ function CategorizationPlayer({
     const next = [...placements];
     next[itemIdx] = categoryIdx;
     setPlacements(next);
+    onInteract();
   };
 
   const allPlaced = placements.every((p) => p !== -1);
 
+  // Dynamic grid columns based on category count
+  const gridCols =
+    scenario.categories.length === 2
+      ? "sm:grid-cols-2"
+      : scenario.categories.length === 4
+      ? "sm:grid-cols-2 lg:grid-cols-4"
+      : "sm:grid-cols-3";
+
   return (
     <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit answer?"
+        message="Once submitted, your answer will be graded and you cannot change it."
+        confirmLabel="Submit"
+        cancelLabel="Review"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          onSubmit(placements);
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
       <p className="text-[13px] text-text-muted">
         Assign each item to the correct category.
       </p>
@@ -497,7 +626,7 @@ function CategorizationPlayer({
       </div>
 
       {/* Summary of placements */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className={`grid grid-cols-1 ${gridCols} gap-2`}>
         {scenario.categories.map((cat, catIdx) => {
           const placedItems = scenario.items.filter(
             (_, i) => placements[i] === catIdx
@@ -527,7 +656,7 @@ function CategorizationPlayer({
 
       <Button
         variant="primary"
-        onClick={() => onSubmit(placements)}
+        onClick={() => setShowSubmitConfirm(true)}
         disabled={!allPlaced}
       >
         Submit Answer

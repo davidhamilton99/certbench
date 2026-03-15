@@ -57,55 +57,47 @@ export const networkPlusTopologies: TopologyScenario[] = [
           "interface Gi0/1\n description Uplink to SW-Dist\n switchport mode access\n switchport access vlan 1\n!\ninterface Fa0/1\n switchport mode access\n switchport access vlan 1\n!\ninterface Fa0/2\n switchport mode access\n switchport access vlan 200\n!\nvlan 200\n name Sales",
         fields: [
           {
-            type: "cli",
-            id: "sw-access2-trunk",
-            label:
-              "Configure the uplink port (Gi0/1) as a trunk and allow the required VLANs",
-            prompt: "SW-Access2(config)#",
-            acceptedSequences: [
-              [
-                "interface gi0/1",
-                "switchport mode trunk",
-                "switchport trunk allowed vlan 100,200,300",
-              ],
-              [
-                "interface gi0/1",
-                "switchport mode trunk",
-                "switchport trunk allowed vlan all",
-              ],
-              [
-                "interface gigabitethernet0/1",
-                "switchport mode trunk",
-                "switchport trunk allowed vlan 100,200,300",
-              ],
-            ],
-            hint: "The uplink is set to access mode on VLAN 1 instead of trunk mode. Configure it as a trunk allowing VLANs 100, 200, and 300.",
+            type: "dropdown",
+            id: "sw-access2-uplink-mode",
+            label: "What mode should the uplink port Gi0/1 be set to?",
+            options: ["Trunk", "Access", "Dynamic Auto", "Dynamic Desirable"],
+            correctIndex: 0,
           },
           {
-            type: "cli",
-            id: "sw-access2-vlan-create",
-            label:
-              "Create the missing VLANs and assign Fa0/1 to the Engineering VLAN",
-            prompt: "SW-Access2(config)#",
-            acceptedSequences: [
-              [
-                "vlan 100",
-                "name Engineering",
-                "vlan 300",
-                "name Management",
-                "interface fa0/1",
-                "switchport access vlan 100",
-              ],
-              [
-                "vlan 100",
-                "name engineering",
-                "vlan 300",
-                "name management",
-                "interface fa0/1",
-                "switchport access vlan 100",
-              ],
+            type: "dropdown",
+            id: "sw-access2-trunk-vlans",
+            label: "Which VLANs should be allowed on the trunk?",
+            options: [
+              "100, 200, and 300",
+              "All VLANs (default)",
+              "Only VLAN 200 (Sales)",
+              "100 and 200 only",
             ],
-            hint: "VLANs 100 (Engineering) and 300 (Management) don't exist on this switch. Create them and assign Fa0/1 to VLAN 100.",
+            correctIndex: 0,
+          },
+          {
+            type: "select-many",
+            id: "sw-access2-missing-vlans",
+            label: "Which VLANs need to be created on this switch? (Select all that apply)",
+            options: [
+              "VLAN 100 (Engineering)",
+              "VLAN 200 (Sales)",
+              "VLAN 300 (Management)",
+              "VLAN 1 (Default)",
+            ],
+            correctIndices: [0, 2],
+          },
+          {
+            type: "dropdown",
+            id: "sw-access2-fa01-vlan",
+            label: "Which VLAN should port Fa0/1 be assigned to?",
+            options: [
+              "VLAN 100 (Engineering)",
+              "VLAN 200 (Sales)",
+              "VLAN 300 (Management)",
+              "VLAN 1 (Default)",
+            ],
+            correctIndex: 0,
           },
         ],
         explanation:

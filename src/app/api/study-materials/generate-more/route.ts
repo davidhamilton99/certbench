@@ -185,11 +185,6 @@ DISTRACTOR QUALITY:
 - Do NOT use "All of the above" or "None of the above"
 - Target common misconceptions
 
-EXPLANATION QUALITY:
-- Sentence 1: State the correct answer and why, citing the study material
-- Sentence 2: Explain why the most plausible wrong answer is wrong
-- Sentence 3 (optional): Memory aid or broader context
-
 Existing questions (DO NOT duplicate or test the same concept):
 ${existingList}
 
@@ -201,7 +196,7 @@ Return ONLY a JSON object, no other text:
       "question_text": "The question",
       "options": [...],
       "correct_index": 1,
-      "explanation": "2-3 sentence explanation"
+      "_note": "do NOT include explanation field"
     }
   ]
 }`;

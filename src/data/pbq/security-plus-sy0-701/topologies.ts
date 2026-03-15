@@ -35,23 +35,39 @@ export const securityPlusTopologies: TopologyScenario[] = [
           "interface Gi0/0\n ip address 10.0.1.1 255.255.255.0\n!\naccess-list 101 permit ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255\naccess-list 101 permit ip any any",
         fields: [
           {
-            type: "cli",
-            id: "fw-acl-fix",
-            label: "Fix the ACL to block guest-to-server traffic",
-            prompt: "FW-Perimeter(config)#",
-            acceptedSequences: [
-              [
-                "no access-list 101 permit ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
-                "access-list 101 deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
-                "access-list 101 permit ip any any",
-              ],
-              [
-                "no access-list 101",
-                "access-list 101 deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
-                "access-list 101 permit ip any any",
-              ],
+            type: "dropdown",
+            id: "fw-acl-action",
+            label: "What should be done with the permit rule for guest-to-server traffic?",
+            options: [
+              "Replace it with a deny rule",
+              "Keep it but add logging",
+              "Move it below the permit-any",
+              "No change needed",
             ],
-            hint: "Remove the permit rule for guest-to-server traffic and replace it with a deny before the permit-any.",
+            correctIndex: 0,
+          },
+          {
+            type: "dropdown",
+            id: "fw-acl-deny-target",
+            label: "Which traffic should the deny rule block?",
+            options: [
+              "10.0.50.0/24 → 10.0.10.0/24 (guest to server)",
+              "10.0.10.0/24 → 10.0.50.0/24 (server to guest)",
+              "All traffic from 10.0.50.0/24",
+              "All traffic to 10.0.10.0/24",
+            ],
+            correctIndex: 0,
+          },
+          {
+            type: "dropdown",
+            id: "fw-acl-order",
+            label: "Where should the deny rule be placed relative to the permit-any?",
+            options: [
+              "Before the permit-any statement",
+              "After the permit-any statement",
+              "Order does not matter",
+            ],
+            correctIndex: 0,
           },
         ],
         explanation:
@@ -74,33 +90,38 @@ export const securityPlusTopologies: TopologyScenario[] = [
             correctIndex: 0,
           },
           {
-            type: "cli",
-            id: "core-sw1-vlan-acl",
-            label:
-              "Create and apply an ACL on the VLAN 50 SVI to deny traffic to the server VLAN",
-            prompt: "Core-SW1(config)#",
-            acceptedSequences: [
-              [
-                "access-list 100 deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
-                "access-list 100 permit ip any any",
-                "interface vlan 50",
-                "ip access-group 100 in",
-              ],
-              [
-                "ip access-list extended BLOCK-GUEST",
-                "deny ip 10.0.50.0 0.0.0.255 10.0.10.0 0.0.0.255",
-                "permit ip any any",
-                "interface vlan 50",
-                "ip access-group BLOCK-GUEST in",
-              ],
-              [
-                "access-list 100 deny ip any 10.0.10.0 0.0.0.255",
-                "access-list 100 permit ip any any",
-                "interface vlan 50",
-                "ip access-group 100 in",
-              ],
+            type: "dropdown",
+            id: "core-sw1-acl-type",
+            label: "Which ACL type is required to match both source AND destination?",
+            options: [
+              "Standard ACL (1–99) — matches source only",
+              "Extended ACL (100–199) — matches source and destination",
             ],
-            hint: "Create an extended ACL that denies guest traffic (10.0.50.0/24) from reaching the server subnet (10.0.10.0/24) and permits everything else, then apply it inbound on VLAN 50 SVI.",
+            correctIndex: 1,
+          },
+          {
+            type: "dropdown",
+            id: "core-sw1-acl-deny",
+            label: "What traffic should the ACL deny?",
+            options: [
+              "From 10.0.50.0/24 to 10.0.10.0/24",
+              "From 10.0.10.0/24 to 10.0.50.0/24",
+              "All traffic on VLAN 50",
+              "All traffic to 10.0.10.0/24 from any source",
+            ],
+            correctIndex: 0,
+          },
+          {
+            type: "dropdown",
+            id: "core-sw1-acl-interface",
+            label: "Which interface should the ACL be applied to?",
+            options: [
+              "Interface VLAN 50 (guest SVI)",
+              "Interface VLAN 10 (server SVI)",
+              "Interface VLAN 20 (workstation SVI)",
+              "Interface Gi0/1 (uplink to firewall)",
+            ],
+            correctIndex: 0,
           },
         ],
         explanation:
@@ -220,6 +241,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "Dist-SW1",
         position: { x: 50, y: 40 },
         preConfigured: true,
+        currentConfig:
+          "interface Gi0/1\n switchport mode trunk\n switchport trunk allowed vlan 10,20,50\n!\ninterface Gi0/2\n switchport mode trunk\n!\ninterface Gi0/3\n switchport mode trunk",
         fields: [],
         explanation:
           "The distribution switch is correctly configured with proper VLAN trunking to the APs.",
@@ -242,6 +265,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "AP-Floor2",
         position: { x: 50, y: 68 },
         preConfigured: false,
+        currentConfig:
+          "Mode: Monitor\nRogue Detection: Disabled\nSSIDs: Corp-Meridian, Guest-Meridian",
         fields: [
           {
             type: "dropdown",
@@ -267,6 +292,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "AP-Floor3",
         position: { x: 75, y: 68 },
         preConfigured: true,
+        currentConfig:
+          "Mode: Local (FlexConnect)\nRogue Detection: Enabled — Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
         fields: [],
         explanation:
           "AP-Floor3 is correctly configured with no changes needed.",
@@ -330,23 +357,16 @@ export const securityPlusTopologies: TopologyScenario[] = [
             correctIndices: [0],
           },
           {
-            type: "cli",
-            id: "fw-ext-acl-fix",
-            label: "Rewrite the inbound ACL to permit only the required services",
-            prompt: "FW-External(config)#",
-            acceptedSequences: [
-              [
-                "no access-list OUTSIDE-IN",
-                "access-list OUTSIDE-IN permit tcp any host 172.16.1.10 eq 443",
-                "access-list OUTSIDE-IN deny ip any any",
-              ],
-              [
-                "no access-list OUTSIDE-IN",
-                "access-list OUTSIDE-IN permit tcp any host 172.16.1.10 eq https",
-                "access-list OUTSIDE-IN deny ip any any",
-              ],
+            type: "dropdown",
+            id: "fw-ext-default-action",
+            label: "What should the ACL's default (final) action be for unmatched traffic?",
+            options: [
+              "Deny all (implicit deny)",
+              "Permit all",
+              "Log and permit",
+              "Drop and log",
             ],
-            hint: "Only HTTPS should be permitted from the internet. HTTP, SSH, and ICMP should be removed from the inbound ACL.",
+            correctIndex: 0,
           },
         ],
         explanation:
@@ -358,6 +378,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
         label: "Web-Server",
         position: { x: 30, y: 50 },
         preConfigured: false,
+        currentConfig:
+          "IP Address: 172.16.1.10\nRunning Services:\n  Nginx (HTTPS, TCP 443)\n  Apache (HTTP, TCP 80)\n  SSH (TCP 22)\n  FTP (TCP 21)\n  MySQL (TCP 3306)\n  SNMP (UDP 161)\nDB Connection: Direct → 192.168.1.100:3306",
         fields: [
           {
             type: "select-many",

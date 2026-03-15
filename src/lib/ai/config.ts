@@ -22,7 +22,7 @@ export interface GeneratedQuestion {
   question_text: string;
   options: unknown[];
   correct_index: number;
-  explanation: string;
+  explanation?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -223,8 +223,7 @@ For each question, check:
 1. CORRECTNESS: Is the marked correct answer actually correct according to the source material?
 2. AMBIGUITY: Could any distractor also be arguably correct?
 3. DEPTH: Does the question test real understanding, or just keyword matching?
-4. EXPLANATION: Is the explanation actually educational (not generic)?
-5. STRUCTURE: For ordering — is the sequence unambiguous? For matching — could any pair be swapped?
+4. STRUCTURE: For ordering — is the sequence unambiguous? For matching — could any pair be swapped?
 
 For each question, return one of:
 - "pass" — question is good
@@ -235,7 +234,7 @@ Return ONLY a JSON object with this exact structure, no other text:
 {
   "reviews": [
     { "index": 0, "status": "pass" },
-    { "index": 1, "status": "rewrite", "improved": { "question_type": "...", "question_text": "...", "options": [...], "correct_index": 0, "explanation": "..." } },
+    { "index": 1, "status": "rewrite", "improved": { "question_type": "...", "question_text": "...", "options": [...], "correct_index": 0 } },
     { "index": 2, "status": "remove", "reason": "The marked correct answer is actually wrong because..." }
   ]
 }`;

@@ -133,6 +133,10 @@ export function StudySetDetail({
   const [editError, setEditError] = useState<string | null>(null);
   const [aiImproving, setAiImproving] = useState<string | null>(null);
 
+  // --- On-demand explanation state ---
+  const [explaining, setExplaining] = useState(false);
+  const [explainError, setExplainError] = useState<string | null>(null);
+
   const currentQuestion = localQuestions[currentIndex];
   const currentType: QuestionType =
     currentQuestion?.question_type || "multiple_choice";
@@ -265,6 +269,7 @@ export function StudySetDetail({
 
   const handleNext = useCallback(() => {
     resetAnswerState();
+    setExplainError(null);
     if (currentIndex < localQuestions.length - 1) {
       const nextIdx = currentIndex + 1;
       const nextQ = localQuestions[nextIdx];
@@ -298,6 +303,66 @@ export function StudySetDetail({
       }).catch(() => {});
     }
   }, [resetAnswerState, initQuestionState, localQuestions, isOwner, studySet.id]);
+
+  // -----------------------------------------------------------------------
+  // On-demand explanation
+  // -----------------------------------------------------------------------
+
+  const handleExplain = useCallback(async () => {
+    if (!currentQuestion || currentQuestion.explanation) return;
+    setExplaining(true);
+    setExplainError(null);
+
+    // Build a description of what the user selected
+    let selectedAnswer = "(not answered)";
+    if (currentType === "multiple_choice" && selectedOption !== null) {
+      const opts = currentQuestion.options as MCTFOption[];
+      const origIdx = optionOrder[selectedOption];
+      selectedAnswer = opts[origIdx]?.text ?? "(unknown)";
+    } else if (currentType === "true_false" && selectedOption !== null) {
+      const opts = currentQuestion.options as MCTFOption[];
+      selectedAnswer = opts[selectedOption]?.text ?? "(unknown)";
+    } else if (currentType === "multiple_select") {
+      const opts = currentQuestion.options as MCTFOption[];
+      selectedAnswer = [...msSelected].map((i) => opts[i]?.text).join(", ") || "(none)";
+    } else if (currentType === "ordering") {
+      selectedAnswer = "User's ordering sequence";
+    } else if (currentType === "matching") {
+      selectedAnswer = "User's matching pairs";
+    }
+
+    try {
+      const res = await fetch("/api/study-materials/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: currentQuestion.id,
+          questionText: currentQuestion.question_text,
+          questionType: currentType,
+          options: currentQuestion.options,
+          correctIndex: currentQuestion.correct_index,
+          selectedAnswer,
+        }),
+      });
+      const data = (await res.json()) as { explanation?: string; error?: string };
+      if (!res.ok || data.error) {
+        setExplainError(data.error || "Failed to generate explanation.");
+      } else if (data.explanation) {
+        // Update local state so it's cached for this session
+        setLocalQuestions((prev) =>
+          prev.map((q) =>
+            q.id === currentQuestion.id
+              ? { ...q, explanation: data.explanation! }
+              : q
+          )
+        );
+      }
+    } catch {
+      setExplainError("Network error. Please try again.");
+    } finally {
+      setExplaining(false);
+    }
+  }, [currentQuestion, currentType, selectedOption, optionOrder, msSelected]);
 
   // -----------------------------------------------------------------------
   // Set management handlers
@@ -1313,6 +1378,26 @@ export function StudySetDetail({
               </p>
             </div>
           </Card>
+        )}
+        {isRevealed && !displayExplanation && (
+          <div className="flex items-center gap-3">
+            <Card accent={isCorrect ? "success" : "danger"} padding="lg" className="flex-1">
+              <p className="text-[14px] font-medium text-text-primary">
+                {isCorrect ? "Correct" : "Incorrect"}
+              </p>
+            </Card>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleExplain}
+              disabled={explaining}
+            >
+              {explaining ? "Generating..." : "Explain"}
+            </Button>
+          </div>
+        )}
+        {explainError && (
+          <p className="text-[13px] text-danger">{explainError}</p>
         )}
 
         {/* Action bar */}

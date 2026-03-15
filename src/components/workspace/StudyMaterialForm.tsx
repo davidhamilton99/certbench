@@ -40,7 +40,7 @@ interface GeneratedQuestion {
   question_text: string;
   options: unknown[];
   correct_index: number;
-  explanation: string;
+  explanation?: string;
 }
 
 type Phase = "form" | "generating" | "validating" | "review";

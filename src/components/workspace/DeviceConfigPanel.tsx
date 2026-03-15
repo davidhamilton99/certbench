@@ -6,9 +6,7 @@ import type {
   TopoDevice,
   TopoField,
   TopoFieldAnswer,
-  TopoCLIFieldAnswer,
 } from "@/data/pbq/types";
-import { CliTerminal } from "@/components/workspace/CliTerminal";
 import {
   DropdownFieldRenderer,
   TextInputFieldRenderer,
@@ -74,22 +72,6 @@ function FieldRenderer({
       );
     }
 
-    case "cli": {
-      const ans = answers[field.id];
-      const commands =
-        ans?.type === "cli" ? (ans as TopoCLIFieldAnswer).commands : [];
-      return (
-        <CliTerminal
-          label={field.label}
-          prompt={field.prompt}
-          commands={commands}
-          helpText={field.hint}
-          onChange={(cmds) =>
-            setAnswer(field.id, { type: "cli", commands: cmds })
-          }
-        />
-      );
-    }
   }
 }
 

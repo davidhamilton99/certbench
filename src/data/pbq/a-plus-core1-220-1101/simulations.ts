@@ -290,13 +290,13 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
             type: "text",
             id: "aplus-core1-sim-soho-network-t2-f1",
             label: "Enter the SSID (network name) that will be broadcast for the office wireless network. Use the format: OfficeNet-[YourInitials] — for this exam enter exactly: OfficeNet-HQ",
-            acceptedValues: ["OfficeNet-HQ", "officenet-hq", "OFFICENET-HQ"],
+            acceptedValues: ["OfficeNet-HQ"],
             placeholder: "Enter SSID",
           },
           {
             type: "dropdown",
             id: "aplus-core1-sim-soho-network-t2-f2",
-            label: "Which wireless security protocol should be selected for a new SOHO deployment in 2024?",
+            label: "Which wireless security protocol should be selected for a new SOHO deployment?",
             options: [
               "WEP (Wired Equivalent Privacy)",
               "WPA (Wi-Fi Protected Access — TKIP)",

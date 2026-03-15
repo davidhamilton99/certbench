@@ -183,12 +183,6 @@ DISTRACTOR QUALITY (critical for learning):
 - Do NOT use "All of the above" or "None of the above"
 - Wrong options should target common misconceptions, not random facts
 
-EXPLANATION QUALITY:
-- Sentence 1: State the correct answer and why it is correct, citing the specific concept from the study material
-- Sentence 2: Explain why the most plausible wrong answer is wrong — this teaches the key distinction
-- Sentence 3 (optional): Provide a memory aid, broader context, or connection to related concepts in the material
-- Never write generic explanations like "This is correct because it is the right answer"
-
 QUALITY REQUIREMENTS:
 - Question stems must be clear, specific, and unambiguous
 - Do not repeat questions or test the same concept twice
@@ -198,7 +192,8 @@ OUTPUT FORMAT (critical):
 - Output exactly ${questionCount} lines
 - Each line is one complete, minified JSON object — no line breaks inside an object
 - No array brackets, no commas between lines, no markdown, no extra text
-- Example line: {"question_type":"multiple_choice","question_text":"...","options":[...],"correct_index":1,"explanation":"..."}`;
+- Do NOT include an "explanation" field — explanations are generated on demand separately
+- Example line: {"question_type":"multiple_choice","question_text":"...","options":[...],"correct_index":1}`;
 
   // Initiate the Anthropic streaming request
   const anthropicResponse = await fetch(ANTHROPIC_API_URL, {

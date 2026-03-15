@@ -10,6 +10,11 @@ import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
+function truncate(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen).trimEnd() + "…";
+}
+
 function drillTypeLabel(t: string): string {
   const map: Record<string, string> = {
     ordering: "Ordering",
@@ -100,9 +105,9 @@ function ScenarioList({
                     </span>
                     <span className="text-[13px] text-text-secondary">
                       {scenario.type === "simulation"
-                        ? (scenario as SimulationScenario).briefing.slice(0, 120) + "..."
+                        ? truncate((scenario as SimulationScenario).briefing, 120)
                         : scenario.type === "topology"
-                        ? (scenario as TopologyScenario).briefing.slice(0, 120) + "..."
+                        ? truncate((scenario as TopologyScenario).briefing, 120)
                         : "description" in scenario
                         ? (scenario as { description: string }).description
                         : ""}

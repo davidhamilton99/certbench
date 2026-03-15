@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type {
   SimulationScenario,
   SimTask,
@@ -327,6 +328,8 @@ export function SimulationPlayer({
     result: PbqGradeResult;
     taskResults: SimTaskGradeResult[];
   } | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const setAnswer = useCallback((id: string, answer: SimFieldAnswer) => {
     setAnswers((prev) => ({ ...prev, [id]: answer }));
@@ -369,12 +372,45 @@ export function SimulationPlayer({
   const activeTask = scenario.tasks[activeTaskIdx];
   const progress = ((activeTaskIdx + 1) / scenario.tasks.length) * 100;
 
+  const hasAnyAnswer = Object.keys(answers).length > 0;
+
+  const handleBack = useCallback(() => {
+    if (hasAnyAnswer && !gradeResult) {
+      setShowBackConfirm(true);
+    } else {
+      onBack();
+    }
+  }, [hasAnyAnswer, gradeResult, onBack]);
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Confirmation dialogs */}
+      <ConfirmDialog
+        open={showBackConfirm}
+        title="Leave scenario?"
+        message="Your progress will be lost. Are you sure you want to go back?"
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        onConfirm={onBack}
+        onCancel={() => setShowBackConfirm(false)}
+      />
+      <ConfirmDialog
+        open={showSubmitConfirm}
+        title="Submit all answers?"
+        message="Once submitted, your answers will be graded and you cannot change them. Make sure you have reviewed all tasks."
+        confirmLabel="Submit"
+        cancelLabel="Review"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          handleSubmit();
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={onBack}
+          onClick={handleBack}
           aria-label="Back to scenarios"
           className="text-text-secondary hover:text-text-primary transition-colors"
         >
@@ -496,7 +532,7 @@ export function SimulationPlayer({
             <ProgressBar value={progress} color="primary" size="sm" />
             <Button
               variant="primary"
-              onClick={handleSubmit}
+              onClick={() => setShowSubmitConfirm(true)}
               disabled={!allFieldsFilled}
             >
               Submit All Answers

@@ -152,26 +152,11 @@ export type TopoDeviceType =
   | "access-point"
   | "cloud";
 
-/** A CLI command field — user types IOS/config-style commands. */
-export interface TopoCLIField {
-  type: "cli";
-  id: string;
-  label: string;
-  /** Prompt string shown (e.g., "Switch(config)#"). */
-  prompt: string;
-  /** Each accepted command sequence: array of command strings.
-   *  Order-sensitive. Multiple valid sequences allowed. */
-  acceptedSequences: string[][];
-  /** Hint shown after incorrect submission. */
-  hint?: string;
-}
-
 /** Union of fields available inside a topology device config panel. */
 export type TopoField =
   | SimDropdownField
   | SimTextInputField
-  | SimSelectManyField
-  | TopoCLIField;
+  | SimSelectManyField;
 
 /** A connection line between two devices in the topology. */
 export interface TopoConnection {
@@ -216,14 +201,8 @@ export interface TopologyScenario {
   estimatedMinutes: number;
 }
 
-/** Answer shape for a CLI field. */
-export interface TopoCLIFieldAnswer {
-  type: "cli";
-  commands: string[];
-}
-
-/** Extended field answer union for topology scenarios. */
-export type TopoFieldAnswer = SimFieldAnswer | TopoCLIFieldAnswer;
+/** Field answer union for topology scenarios (same as simulation fields). */
+export type TopoFieldAnswer = SimFieldAnswer;
 
 export type PbqScenario =
   | OrderingScenario
