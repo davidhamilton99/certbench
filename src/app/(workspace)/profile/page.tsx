@@ -34,7 +34,7 @@ export default async function ProfilePage() {
       <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-1">
         Account Settings
       </h1>
-      <p className="text-[14px] text-text-muted mb-8">
+      <p className="text-[14px] text-text-secondary mb-8">
         Manage your profile, preferences, and account.
       </p>
       <ProfileEditor

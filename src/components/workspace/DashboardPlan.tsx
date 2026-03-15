@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/Spinner";
+import { Card } from "@/components/ui/Card";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlock } from "@/components/workspace/SessionBlock";
 import type { SessionPlanResult } from "@/lib/session/compute-plan";
@@ -43,7 +44,9 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
 
   if (error) {
     return (
-      <p className="text-[14px] text-danger">{error}</p>
+      <Card accent="danger" padding="md">
+        <p className="text-[14px] text-danger">{error}</p>
+      </Card>
     );
   }
 

@@ -56,12 +56,15 @@ export function SrsReview({
 
   // Load SRS cards on mount
   useEffect(() => {
+    const controller = new AbortController();
+
     async function loadCards() {
       try {
         const res = await fetch("/api/srs-review/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ certificationId }),
+          signal: controller.signal,
         });
 
         const data = await res.json();
@@ -89,12 +92,14 @@ export function SrsReview({
 
         setQuestions(shuffledQuestions);
         setPhase("reviewing");
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError("Network error. Please try again.");
       }
     }
 
     loadCards();
+    return () => controller.abort();
   }, [certificationId]);
 
   const handleAnswer = useCallback(() => {

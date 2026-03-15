@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { selectDiagnosticQuestions } from "@/lib/question-selection/select-diagnostic";
 import type { CertQuestion, DomainWeight } from "@/lib/question-selection/types";
 import { DIAGNOSTIC_QUESTION_COUNT } from "@/constants/exam-config";
+import { z } from "zod/v4";
+
+const startSchema = z.object({
+  certificationId: z.string().uuid(),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -15,14 +20,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { certificationId } = await req.json();
+  const parsed = startSchema.safeParse(await req.json());
 
-  if (!certificationId) {
+  if (!parsed.success) {
     return NextResponse.json(
       { error: "certificationId is required" },
       { status: 400 }
     );
   }
+
+  const { certificationId } = parsed.data;
 
   // Verify enrollment
   const { data: enrollment } = await supabase
@@ -40,18 +47,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Check if diagnostic already completed
-  const { data: completed } = await supabase
+  // Check if diagnostic already completed or in progress
+  const { data: existing } = await supabase
     .from("diagnostic_attempts")
-    .select("id")
+    .select("id, is_complete")
     .eq("user_id", user.id)
     .eq("certification_id", certificationId)
-    .eq("is_complete", true)
     .limit(1);
 
-  if (completed && completed.length > 0) {
+  if (existing && existing.length > 0) {
+    if (existing[0].is_complete) {
+      return NextResponse.json(
+        { error: "Diagnostic already completed" },
+        { status: 409 }
+      );
+    }
+    // Return the existing in-progress attempt instead of creating a new one
     return NextResponse.json(
-      { error: "Diagnostic already completed" },
+      { error: "Diagnostic already in progress", attemptId: existing[0].id },
       { status: 409 }
     );
   }

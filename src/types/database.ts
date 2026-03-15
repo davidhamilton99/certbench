@@ -525,6 +525,10 @@ export interface Database {
         Args: { set_id: string };
         Returns: undefined;
       };
+      increment_generation_count: {
+        Args: { p_user_id: string; p_month: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
   };

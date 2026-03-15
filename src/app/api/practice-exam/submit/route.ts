@@ -6,13 +6,19 @@ import {
 } from "@/lib/readiness/compute-score";
 import { computeSrsUpdate } from "@/lib/srs/compute-srs";
 import { SRS_DEFAULT_EASE_FACTOR } from "@/constants/exam-config";
+import { z } from "zod/v4";
 
-interface SubmittedAnswer {
-  questionId: string;
-  selectedIndex: number;
-  timeSpentSeconds: number;
-  isFlagged?: boolean;
-}
+const answerSchema = z.object({
+  questionId: z.string().uuid(),
+  selectedIndex: z.number().int().min(0).max(10),
+  timeSpentSeconds: z.number().min(0).max(7200),
+  isFlagged: z.boolean().optional().default(false),
+});
+
+const submitSchema = z.object({
+  attemptId: z.string().uuid(),
+  answers: z.array(answerSchema).min(1).max(500),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -25,18 +31,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { attemptId, answers } = (await req.json()) as {
-    attemptId: string;
-    answers: SubmittedAnswer[];
-  };
+  const parsed = submitSchema.safeParse(await req.json());
 
-  if (!attemptId || !answers?.length) {
+  if (!parsed.success) {
     return NextResponse.json(
       { error: "attemptId and answers are required" },
       { status: 400 }
     );
   }
 
+  const { attemptId, answers } = parsed.data;
+
+  try {
   // Verify attempt belongs to user and is not complete
   const { data: attempt } = await supabase
     .from("practice_exam_attempts")
@@ -113,21 +119,25 @@ export async function POST(req: NextRequest) {
     .eq("id", attemptId);
 
   // Update question_performance with SRS scheduling
+  // Batch-fetch existing records to avoid N+1 sequential queries
   const now = new Date().toISOString();
-  for (const a of answers) {
+
+  const { data: existingPerf } = await supabase
+    .from("question_performance")
+    .select("id, question_id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor")
+    .eq("user_id", user.id)
+    .in("question_id", questionIds);
+
+  const perfMap = new Map(
+    (existingPerf || []).map((p) => [p.question_id, p])
+  );
+
+  const perfOps = answers.map((a) => {
     const question = questionMap.get(a.questionId);
-    if (!question) continue;
+    if (!question) return null;
 
     const isCorrect = a.selectedIndex === question.correct_index;
-
-    const { data: existing } = await supabase
-      .from("question_performance")
-      .select(
-        "id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor"
-      )
-      .eq("user_id", user.id)
-      .eq("question_id", a.questionId)
-      .single();
+    const existing = perfMap.get(a.questionId);
 
     if (existing) {
       const srs = computeSrsUpdate({
@@ -137,7 +147,7 @@ export async function POST(req: NextRequest) {
         currentStreak: existing.streak,
       });
 
-      await supabase
+      return supabase
         .from("question_performance")
         .update({
           times_seen: existing.times_seen + 1,
@@ -158,7 +168,7 @@ export async function POST(req: NextRequest) {
         currentStreak: 0,
       });
 
-      await supabase.from("question_performance").insert({
+      return supabase.from("question_performance").insert({
         user_id: user.id,
         question_id: a.questionId,
         certification_id: attempt.certification_id,
@@ -172,7 +182,9 @@ export async function POST(req: NextRequest) {
         streak: srs.streak,
       });
     }
-  }
+  }).filter(Boolean);
+
+  await Promise.all(perfOps);
 
   // Compute readiness score
   const { data: domains } = await supabase
@@ -268,4 +280,12 @@ export async function POST(req: NextRequest) {
       isCorrect: r.is_correct,
     })),
   });
+
+  } catch (err) {
+    console.error("Practice exam submit error:", err);
+    return NextResponse.json(
+      { error: "Failed to process exam submission" },
+      { status: 500 }
+    );
+  }
 }

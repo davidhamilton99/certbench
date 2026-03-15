@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected route prefixes
+  // Protected route prefixes — all workspace routes require auth
   const protectedPrefixes = [
     "/dashboard",
     "/certifications",
@@ -43,6 +43,10 @@ export async function updateSession(request: NextRequest) {
     "/profile",
     "/onboarding",
     "/upgrade",
+    "/cheat-sheets",
+    "/pbq",
+    "/add-certification",
+    "/reference",
   ];
 
   const isProtected = protectedPrefixes.some((prefix) =>

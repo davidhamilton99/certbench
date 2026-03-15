@@ -6,12 +6,19 @@ import {
   type DomainPerformance,
 } from "@/lib/readiness/compute-score";
 
-interface SrsAnswer {
-  questionId: string;
-  selectedIndex: number;
-  isCorrect: boolean;
-  timeSpentSeconds: number;
-}
+import { z } from "zod/v4";
+
+const srsAnswerSchema = z.object({
+  questionId: z.string().uuid(),
+  selectedIndex: z.number().int().min(0).max(10),
+  isCorrect: z.boolean(), // kept for API compat but overridden by server grading
+  timeSpentSeconds: z.number().min(0).max(7200),
+});
+
+const submitSchema = z.object({
+  certificationId: z.string().uuid(),
+  answers: z.array(srsAnswerSchema).min(1).max(200),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -24,58 +31,75 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { certificationId, answers } = (await req.json()) as {
-    certificationId: string;
-    answers: SrsAnswer[];
-  };
+  const parsed = submitSchema.safeParse(await req.json());
 
-  if (!certificationId || !answers?.length) {
+  if (!parsed.success) {
     return NextResponse.json(
       { error: "certificationId and answers are required" },
       { status: 400 }
     );
   }
 
+  const { certificationId, answers } = parsed.data;
+
+  // Server-side grading: fetch correct answers to verify client claims
+  const questionIds = answers.map((a) => a.questionId);
+  const { data: questionData } = await supabase
+    .from("cert_questions")
+    .select("id, correct_index")
+    .in("id", questionIds);
+
+  const correctIndexMap = new Map(
+    (questionData || []).map((q) => [q.id, q.correct_index])
+  );
+
   // Update SRS fields for each reviewed card
   const now = new Date().toISOString();
   let totalCorrect = 0;
 
-  for (const a of answers) {
-    if (a.isCorrect) totalCorrect++;
+  // Batch-fetch existing performance records to avoid N+1 sequential queries
+  const { data: existingPerf } = await supabase
+    .from("question_performance")
+    .select("id, question_id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor")
+    .eq("user_id", user.id)
+    .in("question_id", questionIds);
 
-    const { data: existing } = await supabase
+  const perfMap = new Map(
+    (existingPerf || []).map((p) => [p.question_id, p])
+  );
+
+  const updateOps = answers.map((a) => {
+    // Grade on server — don't trust client isCorrect
+    const correctIndex = correctIndexMap.get(a.questionId);
+    const isCorrect = correctIndex !== undefined && a.selectedIndex === correctIndex;
+    if (isCorrect) totalCorrect++;
+
+    const existing = perfMap.get(a.questionId);
+    if (!existing) return null;
+
+    const srs = computeSrsUpdate({
+      isCorrect,
+      currentInterval: existing.srs_interval_days,
+      currentEase: existing.srs_ease_factor,
+      currentStreak: existing.streak,
+    });
+
+    return supabase
       .from("question_performance")
-      .select(
-        "id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor"
-      )
-      .eq("user_id", user.id)
-      .eq("question_id", a.questionId)
-      .single();
+      .update({
+        times_seen: existing.times_seen + 1,
+        times_correct: existing.times_correct + (isCorrect ? 1 : 0),
+        last_seen_at: now,
+        last_correct_at: isCorrect ? now : undefined,
+        streak: srs.streak,
+        srs_interval_days: srs.interval,
+        srs_ease_factor: srs.easeFactor,
+        srs_next_review_at: srs.nextReviewAt,
+      })
+      .eq("id", existing.id);
+  }).filter(Boolean);
 
-    if (existing) {
-      const srs = computeSrsUpdate({
-        isCorrect: a.isCorrect,
-        currentInterval: existing.srs_interval_days,
-        currentEase: existing.srs_ease_factor,
-        currentStreak: existing.streak,
-      });
-
-      await supabase
-        .from("question_performance")
-        .update({
-          times_seen: existing.times_seen + 1,
-          times_correct: existing.times_correct + (a.isCorrect ? 1 : 0),
-          last_seen_at: now,
-          last_correct_at: a.isCorrect ? now : undefined,
-          streak: srs.streak,
-          srs_interval_days: srs.interval,
-          srs_ease_factor: srs.easeFactor,
-          srs_next_review_at: srs.nextReviewAt,
-        })
-        .eq("id", existing.id);
-    }
-    // SRS cards always have existing performance records
-  }
+  await Promise.all(updateOps);
 
   // Compute updated readiness score
   const { data: domains } = await supabase

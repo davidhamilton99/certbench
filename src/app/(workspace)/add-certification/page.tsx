@@ -43,7 +43,7 @@ export default async function AddCertificationPage() {
       <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-1">
         Add Certification
       </h1>
-      <p className="text-[14px] text-text-muted mb-8">
+      <p className="text-[14px] text-text-secondary mb-8">
         Enroll in another certification to start studying.
       </p>
       <AddCertificationForm
