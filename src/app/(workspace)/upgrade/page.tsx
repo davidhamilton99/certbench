@@ -25,7 +25,7 @@ const PRO_FEATURES = [
 export default function UpgradePage() {
   return (
     <div>
-      <h1 className="text-[24px] font-bold text-text-primary tracking-tight mb-2">
+      <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-2">
         Upgrade to Pro
       </h1>
       <p className="text-[15px] text-text-secondary mb-8">

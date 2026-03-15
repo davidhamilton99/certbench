@@ -149,9 +149,9 @@ export function AddCertificationForm({
       </div>
 
       {error && (
-        <p className="text-[13px] text-danger bg-red-50 border border-red-200 rounded-md px-3 py-2">
-          {error}
-        </p>
+        <Card accent="danger" padding="md">
+          <p className="text-[13px] text-danger">{error}</p>
+        </Card>
       )}
 
       <div className="flex items-center gap-3">
