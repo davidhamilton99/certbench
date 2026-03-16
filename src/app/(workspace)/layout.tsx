@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { SessionGuard } from "@/components/auth/SessionGuard";
 
 export default async function WorkspaceLayout({
   children,
@@ -45,11 +46,14 @@ export default async function WorkspaceLayout({
     .eq("is_active", true);
 
   return (
-    <WorkspaceShell
-      displayName={profile.display_name}
-      enrollments={(enrollments as any) || []}
-    >
-      {children}
-    </WorkspaceShell>
+    <>
+      <SessionGuard />
+      <WorkspaceShell
+        displayName={profile.display_name}
+        enrollments={(enrollments as any) || []}
+      >
+        {children}
+      </WorkspaceShell>
+    </>
   );
 }

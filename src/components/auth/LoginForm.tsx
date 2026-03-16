@@ -13,6 +13,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,6 +32,15 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
+
+    // Track session persistence preference
+    if (!rememberMe) {
+      localStorage.setItem("certbench_ephemeral", "true");
+    } else {
+      localStorage.removeItem("certbench_ephemeral");
+    }
+    // Sentinel: exists only while browser is open
+    sessionStorage.setItem("certbench_alive", "1");
 
     router.push("/dashboard");
     router.refresh();
@@ -72,7 +82,16 @@ export function LoginForm() {
           </p>
         )}
 
-        <div className="flex justify-end -mt-1">
+        <div className="flex items-center justify-between -mt-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary"
+            />
+            <span className="text-[13px] text-text-secondary">Stay signed in</span>
+          </label>
           <a
             href="/forgot-password"
             className="text-[13px] text-primary hover:underline"
