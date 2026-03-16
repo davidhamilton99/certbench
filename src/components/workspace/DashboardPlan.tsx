@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/Spinner";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlock } from "@/components/workspace/SessionBlock";
 import type { SessionPlanResult } from "@/lib/session/compute-plan";
@@ -84,21 +83,16 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
       {plan.blocks.length > 0 && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[16px] font-semibold text-text-primary">
-              Today&apos;s Study Plan
+            <h2 className="text-[14px] font-semibold text-text-secondary uppercase tracking-wider">
+              Today&apos;s Plan
             </h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="neutral">
-                {plan.blocks.length} {plan.blocks.length === 1 ? "session" : "sessions"}
-              </Badge>
-              {totalMinutes > 0 && (
-                <span className="text-[12px] text-text-muted">
-                  ~{totalMinutes} min
-                </span>
-              )}
-            </div>
+            {totalMinutes > 0 && (
+              <span className="text-[12px] font-mono text-text-muted">
+                {plan.blocks.length} sessions &middot; ~{totalMinutes} min
+              </span>
+            )}
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {plan.blocks.map((block, i) => (
               <SessionBlock
                 key={`${block.type}-${i}`}
