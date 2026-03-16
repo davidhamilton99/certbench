@@ -23,9 +23,9 @@ const borderColors: Record<string, string> = {
 const iconBgColors: Record<string, string> = {
   primary: "bg-blue-50 text-primary",
   success: "bg-green-50 text-success",
-  warning: "bg-amber-50 text-warning",
-  danger: "bg-red-50 text-danger",
-  urgency: "bg-orange-50 text-urgency",
+  warning: "bg-amber-50/60 text-warning",
+  danger: "bg-red-50/60 text-danger",
+  urgency: "bg-orange-50/60 text-urgency",
 };
 
 const labelColors: Record<string, string> = {
