@@ -933,7 +933,7 @@ export function StudySetDetail({
               <Badge variant="neutral">{studySet.title}</Badge>
             </div>
           </div>
-          <ProgressBar value={progress} color="primary" size="sm" />
+          <ProgressBar value={progress} size="sm" />
         </div>
 
         {/* Question */}

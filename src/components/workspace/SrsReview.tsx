@@ -311,7 +311,7 @@ export function SrsReview({
           </span>
           <Badge variant="neutral">SRS Review</Badge>
         </div>
-        <ProgressBar value={progress} color="primary" size="sm" />
+        <ProgressBar value={progress} size="sm" />
       </div>
 
       {/* Question */}

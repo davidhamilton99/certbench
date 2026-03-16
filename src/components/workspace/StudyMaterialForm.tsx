@@ -478,7 +478,7 @@ export function StudyMaterialForm({
               </p>
             </div>
 
-            <ProgressBar value={pct} size="md" color="primary" />
+            <ProgressBar value={pct} size="md" />
 
             <p className="text-[12px] text-text-muted">
               {phase === "validating"
@@ -712,7 +712,6 @@ export function StudyMaterialForm({
             <ProgressBar
               value={Math.round((userPlan.generationsUsed / userPlan.generationsLimit) * 100)}
               size="sm"
-              color="primary"
             />
           </div>
           <span className="text-[12px] text-text-muted whitespace-nowrap">

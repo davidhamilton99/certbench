@@ -326,7 +326,7 @@ export function PracticeExam({
             <Badge variant="neutral">{examTypeLabels[examType]}</Badge>
           </div>
         </div>
-        <ProgressBar value={progress} color="primary" size="sm" />
+        <ProgressBar value={progress} size="sm" />
       </div>
 
       {/* Question */}

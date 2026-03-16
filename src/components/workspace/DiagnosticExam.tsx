@@ -260,7 +260,7 @@ export function DiagnosticExam({
           </span>
           <Badge variant="neutral">Diagnostic</Badge>
         </div>
-        <ProgressBar value={progress} color="primary" size="sm" />
+        <ProgressBar value={progress} size="sm" />
       </div>
 
       {/* Question */}

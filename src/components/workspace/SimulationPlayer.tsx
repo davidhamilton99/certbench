@@ -529,7 +529,7 @@ export function SimulationPlayer({
                 )}
               </div>
             </div>
-            <ProgressBar value={progress} color="primary" size="sm" />
+            <ProgressBar value={progress} size="sm" />
             <Button
               variant="primary"
               onClick={() => setShowSubmitConfirm(true)}
