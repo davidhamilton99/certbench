@@ -94,13 +94,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Tag with certification if provided
+  // Tag with certification if provided — validate user is enrolled
   if (certSlug) {
-    await supabase.from("study_set_cert_tags").insert({
-      study_set_id: studySet.id,
-      certification_slug: certSlug,
-      domain_tag: domainTag || null,
-    });
+    const { data: cert } = await supabase
+      .from("certifications")
+      .select("id")
+      .eq("slug", certSlug)
+      .single();
+
+    if (cert) {
+      const { data: enrollment } = await supabase
+        .from("user_enrollments")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .eq("certification_id", cert.id)
+        .maybeSingle();
+
+      if (enrollment) {
+        await supabase.from("study_set_cert_tags").insert({
+          study_set_id: studySet.id,
+          certification_slug: certSlug,
+          domain_tag: domainTag || null,
+        });
+      }
+    }
   }
 
   return NextResponse.json({ id: studySet.id });
