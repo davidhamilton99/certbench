@@ -103,7 +103,7 @@ function getHref(
     case "srs_review":
       return `/certifications/${certSlug}/srs`;
     case "new_content":
-      return `/certifications/${certSlug}/exam?type=weak_points`;
+      return `/certifications/${certSlug}/exam`;
     default:
       return null;
   }

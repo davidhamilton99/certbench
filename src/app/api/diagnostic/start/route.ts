@@ -62,11 +62,15 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
-    // Return the existing in-progress attempt instead of creating a new one
-    return NextResponse.json(
-      { error: "Diagnostic already in progress", attemptId: existing[0].id },
-      { status: 409 }
-    );
+    // Delete the abandoned in-progress attempt so user can restart
+    await supabase
+      .from("diagnostic_answers")
+      .delete()
+      .eq("attempt_id", existing[0].id);
+    await supabase
+      .from("diagnostic_attempts")
+      .delete()
+      .eq("id", existing[0].id);
   }
 
   // Fetch questions and domains

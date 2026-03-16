@@ -43,8 +43,10 @@ export async function POST(req: NextRequest) {
         session.subscription as string
       );
 
-      // In newer Stripe API versions, current_period_end is on items
-      const periodEnd = subscription.items?.data?.[0]?.current_period_end;
+      // Handle both old and new Stripe API versions
+      const periodEnd =
+        (subscription as unknown as Record<string, number>).current_period_end ??
+        subscription.items?.data?.[0]?.current_period_end;
 
       await supabase.from("user_subscriptions").upsert(
         {
@@ -78,7 +80,9 @@ export async function POST(req: NextRequest) {
         subscription.status === "active" ||
         subscription.status === "trialing";
 
-      const periodEnd = subscription.items?.data?.[0]?.current_period_end;
+      const periodEnd =
+        (subscription as unknown as Record<string, number>).current_period_end ??
+        subscription.items?.data?.[0]?.current_period_end;
 
       await supabase
         .from("user_subscriptions")
