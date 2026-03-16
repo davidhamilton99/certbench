@@ -12,7 +12,7 @@ export function Hero() {
       <p className="text-[17px] sm:text-[18px] text-text-secondary mt-6 max-w-xl mx-auto leading-relaxed">
         CertBench builds a personalised study plan from your actual performance
         data. Use it alongside your favourite course — it tracks what you get
-        wrong and tells you when you&apos;re ready to sit the exam.
+        wrong and tells you when you&apos;re ready for exam day.
       </p>
       <div className="mt-10 flex items-center justify-center gap-4">
         <Link href="/register">
@@ -25,7 +25,7 @@ export function Hero() {
         {[
           { value: "2,000+", label: "Practice questions across 4 exams" },
           { value: "4", label: "CompTIA certifications supported" },
-          { value: "Free", label: "Full access — nothing held back" },
+          { value: "Free", label: "Get studying right away" },
         ].map((fact) => (
           <div key={fact.value + fact.label}>
             <p className="text-[24px] sm:text-[28px] lg:text-[44px] font-bold font-mono text-text-primary tabular-nums">

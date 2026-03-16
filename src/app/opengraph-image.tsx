@@ -95,7 +95,7 @@ export default function OGImage() {
           {[
             { value: "2,000+", label: "Practice questions" },
             { value: "4", label: "CompTIA certifications" },
-            { value: "Free", label: "Full access — nothing held back" },
+            { value: "Free", label: "Get studying right away" },
           ].map((stat) => (
             <div
               key={stat.label}

@@ -269,11 +269,19 @@ export async function POST(req: NextRequest) {
     )
     .in("id", questionIds);
 
+  // Reorder questions to match the order the user answered them
+  const questionLookup = new Map(
+    (fullQuestions || []).map((q) => [q.id, q])
+  );
+  const orderedQuestions = questionIds
+    .map((id) => questionLookup.get(id))
+    .filter(Boolean);
+
   return NextResponse.json({
     correctCount,
     totalQuestions: answers.length,
     readiness,
-    questions: fullQuestions,
+    questions: orderedQuestions,
     responses: responses.map((r) => ({
       questionId: r.question_id,
       selectedIndex: r.selected_index,
