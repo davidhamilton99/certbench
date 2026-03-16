@@ -189,7 +189,7 @@ export function SampleQuestions() {
             study plan.
           </p>
           <Link href="/register">
-            <Button size="lg">Start Studying Free</Button>
+            <Button size="lg">Start Studying</Button>
           </Link>
         </div>
       </div>

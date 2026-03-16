@@ -15,7 +15,7 @@ export function CTASection() {
         </p>
         <div className="mt-8">
           <Link href="/register">
-            <Button size="lg">Get Started Free</Button>
+            <Button size="lg">Get Started</Button>
           </Link>
         </div>
 
