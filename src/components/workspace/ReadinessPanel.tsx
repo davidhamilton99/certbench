@@ -43,111 +43,86 @@ export function ReadinessPanel({
   const coveragePct = totalQuestions > 0 ? Math.round((totalQuestionsSeen / totalQuestions) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-lg overflow-hidden border border-border">
-        {/* Readiness Score */}
-        <div className="bg-bg-surface p-5 col-span-2 sm:col-span-1 flex flex-col items-center gap-1">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-            Readiness
-          </span>
-          <span className={`text-[36px] font-mono font-semibold tabular-nums leading-none ${getScoreColor(roundedScore)}`}>
+    <div className="flex flex-col gap-8">
+      {/* Score headline + inline stats */}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-8">
+        {/* Big score */}
+        <div className="flex items-baseline gap-2">
+          <span className={`text-[56px] font-mono font-bold tabular-nums leading-none tracking-tight ${getScoreColor(roundedScore)}`}>
             {isPreliminary ? "~" : ""}{roundedScore}
           </span>
-          <span className="text-[11px] text-text-muted">
-            {isPreliminary ? "preliminary" : "out of 100"}
-          </span>
-        </div>
-
-        {/* Questions Seen */}
-        <div className="bg-bg-surface p-5 flex flex-col items-center gap-1">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-            Seen
-          </span>
-          <span className="text-[28px] font-mono font-semibold text-text-primary tabular-nums leading-none">
-            {totalQuestionsSeen}
-          </span>
-          <span className="text-[11px] text-text-muted">
-            of {totalQuestions}
-          </span>
-        </div>
-
-        {/* Coverage */}
-        <div className="bg-bg-surface p-5 flex flex-col items-center gap-1">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-            Coverage
-          </span>
-          <span className="text-[28px] font-mono font-semibold text-text-primary tabular-nums leading-none">
-            {coveragePct}%
-          </span>
-          <div className="w-full max-w-[80px] mt-0.5">
-            <ProgressBar value={coveragePct} size="sm" color="primary" />
+          <div className="flex flex-col pb-1">
+            <span className="text-[13px] font-medium text-text-secondary">
+              Readiness
+            </span>
+            {isPreliminary && (
+              <span className="text-[11px] text-text-muted">preliminary</span>
+            )}
           </div>
         </div>
 
-        {/* Days Until Exam / Remaining */}
-        <div className="bg-bg-surface p-5 flex flex-col items-center gap-1">
-          {daysUntilExam !== null ? (
+        {/* Inline stats */}
+        <div className="flex items-center gap-6 pb-1.5 text-[13px]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-text-muted">Seen</span>
+            <span className="font-mono font-medium text-text-primary tabular-nums">{totalQuestionsSeen}</span>
+            <span className="text-text-muted">/ {totalQuestions}</span>
+          </div>
+          <span className="text-border">|</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-text-muted">Coverage</span>
+            <span className="font-mono font-medium text-text-primary tabular-nums">{coveragePct}%</span>
+          </div>
+          {daysUntilExam !== null && (
             <>
-              <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-                Exam In
-              </span>
-              <span className={`text-[28px] font-mono font-semibold tabular-nums leading-none ${
-                daysUntilExam <= 7 ? "text-danger" : "text-text-primary"
-              }`}>
-                {daysUntilExam}
-              </span>
-              <span className="text-[11px] text-text-muted">
-                day{daysUntilExam === 1 ? "" : "s"}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-                Unseen
-              </span>
-              <span className="text-[28px] font-mono font-semibold text-text-primary tabular-nums leading-none">
-                {totalQuestions - totalQuestionsSeen}
-              </span>
-              <span className="text-[11px] text-text-muted">
-                remaining
-              </span>
+              <span className="text-border">|</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-text-muted">Exam in</span>
+                <span className={`font-mono font-medium tabular-nums ${
+                  daysUntilExam <= 7 ? "text-danger" : "text-text-primary"
+                }`}>
+                  {daysUntilExam}d
+                </span>
+              </div>
             </>
           )}
         </div>
       </div>
 
-      {/* Domain Breakdown — table-style rows */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-[14px] font-semibold text-text-secondary uppercase tracking-wider">
+      {/* Domain rows */}
+      <div className="flex flex-col gap-2">
+        <h2 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider">
           Domains
         </h2>
-        <div className="flex flex-col gap-px bg-border rounded-lg overflow-hidden border border-border">
-          {sortedDomains.map((ds) => {
+        <div className="flex flex-col">
+          {sortedDomains.map((ds, i) => {
             const pct =
               ds.attempted > 0
                 ? Math.round((ds.correct / ds.attempted) * 100)
                 : 0;
 
             return (
-              <div key={ds.domainId} className="bg-bg-surface px-4 py-3 flex items-center gap-4">
-                <span className="text-[12px] font-mono font-semibold text-text-muted w-6 text-right shrink-0">
+              <div
+                key={ds.domainId}
+                className={`flex items-center gap-4 py-2.5 ${
+                  i < sortedDomains.length - 1 ? "border-b border-border-light" : ""
+                }`}
+              >
+                <span className="text-[12px] font-mono text-text-muted w-6 text-right shrink-0">
                   {ds.domainNumber}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-3 mb-1.5">
-                    <span className="text-[13px] text-text-primary truncate">
-                      {ds.title}
-                    </span>
-                    <span className={`text-[13px] font-mono font-medium tabular-nums shrink-0 ${
-                      ds.attempted > 0 ? getScoreColor(pct) : "text-text-muted"
-                    }`}>
-                      {ds.attempted > 0 ? `${pct}%` : "—"}
-                    </span>
-                  </div>
+                <span className="text-[13px] text-text-primary flex-1 min-w-0 truncate">
+                  {ds.title}
+                </span>
+                <div className="w-24 shrink-0 hidden sm:block">
                   <ProgressBar value={pct} size="sm" />
                 </div>
-                <span className="text-[11px] font-mono text-text-muted tabular-nums shrink-0 w-10 text-right">
+                <span className={`text-[13px] font-mono font-medium tabular-nums w-10 text-right shrink-0 ${
+                  ds.attempted > 0 ? getScoreColor(pct) : "text-text-muted"
+                }`}>
+                  {ds.attempted > 0 ? `${pct}%` : "—"}
+                </span>
+                <span className="text-[11px] font-mono text-text-muted tabular-nums w-8 text-right shrink-0">
                   {ds.correct}/{ds.attempted}
                 </span>
               </div>
