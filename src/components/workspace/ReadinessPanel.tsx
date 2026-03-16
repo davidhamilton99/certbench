@@ -20,12 +20,6 @@ interface ReadinessPanelProps {
   daysUntilExam: number | null;
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 75) return "text-success";
-  if (score >= 40) return "text-text-primary";
-  return "text-danger";
-}
-
 export function ReadinessPanel({
   score,
   isPreliminary,
@@ -48,7 +42,7 @@ export function ReadinessPanel({
       <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-8">
         {/* Big score */}
         <div className="flex items-baseline gap-2">
-          <span className={`text-[56px] font-mono font-bold tabular-nums leading-none tracking-tight ${getScoreColor(roundedScore)}`}>
+          <span className="text-[56px] font-mono font-bold tabular-nums leading-none tracking-tight text-text-primary">
             {isPreliminary ? "~" : ""}{roundedScore}
           </span>
           <div className="flex flex-col pb-1">
@@ -78,9 +72,7 @@ export function ReadinessPanel({
               <span className="text-border">|</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-text-muted">Exam in</span>
-                <span className={`font-mono font-medium tabular-nums ${
-                  daysUntilExam <= 7 ? "text-danger" : "text-text-primary"
-                }`}>
+                <span className="font-mono font-medium text-text-primary tabular-nums">
                   {daysUntilExam}d
                 </span>
               </div>
@@ -117,9 +109,7 @@ export function ReadinessPanel({
                 <div className="w-24 shrink-0 hidden sm:block">
                   <ProgressBar value={pct} size="sm" />
                 </div>
-                <span className={`text-[13px] font-mono font-medium tabular-nums w-10 text-right shrink-0 ${
-                  ds.attempted > 0 ? getScoreColor(pct) : "text-text-muted"
-                }`}>
+                <span className="text-[13px] font-mono font-medium text-text-primary tabular-nums w-10 text-right shrink-0">
                   {ds.attempted > 0 ? `${pct}%` : "—"}
                 </span>
                 <span className="text-[11px] font-mono text-text-muted tabular-nums w-8 text-right shrink-0">
