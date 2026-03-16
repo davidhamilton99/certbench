@@ -10,8 +10,8 @@ export function CTASection() {
         </h2>
         <p className="text-[16px] text-text-secondary mt-3 max-w-md mx-auto">
           Use alongside your favourite video course or textbook. CertBench
-          handles the practice — so you know exactly when you&apos;re ready to
-          sit your exam.
+          handles the practice — so you know exactly when you&apos;re ready
+          for exam day.
         </p>
         <div className="mt-8">
           <Link href="/register">
