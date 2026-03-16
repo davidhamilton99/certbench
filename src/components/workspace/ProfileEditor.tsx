@@ -76,10 +76,27 @@ export function ProfileEditor({
     if (deleteConfirmText !== "delete my account") return;
     setDeleting(true);
 
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    try {
+      const res = await fetch("/api/user/delete", { method: "DELETE" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to delete account.",
+        });
+        setDeleting(false);
+        return;
+      }
+
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/");
+      router.refresh();
+    } catch {
+      setMessage({ type: "error", text: "Something went wrong." });
+      setDeleting(false);
+    }
   }
 
   async function handleSignOut() {

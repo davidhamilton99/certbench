@@ -22,7 +22,7 @@ export default async function CommunityPage() {
     .eq("user_id", user.id)
     .eq("is_active", true)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   const cert = enrollment?.certifications as unknown as {
     slug: string;

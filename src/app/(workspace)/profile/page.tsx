@@ -27,7 +27,8 @@ export default async function ProfilePage() {
     .select("certification_id, exam_date")
     .eq("user_id", user.id)
     .eq("is_active", true)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   return (
     <div>

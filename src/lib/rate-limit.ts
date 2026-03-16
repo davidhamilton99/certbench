@@ -6,6 +6,7 @@
 
 interface RateLimitEntry {
   timestamps: number[];
+  windowMs: number;
 }
 
 const store = new Map<string, RateLimitEntry>();
@@ -14,7 +15,9 @@ const store = new Map<string, RateLimitEntry>();
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of store) {
-    entry.timestamps = entry.timestamps.filter((t) => now - t < 120_000);
+    entry.timestamps = entry.timestamps.filter(
+      (t) => now - t < entry.windowMs
+    );
     if (entry.timestamps.length === 0) store.delete(key);
   }
 }, 300_000);
@@ -35,8 +38,10 @@ export function rateLimit(
   let entry = store.get(key);
 
   if (!entry) {
-    entry = { timestamps: [] };
+    entry = { timestamps: [], windowMs };
     store.set(key, entry);
+  } else {
+    entry.windowMs = windowMs;
   }
 
   // Remove timestamps outside the window
