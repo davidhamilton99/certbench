@@ -23,6 +23,9 @@ export async function DELETE() {
   const admin = getAdminSupabase();
 
   // Delete user data in order (respecting FK constraints)
+  // 0. Question flags
+  await admin.from("question_flags").delete().eq("user_id", user.id);
+
   // 1. SRS cards
   await admin.from("srs_cards").delete().eq("user_id", user.id);
 

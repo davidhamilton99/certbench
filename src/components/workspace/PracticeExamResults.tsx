@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { QuestionFlagButton } from "@/components/workspace/QuestionFlagButton";
 
 interface DomainScore {
   domain_id: string;
@@ -161,6 +162,8 @@ export function PracticeExamResults({
                         : q.explanation}
                     </p>
                   </div>
+
+                  <QuestionFlagButton questionId={q.id} />
                 </div>
               </Card>
             );

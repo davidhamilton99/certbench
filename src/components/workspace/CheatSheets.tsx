@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Spinner } from "@/components/ui/Spinner";
+import { QuestionFlagButton } from "@/components/workspace/QuestionFlagButton";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
@@ -363,15 +364,18 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
                             )}
 
                             {/* Footer meta */}
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-mono text-text-muted uppercase">
-                                {getDifficultyLabel(q.difficulty)}
-                              </span>
-                              {qAccuracy < 60 && (
-                                <span className="text-[11px] font-mono text-text-muted">
-                                  · Needs work
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-mono text-text-muted uppercase">
+                                  {getDifficultyLabel(q.difficulty)}
                                 </span>
-                              )}
+                                {qAccuracy < 60 && (
+                                  <span className="text-[11px] font-mono text-text-muted">
+                                    · Needs work
+                                  </span>
+                                )}
+                              </div>
+                              <QuestionFlagButton questionId={q.id} />
                             </div>
                           </Card>
                         );

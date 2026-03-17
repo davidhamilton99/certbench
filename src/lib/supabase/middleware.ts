@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     "/pbq",
     "/add-certification",
     "/reference",
+    "/admin",
   ];
 
   const isProtected = protectedPrefixes.some((prefix) =>
