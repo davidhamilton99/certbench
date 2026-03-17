@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { DiagnosticResults } from "@/components/workspace/DiagnosticResults";
 import { shuffleArray } from "@/lib/shuffle-options";
@@ -209,7 +208,7 @@ export function DiagnosticExam({
             </ul>
 
             {error && (
-              <p className="text-[14px] text-danger">{error}</p>
+              <p className="text-[14px] text-text-secondary">{error}</p>
             )}
 
             <Button size="lg" onClick={startExam} loading={loading}>
@@ -258,7 +257,7 @@ export function DiagnosticExam({
           <span className="text-[13px] font-mono text-text-muted">
             Question {currentIndex + 1} of {questions.length}
           </span>
-          <Badge variant="neutral">Diagnostic</Badge>
+          <span className="text-[12px] font-mono text-text-muted">DIAGNOSTIC</span>
         </div>
         <ProgressBar value={progress} size="sm" />
       </div>
@@ -329,7 +328,7 @@ export function DiagnosticExam({
       </div>
 
       {error && (
-        <p className="text-[14px] text-danger">{error}</p>
+        <p className="text-[14px] text-text-secondary">{error}</p>
       )}
     </div>
   );

@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PracticeExamResults } from "@/components/workspace/PracticeExamResults";
 import { shuffleArray } from "@/lib/shuffle-options";
@@ -248,7 +247,7 @@ export function PracticeExam({
               <li>Your readiness score will update when you finish.</li>
             </ul>
 
-            {error && <p className="text-[14px] text-danger">{error}</p>}
+            {error && <p className="text-[14px] text-text-secondary">{error}</p>}
 
             <Button size="lg" onClick={startExam} loading={loading}>
               Start {examType === "full" ? "Exam" : "Practice"}
@@ -317,13 +316,13 @@ export function PracticeExam({
               onClick={toggleFlag}
               className={`text-[13px] font-medium px-2 py-1 rounded transition-colors ${
                 flagged.has(currentIndex)
-                  ? "text-warning bg-yellow-50"
+                  ? "text-primary bg-blue-50"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
               {flagged.has(currentIndex) ? "Flagged" : "Flag"}
             </button>
-            <Badge variant="neutral">{examTypeLabels[examType]}</Badge>
+            <span className="text-[12px] font-mono text-text-muted">{examTypeLabels[examType].toUpperCase()}</span>
           </div>
         </div>
         <ProgressBar value={progress} size="sm" />
@@ -394,7 +393,7 @@ export function PracticeExam({
         </Button>
       </div>
 
-      {error && <p className="text-[14px] text-danger">{error}</p>}
+      {error && <p className="text-[14px] text-text-secondary">{error}</p>}
     </div>
   );
 }

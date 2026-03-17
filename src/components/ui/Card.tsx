@@ -7,14 +7,6 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: "sm" | "md" | "lg";
 }
 
-const accentStyles: Record<AccentColor, string> = {
-  primary: "border-l-primary",
-  success: "border-l-success",
-  warning: "border-l-warning",
-  danger: "border-l-danger",
-  urgency: "border-l-urgency",
-};
-
 const paddingStyles = {
   sm: "p-3",
   md: "p-4",
@@ -28,7 +20,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         className={`
           bg-bg-surface border border-border rounded-lg
-          ${accent ? `border-l-4 ${accentStyles[accent]}` : ""}
+          ${accent ? "border-l-4 border-l-primary" : ""}
           ${paddingStyles[padding]}
           ${className}
         `}

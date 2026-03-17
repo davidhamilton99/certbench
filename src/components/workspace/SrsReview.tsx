@@ -4,7 +4,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { shuffleArray } from "@/lib/shuffle-options";
 
@@ -192,7 +191,7 @@ export function SrsReview({
         <p className="text-[15px] text-text-secondary">
           Loading review cards...
         </p>
-        {error && <p className="text-[14px] text-danger">{error}</p>}
+        {error && <p className="text-[14px] text-text-secondary">{error}</p>}
       </div>
     );
   }
@@ -309,7 +308,7 @@ export function SrsReview({
           <span className="text-[13px] font-mono text-text-muted">
             Card {currentIndex + 1} of {questions.length}
           </span>
-          <Badge variant="neutral">SRS Review</Badge>
+          <span className="text-[12px] font-mono text-text-muted">SRS REVIEW</span>
         </div>
         <ProgressBar value={progress} size="sm" />
       </div>
@@ -333,13 +332,13 @@ export function SrsReview({
 
           if (isRevealed) {
             if (isCorrectOption) {
-              borderStyle = "border-success bg-green-50 ring-1 ring-success";
-              circleStyle = "bg-success text-white";
+              borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+              circleStyle = "bg-primary text-white";
             } else if (isSelected && !isCorrectOption) {
-              borderStyle = "border-danger bg-red-50 ring-1 ring-danger";
-              circleStyle = "bg-danger text-white";
+              borderStyle = "border-border bg-bg-surface opacity-60";
+              circleStyle = "bg-text-muted text-white";
             } else {
-              borderStyle = "border-border bg-bg-surface opacity-50";
+              borderStyle = "border-border bg-bg-surface opacity-40";
               circleStyle =
                 "bg-bg-page text-text-secondary border border-border";
             }
@@ -377,10 +376,10 @@ export function SrsReview({
 
       {/* Revealed feedback */}
       {isRevealed && (
-        <Card accent={isCorrect ? "success" : "danger"} padding="lg">
+        <Card padding="lg">
           <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-medium text-text-primary">
-              {isCorrect ? "Correct" : "Incorrect"}
+            <p className="text-[13px] font-mono font-medium text-text-secondary">
+              {isCorrect ? "CORRECT" : "INCORRECT"}
             </p>
             <p className="text-[13px] text-text-secondary leading-relaxed">
               {currentQuestion.explanation.length > 500
@@ -413,7 +412,7 @@ export function SrsReview({
         )}
       </div>
 
-      {error && <p className="text-[14px] text-danger">{error}</p>}
+      {error && <p className="text-[14px] text-text-secondary">{error}</p>}
     </div>
   );
 }

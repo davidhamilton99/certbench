@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface DomainScore {
@@ -39,12 +38,6 @@ interface ResultsData {
     selectedIndex: number;
     isCorrect: boolean;
   }[];
-}
-
-function getScoreVariant(score: number): "success" | "warning" | "danger" {
-  if (score >= 75) return "success";
-  if (score >= 40) return "warning";
-  return "danger";
 }
 
 export function DiagnosticResults({
@@ -116,21 +109,15 @@ export function DiagnosticResults({
             if (!response) return null;
 
             return (
-              <Card
-                key={q.id}
-                accent={response.isCorrect ? "success" : "danger"}
-                padding="lg"
-              >
+              <Card key={q.id} padding="lg">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-4">
                     <p className="text-[15px] leading-relaxed text-text-primary">
                       {q.question_text}
                     </p>
-                    <Badge
-                      variant={response.isCorrect ? "success" : "danger"}
-                    >
-                      {response.isCorrect ? "Correct" : "Incorrect"}
-                    </Badge>
+                    <span className="text-[12px] font-mono font-medium text-text-secondary whitespace-nowrap">
+                      {response.isCorrect ? "CORRECT" : "INCORRECT"}
+                    </span>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -139,10 +126,10 @@ export function DiagnosticResults({
                       const isCorrectAnswer = optIdx === q.correct_index;
                       const wasSelected = optIdx === response.selectedIndex;
 
-                      let optionStyle = "text-text-secondary";
-                      if (isCorrectAnswer) optionStyle = "text-success font-medium";
+                      let optionStyle = "text-text-muted";
+                      if (isCorrectAnswer) optionStyle = "text-text-primary font-medium";
                       else if (wasSelected && !response.isCorrect)
-                        optionStyle = "text-danger line-through";
+                        optionStyle = "text-text-muted line-through";
 
                       return (
                         <div key={optIdx} className="flex gap-2">
@@ -199,7 +186,7 @@ export function DiagnosticResults({
             </span>
             <span className="text-[15px] text-text-muted">/ 100</span>
             {readiness.is_preliminary && (
-              <Badge variant="warning">Preliminary</Badge>
+              <span className="text-[12px] font-mono text-text-muted">PRELIMINARY</span>
             )}
           </div>
           <ProgressBar
@@ -233,27 +220,23 @@ export function DiagnosticResults({
                   : 0;
 
               return (
-                <Card key={ds.domain_id}>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[14px] font-medium text-text-primary">
-                        {ds.domain_number} {ds.title}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-mono text-text-muted">
-                          {ds.correct}/{ds.attempted}
-                        </span>
-                        <Badge variant={getScoreVariant(domainPct)}>
-                          {domainPct}%
-                        </Badge>
-                      </div>
-                    </div>
+                <div
+                  key={ds.domain_id}
+                  className="flex items-center gap-4 py-3 border-b border-border last:border-0"
+                >
+                  <p className="text-[14px] text-text-primary flex-1 min-w-0">
+                    {ds.domain_number} {ds.title}
+                  </p>
+                  <span className="text-[12px] font-mono text-text-muted whitespace-nowrap">
+                    {ds.correct}/{ds.attempted}
+                  </span>
+                  <div className="w-24">
                     <ProgressBar value={domainPct} size="sm" />
-                    <span className="text-[12px] text-text-muted">
-                      Exam weight: {ds.exam_weight}%
-                    </span>
                   </div>
-                </Card>
+                  <span className="text-[13px] font-mono text-text-primary tabular-nums w-10 text-right">
+                    {domainPct}%
+                  </span>
+                </div>
               );
             })}
         </div>
