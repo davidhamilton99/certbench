@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/dashboard", "/profile", "/study-materials/", "/practice/", "/community/", "/cheat-sheets/", "/upgrade"],
+        disallow: ["/api/", "/dashboard", "/profile", "/study-materials/", "/practice/", "/community/", "/review/", "/upgrade"],
       },
     ],
     sitemap: "https://certbench.dev/sitemap.xml",

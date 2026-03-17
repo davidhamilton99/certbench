@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     "/profile",
     "/onboarding",
     "/upgrade",
-    "/cheat-sheets",
+    "/review",
     "/pbq",
     "/add-certification",
     "/reference",

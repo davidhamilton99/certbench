@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
@@ -36,21 +35,6 @@ interface DomainSheet {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function getScoreVariant(score: number): "success" | "warning" | "danger" {
-  if (score >= 75) return "success";
-  if (score >= 40) return "warning";
-  return "danger";
-}
-
-function getDifficultyVariant(d: string): "success" | "warning" | "danger" | "neutral" {
-  switch (d) {
-    case "easy": return "success";
-    case "medium": return "warning";
-    case "hard": return "danger";
-    default: return "neutral";
-  }
-}
-
 function getDifficultyLabel(d: string): string {
   return { easy: "Easy", medium: "Medium", hard: "Hard" }[d] || d;
 }
@@ -80,7 +64,7 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
       setError(null);
       try {
         const res = await fetch(
-          `/api/cheat-sheets?cert=${encodeURIComponent(certSlug)}`,
+          `/api/review?cert=${encodeURIComponent(certSlug)}`,
           { signal: controller.signal }
         );
         const data = await res.json();
@@ -146,13 +130,8 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
   /* Error */
   if (error) {
     return (
-      <Card accent="danger" padding="md">
-        <div className="flex items-center gap-3">
-          <svg className="w-5 h-5 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <p className="text-[14px] text-danger">{error}</p>
-        </div>
+      <Card padding="md">
+        <p className="text-[14px] text-text-primary">{error}</p>
       </Card>
     );
   }
@@ -242,7 +221,7 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
             <span className="text-[12px] font-medium text-text-muted uppercase tracking-wider">
               Weak Points
             </span>
-            <span className={`text-[24px] font-mono font-semibold tabular-nums leading-none ${totalWeak > 0 ? "text-danger" : "text-success"}`}>
+            <span className="text-[24px] font-mono font-semibold tabular-nums leading-none text-text-primary">
               {totalWeak}
             </span>
             <span className="text-[12px] text-text-muted">
@@ -260,9 +239,9 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
               Domain Review
             </h2>
             <div className="flex items-center gap-3">
-              <Badge variant="neutral">
+              <span className="text-[12px] font-mono text-text-muted tabular-nums">
                 {testedDomains.length} {testedDomains.length === 1 ? "domain" : "domains"}
-              </Badge>
+              </span>
               <button
                 onClick={allExpanded ? collapseAll : expandAll}
                 className="text-[12px] font-medium text-primary hover:text-primary/80 transition-colors"
@@ -308,16 +287,16 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {weakCount > 0 && (
-                        <span className="text-[11px] font-medium text-danger">
+                        <span className="text-[11px] font-mono text-text-muted">
                           {weakCount} weak
                         </span>
                       )}
                       <span className="text-[12px] font-mono text-text-muted tabular-nums">
                         {domain.exam_weight}%
                       </span>
-                      <Badge variant={getScoreVariant(domain.accuracy)}>
+                      <span className="text-[12px] font-mono font-semibold text-text-primary tabular-nums">
                         {domain.accuracy}%
-                      </Badge>
+                      </span>
                     </div>
                   </button>
 
@@ -360,23 +339,18 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
                                 <span className="text-[11px] font-mono text-text-muted tabular-nums">
                                   {q.times_correct}/{q.times_seen}
                                 </span>
-                                <Badge variant={getScoreVariant(qAccuracy)}>
+                                <span className="text-[12px] font-mono font-semibold text-text-primary tabular-nums">
                                   {qAccuracy}%
-                                </Badge>
+                                </span>
                               </div>
                             </div>
 
                             {/* Correct answer */}
-                            <div className="bg-success/5 border border-success/20 rounded-md px-3 py-2 mb-2">
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
-                                <span className="text-[11px] font-semibold text-success uppercase tracking-wider">
-                                  Correct Answer
-                                </span>
-                              </div>
-                              <p className="text-[13px] text-text-primary leading-relaxed">
+                            <div className="bg-bg-surface border border-border rounded-md px-3 py-2 mb-2">
+                              <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+                                Correct Answer
+                              </span>
+                              <p className="text-[13px] text-text-primary leading-relaxed mt-0.5">
                                 {q.correct_answer}
                               </p>
                             </div>
@@ -390,15 +364,12 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
 
                             {/* Footer meta */}
                             <div className="flex items-center gap-2">
-                              <Badge variant={getDifficultyVariant(q.difficulty)}>
+                              <span className="text-[11px] font-mono text-text-muted uppercase">
                                 {getDifficultyLabel(q.difficulty)}
-                              </Badge>
+                              </span>
                               {qAccuracy < 60 && (
-                                <span className="text-[11px] font-medium text-danger flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-                                  </svg>
-                                  Needs work
+                                <span className="text-[11px] font-mono text-text-muted">
+                                  · Needs work
                                 </span>
                               )}
                             </div>
@@ -427,9 +398,9 @@ export function CheatSheets({ certSlug }: { certSlug: string }) {
             <h2 className="text-[16px] font-semibold text-text-primary">
               Not Yet Tested
             </h2>
-            <Badge variant="neutral">
+            <span className="text-[12px] font-mono text-text-muted tabular-nums">
               {untestedDomains.length} {untestedDomains.length === 1 ? "domain" : "domains"}
-            </Badge>
+            </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {untestedDomains.map((domain) => (
