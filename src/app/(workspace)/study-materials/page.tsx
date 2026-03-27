@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Study Materials — CertBench",
 };
