@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
+import { revalidatePath } from "next/cache";
 
 const questionSchema = z.object({
   question_type: z
@@ -121,5 +122,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  revalidatePath("/study-materials");
   return NextResponse.json({ id: studySet.id });
 }
