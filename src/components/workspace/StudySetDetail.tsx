@@ -1366,56 +1366,11 @@ export function StudySetDetail({
           </div>
         )}
 
-        {/* Explanation section (shown after reveal) */}
+        {/* Explanation (shown after Explain is clicked) */}
         {isRevealed && displayExplanation && (
-          <div className={`flex flex-col gap-2 px-4 py-3 rounded-lg border-l-4 border border-border ${isCorrect ? "border-l-success bg-green-50/50" : "border-l-danger bg-red-50/50"}`}>
-            <div className="flex items-center gap-2">
-              {isCorrect ? (
-                <svg className="w-4 h-4 text-success shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-              <span className={`text-[14px] font-semibold ${isCorrect ? "text-success" : "text-danger"}`}>
-                {isCorrect ? "Correct" : "Incorrect"}
-              </span>
-            </div>
-            <p className="text-[13px] text-text-secondary leading-relaxed">
-              {displayExplanation}
-            </p>
-          </div>
-        )}
-        {isRevealed && !displayExplanation && (
-          <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border-l-4 border border-border ${isCorrect ? "border-l-success bg-green-50/50" : "border-l-danger bg-red-50/50"}`}>
-            <div className="flex items-center gap-2">
-              {isCorrect ? (
-                <svg className="w-4 h-4 text-success shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-              <span className={`text-[14px] font-semibold ${isCorrect ? "text-success" : "text-danger"}`}>
-                {isCorrect ? "Correct" : "Incorrect"}
-              </span>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleExplain}
-              disabled={explaining}
-            >
-              {explaining ? "Generating..." : "Explain"}
-            </Button>
-          </div>
-        )}
-        {explainError && (
-          <p className="text-[13px] text-danger">{explainError}</p>
+          <p className="text-[13px] text-text-secondary leading-relaxed px-1">
+            {displayExplanation}
+          </p>
         )}
 
         {/* Action bar */}
@@ -1424,6 +1379,19 @@ export function StudySetDetail({
             {localQuestions.length - currentIndex - 1} remaining
           </span>
           <div className="flex items-center gap-2">
+            {isRevealed && !displayExplanation && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleExplain}
+                disabled={explaining}
+              >
+                {explaining ? "Generating..." : "Explain"}
+              </Button>
+            )}
+            {explainError && (
+              <span className="text-[12px] text-danger">{explainError}</span>
+            )}
             {isRevealed ? (
               <Button size="lg" onClick={handleNext}>
                 {currentIndex === localQuestions.length - 1
