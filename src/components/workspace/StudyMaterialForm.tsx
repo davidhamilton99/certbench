@@ -415,6 +415,7 @@ export function StudyMaterialForm({
         return;
       }
 
+      router.refresh();
       router.push(`/study-materials/${data.id}`);
     } catch {
       setError("Network error. Please try again.");

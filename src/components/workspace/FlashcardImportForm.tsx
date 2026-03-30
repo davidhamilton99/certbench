@@ -200,6 +200,7 @@ export function FlashcardImportForm({
       }
 
       const data = await res.json();
+      router.refresh();
       router.push(`/study-materials/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
