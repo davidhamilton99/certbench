@@ -1368,24 +1368,42 @@ export function StudySetDetail({
 
         {/* Explanation section (shown after reveal) */}
         {isRevealed && displayExplanation && (
-          <Card accent={isCorrect ? "success" : "danger"} padding="lg">
-            <div className="flex flex-col gap-2">
-              <p className="text-[14px] font-medium text-text-primary">
+          <div className={`flex flex-col gap-2 px-4 py-3 rounded-lg border-l-4 border border-border ${isCorrect ? "border-l-success bg-green-50/50" : "border-l-danger bg-red-50/50"}`}>
+            <div className="flex items-center gap-2">
+              {isCorrect ? (
+                <svg className="w-4 h-4 text-success shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span className={`text-[14px] font-semibold ${isCorrect ? "text-success" : "text-danger"}`}>
                 {isCorrect ? "Correct" : "Incorrect"}
-              </p>
-              <p className="text-[13px] text-text-secondary leading-relaxed">
-                {displayExplanation}
-              </p>
+              </span>
             </div>
-          </Card>
+            <p className="text-[13px] text-text-secondary leading-relaxed">
+              {displayExplanation}
+            </p>
+          </div>
         )}
         {isRevealed && !displayExplanation && (
-          <div className="flex items-center gap-3">
-            <Card accent={isCorrect ? "success" : "danger"} padding="lg" className="flex-1">
-              <p className="text-[14px] font-medium text-text-primary">
+          <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border-l-4 border border-border ${isCorrect ? "border-l-success bg-green-50/50" : "border-l-danger bg-red-50/50"}`}>
+            <div className="flex items-center gap-2">
+              {isCorrect ? (
+                <svg className="w-4 h-4 text-success shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span className={`text-[14px] font-semibold ${isCorrect ? "text-success" : "text-danger"}`}>
                 {isCorrect ? "Correct" : "Incorrect"}
-              </p>
-            </Card>
+              </span>
+            </div>
             <Button
               variant="secondary"
               size="sm"
