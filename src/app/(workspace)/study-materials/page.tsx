@@ -34,11 +34,13 @@ export default async function StudyMaterialsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: studySets } = await supabase
+  const { data: studySets, error: setsError } = await supabase
     .from("user_study_sets")
-    .select("id, title, category, question_count, is_public, created_at, bookmark_count, attempt_count")
+    .select("id, title, category, question_count, is_public, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (setsError) console.error("[study-materials] list query failed:", setsError.message);
 
   const publicCount = studySets?.filter(s => s.is_public).length ?? 0;
   const totalQuestions = studySets?.reduce((sum, s) => sum + (s.question_count || 0), 0) ?? 0;
@@ -125,27 +127,6 @@ export default async function StudyMaterialsPage() {
                     </span>
                   </div>
 
-                  {/* Community metrics (only for public sets) */}
-                  {set.is_public && (set.bookmark_count > 0 || set.attempt_count > 0) && (
-                    <div className="flex items-center gap-3 pt-2 border-t border-border">
-                      {set.bookmark_count > 0 && (
-                        <span className="flex items-center gap-1 text-[12px] text-text-muted">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                          </svg>
-                          {set.bookmark_count}
-                        </span>
-                      )}
-                      {set.attempt_count > 0 && (
-                        <span className="flex items-center gap-1 text-[12px] text-text-muted">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                          </svg>
-                          {set.attempt_count}
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </Card>
             </Link>
