@@ -329,8 +329,7 @@ export function parseAIOutput(text: string): ParseResult {
  * Build a copy-paste prompt for the user to give to their AI.
  */
 export function buildImportPrompt(
-  types: QuestionType[],
-  count: number
+  types: QuestionType[]
 ): string {
   const typeInstructions: string[] = [];
 
@@ -381,7 +380,7 @@ Q: Match each term with its definition:
 Explanation: Brief explanation of the pairings.`);
   }
 
-  return `Generate ${count} study questions from my material below. Use EXACTLY this format — one question per block, each starting with a type tag. Include an explanation for every question.
+  return `Generate study questions from my material below. Cover as much of the material as possible. Use EXACTLY this format — one question per block, each starting with a type tag. Include an explanation for every question.
 
 FORMAT:
 ${typeInstructions.join("\n\n")}
@@ -392,8 +391,7 @@ RULES:
 - For True/False, use "Answer: True" or "Answer: False"
 - For ordering, list items in the CORRECT order numbered 1, 2, 3...
 - For matching, use "term = definition" format
-- Always include "Explanation:" for every question
-- Generate exactly ${count} questions total${types.length > 1 ? `, with a mix of types` : ""}
+- Always include "Explanation:" for every question${types.length > 1 ? `\n- Use a mix of question types` : ""}
 
 MY STUDY MATERIAL:
 [Paste your notes, textbook content, or study material here]`;

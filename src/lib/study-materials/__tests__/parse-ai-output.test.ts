@@ -324,32 +324,31 @@ Answer: True`;
 
 describe("buildImportPrompt", () => {
   it("includes MC format when multiple_choice selected", () => {
-    const prompt = buildImportPrompt(["multiple_choice"], 10);
+    const prompt = buildImportPrompt(["multiple_choice"]);
     expect(prompt).toContain("[MC]");
     expect(prompt).toContain("(correct)");
-    expect(prompt).toContain("10 study questions");
+    expect(prompt).toContain("study questions");
   });
 
   it("includes all type tags when all types selected", () => {
     const prompt = buildImportPrompt(
-      ["multiple_choice", "true_false", "multiple_select", "ordering", "matching"],
-      25
+      ["multiple_choice", "true_false", "multiple_select", "ordering", "matching"]
     );
     expect(prompt).toContain("[MC]");
     expect(prompt).toContain("[TF]");
     expect(prompt).toContain("[MS]");
     expect(prompt).toContain("[ORD]");
     expect(prompt).toContain("[MATCH]");
-    expect(prompt).toContain("mix of types");
+    expect(prompt).toContain("mix of question types");
   });
 
   it("does not mention mix for single type", () => {
-    const prompt = buildImportPrompt(["true_false"], 5);
-    expect(prompt).not.toContain("mix of types");
+    const prompt = buildImportPrompt(["true_false"]);
+    expect(prompt).not.toContain("mix of question types");
   });
 
   it("includes placeholder for study material", () => {
-    const prompt = buildImportPrompt(["multiple_choice"], 10);
+    const prompt = buildImportPrompt(["multiple_choice"]);
     expect(prompt).toContain("[Paste your notes");
   });
 });

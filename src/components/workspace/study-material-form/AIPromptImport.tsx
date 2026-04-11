@@ -25,7 +25,6 @@ export function AIPromptImport({ onSave, saving, onBack }: AIPromptImportProps) 
   const [selectedTypes, setSelectedTypes] = useState<Set<QuestionType>>(
     new Set(["multiple_choice", "true_false"])
   );
-  const [questionCount, setQuestionCount] = useState(25);
   const [rawText, setRawText] = useState("");
   const [title, setTitle] = useState("");
   const [copied, setCopied] = useState(false);
@@ -33,8 +32,8 @@ export function AIPromptImport({ onSave, saving, onBack }: AIPromptImportProps) 
   const [error, setError] = useState<string | null>(null);
 
   const prompt = useMemo(
-    () => buildImportPrompt([...selectedTypes], questionCount),
-    [selectedTypes, questionCount]
+    () => buildImportPrompt([...selectedTypes]),
+    [selectedTypes]
   );
 
   const handleCopy = useCallback(async () => {
@@ -120,28 +119,6 @@ export function AIPromptImport({ onSave, saving, onBack }: AIPromptImportProps) 
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="question-count"
-                className="block text-[13px] font-medium text-text-primary mb-1.5"
-              >
-                Number of questions
-              </label>
-              <select
-                id="question-count"
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Number(e.target.value))}
-                className="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-[14px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              >
-                <option value={10}>10 questions</option>
-                <option value={15}>15 questions</option>
-                <option value={20}>20 questions</option>
-                <option value={25}>25 questions</option>
-                <option value={30}>30 questions</option>
-                <option value={40}>40 questions</option>
-                <option value={50}>50 questions</option>
-              </select>
-            </div>
           </div>
         </Card>
 
