@@ -165,28 +165,29 @@ export function ReviewPhase({
         ))}
       </div>
 
-      {error && (
-        <Card accent="danger" padding="md">
-          <p className="text-[14px] text-danger">{error}</p>
-        </Card>
-      )}
-
       {/* Sticky bottom action bar */}
-      <div className="sticky bottom-0 bg-bg-page border-t border-border -mx-6 px-6 py-4 mt-2 flex items-center justify-between gap-3">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-        >
-          Back to Editor
-        </Button>
-        <Button
-          size="lg"
-          onClick={onSave}
-          loading={saving}
-          disabled={questions.length === 0}
-        >
-          Save to Library
-        </Button>
+      <div className="sticky bottom-0 bg-bg-page border-t border-border -mx-6 px-6 py-4 mt-2 flex flex-col gap-3">
+        {error && (
+          <div className="px-3 py-2 rounded-md bg-red-50 border border-red-200">
+            <p className="text-[13px] text-danger">{error}</p>
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+          >
+            Back to Editor
+          </Button>
+          <Button
+            size="lg"
+            onClick={onSave}
+            loading={saving}
+            disabled={questions.length === 0}
+          >
+            Save to Library
+          </Button>
+        </div>
       </div>
     </>
   );

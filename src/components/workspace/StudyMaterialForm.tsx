@@ -283,13 +283,16 @@ export function StudyMaterialForm({
 
       if (!res.ok) {
         const detail = data.details?.length ? `: ${data.details.join(", ")}` : "";
-        setError((data.error || "Failed to save study set") + detail);
+        const msg = (data.error || "Failed to save study set") + detail;
+        console.error("Save failed:", res.status, data);
+        setError(msg);
         return;
       }
 
       router.refresh();
       router.push(`/study-materials/${data.id}`);
-    } catch {
+    } catch (e) {
+      console.error("Save network error:", e);
       setError("Network error. Please try again.");
     } finally {
       setSaving(false);
@@ -311,6 +314,7 @@ export function StudyMaterialForm({
         const data = await res.json() as { id?: string; error?: string; details?: string[] };
         if (!res.ok) {
           const detail = data.details?.length ? `: ${data.details.join(", ")}` : "";
+          console.error("Import save failed:", res.status, data);
           throw new Error((data.error || "Failed to save study set") + detail);
         }
         router.refresh();
