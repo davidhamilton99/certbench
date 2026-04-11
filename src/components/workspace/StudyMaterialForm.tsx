@@ -298,7 +298,6 @@ export function StudyMaterialForm({
   const handleImportSave = useCallback(
     async (importedQuestions: GeneratedQuestion[], importTitle: string) => {
       setSaving(true);
-      setError(null);
       try {
         const res = await fetch("/api/study-materials", {
           method: "POST",
@@ -310,13 +309,10 @@ export function StudyMaterialForm({
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error || "Failed to save study set");
-          return;
+          throw new Error(data.error || "Failed to save study set");
         }
         router.refresh();
         router.push(`/study-materials/${data.id}`);
-      } catch {
-        setError("Network error. Please try again.");
       } finally {
         setSaving(false);
       }

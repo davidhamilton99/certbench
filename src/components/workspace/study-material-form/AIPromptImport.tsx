@@ -68,7 +68,12 @@ export function AIPromptImport({ onSave, saving, onBack }: AIPromptImportProps) 
 
   const handleSave = useCallback(async () => {
     if (!parseResult) return;
-    await onSave(parseResult.questions as GeneratedQuestion[], title);
+    setError(null);
+    try {
+      await onSave(parseResult.questions as GeneratedQuestion[], title);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save. Please try again.");
+    }
   }, [parseResult, title, onSave]);
 
   const removeQuestion = useCallback((index: number) => {
