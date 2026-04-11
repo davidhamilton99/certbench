@@ -7,67 +7,18 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-
-// Fisher-Yates shuffle — returns a new shuffled array of indices
-function shuffleIndices(length: number): number[] {
-  const indices = Array.from({ length }, (_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  return indices;
-}
-
-type QuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "multiple_select"
-  | "ordering"
-  | "matching";
-
-interface MCTFOption {
-  text: string;
-  is_correct: boolean;
-}
-interface OrderingOption {
-  text: string;
-  correct_position: number;
-}
-interface MatchingOption {
-  left: string;
-  right: string;
-}
-
-const TYPE_LABELS: Record<QuestionType, string> = {
-  multiple_choice: "MC",
-  true_false: "T/F",
-  multiple_select: "Multi-Select",
-  ordering: "Ordering",
-  matching: "Matching",
-};
-
-interface StudySet {
-  id: string;
-  user_id: string;
-  title: string;
-  category: string | null;
-  question_count: number;
-  is_public: boolean;
-  created_at: string;
-  source_material_preview?: string | null;
-}
-
-interface StudyQuestion {
-  id: string;
-  question_type: QuestionType;
-  question_text: string;
-  options: unknown[];
-  correct_index: number;
-  explanation: string | null;
-  sort_order: number;
-}
-
-type Phase = "overview" | "practicing" | "revealed" | "complete";
+import { shuffleIndices, checkAnswer, isAnswerComplete } from "./study-set/answer-utils";
+import { exportPdf } from "./study-set/export-pdf";
+import type {
+  QuestionType,
+  MCTFOption,
+  OrderingOption,
+  MatchingOption,
+  StudySet,
+  StudyQuestion,
+  Phase,
+} from "./study-set/types";
+import { TYPE_LABELS } from "./study-set/types";
 
 export function StudySetDetail({
   studySet,
@@ -158,30 +109,15 @@ export function StudySetDetail({
     return optionOrder.indexOf(currentQuestion.correct_index);
   }, [currentQuestion, currentType, optionOrder]);
 
-  // Whether the user has provided a valid answer for the current question type
   const isAnswerReady = useMemo(() => {
     if (!currentQuestion) return false;
-    switch (currentType) {
-      case "multiple_choice":
-      case "true_false":
-        return selectedOption !== null;
-      case "multiple_select":
-        return msSelected.size > 0;
-      case "ordering":
-        return orderingSequence.length === currentQuestion.options.length;
-      case "matching":
-        return matchingPairs.size === currentQuestion.options.length;
-      default:
-        return false;
-    }
-  }, [
-    currentQuestion,
-    currentType,
-    selectedOption,
-    msSelected,
-    orderingSequence,
-    matchingPairs,
-  ]);
+    return isAnswerComplete(currentQuestion, {
+      selectedOption,
+      msSelected,
+      orderingSequence,
+      matchingPairs,
+    });
+  }, [currentQuestion, selectedOption, msSelected, orderingSequence, matchingPairs]);
 
   // -----------------------------------------------------------------------
   // Answer state reset
@@ -211,61 +147,16 @@ export function StudySetDetail({
 
   const handleAnswer = useCallback(async () => {
     if (!currentQuestion) return;
-    let isCorrect = false;
-
-    switch (currentType) {
-      case "multiple_choice": {
-        if (selectedOption === null) return;
-        isCorrect = selectedOption === shuffledCorrectIndex;
-        break;
-      }
-      case "true_false": {
-        if (selectedOption === null) return;
-        isCorrect = selectedOption === currentQuestion.correct_index;
-        break;
-      }
-      case "multiple_select": {
-        if (msSelected.size === 0) return;
-        const opts = currentQuestion.options as MCTFOption[];
-        const correctSet = new Set(
-          opts.map((o, i) => (o.is_correct ? i : -1)).filter((i) => i >= 0)
-        );
-        isCorrect =
-          msSelected.size === correctSet.size &&
-          [...msSelected].every((i) => correctSet.has(i));
-        break;
-      }
-      case "ordering": {
-        const opts = currentQuestion.options as OrderingOption[];
-        if (orderingSequence.length !== opts.length) return;
-        isCorrect = orderingSequence.every(
-          (optIdx, pos) => opts[optIdx].correct_position === pos
-        );
-        break;
-      }
-      case "matching": {
-        if (matchingPairs.size !== currentQuestion.options.length) return;
-        // options[i].left correctly pairs with options[i].right,
-        // so matchingPairs[leftIdx] should === leftIdx
-        isCorrect = [...matchingPairs.entries()].every(
-          ([leftIdx, rightIdx]) => rightIdx === leftIdx
-        );
-        break;
-      }
-    }
-
+    const isCorrect = checkAnswer(currentQuestion, {
+      selectedOption,
+      shuffledCorrectIndex,
+      msSelected,
+      orderingSequence,
+      matchingPairs,
+    });
     if (isCorrect) setCorrectCount((c) => c + 1);
     setPhase("revealed");
-  }, [
-    selectedOption,
-    currentQuestion,
-    currentType,
-    shuffledCorrectIndex,
-    optionOrder,
-    msSelected,
-    orderingSequence,
-    matchingPairs,
-  ]);
+  }, [selectedOption, currentQuestion, shuffledCorrectIndex, msSelected, orderingSequence, matchingPairs]);
 
   const handleNext = useCallback(() => {
     resetAnswerState();
@@ -429,184 +320,10 @@ export function StudySetDetail({
 
   const [exporting, setExporting] = useState(false);
 
-  const exportPdf = useCallback(async () => {
+  const handleExportPdf = useCallback(async () => {
     setExporting(true);
     try {
-      const { jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
-      const contentWidth = pageWidth - margin * 2;
-      let y = margin;
-
-      const checkPage = (needed: number) => {
-        if (y + needed > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          y = margin;
-        }
-      };
-
-      // Title
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text(studySet.title, margin, y);
-      y += 8;
-
-      if (studySet.category) {
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(100);
-        doc.text(studySet.category, margin, y);
-        doc.setTextColor(0);
-        y += 6;
-      }
-
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(120);
-      doc.text(
-        `${localQuestions.length} questions — Generated by CertBench`,
-        margin,
-        y
-      );
-      doc.setTextColor(0);
-      y += 10;
-
-      // Questions
-      localQuestions.forEach((q, i) => {
-        const qType = q.question_type || "multiple_choice";
-        const typeTag =
-          qType !== "multiple_choice" ? ` [${TYPE_LABELS[qType]}]` : "";
-
-        checkPage(30);
-
-        // Question text
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        const qLines = doc.splitTextToSize(
-          `${i + 1}. ${q.question_text}${typeTag}`,
-          contentWidth
-        );
-        doc.text(qLines, margin, y);
-        y += qLines.length * 5 + 2;
-
-        // Options
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-
-        if (
-          qType === "multiple_choice" ||
-          qType === "true_false" ||
-          qType === "multiple_select"
-        ) {
-          (q.options as MCTFOption[]).forEach((opt, optIdx) => {
-            checkPage(6);
-            const letter = String.fromCharCode(65 + optIdx);
-            const optLines = doc.splitTextToSize(
-              `   ${letter}) ${opt.text}`,
-              contentWidth - 5
-            );
-            doc.text(optLines, margin, y);
-            y += optLines.length * 4.5 + 1;
-          });
-        } else if (qType === "ordering") {
-          (q.options as OrderingOption[]).forEach((opt, optIdx) => {
-            checkPage(6);
-            const optLines = doc.splitTextToSize(
-              `   ${String.fromCharCode(65 + optIdx)}) ${opt.text}`,
-              contentWidth - 5
-            );
-            doc.text(optLines, margin, y);
-            y += optLines.length * 4.5 + 1;
-          });
-        } else if (qType === "matching") {
-          (q.options as MatchingOption[]).forEach((opt, optIdx) => {
-            checkPage(6);
-            const optLines = doc.splitTextToSize(
-              `   ${optIdx + 1}. ${opt.left}`,
-              contentWidth - 5
-            );
-            doc.text(optLines, margin, y);
-            y += optLines.length * 4.5 + 1;
-          });
-          y += 2;
-          doc.setFont("helvetica", "italic");
-          doc.text("   Definitions:", margin, y);
-          y += 5;
-          doc.setFont("helvetica", "normal");
-          const shuffled = [...(q.options as MatchingOption[])].sort(() =>
-            Math.random() - 0.5
-          );
-          shuffled.forEach((opt, optIdx) => {
-            checkPage(6);
-            const optLines = doc.splitTextToSize(
-              `   ${String.fromCharCode(65 + optIdx)}) ${opt.right}`,
-              contentWidth - 5
-            );
-            doc.text(optLines, margin, y);
-            y += optLines.length * 4.5 + 1;
-          });
-        }
-
-        y += 4;
-      });
-
-      // Answer key on new page
-      doc.addPage();
-      y = margin;
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Answer Key", margin, y);
-      y += 8;
-
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-
-      localQuestions.forEach((q, i) => {
-        checkPage(12);
-        const qType = q.question_type || "multiple_choice";
-        let answer = "";
-
-        if (qType === "multiple_choice" || qType === "true_false") {
-          const correct = (q.options as MCTFOption[])[q.correct_index];
-          answer = `${String.fromCharCode(65 + q.correct_index)}) ${correct?.text || ""}`;
-        } else if (qType === "multiple_select") {
-          const correct = (q.options as MCTFOption[])
-            .map((o, idx) => (o.is_correct ? String.fromCharCode(65 + idx) : null))
-            .filter(Boolean);
-          answer = correct.join(", ");
-        } else if (qType === "ordering") {
-          const sorted = [...(q.options as OrderingOption[])].sort(
-            (a, b) => a.correct_position - b.correct_position
-          );
-          answer = sorted.map((o) => o.text).join(" → ");
-        } else if (qType === "matching") {
-          answer = (q.options as MatchingOption[])
-            .map((o) => `${o.left} = ${o.right}`)
-            .join("; ");
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.text(`${i + 1}.`, margin, y);
-        doc.setFont("helvetica", "normal");
-        const ansLines = doc.splitTextToSize(answer, contentWidth - 10);
-        doc.text(ansLines, margin + 8, y);
-        y += ansLines.length * 4.5 + 1;
-
-        if (q.explanation) {
-          doc.setTextColor(80);
-          const expLines = doc.splitTextToSize(q.explanation, contentWidth - 10);
-          doc.text(expLines, margin + 8, y);
-          doc.setTextColor(0);
-          y += expLines.length * 4 + 3;
-        }
-      });
-
-      const filename = studySet.title
-        .replace(/[^a-zA-Z0-9 ]/g, "")
-        .replace(/\s+/g, "-")
-        .toLowerCase();
-      doc.save(`${filename}.pdf`);
+      await exportPdf(studySet, localQuestions);
     } catch (err) {
       console.error("PDF export error:", err);
     } finally {
@@ -876,45 +593,6 @@ export function StudySetDetail({
     currentQuestion
   ) {
     const isRevealed = phase === "revealed";
-
-    // For MC: was the selected option correct?
-    const isMCCorrect =
-      isRevealed &&
-      currentType === "multiple_choice" &&
-      selectedOption === shuffledCorrectIndex;
-    const isTFCorrect =
-      isRevealed &&
-      currentType === "true_false" &&
-      selectedOption === currentQuestion.correct_index;
-
-    // Generic "is answer correct" for result display
-    let isCorrect = false;
-    if (isRevealed) {
-      if (currentType === "multiple_choice") isCorrect = isMCCorrect;
-      else if (currentType === "true_false") isCorrect = isTFCorrect;
-      else if (currentType === "multiple_select") {
-        const opts = currentQuestion.options as MCTFOption[];
-        const correctSet = new Set(
-          opts.map((o, i) => (o.is_correct ? i : -1)).filter((i) => i >= 0)
-        );
-        isCorrect =
-          msSelected.size === correctSet.size &&
-          [...msSelected].every((i) => correctSet.has(i));
-      } else if (currentType === "ordering") {
-        const opts = currentQuestion.options as OrderingOption[];
-        isCorrect =
-          orderingSequence.length === opts.length &&
-          orderingSequence.every(
-            (optIdx, pos) => opts[optIdx].correct_position === pos
-          );
-      } else if (currentType === "matching") {
-        isCorrect =
-          matchingPairs.size === currentQuestion.options.length &&
-          [...matchingPairs.entries()].every(
-            ([leftIdx, rightIdx]) => rightIdx === leftIdx
-          );
-      }
-    }
 
     const displayExplanation = currentQuestion.explanation;
 
@@ -1440,7 +1118,7 @@ export function StudySetDetail({
         <Button size="lg" onClick={startPractice}>
           Practice Questions
         </Button>
-        <Button variant="secondary" onClick={exportPdf} loading={exporting}>
+        <Button variant="secondary" onClick={handleExportPdf} loading={exporting}>
           Export PDF
         </Button>
         {isPublic && (

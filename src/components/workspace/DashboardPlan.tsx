@@ -80,7 +80,7 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
       />
 
       {/* Session blocks */}
-      {plan.blocks.length > 0 && (
+      {plan.blocks.length > 0 ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[14px] font-semibold text-text-secondary uppercase tracking-wider">
@@ -109,6 +109,17 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
             ))}
           </div>
         </div>
+      ) : (
+        <Card accent="success" padding="md">
+          <div className="flex flex-col gap-1">
+            <p className="text-[14px] font-medium text-text-primary">
+              You&apos;re all caught up
+            </p>
+            <p className="text-[13px] text-text-muted">
+              No sessions scheduled for today. Check back tomorrow for SRS reviews, or start a practice exam.
+            </p>
+          </div>
+        </Card>
       )}
     </div>
   );

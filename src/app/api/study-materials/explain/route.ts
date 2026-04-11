@@ -5,6 +5,18 @@ import {
   callClaude,
   getAnthropicApiKey,
 } from "@/lib/ai/config";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod/v4";
+
+const explainSchema = z.object({
+  questionId: z.string().uuid(),
+  questionText: z.string().min(1).max(5000),
+  questionType: z.string().min(1).max(50),
+  options: z.array(z.unknown()).min(2).max(20),
+  correctIndex: z.number().int().min(0),
+  selectedAnswer: z.string().max(1000).optional().default(""),
+});
 
 /**
  * POST /api/study-materials/explain
@@ -13,7 +25,7 @@ import {
  * Uses Haiku for speed and cost efficiency.
  * Caches the result back to the database so it's only generated once.
  */
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -24,6 +36,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { limited } = rateLimit(`explain:${user.id}`, 30, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json(
@@ -32,31 +52,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { questionId, questionText, questionType, options, correctIndex, selectedAnswer } =
-    (await req.json()) as {
-      questionId: string;
-      questionText: string;
-      questionType: string;
-      options: unknown[];
-      correctIndex: number;
-      selectedAnswer: string;
-    };
-
-  if (!questionId || !questionText) {
+  const parsed = explainSchema.safeParse(await req.json());
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "questionId and questionText are required" },
+      { error: "Invalid request body" },
       { status: 400 }
     );
   }
 
-  // Check if explanation already exists (race condition guard)
+  const { questionId, questionText, questionType, options, correctIndex, selectedAnswer } = parsed.data;
+
+  // Check if explanation already exists — verify user owns this question
   const { data: existing } = await supabase
     .from("user_study_questions")
-    .select("explanation")
+    .select("explanation, study_set_id")
     .eq("id", questionId)
     .single();
 
-  if (existing?.explanation) {
+  if (!existing) {
+    return NextResponse.json({ error: "Question not found" }, { status: 404 });
+  }
+
+  // Verify user owns the study set this question belongs to
+  const { data: studySet } = await supabase
+    .from("user_study_sets")
+    .select("id")
+    .eq("id", existing.study_set_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!studySet) {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
+
+  if (existing.explanation) {
     return NextResponse.json({ explanation: existing.explanation });
   }
 
@@ -88,6 +117,7 @@ Explain why the correct answer is correct${selectedAnswer !== "correct" ? " and 
       .from("user_study_questions")
       .update({ explanation: trimmed })
       .eq("id", questionId)
+      .eq("study_set_id", studySet.id)
       .then(() => {});
 
     return NextResponse.json({ explanation: trimmed });
@@ -98,6 +128,8 @@ Explain why the correct answer is correct${selectedAnswer !== "correct" ? " and 
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const POST = withErrorHandler(handler);
 
 /** Format options into a readable string for the prompt. */
 function formatOptions(

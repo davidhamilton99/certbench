@@ -6,6 +6,8 @@ import {
 } from "@/lib/readiness/compute-score";
 import { computeSrsUpdate } from "@/lib/srs/compute-srs";
 import { SRS_DEFAULT_EASE_FACTOR } from "@/constants/exam-config";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod/v4";
 
 const answerSchema = z.object({
@@ -19,7 +21,7 @@ const submitSchema = z.object({
   answers: z.array(answerSchema).min(1).max(500),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -28,6 +30,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`exam-submit:${user.id}`, 10, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const parsed = submitSchema.safeParse(await req.json());
@@ -41,11 +51,10 @@ export async function POST(req: NextRequest) {
 
   const { attemptId, answers } = parsed.data;
 
-  try {
   // Verify attempt belongs to user and is not complete
   const { data: attempt } = await supabase
     .from("diagnostic_attempts")
-    .select("id, user_id, certification_id, is_complete")
+    .select("id, user_id, certification_id, is_complete, total_questions")
     .eq("id", attemptId)
     .single();
 
@@ -60,21 +69,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch the actual questions to grade
+  // Validate answer count matches expected question count
+  if (attempt.total_questions && answers.length !== attempt.total_questions) {
+    return NextResponse.json(
+      { error: `Expected ${attempt.total_questions} answers, received ${answers.length}` },
+      { status: 400 }
+    );
+  }
+
+  // Fetch full question data upfront (used for grading + review response)
   const questionIds = answers.map((a) => a.questionId);
-  const { data: questions } = await supabase
+  const { data: fullQuestions } = await supabase
     .from("cert_questions")
-    .select("id, domain_id, correct_index")
+    .select("id, domain_id, correct_index, question_text, options, explanation")
     .in("id", questionIds);
 
-  if (!questions) {
+  if (!fullQuestions) {
     return NextResponse.json(
       { error: "Failed to fetch questions" },
       { status: 500 }
     );
   }
 
-  const questionMap = new Map(questions.map((q) => [q.id, q]));
+  const questionMap = new Map(fullQuestions.map((q) => [q.id, q]));
 
   // Grade answers and build responses
   let correctCount = 0;
@@ -174,7 +191,7 @@ export async function POST(req: NextRequest) {
         currentStreak: 0,
       });
 
-      return supabase.from("question_performance").insert({
+      return supabase.from("question_performance").upsert({
         user_id: user.id,
         question_id: a.questionId,
         certification_id: attempt.certification_id,
@@ -186,46 +203,53 @@ export async function POST(req: NextRequest) {
         srs_ease_factor: srs.easeFactor,
         srs_next_review_at: srs.nextReviewAt,
         streak: srs.streak,
-      });
+      }, { onConflict: "user_id,question_id" });
     }
   }).filter(Boolean);
 
   await Promise.all(perfOps);
 
   // Compute readiness score
-  const { data: domains } = await supabase
-    .from("cert_domains")
-    .select("id, domain_number, title, exam_weight")
-    .eq("certification_id", attempt.certification_id)
-    .order("sort_order");
+  // Parallel fetch: domains, user performance, and all cert questions (for domain mapping + counts)
+  const [domainsResult, allPerformanceResult, allCertQuestionsResult] =
+    await Promise.all([
+      supabase
+        .from("cert_domains")
+        .select("id, domain_number, title, exam_weight")
+        .eq("certification_id", attempt.certification_id)
+        .order("sort_order"),
+      supabase
+        .from("question_performance")
+        .select("question_id, times_seen, times_correct")
+        .eq("user_id", user.id)
+        .eq("certification_id", attempt.certification_id),
+      // Single query replaces two separate cert_questions fetches
+      supabase
+        .from("cert_questions")
+        .select("id, domain_id, is_active")
+        .eq("certification_id", attempt.certification_id),
+    ]);
 
-  const { data: allPerformance } = await supabase
-    .from("question_performance")
-    .select("question_id, times_seen, times_correct")
-    .eq("user_id", user.id)
-    .eq("certification_id", attempt.certification_id);
+  const domains = domainsResult.data;
+  const allPerformance = allPerformanceResult.data;
+  const allCertQuestions = allCertQuestionsResult.data;
 
-  const { data: questionDomainMap } = await supabase
-    .from("cert_questions")
-    .select("id, domain_id")
-    .eq("certification_id", attempt.certification_id);
+  let readiness = null;
 
-  if (domains && allPerformance && questionDomainMap) {
-    // Build domain performance
+  if (domains && allPerformance && allCertQuestions) {
     const qDomainLookup = new Map(
-      questionDomainMap.map((q) => [q.id, q.domain_id])
+      allCertQuestions.map((q) => [q.id, q.domain_id])
     );
 
-    const { data: domainQuestionCounts } = await supabase
-      .from("cert_questions")
-      .select("domain_id")
-      .eq("certification_id", attempt.certification_id)
-      .eq("is_active", true);
-
     const totalByDomain = new Map<string, number>();
-    domainQuestionCounts?.forEach((q) => {
-      totalByDomain.set(q.domain_id, (totalByDomain.get(q.domain_id) || 0) + 1);
-    });
+    allCertQuestions
+      .filter((q) => q.is_active)
+      .forEach((q) => {
+        totalByDomain.set(
+          q.domain_id,
+          (totalByDomain.get(q.domain_id) || 0) + 1
+        );
+      });
 
     const domainPerformances: DomainPerformance[] = domains.map((d) => {
       const domainPerfRecords = allPerformance.filter(
@@ -248,9 +272,8 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    const readiness = computeReadinessScore(domainPerformances);
+    readiness = computeReadinessScore(domainPerformances);
 
-    // Save readiness snapshot
     await supabase.from("readiness_snapshots").insert({
       user_id: user.id,
       certification_id: attempt.certification_id,
@@ -259,36 +282,24 @@ export async function POST(req: NextRequest) {
       total_questions_seen: readiness.total_questions_seen,
       is_preliminary: readiness.is_preliminary,
     });
-
-    // Fetch full question data for the review screen
-    const { data: fullQuestions } = await supabase
-      .from("cert_questions")
-      .select("id, question_text, options, correct_index, explanation, domain_id")
-      .in("id", questionIds);
-
-    return NextResponse.json({
-      correctCount,
-      totalQuestions: answers.length,
-      readiness,
-      questions: fullQuestions,
-      responses: responses.map((r) => ({
-        questionId: r.question_id,
-        selectedIndex: r.selected_index,
-        isCorrect: r.is_correct,
-      })),
-    });
   }
+
+  // Reorder questions to match the order the user answered them (reuse fullQuestions from grading)
+  const orderedQuestions = questionIds
+    .map((id) => questionMap.get(id))
+    .filter(Boolean);
 
   return NextResponse.json({
     correctCount,
     totalQuestions: answers.length,
+    readiness,
+    questions: orderedQuestions,
+    responses: responses.map((r) => ({
+      questionId: r.question_id,
+      selectedIndex: r.selected_index,
+      isCorrect: r.is_correct,
+    })),
   });
-
-  } catch (err) {
-    console.error("Diagnostic submit error:", err);
-    return NextResponse.json(
-      { error: "Failed to process diagnostic submission" },
-      { status: 500 }
-    );
-  }
 }
+
+export const POST = withErrorHandler(handler);

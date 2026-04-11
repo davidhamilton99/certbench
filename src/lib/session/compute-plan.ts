@@ -7,7 +7,6 @@ import {
 } from "@/constants/exam-config";
 import {
   computeReadinessScore,
-  getScoreColor,
   type DomainPerformance,
 } from "@/lib/readiness/compute-score";
 

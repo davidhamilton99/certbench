@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { SRS_MAX_CARDS_PER_SESSION } from "@/constants/exam-config";
 import { z } from "zod/v4";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const startSchema = z.object({
   certificationId: z.string().uuid(),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -16,6 +18,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`srs-start:${user.id}`, 20, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const parsed = startSchema.safeParse(await req.json());
@@ -108,3 +118,5 @@ export async function POST(req: NextRequest) {
     totalDue: dueCards.length,
   });
 }
+
+export const POST = withErrorHandler(handler);

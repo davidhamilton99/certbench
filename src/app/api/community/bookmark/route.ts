@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
 import { rateLimit } from "@/lib/rate-limit";
+import { withErrorHandler } from "@/lib/api/errors";
 
 const bookmarkSchema = z.object({
   studySetId: z.string().uuid(),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -76,3 +77,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ bookmarked: true });
   }
 }
+
+export const POST = withErrorHandler(handler);

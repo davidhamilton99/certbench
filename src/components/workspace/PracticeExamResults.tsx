@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { QuestionFlagButton } from "@/components/workspace/QuestionFlagButton";
+import { ExpandableText } from "@/components/ui/ExpandableText";
 
 interface DomainScore {
   domain_id: string;
@@ -156,11 +157,10 @@ export function PracticeExamResults({
                   </div>
 
                   <div className="border-t border-border pt-3 mt-1">
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      {q.explanation.length > 500
-                        ? q.explanation.substring(0, 500) + "..."
-                        : q.explanation}
-                    </p>
+                    <ExpandableText
+                      text={q.explanation}
+                      className="text-[13px] text-text-secondary leading-relaxed"
+                    />
                   </div>
 
                   <QuestionFlagButton questionId={q.id} />

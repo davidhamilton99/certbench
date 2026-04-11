@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { computeSessionPlan } from "@/lib/session/compute-plan";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function GET(request: NextRequest) {
+async function handler(request: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -11,6 +13,14 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`session-plan:${user.id}`, 30, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const certSlug = request.nextUrl.searchParams.get("cert");
@@ -140,3 +150,5 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(plan);
 }
+
+export const GET = withErrorHandler(handler);
