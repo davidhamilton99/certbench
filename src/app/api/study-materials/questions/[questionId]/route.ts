@@ -13,7 +13,7 @@ import {
 const patchQuestionSchema = z.object({
   aiImprove: z.literal(true).optional(),
   questionText: z.string().min(1).max(5000).optional(),
-  options: z.array(z.unknown()).min(2).max(10).optional(),
+  options: z.array(z.unknown()).min(2).max(20).optional(),
   correctIndex: z.number().int().optional(),
   explanation: z.string().max(5000).nullish(),
 });

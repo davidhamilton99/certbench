@@ -11,7 +11,7 @@ const questionSchema = z.object({
     .optional()
     .default("multiple_choice"),
   question_text: z.string().min(1).max(5000),
-  options: z.array(z.unknown()).min(2).max(10),
+  options: z.array(z.unknown()).min(2).max(20),
   correct_index: z.number().int(),
   explanation: z.string().max(5000).nullish().default(""),
 });
