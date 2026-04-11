@@ -13,7 +13,7 @@ const questionSchema = z.object({
   question_text: z.string().min(1).max(5000),
   options: z.array(z.unknown()).min(2).max(10),
   correct_index: z.number().int(),
-  explanation: z.string().max(5000).optional().default(""),
+  explanation: z.string().max(5000).nullish().default(""),
 });
 
 const createSetSchema = z.object({
