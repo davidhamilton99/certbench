@@ -279,10 +279,11 @@ export function StudyMaterialForm({
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json() as { id?: string; error?: string; details?: string[] };
 
       if (!res.ok) {
-        setError(data.error || "Failed to save study set");
+        const detail = data.details?.length ? `: ${data.details.join(", ")}` : "";
+        setError((data.error || "Failed to save study set") + detail);
         return;
       }
 
@@ -307,9 +308,10 @@ export function StudyMaterialForm({
             questions: importedQuestions,
           }),
         });
-        const data = await res.json();
+        const data = await res.json() as { id?: string; error?: string; details?: string[] };
         if (!res.ok) {
-          throw new Error(data.error || "Failed to save study set");
+          const detail = data.details?.length ? `: ${data.details.join(", ")}` : "";
+          throw new Error((data.error || "Failed to save study set") + detail);
         }
         router.refresh();
         router.push(`/study-materials/${data.id}`);

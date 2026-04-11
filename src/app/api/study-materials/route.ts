@@ -49,8 +49,13 @@ async function handler(req: NextRequest) {
   const parsed = createSetSchema.safeParse(body);
 
   if (!parsed.success) {
+    const details = parsed.error.issues.map((i) => {
+      const path = i.path.length ? i.path.join(".") + ": " : "";
+      return path + i.message;
+    });
+    console.error("Study materials validation failed:", JSON.stringify(details));
     return NextResponse.json(
-      { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
+      { error: "Invalid input", details },
       { status: 400 }
     );
   }
