@@ -140,7 +140,7 @@ export async function callClaude(opts: {
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      "anthropic-version": "2025-04-15",
     },
     body: JSON.stringify({
       model: opts.model ?? ANTHROPIC_MODEL,
@@ -190,7 +190,7 @@ export async function callClaudeStream(opts: {
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      "anthropic-version": "2025-04-15",
     },
     body: JSON.stringify({
       model: opts.model ?? ANTHROPIC_MODEL,

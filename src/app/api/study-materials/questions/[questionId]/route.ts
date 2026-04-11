@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorHandler } from "@/lib/api/errors";
 import { z } from "zod/v4";
 import {
   type QuestionType,
@@ -155,7 +156,7 @@ Return ONLY a JSON object preserving the original question structure with improv
 // PATCH — Edit a question or request AI improvement
 // ---------------------------------------------------------------------------
 
-export async function PATCH(
+async function patchHandler(
   req: NextRequest,
   { params }: { params: Promise<{ questionId: string }> }
 ) {
@@ -334,7 +335,7 @@ export async function PATCH(
 // DELETE — Remove a single question
 // ---------------------------------------------------------------------------
 
-export async function DELETE(
+async function deleteHandler(
   req: NextRequest,
   { params }: { params: Promise<{ questionId: string }> }
 ) {
@@ -400,3 +401,6 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withErrorHandler(patchHandler as Parameters<typeof withErrorHandler>[0]);
+export const DELETE = withErrorHandler(deleteHandler as Parameters<typeof withErrorHandler>[0]);

@@ -1,65 +1,26 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-
-interface UserPlan {
-  plan: "free" | "pro";
-  generationsUsed: number;
-  generationsLimit: number | null;
-  canGenerate: boolean;
-}
-
-type QuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "multiple_select"
-  | "ordering"
-  | "matching";
-
-interface MCTFOption { text: string; is_correct: boolean }
-interface OrderingOption { text: string; correct_position: number }
-interface MatchingOption { left: string; right: string }
-
-const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
-  multiple_choice: "MC",
-  true_false: "T/F",
-  multiple_select: "Multi-Select",
-  ordering: "Ordering",
-  matching: "Matching",
-};
-
-interface GeneratedQuestion {
-  question_type: QuestionType;
-  question_text: string;
-  options: unknown[];
-  correct_index: number;
-  explanation?: string;
-}
-
-type Phase = "form" | "generating" | "validating" | "review";
-
-const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string; desc: string; icon: string }[] = [
-  { value: "multiple_choice", label: "Multiple Choice", desc: "Pick one correct answer", icon: "A" },
-  { value: "true_false", label: "True / False", desc: "Binary true or false", icon: "T" },
-  { value: "multiple_select", label: "Multi-Select", desc: "Select all that apply", icon: "+" },
-  { value: "ordering", label: "Ordering", desc: "Arrange in correct sequence", icon: "#" },
-  { value: "matching", label: "Matching", desc: "Pair related items", icon: "=" },
-];
-
-const DEFAULT_QUESTION_COUNT = 25;
-
-const ACCEPTED_FILE_TYPES = ".txt,.md,.csv,.tsv,.pdf,.docx,.png,.jpg,.jpeg,.webp";
-const PLAIN_TEXT_EXTENSIONS = ["txt", "md", "csv", "tsv"];
-const SERVER_PARSED_EXTENSIONS = ["pdf", "docx", "png", "jpg", "jpeg", "webp"];
-const ALL_EXTENSIONS = [...PLAIN_TEXT_EXTENSIONS, ...SERVER_PARSED_EXTENSIONS];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+import { FileUploadZone } from "./study-material-form/FileUploadZone";
+import { GenerationProgress } from "./study-material-form/GenerationProgress";
+import { QuestionTypeSelector } from "./study-material-form/QuestionTypeSelector";
+import { ReviewPhase } from "./study-material-form/ReviewPhase";
+import { AIPromptImport } from "./study-material-form/AIPromptImport";
+import type {
+  QuestionType,
+  GeneratedQuestion,
+  Phase,
+  UserPlan,
+} from "./study-material-form/types";
+import {
+  QUESTION_TYPE_OPTIONS,
+} from "./study-material-form/types";
 
 const STEPS = [
   { number: 1, label: "Upload" },
@@ -131,7 +92,7 @@ export function StudyMaterialForm({
   domainsByCert?: Record<string, string[]>;
 }) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<"generate" | "import">("generate");
   const [phase, setPhase] = useState<Phase>("form");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -173,100 +134,10 @@ export function StudyMaterialForm({
     [title]
   );
 
-  // File reading handler — plain text client-side, PDF/DOCX server-side
-  const handleFile = useCallback(
-    async (file: File) => {
-      setError(null);
-
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File is too large. Maximum size is 10 MB.");
-        return;
-      }
-
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (!ext || !ALL_EXTENSIONS.includes(ext)) {
-        setError(
-          "Unsupported file type. Accepted: .txt, .md, .csv, .tsv, .pdf, .docx, .png, .jpg, .webp"
-        );
-        return;
-      }
-
-      // Plain text files — read client-side
-      if (PLAIN_TEXT_EXTENSIONS.includes(ext)) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target?.result;
-          if (typeof text === "string") {
-            setContent(text);
-            setUploadedFileName(file.name);
-            setUploadedFileSize(file.size);
-            autoFillTitle(file.name);
-          }
-        };
-        reader.onerror = () => {
-          setError("Failed to read file. Please try again.");
-        };
-        reader.readAsText(file);
-        return;
-      }
-
-      // PDF/DOCX/images — send to server for text extraction
-      if (SERVER_PARSED_EXTENSIONS.includes(ext)) {
-        setFileLoading(true);
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await fetch("/api/study-materials/extract-text", {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            setError(data.error || "Failed to extract text from file.");
-            return;
-          }
-
-          setContent(data.text);
-          setUploadedFileName(file.name);
-          setUploadedFileSize(file.size);
-          autoFillTitle(file.name);
-        } catch {
-          setError("Network error. Please try again.");
-        } finally {
-          setFileLoading(false);
-        }
-      }
-    },
-    [autoFillTitle]
-  );
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragOver(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
-    },
-    [handleFile]
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) handleFile(file);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    },
-    [handleFile]
-  );
-
   const clearFile = useCallback(() => {
     setUploadedFileName(null);
     setUploadedFileSize(null);
     setContent("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   const generate = useCallback(async () => {
@@ -424,19 +295,50 @@ export function StudyMaterialForm({
     }
   }, [saving, questions, title, category, sourcePreview, selectedCertSlug, domainTag, router]);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  const handleImportSave = useCallback(
+    async (importedQuestions: GeneratedQuestion[], importTitle: string) => {
+      setSaving(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/study-materials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: importTitle,
+            questions: importedQuestions,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Failed to save study set");
+          return;
+        }
+        router.refresh();
+        router.push(`/study-materials/${data.id}`);
+      } catch {
+        setError("Network error. Please try again.");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [router]
+  );
+
+  // ─── Import mode ──────────────────────────────────────────────
+  if (mode === "import") {
+    return (
+      <AIPromptImport
+        onSave={handleImportSave}
+        saving={saving}
+        onBack={() => setMode("generate")}
+      />
+    );
+  }
 
   const currentStep = phase === "form" ? 1 : phase === "review" ? 3 : 2;
 
   // ─── Generating / validating state ─────────────────────────────
   if (phase === "generating" || phase === "validating") {
-    const targetCount = DEFAULT_QUESTION_COUNT;
-    const pct = targetCount > 0 ? Math.min(100, Math.round((questions.length / targetCount) * 100)) : 0;
-
     return (
       <div className="flex flex-col gap-8 max-w-2xl">
         <div className="flex items-center justify-between">
@@ -446,48 +348,10 @@ export function StudyMaterialForm({
           <StepIndicator currentStep={currentStep} />
         </div>
 
-        <Card padding="lg">
-          <div className="flex flex-col items-center justify-center gap-6 py-12">
-            {/* Animated ring */}
-            <div className="relative w-20 h-20">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="36" fill="none" stroke="var(--color-border)" strokeWidth="4" />
-                <circle
-                  cx="40" cy="40" r="36" fill="none"
-                  stroke="var(--color-primary)" strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 36}`}
-                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - pct / 100)}`}
-                  className="transition-all duration-500 ease-out"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[18px] font-mono font-semibold text-primary tabular-nums">
-                {questions.length}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              <p className="text-[16px] font-semibold text-text-primary">
-                {phase === "validating"
-                  ? "Checking question quality"
-                  : "Generating questions"}
-              </p>
-              <p className="text-[14px] text-text-secondary">
-                {questions.length > 0
-                  ? `${questions.length} questions created`
-                  : "Analyzing your content..."}
-              </p>
-            </div>
-
-            <ProgressBar value={pct} size="md" />
-
-            <p className="text-[12px] text-text-muted">
-              {phase === "validating"
-                ? "Verifying accuracy and improving weak questions"
-                : "This usually takes 15\u201345 seconds"}
-            </p>
-          </div>
-        </Card>
+        <GenerationProgress
+          phase={phase}
+          questionCount={questions.length}
+        />
       </div>
     );
   }
@@ -508,156 +372,16 @@ export function StudyMaterialForm({
           <StepIndicator currentStep={3} />
         </div>
 
-        {contentTruncated && (
-          <Card accent="warning" padding="md">
-            <p className="text-[13px] text-text-secondary">
-              Your content was trimmed to fit the context window. Consider splitting large documents into multiple study sets for better coverage.
-            </p>
-          </Card>
-        )}
-
-        {/* Summary bar */}
-        <div className="flex items-center gap-3 px-4 py-3 bg-bg-page border border-border rounded-lg">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-text-muted">Questions</span>
-            <Badge variant="neutral">{questions.length}</Badge>
-          </div>
-          <div className="w-px h-4 bg-border" />
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-text-muted">Types</span>
-            <div className="flex gap-1">
-              {[...new Set(questions.map(q => q.question_type))].map(t => (
-                <span key={t} className="text-[11px] font-mono bg-bg-surface border border-border rounded px-1.5 py-0.5 text-text-secondary">
-                  {QUESTION_TYPE_LABELS[t] || t}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Question cards */}
-        <div className="flex flex-col gap-3">
-          {questions.map((q, i) => (
-            <Card key={i} padding="md" className="group">
-              <div className="flex flex-col gap-2.5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-bg-page border border-border flex items-center justify-center text-[11px] font-mono font-semibold text-text-muted mt-0.5">
-                      {i + 1}
-                    </span>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <p className="text-[14px] font-medium text-text-primary leading-snug">
-                        {q.question_text}
-                      </p>
-                      <span className="text-[11px] font-mono text-text-muted">
-                        {QUESTION_TYPE_LABELS[q.question_type] || "MC"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeQuestion(i)}
-                    className="opacity-0 group-hover:opacity-100 text-[12px] text-text-muted hover:text-danger transition-all shrink-0 px-2 py-1 rounded hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-1 ml-9">
-                  {(!q.question_type ||
-                    q.question_type === "multiple_choice" ||
-                    q.question_type === "true_false") &&
-                    (q.options as MCTFOption[]).map((opt, optIdx) => {
-                      const letter = String.fromCharCode(65 + optIdx);
-                      const isCorrect = optIdx === q.correct_index;
-                      return (
-                        <div
-                          key={optIdx}
-                          className={`flex items-start gap-2 text-[13px] px-2 py-1 rounded ${
-                            isCorrect ? "bg-green-50 text-success" : "text-text-secondary"
-                          }`}
-                        >
-                          <span className={`font-mono text-[12px] ${isCorrect ? "font-semibold" : ""}`}>{letter})</span>
-                          <span className={isCorrect ? "font-medium" : ""}>{opt.text}</span>
-                          {isCorrect && (
-                            <svg className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                          )}
-                        </div>
-                      );
-                    })}
-                  {q.question_type === "multiple_select" &&
-                    (q.options as MCTFOption[]).map((opt, optIdx) => {
-                      const letter = String.fromCharCode(65 + optIdx);
-                      return (
-                        <div
-                          key={optIdx}
-                          className={`flex items-start gap-2 text-[13px] px-2 py-1 rounded ${
-                            opt.is_correct ? "bg-green-50 text-success" : "text-text-secondary"
-                          }`}
-                        >
-                          <span className={`font-mono text-[12px] ${opt.is_correct ? "font-semibold" : ""}`}>{letter})</span>
-                          <span className={opt.is_correct ? "font-medium" : ""}>{opt.text}</span>
-                          {opt.is_correct && (
-                            <svg className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                          )}
-                        </div>
-                      );
-                    })}
-                  {q.question_type === "ordering" &&
-                    [...(q.options as OrderingOption[])]
-                      .sort((a, b) => a.correct_position - b.correct_position)
-                      .map((opt, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-[13px] text-text-secondary px-2 py-1">
-                          <span className="font-mono text-[12px]">{idx + 1}.</span>
-                          <span>{opt.text}</span>
-                        </div>
-                      ))}
-                  {q.question_type === "matching" &&
-                    (q.options as MatchingOption[]).map((opt, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-[13px] text-text-secondary px-2 py-1">
-                        <span className="font-medium text-text-primary">{opt.left}</span>
-                        <span className="text-text-muted">&rarr;</span>
-                        <span>{opt.right}</span>
-                      </div>
-                    ))}
-                </div>
-
-                {q.explanation && (
-                  <p className="text-[12px] text-text-muted ml-9 px-2 py-1.5 bg-bg-page rounded leading-relaxed">
-                    {q.explanation}
-                  </p>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {error && (
-          <Card accent="danger" padding="md">
-            <p className="text-[14px] text-danger">{error}</p>
-          </Card>
-        )}
-
-        {/* Sticky bottom action bar */}
-        <div className="sticky bottom-0 bg-bg-page border-t border-border -mx-6 px-6 py-4 mt-2 flex items-center justify-between gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => setPhase("form")}
-          >
-            Back to Editor
-          </Button>
-          <Button
-            size="lg"
-            onClick={saveToLibrary}
-            loading={saving}
-            disabled={questions.length === 0}
-          >
-            Save to Library
-          </Button>
-        </div>
+        <ReviewPhase
+          questions={questions}
+          title={title}
+          contentTruncated={contentTruncated}
+          error={error}
+          saving={saving}
+          onRemoveQuestion={removeQuestion}
+          onBack={() => setPhase("form")}
+          onSave={saveToLibrary}
+        />
       </div>
     );
   }
@@ -680,6 +404,22 @@ export function StudyMaterialForm({
           </p>
         </div>
         <StepIndicator currentStep={1} />
+      </div>
+
+      {/* Mode toggle */}
+      <div className="flex gap-1 p-1 bg-bg-page border border-border rounded-lg">
+        <button
+          onClick={() => setMode("generate")}
+          className="flex-1 py-2 px-3 rounded-md text-[13px] font-medium transition-colors bg-bg-surface text-text-primary shadow-sm"
+        >
+          Generate with AI
+        </button>
+        <button
+          onClick={() => setMode("import")}
+          className="flex-1 py-2 px-3 rounded-md text-[13px] font-medium transition-colors text-text-muted hover:text-text-secondary"
+        >
+          Import from AI
+        </button>
       </div>
 
       {/* Usage indicator / upgrade banner */}
@@ -803,185 +543,40 @@ export function StudyMaterialForm({
       <div className="flex flex-col gap-4">
         <SectionHeader title="Source Material" description="Upload a file or paste the content you want to generate questions from." />
 
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_FILE_TYPES}
-              onChange={handleFileInput}
-              className="hidden"
-              disabled={fileLoading}
-            />
-
-            {uploadedFileName ? (
-              <div className="flex items-center gap-4 px-4 py-4 bg-green-50 border border-success/20 rounded-lg">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[14px] font-medium text-text-primary truncate">
-                    {uploadedFileName}
-                  </span>
-                  <span className="text-[12px] text-text-secondary">
-                    {uploadedFileSize != null && formatFileSize(uploadedFileSize)}
-                    {" \u00b7 "}
-                    {content.length.toLocaleString()} characters extracted
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearFile}
-                  className="text-[13px] text-text-muted hover:text-danger transition-colors shrink-0 px-2 py-1 rounded hover:bg-red-50"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className={`relative flex flex-col items-center justify-center gap-3 py-10 px-6 border-2 border-dashed rounded-lg transition-all ${
-                  fileLoading
-                    ? "border-primary bg-blue-50/50 cursor-wait"
-                    : dragOver
-                      ? "border-primary bg-blue-50/50 scale-[1.01]"
-                      : "border-border hover:border-primary/40 hover:bg-blue-50/30 bg-bg-surface cursor-pointer"
-                }`}
-                onClick={() => !fileLoading && fileInputRef.current?.click()}
-              >
-                {fileLoading ? (
-                  <>
-                    <svg className="animate-spin w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    <p className="text-[14px] text-text-secondary font-medium">
-                      Extracting text from file...
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <p className="text-[14px] text-text-primary font-medium">
-                        <span className="text-primary">Click to upload</span>{" "}or drag and drop
-                      </p>
-                      <p className="text-[12px] text-text-muted">
-                        PDF, DOCX, TXT, MD, CSV, PNG, JPG, WEBP &mdash; up to 10 MB
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 border-t border-border" />
-              <span className="text-[12px] font-medium text-text-muted uppercase tracking-wider">or paste text</span>
-              <div className="flex-1 border-t border-border" />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <textarea
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value);
-                  if (uploadedFileName) {
-                    setUploadedFileName(null);
-                    setUploadedFileSize(null);
-                  }
-                }}
-                placeholder="Paste your notes, textbook text, or any study material here..."
-                rows={6}
-                className="w-full px-3 py-3 text-[15px] text-text-primary bg-bg-surface border border-border rounded-md placeholder:text-text-muted transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 focus:border-primary resize-y"
-                style={{ minHeight: "140px" }}
-              />
-              <div className="flex items-center justify-between">
-                <p className="text-[12px] text-text-muted">
-                  {content.length.toLocaleString()} characters
-                </p>
-                {hasContent && (
-                  <span className="flex items-center gap-1 text-[12px] text-success">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    Content ready
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
+        <FileUploadZone
+          content={content}
+          uploadedFileName={uploadedFileName}
+          uploadedFileSize={uploadedFileSize}
+          dragOver={dragOver}
+          fileLoading={fileLoading}
+          onContentChange={(newContent) => {
+            setContent(newContent);
+            if (uploadedFileName) {
+              setUploadedFileName(null);
+              setUploadedFileSize(null);
+            }
+          }}
+          onFileUploaded={(name, size, extractedContent) => {
+            setUploadedFileName(name);
+            setUploadedFileSize(size);
+            setContent(extractedContent);
+          }}
+          onClearFile={clearFile}
+          onDragOverChange={setDragOver}
+          onFileLoadingChange={setFileLoading}
+          onError={setError}
+          autoFillTitle={autoFillTitle}
+        />
       </div>
 
       {/* ── Section 3: Question Types ── */}
       <div className="flex flex-col gap-4">
         <SectionHeader title="Question Types" description="Choose which formats to include. AI picks the best mix for your content." />
 
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] text-text-muted">
-                {selectedTypes.size === QUESTION_TYPE_OPTIONS.length
-                  ? "All types selected"
-                  : `${selectedTypes.size} of ${QUESTION_TYPE_OPTIONS.length} selected`}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {QUESTION_TYPE_OPTIONS.map((type) => {
-                const isSelected = selectedTypes.has(type.value);
-                return (
-                  <button
-                    key={type.value}
-                    onClick={() => {
-                      setSelectedTypes((prev) => {
-                        const next = new Set(prev);
-                        if (isSelected && next.size > 1) {
-                          next.delete(type.value);
-                        } else {
-                          next.add(type.value);
-                        }
-                        return next;
-                      });
-                    }}
-                    className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
-                      isSelected
-                        ? "border-primary bg-blue-50 ring-1 ring-primary/20"
-                        : "border-border bg-bg-surface hover:border-primary/30 hover:bg-blue-50/30"
-                    }`}
-                  >
-                    <span className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-[13px] font-mono font-semibold ${
-                      isSelected
-                        ? "bg-primary text-white"
-                        : "bg-bg-page text-text-muted border border-border"
-                    }`}>
-                      {type.icon}
-                    </span>
-                    <div className="flex flex-col min-w-0">
-                      <span className={`text-[13px] font-medium ${isSelected ? "text-primary" : "text-text-primary"}`}>
-                        {type.label}
-                      </span>
-                      <span className="text-[11px] text-text-muted">{type.desc}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
+        <QuestionTypeSelector
+          selectedTypes={selectedTypes}
+          onSelectedTypesChange={setSelectedTypes}
+        />
       </div>
 
       {/* Error */}

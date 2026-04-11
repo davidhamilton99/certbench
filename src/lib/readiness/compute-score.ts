@@ -42,7 +42,6 @@ export function computeReadinessScore(
   domainPerformances: DomainPerformance[]
 ): ReadinessResult {
   let totalWeightedScore = 0;
-  let totalWeight = 0;
   let totalQuestionsSeen = 0;
   let isPreliminary = false;
 
@@ -58,7 +57,6 @@ export function computeReadinessScore(
     const weightedScore = rawScore * confidenceFactor * (dp.exam_weight / 100);
 
     totalWeightedScore += weightedScore;
-    totalWeight += dp.exam_weight;
     totalQuestionsSeen += dp.attempted;
 
     return {
@@ -69,9 +67,13 @@ export function computeReadinessScore(
     };
   });
 
+  // totalWeightedScore is already scaled by (exam_weight / 100), so it sums
+  // to at most 100 when all domains are at 100% accuracy with full confidence.
+  // We must NOT divide by partial totalWeight — that would inflate the score
+  // when a student has only studied a subset of domains.
   const overallScore =
-    totalWeight > 0
-      ? Math.round((totalWeightedScore / (totalWeight / 100)) * 100) / 100
+    domainPerformances.length > 0
+      ? Math.round(totalWeightedScore * 100) / 100
       : 0;
 
   return {

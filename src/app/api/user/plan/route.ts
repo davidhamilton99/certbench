@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/subscription";
+import { withErrorHandler } from "@/lib/api/errors";
 
-export async function GET() {
+async function handler() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,3 +16,5 @@ export async function GET() {
   const plan = await getUserPlan(supabase, user.id);
   return NextResponse.json(plan);
 }
+
+export const GET = withErrorHandler(handler as unknown as Parameters<typeof withErrorHandler>[0]);

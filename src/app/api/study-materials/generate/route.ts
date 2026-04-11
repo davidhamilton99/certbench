@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { content, title, questionTypes } = parsed.data;
+  const { content, questionTypes } = parsed.data;
   const questionCount = parsed.data.questionCount || DEFAULT_QUESTION_COUNT;
 
   const validDifficulty: Difficulty = "mixed";
@@ -201,7 +201,7 @@ OUTPUT FORMAT (critical):
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      "anthropic-version": "2025-04-15",
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
@@ -214,7 +214,7 @@ OUTPUT FORMAT (critical):
       ],
       stream: true,
       temperature: 0.5,
-      max_tokens: 16384,
+      max_tokens: 32768,
     }),
   });
 

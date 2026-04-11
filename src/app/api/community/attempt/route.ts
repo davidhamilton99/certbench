@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { z } from "zod/v4";
 import { rateLimit } from "@/lib/rate-limit";
+import { withErrorHandler } from "@/lib/api/errors";
 
 const attemptSchema = z.object({
   studySetId: z.string().uuid(),
@@ -15,7 +16,7 @@ function getAdminSupabase() {
   );
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -66,3 +67,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorHandler(handler);

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/config";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST() {
+async function handler() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -10,6 +12,14 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`portal:${user.id}`, 5, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const { data: sub } = await supabase
@@ -27,18 +37,12 @@ export async function POST() {
 
   const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  try {
-    const session = await getStripe().billingPortal.sessions.create({
-      customer: sub.stripe_customer_id,
-      return_url: `${origin}/dashboard`,
-    });
+  const session = await getStripe().billingPortal.sessions.create({
+    customer: sub.stripe_customer_id,
+    return_url: `${origin}/dashboard`,
+  });
 
-    return NextResponse.json({ url: session.url });
-  } catch (err) {
-    console.error("Stripe portal error:", err);
-    return NextResponse.json(
-      { error: "Failed to open billing portal" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({ url: session.url });
 }
+
+export const POST = withErrorHandler(handler as Parameters<typeof withErrorHandler>[0]);

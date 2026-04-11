@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { callClaude, ANTHROPIC_MODEL_HAIKU } from "@/lib/ai/config";
-
-interface FlashcardInput {
-  question: string;
-  answer: string;
-}
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod/v4";
 
 interface MCQuestion {
   question_type: "multiple_choice";
@@ -15,9 +13,18 @@ interface MCQuestion {
   explanation: string;
 }
 
+const flashcardSchema = z.object({
+  question: z.string().min(1).max(2000),
+  answer: z.string().min(1).max(2000),
+});
+
+const importSchema = z.object({
+  flashcards: z.array(flashcardSchema).min(1).max(200),
+});
+
 const BATCH_SIZE = 20;
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -28,16 +35,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { flashcards } = (await req.json()) as {
-    flashcards: FlashcardInput[];
-  };
-
-  if (!flashcards?.length || flashcards.length > 200) {
+  const { limited } = rateLimit(`flashcard-import:${user.id}`, 5, 3_600_000);
+  if (limited) {
     return NextResponse.json(
-      { error: "Provide between 1 and 200 flashcards" },
+      { error: "Too many imports. Please try again later." },
+      { status: 429 }
+    );
+  }
+
+  const parsed = importSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid flashcard data. Each card must have a question and answer." },
       { status: 400 }
     );
   }
+
+  const { flashcards } = parsed.data;
 
   // Process in batches to keep prompt sizes reasonable
   const allQuestions: MCQuestion[] = [];
@@ -51,8 +65,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ questions: allQuestions });
 }
 
+export const POST = withErrorHandler(handler);
+
 async function generateDistractors(
-  flashcards: FlashcardInput[]
+  flashcards: { question: string; answer: string }[]
 ): Promise<MCQuestion[]> {
   const cardList = flashcards
     .map((f, i) => `${i}. Q: ${f.question}\n   A: ${f.answer}`)

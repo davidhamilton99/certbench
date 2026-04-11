@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { shuffleArray } from "@/lib/shuffle-options";
+import { ExpandableText } from "@/components/ui/ExpandableText";
 
 interface SrsQuestion {
   id: string;
@@ -44,7 +45,7 @@ export function SrsReview({
     correctCount: number;
     totalReviewed: number;
   } | null>(null);
-  const questionStartTime = useRef(Date.now());
+  const questionStartTime = useRef(0);
   const shuffleMaps = useRef<Map<string, number[]>>(new Map());
 
   const currentQuestion = questions[currentIndex];
@@ -106,36 +107,6 @@ export function SrsReview({
     setPhase("revealed");
   }, [selectedOption]);
 
-  const handleNext = useCallback(() => {
-    if (selectedOption === null) return;
-
-    const timeSpent = Math.round(
-      (Date.now() - questionStartTime.current) / 1000
-    );
-    const isCorrect = selectedOption === currentQuestion.correct_index;
-    // Map shuffled index back to original DB index
-    const toOriginal = shuffleMaps.current.get(currentQuestion.id);
-    const originalIndex = toOriginal ? toOriginal[selectedOption] : selectedOption;
-
-    const answer: AnswerRecord = {
-      questionId: currentQuestion.id,
-      selectedIndex: originalIndex,
-      isCorrect,
-      timeSpentSeconds: timeSpent,
-    };
-
-    const newAnswers = [...answers, answer];
-    setAnswers(newAnswers);
-    setSelectedOption(null);
-
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setPhase("reviewing");
-    } else {
-      submitReview(newAnswers);
-    }
-  }, [selectedOption, currentQuestion, answers, currentIndex, questions.length]);
-
   const submitReview = useCallback(
     async (finalAnswers: AnswerRecord[]) => {
       setPhase("submitting");
@@ -164,6 +135,36 @@ export function SrsReview({
     },
     [certificationId]
   );
+
+  const handleNext = useCallback(() => {
+    if (selectedOption === null) return;
+
+    const timeSpent = Math.round(
+      (Date.now() - questionStartTime.current) / 1000
+    );
+    const isCorrect = selectedOption === currentQuestion.correct_index;
+    // Map shuffled index back to original DB index
+    const toOriginal = shuffleMaps.current.get(currentQuestion.id);
+    const originalIndex = toOriginal ? toOriginal[selectedOption] : selectedOption;
+
+    const answer: AnswerRecord = {
+      questionId: currentQuestion.id,
+      selectedIndex: originalIndex,
+      isCorrect,
+      timeSpentSeconds: timeSpent,
+    };
+
+    const newAnswers = [...answers, answer];
+    setAnswers(newAnswers);
+    setSelectedOption(null);
+
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setPhase("reviewing");
+    } else {
+      submitReview(newAnswers);
+    }
+  }, [selectedOption, currentQuestion, answers, currentIndex, questions.length, submitReview]);
 
   // Loading
   if (phase === "loading") {
@@ -381,11 +382,10 @@ export function SrsReview({
             <p className="text-[13px] font-mono font-medium text-text-secondary">
               {isCorrect ? "CORRECT" : "INCORRECT"}
             </p>
-            <p className="text-[13px] text-text-secondary leading-relaxed">
-              {currentQuestion.explanation.length > 500
-                ? currentQuestion.explanation.substring(0, 500) + "..."
-                : currentQuestion.explanation}
-            </p>
+            <ExpandableText
+              text={currentQuestion.explanation}
+              className="text-[13px] text-text-secondary leading-relaxed"
+            />
           </div>
         </Card>
       )}

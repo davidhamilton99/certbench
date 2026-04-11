@@ -4,12 +4,14 @@ import { selectDiagnosticQuestions } from "@/lib/question-selection/select-diagn
 import type { CertQuestion, DomainWeight } from "@/lib/question-selection/types";
 import { DIAGNOSTIC_QUESTION_COUNT } from "@/constants/exam-config";
 import { z } from "zod/v4";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const startSchema = z.object({
   certificationId: z.string().uuid(),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -18,6 +20,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`diagnostic-start:${user.id}`, 10, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const parsed = startSchema.safeParse(await req.json());
@@ -135,3 +145,5 @@ export async function POST(req: NextRequest) {
     totalQuestions: DIAGNOSTIC_QUESTION_COUNT,
   });
 }
+
+export const POST = withErrorHandler(handler);

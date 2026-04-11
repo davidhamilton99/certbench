@@ -21,6 +21,19 @@ interface AnswerRecord {
   isFlagged: boolean;
 }
 
+interface PersistedExamState {
+  attemptId: string;
+  questions: ExamQuestion[];
+  answers: AnswerRecord[];
+  currentIndex: number;
+  flagged: number[];
+  shuffleMaps: Record<string, number[]>;
+  savedAt: number;
+}
+
+const EXAM_STORAGE_PREFIX = "certbench_exam_";
+const EXAM_STATE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+
 interface ResultsData {
   correctCount: number;
   totalQuestions: number;
@@ -84,6 +97,8 @@ export function PracticeExam({
   domainId?: string;
   domainTitle?: string;
 }) {
+  const storageKey = `${EXAM_STORAGE_PREFIX}${certificationId}_${examType}`;
+
   const [phase, setPhase] = useState<Phase>("intro");
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [attemptId, setAttemptId] = useState<string>("");
@@ -94,12 +109,71 @@ export function PracticeExam({
   const [results, setResults] = useState<ResultsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const questionStartTime = useRef(Date.now());
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  const questionStartTime = useRef(0);
   const shuffleMaps = useRef<Map<string, number[]>>(new Map());
 
   const currentQuestion = questions[currentIndex];
   const progress =
     questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
+
+  // Check for a saved exam session on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      const saved: PersistedExamState = JSON.parse(raw);
+      if (Date.now() - saved.savedAt > EXAM_STATE_MAX_AGE_MS) {
+        localStorage.removeItem(storageKey);
+        return;
+      }
+      setHasSavedSession(true);
+    } catch {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
+
+  // Persist exam state whenever answers change during the exam
+  useEffect(() => {
+    if (phase !== "exam" || questions.length === 0) return;
+    try {
+      const state: PersistedExamState = {
+        attemptId,
+        questions,
+        answers,
+        currentIndex,
+        flagged: Array.from(flagged),
+        shuffleMaps: Object.fromEntries(shuffleMaps.current),
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+      // Storage full or unavailable — non-critical
+    }
+  }, [phase, attemptId, questions, answers, currentIndex, flagged, storageKey]);
+
+  const clearSavedSession = useCallback(() => {
+    localStorage.removeItem(storageKey);
+    setHasSavedSession(false);
+  }, [storageKey]);
+
+  const resumeSession = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      const saved: PersistedExamState = JSON.parse(raw);
+      setAttemptId(saved.attemptId);
+      setQuestions(saved.questions);
+      setAnswers(saved.answers);
+      setCurrentIndex(saved.currentIndex);
+      setFlagged(new Set(saved.flagged));
+      shuffleMaps.current = new Map(Object.entries(saved.shuffleMaps));
+      setPhase("exam");
+      setHasSavedSession(false);
+    } catch {
+      clearSavedSession();
+    }
+  }, [storageKey, clearSavedSession]);
 
   useEffect(() => {
     questionStartTime.current = Date.now();
@@ -154,6 +228,35 @@ export function PracticeExam({
     });
   }, [currentIndex]);
 
+  const submitExam = useCallback(
+    async (finalAnswers: AnswerRecord[]) => {
+      setPhase("submitting");
+      try {
+        const res = await fetch("/api/practice-exam/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attemptId, answers: finalAnswers }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || "Failed to submit exam");
+          setPhase("exam");
+          return;
+        }
+
+        setResults(data);
+        setPhase("results");
+        clearSavedSession();
+      } catch {
+        setError("Network error. Please try again.");
+        setPhase("exam");
+      }
+    },
+    [attemptId, clearSavedSession]
+  );
+
   const handleNext = useCallback(() => {
     if (selectedOption === null) return;
 
@@ -187,35 +290,30 @@ export function PracticeExam({
     currentIndex,
     questions.length,
     flagged,
+    submitExam,
   ]);
 
-  const submitExam = useCallback(
-    async (finalAnswers: AnswerRecord[]) => {
-      setPhase("submitting");
-      try {
-        const res = await fetch("/api/practice-exam/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ attemptId, answers: finalAnswers }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Failed to submit exam");
-          setPhase("exam");
-          return;
-        }
-
-        setResults(data);
-        setPhase("results");
-      } catch {
-        setError("Network error. Please try again.");
-        setPhase("exam");
+  // Keyboard shortcuts for selecting options and advancing
+  useEffect(() => {
+    if (phase !== "exam" || !currentQuestion) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      const numKey = parseInt(e.key, 10);
+      if (numKey >= 1 && numKey <= currentQuestion.options.length) {
+        setSelectedOption(numKey - 1);
+        return;
       }
-    },
-    [attemptId]
-  );
+      const letterIndex = e.key.toLowerCase().charCodeAt(0) - 97;
+      if (letterIndex >= 0 && letterIndex < currentQuestion.options.length && e.key.length === 1) {
+        setSelectedOption(letterIndex);
+        return;
+      }
+      if (e.key === "Enter" && selectedOption !== null) {
+        handleNext();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [phase, currentQuestion, selectedOption, handleNext]);
 
   // Intro screen
   if (phase === "intro") {
@@ -249,9 +347,28 @@ export function PracticeExam({
 
             {error && <p className="text-[14px] text-text-secondary">{error}</p>}
 
-            <Button size="lg" onClick={startExam} loading={loading}>
-              Start {examType === "full" ? "Exam" : "Practice"}
-            </Button>
+            {hasSavedSession ? (
+              <div className="flex flex-col gap-2">
+                <Button size="lg" onClick={resumeSession}>
+                  Resume Previous Attempt
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => {
+                    clearSavedSession();
+                    startExam();
+                  }}
+                  loading={loading}
+                >
+                  Start Fresh
+                </Button>
+              </div>
+            ) : (
+              <Button size="lg" onClick={startExam} loading={loading}>
+                Start {examType === "full" ? "Exam" : "Practice"}
+              </Button>
+            )}
           </div>
         </Card>
       </div>
@@ -314,6 +431,7 @@ export function PracticeExam({
           <div className="flex items-center gap-2">
             <button
               onClick={toggleFlag}
+              aria-label={flagged.has(currentIndex) ? "Unflag this question" : "Flag this question for review"}
               className={`text-[13px] font-medium px-2 py-1 rounded transition-colors ${
                 flagged.has(currentIndex)
                   ? "text-primary bg-blue-50"
@@ -330,13 +448,13 @@ export function PracticeExam({
 
       {/* Question */}
       <Card padding="lg">
-        <p className="text-[15px] leading-relaxed text-text-primary">
+        <p id="question-text" className="text-[15px] leading-relaxed text-text-primary">
           {currentQuestion.question_text}
         </p>
       </Card>
 
       {/* Options */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby="question-text">
         {currentQuestion.options.map((option, index) => {
           const letter = String.fromCharCode(65 + index);
           const isSelected = selectedOption === index;
@@ -345,6 +463,9 @@ export function PracticeExam({
             <button
               key={index}
               onClick={() => setSelectedOption(index)}
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={`Option ${letter}: ${option.text}`}
               className={`
                 w-full text-left p-4 rounded-lg border transition-colors duration-150
                 ${
@@ -393,7 +514,7 @@ export function PracticeExam({
         </Button>
       </div>
 
-      {error && <p className="text-[14px] text-text-secondary">{error}</p>}
+      {error && <p className="text-[14px] text-text-secondary" role="alert">{error}</p>}
     </div>
   );
 }

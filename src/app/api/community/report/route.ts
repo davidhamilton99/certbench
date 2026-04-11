@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
 import { rateLimit } from "@/lib/rate-limit";
+import { withErrorHandler } from "@/lib/api/errors";
 
 const reportSchema = z.object({
   studySetId: z.string().uuid(),
   reason: z.string().min(5, "Please provide a reason (at least 5 characters)").max(1000),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -79,3 +80,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ reported: true });
 }
+
+export const POST = withErrorHandler(handler);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe/config";
 import { createClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
+import { withErrorHandler } from "@/lib/api/errors";
 
 // Use service role key for webhook — no user session available
 function getAdminSupabase() {
@@ -11,7 +12,7 @@ function getAdminSupabase() {
   );
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -133,3 +134,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ received: true });
 }
+
+export const POST = withErrorHandler(handler);

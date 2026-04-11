@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const questionSchema = z.object({
   question_type: z
@@ -24,7 +26,7 @@ const createSetSchema = z.object({
   domainTag: z.string().max(200).optional(),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -33,6 +35,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`study-materials:${user.id}`, 10, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const body = await req.json();
@@ -125,3 +135,5 @@ export async function POST(req: NextRequest) {
   revalidatePath("/study-materials");
   return NextResponse.json({ id: studySet.id });
 }
+
+export const POST = withErrorHandler(handler);

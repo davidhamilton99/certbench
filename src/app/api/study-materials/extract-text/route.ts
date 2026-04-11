@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const SUPPORTED_EXTENSIONS = [
@@ -16,7 +18,7 @@ const SUPPORTED_EXTENSIONS = [
 ];
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -25,6 +27,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`extract:${user.id}`, 20, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   let formData: FormData;
@@ -145,3 +155,5 @@ async function extractImageText(file: File): Promise<string> {
   const { data } = await Tesseract.recognize(buffer, "eng");
   return data.text;
 }
+
+export const POST = withErrorHandler(handler);

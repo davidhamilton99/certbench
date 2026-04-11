@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const patchSetSchema = z.object({
   isPublic: z.boolean().optional(),
@@ -8,7 +10,7 @@ const patchSetSchema = z.object({
   message: "No updates provided",
 });
 
-export async function DELETE(
+async function deleteHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ setId: string }> }
 ) {
@@ -21,6 +23,14 @@ export async function DELETE(
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`study-set-delete:${user.id}`, 20, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   // Verify ownership
@@ -50,7 +60,9 @@ export async function DELETE(
   return NextResponse.json({ success: true });
 }
 
-export async function PATCH(
+export const DELETE = withErrorHandler(deleteHandler as Parameters<typeof withErrorHandler>[0]);
+
+async function patchHandler(
   req: NextRequest,
   { params }: { params: Promise<{ setId: string }> }
 ) {
@@ -63,6 +75,14 @@ export async function PATCH(
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`study-set-patch:${user.id}`, 20, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   // Verify ownership
@@ -109,3 +129,5 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withErrorHandler(patchHandler as Parameters<typeof withErrorHandler>[0]);

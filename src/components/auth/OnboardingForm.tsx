@@ -42,14 +42,15 @@ export function OnboardingForm({
 
     const supabase = createClient();
 
-    // Create enrollment
+    // Create enrollment (upsert so retrying after partial failure is safe)
     const { error: enrollError } = await supabase
       .from("user_enrollments")
-      .insert({
+      .upsert({
         user_id: userId,
         certification_id: selectedCertId,
         exam_date: examDate || null,
-      });
+        is_active: true,
+      }, { onConflict: "user_id,certification_id" });
 
     if (enrollError) {
       setError(enrollError.message);

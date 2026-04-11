@@ -7,6 +7,8 @@ import {
 } from "@/lib/readiness/compute-score";
 
 import { z } from "zod/v4";
+import { withErrorHandler } from "@/lib/api/errors";
+import { rateLimit } from "@/lib/rate-limit";
 
 const srsAnswerSchema = z.object({
   questionId: z.string().uuid(),
@@ -20,7 +22,7 @@ const submitSchema = z.object({
   answers: z.array(srsAnswerSchema).min(1).max(200),
 });
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -29,6 +31,14 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { limited } = rateLimit(`srs-submit:${user.id}`, 20, 3_600_000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const parsed = submitSchema.safeParse(await req.json());
@@ -42,16 +52,30 @@ export async function POST(req: NextRequest) {
 
   const { certificationId, answers } = parsed.data;
 
-  // Server-side grading: fetch correct answers to verify client claims
+  // Single query for all cert questions in this certification —
+  // used for grading (correct_index), domain mapping (domain_id), and domain counts (is_active)
   const questionIds = answers.map((a) => a.questionId);
-  const { data: questionData } = await supabase
+  const { data: allCertQuestions } = await supabase
     .from("cert_questions")
-    .select("id, correct_index")
-    .in("id", questionIds);
+    .select("id, domain_id, correct_index, is_active")
+    .eq("certification_id", certificationId);
 
+  const certQuestions = allCertQuestions || [];
   const correctIndexMap = new Map(
-    (questionData || []).map((q) => [q.id, q.correct_index])
+    certQuestions.map((q) => [q.id, q.correct_index])
   );
+  const qDomainLookup = new Map(
+    certQuestions.map((q) => [q.id, q.domain_id])
+  );
+  const totalByDomain = new Map<string, number>();
+  certQuestions
+    .filter((q) => q.is_active)
+    .forEach((q) => {
+      totalByDomain.set(
+        q.domain_id,
+        (totalByDomain.get(q.domain_id) || 0) + 1
+      );
+    });
 
   // Update SRS fields for each reviewed card
   const now = new Date().toISOString();
@@ -101,45 +125,23 @@ export async function POST(req: NextRequest) {
 
   await Promise.all(updateOps);
 
-  // Compute updated readiness score
-  const { data: domains } = await supabase
-    .from("cert_domains")
-    .select("id, domain_number, title, exam_weight")
-    .eq("certification_id", certificationId)
-    .order("sort_order");
-
-  const { data: allPerformance } = await supabase
-    .from("question_performance")
-    .select("question_id, times_seen, times_correct")
-    .eq("user_id", user.id)
-    .eq("certification_id", certificationId);
-
-  const { data: questionDomainMap } = await supabase
-    .from("cert_questions")
-    .select("id, domain_id")
-    .eq("certification_id", certificationId);
+  // Compute updated readiness score — parallel fetch
+  const [{ data: domains }, { data: allPerformance }] = await Promise.all([
+    supabase
+      .from("cert_domains")
+      .select("id, domain_number, title, exam_weight")
+      .eq("certification_id", certificationId)
+      .order("sort_order"),
+    supabase
+      .from("question_performance")
+      .select("question_id, times_seen, times_correct")
+      .eq("user_id", user.id)
+      .eq("certification_id", certificationId),
+  ]);
 
   let readiness = null;
 
-  if (domains && allPerformance && questionDomainMap) {
-    const qDomainLookup = new Map(
-      questionDomainMap.map((q) => [q.id, q.domain_id])
-    );
-
-    const { data: domainQuestionCounts } = await supabase
-      .from("cert_questions")
-      .select("domain_id")
-      .eq("certification_id", certificationId)
-      .eq("is_active", true);
-
-    const totalByDomain = new Map<string, number>();
-    domainQuestionCounts?.forEach((q) => {
-      totalByDomain.set(
-        q.domain_id,
-        (totalByDomain.get(q.domain_id) || 0) + 1
-      );
-    });
-
+  if (domains && allPerformance) {
     const domainPerformances: DomainPerformance[] = domains.map((d) => {
       const domainPerfRecords = allPerformance.filter(
         (p) => qDomainLookup.get(p.question_id) === d.id
@@ -182,3 +184,5 @@ export async function POST(req: NextRequest) {
     readiness,
   });
 }
+
+export const POST = withErrorHandler(handler);
