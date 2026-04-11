@@ -289,7 +289,6 @@ export function StudyMaterialForm({
         return;
       }
 
-      router.refresh();
       router.push(`/study-materials/${data.id}`);
     } catch (e) {
       console.error("Save network error:", e);
