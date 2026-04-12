@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -32,7 +33,7 @@ interface PersistedExamState {
 }
 
 const EXAM_STORAGE_PREFIX = "certbench_exam_";
-const EXAM_STATE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+const EXAM_STATE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface ResultsData {
   correctCount: number;
@@ -97,6 +98,7 @@ export function PracticeExam({
   domainId?: string;
   domainTitle?: string;
 }) {
+  const router = useRouter();
   const storageKey = `${EXAM_STORAGE_PREFIX}${certificationId}_${examType}`;
 
   const [phase, setPhase] = useState<Phase>("intro");
@@ -117,21 +119,49 @@ export function PracticeExam({
   const progress =
     questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
 
-  // Check for a saved exam session on mount
+  // Check for a saved exam session on mount (localStorage first, then server)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
-      if (!raw) return;
-      const saved: PersistedExamState = JSON.parse(raw);
-      if (Date.now() - saved.savedAt > EXAM_STATE_MAX_AGE_MS) {
+      if (raw) {
+        const saved: PersistedExamState = JSON.parse(raw);
+        if (Date.now() - saved.savedAt <= EXAM_STATE_MAX_AGE_MS) {
+          setHasSavedSession(true);
+          return;
+        }
         localStorage.removeItem(storageKey);
-        return;
       }
-      setHasSavedSession(true);
     } catch {
       localStorage.removeItem(storageKey);
     }
-  }, [storageKey]);
+
+    // Fallback: check server for saved progress
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/practice-exam/progress?certificationId=${certificationId}&examType=${examType}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.progress) {
+          // Write to localStorage so resumeSession works uniformly
+          const state: PersistedExamState = {
+            attemptId: data.progress.attemptId,
+            questions: data.progress.questions,
+            answers: data.progress.answers,
+            currentIndex: data.progress.currentIndex,
+            flagged: data.progress.flagged,
+            shuffleMaps: data.progress.shuffleMaps,
+            savedAt: data.progress.savedAt,
+          };
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          setHasSavedSession(true);
+        }
+      } catch {
+        // Non-critical
+      }
+    })();
+  }, [storageKey, certificationId, examType]);
 
   // Persist exam state whenever answers change during the exam
   useEffect(() => {
@@ -174,6 +204,46 @@ export function PracticeExam({
       clearSavedSession();
     }
   }, [storageKey, clearSavedSession]);
+
+  const saveAndExit = useCallback(async () => {
+    // Save to localStorage
+    try {
+      const state: PersistedExamState = {
+        attemptId,
+        questions,
+        answers,
+        currentIndex,
+        flagged: Array.from(flagged),
+        shuffleMaps: Object.fromEntries(shuffleMaps.current),
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+      // Storage full — non-critical
+    }
+
+    // Save to server (fire and forget)
+    try {
+      await fetch("/api/practice-exam/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId,
+          state: {
+            questions,
+            answers,
+            currentIndex,
+            flagged: Array.from(flagged),
+            shuffleMaps: Object.fromEntries(shuffleMaps.current),
+          },
+        }),
+      });
+    } catch {
+      // Non-critical — localStorage is the primary store
+    }
+
+    router.push(`/dashboard?cert=${certSlug}`);
+  }, [attemptId, questions, answers, currentIndex, flagged, storageKey, router, certSlug]);
 
   useEffect(() => {
     questionStartTime.current = Date.now();
@@ -500,9 +570,17 @@ export function PracticeExam({
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-text-muted">
-          {questions.length - currentIndex - 1} remaining
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={saveAndExit}
+            className="text-[13px] font-medium text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded hover:bg-bg-page"
+          >
+            Save &amp; Exit
+          </button>
+          <span className="text-[13px] text-text-muted">
+            {questions.length - currentIndex - 1} remaining
+          </span>
+        </div>
         <Button
           size="lg"
           onClick={handleNext}

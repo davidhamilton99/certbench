@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -30,7 +31,7 @@ interface PersistedExamState {
 }
 
 const DIAGNOSTIC_STORAGE_PREFIX = "certbench_diagnostic_";
-const EXAM_STATE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+const EXAM_STATE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface ResultsData {
   correctCount: number;
@@ -75,6 +76,7 @@ export function DiagnosticExam({
   certName: string;
   certSlug: string;
 }) {
+  const router = useRouter();
   const storageKey = `${DIAGNOSTIC_STORAGE_PREFIX}${certificationId}`;
 
   const [phase, setPhase] = useState<Phase>("intro");
@@ -148,6 +150,23 @@ export function DiagnosticExam({
       clearSavedSession();
     }
   }, [storageKey, clearSavedSession]);
+
+  const saveAndExit = useCallback(async () => {
+    try {
+      const state: PersistedExamState = {
+        attemptId,
+        questions,
+        answers,
+        currentIndex,
+        shuffleMaps: Object.fromEntries(shuffleMaps.current),
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+      // Storage full — non-critical
+    }
+    router.push(`/dashboard?cert=${certSlug}`);
+  }, [attemptId, questions, answers, currentIndex, storageKey, router, certSlug]);
 
   // Reset timer when navigating to new question
   useEffect(() => {
@@ -429,9 +448,17 @@ export function DiagnosticExam({
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-text-muted">
-          {questions.length - currentIndex - 1} remaining
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={saveAndExit}
+            className="text-[13px] font-medium text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded hover:bg-bg-page"
+          >
+            Save &amp; Exit
+          </button>
+          <span className="text-[13px] text-text-muted">
+            {questions.length - currentIndex - 1} remaining
+          </span>
+        </div>
         <Button
           size="lg"
           onClick={handleNext}
