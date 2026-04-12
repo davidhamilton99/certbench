@@ -155,8 +155,8 @@ export function ProfileEditor({
                 <p
                   className={`text-[13px] rounded-md px-3 py-2 ${
                     message.type === "success"
-                      ? "text-green-700 bg-green-50 border border-green-200"
-                      : "text-danger bg-red-50 border border-red-200"
+                      ? "text-success-text bg-success-bg border border-success-border"
+                      : "text-danger-text bg-danger-bg border border-danger-border"
                   }`}
                 >
                   {message.text}
@@ -265,7 +265,7 @@ export function ProfileEditor({
         <p className="text-[13px] text-text-muted mb-4">
           Irreversible actions that permanently affect your account.
         </p>
-        <Card padding="lg" className="!border-red-200">
+        <Card padding="lg" className="!border-danger-border">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
@@ -282,7 +282,7 @@ export function ProfileEditor({
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="!text-danger !border-red-200 hover:!bg-red-50 shrink-0 ml-4"
+                  className="!text-danger !border-danger-border hover:!bg-danger-bg shrink-0 ml-4"
                 >
                   Delete account
                 </Button>
@@ -290,7 +290,7 @@ export function ProfileEditor({
             </div>
 
             {showDeleteConfirm && (
-              <div className="border-t border-red-200 pt-4">
+              <div className="border-t border-danger-border pt-4">
                 <p className="text-[13px] text-text-secondary mb-3">
                   To confirm, type{" "}
                   <span className="font-mono font-medium text-text-primary">
@@ -305,7 +305,7 @@ export function ProfileEditor({
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="delete my account"
-                      className="w-full text-[14px] px-3 py-2 border border-red-200 rounded-md bg-bg-page text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
+                      className="w-full text-[14px] px-3 py-2 border border-danger-border rounded-md bg-bg-page text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-danger/30 focus:border-danger"
                     />
                   </div>
                   <Button

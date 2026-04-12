@@ -634,10 +634,10 @@ export function StudySetDetail({
 
               if (isRevealed) {
                 if (isCorrectOption) {
-                  borderStyle = "border-success bg-green-50 ring-1 ring-success";
+                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
                   circleStyle = "bg-success text-white";
                 } else if (isSelected && !isCorrectOption) {
-                  borderStyle = "border-danger bg-red-50 ring-1 ring-danger";
+                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
                   circleStyle = "bg-danger text-white";
                 } else {
                   borderStyle = "border-border bg-bg-surface opacity-50";
@@ -645,7 +645,7 @@ export function StudySetDetail({
                     "bg-bg-page text-text-secondary border border-border";
                 }
               } else if (isSelected) {
-                borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
                 circleStyle = "bg-primary text-white";
               } else {
                 borderStyle =
@@ -690,10 +690,10 @@ export function StudySetDetail({
 
               if (isRevealed) {
                 if (isCorrectOption) {
-                  borderStyle = "border-success bg-green-50 ring-1 ring-success";
+                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
                   circleStyle = "bg-success text-white";
                 } else if (isSelected && !isCorrectOption) {
-                  borderStyle = "border-danger bg-red-50 ring-1 ring-danger";
+                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
                   circleStyle = "bg-danger text-white";
                 } else {
                   borderStyle = "border-border bg-bg-surface opacity-50";
@@ -701,7 +701,7 @@ export function StudySetDetail({
                     "bg-bg-page text-text-secondary border border-border";
                 }
               } else if (isSelected) {
-                borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
                 circleStyle = "bg-primary text-white";
               } else {
                 borderStyle =
@@ -748,15 +748,15 @@ export function StudySetDetail({
 
               if (isRevealed) {
                 if (isCorrectOpt && isSelected) {
-                  borderStyle = "border-success bg-green-50 ring-1 ring-success";
+                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
                   boxStyle = "bg-success text-white";
                 } else if (isCorrectOpt && !isSelected) {
                   // Missed correct
-                  borderStyle = "border-success bg-green-50";
+                  borderStyle = "border-success bg-success-bg";
                   boxStyle = "border border-success text-success";
                 } else if (!isCorrectOpt && isSelected) {
                   // Wrong selection
-                  borderStyle = "border-danger bg-red-50 ring-1 ring-danger";
+                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
                   boxStyle = "bg-danger text-white";
                 } else {
                   borderStyle = "border-border bg-bg-surface opacity-50";
@@ -764,7 +764,7 @@ export function StudySetDetail({
                     "bg-bg-page text-text-secondary border border-border";
                 }
               } else if (isSelected) {
-                borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
                 boxStyle = "bg-primary text-white";
               } else {
                 borderStyle =
@@ -831,10 +831,10 @@ export function StudySetDetail({
 
                 if (isRevealed) {
                   if (isPlacedCorrectly) {
-                    borderStyle = "border-success bg-green-50";
+                    borderStyle = "border-success bg-success-bg";
                     numStyle = "bg-success text-white";
                   } else if (isPlacedWrongly) {
-                    borderStyle = "border-danger bg-red-50";
+                    borderStyle = "border-danger bg-danger-bg";
                     numStyle = "bg-danger text-white";
                   } else if (wasNotPlaced) {
                     borderStyle = "border-border bg-bg-surface opacity-50";
@@ -846,7 +846,7 @@ export function StudySetDetail({
                       "bg-bg-page text-text-secondary border border-border";
                   }
                 } else if (seqNum !== null) {
-                  borderStyle = "border-primary bg-blue-50";
+                  borderStyle = "border-primary bg-info-bg";
                   numStyle = "bg-primary text-white";
                 } else {
                   borderStyle =
@@ -934,15 +934,15 @@ export function StudySetDetail({
                     let borderStyle: string;
                     if (isRevealed) {
                       borderStyle = isCorrectPair
-                        ? "border-success bg-green-50"
+                        ? "border-success bg-success-bg"
                         : isWrongPair
-                          ? "border-danger bg-red-50"
+                          ? "border-danger bg-danger-bg"
                           : "border-border bg-bg-surface opacity-50";
                     } else if (isActive) {
                       borderStyle =
-                        "border-primary bg-blue-50 ring-2 ring-primary/30";
+                        "border-primary bg-info-bg ring-2 ring-primary/30";
                     } else if (isPaired) {
-                      borderStyle = "border-primary bg-blue-50";
+                      borderStyle = "border-primary bg-info-bg";
                     } else {
                       borderStyle =
                         "border-border bg-bg-surface hover:border-border-dark";
@@ -990,15 +990,15 @@ export function StudySetDetail({
                   let borderStyle: string;
                   if (isRevealed) {
                     borderStyle = isCorrectPair
-                      ? "border-success bg-green-50"
+                      ? "border-success bg-success-bg"
                       : isWrongPair
-                        ? "border-danger bg-red-50"
+                        ? "border-danger bg-danger-bg"
                         : "border-border bg-bg-surface opacity-50";
                   } else if (isPaired) {
-                    borderStyle = "border-primary bg-blue-50";
+                    borderStyle = "border-primary bg-info-bg";
                   } else if (isClickable) {
                     borderStyle =
-                      "border-border bg-bg-surface hover:border-primary hover:bg-blue-50";
+                      "border-border bg-bg-surface hover:border-primary hover:bg-info-bg";
                   } else {
                     borderStyle = "border-border bg-bg-surface";
                   }
@@ -1155,7 +1155,7 @@ export function StudySetDetail({
 
       {/* Report Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
           <Card padding="lg" className="w-full max-w-md mx-4">
             {reportResult === "success" ? (
               <div className="flex flex-col gap-3">
@@ -1196,7 +1196,7 @@ export function StudySetDetail({
                       onClick={() => setReportReason(reason)}
                       className={`text-left text-[14px] px-3 py-2 rounded-lg border transition-colors ${
                         reportReason === reason
-                          ? "border-primary bg-blue-50 text-primary"
+                          ? "border-primary bg-info-bg text-primary"
                           : "border-border bg-bg-surface text-text-primary hover:bg-bg-page"
                       }`}
                     >
@@ -1484,7 +1484,7 @@ export function StudySetDetail({
                         onClick={() => setGenerateMoreCount(count)}
                         className={`px-4 py-2 text-[14px] font-medium rounded-md border transition-colors ${
                           generateMoreCount === count
-                            ? "border-primary bg-blue-50 text-primary"
+                            ? "border-primary bg-info-bg text-primary"
                             : "border-border bg-bg-surface text-text-secondary hover:border-border-dark"
                         }`}
                       >

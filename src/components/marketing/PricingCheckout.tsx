@@ -31,7 +31,7 @@ export function PricingCheckout() {
   return (
     <div>
       {error && (
-        <p className="text-[13px] text-red-600 mb-2">{error}</p>
+        <p className="text-[13px] text-danger-text mb-2">{error}</p>
       )}
       <Button size="lg" className="w-full" onClick={handleCheckout} loading={loading}>
         Upgrade to Pro

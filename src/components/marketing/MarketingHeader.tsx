@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { createClient } from "@/lib/supabase/server";
 import { MobileMenuButton } from "@/components/marketing/MobileMenuButton";
 
@@ -31,6 +32,7 @@ export async function MarketingHeader() {
               Help
             </Button>
           </Link>
+          <ThemeToggle />
           {user ? (
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
@@ -49,8 +51,11 @@ export async function MarketingHeader() {
           )}
         </div>
 
-        {/* Mobile menu */}
-        <MobileMenuButton isLoggedIn={!!user} />
+        {/* Theme + Mobile menu */}
+        <div className="flex items-center gap-1">
+          <ThemeToggle className="md:hidden" />
+          <MobileMenuButton isLoggedIn={!!user} />
+        </div>
       </div>
     </header>
   );

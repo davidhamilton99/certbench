@@ -333,7 +333,7 @@ export function SrsReview({
 
           if (isRevealed) {
             if (isCorrectOption) {
-              borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+              borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
               circleStyle = "bg-primary text-white";
             } else if (isSelected && !isCorrectOption) {
               borderStyle = "border-border bg-bg-surface opacity-60";
@@ -344,7 +344,7 @@ export function SrsReview({
                 "bg-bg-page text-text-secondary border border-border";
             }
           } else if (isSelected) {
-            borderStyle = "border-primary bg-blue-50 ring-1 ring-primary";
+            borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
             circleStyle = "bg-primary text-white";
           } else {
             borderStyle =

@@ -155,7 +155,7 @@ export function DeviceConfigPanel({
 
         {/* Pre-configured notice */}
         {device.preConfigured && (
-          <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-md px-3 py-2.5">
+          <div className="flex items-start gap-2 bg-success-bg border border-success-border rounded-md px-3 py-2.5">
             <svg
               className="w-4 h-4 text-success flex-shrink-0 mt-0.5"
               fill="none"

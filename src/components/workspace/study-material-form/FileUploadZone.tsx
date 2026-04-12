@@ -145,7 +145,7 @@ export function FileUploadZone({
       />
 
       {uploadedFileName ? (
-        <div className="flex items-center gap-4 px-4 py-4 bg-green-50 border border-success/20 rounded-lg">
+        <div className="flex items-center gap-4 px-4 py-4 bg-success-bg border border-success/20 rounded-lg">
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
             <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -164,7 +164,7 @@ export function FileUploadZone({
           <button
             type="button"
             onClick={onClearFile}
-            className="text-[13px] text-text-muted hover:text-danger transition-colors shrink-0 px-2 py-1 rounded hover:bg-red-50"
+            className="text-[13px] text-text-muted hover:text-danger transition-colors shrink-0 px-2 py-1 rounded hover:bg-danger-bg"
           >
             Remove
           </button>
@@ -179,10 +179,10 @@ export function FileUploadZone({
           onDrop={handleDrop}
           className={`relative flex flex-col items-center justify-center gap-3 py-10 px-6 border-2 border-dashed rounded-lg transition-all ${
             fileLoading
-              ? "border-primary bg-blue-50/50 cursor-wait"
+              ? "border-primary bg-info-bg/50 cursor-wait"
               : dragOver
-                ? "border-primary bg-blue-50/50 scale-[1.01]"
-                : "border-border hover:border-primary/40 hover:bg-blue-50/30 bg-bg-surface cursor-pointer"
+                ? "border-primary bg-info-bg/50 scale-[1.01]"
+                : "border-border hover:border-primary/40 hover:bg-info-bg/30 bg-bg-surface cursor-pointer"
           }`}
           onClick={() => !fileLoading && fileInputRef.current?.click()}
         >
@@ -198,7 +198,7 @@ export function FileUploadZone({
             </>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-info-bg flex items-center justify-center">
                 <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>

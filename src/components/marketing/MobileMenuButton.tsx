@@ -45,7 +45,7 @@ export function MobileMenuButton({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Link
                 href="/dashboard"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2.5 text-[15px] font-medium text-primary hover:bg-blue-50 rounded-md transition-colors"
+                className="px-3 py-2.5 text-[15px] font-medium text-primary hover:bg-info-bg rounded-md transition-colors"
               >
                 Dashboard
               </Link>

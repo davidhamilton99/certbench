@@ -16,7 +16,7 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
           px-2 py-0.5
           text-[12px] font-medium
           border rounded-full
-          bg-gray-50 text-text-secondary border-border
+          bg-neutral-bg text-text-secondary border-border
           ${className}
         `}
         {...props}

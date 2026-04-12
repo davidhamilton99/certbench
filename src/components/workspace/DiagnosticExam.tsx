@@ -399,7 +399,7 @@ export function DiagnosticExam({
                 w-full text-left p-4 rounded-lg border transition-colors duration-150
                 ${
                   isSelected
-                    ? "border-primary bg-blue-50 ring-1 ring-primary"
+                    ? "border-primary bg-info-bg ring-1 ring-primary"
                     : "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page"
                 }
               `}

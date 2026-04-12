@@ -103,11 +103,11 @@ function QuestionCard({ q, index }: { q: SampleQuestion; index: number }) {
           if (answered) {
             if (isCorrect) {
               borderClass =
-                "border-success bg-green-50 ring-1 ring-success";
+                "border-success bg-success-bg ring-1 ring-success";
               circleClass = "bg-success text-white";
             } else if (isSelected && !isCorrect) {
               borderClass =
-                "border-danger bg-red-50 ring-1 ring-danger";
+                "border-danger bg-danger-bg ring-1 ring-danger";
               circleClass = "bg-danger text-white";
             } else {
               borderClass =
@@ -115,7 +115,7 @@ function QuestionCard({ q, index }: { q: SampleQuestion; index: number }) {
             }
           } else if (isSelected) {
             borderClass =
-              "border-primary bg-blue-50 ring-1 ring-primary";
+              "border-primary bg-info-bg ring-1 ring-primary";
             circleClass = "bg-primary text-white";
           }
 

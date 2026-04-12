@@ -432,7 +432,7 @@ export function FlashcardImportForm({
                         key={oi}
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-[13px] ${
                           opt.is_correct
-                            ? "bg-green-50 text-success border border-success/20"
+                            ? "bg-success-bg text-success border border-success/20"
                             : "bg-bg-page text-text-secondary"
                         }`}
                       >

@@ -17,7 +17,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost:
     "bg-transparent text-text-secondary hover:bg-bg-page hover:text-text-primary focus-visible:ring-border",
   danger:
-    "bg-danger text-white hover:bg-red-700 focus-visible:ring-danger/50",
+    "bg-danger text-white hover:bg-danger/80 focus-visible:ring-danger/50",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -47,7 +47,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           inline-flex items-center justify-center gap-2
           font-medium rounded-md
           transition-colors duration-150
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page
           disabled:opacity-50 disabled:cursor-not-allowed
           ${variantStyles[variant]}
           ${sizeStyles[size]}

@@ -86,7 +86,7 @@ export function ReviewPhase({
                 </div>
                 <button
                   onClick={() => onRemoveQuestion(i)}
-                  className="opacity-0 group-hover:opacity-100 text-[12px] text-text-muted hover:text-danger transition-all shrink-0 px-2 py-1 rounded hover:bg-red-50"
+                  className="opacity-0 group-hover:opacity-100 text-[12px] text-text-muted hover:text-danger transition-all shrink-0 px-2 py-1 rounded hover:bg-danger-bg"
                 >
                   Remove
                 </button>
@@ -103,7 +103,7 @@ export function ReviewPhase({
                       <div
                         key={optIdx}
                         className={`flex items-start gap-2 text-[13px] px-2 py-1 rounded ${
-                          isCorrect ? "bg-green-50 text-success" : "text-text-secondary"
+                          isCorrect ? "bg-success-bg text-success" : "text-text-secondary"
                         }`}
                       >
                         <span className={`font-mono text-[12px] ${isCorrect ? "font-semibold" : ""}`}>{letter})</span>
@@ -123,7 +123,7 @@ export function ReviewPhase({
                       <div
                         key={optIdx}
                         className={`flex items-start gap-2 text-[13px] px-2 py-1 rounded ${
-                          opt.is_correct ? "bg-green-50 text-success" : "text-text-secondary"
+                          opt.is_correct ? "bg-success-bg text-success" : "text-text-secondary"
                         }`}
                       >
                         <span className={`font-mono text-[12px] ${opt.is_correct ? "font-semibold" : ""}`}>{letter})</span>
@@ -168,7 +168,7 @@ export function ReviewPhase({
       {/* Sticky bottom action bar */}
       <div className="sticky bottom-0 bg-bg-page border-t border-border -mx-6 px-6 py-4 mt-2 flex flex-col gap-3">
         {error && (
-          <div className="px-3 py-2 rounded-md bg-red-50 border border-red-200">
+          <div className="px-3 py-2 rounded-md bg-danger-bg border border-danger-border">
             <p className="text-[13px] text-danger">{error}</p>
           </div>
         )}

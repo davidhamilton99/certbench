@@ -440,7 +440,7 @@ export function CommunityList({
                         aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this set"}
                         className={`flex-shrink-0 text-[13px] font-medium px-2.5 py-1 rounded transition-colors disabled:opacity-50 ${
                           isBookmarked
-                            ? "text-primary bg-blue-50"
+                            ? "text-primary bg-info-bg"
                             : "text-text-muted hover:text-text-secondary"
                         }`}
                       >

@@ -316,11 +316,11 @@ export function SharedQuizView({
                     let style =
                       "border-border bg-bg-surface hover:border-border-dark";
                     if (isRevealed && isCorrect)
-                      style = "border-success bg-green-50";
+                      style = "border-success bg-success-bg";
                     else if (isRevealed && isSelected && !isCorrect)
-                      style = "border-danger bg-red-50";
+                      style = "border-danger bg-danger-bg";
                     else if (isSelected)
-                      style = "border-primary bg-blue-50";
+                      style = "border-primary bg-info-bg";
 
                     return (
                       <button
@@ -356,11 +356,11 @@ export function SharedQuizView({
                       let style =
                         "border-border bg-bg-surface hover:border-border-dark";
                       if (isRevealed && isCorrect)
-                        style = "border-success bg-green-50";
+                        style = "border-success bg-success-bg";
                       else if (isRevealed && isSelected && !isCorrect)
-                        style = "border-danger bg-red-50";
+                        style = "border-danger bg-danger-bg";
                       else if (isSelected)
-                        style = "border-primary bg-blue-50";
+                        style = "border-primary bg-info-bg";
 
                       return (
                         <button
@@ -396,11 +396,11 @@ export function SharedQuizView({
                       let style =
                         "border-border bg-bg-surface hover:border-border-dark";
                       if (isRevealed && isCorrect)
-                        style = "border-success bg-green-50";
+                        style = "border-success bg-success-bg";
                       else if (isRevealed && isSelected && !isCorrect)
-                        style = "border-danger bg-red-50";
+                        style = "border-danger bg-danger-bg";
                       else if (isSelected)
-                        style = "border-primary bg-blue-50";
+                        style = "border-primary bg-info-bg";
 
                       return (
                         <button
@@ -468,11 +468,11 @@ export function SharedQuizView({
                       let style =
                         "border-border bg-bg-surface hover:border-border-dark";
                       if (isRevealed && isCorrectPos)
-                        style = "border-success bg-green-50";
+                        style = "border-success bg-success-bg";
                       else if (isRevealed && isPlaced && !isCorrectPos)
-                        style = "border-danger bg-red-50";
+                        style = "border-danger bg-danger-bg";
                       else if (isPlaced)
-                        style = "border-primary bg-blue-50";
+                        style = "border-primary bg-info-bg";
 
                       return (
                         <button
@@ -539,12 +539,12 @@ export function SharedQuizView({
                           let style =
                             "border-border bg-bg-surface hover:border-border-dark";
                           if (isRevealed && isCorrectPair)
-                            style = "border-success bg-green-50";
+                            style = "border-success bg-success-bg";
                           else if (isRevealed && isPaired && !isCorrectPair)
-                            style = "border-danger bg-red-50";
+                            style = "border-danger bg-danger-bg";
                           else if (isActive)
-                            style = "border-primary bg-blue-50";
-                          else if (isPaired) style = "border-primary/50 bg-blue-50/50";
+                            style = "border-primary bg-info-bg";
+                          else if (isPaired) style = "border-primary/50 bg-info-bg/50";
 
                           return (
                             <button
@@ -576,7 +576,7 @@ export function SharedQuizView({
 
                         let style =
                           "border-border bg-bg-surface hover:border-border-dark";
-                        if (isPaired) style = "border-primary/50 bg-blue-50/50";
+                        if (isPaired) style = "border-primary/50 bg-info-bg/50";
 
                         return (
                           <button

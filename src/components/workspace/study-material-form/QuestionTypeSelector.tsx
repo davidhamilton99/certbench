@@ -40,8 +40,8 @@ export function QuestionTypeSelector({
                 }}
                 className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                   isSelected
-                    ? "border-primary bg-blue-50 ring-1 ring-primary/20"
-                    : "border-border bg-bg-surface hover:border-primary/30 hover:bg-blue-50/30"
+                    ? "border-primary bg-info-bg ring-1 ring-primary/20"
+                    : "border-border bg-bg-surface hover:border-primary/30 hover:bg-info-bg/30"
                 }`}
               >
                 <span className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-[13px] font-mono font-semibold ${

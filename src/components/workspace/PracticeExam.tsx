@@ -434,7 +434,7 @@ export function PracticeExam({
               aria-label={flagged.has(currentIndex) ? "Unflag this question" : "Flag this question for review"}
               className={`text-[13px] font-medium px-2 py-1 rounded transition-colors ${
                 flagged.has(currentIndex)
-                  ? "text-primary bg-blue-50"
+                  ? "text-primary bg-info-bg"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
@@ -470,7 +470,7 @@ export function PracticeExam({
                 w-full text-left p-4 rounded-lg border transition-colors duration-150
                 ${
                   isSelected
-                    ? "border-primary bg-blue-50 ring-1 ring-primary"
+                    ? "border-primary bg-info-bg ring-1 ring-primary"
                     : "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page"
                 }
               `}

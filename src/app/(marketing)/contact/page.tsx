@@ -29,7 +29,7 @@ export default function ContactPage() {
           {/* Email */}
           <div className="border border-border rounded-lg bg-bg-surface p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-info-bg flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-primary"
                   fill="none"
@@ -65,7 +65,7 @@ export default function ContactPage() {
           {/* Response time */}
           <div className="border border-border rounded-lg bg-bg-surface p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-success-bg flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-success"
                   fill="none"
@@ -129,7 +129,7 @@ export default function ContactPage() {
           {/* Question accuracy */}
           <div className="border border-border rounded-lg bg-bg-surface p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-danger-bg flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-danger"
                   fill="none"
