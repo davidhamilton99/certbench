@@ -163,23 +163,45 @@ export function PracticeExam({
     })();
   }, [storageKey, certificationId, examType]);
 
-  // Persist exam state whenever answers change during the exam
+  // Auto-save exam state whenever answers change (localStorage + server)
   useEffect(() => {
     if (phase !== "exam" || questions.length === 0) return;
+    const state: PersistedExamState = {
+      attemptId,
+      questions,
+      answers,
+      currentIndex,
+      flagged: Array.from(flagged),
+      shuffleMaps: Object.fromEntries(shuffleMaps.current),
+      savedAt: Date.now(),
+    };
+
+    // Save to localStorage immediately
     try {
-      const state: PersistedExamState = {
-        attemptId,
-        questions,
-        answers,
-        currentIndex,
-        flagged: Array.from(flagged),
-        shuffleMaps: Object.fromEntries(shuffleMaps.current),
-        savedAt: Date.now(),
-      };
       localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
       // Storage full or unavailable — non-critical
     }
+
+    // Debounced save to server (every answer, but not on every render)
+    const timeout = setTimeout(() => {
+      fetch("/api/practice-exam/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId,
+          state: {
+            questions,
+            answers,
+            currentIndex,
+            flagged: Array.from(flagged),
+            shuffleMaps: Object.fromEntries(shuffleMaps.current),
+          },
+        }),
+      }).catch(() => {});
+    }, 1000);
+
+    return () => clearTimeout(timeout);
   }, [phase, attemptId, questions, answers, currentIndex, flagged, storageKey]);
 
   const clearSavedSession = useCallback(() => {
@@ -205,45 +227,10 @@ export function PracticeExam({
     }
   }, [storageKey, clearSavedSession]);
 
-  const saveAndExit = useCallback(async () => {
-    // Save to localStorage
-    try {
-      const state: PersistedExamState = {
-        attemptId,
-        questions,
-        answers,
-        currentIndex,
-        flagged: Array.from(flagged),
-        shuffleMaps: Object.fromEntries(shuffleMaps.current),
-        savedAt: Date.now(),
-      };
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    } catch {
-      // Storage full — non-critical
-    }
-
-    // Save to server (fire and forget)
-    try {
-      await fetch("/api/practice-exam/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          attemptId,
-          state: {
-            questions,
-            answers,
-            currentIndex,
-            flagged: Array.from(flagged),
-            shuffleMaps: Object.fromEntries(shuffleMaps.current),
-          },
-        }),
-      });
-    } catch {
-      // Non-critical — localStorage is the primary store
-    }
-
+  const exitExam = useCallback(() => {
+    // Progress is already auto-saved by the useEffect above
     router.push(`/dashboard?cert=${certSlug}`);
-  }, [attemptId, questions, answers, currentIndex, flagged, storageKey, router, certSlug]);
+  }, [router, certSlug]);
 
   useEffect(() => {
     questionStartTime.current = Date.now();
@@ -572,10 +559,10 @@ export function PracticeExam({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={saveAndExit}
+            onClick={exitExam}
             className="text-[13px] font-medium text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded hover:bg-bg-page"
           >
-            Save &amp; Exit
+            Exit
           </button>
           <span className="text-[13px] text-text-muted">
             {questions.length - currentIndex - 1} remaining

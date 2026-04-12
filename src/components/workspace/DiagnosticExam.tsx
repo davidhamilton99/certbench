@@ -111,22 +111,43 @@ export function DiagnosticExam({
     }
   }, [storageKey]);
 
-  // Persist exam state whenever answers change during the exam
+  // Auto-save exam state whenever answers change (localStorage + server)
   useEffect(() => {
     if (phase !== "exam" || questions.length === 0) return;
+    const state: PersistedExamState = {
+      attemptId,
+      questions,
+      answers,
+      currentIndex,
+      shuffleMaps: Object.fromEntries(shuffleMaps.current),
+      savedAt: Date.now(),
+    };
+
     try {
-      const state: PersistedExamState = {
-        attemptId,
-        questions,
-        answers,
-        currentIndex,
-        shuffleMaps: Object.fromEntries(shuffleMaps.current),
-        savedAt: Date.now(),
-      };
       localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
-      // Storage full or unavailable — non-critical
+      // Storage full — non-critical
     }
+
+    // Debounced save to server
+    const timeout = setTimeout(() => {
+      fetch("/api/practice-exam/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId,
+          state: {
+            questions,
+            answers,
+            currentIndex,
+            flagged: [],
+            shuffleMaps: Object.fromEntries(shuffleMaps.current),
+          },
+        }),
+      }).catch(() => {});
+    }, 1000);
+
+    return () => clearTimeout(timeout);
   }, [phase, attemptId, questions, answers, currentIndex, storageKey]);
 
   const clearSavedSession = useCallback(() => {
@@ -151,22 +172,10 @@ export function DiagnosticExam({
     }
   }, [storageKey, clearSavedSession]);
 
-  const saveAndExit = useCallback(async () => {
-    try {
-      const state: PersistedExamState = {
-        attemptId,
-        questions,
-        answers,
-        currentIndex,
-        shuffleMaps: Object.fromEntries(shuffleMaps.current),
-        savedAt: Date.now(),
-      };
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    } catch {
-      // Storage full — non-critical
-    }
+  const exitExam = useCallback(() => {
+    // Progress is already auto-saved by the useEffect above
     router.push(`/dashboard?cert=${certSlug}`);
-  }, [attemptId, questions, answers, currentIndex, storageKey, router, certSlug]);
+  }, [router, certSlug]);
 
   // Reset timer when navigating to new question
   useEffect(() => {
@@ -450,10 +459,10 @@ export function DiagnosticExam({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={saveAndExit}
+            onClick={exitExam}
             className="text-[13px] font-medium text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded hover:bg-bg-page"
           >
-            Save &amp; Exit
+            Exit
           </button>
           <span className="text-[13px] text-text-muted">
             {questions.length - currentIndex - 1} remaining
