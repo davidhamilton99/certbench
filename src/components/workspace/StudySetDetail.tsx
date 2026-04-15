@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -75,6 +75,14 @@ export function StudySetDetail({
   );
 
   // --- Question Editing state ---
+  // --- Quiz progress persistence ---
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  const [savedProgress, setSavedProgress] = useState<{
+    currentIndex: number;
+    correctCount: number;
+    total: number;
+  } | null>(null);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editOptions, setEditOptions] = useState<string[]>(["", "", "", ""]);
@@ -142,6 +150,67 @@ export function StudySetDetail({
   }, []);
 
   // -----------------------------------------------------------------------
+  // Quiz progress persistence
+  // -----------------------------------------------------------------------
+
+  const quizStorageKey = `certbench_studyset_${studySet.id}`;
+  const QUIZ_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  // Check for saved session on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(quizStorageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (Date.now() - saved.savedAt > QUIZ_MAX_AGE_MS) {
+        localStorage.removeItem(quizStorageKey);
+        return;
+      }
+      if (saved.currentIndex > 0 && saved.currentIndex < saved.total) {
+        setHasSavedSession(true);
+        setSavedProgress({
+          currentIndex: saved.currentIndex,
+          correctCount: saved.correctCount,
+          total: saved.total,
+        });
+      }
+    } catch {
+      localStorage.removeItem(quizStorageKey);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save progress whenever the user advances to a new question
+  useEffect(() => {
+    if (phase !== "practicing" && phase !== "revealed") return;
+    try {
+      localStorage.setItem(
+        quizStorageKey,
+        JSON.stringify({
+          currentIndex,
+          correctCount,
+          total: localQuestions.length,
+          savedAt: Date.now(),
+        })
+      );
+    } catch {
+      // Non-critical
+    }
+  }, [phase, currentIndex, correctCount, localQuestions.length, quizStorageKey]);
+
+  const resumeQuiz = useCallback(() => {
+    if (!savedProgress) return;
+    const idx = savedProgress.currentIndex;
+    setCurrentIndex(idx);
+    setCorrectCount(savedProgress.correctCount);
+    resetAnswerState();
+    const q = localQuestions[idx];
+    if (q) initQuestionState(q);
+    setPhase("practicing");
+    setHasSavedSession(false);
+  }, [savedProgress, localQuestions, resetAnswerState, initQuestionState]);
+
+  // -----------------------------------------------------------------------
   // Practice handlers
   // -----------------------------------------------------------------------
 
@@ -168,6 +237,7 @@ export function StudySetDetail({
       setCurrentIndex(nextIdx);
       setPhase("practicing");
     } else {
+      localStorage.removeItem(`certbench_studyset_${studySet.id}`);
       setPhase("complete");
     }
   }, [
@@ -181,6 +251,8 @@ export function StudySetDetail({
     setCurrentIndex(0);
     resetAnswerState();
     setCorrectCount(0);
+    setHasSavedSession(false);
+    localStorage.removeItem(`certbench_studyset_${studySet.id}`);
     const firstQ = localQuestions[0];
     if (firstQ) initQuestionState(firstQ);
     setPhase("practicing");
@@ -1053,9 +1125,17 @@ export function StudySetDetail({
 
         {/* Action bar */}
         <div className="flex items-center justify-between">
-          <span className="text-[13px] text-text-muted">
-            {localQuestions.length - currentIndex - 1} remaining
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPhase("overview")}
+              className="text-[13px] font-medium text-text-muted hover:text-text-primary transition-colors"
+            >
+              Exit
+            </button>
+            <span className="text-[13px] text-text-muted">
+              {localQuestions.length - currentIndex - 1} remaining
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             {isRevealed && !displayExplanation && (
               <Button
@@ -1115,9 +1195,20 @@ export function StudySetDetail({
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-        <Button size="lg" onClick={startPractice}>
-          Practice Questions
-        </Button>
+        {hasSavedSession && savedProgress ? (
+          <>
+            <Button size="lg" onClick={resumeQuiz}>
+              Resume ({savedProgress.currentIndex}/{savedProgress.total})
+            </Button>
+            <Button variant="secondary" onClick={startPractice}>
+              Start Over
+            </Button>
+          </>
+        ) : (
+          <Button size="lg" onClick={startPractice}>
+            Practice Questions
+          </Button>
+        )}
         <Button variant="secondary" onClick={handleExportPdf} loading={exporting}>
           Export PDF
         </Button>
