@@ -131,7 +131,7 @@ export function DiagnosticExam({
 
     // Debounced save to server
     const timeout = setTimeout(() => {
-      fetch("/api/practice-exam/progress", {
+      fetch("/api/diagnostic/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -140,7 +140,6 @@ export function DiagnosticExam({
             questions,
             answers,
             currentIndex,
-            flagged: [],
             shuffleMaps: Object.fromEntries(shuffleMaps.current),
           },
         }),
