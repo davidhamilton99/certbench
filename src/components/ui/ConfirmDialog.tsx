@@ -57,13 +57,14 @@ export function ConfirmDialog({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-desc"
         tabIndex={-1}
         className="bg-bg-surface border border-border rounded-lg shadow-lg max-w-sm w-full mx-4 p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-[16px] font-semibold text-text-primary">{title}</h3>
-        <p className="text-[14px] text-text-secondary leading-relaxed">
+        <h3 id="confirm-dialog-title" className="text-[16px] font-semibold text-text-primary">{title}</h3>
+        <p id="confirm-dialog-desc" className="text-[14px] text-text-secondary leading-relaxed">
           {message}
         </p>
         <div className="flex gap-3 justify-end">

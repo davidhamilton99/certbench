@@ -3,6 +3,7 @@ interface ProgressBarProps {
   size?: "sm" | "md";
   showLabel?: boolean;
   className?: string;
+  label?: string;
 }
 
 const sizeStyles = {
@@ -15,12 +16,18 @@ export function ProgressBar({
   size = "sm",
   showLabel = false,
   className = "",
+  label,
 }: ProgressBarProps) {
   const clampedValue = Math.min(100, Math.max(0, value));
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div
+        role="progressbar"
+        aria-valuenow={Math.round(clampedValue)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label ?? "Progress"}
         className={`flex-1 bg-border-light rounded-full overflow-hidden ${sizeStyles[size]}`}
       >
         <div

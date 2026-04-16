@@ -57,6 +57,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
+            aria-hidden="true"
             className="animate-spin h-4 w-4"
             viewBox="0 0 24 24"
             fill="none"
