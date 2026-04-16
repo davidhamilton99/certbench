@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { computeSessionPlan } from "@/lib/session/compute-plan";
+import { computeReadinessTrend } from "@/lib/readiness/compute-trend";
 import { withErrorHandler } from "@/lib/api/errors";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -65,6 +66,7 @@ async function handler(request: NextRequest) {
     totalQuestionsResult,
     performanceResult,
     lastFullExamResult,
+    snapshotsResult,
   ] = await Promise.all([
     // Check diagnostic completion
     supabase
@@ -108,6 +110,15 @@ async function handler(request: NextRequest) {
       .eq("is_complete", true)
       .order("completed_at", { ascending: false })
       .limit(1),
+
+    // Readiness snapshots for trend delta (newest-first, cap recent history)
+    supabase
+      .from("readiness_snapshots")
+      .select("overall_score, computed_at")
+      .eq("user_id", user.id)
+      .eq("certification_id", cert.id)
+      .order("computed_at", { ascending: false })
+      .limit(50),
   ]);
 
   const diagnosticComplete =
@@ -138,7 +149,8 @@ async function handler(request: NextRequest) {
     domain_id: questionDomainMap.get(p.question_id) || "",
   }));
 
-  // Compute session plan
+  // Compute session plan first so we can feed the current readiness score
+  // into the trend calc.
   const plan = computeSessionPlan({
     diagnosticComplete,
     examDate: enrollment.exam_date,
@@ -147,6 +159,9 @@ async function handler(request: NextRequest) {
     totalQuestionCount,
     lastFullExamDate,
   });
+
+  const snapshots = snapshotsResult.data ?? [];
+  plan.readinessTrend = computeReadinessTrend(plan.readinessScore, snapshots);
 
   return NextResponse.json(plan);
 }

@@ -1,4 +1,5 @@
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import type { ReadinessTrend } from "@/lib/readiness/compute-trend";
 
 interface DomainScore {
   domainId: string;
@@ -18,6 +19,7 @@ interface ReadinessPanelProps {
   totalQuestions: number;
   examDate: string | null;
   daysUntilExam: number | null;
+  trend?: ReadinessTrend | null;
 }
 
 export function ReadinessPanel({
@@ -28,6 +30,7 @@ export function ReadinessPanel({
   totalQuestions,
   examDate,
   daysUntilExam,
+  trend,
 }: ReadinessPanelProps) {
   const sortedDomains = [...domainScores].sort(
     (a, b) => parseFloat(a.domainNumber) - parseFloat(b.domainNumber)
@@ -53,6 +56,9 @@ export function ReadinessPanel({
               <span className="text-[11px] text-text-muted">preliminary</span>
             )}
           </div>
+          {trend && Math.abs(trend.delta) >= 0.1 && (
+            <TrendChip trend={trend} />
+          )}
         </div>
 
         {/* Inline stats */}
@@ -121,5 +127,32 @@ export function ReadinessPanel({
         </div>
       </div>
     </div>
+  );
+}
+
+function TrendChip({ trend }: { trend: ReadinessTrend }) {
+  const up = trend.delta > 0;
+  const sign = up ? "+" : "";
+  // Only show a "this week" label when we actually compared to a
+  // week-old-or-older snapshot; otherwise show the span we found.
+  const label = trend.hasBaseline
+    ? "this week"
+    : trend.daysSpan <= 1
+      ? "today"
+      : `${trend.daysSpan}d`;
+
+  const tone = up
+    ? "text-success bg-success-bg"
+    : "text-danger bg-danger-bg";
+
+  return (
+    <span
+      className={`ml-2 pb-1 inline-flex items-center gap-1 self-end rounded px-1.5 py-0.5 text-[11px] font-mono ${tone}`}
+      title={`Baseline ${trend.baselineScore} (${trend.daysSpan} day${trend.daysSpan === 1 ? "" : "s"} ago)`}
+    >
+      <span aria-hidden>{up ? "▲" : "▼"}</span>
+      <span className="tabular-nums">{sign}{trend.delta}</span>
+      <span className="text-text-muted">{label}</span>
+    </span>
   );
 }

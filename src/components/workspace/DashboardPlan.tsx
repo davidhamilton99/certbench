@@ -77,6 +77,7 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
         totalQuestions={plan.totalQuestions}
         examDate={plan.examDate}
         daysUntilExam={plan.daysUntilExam}
+        trend={plan.readinessTrend}
       />
 
       {/* Session blocks */}
