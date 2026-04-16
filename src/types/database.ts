@@ -1,6 +1,10 @@
-// Manual type definitions matching the database schema.
-// Once migrations are run, these can be replaced with auto-generated types:
-// npx supabase gen types typescript --project-id mdvkidwkjjfgfwkogqvq > src/types/database.ts
+// Database types.
+//
+// Regenerate with:   npm run db:types
+// CI drift check:    npm run db:types:check (skipped unless SUPABASE_ACCESS_TOKEN is set)
+//
+// Currently hand-maintained — replace wholesale once the first generated run
+// has been reviewed against the committed shape.
 
 export type Json =
   | string

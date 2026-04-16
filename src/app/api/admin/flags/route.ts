@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { withErrorHandler } from "@/lib/api/errors";
-
-function getAdminSupabase() {
-  return createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -42,7 +34,7 @@ async function getHandler(request: NextRequest) {
   const perPage = 25;
   const offset = (page - 1) * perPage;
 
-  const db = getAdminSupabase();
+  const db = await createClient();
 
   let query = db
     .from("question_flags")
@@ -108,7 +100,7 @@ async function patchHandler(request: NextRequest) {
   }
 
   const { flagId, status, adminNotes } = parsed.data;
-  const db = getAdminSupabase();
+  const db = await createClient();
 
   const { error } = await db
     .from("question_flags")
