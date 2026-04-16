@@ -58,9 +58,12 @@ export function StudySetDetail({
   const [optionOrder, setOptionOrder] = useState<number[]>([0, 1, 2, 3]);
 
   // --- Multiple Select answer state ---
+  const [msOptionOrder, setMsOptionOrder] = useState<number[]>([]);
   const [msSelected, setMsSelected] = useState<Set<number>>(new Set());
 
   // --- Ordering answer state ---
+  // Shuffled display order for ordering questions
+  const [orderingDisplayOrder, setOrderingDisplayOrder] = useState<number[]>([]);
   // List of original option indices in the order the user clicked them
   const [orderingSequence, setOrderingSequence] = useState<number[]>([]);
 
@@ -144,6 +147,10 @@ export function StudySetDetail({
     const type = q.question_type || "multiple_choice";
     if (type === "multiple_choice") {
       setOptionOrder(shuffleIndices(q.options.length));
+    } else if (type === "multiple_select") {
+      setMsOptionOrder(shuffleIndices(q.options.length));
+    } else if (type === "ordering") {
+      setOrderingDisplayOrder(shuffleIndices(q.options.length));
     } else if (type === "matching") {
       setMatchingRightOrder(shuffleIndices(q.options.length));
     }
@@ -811,8 +818,9 @@ export function StudySetDetail({
             <p className="text-[12px] text-text-muted">
               {isRevealed ? "" : "Select all that apply."}
             </p>
-            {(currentQuestion.options as MCTFOption[]).map((option, index) => {
-              const isSelected = msSelected.has(index);
+            {(msOptionOrder.length > 0 ? msOptionOrder : (currentQuestion.options as MCTFOption[]).map((_, i) => i)).map((origIdx) => {
+              const option = (currentQuestion.options as MCTFOption[])[origIdx];
+              const isSelected = msSelected.has(origIdx);
               const isCorrectOpt = option.is_correct;
 
               let borderStyle: string;
@@ -847,13 +855,13 @@ export function StudySetDetail({
 
               return (
                 <button
-                  key={index}
+                  key={origIdx}
                   onClick={() => {
                     if (isRevealed) return;
                     setMsSelected((prev) => {
                       const next = new Set(prev);
-                      if (next.has(index)) next.delete(index);
-                      else next.add(index);
+                      if (next.has(origIdx)) next.delete(origIdx);
+                      else next.add(origIdx);
                       return next;
                     });
                   }}
@@ -884,8 +892,9 @@ export function StudySetDetail({
                 Click items in the correct order. Click a numbered item to remove it from the sequence.
               </p>
             )}
-            {(currentQuestion.options as OrderingOption[]).map(
-              (option, origIdx) => {
+            {(orderingDisplayOrder.length > 0 ? orderingDisplayOrder : (currentQuestion.options as OrderingOption[]).map((_, i) => i)).map(
+              (origIdx) => {
+                const option = (currentQuestion.options as OrderingOption[])[origIdx];
                 const posInSeq = orderingSequence.indexOf(origIdx);
                 const seqNum = posInSeq >= 0 ? posInSeq + 1 : null;
                 const isPlacedCorrectly =
