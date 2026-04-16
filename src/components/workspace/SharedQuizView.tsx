@@ -236,7 +236,7 @@ export function SharedQuizView({
         : 0;
 
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-bg-page">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <Card padding="lg">
             <div className="flex flex-col items-center gap-4 py-8">
@@ -281,7 +281,7 @@ export function SharedQuizView({
       currentType !== "multiple_choice" ? TYPE_LABELS[currentType] : null;
 
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-bg-page">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[13px] font-mono text-text-muted">
@@ -667,7 +667,7 @@ export function SharedQuizView({
   // RENDER: Overview
   // =======================================================================
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-bg-page">
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="flex flex-col gap-6">
           <div>
