@@ -16,6 +16,7 @@ const typeLabels: Record<string, string> = {
   diagnostic: "DIAGNOSTIC",
   srs_review: "REVIEW",
   domain_drill: "DRILL",
+  weak_points: "WEAK POINTS",
   practice_exam: "EXAM",
   new_content: "NEW",
 };
@@ -34,6 +35,8 @@ function getHref(
       return domainNumber
         ? `/certifications/${certSlug}/exam?type=domain_drill&domain=${domainNumber}`
         : null;
+    case "weak_points":
+      return `/certifications/${certSlug}/exam?type=weak_points`;
     case "srs_review":
       return `/certifications/${certSlug}/srs`;
     case "new_content":

@@ -4,11 +4,14 @@ import {
   DOMAIN_DRILL_QUESTION_COUNT,
   SRS_MAX_CARDS_PER_SESSION,
   URGENCY_THRESHOLDS,
+  WEAK_POINTS_QUESTION_COUNT,
+  WEAK_POINTS_MIN_AVAILABLE,
 } from "@/constants/exam-config";
 import {
   computeReadinessScore,
   type DomainPerformance,
 } from "@/lib/readiness/compute-score";
+import type { ReadinessTrend } from "@/lib/readiness/compute-trend";
 
 // --- Types ---
 
@@ -17,6 +20,7 @@ export interface SessionBlock {
     | "diagnostic"
     | "srs_review"
     | "domain_drill"
+    | "weak_points"
     | "practice_exam"
     | "new_content";
   priority: number;
@@ -35,6 +39,7 @@ export interface SessionPlanResult {
   blocks: SessionBlock[];
   readinessScore: number;
   readinessIsPreliminary: boolean;
+  readinessTrend: ReadinessTrend | null;
   domainScores: {
     domainId: string;
     domainNumber: string;
@@ -53,6 +58,7 @@ export interface SessionPlanResult {
 export interface SessionEngineInput {
   diagnosticComplete: boolean;
   examDate: string | null;
+  readinessTrend?: ReadinessTrend | null;
   domains: {
     id: string;
     domain_number: string;
@@ -96,6 +102,7 @@ export function computeSessionPlan(
       ],
       readinessScore: 0,
       readinessIsPreliminary: true,
+      readinessTrend: null,
       domainScores: [],
       totalQuestionsSeen: 0,
       totalQuestions: input.totalQuestionCount,
@@ -224,7 +231,27 @@ export function computeSessionPlan(
     }
   }
 
-  // 4. PRACTICE EXAM (regular cadence, priority 4)
+  // 4. WEAK POINTS REVIEW (priority 4) — surface when the user has enough
+  //    previously-missed questions to warrant a focused gap-closing session
+  const weakCount = input.questionPerformance.reduce((acc, p) => {
+    return p.times_seen > 0 && p.times_correct < p.times_seen ? acc + 1 : acc;
+  }, 0);
+
+  if (weakCount >= WEAK_POINTS_MIN_AVAILABLE) {
+    const wantCount = Math.min(WEAK_POINTS_QUESTION_COUNT, weakCount);
+    blocks.push({
+      type: "weak_points",
+      priority: 4,
+      title: "Weak Points Review",
+      description: `${weakCount} question${weakCount === 1 ? "" : "s"} you've missed before`,
+      reason: "Revisit questions you've gotten wrong to close gaps",
+      questionCount: wantCount,
+      estimatedMinutes: Math.ceil(wantCount * 1.5),
+      color: "warning",
+    });
+  }
+
+  // 5. PRACTICE EXAM (regular cadence, priority 5)
   let daysSinceFullExam: number | null = null;
   if (input.lastFullExamDate) {
     daysSinceFullExam = Math.ceil(
@@ -239,7 +266,7 @@ export function computeSessionPlan(
   ) {
     blocks.push({
       type: "practice_exam",
-      priority: 4,
+      priority: 5,
       title: "Practice Exam",
       description: `${FULL_EXAM_QUESTION_COUNT} questions across all domains`,
       reason: daysSinceFullExam
@@ -251,7 +278,7 @@ export function computeSessionPlan(
     });
   }
 
-  // 5. UNSEEN CONTENT (priority 5)
+  // 6. UNSEEN CONTENT (priority 6)
   const seenQuestionIds = new Set(
     input.questionPerformance.map((p) => p.question_id)
   );
@@ -260,7 +287,7 @@ export function computeSessionPlan(
   if (unseenCount > 0) {
     blocks.push({
       type: "new_content",
-      priority: 5,
+      priority: 6,
       title: "Explore New Questions",
       description: `${unseenCount} question${unseenCount === 1 ? "" : "s"} you haven't seen yet`,
       reason: "Cover more of the exam objectives",
@@ -277,6 +304,7 @@ export function computeSessionPlan(
     blocks,
     readinessScore: readiness.overall_score,
     readinessIsPreliminary: readiness.is_preliminary,
+    readinessTrend: input.readinessTrend ?? null,
     domainScores,
     totalQuestionsSeen: readiness.total_questions_seen,
     totalQuestions: input.totalQuestionCount,

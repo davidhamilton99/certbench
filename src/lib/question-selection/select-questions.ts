@@ -90,6 +90,58 @@ export function selectPracticeQuestions(
   return shuffle(selected);
 }
 
+/**
+ * Select questions a user has gotten wrong at least once, ordered by
+ * error rate (worst first). Used by the weak-points practice-exam mode.
+ *
+ * A question qualifies when the user has seen it and missed it more than
+ * they've gotten it right (`times_correct < times_seen`). Unseen questions
+ * are deliberately excluded — this mode is for reviewing known gaps, not
+ * exploring new material.
+ */
+export function selectWeakPointsQuestions(
+  allQuestions: CertQuestion[],
+  performance: QuestionPerformanceRecord[],
+  count: number
+): CertQuestion[] {
+  const perfMap = new Map(performance.map((p) => [p.question_id, p]));
+
+  const weak = allQuestions
+    .map((q) => ({ q, perf: perfMap.get(q.id) }))
+    .filter(
+      (entry): entry is { q: CertQuestion; perf: QuestionPerformanceRecord } =>
+        !!entry.perf &&
+        entry.perf.times_seen > 0 &&
+        entry.perf.times_correct < entry.perf.times_seen
+    );
+
+  // Lowest accuracy first; oldest last_seen_at breaks ties so stale gaps rise.
+  weak.sort((a, b) => {
+    const rateA = a.perf.times_correct / a.perf.times_seen;
+    const rateB = b.perf.times_correct / b.perf.times_seen;
+    if (rateA !== rateB) return rateA - rateB;
+    const dateA = a.perf.last_seen_at || "1970-01-01";
+    const dateB = b.perf.last_seen_at || "1970-01-01";
+    return dateA.localeCompare(dateB);
+  });
+
+  return shuffle(weak.slice(0, count).map((entry) => entry.q));
+}
+
+/**
+ * Count how many weak-point questions a user has available. Used by the
+ * session planner to decide whether to emit a weak-points block.
+ */
+export function countWeakPointsQuestions(
+  performance: QuestionPerformanceRecord[]
+): number {
+  let n = 0;
+  for (const p of performance) {
+    if (p.times_seen > 0 && p.times_correct < p.times_seen) n++;
+  }
+  return n;
+}
+
 function takeFromBuckets(
   count: number,
   ...buckets: CertQuestion[][]

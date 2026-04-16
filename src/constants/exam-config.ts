@@ -9,6 +9,12 @@ export const FULL_EXAM_QUESTION_COUNT = 90;
 /** Number of questions in a domain drill */
 export const DOMAIN_DRILL_QUESTION_COUNT = 10;
 
+/** Number of questions in a weak-points review session */
+export const WEAK_POINTS_QUESTION_COUNT = 15;
+
+/** Minimum weak questions available before the planner surfaces a weak-points block */
+export const WEAK_POINTS_MIN_AVAILABLE = 10;
+
 /** Minimum questions per domain for confident readiness score */
 export const MIN_SAMPLE_SIZE = 15;
 

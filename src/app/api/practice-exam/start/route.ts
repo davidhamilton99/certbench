@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { selectPracticeQuestions } from "@/lib/question-selection/select-questions";
+import {
+  selectPracticeQuestions,
+  selectWeakPointsQuestions,
+} from "@/lib/question-selection/select-questions";
 import type {
   CertQuestion,
   DomainWeight,
@@ -9,6 +12,7 @@ import type {
 import {
   FULL_EXAM_QUESTION_COUNT,
   DOMAIN_DRILL_QUESTION_COUNT,
+  WEAK_POINTS_QUESTION_COUNT,
 } from "@/constants/exam-config";
 import { z } from "zod/v4";
 import { withErrorHandler } from "@/lib/api/errors";
@@ -124,14 +128,33 @@ async function handler(req: NextRequest) {
   const questionCount =
     examType === "full"
       ? FULL_EXAM_QUESTION_COUNT
-      : DOMAIN_DRILL_QUESTION_COUNT;
+      : examType === "weak_points"
+        ? WEAK_POINTS_QUESTION_COUNT
+        : DOMAIN_DRILL_QUESTION_COUNT;
 
-  const selectedQuestions = selectPracticeQuestions(
-    allQuestions,
-    domains,
-    performance,
-    Math.min(questionCount, allQuestions.length)
-  );
+  const selectedQuestions =
+    examType === "weak_points"
+      ? selectWeakPointsQuestions(
+          allQuestions,
+          performance,
+          Math.min(questionCount, allQuestions.length)
+        )
+      : selectPracticeQuestions(
+          allQuestions,
+          domains,
+          performance,
+          Math.min(questionCount, allQuestions.length)
+        );
+
+  if (examType === "weak_points" && selectedQuestions.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "No weak-point questions yet — answer some questions incorrectly first.",
+      },
+      { status: 400 }
+    );
+  }
 
   // Create the attempt
   const { data: attempt, error: attemptError } = await supabase
