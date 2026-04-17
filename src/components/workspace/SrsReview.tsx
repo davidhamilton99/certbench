@@ -45,6 +45,10 @@ export function SrsReview({
     correctCount: number;
     totalReviewed: number;
   } | null>(null);
+  const [suspendingCard, setSuspendingCard] = useState(false);
+  const [suspendedThisSession, setSuspendedThisSession] = useState<Set<string>>(
+    new Set()
+  );
   const questionStartTime = useRef(0);
   const shuffleMaps = useRef<Map<string, number[]>>(new Map());
 
@@ -135,6 +139,36 @@ export function SrsReview({
     },
     [certificationId]
   );
+
+  const handleSuspend = useCallback(async () => {
+    if (!currentQuestion || suspendingCard) return;
+    if (suspendedThisSession.has(currentQuestion.id)) return;
+    setSuspendingCard(true);
+    try {
+      const res = await fetch("/api/srs-review/suspend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: currentQuestion.id,
+          suspend: true,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to suspend card");
+        return;
+      }
+      setSuspendedThisSession((prev) => {
+        const next = new Set(prev);
+        next.add(currentQuestion.id);
+        return next;
+      });
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSuspendingCard(false);
+    }
+  }, [currentQuestion, suspendingCard, suspendedThisSession]);
 
   const handleNext = useCallback(() => {
     if (selectedOption === null) return;
@@ -396,11 +430,28 @@ export function SrsReview({
           {questions.length - currentIndex - 1} remaining
         </span>
         {isRevealed ? (
-          <Button size="lg" onClick={handleNext}>
-            {currentIndex === questions.length - 1
-              ? "Finish Review"
-              : "Next Card"}
-          </Button>
+          <div className="flex items-center gap-3">
+            {suspendedThisSession.has(currentQuestion.id) ? (
+              <span className="text-[12px] font-mono text-text-muted">
+                CARD SUSPENDED
+              </span>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSuspend}
+                loading={suspendingCard}
+                title="Remove this card from review rotation. Accuracy history is kept; you can unsuspend later from the card's performance detail."
+              >
+                Suspend card
+              </Button>
+            )}
+            <Button size="lg" onClick={handleNext}>
+              {currentIndex === questions.length - 1
+                ? "Finish Review"
+                : "Next Card"}
+            </Button>
+          </div>
         ) : (
           <Button
             size="lg"

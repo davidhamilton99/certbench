@@ -96,7 +96,9 @@ async function handler(req: NextRequest) {
         .order("sort_order"),
       supabase
         .from("question_performance")
-        .select("question_id, times_seen, times_correct, last_seen_at")
+        .select(
+          "question_id, times_seen, times_correct, last_seen_at, suspended_at"
+        )
         .eq("user_id", user.id)
         .eq("certification_id", certificationId),
     ]);
@@ -108,10 +110,27 @@ async function handler(req: NextRequest) {
     );
   }
 
-  const allQuestions = questionsResult.data as CertQuestion[];
+  // Suspended cards stay out of all exam modes. Build an exclusion set
+  // then strip those questions before selection runs.
+  const rawPerformance = performanceResult.data ?? [];
+  const suspendedIds = new Set(
+    rawPerformance.filter((p) => p.suspended_at).map((p) => p.question_id)
+  );
+
+  const allQuestions = (questionsResult.data as CertQuestion[]).filter(
+    (q) => !suspendedIds.has(q.id)
+  );
   let domains = domainsResult.data as DomainWeight[];
-  const performance = (performanceResult.data ||
-    []) as QuestionPerformanceRecord[];
+  const performance = rawPerformance
+    .filter((p) => !p.suspended_at)
+    .map(
+      ({ question_id, times_seen, times_correct, last_seen_at }) => ({
+        question_id,
+        times_seen,
+        times_correct,
+        last_seen_at,
+      })
+    ) as QuestionPerformanceRecord[];
 
   // For domain drill, use only the target domain with 100% weight
   if (examType === "domain_drill" && domainId) {

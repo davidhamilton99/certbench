@@ -330,6 +330,7 @@ export interface Database {
           srs_ease_factor: number;
           srs_next_review_at: string | null;
           streak: number;
+          suspended_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -346,6 +347,7 @@ export interface Database {
           srs_ease_factor?: number;
           srs_next_review_at?: string | null;
           streak?: number;
+          suspended_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -358,6 +360,7 @@ export interface Database {
           srs_ease_factor?: number;
           srs_next_review_at?: string | null;
           streak?: number;
+          suspended_at?: string | null;
         };
       };
       readiness_snapshots: {

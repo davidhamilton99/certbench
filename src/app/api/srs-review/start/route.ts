@@ -55,13 +55,15 @@ async function handler(req: NextRequest) {
     );
   }
 
-  // Fetch SRS cards that are due (most overdue first)
+  // Fetch SRS cards that are due (most overdue first). Exclude
+  // user-suspended cards — they stay out of rotation until unsuspended.
   const now = new Date().toISOString();
   const { data: dueCards } = await supabase
     .from("question_performance")
     .select("question_id, srs_next_review_at")
     .eq("user_id", user.id)
     .eq("certification_id", certificationId)
+    .is("suspended_at", null)
     .not("srs_next_review_at", "is", null)
     .lte("srs_next_review_at", now)
     .order("srs_next_review_at", { ascending: true })

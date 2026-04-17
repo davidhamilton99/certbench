@@ -72,6 +72,7 @@ export interface SessionEngineInput {
     times_correct: number;
     last_seen_at: string | null;
     srs_next_review_at: string | null;
+    suspended_at?: string | null;
   }[];
   totalQuestionCount: number;
   lastFullExamDate: string | null;
@@ -152,6 +153,7 @@ export function computeSessionPlan(
 
   // 1. SRS CARDS DUE (priority 1)
   const srsDue = input.questionPerformance.filter((qp) => {
+    if (qp.suspended_at) return false;
     if (!qp.srs_next_review_at) return false;
     return new Date(qp.srs_next_review_at) <= now;
   });

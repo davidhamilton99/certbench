@@ -95,7 +95,7 @@ async function handler(request: NextRequest) {
     supabase
       .from("question_performance")
       .select(
-        "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at"
+        "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at, suspended_at"
       )
       .eq("user_id", user.id)
       .eq("certification_id", cert.id),
