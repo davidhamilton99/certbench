@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { shuffleIndices, checkAnswer, isAnswerComplete } from "./study-set/answer-utils";
 import { exportPdf } from "./study-set/export-pdf";
+import { QuestionEditForm } from "./study-set/QuestionEditForm";
+import { useQuizProgress } from "@/hooks/use-quiz-progress";
 import type {
   QuestionType,
   MCTFOption,
@@ -78,14 +80,6 @@ export function StudySetDetail({
   );
 
   // --- Question Editing state ---
-  // --- Quiz progress persistence ---
-  const [hasSavedSession, setHasSavedSession] = useState(false);
-  const [savedProgress, setSavedProgress] = useState<{
-    currentIndex: number;
-    correctCount: number;
-    total: number;
-  } | null>(null);
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editOptions, setEditOptions] = useState<string[]>(["", "", "", ""]);
@@ -160,50 +154,18 @@ export function StudySetDetail({
   // Quiz progress persistence
   // -----------------------------------------------------------------------
 
-  const quizStorageKey = `certbench_studyset_${studySet.id}`;
-  const QUIZ_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-  // Check for saved session on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(quizStorageKey);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      if (Date.now() - saved.savedAt > QUIZ_MAX_AGE_MS) {
-        localStorage.removeItem(quizStorageKey);
-        return;
-      }
-      if (saved.currentIndex > 0 && saved.currentIndex < saved.total) {
-        setHasSavedSession(true);
-        setSavedProgress({
-          currentIndex: saved.currentIndex,
-          correctCount: saved.correctCount,
-          total: saved.total,
-        });
-      }
-    } catch {
-      localStorage.removeItem(quizStorageKey);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Auto-save progress whenever the user advances to a new question
-  useEffect(() => {
-    if (phase !== "practicing" && phase !== "revealed") return;
-    try {
-      localStorage.setItem(
-        quizStorageKey,
-        JSON.stringify({
-          currentIndex,
-          correctCount,
-          total: localQuestions.length,
-          savedAt: Date.now(),
-        })
-      );
-    } catch {
-      // Non-critical
-    }
-  }, [phase, currentIndex, correctCount, localQuestions.length, quizStorageKey]);
+  const {
+    hasSavedSession,
+    savedProgress,
+    clearSavedSession,
+    dismissResumePrompt,
+  } = useQuizProgress({
+    studySetId: studySet.id,
+    phase,
+    currentIndex,
+    correctCount,
+    total: localQuestions.length,
+  });
 
   const resumeQuiz = useCallback(() => {
     if (!savedProgress) return;
@@ -214,8 +176,8 @@ export function StudySetDetail({
     const q = localQuestions[idx];
     if (q) initQuestionState(q);
     setPhase("practicing");
-    setHasSavedSession(false);
-  }, [savedProgress, localQuestions, resetAnswerState, initQuestionState]);
+    dismissResumePrompt();
+  }, [savedProgress, localQuestions, resetAnswerState, initQuestionState, dismissResumePrompt]);
 
   // -----------------------------------------------------------------------
   // Practice handlers
@@ -244,7 +206,7 @@ export function StudySetDetail({
       setCurrentIndex(nextIdx);
       setPhase("practicing");
     } else {
-      localStorage.removeItem(`certbench_studyset_${studySet.id}`);
+      clearSavedSession();
       setPhase("complete");
     }
   }, [
@@ -252,14 +214,14 @@ export function StudySetDetail({
     localQuestions,
     resetAnswerState,
     initQuestionState,
+    clearSavedSession,
   ]);
 
   const startPractice = useCallback(() => {
     setCurrentIndex(0);
     resetAnswerState();
     setCorrectCount(0);
-    setHasSavedSession(false);
-    localStorage.removeItem(`certbench_studyset_${studySet.id}`);
+    clearSavedSession();
     const firstQ = localQuestions[0];
     if (firstQ) initQuestionState(firstQ);
     setPhase("practicing");
@@ -272,7 +234,7 @@ export function StudySetDetail({
         body: JSON.stringify({ studySetId: studySet.id }),
       }).catch(() => {});
     }
-  }, [resetAnswerState, initQuestionState, localQuestions, isOwner, studySet.id]);
+  }, [resetAnswerState, initQuestionState, localQuestions, isOwner, studySet.id, clearSavedSession]);
 
   // -----------------------------------------------------------------------
   // On-demand explanation
@@ -1350,97 +1312,26 @@ export function StudySetDetail({
             return (
               <Card key={q.id} padding="md">
                 {editingId === q.id ? (
-                  /* ----- Inline editing mode ----- */
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[12px] font-medium text-text-muted">
-                        Question
-                      </label>
-                      <textarea
-                        value={editQuestion}
-                        onChange={(e) => setEditQuestion(e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 text-[14px] text-text-primary bg-bg-surface border border-border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[12px] font-medium text-text-muted">
-                        Options (select the correct answer)
-                      </label>
-                      {editOptions.map((opt, optIdx) => {
-                        const letter = String.fromCharCode(65 + optIdx);
-                        return (
-                          <div
-                            key={optIdx}
-                            className="flex items-center gap-2"
-                          >
-                            <input
-                              type="radio"
-                              name={`correct-${q.id}`}
-                              checked={editCorrectIndex === optIdx}
-                              onChange={() => setEditCorrectIndex(optIdx)}
-                              className="accent-primary"
-                            />
-                            <span className="text-[13px] font-mono text-text-muted w-4">
-                              {letter})
-                            </span>
-                            <input
-                              value={opt}
-                              onChange={(e) =>
-                                setEditOptions((prev) =>
-                                  prev.map((o, j) =>
-                                    j === optIdx ? e.target.value : o
-                                  )
-                                )
-                              }
-                              className="flex-1 px-2 py-1.5 text-[13px] text-text-primary bg-bg-surface border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[12px] font-medium text-text-muted">
-                        Explanation
-                      </label>
-                      <textarea
-                        value={editExplanation}
-                        onChange={(e) => setEditExplanation(e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 text-[13px] text-text-primary bg-bg-surface border border-border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      />
-                    </div>
-
-                    {editError && (
-                      <p className="text-[13px] text-danger">{editError}</p>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={saveEdit}
-                        loading={editSaving}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={cancelEditing}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => deleteQuestion(q.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
+                  <QuestionEditForm
+                    questionId={q.id}
+                    questionText={editQuestion}
+                    options={editOptions}
+                    correctIndex={editCorrectIndex}
+                    explanation={editExplanation}
+                    error={editError}
+                    saving={editSaving}
+                    onQuestionTextChange={setEditQuestion}
+                    onOptionChange={(idx, text) =>
+                      setEditOptions((prev) =>
+                        prev.map((o, j) => (j === idx ? text : o))
+                      )
+                    }
+                    onCorrectIndexChange={setEditCorrectIndex}
+                    onExplanationChange={setEditExplanation}
+                    onSave={saveEdit}
+                    onCancel={cancelEditing}
+                    onDelete={() => deleteQuestion(q.id)}
+                  />
                 ) : (
                   /* ----- Normal display mode ----- */
                   <div className="flex flex-col gap-2">
