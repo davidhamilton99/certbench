@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  computeReadinessScore,
-  type DomainPerformance,
-} from "@/lib/readiness/compute-score";
-import { computeSrsUpdate } from "@/lib/srs/compute-srs";
-import { SRS_DEFAULT_EASE_FACTOR } from "@/constants/exam-config";
+import { updateQuestionPerformanceForAnswers } from "@/lib/exam-submission/update-performance";
+import { recomputeAndSnapshotReadiness } from "@/lib/exam-submission/recompute-readiness";
 import { withErrorHandler } from "@/lib/api/errors";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod/v4";
@@ -140,149 +136,18 @@ async function handler(req: NextRequest) {
     );
   }
 
-  // Create/update question_performance records
-  // Batch-fetch existing records to avoid N+1 sequential queries
-  const now = new Date().toISOString();
+  await updateQuestionPerformanceForAnswers(supabase, {
+    userId: user.id,
+    certificationId: attempt.certification_id,
+    answers,
+    questions: fullQuestions,
+    upsertNew: true,
+  });
 
-  const { data: existingPerf } = await supabase
-    .from("question_performance")
-    .select("id, question_id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor")
-    .eq("user_id", user.id)
-    .in("question_id", questionIds);
-
-  const perfMap = new Map(
-    (existingPerf || []).map((p) => [p.question_id, p])
-  );
-
-  // Process updates and inserts concurrently
-  const perfOps = answers.map((a) => {
-    const question = questionMap.get(a.questionId);
-    if (!question) return null;
-
-    const isCorrect = a.selectedIndex === question.correct_index;
-    const existing = perfMap.get(a.questionId);
-
-    if (existing) {
-      const srs = computeSrsUpdate({
-        isCorrect,
-        currentInterval: existing.srs_interval_days || 1,
-        currentEase: existing.srs_ease_factor || SRS_DEFAULT_EASE_FACTOR,
-        currentStreak: existing.streak,
-      });
-
-      return supabase
-        .from("question_performance")
-        .update({
-          times_seen: existing.times_seen + 1,
-          times_correct: existing.times_correct + (isCorrect ? 1 : 0),
-          last_seen_at: now,
-          last_correct_at: isCorrect ? now : undefined,
-          streak: srs.streak,
-          srs_interval_days: srs.interval,
-          srs_ease_factor: srs.easeFactor,
-          srs_next_review_at: srs.nextReviewAt,
-        })
-        .eq("id", existing.id);
-    } else {
-      const srs = computeSrsUpdate({
-        isCorrect,
-        currentInterval: 1,
-        currentEase: SRS_DEFAULT_EASE_FACTOR,
-        currentStreak: 0,
-      });
-
-      return supabase.from("question_performance").upsert({
-        user_id: user.id,
-        question_id: a.questionId,
-        certification_id: attempt.certification_id,
-        times_seen: 1,
-        times_correct: isCorrect ? 1 : 0,
-        last_seen_at: now,
-        last_correct_at: isCorrect ? now : null,
-        srs_interval_days: srs.interval,
-        srs_ease_factor: srs.easeFactor,
-        srs_next_review_at: srs.nextReviewAt,
-        streak: srs.streak,
-      }, { onConflict: "user_id,question_id" });
-    }
-  }).filter(Boolean);
-
-  await Promise.all(perfOps);
-
-  // Compute readiness score
-  // Parallel fetch: domains, user performance, and all cert questions (for domain mapping + counts)
-  const [domainsResult, allPerformanceResult, allCertQuestionsResult] =
-    await Promise.all([
-      supabase
-        .from("cert_domains")
-        .select("id, domain_number, title, exam_weight")
-        .eq("certification_id", attempt.certification_id)
-        .order("sort_order"),
-      supabase
-        .from("question_performance")
-        .select("question_id, times_seen, times_correct")
-        .eq("user_id", user.id)
-        .eq("certification_id", attempt.certification_id),
-      // Single query replaces two separate cert_questions fetches
-      supabase
-        .from("cert_questions")
-        .select("id, domain_id, is_active")
-        .eq("certification_id", attempt.certification_id),
-    ]);
-
-  const domains = domainsResult.data;
-  const allPerformance = allPerformanceResult.data;
-  const allCertQuestions = allCertQuestionsResult.data;
-
-  let readiness = null;
-
-  if (domains && allPerformance && allCertQuestions) {
-    const qDomainLookup = new Map(
-      allCertQuestions.map((q) => [q.id, q.domain_id])
-    );
-
-    const totalByDomain = new Map<string, number>();
-    allCertQuestions
-      .filter((q) => q.is_active)
-      .forEach((q) => {
-        totalByDomain.set(
-          q.domain_id,
-          (totalByDomain.get(q.domain_id) || 0) + 1
-        );
-      });
-
-    const domainPerformances: DomainPerformance[] = domains.map((d) => {
-      const domainPerfRecords = allPerformance.filter(
-        (p) => qDomainLookup.get(p.question_id) === d.id
-      );
-      return {
-        domain_id: d.id,
-        domain_number: d.domain_number,
-        title: d.title,
-        exam_weight: d.exam_weight,
-        attempted: domainPerfRecords.reduce(
-          (sum, p) => sum + p.times_seen,
-          0
-        ),
-        correct: domainPerfRecords.reduce(
-          (sum, p) => sum + p.times_correct,
-          0
-        ),
-        total_questions: totalByDomain.get(d.id) || 0,
-      };
-    });
-
-    readiness = computeReadinessScore(domainPerformances);
-
-    await supabase.from("readiness_snapshots").insert({
-      user_id: user.id,
-      certification_id: attempt.certification_id,
-      overall_score: readiness.overall_score,
-      domain_scores: readiness.domain_scores as unknown as Record<string, unknown>,
-      total_questions_seen: readiness.total_questions_seen,
-      is_preliminary: readiness.is_preliminary,
-    });
-  }
+  const readiness = await recomputeAndSnapshotReadiness(supabase, {
+    userId: user.id,
+    certificationId: attempt.certification_id,
+  });
 
   // Reorder questions to match the order the user answered them (reuse fullQuestions from grading)
   const orderedQuestions = questionIds
