@@ -10,6 +10,11 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { shuffleIndices, checkAnswer, isAnswerComplete } from "./study-set/answer-utils";
 import { exportPdf } from "./study-set/export-pdf";
 import { QuestionEditForm } from "./study-set/QuestionEditForm";
+import { MultipleChoiceQuestion } from "./study-set/questions/MultipleChoiceQuestion";
+import { TrueFalseQuestion } from "./study-set/questions/TrueFalseQuestion";
+import { MultipleSelectQuestion } from "./study-set/questions/MultipleSelectQuestion";
+import { OrderingQuestion } from "./study-set/questions/OrderingQuestion";
+import { MatchingQuestion } from "./study-set/questions/MatchingQuestion";
 import { useQuizProgress } from "@/hooks/use-quiz-progress";
 import type {
   QuestionType,
@@ -664,427 +669,74 @@ export function StudySetDetail({
 
         {/* ---- Multiple Choice ---- */}
         {currentType === "multiple_choice" && (
-          <div className="flex flex-col gap-2">
-            {shuffledOptions.map((option, index) => {
-              const letter = String.fromCharCode(65 + index);
-              const isSelected = selectedOption === index;
-              const isCorrectOption = index === shuffledCorrectIndex;
-
-              let borderStyle: string;
-              let circleStyle: string;
-
-              if (isRevealed) {
-                if (isCorrectOption) {
-                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
-                  circleStyle = "bg-success text-white";
-                } else if (isSelected && !isCorrectOption) {
-                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
-                  circleStyle = "bg-danger text-white";
-                } else {
-                  borderStyle = "border-border bg-bg-surface opacity-50";
-                  circleStyle =
-                    "bg-bg-page text-text-secondary border border-border";
-                }
-              } else if (isSelected) {
-                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
-                circleStyle = "bg-primary text-white";
-              } else {
-                borderStyle =
-                  "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page";
-                circleStyle =
-                  "bg-bg-page text-text-secondary border border-border";
-              }
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => !isRevealed && setSelectedOption(index)}
-                  disabled={isRevealed}
-                  className={`w-full text-left p-4 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                >
-                  <div className="flex gap-3">
-                    <span
-                      className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-mono font-medium ${circleStyle}`}
-                    >
-                      {letter}
-                    </span>
-                    <span className="text-[15px] leading-relaxed text-text-primary pt-0.5">
-                      {option.text}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <MultipleChoiceQuestion
+            shuffledOptions={shuffledOptions}
+            selectedOption={selectedOption}
+            shuffledCorrectIndex={shuffledCorrectIndex}
+            isRevealed={isRevealed}
+            onSelect={setSelectedOption}
+          />
         )}
 
         {/* ---- True / False ---- */}
         {currentType === "true_false" && (
-          <div className="flex flex-col gap-2">
-            {(currentQuestion.options as MCTFOption[]).map((option, index) => {
-              const isSelected = selectedOption === index;
-              const isCorrectOption =
-                isRevealed && index === currentQuestion.correct_index;
-
-              let borderStyle: string;
-              let circleStyle: string;
-
-              if (isRevealed) {
-                if (isCorrectOption) {
-                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
-                  circleStyle = "bg-success text-white";
-                } else if (isSelected && !isCorrectOption) {
-                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
-                  circleStyle = "bg-danger text-white";
-                } else {
-                  borderStyle = "border-border bg-bg-surface opacity-50";
-                  circleStyle =
-                    "bg-bg-page text-text-secondary border border-border";
-                }
-              } else if (isSelected) {
-                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
-                circleStyle = "bg-primary text-white";
-              } else {
-                borderStyle =
-                  "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page";
-                circleStyle =
-                  "bg-bg-page text-text-secondary border border-border";
-              }
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => !isRevealed && setSelectedOption(index)}
-                  disabled={isRevealed}
-                  className={`w-full text-left p-4 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                >
-                  <div className="flex gap-3">
-                    <span
-                      className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-mono font-medium ${circleStyle}`}
-                    >
-                      {option.text[0]}
-                    </span>
-                    <span className="text-[15px] leading-relaxed text-text-primary pt-0.5">
-                      {option.text}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <TrueFalseQuestion
+            options={currentQuestion.options as MCTFOption[]}
+            selectedOption={selectedOption}
+            correctIndex={currentQuestion.correct_index}
+            isRevealed={isRevealed}
+            onSelect={setSelectedOption}
+          />
         )}
 
         {/* ---- Multiple Select ---- */}
         {currentType === "multiple_select" && (
-          <div className="flex flex-col gap-2">
-            <p className="text-[12px] text-text-muted">
-              {isRevealed ? "" : "Select all that apply."}
-            </p>
-            {(msOptionOrder.length > 0 ? msOptionOrder : (currentQuestion.options as MCTFOption[]).map((_, i) => i)).map((origIdx) => {
-              const option = (currentQuestion.options as MCTFOption[])[origIdx];
-              const isSelected = msSelected.has(origIdx);
-              const isCorrectOpt = option.is_correct;
-
-              let borderStyle: string;
-              let boxStyle: string;
-
-              if (isRevealed) {
-                if (isCorrectOpt && isSelected) {
-                  borderStyle = "border-success bg-success-bg ring-1 ring-success";
-                  boxStyle = "bg-success text-white";
-                } else if (isCorrectOpt && !isSelected) {
-                  // Missed correct
-                  borderStyle = "border-success bg-success-bg";
-                  boxStyle = "border border-success text-success";
-                } else if (!isCorrectOpt && isSelected) {
-                  // Wrong selection
-                  borderStyle = "border-danger bg-danger-bg ring-1 ring-danger";
-                  boxStyle = "bg-danger text-white";
-                } else {
-                  borderStyle = "border-border bg-bg-surface opacity-50";
-                  boxStyle =
-                    "bg-bg-page text-text-secondary border border-border";
-                }
-              } else if (isSelected) {
-                borderStyle = "border-primary bg-info-bg ring-1 ring-primary";
-                boxStyle = "bg-primary text-white";
-              } else {
-                borderStyle =
-                  "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page";
-                boxStyle =
-                  "bg-bg-page text-text-secondary border border-border";
-              }
-
-              return (
-                <button
-                  key={origIdx}
-                  onClick={() => {
-                    if (isRevealed) return;
-                    setMsSelected((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(origIdx)) next.delete(origIdx);
-                      else next.add(origIdx);
-                      return next;
-                    });
-                  }}
-                  disabled={isRevealed}
-                  className={`w-full text-left p-4 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                >
-                  <div className="flex gap-3">
-                    <span
-                      className={`flex-shrink-0 w-7 h-7 rounded flex items-center justify-center text-[13px] font-medium ${boxStyle}`}
-                    >
-                      {isRevealed && isCorrectOpt ? "\u2713" : isSelected ? "\u2713" : ""}
-                    </span>
-                    <span className="text-[15px] leading-relaxed text-text-primary pt-0.5">
-                      {option.text}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <MultipleSelectQuestion
+            options={currentQuestion.options as MCTFOption[]}
+            displayOrder={msOptionOrder}
+            selected={msSelected}
+            isRevealed={isRevealed}
+            onToggle={(origIdx) =>
+              setMsSelected((prev) => {
+                const next = new Set(prev);
+                if (next.has(origIdx)) next.delete(origIdx);
+                else next.add(origIdx);
+                return next;
+              })
+            }
+          />
         )}
 
         {/* ---- Ordering ---- */}
         {currentType === "ordering" && (
-          <div className="flex flex-col gap-2">
-            {!isRevealed && (
-              <p className="text-[12px] text-text-muted">
-                Click items in the correct order. Click a numbered item to remove it from the sequence.
-              </p>
-            )}
-            {(orderingDisplayOrder.length > 0 ? orderingDisplayOrder : (currentQuestion.options as OrderingOption[]).map((_, i) => i)).map(
-              (origIdx) => {
-                const option = (currentQuestion.options as OrderingOption[])[origIdx];
-                const posInSeq = orderingSequence.indexOf(origIdx);
-                const seqNum = posInSeq >= 0 ? posInSeq + 1 : null;
-                const isPlacedCorrectly =
-                  isRevealed &&
-                  seqNum !== null &&
-                  option.correct_position === posInSeq;
-                const isPlacedWrongly =
-                  isRevealed &&
-                  seqNum !== null &&
-                  option.correct_position !== posInSeq;
-                const wasNotPlaced = isRevealed && seqNum === null;
-
-                let borderStyle: string;
-                let numStyle: string;
-
-                if (isRevealed) {
-                  if (isPlacedCorrectly) {
-                    borderStyle = "border-success bg-success-bg";
-                    numStyle = "bg-success text-white";
-                  } else if (isPlacedWrongly) {
-                    borderStyle = "border-danger bg-danger-bg";
-                    numStyle = "bg-danger text-white";
-                  } else if (wasNotPlaced) {
-                    borderStyle = "border-border bg-bg-surface opacity-50";
-                    numStyle =
-                      "bg-bg-page text-text-secondary border border-border";
-                  } else {
-                    borderStyle = "border-border bg-bg-surface";
-                    numStyle =
-                      "bg-bg-page text-text-secondary border border-border";
-                  }
-                } else if (seqNum !== null) {
-                  borderStyle = "border-primary bg-info-bg";
-                  numStyle = "bg-primary text-white";
-                } else {
-                  borderStyle =
-                    "border-border bg-bg-surface hover:border-border-dark hover:bg-bg-page";
-                  numStyle =
-                    "bg-bg-page text-text-secondary border border-border";
+          <OrderingQuestion
+            options={currentQuestion.options as OrderingOption[]}
+            displayOrder={orderingDisplayOrder}
+            sequence={orderingSequence}
+            isRevealed={isRevealed}
+            onToggleItem={(origIdx) =>
+              setOrderingSequence((prev) => {
+                const existing = prev.indexOf(origIdx);
+                if (existing >= 0) {
+                  return prev.filter((_, i) => i !== existing);
                 }
-
-                return (
-                  <button
-                    key={origIdx}
-                    onClick={() => {
-                      if (isRevealed) return;
-                      setOrderingSequence((prev) => {
-                        const existing = prev.indexOf(origIdx);
-                        if (existing >= 0) {
-                          return prev.filter((_, i) => i !== existing);
-                        }
-                        return [...prev, origIdx];
-                      });
-                    }}
-                    disabled={isRevealed}
-                    className={`w-full text-left p-4 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                  >
-                    <div className="flex gap-3">
-                      <span
-                        className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-mono font-medium ${numStyle}`}
-                      >
-                        {seqNum ?? "\u2013"}
-                      </span>
-                      <span className="text-[15px] leading-relaxed text-text-primary pt-0.5">
-                        {option.text}
-                      </span>
-                    </div>
-                  </button>
-                );
-              }
-            )}
-            {isRevealed && (
-              <div className="mt-1 p-3 bg-bg-page rounded-lg border border-border">
-                <p className="text-[12px] font-medium text-text-muted mb-1.5">
-                  Correct order:
-                </p>
-                {[...(currentQuestion.options as OrderingOption[])]
-                  .sort((a, b) => a.correct_position - b.correct_position)
-                  .map((opt, i) => (
-                    <p
-                      key={i}
-                      className="text-[13px] text-text-secondary leading-relaxed"
-                    >
-                      {i + 1}. {opt.text}
-                    </p>
-                  ))}
-              </div>
-            )}
-          </div>
+                return [...prev, origIdx];
+              })
+            }
+          />
         )}
 
         {/* ---- Matching ---- */}
         {currentType === "matching" && (
-          <div className="flex flex-col gap-3">
-            {!isRevealed && (
-              <p className="text-[12px] text-text-muted">
-                Click a term, then click its matching definition.
-              </p>
-            )}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Left column: terms */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-                  Term
-                </p>
-                {(currentQuestion.options as MatchingOption[]).map(
-                  (pair, leftIdx) => {
-                    const isActive = matchingLeft === leftIdx;
-                    const pairedRightOrigIdx = matchingPairs.get(leftIdx);
-                    const isPaired = pairedRightOrigIdx !== undefined;
-                    const isCorrectPair =
-                      isRevealed && pairedRightOrigIdx === leftIdx;
-                    const isWrongPair =
-                      isRevealed &&
-                      isPaired &&
-                      pairedRightOrigIdx !== leftIdx;
-
-                    let borderStyle: string;
-                    if (isRevealed) {
-                      borderStyle = isCorrectPair
-                        ? "border-success bg-success-bg"
-                        : isWrongPair
-                          ? "border-danger bg-danger-bg"
-                          : "border-border bg-bg-surface opacity-50";
-                    } else if (isActive) {
-                      borderStyle =
-                        "border-primary bg-info-bg ring-2 ring-primary/30";
-                    } else if (isPaired) {
-                      borderStyle = "border-primary bg-info-bg";
-                    } else {
-                      borderStyle =
-                        "border-border bg-bg-surface hover:border-border-dark";
-                    }
-
-                    return (
-                      <button
-                        key={leftIdx}
-                        onClick={() =>
-                          !isRevealed && handleMatchingLeftClick(leftIdx)
-                        }
-                        disabled={isRevealed}
-                        className={`w-full text-left p-3 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                      >
-                        <span className="text-[14px] text-text-primary leading-snug">
-                          {pair.left}
-                        </span>
-                      </button>
-                    );
-                  }
-                )}
-              </div>
-
-              {/* Right column: definitions (scrambled) */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-                  Definition
-                </p>
-                {matchingRightOrder.map((origRightIdx, displayPos) => {
-                  const pair = (
-                    currentQuestion.options as MatchingOption[]
-                  )[origRightIdx];
-                  const pairedLeftEntry = [
-                    ...matchingPairs.entries(),
-                  ].find(([, v]) => v === origRightIdx);
-                  const isPaired = pairedLeftEntry !== undefined;
-                  const isCorrectPair =
-                    isRevealed &&
-                    pairedLeftEntry !== undefined &&
-                    pairedLeftEntry[0] === origRightIdx;
-                  const isWrongPair =
-                    isRevealed && isPaired && !isCorrectPair;
-                  const isClickable = !isRevealed && matchingLeft !== null;
-
-                  let borderStyle: string;
-                  if (isRevealed) {
-                    borderStyle = isCorrectPair
-                      ? "border-success bg-success-bg"
-                      : isWrongPair
-                        ? "border-danger bg-danger-bg"
-                        : "border-border bg-bg-surface opacity-50";
-                  } else if (isPaired) {
-                    borderStyle = "border-primary bg-info-bg";
-                  } else if (isClickable) {
-                    borderStyle =
-                      "border-border bg-bg-surface hover:border-primary hover:bg-info-bg";
-                  } else {
-                    borderStyle = "border-border bg-bg-surface";
-                  }
-
-                  return (
-                    <button
-                      key={origRightIdx}
-                      onClick={() =>
-                        isClickable && handleMatchingRightClick(displayPos)
-                      }
-                      disabled={isRevealed || matchingLeft === null}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors duration-150 ${borderStyle}`}
-                    >
-                      <span className="text-[14px] text-text-primary leading-snug">
-                        {pair.right}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Show correct pairs when revealed */}
-            {isRevealed && (
-              <div className="p-3 bg-bg-page rounded-lg border border-border">
-                <p className="text-[12px] font-medium text-text-muted mb-1.5">
-                  Correct matches:
-                </p>
-                {(currentQuestion.options as MatchingOption[]).map(
-                  (pair, i) => (
-                    <p
-                      key={i}
-                      className="text-[13px] text-text-secondary leading-relaxed"
-                    >
-                      {pair.left}{" "}
-                      <span className="text-text-muted">→</span>{" "}
-                      {pair.right}
-                    </p>
-                  )
-                )}
-              </div>
-            )}
-          </div>
+          <MatchingQuestion
+            options={currentQuestion.options as MatchingOption[]}
+            rightOrder={matchingRightOrder}
+            activeLeft={matchingLeft}
+            pairs={matchingPairs}
+            isRevealed={isRevealed}
+            onLeftClick={handleMatchingLeftClick}
+            onRightClick={handleMatchingRightClick}
+          />
         )}
 
         {/* Explanation (shown after Explain is clicked) */}
