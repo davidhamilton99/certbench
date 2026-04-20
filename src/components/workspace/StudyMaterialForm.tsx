@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -113,15 +115,15 @@ export function StudyMaterialForm({
   const [dragOver, setDragOver] = useState(false);
   const [fileLoading, setFileLoading] = useState(false);
   const [contentTruncated, setContentTruncated] = useState(false);
-  const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
 
-  // Fetch user plan on mount
-  useEffect(() => {
-    fetch("/api/user/plan")
-      .then((res) => res.json())
-      .then((data) => setUserPlan(data as UserPlan))
-      .catch(() => {});
-  }, []);
+  // Cached across modal opens — invalidated after a successful generation so
+  // the quota counter updates without a full refetch on mount.
+  const queryClient = useQueryClient();
+  const { data: userPlanData } = useQuery({
+    queryKey: ["user-plan"],
+    queryFn: ({ signal }) => api.get<UserPlan>("/api/user/plan", { signal }),
+  });
+  const userPlan = userPlanData ?? null;
 
   // Auto-fill title from filename
   const autoFillTitle = useCallback(
@@ -164,7 +166,9 @@ export function StudyMaterialForm({
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => ({})) as { error?: string; code?: string };
         if (data.code === "GENERATION_LIMIT_REACHED") {
-          setUserPlan((prev) => prev ? { ...prev, canGenerate: false } : prev);
+          queryClient.setQueryData<UserPlan>(["user-plan"], (prev) =>
+            prev ? { ...prev, canGenerate: false } : prev
+          );
         }
         setError(data.error || "Failed to generate questions");
         setPhase("form");
@@ -239,17 +243,15 @@ export function StudyMaterialForm({
         }
       }
 
-      fetch("/api/user/plan")
-        .then((r) => r.json())
-        .then((d) => setUserPlan(d as UserPlan))
-        .catch(() => {});
+      // Refresh the quota counter after a successful generation.
+      queryClient.invalidateQueries({ queryKey: ["user-plan"] });
 
       setPhase("review");
     } catch {
       setError("Network error. Please try again.");
       setPhase("form");
     }
-  }, [title, content, selectedTypes]);
+  }, [title, content, selectedTypes, queryClient]);
 
   const removeQuestion = useCallback((index: number) => {
     setQuestions((prev) => prev.filter((_, i) => i !== index));

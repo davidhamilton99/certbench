@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { api } from "@/lib/api";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -97,8 +99,52 @@ export function CommunityList({
     new Map(sets.map((s) => [s.id, s.bookmarkCount]))
   );
 
-  // Debounce: track which bookmark toggles are in-flight
-  const inflightRef = useRef<Set<string>>(new Set());
+  // Per-setId debounce: skip re-clicks while one toggle is still in-flight.
+  // State (not a ref) so the disabled-state read during render re-renders
+  // the button when the set changes — ref reads during render are disallowed
+  // under the new React compiler/lint rules.
+  const [inflight, setInflight] = useState<Set<string>>(() => new Set());
+
+  // Mutation handles the POST; onMutate flips the optimistic state and
+  // returns a context used by onError to roll back on failure.
+  const bookmarkMutation = useMutation<
+    unknown,
+    Error,
+    string,
+    { setId: string; wasBookmarked: boolean }
+  >({
+    mutationFn: (setId: string) =>
+      api.post("/api/community/bookmark", { body: { studySetId: setId } }),
+    onMutate: (setId) => {
+      const wasBookmarked = bookmarks.get(setId) || false;
+      setBookmarks((prev) => new Map(prev).set(setId, !wasBookmarked));
+      setCounts((prev) =>
+        new Map(prev).set(
+          setId,
+          (prev.get(setId) || 0) + (wasBookmarked ? -1 : 1)
+        )
+      );
+      return { setId, wasBookmarked };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (!ctx) return;
+      setBookmarks((prev) => new Map(prev).set(ctx.setId, ctx.wasBookmarked));
+      setCounts((prev) =>
+        new Map(prev).set(
+          ctx.setId,
+          (prev.get(ctx.setId) || 0) + (ctx.wasBookmarked ? 1 : -1)
+        )
+      );
+    },
+    onSettled: (_data, _err, setId) => {
+      setInflight((prev) => {
+        if (!prev.has(setId)) return prev;
+        const next = new Set(prev);
+        next.delete(setId);
+        return next;
+      });
+    },
+  });
 
   // Filters & search
   const [search, setSearch] = useState("");
@@ -176,54 +222,19 @@ export function CommunityList({
   const hasMore = visibleCount < filteredSets.length;
 
   const toggleBookmark = useCallback(
-    async (setId: string, e: React.MouseEvent) => {
+    (setId: string, e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Debounce: skip if already in-flight for this set
-      if (inflightRef.current.has(setId)) return;
-      inflightRef.current.add(setId);
-
-      const wasBookmarked = bookmarks.get(setId) || false;
-
-      // Optimistic update
-      setBookmarks((prev) => new Map(prev).set(setId, !wasBookmarked));
-      setCounts((prev) =>
-        new Map(prev).set(
-          setId,
-          (prev.get(setId) || 0) + (wasBookmarked ? -1 : 1)
-        )
-      );
-
-      try {
-        const res = await fetch("/api/community/bookmark", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ studySetId: setId }),
-        });
-
-        if (!res.ok) {
-          setBookmarks((prev) => new Map(prev).set(setId, wasBookmarked));
-          setCounts((prev) =>
-            new Map(prev).set(
-              setId,
-              (prev.get(setId) || 0) + (wasBookmarked ? 1 : -1)
-            )
-          );
-        }
-      } catch {
-        setBookmarks((prev) => new Map(prev).set(setId, wasBookmarked));
-        setCounts((prev) =>
-          new Map(prev).set(
-            setId,
-            (prev.get(setId) || 0) + (wasBookmarked ? 1 : -1)
-          )
-        );
-      } finally {
-        inflightRef.current.delete(setId);
-      }
+      // Skip if a toggle for this set is already in flight. Reading the
+      // state snapshot from this render is fine — humans can't double-click
+      // faster than a render cycle, and if one slips through the POST
+      // endpoint is an idempotent upsert.
+      if (inflight.has(setId)) return;
+      setInflight((prev) => new Set(prev).add(setId));
+      bookmarkMutation.mutate(setId);
     },
-    [bookmarks]
+    [inflight, bookmarkMutation]
   );
 
   // Reset pagination when filters change
@@ -361,7 +372,7 @@ export function CommunityList({
             {paginatedSets.map((set) => {
               const isBookmarked = bookmarks.get(set.id) || false;
               const count = counts.get(set.id) || 0;
-              const isInflight = inflightRef.current.has(set.id);
+              const isInflight = inflight.has(set.id);
 
               return (
                 <Link key={set.id} href={`/community/${set.id}`}>

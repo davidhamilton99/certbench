@@ -1,46 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/Spinner";
 import { Card } from "@/components/ui/Card";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlock } from "@/components/workspace/SessionBlock";
 import type { SessionPlanResult } from "@/lib/session/compute-plan";
+import { api } from "@/lib/api";
 
 export function DashboardPlan({ certSlug }: { certSlug: string }) {
-  const [plan, setPlan] = useState<SessionPlanResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: plan, isPending, error } = useQuery({
+    queryKey: ["session-plan", certSlug],
+    queryFn: ({ signal }) =>
+      api.get<SessionPlanResult>("/api/session-plan", {
+        params: { cert: certSlug },
+        signal,
+      }),
+  });
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchPlan() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/session-plan?cert=${certSlug}`, {
-          signal: controller.signal,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "Failed to load study plan");
-          return;
-        }
-        setPlan(data);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        setError("Network error. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPlan();
-    return () => controller.abort();
-  }, [certSlug]);
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16">
         <Spinner size="lg" />
@@ -56,7 +34,9 @@ export function DashboardPlan({ certSlug }: { certSlug: string }) {
           <svg className="w-5 h-5 text-danger shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
-          <p className="text-[14px] text-danger">{error}</p>
+          <p className="text-[14px] text-danger">
+            {error.message || "Failed to load study plan"}
+          </p>
         </div>
       </Card>
     );

@@ -17,6 +17,7 @@
     "@sentry/nextjs": "^10.49.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@tanstack/react-query": "^5.99.2",
     "jspdf": "^4.2.0",
     "mammoth": "^1.11.0",
     "next": "16.1.6",

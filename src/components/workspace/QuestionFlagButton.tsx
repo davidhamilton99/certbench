@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { api, ApiError } from "@/lib/api";
 
 interface QuestionFlagButtonProps {
   questionId: string;
@@ -10,66 +12,56 @@ export function QuestionFlagButton({ questionId }: QuestionFlagButtonProps) {
   const [flagged, setFlagged] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const [reason, setReason] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleFlag() {
-    if (flagged) {
-      // Unflag
-      setSubmitting(true);
+  const flagMutation = useMutation({
+    mutationFn: (body: { questionId: string; reason?: string }) =>
+      api.post("/api/questions/flag", { body }),
+    onSuccess: () => {
+      setFlagged(true);
+      setShowInput(false);
+      setReason("");
       setError(null);
-      try {
-        const res = await fetch("/api/questions/flag", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId }),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error || "Failed to unflag");
-          return;
-        }
-        setFlagged(false);
-        setReason("");
-      } catch {
-        setError("Network error");
-      } finally {
-        setSubmitting(false);
-      }
+    },
+    onError: (err) => {
+      setError(
+        err instanceof ApiError ? err.message : "Network error"
+      );
+    },
+  });
+
+  const unflagMutation = useMutation({
+    mutationFn: () =>
+      api.delete("/api/questions/flag", { body: { questionId } }),
+    onSuccess: () => {
+      setFlagged(false);
+      setReason("");
+      setError(null);
+    },
+    onError: (err) => {
+      setError(
+        err instanceof ApiError ? err.message : "Network error"
+      );
+    },
+  });
+
+  const submitting = flagMutation.isPending || unflagMutation.isPending;
+
+  function handleFlag() {
+    if (flagged) {
+      unflagMutation.mutate();
       return;
     }
-
-    // Show input if not already showing
     if (!showInput) {
       setShowInput(true);
-      return;
     }
   }
 
-  async function handleSubmit() {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/questions/flag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId,
-          ...(reason.trim() ? { reason: reason.trim() } : {}),
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to flag");
-        return;
-      }
-      setFlagged(true);
-      setShowInput(false);
-    } catch {
-      setError("Network error");
-    } finally {
-      setSubmitting(false);
-    }
+  function handleSubmit() {
+    flagMutation.mutate({
+      questionId,
+      ...(reason.trim() ? { reason: reason.trim() } : {}),
+    });
   }
 
   return (

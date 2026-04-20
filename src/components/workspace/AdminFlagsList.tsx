@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
+import { api } from "@/lib/api";
 
 interface FlagEntry {
   id: string;
@@ -16,6 +23,11 @@ interface FlagEntry {
   cert_questions: { question_text: string; difficulty: string } | null;
 }
 
+interface FlagsResponse {
+  flags: FlagEntry[];
+  total: number;
+}
+
 type StatusFilter = "pending" | "actioned" | "dismissed" | "all";
 
 const STATUS_TABS: { label: string; value: StatusFilter }[] = [
@@ -25,58 +37,40 @@ const STATUS_TABS: { label: string; value: StatusFilter }[] = [
   { label: "All", value: "all" },
 ];
 
+const PER_PAGE = 25;
+const flagsKey = (status: StatusFilter, page: number) =>
+  ["admin-flags", status, page] as const;
+
 export function AdminFlagsList() {
-  const [flags, setFlags] = useState<FlagEntry[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>("pending");
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const perPage = 25;
+  // Paginated read — keepPreviousData keeps the current page visible
+  // during the next-page fetch instead of snapping to a spinner.
+  const { data, isPending } = useQuery({
+    queryKey: flagsKey(status, page),
+    queryFn: ({ signal }) =>
+      api.get<FlagsResponse>("/api/admin/flags", {
+        params: { status, page },
+        signal,
+      }),
+    placeholderData: keepPreviousData,
+  });
 
-  const loadFlags = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/admin/flags?status=${status}&page=${page}`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setFlags(data.flags);
-        setTotal(data.total);
-      }
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
-  }, [status, page]);
+  const flags = data?.flags ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PER_PAGE);
 
-  useEffect(() => {
-    loadFlags();
-  }, [loadFlags]);
-
-  async function handleAction(flagId: string, newStatus: "actioned" | "dismissed") {
-    setUpdating(flagId);
-    try {
-      const res = await fetch("/api/admin/flags", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flagId, status: newStatus }),
-      });
-      if (res.ok) {
-        // Reload to reflect changes
-        loadFlags();
-      }
-    } catch {
-      // silently fail
-    } finally {
-      setUpdating(null);
-    }
-  }
-
-  const totalPages = Math.ceil(total / perPage);
+  // Status update — on success we invalidate every admin-flags page so
+  // any cached tab the user navigates to will refetch.
+  const updateFlag = useMutation({
+    mutationFn: (vars: { flagId: string; status: "actioned" | "dismissed" }) =>
+      api.patch("/api/admin/flags", { body: vars }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-flags"] });
+    },
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -100,15 +94,15 @@ export function AdminFlagsList() {
         ))}
       </div>
 
-      {/* Loading */}
-      {loading && (
+      {/* Loading (only on first load — page changes use placeholderData) */}
+      {isPending && (
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
         </div>
       )}
 
       {/* Empty state */}
-      {!loading && flags.length === 0 && (
+      {!isPending && flags.length === 0 && (
         <Card padding="lg">
           <p className="text-[14px] text-text-muted text-center py-4">
             No {status === "all" ? "" : status} flags found.
@@ -117,7 +111,7 @@ export function AdminFlagsList() {
       )}
 
       {/* Flag list */}
-      {!loading && flags.length > 0 && (
+      {!isPending && flags.length > 0 && (
         <div className="flex flex-col gap-3">
           {flags.map((flag) => {
             const userName =
@@ -131,6 +125,10 @@ export function AdminFlagsList() {
               month: "short",
               day: "numeric",
             });
+
+            const isUpdatingThisFlag =
+              updateFlag.isPending &&
+              updateFlag.variables?.flagId === flag.id;
 
             return (
               <Card key={flag.id} padding="md">
@@ -176,16 +174,26 @@ export function AdminFlagsList() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAction(flag.id, "dismissed")}
-                          disabled={updating === flag.id}
+                          onClick={() =>
+                            updateFlag.mutate({
+                              flagId: flag.id,
+                              status: "dismissed",
+                            })
+                          }
+                          disabled={isUpdatingThisFlag}
                         >
                           Dismiss
                         </Button>
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => handleAction(flag.id, "actioned")}
-                          disabled={updating === flag.id}
+                          onClick={() =>
+                            updateFlag.mutate({
+                              flagId: flag.id,
+                              status: "actioned",
+                            })
+                          }
+                          disabled={isUpdatingThisFlag}
                         >
                           Action
                         </Button>
@@ -200,7 +208,7 @@ export function AdminFlagsList() {
       )}
 
       {/* Pagination */}
-      {!loading && totalPages > 1 && (
+      {!isPending && totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
           <span className="text-[12px] font-mono text-text-muted">
             Page {page} of {totalPages} · {total} flags

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { QueryProvider } from "@/components/QueryProvider";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -97,7 +98,7 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
-        {children}
+          <QueryProvider>{children}</QueryProvider>
         </ThemeProvider>
         <Script id="sw-register" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) {
