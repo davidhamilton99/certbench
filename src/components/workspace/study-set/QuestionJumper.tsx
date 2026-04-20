@@ -35,6 +35,11 @@ export function QuestionJumper({ currentNumber, total, onJump }: Props) {
     }
   };
 
+  // Size the input to fit the widest possible value (e.g. "324" needs 3 chars).
+  // Add a small cushion for padding so digits don't collide with the border.
+  const digitCount = Math.max(String(total).length, 2);
+  const inputStyle = { width: `calc(${digitCount}ch + 0.75rem)` };
+
   return (
     <span className="text-[13px] font-mono text-text-muted flex items-center gap-1">
       <span>Question</span>
@@ -53,7 +58,8 @@ export function QuestionJumper({ currentNumber, total, onJump }: Props) {
           }
         }}
         aria-label="Jump to question number"
-        className="w-[3.5ch] text-center bg-bg-surface border border-border rounded px-1 py-0.5 font-mono text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        style={inputStyle}
+        className="text-center bg-bg-surface border border-border rounded px-1 py-0.5 font-mono text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
       <span>of {total}</span>
     </span>
