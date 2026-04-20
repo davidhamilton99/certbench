@@ -5,12 +5,50 @@ import type {
 } from "./types";
 
 /**
+ * Pick a target difficulty (1–3) for the user's current skill level based on
+ * their all-time accuracy across every question they've seen.
+ *
+ * Thresholds:
+ *  - accuracy < 50%       → 1 (easier — build foundation)
+ *  - accuracy 50%–75%     → 2 (default stretch zone)
+ *  - accuracy > 75%       → 3 (harder — they need challenge)
+ *
+ * Cold start (no performance data at all) → 2. This is a graceful no-op given
+ * that most cert questions ship with `difficulty = 2` as the default, so the
+ * adaptive layer doesn't introduce any observable bias until we either (a)
+ * backfill real difficulty values or (b) the user builds up history.
+ */
+export function computeTargetDifficulty(
+  performance: QuestionPerformanceRecord[]
+): 1 | 2 | 3 {
+  let totalSeen = 0;
+  let totalCorrect = 0;
+  for (const p of performance) {
+    totalSeen += p.times_seen;
+    totalCorrect += p.times_correct;
+  }
+  if (totalSeen === 0) return 2;
+  const accuracy = totalCorrect / totalSeen;
+  if (accuracy < 0.5) return 1;
+  if (accuracy > 0.75) return 3;
+  return 2;
+}
+
+/**
  * Select questions for practice exams using the priority bucket system:
  * 1. Never seen (highest priority)
  * 2. Seen and answered incorrectly (by error rate desc)
  * 3. Seen and answered correctly (oldest first)
  *
  * Questions are distributed proportionally by domain weight.
+ *
+ * Adaptive difficulty: within each bucket, questions whose `difficulty` sits
+ * closest to the user's target level are preferred. This is a **soft** sort —
+ * off-target questions are still selected when the target-matched pool is
+ * exhausted — so requested counts are always honored. For the unseen bucket
+ * difficulty distance is the primary order; for the seen buckets it is a
+ * tie-breaker that doesn't disturb the accuracy/staleness priorities those
+ * rely on.
  */
 export function selectPracticeQuestions(
   allQuestions: CertQuestion[],
@@ -20,6 +58,9 @@ export function selectPracticeQuestions(
 ): CertQuestion[] {
   // Build performance lookup
   const perfMap = new Map(performance.map((p) => [p.question_id, p]));
+  const targetDifficulty = computeTargetDifficulty(performance);
+  const distance = (q: CertQuestion) =>
+    Math.abs(q.difficulty - targetDifficulty);
 
   // Bucket questions
   const unseen: CertQuestion[] = [];
@@ -37,22 +78,33 @@ export function selectPracticeQuestions(
     }
   }
 
-  // Sort incorrect by error rate descending (worst first)
+  // Unseen has no intrinsic priority — use difficulty distance as the primary
+  // order so target-matched novel questions get picked first. The final
+  // shuffle() mixes chosen items for presentation; what matters here is
+  // *which* questions cross the selection threshold.
+  unseen.sort((a, b) => distance(a) - distance(b));
+
+  // Sort incorrect by error rate ascending (worst first), then by difficulty
+  // distance as a tie-breaker so we don't disturb the accuracy signal.
   incorrect.sort((a, b) => {
     const perfA = perfMap.get(a.id)!;
     const perfB = perfMap.get(b.id)!;
     const rateA = perfA.times_correct / perfA.times_seen;
     const rateB = perfB.times_correct / perfB.times_seen;
-    return rateA - rateB; // lower accuracy first
+    if (rateA !== rateB) return rateA - rateB; // lower accuracy first
+    return distance(a) - distance(b);
   });
 
-  // Sort correct by last_seen_at ascending (most stale first)
+  // Sort correct by last_seen_at ascending (most stale first), then by
+  // difficulty distance as a tie-breaker.
   correct.sort((a, b) => {
     const perfA = perfMap.get(a.id)!;
     const perfB = perfMap.get(b.id)!;
     const dateA = perfA.last_seen_at || "1970-01-01";
     const dateB = perfB.last_seen_at || "1970-01-01";
-    return dateA.localeCompare(dateB);
+    const cmp = dateA.localeCompare(dateB);
+    if (cmp !== 0) return cmp;
+    return distance(a) - distance(b);
   });
 
   // Select proportionally by domain weight
