@@ -98,6 +98,8 @@ export function useQuizProgress({
     const applyEntry = (entry: StoredEntry) => {
       if (cancelled || dismissedRef.current) return;
       // Only surface as "saved session" if it represents a partial run.
+      // A completed or pristine entry should clear any stale state we set
+      // from localStorage before the server response arrived.
       if (entry.currentIndex > 0 && entry.currentIndex < entry.total) {
         setHasSavedSession(true);
         setSavedProgress({
@@ -105,7 +107,16 @@ export function useQuizProgress({
           correctCount: entry.correctCount,
           total: entry.total,
         });
+      } else {
+        setHasSavedSession(false);
+        setSavedProgress(null);
       }
+    };
+
+    const clearResumeState = () => {
+      if (cancelled || dismissedRef.current) return;
+      setHasSavedSession(false);
+      setSavedProgress(null);
     };
 
     // Show local immediately (if fresh) so the resume banner isn't blocked
@@ -125,13 +136,24 @@ export function useQuizProgress({
         if (cancelled) return;
         const serverEntry = json.progress;
         if (!serverEntry) {
-          // Server has no record. If local is stale or we don't want to
-          // surface it, drop it.
+          // Server has no record — another device either completed the quiz
+          // (which DELETEs the row) or the row aged past the 24h TTL. Either
+          // way, our local copy is stale. Drop it so we don't keep offering
+          // a resume banner for a run that's already been finished elsewhere.
+          if (localEntry) {
+            clearLocal(storageKey);
+            clearResumeState();
+          }
           return;
         }
         // Keep whichever is newer.
         if (!localEntry || serverEntry.savedAt > localEntry.savedAt) {
-          writeLocal(storageKey, serverEntry);
+          if (serverEntry.currentIndex >= serverEntry.total) {
+            // Completed elsewhere — no point caching a finished run locally.
+            clearLocal(storageKey);
+          } else {
+            writeLocal(storageKey, serverEntry);
+          }
           applyEntry(serverEntry);
         }
       } catch {
