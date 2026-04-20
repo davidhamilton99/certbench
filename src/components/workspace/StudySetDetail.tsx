@@ -10,6 +10,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { shuffleIndices, checkAnswer, isAnswerComplete } from "./study-set/answer-utils";
 import { exportPdf } from "./study-set/export-pdf";
 import { QuestionEditForm } from "./study-set/QuestionEditForm";
+import { QuestionJumper } from "./study-set/QuestionJumper";
 import { MultipleChoiceQuestion } from "./study-set/questions/MultipleChoiceQuestion";
 import { TrueFalseQuestion } from "./study-set/questions/TrueFalseQuestion";
 import { MultipleSelectQuestion } from "./study-set/questions/MultipleSelectQuestion";
@@ -183,6 +184,33 @@ export function StudySetDetail({
     setPhase("practicing");
     dismissResumePrompt();
   }, [savedProgress, localQuestions, resetAnswerState, initQuestionState, dismissResumePrompt]);
+
+  /**
+   * Jump directly to a question by its 1-based number. Out-of-range
+   * values are clamped. Used by the in-quiz navigator.
+   *
+   * We do NOT update correctCount on jump — the count reflects only
+   * questions the user has actually answered, regardless of how they got
+   * to the current index.
+   */
+  const jumpToQuestion = useCallback(
+    (questionNumber: number) => {
+      if (localQuestions.length === 0) return;
+      const clamped = Math.max(
+        1,
+        Math.min(questionNumber, localQuestions.length)
+      );
+      const idx = clamped - 1;
+      if (idx === currentIndex && phase === "practicing") return;
+      resetAnswerState();
+      setExplainError(null);
+      const q = localQuestions[idx];
+      if (q) initQuestionState(q);
+      setCurrentIndex(idx);
+      setPhase("practicing");
+    },
+    [localQuestions, currentIndex, phase, resetAnswerState, initQuestionState]
+  );
 
   // -----------------------------------------------------------------------
   // Practice handlers
@@ -647,9 +675,11 @@ export function StudySetDetail({
         {/* Progress header */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-mono text-text-muted">
-              Question {currentIndex + 1} of {localQuestions.length}
-            </span>
+            <QuestionJumper
+              currentNumber={currentIndex + 1}
+              total={localQuestions.length}
+              onJump={jumpToQuestion}
+            />
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-text-muted bg-bg-page border border-border rounded px-1.5 py-0.5">
                 {TYPE_LABELS[currentType]}

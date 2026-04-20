@@ -525,6 +525,30 @@ export interface Database {
           reviewed_at?: string | null;
         };
       };
+      study_set_progress: {
+        Row: {
+          user_id: string;
+          study_set_id: string;
+          current_index: number;
+          correct_count: number;
+          total_questions: number;
+          saved_at: string;
+        };
+        Insert: {
+          user_id: string;
+          study_set_id: string;
+          current_index?: number;
+          correct_count?: number;
+          total_questions: number;
+          saved_at?: string;
+        };
+        Update: {
+          current_index?: number;
+          correct_count?: number;
+          total_questions?: number;
+          saved_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -1,29 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Phase } from "@/components/workspace/study-set/types";
 
 /**
- * localStorage-backed quiz progress for the StudySetDetail practice flow.
+ * Cross-device quiz progress for the StudySetDetail practice flow.
  *
- * On mount, reads the saved entry for this study set. If it's recent and
- * points at a partial run, exposes it via `savedProgress` and flags
- * `hasSavedSession` so the UI can offer a "Resume" prompt.
+ * Writes to localStorage for instant response AND to the server for cross-
+ * device sync. On mount we race-merge both sources: whichever copy is newer
+ * wins. While the quiz is active, every advance triggers an immediate
+ * localStorage write and a 1s-debounced POST to /api/study-materials/progress.
  *
- * While the quiz is active (phase is `practicing` or `revealed`), auto-saves
- * progress on every advance. Callers clear the entry explicitly when the
- * user restarts or finishes the quiz.
- *
- * Non-critical: all localStorage access is wrapped — if it's disabled or
- * the stored value is malformed, we degrade silently.
+ * The server is the source of truth when the user signs in on another
+ * device — it always has the latest savedAt if the other device was online
+ * when it last saved.
  */
 
 const QUIZ_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SERVER_DEBOUNCE_MS = 1000;
 
 export interface SavedQuizProgress {
   currentIndex: number;
   correctCount: number;
   total: number;
+}
+
+interface StoredEntry extends SavedQuizProgress {
+  savedAt: number;
 }
 
 interface UseQuizProgressArgs {
@@ -32,6 +35,42 @@ interface UseQuizProgressArgs {
   currentIndex: number;
   correctCount: number;
   total: number;
+}
+
+function readLocal(storageKey: string): StoredEntry | null {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as StoredEntry;
+    if (Date.now() - saved.savedAt > QUIZ_MAX_AGE_MS) {
+      localStorage.removeItem(storageKey);
+      return null;
+    }
+    return saved;
+  } catch {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+}
+
+function writeLocal(storageKey: string, entry: StoredEntry) {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(entry));
+  } catch {
+    // Non-critical
+  }
+}
+
+function clearLocal(storageKey: string) {
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    // ignore
+  }
 }
 
 export function useQuizProgress({
@@ -48,70 +87,118 @@ export function useQuizProgress({
     null
   );
 
-  // Read any existing saved session on mount
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissedRef = useRef(false);
+
+  // On mount: pull both sources in parallel, keep the newer one.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return;
-      const saved = JSON.parse(raw) as {
-        currentIndex: number;
-        correctCount: number;
-        total: number;
-        savedAt: number;
-      };
-      if (Date.now() - saved.savedAt > QUIZ_MAX_AGE_MS) {
-        localStorage.removeItem(storageKey);
-        return;
-      }
-      if (saved.currentIndex > 0 && saved.currentIndex < saved.total) {
+    let cancelled = false;
+    const localEntry = readLocal(storageKey);
+
+    const applyEntry = (entry: StoredEntry) => {
+      if (cancelled || dismissedRef.current) return;
+      // Only surface as "saved session" if it represents a partial run.
+      if (entry.currentIndex > 0 && entry.currentIndex < entry.total) {
         setHasSavedSession(true);
         setSavedProgress({
-          currentIndex: saved.currentIndex,
-          correctCount: saved.correctCount,
-          total: saved.total,
+          currentIndex: entry.currentIndex,
+          correctCount: entry.correctCount,
+          total: entry.total,
         });
       }
-    } catch {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch {
-        // ignore
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    };
 
-  // Auto-save progress whenever the user advances while the quiz is live
+    // Show local immediately (if fresh) so the resume banner isn't blocked
+    // on a network round-trip.
+    if (localEntry) applyEntry(localEntry);
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/study-materials/progress?studySetId=${encodeURIComponent(studySetId)}`,
+          { credentials: "include" }
+        );
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          progress: StoredEntry | null;
+        };
+        if (cancelled) return;
+        const serverEntry = json.progress;
+        if (!serverEntry) {
+          // Server has no record. If local is stale or we don't want to
+          // surface it, drop it.
+          return;
+        }
+        // Keep whichever is newer.
+        if (!localEntry || serverEntry.savedAt > localEntry.savedAt) {
+          writeLocal(storageKey, serverEntry);
+          applyEntry(serverEntry);
+        }
+      } catch {
+        // Network errors are non-critical — local copy still works offline.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studySetId]);
+
+  // Auto-save on every advance: localStorage immediate, server debounced.
   useEffect(() => {
     if (phase !== "practicing" && phase !== "revealed") return;
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
+
+    const entry: StoredEntry = {
+      currentIndex,
+      correctCount,
+      total,
+      savedAt: Date.now(),
+    };
+    writeLocal(storageKey, entry);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetch("/api/study-materials/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          studySetId,
           currentIndex,
           correctCount,
-          total,
-          savedAt: Date.now(),
-        })
-      );
-    } catch {
-      // Non-critical
-    }
-  }, [phase, currentIndex, correctCount, total, storageKey]);
+          totalQuestions: total,
+        }),
+      }).catch(() => {
+        // Non-critical — next save attempt will include this state.
+      });
+    }, SERVER_DEBOUNCE_MS);
 
-  /** Remove the stored session and hide the resume prompt. */
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [phase, currentIndex, correctCount, total, storageKey, studySetId]);
+
+  /** Remove stored progress (both local and server) and hide the prompt. */
   const clearSavedSession = useCallback(() => {
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      // ignore
-    }
+    clearLocal(storageKey);
     setHasSavedSession(false);
     setSavedProgress(null);
-  }, [storageKey]);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    fetch(
+      `/api/study-materials/progress?studySetId=${encodeURIComponent(studySetId)}`,
+      { method: "DELETE", credentials: "include" }
+    ).catch(() => {
+      // Non-critical
+    });
+  }, [storageKey, studySetId]);
 
   /** Hide the resume prompt without clearing storage (used when resuming). */
   const dismissResumePrompt = useCallback(() => {
+    dismissedRef.current = true;
     setHasSavedSession(false);
   }, []);
 
