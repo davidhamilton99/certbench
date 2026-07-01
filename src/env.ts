@@ -27,15 +27,12 @@ export const publicEnv = publicSchema.parse({
 });
 
 /** Server-side secrets. Every name the app may need lives here. */
-const SERVER_KEYS = [
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "ANTHROPIC_API_KEY",
-  "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
-  "STRIPE_PRO_PRICE_ID",
-] as const;
-
-type ServerKey = (typeof SERVER_KEYS)[number];
+type ServerKey =
+  | "SUPABASE_SERVICE_ROLE_KEY"
+  | "ANTHROPIC_API_KEY"
+  | "STRIPE_SECRET_KEY"
+  | "STRIPE_WEBHOOK_SECRET"
+  | "STRIPE_PRO_PRICE_ID";
 
 /**
  * Fetch a required server secret. Throws with the variable name if missing —
