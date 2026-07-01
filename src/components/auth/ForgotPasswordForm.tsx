@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase-browser";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -17,70 +20,67 @@ export function ForgotPasswordForm() {
     setLoading(true);
 
     const supabase = createClient();
-
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
-      {
-        redirectTo: `${window.location.origin}/reset-password`,
-      }
+      { redirectTo: `${window.location.origin}/reset-password` }
     );
 
+    setLoading(false);
     if (resetError) {
       setError(resetError.message);
-      setLoading(false);
       return;
     }
-
     setSent(true);
-    setLoading(false);
   }
 
   if (sent) {
     return (
-      <div className="text-center py-4">
-        <p className="text-[15px] text-text-primary mb-2">Check your email</p>
-        <p className="text-[13px] text-text-muted">
-          We sent a password reset link to{" "}
-          <span className="font-medium text-text-primary">{email}</span>. Click
-          the link in the email to set a new password.
+      <div className="flex flex-col gap-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          If an account exists for <span className="font-medium text-foreground">{email}</span>,
+          a password reset link is on its way.
         </p>
-        <a
-          href="/login"
-          className="inline-block mt-4 text-[13px] text-primary hover:underline"
-        >
-          Back to sign in
-        </a>
+        <Button asChild variant="outline">
+          <Link href="/login">Back to sign in</Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input
-        label="Email"
-        type="email"
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoComplete="email"
-      />
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+        />
+      </div>
 
       {error && (
-        <p className="text-[13px] text-danger-text bg-danger-bg border border-danger-border rounded-md px-3 py-2">
+        <p
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
           {error}
         </p>
       )}
 
-      <Button type="submit" loading={loading} className="mt-2">
+      <Button type="submit" disabled={loading}>
+        {loading && <Loader2 className="animate-spin" />}
         Send reset link
       </Button>
 
-      <p className="text-[13px] text-text-muted text-center">
-        Remember your password?{" "}
-        <a href="/login" className="text-primary hover:underline">
+      <p className="text-center text-sm text-muted-foreground">
+        Remembered it?{" "}
+        <Link href="/login" className="text-primary hover:underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </form>
   );

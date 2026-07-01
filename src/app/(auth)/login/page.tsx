@@ -1,16 +1,29 @@
+import { Suspense } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata = {
-  title: "Sign In — CertBench",
+  title: "Sign in",
 };
 
 export default function LoginPage() {
   return (
-    <>
-      <h2 className="text-[18px] font-semibold text-text-primary text-center mb-6">
-        Sign in to CertBench
-      </h2>
-      <LoginForm />
-    </>
+    <Card>
+      <CardHeader className="text-center">
+        <CardTitle className="text-lg">Welcome back</CardTitle>
+        <CardDescription>Sign in to continue studying</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Suspense>
+          <LoginForm />
+        </Suspense>
+      </CardContent>
+    </Card>
   );
 }

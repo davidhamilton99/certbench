@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase-browser";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -21,7 +26,6 @@ export function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -33,82 +37,73 @@ export function LoginForm() {
       return;
     }
 
-    // Track session persistence preference
-    if (!rememberMe) {
-      localStorage.setItem("certbench_ephemeral", "true");
-    } else {
-      localStorage.removeItem("certbench_ephemeral");
-    }
-    // Sentinel: exists only while browser is open
-    sessionStorage.setItem("certbench_alive", "1");
-
-    router.push("/dashboard");
+    router.push(next.startsWith("/") ? next : "/dashboard");
     router.refresh();
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <GoogleSignInButton />
+      <GoogleSignInButton next={next} />
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-[12px] text-text-muted">or</span>
+        <span className="text-xs text-muted-foreground">or</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-        />
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-        />
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </div>
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+        </div>
 
         {error && (
-          <p className="text-[13px] text-danger-text bg-danger-bg border border-danger-border rounded-md px-3 py-2">
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         )}
 
-        <div className="flex items-center justify-between -mt-1">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary"
-            />
-            <span className="text-[13px] text-text-secondary">Stay signed in</span>
-          </label>
-          <a
-            href="/forgot-password"
-            className="text-[13px] text-primary hover:underline"
-          >
-            Forgot password?
-          </a>
-        </div>
-
-        <Button type="submit" loading={loading} className="mt-2">
+        <Button type="submit" disabled={loading} className="mt-1">
+          {loading && <Loader2 className="animate-spin" />}
           Sign in
         </Button>
 
-        <p className="text-[13px] text-text-muted text-center">
+        <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <a href="/register" className="text-primary hover:underline">
+          <Link href="/register" className="text-primary hover:underline">
             Create one
-          </a>
+          </Link>
         </p>
       </form>
     </div>
