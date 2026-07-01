@@ -19,7 +19,7 @@ import type { Db } from "./server";
 export function createAdminClient(): Db {
   return createSupabaseClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv().SUPABASE_SERVICE_ROLE_KEY,
+    serverEnv("SUPABASE_SERVICE_ROLE_KEY"),
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
