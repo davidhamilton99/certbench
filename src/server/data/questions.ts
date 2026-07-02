@@ -87,6 +87,22 @@ export async function getQuestionsByIds(
   return (data ?? []).map(mapQuestion);
 }
 
+/** question id -> sub_objective id map for a cert (analytics rollups). */
+export async function getQuestionSubObjectiveMap(
+  db: Db,
+  certId: string
+): Promise<Map<string, string>> {
+  const { data, error } = await db
+    .from("cert_questions")
+    .select("id, sub_objective_id")
+    .eq("certification_id", certId)
+    .not("sub_objective_id", "is", null);
+  if (error) throw new ApiError("internal", error.message);
+  return new Map(
+    (data ?? []).map((q) => [q.id, q.sub_objective_id as string])
+  );
+}
+
 export async function countActiveQuestions(db: Db, certId: string): Promise<number> {
   const { count, error } = await db
     .from("cert_questions")

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getScoreColor } from "@/core/readiness/compute-score";
+import { QuestionFlagButton } from "./QuestionFlagButton";
 import { cn } from "@/lib/utils";
 
 const SCORE_TEXT: Record<ReturnType<typeof getScoreColor>, string> = {
@@ -123,6 +124,9 @@ export function ExamResultsView({
               {r.explanation && (
                 <p className="mt-1 text-muted-foreground">{r.explanation}</p>
               )}
+              <div className="mt-1">
+                <QuestionFlagButton questionId={r.questionId} />
+              </div>
             </div>
           </details>
         ))}

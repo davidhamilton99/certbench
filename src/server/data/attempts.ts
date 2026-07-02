@@ -19,6 +19,39 @@ export async function hasCompletedDiagnostic(
   return (count ?? 0) > 0;
 }
 
+/** Completed attempts (diagnostic + practice) for activity charting. */
+export async function listCompletedActivity(
+  db: Db,
+  userId: string,
+  certId: string
+): Promise<
+  {
+    completed_at: string | null;
+    total_questions: number | null;
+    correct_count: number | null;
+    is_complete: boolean;
+  }[]
+> {
+  const columns = "completed_at, total_questions, correct_count, is_complete";
+  const [diag, practice] = await Promise.all([
+    db
+      .from("diagnostic_attempts")
+      .select(columns)
+      .eq("user_id", userId)
+      .eq("certification_id", certId)
+      .eq("is_complete", true),
+    db
+      .from("practice_exam_attempts")
+      .select(columns)
+      .eq("user_id", userId)
+      .eq("certification_id", certId)
+      .eq("is_complete", true),
+  ]);
+  if (diag.error) throw new ApiError("internal", diag.error.message);
+  if (practice.error) throw new ApiError("internal", practice.error.message);
+  return [...(diag.data ?? []), ...(practice.data ?? [])];
+}
+
 /** Completion date of the most recent full practice exam, if any. */
 export async function getLastFullExamDate(
   db: Db,

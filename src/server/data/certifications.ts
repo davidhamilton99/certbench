@@ -83,6 +83,35 @@ export async function listDomains(db: Db, certId: string): Promise<CertDomain[]>
   }));
 }
 
+export interface SubObjective {
+  id: string;
+  code: string;
+  title: string;
+  domain_id: string;
+}
+
+export async function listSubObjectives(
+  db: Db,
+  certId: string
+): Promise<SubObjective[]> {
+  // Sub-objectives hang off domains; two-step lookup keeps RLS simple.
+  const { data: domains, error: dErr } = await db
+    .from("cert_domains")
+    .select("id")
+    .eq("certification_id", certId);
+  if (dErr) throw new ApiError("internal", dErr.message);
+  const domainIds = (domains ?? []).map((d) => d.id);
+  if (domainIds.length === 0) return [];
+
+  const { data, error } = await db
+    .from("cert_sub_objectives")
+    .select("id, code, title, domain_id")
+    .in("domain_id", domainIds)
+    .order("sort_order");
+  if (error) throw new ApiError("internal", error.message);
+  return data ?? [];
+}
+
 function mapCertification(row: {
   id: string;
   slug: string;
