@@ -481,6 +481,12 @@ interface DatabaseGenerated {
           id: string;
           study_set_id: string;
           user_id: string;
+          question_type:
+            | "multiple_choice"
+            | "true_false"
+            | "multiple_select"
+            | "ordering"
+            | "matching";
           question_text: string;
           options: Json;
           correct_index: number;
@@ -492,6 +498,12 @@ interface DatabaseGenerated {
           id?: string;
           study_set_id: string;
           user_id: string;
+          question_type?:
+            | "multiple_choice"
+            | "true_false"
+            | "multiple_select"
+            | "ordering"
+            | "matching";
           question_text: string;
           options: Json;
           correct_index: number;
@@ -500,6 +512,12 @@ interface DatabaseGenerated {
           created_at?: string;
         };
         Update: {
+          question_type?:
+            | "multiple_choice"
+            | "true_false"
+            | "multiple_select"
+            | "ordering"
+            | "matching";
           question_text?: string;
           options?: Json;
           correct_index?: number;
