@@ -49,7 +49,11 @@ export const domainBreakdown = z.object({
 });
 export type DomainBreakdown = z.infer<typeof domainBreakdown>;
 
-/** Serialized quiz-engine snapshot persisted in progress_state (opaque to the server). */
+/**
+ * Serialized quiz-engine snapshot persisted in progress_state. Carries the
+ * selected question ids so a resumed attempt serves the identical question
+ * set, and the seed so option order reproduces exactly.
+ */
 export const progressSnapshot = z.object({
   index: z.number().int().min(0),
   responses: z.record(z.string(), z.unknown()),
@@ -57,6 +61,7 @@ export const progressSnapshot = z.object({
   revealed: z.array(z.string()),
   startedAt: z.string(),
   seed: z.string(),
+  questionIds: z.array(z.uuid()),
 });
 export type ProgressSnapshot = z.infer<typeof progressSnapshot>;
 
