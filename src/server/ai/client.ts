@@ -25,7 +25,7 @@ export async function callClaude(opts: {
     headers: {
       "Content-Type": "application/json",
       "x-api-key": serverEnv("ANTHROPIC_API_KEY"),
-      "anthropic-version": "2025-04-15",
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
       model: opts.model ?? ANTHROPIC_MODEL_SONNET,
@@ -67,7 +67,7 @@ export async function callClaudeStreamRaw(opts: {
     headers: {
       "Content-Type": "application/json",
       "x-api-key": serverEnv("ANTHROPIC_API_KEY"),
-      "anthropic-version": "2025-04-15",
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
       model: opts.model ?? ANTHROPIC_MODEL_SONNET,

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Db } from "@/server/supabase/server";
+import { createAdminClient } from "@/server/supabase/admin";
 
 /** Free tier: AI generations per calendar month. */
 export const FREE_GENERATION_LIMIT = 3;
@@ -48,13 +49,22 @@ export async function getUserPlan(db: Db, userId: string): Promise<UserPlan> {
   };
 }
 
-/** Atomic monthly counter bump (RPC: INSERT ... ON CONFLICT count+1). */
+/**
+ * Atomic monthly counter bump (RPC: INSERT ... ON CONFLICT count+1).
+ *
+ * Runs on the ADMIN client: the RPC is SECURITY INVOKER and
+ * ai_generation_usage has no INSERT policy, so a user-scoped call fails
+ * silently under RLS — which is why the old app never actually enforced
+ * the free-tier quota. userId comes from the authenticated session, never
+ * from client input.
+ */
 export async function incrementGenerationUsage(
-  db: Db,
+  _db: Db,
   userId: string
 ): Promise<void> {
-  await db.rpc("increment_generation_count", {
+  const { error } = await createAdminClient().rpc("increment_generation_count", {
     p_user_id: userId,
     p_month: currentMonth(),
   });
+  if (error) console.error("generation counter failed:", error.message);
 }
