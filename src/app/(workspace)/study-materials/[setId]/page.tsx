@@ -7,6 +7,7 @@ import {
 } from "@/server/data/study-sets";
 import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
 import { StudySetSettings } from "@/components/workspace/StudySetSettings";
+import { ExportPdfButton } from "@/components/workspace/ExportPdfButton";
 
 export const metadata = {
   title: "Study set",
@@ -43,7 +44,16 @@ export default async function StudySetPage({
             {set.description && <> · {set.description}</>}
           </p>
         </div>
-        {isOwner && <StudySetSettings setId={set.id} isPublic={set.isPublic} />}
+        {isOwner && (
+          <div className="flex items-center gap-2">
+            <ExportPdfButton
+              title={set.title}
+              category={set.category}
+              questions={questions}
+            />
+            <StudySetSettings setId={set.id} isPublic={set.isPublic} />
+          </div>
+        )}
       </div>
 
       <StudySetPlayer

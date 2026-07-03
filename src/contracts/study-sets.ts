@@ -71,6 +71,18 @@ export const deleteStudyQuestion = {
   output: z.object({ deleted: z.boolean() }),
 } as const satisfies EndpointContract;
 
+/** On-demand AI explanation for a study question (cached on the row). */
+export const explainStudyQuestion = {
+  path: "/api/study-sets/explain",
+  method: "POST",
+  input: z.object({
+    questionId: z.uuid(),
+    /** Text of what the user picked, for "why yours was wrong" context. */
+    selectedAnswer: z.string().max(1000).optional().default(""),
+  }),
+  output: z.object({ explanation: z.string() }),
+} as const satisfies EndpointContract;
+
 /** Cross-device resume for study-set practice (study_set_progress). */
 export const saveSetProgress = {
   path: "/api/study-sets/progress",

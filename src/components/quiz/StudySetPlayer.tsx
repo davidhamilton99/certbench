@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import {
   clearSetProgress,
+  explainStudyQuestion,
   saveSetProgress,
   type StudyQuestion,
 } from "@/contracts/study-sets";
@@ -191,8 +192,10 @@ export function StudySetPlayer({
               >
                 {phase.wasCorrect ? "Correct" : "Not quite"}
               </p>
-              {question.explanation && (
+              {question.explanation ? (
                 <p className="text-muted-foreground">{question.explanation}</p>
+              ) : (
+                persistProgress && <ExplainOnDemand questionId={question.id} />
               )}
             </div>
           )}
@@ -211,5 +214,43 @@ export function StudySetPlayer({
         )}
       </div>
     </div>
+  );
+}
+
+/** Fetches an AI explanation on demand (cached server-side after first ask). */
+function ExplainOnDemand({ questionId }: { questionId: string }) {
+  const [state, setState] = useState<
+    { s: "idle" } | { s: "loading" } | { s: "done"; text: string }
+  >({ s: "idle" });
+
+  if (state.s === "done") {
+    return <p className="text-muted-foreground">{state.text}</p>;
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="justify-self-start text-muted-foreground"
+      disabled={state.s === "loading"}
+      onClick={async () => {
+        setState({ s: "loading" });
+        try {
+          const { explanation } = await api(explainStudyQuestion, {
+            questionId,
+            selectedAnswer: "",
+          });
+          setState({ s: "done", text: explanation });
+        } catch (err) {
+          toast.error(
+            err instanceof ApiError ? err.message : "Could not generate an explanation"
+          );
+          setState({ s: "idle" });
+        }
+      }}
+    >
+      {state.s === "loading" && <Loader2 className="animate-spin" />}
+      Explain this answer
+    </Button>
   );
 }
