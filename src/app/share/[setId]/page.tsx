@@ -44,6 +44,7 @@ export default async function SharePage({
       <StudySetPlayer
         setId={set.id}
         questions={questions}
+        seed={crypto.randomUUID()}
         persistProgress={false}
         backHref="/register"
         backLabel="Study smarter — join free"

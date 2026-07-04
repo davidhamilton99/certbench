@@ -8,6 +8,7 @@ import {
 import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
 import { StudySetSettings } from "@/components/workspace/StudySetSettings";
 import { ExportPdfButton } from "@/components/workspace/ExportPdfButton";
+import { QuestionManager } from "@/components/workspace/QuestionManager";
 
 export const metadata = {
   title: "Study set",
@@ -59,10 +60,13 @@ export default async function StudySetPage({
       <StudySetPlayer
         setId={set.id}
         questions={questions}
+        seed={crypto.randomUUID()}
         initialIndex={progress?.currentIndex ?? 0}
         initialCorrect={progress?.correctCount ?? 0}
         persistProgress={isOwner}
       />
+
+      {isOwner && <QuestionManager setId={set.id} questions={questions} />}
     </div>
   );
 }

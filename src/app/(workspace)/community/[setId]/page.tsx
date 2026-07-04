@@ -52,6 +52,7 @@ export default async function CommunitySetPage({
       <StudySetPlayer
         setId={set.id}
         questions={questions}
+        seed={crypto.randomUUID()}
         persistProgress={false}
         backHref="/community"
         backLabel="Back to community"

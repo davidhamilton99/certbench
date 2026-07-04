@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { Check, Copy, Loader2, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { createStudySet } from "@/contracts/study-sets";
@@ -54,6 +54,36 @@ export function CreateSetClient({
   const [importText, setImportText] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+
+  // File extraction (AI tab)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [extracting, setExtracting] = useState(false);
+
+  async function extractFile(file: File) {
+    setExtracting(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/study-sets/extract-text", {
+        method: "POST",
+        body: form,
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body?.error?.message ?? `Extraction failed (${res.status})`);
+      }
+      setContent(body.text);
+      if (!title.trim()) setTitle(file.name.replace(/\.[^.]+$/, ""));
+      toast.success(
+        `Extracted ${body.charCount.toLocaleString()} characters from ${body.fileName}`
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Extraction failed");
+    } finally {
+      setExtracting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function save(qs: GeneratedQuestion[], sourcePreview?: string) {
     if (!title.trim()) {
@@ -233,7 +263,30 @@ export function CreateSetClient({
         <div className="grid gap-4">
           <p className="text-xs text-muted-foreground">{quotaText}</p>
           <div className="grid gap-2">
-            <Label htmlFor="content">Study material</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="content">Study material</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md,.csv,.tsv,.docx,.pdf,.png,.jpg,.jpeg,.webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void extractFile(f);
+                }}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                disabled={extracting}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {extracting ? <Loader2 className="animate-spin" /> : <Upload className="size-3.5" />}
+                Upload a file
+              </Button>
+            </div>
             <textarea
               id="content"
               value={content}

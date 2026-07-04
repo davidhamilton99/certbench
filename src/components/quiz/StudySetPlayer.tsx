@@ -34,6 +34,7 @@ type Phase =
 export function StudySetPlayer({
   setId,
   questions,
+  seed,
   initialIndex = 0,
   initialCorrect = 0,
   persistProgress = true,
@@ -42,6 +43,8 @@ export function StudySetPlayer({
 }: {
   setId: string;
   questions: StudyQuestion[];
+  /** Shuffle seed. Generated server-side so SSR and hydration agree. */
+  seed: string;
   initialIndex?: number;
   initialCorrect?: number;
   persistProgress?: boolean;
@@ -50,7 +53,6 @@ export function StudySetPlayer({
 }) {
   const total = questions.length;
   const startIndex = Math.min(initialIndex, total - 1);
-  const [seed] = useState(() => crypto.randomUUID());
   const [index, setIndex] = useState(
     initialIndex >= total ? 0 : startIndex
   );
