@@ -1,70 +1,60 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { ProfileEditor } from "@/components/workspace/ProfileEditor";
-import { SubscriptionPanel } from "@/components/workspace/SubscriptionPanel";
-import { getUserPlan } from "@/lib/subscription";
+import { createClient } from "@/server/supabase/server";
+import { getProfile } from "@/server/data/profiles";
+import { listEnrollments } from "@/server/data/enrollments";
+import { listActiveCertifications } from "@/server/data/certifications";
+import {
+  ProfileSettings,
+  type AvailableCert,
+  type ProfileEnrollment,
+} from "@/components/workspace/ProfileSettings";
 
 export const metadata = {
-  title: "Account Settings — CertBench",
+  title: "Profile",
 };
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  const [profileResult, enrollmentResult, subResult, plan] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
-      .from("user_enrollments")
-      .select("certification_id, exam_date")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("user_subscriptions")
-      .select("status, current_period_end, stripe_customer_id")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    getUserPlan(supabase, user.id),
+  const [profile, enrollments, certifications] = await Promise.all([
+    getProfile(db, user.id),
+    listEnrollments(db, user.id),
+    listActiveCertifications(db),
   ]);
+  if (!profile) redirect("/onboarding");
 
-  const profile = profileResult.data;
-  const activeEnrollment = enrollmentResult.data;
-  const sub = subResult.data;
+  const certById = new Map(certifications.map((c) => [c.id, c]));
+  const rows: ProfileEnrollment[] = enrollments.flatMap((e) => {
+    const cert = certById.get(e.certificationId);
+    return cert
+      ? [
+          {
+            certId: cert.id,
+            certName: cert.name,
+            examCode: cert.examCode,
+            examDate: e.examDate,
+          },
+        ]
+      : [];
+  });
+
+  const enrolledIds = new Set(enrollments.map((e) => e.certificationId));
+  const availableCerts: AvailableCert[] = certifications
+    .filter((c) => !enrolledIds.has(c.id))
+    .map((c) => ({ certId: c.id, certName: c.name, examCode: c.examCode }));
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-1">
-          Account Settings
-        </h1>
-        <p className="text-[14px] text-text-secondary">
-          Manage your profile, preferences, and account.
-        </p>
-      </div>
-
-      <SubscriptionPanel
-        plan={plan.plan}
-        status={sub?.status ?? null}
-        currentPeriodEnd={sub?.current_period_end ?? null}
-        generationsUsed={plan.generationsUsed}
-        generationsLimit={plan.generationsLimit}
-        hasStripeCustomer={Boolean(sub?.stripe_customer_id)}
-      />
-
-      <ProfileEditor
-        userId={user.id}
-        email={user.email || ""}
-        displayName={profile?.display_name || ""}
-        memberSince={profile?.created_at || user.created_at}
-        examDate={activeEnrollment?.exam_date || null}
-        certificationId={activeEnrollment?.certification_id || null}
+    <div className="mx-auto grid w-full max-w-3xl gap-6">
+      <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
+      <ProfileSettings
+        initialDisplayName={profile.displayName}
+        email={user.email ?? ""}
+        enrollments={rows}
+        availableCerts={availableCerts}
       />
     </div>
   );

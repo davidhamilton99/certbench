@@ -8,7 +8,7 @@ export function BackLink() {
   return (
     <button
       onClick={() => router.back()}
-      className="text-[13px] text-primary hover:underline mb-8 inline-block"
+      className="mb-8 inline-block text-sm text-primary hover:underline"
     >
       &larr; Back
     </button>

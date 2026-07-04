@@ -1,73 +1,54 @@
-import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SharedQuizView } from "@/components/workspace/SharedQuizView";
+import { createClient } from "@/server/supabase/server";
+import { getStudySet, listSetQuestions } from "@/server/data/study-sets";
+import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
+import { AttemptPing } from "@/components/workspace/CommunitySetActions";
+import { Button } from "@/components/ui/button";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ setId: string }>;
-}) {
-  const { setId } = await params;
-  const supabase = await createClient();
+export const metadata = {
+  title: "Shared study set",
+};
 
-  const { data: studySet } = await supabase
-    .from("user_study_sets")
-    .select("title, category, question_count")
-    .eq("id", setId)
-    .eq("is_public", true)
-    .single();
-
-  if (!studySet) {
-    return { title: "Quiz Not Found — CertBench" };
-  }
-
-  return {
-    title: `${studySet.title} — CertBench`,
-    description: `Practice ${studySet.question_count} questions${studySet.category ? ` on ${studySet.category}` : ""}. Shared via CertBench.`,
-  };
-}
-
+/** Public share link — no auth required (RLS allows public-set reads). */
 export default async function SharePage({
   params,
 }: {
   params: Promise<{ setId: string }>;
 }) {
   const { setId } = await params;
-  const supabase = await createClient();
+  const db = await createClient();
 
-  // Fetch the study set — only if public
-  const { data: studySet } = await supabase
-    .from("user_study_sets")
-    .select(
-      "id, user_id, title, category, question_count, is_public, created_at"
-    )
-    .eq("id", setId)
-    .eq("is_public", true)
-    .single();
-
-  if (!studySet) notFound();
-
-  // Fetch questions
-  const { data: questions } = await supabase
-    .from("user_study_questions")
-    .select(
-      "id, question_type, question_text, options, correct_index, explanation, sort_order"
-    )
-    .eq("study_set_id", setId)
-    .order("sort_order");
-
-  // Fetch creator name
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", studySet.user_id)
-    .single();
+  const set = await getStudySet(db, setId);
+  if (!set || !set.isPublic) notFound();
+  const questions = await listSetQuestions(db, setId);
 
   return (
-    <SharedQuizView
-      studySet={studySet}
-      questions={questions || []}
-      creatorName={profile?.display_name || "Anonymous"}
-    />
+    <div className="mx-auto grid min-h-svh w-full max-w-2xl content-start gap-6 px-4 py-10">
+      <AttemptPing setId={set.id} />
+      <header className="flex items-center justify-between">
+        <Link href="/" className="text-lg font-semibold tracking-tight">
+          CertBench
+        </Link>
+        <Button asChild size="sm">
+          <Link href="/register">Create your own sets</Link>
+        </Button>
+      </header>
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">{set.title}</h1>
+        <p className="text-sm text-muted-foreground">
+          {set.questionCount} question{set.questionCount === 1 ? "" : "s"} · shared
+          on CertBench
+        </p>
+      </div>
+      <StudySetPlayer
+        setId={set.id}
+        questions={questions}
+        seed={crypto.randomUUID()}
+        persistProgress={false}
+        backHref="/register"
+        backLabel="Study smarter — join free"
+      />
+    </div>
   );
 }

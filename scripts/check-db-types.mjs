@@ -1,4 +1,4 @@
-// Drift check for src/types/database.ts.
+// Drift check for src/types/database.gen.ts.
 //
 // Regenerates Supabase types against the linked project and compares against
 // the committed file. Exits 1 if they differ so CI can flag the drift.
@@ -32,12 +32,12 @@ if (result.status !== 0) {
 }
 
 const generated = result.stdout.replace(/\r\n/g, "\n").trim();
-const committedPath = resolve("src/types/database.ts");
+const committedPath = resolve("src/types/database.gen.ts");
 const committed = readFileSync(committedPath, "utf8").replace(/\r\n/g, "\n").trim();
 
 if (generated !== committed) {
   console.error(
-    "[db:types:check] src/types/database.ts is out of date with the live schema."
+    "[db:types:check] src/types/database.gen.ts is out of date with the live schema."
   );
   console.error("[db:types:check] Run `npm run db:types` and commit the result.");
   process.exit(1);

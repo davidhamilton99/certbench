@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type {
   PbqScenario,
   PbqGradeResult,
   OrderingScenario,
   MatchingScenario,
   CategorizationScenario,
-  TopologyScenario,
 } from "@/data/pbq/types";
-import { gradeScenario } from "@/lib/pbq/grade";
+import { gradeScenario } from "@/core/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 
@@ -48,7 +47,7 @@ export function PbqPlayer({
   onBack: () => void;
 }) {
   const [result, setResult] = useState<PbqGradeResult | null>(null);
-  const [userAnswer, setUserAnswer] = useState<number[] | null>(null);
+  const [, setUserAnswer] = useState<number[] | null>(null);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -102,7 +101,7 @@ export function PbqPlayer({
         <button
           onClick={handleBack}
           aria-label="Back to scenarios"
-          className="text-text-secondary hover:text-text-primary transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -119,19 +118,19 @@ export function PbqPlayer({
           </svg>
         </button>
         <div>
-          <h2 className="text-[18px] font-semibold text-text-primary">
+          <h2 className="text-[18px] font-semibold text-foreground">
             {scenario.title}
           </h2>
-          <p className="text-[13px] text-text-secondary">
+          <p className="text-[13px] text-muted-foreground">
             {scenario.domain_number} {scenario.domain_title}
           </p>
         </div>
       </div>
 
       {/* Description */}
-      <Card padding="md">
-        <p className="text-[14px] text-text-primary">{scenario.description}</p>
-      </Card>
+      <Panel padding="md">
+        <p className="text-[14px] text-foreground">{scenario.description}</p>
+      </Panel>
 
       {/* Interactive area or results */}
       {result ? (
@@ -195,7 +194,7 @@ function ResultView({
   return (
     <div className="flex flex-col gap-4">
       {/* Score */}
-      <Card padding="lg">
+      <Panel padding="lg">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-3">
             <span
@@ -203,7 +202,7 @@ function ResultView({
             >
               {result.score}%
             </span>
-            <span className="text-[14px] text-text-muted">
+            <span className="text-[14px] text-muted-foreground">
               {result.correctItems}/{result.totalItems} correct
             </span>
           </div>
@@ -223,37 +222,37 @@ function ResultView({
               : "Needs Work"}
           </Badge>
         </div>
-      </Card>
+      </Panel>
 
       {/* Incorrect items */}
       {result.feedback.length > 0 && (
-        <Card padding="md">
-          <h3 className="text-[14px] font-semibold text-text-primary mb-2">
+        <Panel padding="md">
+          <h3 className="text-[14px] font-semibold text-foreground mb-2">
             Corrections
           </h3>
           <div className="flex flex-col gap-1.5">
             {result.feedback.map((fb, i) => (
-              <p key={i} className="text-[13px] text-text-secondary">
+              <p key={i} className="text-[13px] text-muted-foreground">
                 • {fb}
               </p>
             ))}
           </div>
-        </Card>
+        </Panel>
       )}
 
       {/* Explanation */}
-      <Card padding="md">
-        <h3 className="text-[14px] font-semibold text-text-primary mb-2">
+      <Panel padding="md">
+        <h3 className="text-[14px] font-semibold text-foreground mb-2">
           Explanation
         </h3>
-        <p className="text-[13px] text-text-secondary leading-relaxed">
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
           {scenario.explanation}
         </p>
-      </Card>
+      </Panel>
 
       {/* Actions */}
       <div className="flex gap-3">
-        <Button variant="primary" onClick={onRetry}>
+        <Button onClick={onRetry}>
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
@@ -320,7 +319,7 @@ function OrderingPlayer({
         onCancel={() => setShowSubmitConfirm(false)}
       />
 
-      <p className="text-[13px] text-text-muted">
+      <p className="text-[13px] text-muted-foreground">
         Use the arrows to arrange items in the correct order.
       </p>
 
@@ -328,19 +327,19 @@ function OrderingPlayer({
         {order.map((itemIdx, pos) => (
           <div
             key={itemIdx}
-            className="flex items-center gap-2 bg-bg-surface border border-border rounded-lg px-4 py-3"
+            className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-3"
           >
-            <span className="text-[13px] font-mono text-text-muted tabular-nums w-6">
+            <span className="text-[13px] font-mono text-muted-foreground tabular-nums w-6">
               {pos + 1}.
             </span>
-            <span className="text-[14px] text-text-primary flex-1">
+            <span className="text-[14px] text-foreground flex-1">
               {scenario.items[itemIdx]}
             </span>
             <div className="flex flex-col gap-0.5">
               <button
                 onClick={() => moveUp(pos)}
                 disabled={pos === 0}
-                className="p-1 text-text-muted hover:text-text-primary disabled:opacity-25 disabled:cursor-default transition-colors"
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-default transition-colors"
                 aria-label="Move up"
               >
                 <svg
@@ -360,7 +359,7 @@ function OrderingPlayer({
               <button
                 onClick={() => moveDown(pos)}
                 disabled={pos === order.length - 1}
-                className="p-1 text-text-muted hover:text-text-primary disabled:opacity-25 disabled:cursor-default transition-colors"
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-default transition-colors"
                 aria-label="Move down"
               >
                 <svg
@@ -383,14 +382,14 @@ function OrderingPlayer({
       </div>
 
       <Button
-        variant="primary"
+       
         onClick={() => setShowSubmitConfirm(true)}
         disabled={!hasMoved}
       >
         Submit Answer
       </Button>
       {!hasMoved && (
-        <p className="text-[12px] text-text-muted text-center">
+        <p className="text-[12px] text-muted-foreground text-center">
           Rearrange at least one item before submitting.
         </p>
       )}
@@ -416,15 +415,16 @@ function MatchingPlayer({
   );
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
-  // Shuffle right column display order
-  const shuffledRight = useMemo(() => {
+  // Shuffle right column display order once per mount (lazy init keeps the
+  // impure shuffle out of render).
+  const [shuffledRight] = useState<number[]>(() => {
     const indices = scenario.right.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     return indices;
-  }, [scenario.right]);
+  });
 
   // Track which right-side options are already used
   const usedRightIndices = new Set(selections.filter((s) => s !== -1));
@@ -453,7 +453,7 @@ function MatchingPlayer({
         onCancel={() => setShowSubmitConfirm(false)}
       />
 
-      <p className="text-[13px] text-text-muted">
+      <p className="text-[13px] text-muted-foreground">
         Select the correct match for each item on the left.
       </p>
 
@@ -461,14 +461,14 @@ function MatchingPlayer({
         {scenario.left.map((leftItem, leftIdx) => (
           <div
             key={leftIdx}
-            className="bg-bg-surface border border-border rounded-lg p-4"
+            className="bg-card border border-border rounded-lg p-4"
           >
             <div className="flex items-center gap-4">
-              <span className="text-[14px] font-mono font-medium text-text-primary min-w-[80px]">
+              <span className="text-[14px] font-mono font-medium text-foreground min-w-[80px]">
                 {leftItem}
               </span>
               <svg
-                className="w-4 h-4 text-text-muted flex-shrink-0"
+                className="w-4 h-4 text-muted-foreground flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -485,7 +485,7 @@ function MatchingPlayer({
                 onChange={(e) =>
                   updateSelection(leftIdx, parseInt(e.target.value))
                 }
-                className="flex-1 bg-bg-page border border-border rounded-md px-3 py-2 text-[13px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="flex-1 bg-muted/40 border border-border rounded-md px-3 py-2 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               >
                 <option value={-1}>— Select match —</option>
                 {shuffledRight.map((rightIdx) => {
@@ -510,7 +510,7 @@ function MatchingPlayer({
       </div>
 
       <Button
-        variant="primary"
+       
         onClick={() => setShowSubmitConfirm(true)}
         disabled={!allSelected}
       >
@@ -538,15 +538,15 @@ function CategorizationPlayer({
   );
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
-  // Shuffled item display order
-  const shuffledItems = useMemo(() => {
+  // Shuffled item display order, fixed per mount.
+  const [shuffledItems] = useState<number[]>(() => {
     const indices = scenario.items.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     return indices;
-  }, [scenario.items]);
+  });
 
   const placeItem = (itemIdx: number, categoryIdx: number) => {
     const next = [...placements];
@@ -580,7 +580,7 @@ function CategorizationPlayer({
         onCancel={() => setShowSubmitConfirm(false)}
       />
 
-      <p className="text-[13px] text-text-muted">
+      <p className="text-[13px] text-muted-foreground">
         Assign each item to the correct category.
       </p>
 
@@ -591,10 +591,10 @@ function CategorizationPlayer({
           return (
             <div
               key={itemIdx}
-              className="bg-bg-surface border border-border rounded-lg p-3"
+              className="bg-card border border-border rounded-lg p-3"
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[14px] text-text-primary">
+                <span className="text-[14px] text-foreground">
                   {item.text}
                 </span>
                 <div className="flex gap-1">
@@ -610,7 +610,7 @@ function CategorizationPlayer({
                           ${
                             isSelected
                               ? "bg-primary text-white"
-                              : "bg-bg-page border border-border-light text-text-secondary hover:border-primary/40 hover:text-text-primary"
+                              : "bg-muted/40 border border-border-light text-muted-foreground hover:border-primary/40 hover:text-foreground"
                           }
                         `}
                       >
@@ -632,30 +632,30 @@ function CategorizationPlayer({
             (_, i) => placements[i] === catIdx
           );
           return (
-            <Card key={catIdx} padding="sm">
-              <span className="text-[12px] font-semibold text-text-primary uppercase tracking-wider">
+            <Panel key={catIdx} padding="sm">
+              <span className="text-[12px] font-semibold text-foreground uppercase tracking-wider">
                 {cat}
               </span>
               <div className="mt-1.5 flex flex-col gap-0.5">
                 {placedItems.length === 0 ? (
-                  <span className="text-[12px] text-text-muted italic">
+                  <span className="text-[12px] text-muted-foreground italic">
                     No items placed
                   </span>
                 ) : (
                   placedItems.map((item, i) => (
-                    <span key={i} className="text-[12px] text-text-secondary">
+                    <span key={i} className="text-[12px] text-muted-foreground">
                       • {item.text}
                     </span>
                   ))
                 )}
               </div>
-            </Card>
+            </Panel>
           );
         })}
       </div>
 
       <Button
-        variant="primary"
+       
         onClick={() => setShowSubmitConfirm(true)}
         disabled={!allPlaced}
       >

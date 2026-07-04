@@ -1,125 +1,73 @@
-import { Card } from "@/components/ui/Card";
-import { PricingCheckout } from "@/components/marketing/PricingCheckout";
+import { redirect } from "next/navigation";
+import { Check } from "lucide-react";
+import { createClient } from "@/server/supabase/server";
+import {
+  FREE_GENERATION_LIMIT,
+  getUserPlan,
+} from "@/server/services/subscription";
+import {
+  ManageBillingButton,
+  UpgradeButton,
+} from "@/components/workspace/UpgradePanel";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export const metadata = {
-  title: "Upgrade to Pro — CertBench",
+  title: "Upgrade",
 };
 
-const FREE_FEATURES = [
-  "3 AI quiz generations per month",
-  "Tab-separated flashcard import",
-  "Built-in question bank",
-  "Practice exams & diagnostics",
-  "Spaced repetition (SRS)",
-  "Community study sets",
-];
-
 const PRO_FEATURES = [
-  "Unlimited AI quiz generations",
-  "Everything in Free",
-  "Priority AI processing",
-  "Upload PDF, DOCX, and more",
-  "Early access to new features",
+  "Unlimited AI question generation",
+  "All practice exams, PBQs, and spaced repetition",
+  "Priority support",
 ];
 
-export default function UpgradePage() {
+export default async function UpgradePage() {
+  const db = await createClient();
+  const {
+    data: { user },
+  } = await db.auth.getUser();
+  if (!user) redirect("/login");
+
+  const plan = await getUserPlan(db, user.id);
+
   return (
-    <div>
-      <h1 className="text-[24px] font-semibold text-text-primary tracking-tight mb-2">
-        Upgrade to Pro
-      </h1>
-      <p className="text-[15px] text-text-secondary mb-8">
-        Unlock unlimited AI-generated quizzes for serious learners.
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-        {/* Free Plan */}
-        <Card padding="lg">
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-[18px] font-semibold text-text-primary">
-                Free
-              </h2>
-              <div className="mt-2">
-                <span className="text-[32px] font-bold text-text-primary">
-                  $0
-                </span>
-                <span className="text-[14px] text-text-muted">/month</span>
-              </div>
-              <p className="text-[13px] text-text-secondary mt-1">
-                Your current plan
-              </p>
-            </div>
-            <ul className="flex flex-col gap-2.5">
-              {FREE_FEATURES.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-[13px] text-text-secondary"
-                >
-                  <svg
-                    className="w-4 h-4 text-success shrink-0 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Card>
-
-        {/* Pro Plan */}
-        <Card padding="lg" accent="primary">
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-[18px] font-semibold text-text-primary">
-                Pro
-              </h2>
-              <div className="mt-2">
-                <span className="text-[32px] font-bold text-text-primary">
-                  $8
-                </span>
-                <span className="text-[14px] text-text-muted">/month</span>
-              </div>
-              <p className="text-[13px] text-text-secondary mt-1">
-                Unlimited AI quizzes
-              </p>
-            </div>
-            <ul className="flex flex-col gap-2.5">
-              {PRO_FEATURES.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-[13px] text-text-secondary"
-                >
-                  <svg
-                    className="w-4 h-4 text-primary shrink-0 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <PricingCheckout />
-          </div>
-        </Card>
+    <div className="mx-auto grid w-full max-w-lg gap-6">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">
+          {plan.plan === "pro" ? "Your subscription" : "Upgrade to Pro"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {plan.plan === "pro"
+            ? "You're on Pro — thanks for supporting CertBench"
+            : `Free plan: ${plan.generationsUsed}/${FREE_GENERATION_LIMIT} AI generations used this month`}
+        </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>CertBench Pro</CardTitle>
+          <CardDescription>Everything, without limits</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <ul className="grid gap-2 text-sm">
+            {PRO_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2">
+                <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <div className="pt-2">
+            {plan.plan === "pro" ? <ManageBillingButton /> : <UpgradeButton />}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

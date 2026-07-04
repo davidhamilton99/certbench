@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type {
   TopologyScenario,
   TopoFieldAnswer,
   PbqGradeResult,
   TopoDeviceGradeResult,
 } from "@/data/pbq/types";
-import { gradeTopologyScenario } from "@/lib/pbq/grade-topology";
+import { gradeTopologyScenario } from "@/core/pbq/grade-topology";
 import { TopologyDiagram } from "@/components/workspace/TopologyDiagram";
 import { DeviceConfigPanel } from "@/components/workspace/DeviceConfigPanel";
 
@@ -42,7 +42,7 @@ function TopologyResults({
   return (
     <div className="flex flex-col gap-4">
       {/* Overall score */}
-      <Card padding="lg">
+      <Panel padding="lg">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-3">
             <span
@@ -50,7 +50,7 @@ function TopologyResults({
             >
               {result.score}%
             </span>
-            <span className="text-[14px] text-text-muted">
+            <span className="text-[14px] text-muted-foreground">
               {result.correctItems}/{result.totalItems} correct
             </span>
           </div>
@@ -70,7 +70,7 @@ function TopologyResults({
               : "Needs Work"}
           </Badge>
         </div>
-      </Card>
+      </Panel>
 
       {/* Per-device breakdown */}
       {deviceResults.map((dr) => {
@@ -78,7 +78,7 @@ function TopologyResults({
         const device = scenario.devices.find((d) => d.id === dr.deviceId);
 
         return (
-          <Card
+          <Panel
             key={dr.deviceId}
             padding="md"
             accent={
@@ -87,21 +87,21 @@ function TopologyResults({
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <h3 className="text-[14px] font-semibold text-text-primary">
+                <h3 className="text-[14px] font-semibold text-foreground">
                   {dr.deviceLabel}
                 </h3>
                 {dr.preConfigured && (
                   <Badge variant="neutral">Pre-configured</Badge>
                 )}
               </div>
-              <span className="text-[13px] font-mono text-text-secondary tabular-nums">
+              <span className="text-[13px] font-mono text-muted-foreground tabular-nums">
                 {dr.correctFields}/{dr.totalFields}
               </span>
             </div>
             {dr.feedback.length > 0 && (
               <div className="flex flex-col gap-1 mt-2">
                 {dr.feedback.map((fb, j) => (
-                  <p key={j} className="text-[12px] text-text-secondary">
+                  <p key={j} className="text-[12px] text-muted-foreground">
                     {fb}
                   </p>
                 ))}
@@ -109,27 +109,27 @@ function TopologyResults({
             )}
             {/* Per-device explanation */}
             {device?.explanation && (
-              <p className="text-[12px] text-text-muted mt-2 italic">
+              <p className="text-[12px] text-muted-foreground mt-2 italic">
                 {device.explanation}
               </p>
             )}
-          </Card>
+          </Panel>
         );
       })}
 
       {/* Overall explanation */}
-      <Card padding="md">
-        <h3 className="text-[14px] font-semibold text-text-primary mb-2">
+      <Panel padding="md">
+        <h3 className="text-[14px] font-semibold text-foreground mb-2">
           Explanation
         </h3>
-        <p className="text-[13px] text-text-secondary leading-relaxed">
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
           {scenario.explanation}
         </p>
-      </Card>
+      </Panel>
 
       {/* Actions */}
       <div className="flex gap-3">
-        <Button variant="primary" onClick={onRetry}>
+        <Button onClick={onRetry}>
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
@@ -257,7 +257,7 @@ export function TopologyPlayer({
         <button
           onClick={handleBack}
           aria-label="Back to scenarios"
-          className="text-text-secondary hover:text-text-primary transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -275,12 +275,12 @@ export function TopologyPlayer({
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-[18px] font-semibold text-text-primary">
+            <h2 className="text-[18px] font-semibold text-foreground">
               {scenario.title}
             </h2>
             <Badge variant="neutral">Topology Lab</Badge>
           </div>
-          <p className="text-[13px] text-text-secondary">
+          <p className="text-[13px] text-muted-foreground">
             {scenario.domain_number} {scenario.domain_title}
           </p>
         </div>
@@ -298,14 +298,14 @@ export function TopologyPlayer({
       ) : (
         <>
           {/* Briefing */}
-          <Card padding="md" accent="primary">
-            <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+          <Panel padding="md" accent="primary">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Scenario
             </p>
-            <p className="text-[14px] text-text-primary leading-relaxed">
+            <p className="text-[14px] text-foreground leading-relaxed">
               {scenario.briefing}
             </p>
-          </Card>
+          </Panel>
 
           {/* Topology + Config Panel layout (desktop: side-by-side, mobile: overlay) */}
           <div className="hidden sm:flex gap-0 relative">
@@ -360,7 +360,7 @@ export function TopologyPlayer({
 
           {/* Mobile: full-width config panel overlay */}
           {selectedDevice && (
-            <div className="sm:hidden fixed inset-0 z-50 bg-bg-surface overflow-y-auto">
+            <div className="sm:hidden fixed inset-0 z-50 bg-card overflow-y-auto">
               <DeviceConfigPanel
                 device={selectedDevice}
                 answers={answers}
@@ -372,25 +372,25 @@ export function TopologyPlayer({
 
           {/* Progress indicator */}
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-text-muted">
+            <span className="text-[13px] text-muted-foreground">
               {touchedDeviceIds.size} of {configurableDevices.length} devices
               configured
             </span>
-            <span className="text-[12px] text-text-muted font-mono">
+            <span className="text-[12px] text-muted-foreground font-mono">
               ~{scenario.estimatedMinutes} min
             </span>
           </div>
 
           {/* Submit */}
           <Button
-            variant="primary"
+           
             onClick={() => setShowSubmitConfirm(true)}
             disabled={!allRequiredFilled}
           >
             Submit Configuration
           </Button>
           {!allRequiredFilled && (
-            <p className="text-[12px] text-text-muted text-center">
+            <p className="text-[12px] text-muted-foreground text-center">
               Configure all devices that need changes before submitting.
               Not all devices need modification — identify and fix only what is
               broken.

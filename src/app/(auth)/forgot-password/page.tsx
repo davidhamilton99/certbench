@@ -1,19 +1,28 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 export const metadata = {
-  title: "Reset Password — CertBench",
+  title: "Reset password",
 };
 
 export default function ForgotPasswordPage() {
   return (
-    <>
-      <h2 className="text-[18px] font-semibold text-text-primary text-center mb-2">
-        Reset your password
-      </h2>
-      <p className="text-[13px] text-text-muted text-center mb-6">
-        Enter your email and we&apos;ll send you a reset link.
-      </p>
-      <ForgotPasswordForm />
-    </>
+    <Card>
+      <CardHeader className="text-center">
+        <CardTitle className="text-lg">Reset your password</CardTitle>
+        <CardDescription>
+          We&apos;ll email you a link to set a new one
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ForgotPasswordForm />
+      </CardContent>
+    </Card>
   );
 }

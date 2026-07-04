@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe/config";
-import { createClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
-import { withErrorHandler } from "@/lib/api/errors";
+import { getStripe } from "@/server/stripe";
+import { createAdminClient } from "@/server/supabase/admin";
+import { serverEnv } from "@/env";
 
-// Use service role key for webhook — no user session available
-function getAdminSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-async function handler(req: NextRequest) {
+/**
+ * Stripe webhook — event-sync logic ported near-verbatim from the previous
+ * app (same URL path; the live endpoint configuration doesn't change).
+ * Raw-body signature verification, so this is the second documented
+ * exception to the defineEndpoint factory.
+ */
+export async function POST(req: NextRequest) {
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -25,14 +23,14 @@ async function handler(req: NextRequest) {
     event = getStripe().webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      serverEnv("STRIPE_WEBHOOK_SECRET")
     );
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const supabase = getAdminSupabase();
+  const supabase = createAdminClient();
 
   switch (event.type) {
     case "checkout.session.completed": {
@@ -78,8 +76,7 @@ async function handler(req: NextRequest) {
       if (!sub) break;
 
       const isActive =
-        subscription.status === "active" ||
-        subscription.status === "trialing";
+        subscription.status === "active" || subscription.status === "trialing";
 
       const periodEnd =
         (subscription as unknown as Record<string, number>).current_period_end ??
@@ -89,13 +86,14 @@ async function handler(req: NextRequest) {
         .from("user_subscriptions")
         .update({
           plan: isActive ? "pro" : "free",
-          status: subscription.status === "active"
-            ? "active"
-            : subscription.status === "trialing"
-              ? "trialing"
-              : subscription.status === "past_due"
-                ? "past_due"
-                : "canceled",
+          status:
+            subscription.status === "active"
+              ? "active"
+              : subscription.status === "trialing"
+                ? "trialing"
+                : subscription.status === "past_due"
+                  ? "past_due"
+                  : "canceled",
           current_period_end: periodEnd
             ? new Date(periodEnd * 1000).toISOString()
             : null,
@@ -134,5 +132,3 @@ async function handler(req: NextRequest) {
 
   return NextResponse.json({ received: true });
 }
-
-export const POST = withErrorHandler(handler);

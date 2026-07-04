@@ -1,87 +1,54 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { PracticeExam } from "@/components/workspace/PracticeExam";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/server/supabase/server";
+import { getCertificationBySlug } from "@/server/data/certifications";
+import { PracticeExamClient } from "@/components/quiz/PracticeExamClient";
+import { examType as examTypeSchema } from "@/contracts/practice-exam";
 
 export const metadata = {
-  title: "Practice Exam — CertBench",
+  title: "Practice exam",
 };
 
-export default async function ExamPage({
+const HEADINGS = {
+  full: { title: "Practice exam", sub: "questions across all domains" },
+  weak_points: {
+    title: "Weak points review",
+    sub: "questions you've missed before",
+  },
+} as const;
+
+export default async function PracticeExamPage({
   params,
   searchParams,
 }: {
   params: Promise<{ certId: string }>;
-  searchParams: Promise<{ type?: string; domain?: string }>;
+  searchParams: Promise<{ type?: string }>;
 }) {
-  const { certId: certSlug } = await params;
-  const { type: examType = "full", domain: domainNumber } =
-    await searchParams;
-  const supabase = await createClient();
-
+  const [{ certId: slug }, { type }] = await Promise.all([params, searchParams]);
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  // Get certification
-  const { data: certification } = await supabase
-    .from("certifications")
-    .select("id, name, slug")
-    .eq("slug", certSlug)
-    .single();
+  const parsedType = examTypeSchema.safeParse(type ?? "full");
+  const mode = parsedType.success && parsedType.data !== "domain_drill"
+    ? parsedType.data
+    : "full";
 
-  if (!certification) redirect("/dashboard");
+  const cert = await getCertificationBySlug(db, slug);
+  if (!cert) notFound();
 
-  // Verify enrollment
-  const { data: enrollment } = await supabase
-    .from("user_enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certification.id)
-    .eq("is_active", true)
-    .single();
-
-  if (!enrollment) redirect("/dashboard");
-
-  // Must complete diagnostic first
-  const { data: diagnostic } = await supabase
-    .from("diagnostic_attempts")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certification.id)
-    .eq("is_complete", true)
-    .limit(1);
-
-  if (!diagnostic || diagnostic.length === 0) {
-    redirect(`/certifications/${certification.slug}/diagnostic`);
-  }
-
-  // For domain drill, resolve domainId from domainNumber
-  let domainId: string | undefined;
-  let domainTitle: string | undefined;
-
-  if (examType === "domain_drill" && domainNumber) {
-    const { data: domain } = await supabase
-      .from("cert_domains")
-      .select("id, title")
-      .eq("certification_id", certification.id)
-      .eq("domain_number", domainNumber)
-      .single();
-
-    if (!domain) redirect(`/dashboard?cert=${certification.slug}`);
-    domainId = domain.id;
-    domainTitle = domain.title;
-  }
+  const heading = HEADINGS[mode];
 
   return (
-    <PracticeExam
-      certificationId={certification.id}
-      certName={certification.name}
-      certSlug={certification.slug}
-      examType={examType as "full" | "domain_drill" | "weak_points"}
-      domainId={domainId}
-      domainTitle={domainTitle}
-    />
+    <div className="grid gap-6">
+      <div className="mx-auto w-full max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight">{heading.title}</h1>
+        <p className="text-sm text-muted-foreground">
+          {cert.name} · {heading.sub}
+        </p>
+      </div>
+      <PracticeExamClient certId={cert.id} examType={mode} />
+    </div>
   );
 }

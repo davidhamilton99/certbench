@@ -1,52 +1,57 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { PbqScenarios } from "@/components/workspace/PbqScenarios";
+import { createClient } from "@/server/supabase/server";
+import { listEnrollments } from "@/server/data/enrollments";
+import {
+  getCertificationBySlug,
+  listActiveCertifications,
+} from "@/server/data/certifications";
 import { pbqRegistry } from "@/data/pbq";
+import { PbqScenarios } from "@/components/workspace/PbqScenarios";
+
+export const metadata = {
+  title: "PBQ lab",
+};
 
 export default async function PbqPage({
   searchParams,
 }: {
   searchParams: Promise<{ cert?: string }>;
 }) {
-  const supabase = await createClient();
+  const { cert: certSlug } = await searchParams;
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  const params = await searchParams;
-  const certSlug = params.cert;
+  const enrollments = await listEnrollments(db, user.id);
+  if (enrollments.length === 0) redirect("/onboarding");
 
-  if (!certSlug) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-          Hands-On Practice
-        </h1>
-        <p className="text-[15px] text-text-secondary">
-          Select a certification from the sidebar to access hands-on practice
-          scenarios.
-        </p>
-      </div>
-    );
+  let active = certSlug ? await getCertificationBySlug(db, certSlug) : null;
+  if (!active || !enrollments.some((e) => e.certificationId === active!.id)) {
+    const certs = await listActiveCertifications(db);
+    active = certs.find((c) => c.id === enrollments[0].certificationId) ?? null;
   }
+  if (!active) redirect("/onboarding");
 
-  const scenarios = pbqRegistry[certSlug] || [];
+  const scenarios = pbqRegistry[active.slug] ?? [];
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div>
-        <h1 className="text-[24px] font-semibold text-text-primary tracking-tight">
-          Hands-On Practice
-        </h1>
-        <p className="text-[15px] text-text-secondary mt-1">
-          Interactive scenarios that mirror the hands-on questions found on the
-          actual exam.
+        <h1 className="text-xl font-semibold tracking-tight">PBQ lab</h1>
+        <p className="text-sm text-muted-foreground">
+          {active.name} · interactive scenarios that mirror the hands-on exam
+          questions
         </p>
       </div>
-
-      <PbqScenarios scenarios={scenarios} certSlug={certSlug} />
+      {scenarios.length === 0 ? (
+        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
+          No scenarios for this certification yet.
+        </p>
+      ) : (
+        <PbqScenarios scenarios={scenarios} />
+      )}
     </div>
   );
 }

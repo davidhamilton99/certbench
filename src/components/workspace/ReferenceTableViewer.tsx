@@ -27,7 +27,7 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
       {/* Search */}
       <div className="relative">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -44,7 +44,7 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
           placeholder="Search across all columns..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 text-[14px] bg-bg-surface border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          className="w-full pl-10 pr-4 py-2.5 text-[14px] bg-card border border-border rounded-lg text-foreground placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
         />
       </div>
 
@@ -63,7 +63,7 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
               ${
                 activeTableId === table.id
                   ? "bg-primary text-white"
-                  : "bg-bg-surface border border-border text-text-secondary hover:bg-bg-page hover:text-text-primary"
+                  : "bg-card border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               }
             `}
           >
@@ -73,18 +73,18 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
       </div>
 
       {/* Description */}
-      <p className="text-[13px] text-text-muted">{activeTable.description}</p>
+      <p className="text-[13px] text-muted-foreground">{activeTable.description}</p>
 
       {/* Table */}
-      <div className="bg-bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-border bg-bg-page">
+              <tr className="border-b border-border bg-muted/40">
                 {activeTable.columnHeaders.map((col) => (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 text-left font-semibold text-text-primary ${
+                    className={`px-4 py-3 text-left font-semibold text-foreground ${
                       col.mono ? "font-mono" : ""
                     }`}
                   >
@@ -98,7 +98,7 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
                 <tr>
                   <td
                     colSpan={activeTable.columnHeaders.length}
-                    className="px-4 py-8 text-center text-text-muted"
+                    className="px-4 py-8 text-center text-muted-foreground"
                   >
                     {search
                       ? `No results for "${search}"`
@@ -109,14 +109,14 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
                 filteredEntries.map((entry, idx) => (
                   <tr
                     key={idx}
-                    className="border-b border-border-light last:border-0 hover:bg-bg-page transition-colors"
+                    className="border-b border-border-light last:border-0 hover:bg-muted/40 transition-colors"
                   >
                     {activeTable.columnHeaders.map((col) => (
                       <td
                         key={col.key}
-                        className={`px-4 py-3 text-text-secondary ${
+                        className={`px-4 py-3 text-muted-foreground ${
                           col.mono
-                            ? "font-mono tabular-nums text-text-primary font-medium"
+                            ? "font-mono tabular-nums text-foreground font-medium"
                             : ""
                         }`}
                       >
@@ -132,7 +132,7 @@ export function ReferenceTableViewer({ tables }: { tables: ReferenceTable[] }) {
       </div>
 
       {/* Count */}
-      <p className="text-[12px] text-text-muted">
+      <p className="text-[12px] text-muted-foreground">
         {filteredEntries.length} of {activeTable.entries.length} entries
         {search ? ` matching "${search}"` : ""}
       </p>

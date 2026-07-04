@@ -7,10 +7,12 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    exclude: ['**/node_modules/**', '**/.next/**', '.claude/**', 'e2e/**'],
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'server-only': path.resolve(__dirname, './src/test/stubs/server-only.ts'),
     },
   },
 })

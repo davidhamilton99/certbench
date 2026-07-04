@@ -1,17 +1,22 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createClient } from "@/server/supabase/server";
 
+/**
+ * OAuth code exchange. Path unchanged from the previous app — it is the
+ * registered redirect URI in Google Console and Supabase Auth settings.
+ */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/onboarding";
+  const nextParam = searchParams.get("next") ?? "/onboarding";
+  const next = nextParam.startsWith("/") ? nextParam : "/onboarding";
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user has completed onboarding
+      // Un-onboarded users always land on onboarding, regardless of `next`.
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -23,8 +28,8 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single();
 
-        if (profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/dashboard`);
+        if (!profile?.onboarding_completed) {
+          return NextResponse.redirect(`${origin}/onboarding`);
         }
       }
 

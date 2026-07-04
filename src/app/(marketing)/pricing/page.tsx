@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/ui/panel";
 import { PricingCheckout } from "@/components/marketing/PricingCheckout";
 import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
@@ -27,34 +27,34 @@ const PRO_FEATURES = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-bg-page overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <MarketingHeader />
 
       <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         <div className="text-center mb-10 sm:mb-12">
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-text-primary tracking-tight">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-foreground tracking-tight">
             Simple pricing
           </h1>
-          <p className="text-[17px] text-text-secondary mt-2">
+          <p className="text-[17px] text-muted-foreground mt-2">
             Start free, upgrade when you need unlimited AI-generated quizzes.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free Plan */}
-          <Card padding="lg">
+          <Panel padding="lg">
             <div className="flex flex-col gap-6">
               <div>
-                <h2 className="text-[20px] font-semibold text-text-primary">
+                <h2 className="text-[20px] font-semibold text-foreground">
                   Free
                 </h2>
                 <div className="mt-2">
-                  <span className="text-[36px] font-bold text-text-primary">
+                  <span className="text-[36px] font-bold text-foreground">
                     $0
                   </span>
-                  <span className="text-[15px] text-text-muted">/month</span>
+                  <span className="text-[15px] text-muted-foreground">/month</span>
                 </div>
-                <p className="text-[14px] text-text-secondary mt-2">
+                <p className="text-[14px] text-muted-foreground mt-2">
                   Perfect for trying CertBench out.
                 </p>
               </div>
@@ -62,7 +62,7 @@ export default function PricingPage() {
                 {FREE_FEATURES.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-start gap-2 text-[14px] text-text-secondary"
+                    className="flex items-start gap-2 text-[14px] text-muted-foreground"
                   >
                     <svg
                       className="w-4 h-4 text-success shrink-0 mt-0.5"
@@ -87,22 +87,22 @@ export default function PricingPage() {
                 </Button>
               </Link>
             </div>
-          </Card>
+          </Panel>
 
           {/* Pro Plan */}
-          <Card padding="lg" accent="primary">
+          <Panel padding="lg" accent="primary">
             <div className="flex flex-col gap-6">
               <div>
-                <h2 className="text-[20px] font-semibold text-text-primary">
+                <h2 className="text-[20px] font-semibold text-foreground">
                   Pro
                 </h2>
                 <div className="mt-2">
-                  <span className="text-[36px] font-bold text-text-primary">
+                  <span className="text-[36px] font-bold text-foreground">
                     $8
                   </span>
-                  <span className="text-[15px] text-text-muted">/month</span>
+                  <span className="text-[15px] text-muted-foreground">/month</span>
                 </div>
-                <p className="text-[14px] text-text-secondary mt-2">
+                <p className="text-[14px] text-muted-foreground mt-2">
                   Unlimited AI quizzes for serious learners.
                 </p>
               </div>
@@ -110,7 +110,7 @@ export default function PricingPage() {
                 {PRO_FEATURES.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-start gap-2 text-[14px] text-text-secondary"
+                    className="flex items-start gap-2 text-[14px] text-muted-foreground"
                   >
                     <svg
                       className="w-4 h-4 text-primary shrink-0 mt-0.5"
@@ -131,7 +131,7 @@ export default function PricingPage() {
               </ul>
               <PricingCheckout />
             </div>
-          </Card>
+          </Panel>
         </div>
       </main>
 

@@ -157,10 +157,10 @@ export function TopologyDiagram({
   }
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg overflow-hidden">
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Diagram title */}
       <div className="px-4 py-2 border-b border-border-light">
-        <span className="text-[13px] font-semibold text-text-primary uppercase tracking-wider">
+        <span className="text-[13px] font-semibold text-foreground uppercase tracking-wider">
           {diagramTitle}
         </span>
       </div>
@@ -326,7 +326,7 @@ export function TopologyDiagram({
       </svg>
 
       {/* Legend */}
-      <div className="px-4 py-2 border-t border-border-light flex items-center flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-muted">
+      <div className="px-4 py-2 border-t border-border-light flex items-center flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#16a34a]" />
           Pre-configured (leave alone)
@@ -335,7 +335,7 @@ export function TopologyDiagram({
           <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
           Modified
         </span>
-        <span className="text-text-muted">Click a device to configure it</span>
+        <span className="text-muted-foreground">Click a device to configure it</span>
       </div>
     </div>
   );

@@ -1,48 +1,27 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getStripe } from "@/lib/stripe/config";
-import { withErrorHandler } from "@/lib/api/errors";
-import { rateLimit } from "@/lib/rate-limit";
+import { defineEndpoint } from "@/server/api/define-endpoint";
+import { createPortal } from "@/contracts/billing";
+import { ApiError } from "@/contracts/common";
+import { getStripe } from "@/server/stripe";
+import { publicEnv } from "@/env";
 
-async function handler() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const POST = defineEndpoint(createPortal, {
+  auth: "user",
+  rateLimit: { limit: 5, windowSeconds: 3600 },
+  handler: async ({ user, db }) => {
+    if (!user) throw new ApiError("unauthorized");
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    const { data: sub } = await db
+      .from("user_subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!sub?.stripe_customer_id)
+      throw new ApiError("not_found", "No billing account found");
 
-  const { limited } = rateLimit(`portal:${user.id}`, 5, 3_600_000);
-  if (limited) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429 }
-    );
-  }
-
-  const { data: sub } = await supabase
-    .from("user_subscriptions")
-    .select("stripe_customer_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!sub?.stripe_customer_id) {
-    return NextResponse.json(
-      { error: "No billing account found" },
-      { status: 404 }
-    );
-  }
-
-  const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-  const session = await getStripe().billingPortal.sessions.create({
-    customer: sub.stripe_customer_id,
-    return_url: `${origin}/dashboard`,
-  });
-
-  return NextResponse.json({ url: session.url });
-}
-
-export const POST = withErrorHandler(handler as Parameters<typeof withErrorHandler>[0]);
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: sub.stripe_customer_id,
+      return_url: `${publicEnv.NEXT_PUBLIC_APP_URL}/dashboard`,
+    });
+    return { url: session.url };
+  },
+});

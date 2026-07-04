@@ -1,75 +1,66 @@
 # CertBench
 
-Certification preparation platform for CompTIA exams. Built to help IT students know exactly what to study and when they are ready for exam day.
+Adaptive exam prep for CompTIA certifications — live at [certbench.dev](https://certbench.dev).
 
-Live at [certbench.dev](https://certbench.dev).
+CertBench builds a personalised daily study plan from your actual performance: a
+confidence-penalised readiness score, adaptive practice exams, SM-2 spaced
+repetition, hands-on PBQ simulations, and AI-generated study sets from your own
+notes.
 
-## Supported Certifications
+**Certifications:** Security+ SY0-701 · Network+ N10-009 · A+ Core 1 220-1101 · A+ Core 2 220-1102
 
-- CompTIA Security+ SY0-701
-- CompTIA Network+ N10-009
-- CompTIA A+ Core 1 (220-1101)
-- CompTIA A+ Core 2 (220-1102)
+## Stack
 
-## Features
+- **Next.js 16** (App Router, React 19) on **Vercel**
+- **Supabase** — Postgres (RLS everywhere) + Auth (password & Google OAuth)
+- **Tailwind CSS v4** with a shadcn-style token system (light + dark)
+- **Zod v4** — end-to-end typed API contracts shared client/server
+- **Anthropic API** — AI question generation with a two-pass quality review
+- **Stripe** — Pro subscriptions (checkout, portal, webhook sync)
 
-- **Diagnostic Exam** -- 25-question assessment across all domains to identify strengths and gaps
-- **Readiness Score** -- Domain-weighted, confidence-penalised score (0-100) that tells you when you are ready
-- **Daily Study Plan** -- Prioritised sessions generated from your performance data
-- **Practice Exams** -- Full 90-question exams, 10-question domain drills, and weak-points mode
-- **Spaced Repetition (SRS)** -- SM-2 algorithm schedules questions you got wrong for review at optimal intervals
-- **Performance-Based Questions** -- Ordering, matching, categorization, simulations, and network topology labs
-- **AI Quiz Generation** -- Upload PDF, DOCX, or text and generate quiz questions with Claude
-- **Community Study Sets** -- Share and discover study materials created by other users
-- **Reference Tables** -- Ports, protocols, OSI model, commands, and more
-- **Question Flagging** -- Students can flag questions; admins review and manage flags
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layering rules and
+[docs/DATABASE.md](docs/DATABASE.md) for the schema contract.
 
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router), React 19, TypeScript 5
-- **Database:** Supabase (PostgreSQL with Row Level Security)
-- **Auth:** Supabase Auth (email/password + Google OAuth)
-- **Payments:** Stripe (free tier + pro subscription)
-- **AI:** Anthropic Claude API (Sonnet for generation, Haiku for explanations)
-- **Styling:** Tailwind CSS 4
-- **Deployment:** Vercel
-- **CI:** GitHub Actions (lint, typecheck, build, test)
-- **Testing:** Vitest
-
-## Quick Start
-
-See [SETUP.md](SETUP.md) for full setup instructions.
+## Local development
 
 ```bash
-git clone https://github.com/davidhamilton99/certbench.git
-cd certbench
 npm install
-cp .env.example .env.local
-# Fill in your Supabase credentials in .env.local
-npm run dev
+cp .env.example .env.local   # fill in the values (see below)
+npm run dev                  # http://localhost:3000
 ```
 
-## Project Structure
+Required in `.env.local` for a working app:
 
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase project (RLS-scoped access) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Admin client (webhook, rate limiter, account deletion) |
+| `ANTHROPIC_API_KEY` | AI question generation (503s cleanly if absent) |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRO_PRICE_ID` | Billing (use TEST keys locally) |
+
+`src/env.ts` is the authority: public vars are validated at boot, secrets at
+point of use — a missing Stripe key never breaks non-Stripe features.
+
+Note: the Supabase free tier pauses the project after inactivity, which drops
+its DNS records. If the DB is unreachable, resume it from the Supabase
+dashboard.
+
+## Commands
+
+```bash
+npm run dev            # dev server
+npm run build          # production build
+npm test               # vitest (core behavioural locks + contract tests)
+npm run lint           # eslint (includes architecture-boundary rules)
+npm run typecheck      # tsc --noEmit
+npm run db:types       # regenerate src/types/database.gen.ts (needs SUPABASE_ACCESS_TOKEN)
+npm run db:types:check # CI drift check against the live schema
 ```
-src/
-  app/           # Next.js App Router (pages, layouts, API routes)
-  components/    # React components (auth, marketing, workspace, ui)
-  lib/           # Business logic (readiness, SRS, session plan, AI, Supabase)
-  constants/     # Configuration constants
-  data/          # Seeded content (PBQ scenarios, reference tables)
-supabase/
-  migrations/    # PostgreSQL schema and seed data
-```
 
-## Contributing
+## Deployment
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for coding conventions and development guidelines.
-
-## Content
-
-2,376 multiple-choice questions seeded across all four certifications, plus performance-based questions (ordering, matching, categorization, simulations, topology labs) and 20+ reference tables.
-
-## Legal
-
-CompTIA, Security+, Network+, and A+ are registered trademarks of CompTIA, Inc. CertBench is not affiliated with or endorsed by CompTIA.
+Pushes to `main` deploy to production via Vercel. Preview deployments run
+against the **same production database** (RLS confines writes to the acting
+user) — use dedicated `+test` accounts on previews and TEST-mode Stripe keys in
+the Preview environment. New migrations in `supabase/migrations/` must be
+additive and are applied manually via the Supabase SQL editor.

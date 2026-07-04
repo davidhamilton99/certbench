@@ -1,149 +1,87 @@
-import type { ReadinessPoint } from "@/lib/analytics/shape";
+import type { ReadinessPoint } from "@/core/analytics/shape";
 
-interface Props {
-  points: ReadinessPoint[];
-  /** Readiness thresholds to draw as horizontal reference lines. */
-  thresholds: { label: string; value: number; tone: "success" | "warning" }[];
-}
+const W = 640;
+const H = 180;
+const PAD = { top: 10, right: 8, bottom: 22, left: 34 };
 
-const WIDTH = 640;
-const HEIGHT = 200;
-const PADDING = { top: 16, right: 16, bottom: 28, left: 36 };
-
-/**
- * Static SVG line chart of readiness score over time. Server-rendered —
- * no interactivity. Dot at each data point so single-snapshot spans are
- * still visible. Y axis is fixed 0–100 so visual changes map directly
- * to readiness percentage points.
- */
-export function ReadinessChart({ points, thresholds }: Props) {
-  const innerW = WIDTH - PADDING.left - PADDING.right;
-  const innerH = HEIGHT - PADDING.top - PADDING.bottom;
-
+/** Pure-SVG readiness line chart (server-rendered, theme-aware via tokens). */
+export function ReadinessChart({ points }: { points: ReadinessPoint[] }) {
   if (points.length === 0) {
     return (
-      <div className="h-[200px] flex items-center justify-center text-[13px] text-text-muted">
-        No readiness snapshots yet — take a diagnostic or practice exam.
-      </div>
+      <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+        No readiness history yet — complete exams to build the trend.
+      </p>
     );
   }
 
-  const xStep =
-    points.length > 1 ? innerW / (points.length - 1) : 0;
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const x = (i: number) =>
+    PAD.left + (points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
+  const y = (score: number) => PAD.top + innerH - (score / 100) * innerH;
 
-  const xOf = (i: number) =>
-    points.length === 1 ? PADDING.left + innerW / 2 : PADDING.left + i * xStep;
-  const yOf = (score: number) =>
-    PADDING.top + innerH * (1 - Math.max(0, Math.min(100, score)) / 100);
-
-  const pathD = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${xOf(i).toFixed(1)} ${yOf(p.score).toFixed(1)}`)
+  const path = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.score).toFixed(1)}`)
     .join(" ");
 
-  // Axis tick labels — first, middle, last day
-  const axisIndexes = new Set<number>([0]);
-  if (points.length > 2) axisIndexes.add(Math.floor(points.length / 2));
-  if (points.length > 1) axisIndexes.add(points.length - 1);
+  const gridLines = [0, 25, 50, 75, 100];
+  const firstDay = points[0].day.slice(5);
+  const lastDay = points[points.length - 1].day.slice(5);
 
   return (
     <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="w-full h-[200px]"
+      viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label={`Readiness score over ${points.length} day${points.length === 1 ? "" : "s"}`}
+      aria-label={`Readiness trend from ${points[0].day} to ${points[points.length - 1].day}`}
+      className="w-full"
     >
-      {/* Y axis gridlines at 0/25/50/75/100 */}
-      {[0, 25, 50, 75, 100].map((v) => (
-        <g key={v}>
+      {gridLines.map((g) => (
+        <g key={g}>
           <line
-            x1={PADDING.left}
-            x2={WIDTH - PADDING.right}
-            y1={yOf(v)}
-            y2={yOf(v)}
-            className="stroke-border-light"
-            strokeWidth={1}
-            strokeDasharray={v === 0 ? undefined : "2 3"}
+            x1={PAD.left}
+            x2={W - PAD.right}
+            y1={y(g)}
+            y2={y(g)}
+            className="stroke-border"
+            strokeWidth="1"
           />
           <text
-            x={PADDING.left - 6}
-            y={yOf(v) + 3}
+            x={PAD.left - 6}
+            y={y(g) + 3}
             textAnchor="end"
-            className="fill-text-muted font-mono"
-            fontSize={10}
+            className="fill-muted-foreground font-mono text-[10px]"
           >
-            {v}
+            {g}
           </text>
         </g>
       ))}
-
-      {/* Threshold lines (e.g. pass = 75) */}
-      {thresholds.map((t) => (
-        <g key={t.label}>
-          <line
-            x1={PADDING.left}
-            x2={WIDTH - PADDING.right}
-            y1={yOf(t.value)}
-            y2={yOf(t.value)}
-            className={
-              t.tone === "success" ? "stroke-success" : "stroke-warning"
-            }
-            strokeWidth={1}
-            strokeDasharray="4 3"
-            opacity={0.5}
-          />
-          <text
-            x={WIDTH - PADDING.right - 4}
-            y={yOf(t.value) - 4}
-            textAnchor="end"
-            className={
-              t.tone === "success"
-                ? "fill-success font-mono"
-                : "fill-warning font-mono"
-            }
-            fontSize={9}
-          >
-            {t.label}
-          </text>
-        </g>
-      ))}
-
-      {/* Data line */}
-      <path
-        d={pathD}
-        fill="none"
-        className="stroke-primary"
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-
-      {/* Data dots */}
+      <path d={path} fill="none" className="stroke-primary" strokeWidth="2" />
       {points.map((p, i) => (
         <circle
           key={p.day}
-          cx={xOf(i)}
-          cy={yOf(p.score)}
-          r={3}
+          cx={x(i)}
+          cy={y(p.score)}
+          r="3"
           className="fill-primary"
         >
-          <title>
-            {p.day}: {p.score.toFixed(1)}%
-          </title>
+          <title>{`${p.day}: ${p.score}%`}</title>
         </circle>
       ))}
-
-      {/* X axis labels */}
-      {[...axisIndexes].sort((a, b) => a - b).map((i) => (
-        <text
-          key={i}
-          x={xOf(i)}
-          y={HEIGHT - 8}
-          textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
-          className="fill-text-muted font-mono"
-          fontSize={10}
-        >
-          {points[i].day.slice(5)}
-        </text>
-      ))}
+      <text
+        x={PAD.left}
+        y={H - 6}
+        className="fill-muted-foreground font-mono text-[10px]"
+      >
+        {firstDay}
+      </text>
+      <text
+        x={W - PAD.right}
+        y={H - 6}
+        textAnchor="end"
+        className="fill-muted-foreground font-mono text-[10px]"
+      >
+        {lastDay}
+      </text>
     </svg>
   );
 }

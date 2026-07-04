@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 
@@ -227,22 +227,22 @@ const sections: Section[] = [
 function SectionBlock({ section }: { section: Section }) {
   return (
     <div id={section.id} className="scroll-mt-24">
-      <h2 className="text-[22px] font-bold text-text-primary tracking-tight">
+      <h2 className="text-[22px] font-bold text-foreground tracking-tight">
         {section.title}
       </h2>
-      <p className="text-[15px] text-text-secondary mt-1 mb-6">
+      <p className="text-[15px] text-muted-foreground mt-1 mb-6">
         {section.description}
       </p>
       <div className="flex flex-col gap-5">
         {section.items.map((item, i) => (
           <div
             key={i}
-            className="border border-border rounded-lg bg-bg-surface p-5"
+            className="border border-border rounded-lg bg-card p-5"
           >
-            <h3 className="text-[15px] font-semibold text-text-primary">
+            <h3 className="text-[15px] font-semibold text-foreground">
               {item.q}
             </h3>
-            <p className="text-[14px] text-text-secondary mt-2 leading-relaxed">
+            <p className="text-[14px] text-muted-foreground mt-2 leading-relaxed">
               {item.a}
             </p>
           </div>
@@ -254,16 +254,16 @@ function SectionBlock({ section }: { section: Section }) {
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen bg-bg-page overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <MarketingHeader />
 
       <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         {/* Hero */}
         <div className="text-center mb-6">
-          <h1 className="text-[28px] sm:text-[36px] md:text-[40px] font-bold text-text-primary tracking-tight">
+          <h1 className="text-[28px] sm:text-[36px] md:text-[40px] font-bold text-foreground tracking-tight">
             Help Centre
           </h1>
-          <p className="text-[17px] text-text-secondary mt-3 max-w-xl mx-auto">
+          <p className="text-[17px] text-muted-foreground mt-3 max-w-xl mx-auto">
             Everything you need to know about using CertBench. If you
             can&apos;t find your answer here, reach out — we respond to
             every message.
@@ -279,8 +279,8 @@ export default function HelpPage() {
         </div>
 
         {/* Jump nav */}
-        <nav className="border border-border rounded-lg bg-bg-surface p-5 mb-12">
-          <p className="text-[12px] font-medium text-text-muted uppercase tracking-wider mb-3">
+        <nav className="border border-border rounded-lg bg-card p-5 mb-12">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
             Jump to
           </p>
           <div className="flex flex-wrap gap-2">
@@ -288,7 +288,7 @@ export default function HelpPage() {
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="px-3 py-1.5 text-[13px] text-text-secondary bg-bg-page border border-border rounded-md hover:text-primary hover:border-primary transition-colors duration-150"
+                className="px-3 py-1.5 text-[13px] text-muted-foreground bg-background border border-border rounded-md hover:text-primary hover:border-primary transition-colors duration-150"
               >
                 {s.title}
               </a>
@@ -304,11 +304,11 @@ export default function HelpPage() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-16 border border-border rounded-lg bg-bg-surface p-8 text-center">
-          <h2 className="text-[20px] font-bold text-text-primary">
+        <div className="mt-16 border border-border rounded-lg bg-card p-8 text-center">
+          <h2 className="text-[20px] font-bold text-foreground">
             Still have questions?
           </h2>
-          <p className="text-[15px] text-text-secondary mt-2">
+          <p className="text-[15px] text-muted-foreground mt-2">
             I read and reply to every message. If something is broken,
             confusing, or missing — I want to know.
           </p>

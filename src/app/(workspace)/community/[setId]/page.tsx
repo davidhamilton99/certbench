@@ -1,9 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { StudySetDetail } from "@/components/workspace/StudySetDetail";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/server/supabase/server";
+import { getStudySet, listSetQuestions } from "@/server/data/study-sets";
+import { listBookmarkedSetIds } from "@/server/data/community";
+import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
+import {
+  AttemptPing,
+  CommunitySetActions,
+} from "@/components/workspace/CommunitySetActions";
 
 export const metadata = {
-  title: "Community Study Set — CertBench",
+  title: "Community set",
 };
 
 export default async function CommunitySetPage({
@@ -12,40 +18,45 @@ export default async function CommunitySetPage({
   params: Promise<{ setId: string }>;
 }) {
   const { setId } = await params;
-  const supabase = await createClient();
-
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch the study set (must be public)
-  const { data: studySet } = await supabase
-    .from("user_study_sets")
-    .select("id, user_id, title, category, question_count, is_public, created_at, source_material_preview")
-    .eq("id", setId)
-    .eq("is_public", true)
-    .single();
+  const set = await getStudySet(db, setId);
+  if (!set || !set.isPublic) notFound();
 
-  if (!studySet) redirect("/community");
-
-  // Fetch questions
-  const { data: questions } = await supabase
-    .from("user_study_questions")
-    .select(
-      "id, question_type, question_text, options, correct_index, explanation, sort_order"
-    )
-    .eq("study_set_id", setId)
-    .order("sort_order");
-
-  const isOwner = studySet.user_id === user.id;
+  const [questions, bookmarks] = await Promise.all([
+    listSetQuestions(db, setId),
+    listBookmarkedSetIds(db, user.id),
+  ]);
 
   return (
-    <StudySetDetail
-      studySet={studySet}
-      questions={questions || []}
-      isOwner={isOwner}
-    />
+    <div className="grid gap-6">
+      <AttemptPing setId={set.id} />
+      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{set.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {set.questionCount} question{set.questionCount === 1 ? "" : "s"}
+            {set.description && <> · {set.description}</>}
+          </p>
+        </div>
+        <CommunitySetActions
+          setId={set.id}
+          initialBookmarked={bookmarks.has(set.id)}
+        />
+      </div>
+
+      <StudySetPlayer
+        setId={set.id}
+        questions={questions}
+        seed={crypto.randomUUID()}
+        persistProgress={false}
+        backHref="/community"
+        backLabel="Back to community"
+      />
+    </div>
   );
 }

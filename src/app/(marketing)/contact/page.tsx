@@ -10,15 +10,15 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-bg-page overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <MarketingHeader />
 
       <main className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-[36px] sm:text-[40px] font-bold text-text-primary tracking-tight">
+          <h1 className="text-[36px] sm:text-[40px] font-bold text-foreground tracking-tight">
             Get in touch
           </h1>
-          <p className="text-[17px] text-text-secondary mt-3 max-w-md mx-auto">
+          <p className="text-[17px] text-muted-foreground mt-3 max-w-md mx-auto">
             Bug reports, feature requests, exam questions, feedback — I read
             and respond to everything personally.
           </p>
@@ -27,7 +27,7 @@ export default function ContactPage() {
         {/* Contact options */}
         <div className="flex flex-col gap-6">
           {/* Email */}
-          <div className="border border-border rounded-lg bg-bg-surface p-6">
+          <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-info-bg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -45,10 +45,10 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-[17px] font-semibold text-text-primary">
+                <h2 className="text-[17px] font-semibold text-foreground">
                   Email
                 </h2>
-                <p className="text-[14px] text-text-secondary mt-1 leading-relaxed">
+                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                   Best for bug reports with screenshots, detailed feedback, or
                   anything that needs a back-and-forth conversation.
                 </p>
@@ -63,7 +63,7 @@ export default function ContactPage() {
           </div>
 
           {/* Response time */}
-          <div className="border border-border rounded-lg bg-bg-surface p-6">
+          <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-success-bg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -81,10 +81,10 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-[17px] font-semibold text-text-primary">
+                <h2 className="text-[17px] font-semibold text-foreground">
                   Response time
                 </h2>
-                <p className="text-[14px] text-text-secondary mt-1 leading-relaxed">
+                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                   CertBench is built and maintained by one person. I aim to
                   respond to every message within 24 hours. If
                   something is broken and blocking your study session, say so in
@@ -95,7 +95,7 @@ export default function ContactPage() {
           </div>
 
           {/* What to include */}
-          <div className="border border-border rounded-lg bg-bg-surface p-6">
+          <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -113,10 +113,10 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-[17px] font-semibold text-text-primary">
+                <h2 className="text-[17px] font-semibold text-foreground">
                   Reporting a bug?
                 </h2>
-                <p className="text-[14px] text-text-secondary mt-1 leading-relaxed">
+                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                   To help me fix it fast, include: (1) what you were doing when
                   it happened, (2) what you expected to happen, (3) what
                   actually happened, and (4) a screenshot if you can. Mention
@@ -127,9 +127,9 @@ export default function ContactPage() {
           </div>
 
           {/* Question accuracy */}
-          <div className="border border-border rounded-lg bg-bg-surface p-6">
+          <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-danger-bg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-danger"
                   fill="none"
@@ -145,10 +145,10 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-[17px] font-semibold text-text-primary">
+                <h2 className="text-[17px] font-semibold text-foreground">
                   Found an incorrect question or answer?
                 </h2>
-                <p className="text-[14px] text-text-secondary mt-1 leading-relaxed">
+                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
                   This is the most important feedback you can give me. If you
                   believe a question has the wrong correct answer or a
                   misleading explanation, email me with the question text (or a
@@ -162,7 +162,7 @@ export default function ContactPage() {
 
         {/* Help centre link */}
         <div className="mt-12 text-center">
-          <p className="text-[15px] text-text-secondary">
+          <p className="text-[15px] text-muted-foreground">
             Looking for answers to common questions?
           </p>
           <Link

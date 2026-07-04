@@ -20,13 +20,13 @@ export function DropdownFieldRenderer({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] font-medium text-text-primary">
+      <label className="text-[13px] font-medium text-foreground">
         {field.label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full bg-bg-page border border-border rounded-md px-3 py-2 text-[14px] text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        className="w-full bg-muted/40 border border-border rounded-md px-3 py-2 text-[14px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
       >
         <option value={-1}>— Select —</option>
         {field.options.map((opt, i) => (
@@ -54,7 +54,7 @@ export function TextInputFieldRenderer({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] font-medium text-text-primary">
+      <label className="text-[13px] font-medium text-foreground">
         {field.label}
       </label>
       <input
@@ -62,7 +62,7 @@ export function TextInputFieldRenderer({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder || "Type your answer..."}
-        className="w-full px-3 py-2 text-[14px] text-text-primary bg-bg-surface border border-border rounded-md placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        className="w-full px-3 py-2 text-[14px] text-foreground bg-card border border-border rounded-md placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
       />
     </div>
   );
@@ -91,7 +91,7 @@ export function SelectManyFieldRenderer({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[13px] font-medium text-text-primary">
+      <label className="text-[13px] font-medium text-foreground">
         {field.label}
       </label>
       <div className="flex flex-col gap-1.5">
@@ -108,7 +108,7 @@ export function SelectManyFieldRenderer({
                 ${
                   isSelected
                     ? "bg-info-bg border-primary/40 text-primary font-medium"
-                    : "bg-bg-page border-border text-text-secondary hover:border-primary/30 hover:text-text-primary"
+                    : "bg-muted/40 border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                 }
               `}
             >

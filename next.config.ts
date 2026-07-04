@@ -2,6 +2,21 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Old-app URLs that no longer exist after the rebuild.
+  redirects: async () => [
+    { source: "/add-certification", destination: "/profile", permanent: true },
+    {
+      source: "/study-materials/import",
+      destination: "/study-materials/new",
+      permanent: true,
+    },
+    {
+      source: "/certifications/:certId",
+      destination: "/dashboard",
+      permanent: false,
+    },
+    { source: "/offline", destination: "/", permanent: true },
+  ],
   headers: async () => [
     {
       source: "/sw.js",

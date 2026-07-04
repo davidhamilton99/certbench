@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
 import type {
   TopoDevice,
   TopoField,
@@ -106,11 +106,11 @@ export function DeviceConfigPanel({
   onClose,
 }: DeviceConfigPanelProps) {
   return (
-    <div className="bg-bg-surface border-l border-border flex flex-col h-full">
+    <div className="bg-card border-l border-border flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <h3 className="text-[15px] font-semibold text-text-primary">
+          <h3 className="text-[15px] font-semibold text-foreground">
             {device.label}
           </h3>
           <Badge variant="neutral">{deviceTypeLabel(device.type)}</Badge>
@@ -120,7 +120,7 @@ export function DeviceConfigPanel({
         </div>
         <button
           onClick={onClose}
-          className="p-1 text-text-muted hover:text-text-primary transition-colors"
+          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Close panel"
         >
           <svg
@@ -143,19 +143,19 @@ export function DeviceConfigPanel({
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {/* Current config (read-only) */}
         {device.currentConfig && (
-          <Card padding="sm" className="bg-bg-page border-l-2 border-l-primary/20">
-            <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider mb-2">
+          <Panel padding="sm" className="bg-muted/40 border-l-2 border-l-primary/20">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Current Configuration
             </p>
-            <pre className="text-[12px] font-mono text-text-primary leading-relaxed overflow-x-auto whitespace-pre">
+            <pre className="text-[12px] font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre">
               {device.currentConfig}
             </pre>
-          </Card>
+          </Panel>
         )}
 
         {/* Pre-configured notice */}
         {device.preConfigured && (
-          <div className="flex items-start gap-2 bg-success-bg border border-success-border rounded-md px-3 py-2.5">
+          <div className="flex items-start gap-2 bg-success/10 border border-success-border rounded-md px-3 py-2.5">
             <svg
               className="w-4 h-4 text-success flex-shrink-0 mt-0.5"
               fill="none"
@@ -169,7 +169,7 @@ export function DeviceConfigPanel({
                 d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-[12px] text-text-secondary">
+            <p className="text-[12px] text-muted-foreground">
               This device appears to be correctly configured. Review the
               current configuration below. Modifying a correctly-configured
               device will count against your score.
@@ -181,7 +181,7 @@ export function DeviceConfigPanel({
         {device.fields.length === 0 ? (
           !device.currentConfig && (
             <div className="text-center py-6">
-              <p className="text-[14px] text-text-muted">
+              <p className="text-[14px] text-muted-foreground">
                 No configuration available for this device.
               </p>
             </div>

@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { DiagnosticExam } from "@/components/workspace/DiagnosticExam";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/server/supabase/server";
+import { getCertificationBySlug } from "@/server/data/certifications";
+import { DiagnosticClient } from "@/components/quiz/DiagnosticClient";
 
 export const metadata = {
-  title: "Diagnostic Exam — CertBench",
+  title: "Diagnostic exam",
 };
 
 export default async function DiagnosticPage({
@@ -11,53 +12,25 @@ export default async function DiagnosticPage({
 }: {
   params: Promise<{ certId: string }>;
 }) {
-  const { certId: certSlug } = await params;
-  const supabase = await createClient();
-
+  const { certId: slug } = await params;
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  // Get certification
-  const { data: certification } = await supabase
-    .from("certifications")
-    .select("id, name, slug")
-    .eq("slug", certSlug)
-    .single();
-
-  if (!certification) redirect("/dashboard");
-
-  // Verify enrollment
-  const { data: enrollment } = await supabase
-    .from("user_enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certification.id)
-    .eq("is_active", true)
-    .single();
-
-  if (!enrollment) redirect("/dashboard");
-
-  // Check if diagnostic already completed
-  const { data: completed } = await supabase
-    .from("diagnostic_attempts")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certification.id)
-    .eq("is_complete", true)
-    .limit(1);
-
-  if (completed && completed.length > 0) {
-    redirect(`/dashboard?cert=${certification.slug}`);
-  }
+  const cert = await getCertificationBySlug(db, slug);
+  if (!cert) notFound();
 
   return (
-    <DiagnosticExam
-      certificationId={certification.id}
-      certName={certification.name}
-      certSlug={certification.slug}
-    />
+    <div className="grid gap-6">
+      <div className="mx-auto w-full max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight">Diagnostic</h1>
+        <p className="text-sm text-muted-foreground">
+          {cert.name} · establishes your baseline across every domain
+        </p>
+      </div>
+      <DiagnosticClient certId={cert.id} />
+    </div>
   );
 }

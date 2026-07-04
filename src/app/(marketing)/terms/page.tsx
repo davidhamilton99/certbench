@@ -8,16 +8,16 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-bg-page">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-16">
         <BackLink />
-        <h1 className="text-[28px] font-bold text-text-primary tracking-tight mb-2">
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-2">
           Terms of Service
         </h1>
-        <p className="text-[13px] text-text-muted mb-2">
+        <p className="text-[13px] text-muted-foreground mb-2">
           Effective date: March 14, 2026
         </p>
-        <p className="text-[13px] text-text-muted mb-8">
+        <p className="text-[13px] text-muted-foreground mb-8">
           These Terms of Service (&ldquo;Terms&rdquo;) are a legally binding
           agreement between you and CertBench (&ldquo;we,&rdquo;
           &ldquo;us,&rdquo; or &ldquo;our&rdquo;). They govern your access to
@@ -479,10 +479,10 @@ function Section({
 }) {
   return (
     <section className="mb-10">
-      <h2 className="text-[17px] font-semibold text-text-primary mb-3">
+      <h2 className="text-[17px] font-semibold text-foreground mb-3">
         {title}
       </h2>
-      <div className="text-[14px] text-text-secondary leading-relaxed space-y-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[14px]">
+      <div className="text-[14px] text-muted-foreground leading-relaxed space-y-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[14px]">
         {children}
       </div>
     </section>

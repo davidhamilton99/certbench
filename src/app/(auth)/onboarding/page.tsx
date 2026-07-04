@@ -1,52 +1,50 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { createClient } from "@/server/supabase/server";
+import { listActiveCertifications } from "@/server/data/certifications";
+import { getProfile } from "@/server/data/profiles";
 import { OnboardingForm } from "@/components/auth/OnboardingForm";
 
 export const metadata = {
-  title: "Get Started — CertBench",
+  title: "Get started",
 };
 
 export default async function OnboardingPage() {
-  const supabase = await createClient();
-
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await db.auth.getUser();
+  if (!user) redirect("/login");
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Check if already onboarded
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.onboarding_completed) {
-    redirect("/dashboard");
-  }
-
-  // Fetch available certifications
-  const { data: certifications } = await supabase
-    .from("certifications")
-    .select("id, slug, name, exam_code, vendor")
-    .eq("is_active", true)
-    .order("name");
+  const [profile, certifications] = await Promise.all([
+    getProfile(db, user.id),
+    listActiveCertifications(db),
+  ]);
+  if (profile?.onboardingCompleted) redirect("/dashboard");
 
   return (
-    <>
-      <h2 className="text-[18px] font-semibold text-text-primary text-center mb-2">
-        Welcome to CertBench
-      </h2>
-      <p className="text-[15px] text-text-secondary text-center mb-6">
-        Let&apos;s set up your study workspace.
-      </p>
-      <OnboardingForm
-        certifications={certifications || []}
-        userId={user.id}
-      />
-    </>
+    <Card className="max-w-lg">
+      <CardHeader className="text-center">
+        <CardTitle className="text-lg">Which exam are you studying for?</CardTitle>
+        <CardDescription>
+          You can add more certifications later.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <OnboardingForm
+          certifications={certifications.map((c) => ({
+            id: c.id,
+            name: c.name,
+            examCode: c.examCode,
+          }))}
+        />
+      </CardContent>
+    </Card>
   );
 }

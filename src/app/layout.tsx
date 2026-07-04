@@ -1,20 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { QueryProvider } from "@/components/QueryProvider";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const instrumentSans = Instrument_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-instrument-sans",
+  variable: "--font-inter",
   display: "swap",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-  variable: "--font-ibm-plex-mono",
+  variable: "--font-jetbrains-mono",
   display: "swap",
 });
 
@@ -24,7 +24,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0f13" },
+    { media: "(prefers-color-scheme: dark)", color: "#18181b" },
   ],
 };
 
@@ -45,12 +45,6 @@ export const metadata: Metadata = {
     "study plan",
     "IT certification",
   ],
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "CertBench",
-  },
   icons: {
     icon: [
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -88,21 +82,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("certbench-theme");if(t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}})()`,
-          }}
-        />
-      </head>
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
         </ThemeProvider>
-        <Script id="sw-register" strategy="afterInteractive">
+        {/* The previous app registered a service worker (/sw.js). Unregister it
+            so stale caches can never serve the old UI after cutover. */}
+        <Script id="sw-unregister" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
+            navigator.serviceWorker.getRegistrations()
+              .then((rs) => rs.forEach((r) => r.unregister()))
+              .catch(() => {});
           }`}
         </Script>
         {process.env.NEXT_PUBLIC_POSTHOG_KEY && (

@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { SrsReview } from "@/components/workspace/SrsReview";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/server/supabase/server";
+import { getCertificationBySlug } from "@/server/data/certifications";
+import { SrsReviewClient } from "@/components/quiz/SrsReviewClient";
 
 export const metadata = {
-  title: "SRS Review — CertBench",
+  title: "Spaced repetition",
 };
 
 export default async function SrsPage({
@@ -11,39 +12,27 @@ export default async function SrsPage({
 }: {
   params: Promise<{ certId: string }>;
 }) {
-  const { certId: certSlug } = await params;
-  const supabase = await createClient();
-
+  const { certId: slug } = await params;
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: certification } = await supabase
-    .from("certifications")
-    .select("id, name, slug")
-    .eq("slug", certSlug)
-    .single();
-
-  if (!certification) redirect("/dashboard");
-
-  // Verify enrollment
-  const { data: enrollment } = await supabase
-    .from("user_enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certification.id)
-    .eq("is_active", true)
-    .single();
-
-  if (!enrollment) redirect("/dashboard");
+  const cert = await getCertificationBySlug(db, slug);
+  if (!cert) notFound();
 
   return (
-    <SrsReview
-      certificationId={certification.id}
-      certName={certification.name}
-      certSlug={certification.slug}
-    />
+    <div className="grid gap-6">
+      <div className="mx-auto w-full max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Spaced repetition
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {cert.name} · answer to reschedule each card
+        </p>
+      </div>
+      <SrsReviewClient certId={cert.id} />
+    </div>
   );
 }

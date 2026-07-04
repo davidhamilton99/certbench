@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Panel } from "@/components/ui/panel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type {
   SimulationScenario,
   SimTask,
@@ -14,7 +14,7 @@ import type {
   PbqGradeResult,
   SimTaskGradeResult,
 } from "@/data/pbq/types";
-import { gradeSimulationScenario } from "@/lib/pbq/grade-simulation";
+import { gradeSimulationScenario } from "@/core/pbq/grade-simulation";
 import {
   DropdownFieldRenderer,
   TextInputFieldRenderer,
@@ -42,17 +42,17 @@ function ZonePlacementFieldRenderer({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[13px] font-medium text-text-primary">
+      <label className="text-[13px] font-medium text-foreground">
         {field.label}
       </label>
       <div className="flex flex-col gap-1.5">
         {field.items.map((item, itemIdx) => (
           <div
             key={itemIdx}
-            className="bg-bg-surface border border-border rounded-lg p-3"
+            className="bg-card border border-border rounded-lg p-3"
           >
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <span className="text-[13px] text-text-primary">{item}</span>
+              <span className="text-[13px] text-foreground">{item}</span>
               <div className="flex gap-1">
                 {field.zones.map((zone, zoneIdx) => {
                   const isSelected = placements[itemIdx] === zoneIdx;
@@ -67,7 +67,7 @@ function ZonePlacementFieldRenderer({
                         ${
                           isSelected
                             ? "bg-primary text-white"
-                            : "bg-bg-page border border-border-light text-text-secondary hover:border-primary/40 hover:text-text-primary"
+                            : "bg-muted/40 border border-border-light text-muted-foreground hover:border-primary/40 hover:text-foreground"
                         }
                       `}
                     >
@@ -158,20 +158,20 @@ function TaskPanel({
   return (
     <div className="flex flex-col gap-4">
       {/* Instructions */}
-      <p className="text-[14px] text-text-primary leading-relaxed">
+      <p className="text-[14px] text-foreground leading-relaxed">
         {task.instructions}
       </p>
 
       {/* Evidence blocks */}
       {task.evidence?.map((ev, i) => (
-        <Card key={i} padding="sm" className="bg-bg-page border-l-2 border-l-primary/20">
-          <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider mb-2">
+        <Panel key={i} padding="sm" className="bg-muted/40 border-l-2 border-l-primary/20">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             {ev.label}
           </p>
-          <pre className="text-[12px] font-mono text-text-primary leading-relaxed overflow-x-auto whitespace-pre">
+          <pre className="text-[12px] font-mono text-foreground leading-relaxed overflow-x-auto whitespace-pre">
             {ev.content}
           </pre>
-        </Card>
+        </Panel>
       ))}
 
       {/* Fields */}
@@ -216,7 +216,7 @@ function SimulationResults({
   return (
     <div className="flex flex-col gap-4">
       {/* Overall score */}
-      <Card padding="lg">
+      <Panel padding="lg">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-3">
             <span
@@ -224,7 +224,7 @@ function SimulationResults({
             >
               {result.score}%
             </span>
-            <span className="text-[14px] text-text-muted">
+            <span className="text-[14px] text-muted-foreground">
               {result.correctItems}/{result.totalItems} correct
             </span>
           </div>
@@ -244,63 +244,63 @@ function SimulationResults({
               : "Needs Work"}
           </Badge>
         </div>
-      </Card>
+      </Panel>
 
       {/* Per-task breakdown */}
       {taskResults.map((tr, i) => {
         const taskPerfect = tr.correctFields === tr.totalFields;
         return (
-          <Card
+          <Panel
             key={i}
             padding="md"
             accent={taskPerfect ? "success" : tr.correctFields > 0 ? "warning" : "danger"}
           >
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[14px] font-semibold text-text-primary">
+              <h3 className="text-[14px] font-semibold text-foreground">
                 {tr.taskTitle}
               </h3>
-              <span className="text-[13px] font-mono text-text-secondary tabular-nums">
+              <span className="text-[13px] font-mono text-muted-foreground tabular-nums">
                 {tr.correctFields}/{tr.totalFields}
               </span>
             </div>
             {tr.feedback.length > 0 && (
               <div className="flex flex-col gap-1 mt-2">
                 {tr.feedback.map((fb, j) => (
-                  <p key={j} className="text-[12px] text-text-secondary">
+                  <p key={j} className="text-[12px] text-muted-foreground">
                     • {fb}
                   </p>
                 ))}
               </div>
             )}
-          </Card>
+          </Panel>
         );
       })}
 
       {/* Explanation */}
-      <Card padding="md">
-        <h3 className="text-[14px] font-semibold text-text-primary mb-2">
+      <Panel padding="md">
+        <h3 className="text-[14px] font-semibold text-foreground mb-2">
           Explanation
         </h3>
-        <p className="text-[13px] text-text-secondary leading-relaxed">
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
           {scenario.explanation}
         </p>
-      </Card>
+      </Panel>
 
       {/* Per-task explanations */}
       {scenario.tasks.map((task) => (
-        <Card key={task.id} padding="sm">
-          <h4 className="text-[13px] font-semibold text-text-primary mb-1">
+        <Panel key={task.id} padding="sm">
+          <h4 className="text-[13px] font-semibold text-foreground mb-1">
             {task.title}
           </h4>
-          <p className="text-[12px] text-text-secondary leading-relaxed">
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
             {task.explanation}
           </p>
-        </Card>
+        </Panel>
       ))}
 
       {/* Actions */}
       <div className="flex gap-3">
-        <Button variant="primary" onClick={onRetry}>
+        <Button onClick={onRetry}>
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
@@ -412,7 +412,7 @@ export function SimulationPlayer({
         <button
           onClick={handleBack}
           aria-label="Back to scenarios"
-          className="text-text-secondary hover:text-text-primary transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -430,12 +430,12 @@ export function SimulationPlayer({
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-[18px] font-semibold text-text-primary">
+            <h2 className="text-[18px] font-semibold text-foreground">
               {scenario.title}
             </h2>
             <Badge variant="neutral">Simulation</Badge>
           </div>
-          <p className="text-[13px] text-text-secondary">
+          <p className="text-[13px] text-muted-foreground">
             {scenario.domain_number} {scenario.domain_title}
           </p>
         </div>
@@ -453,14 +453,14 @@ export function SimulationPlayer({
       ) : (
         <>
           {/* Briefing */}
-          <Card padding="md" accent="primary">
-            <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+          <Panel padding="md" accent="primary">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Scenario
             </p>
-            <p className="text-[14px] text-text-primary leading-relaxed">
+            <p className="text-[14px] text-foreground leading-relaxed">
               {scenario.briefing}
             </p>
-          </Card>
+          </Panel>
 
           {/* Task tabs */}
           <div className="flex items-center gap-1 overflow-x-auto border-b border-border pb-px">
@@ -477,7 +477,7 @@ export function SimulationPlayer({
                     ${
                       isActive
                         ? "text-primary"
-                        : "text-text-secondary hover:text-text-primary"
+                        : "text-muted-foreground hover:text-foreground"
                     }
                   `}
                 >
@@ -505,7 +505,7 @@ export function SimulationPlayer({
           {/* Progress + Submit */}
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-text-muted">
+              <span className="text-[13px] text-muted-foreground">
                 Task {activeTaskIdx + 1} of {scenario.tasks.length}
               </span>
               <div className="flex gap-2">
@@ -531,14 +531,14 @@ export function SimulationPlayer({
             </div>
             <ProgressBar value={progress} size="sm" />
             <Button
-              variant="primary"
+             
               onClick={() => setShowSubmitConfirm(true)}
               disabled={!allFieldsFilled}
             >
               Submit All Answers
             </Button>
             {!allFieldsFilled && (
-              <p className="text-[12px] text-text-muted text-center">
+              <p className="text-[12px] text-muted-foreground text-center">
                 Complete all fields across all tasks before submitting.
               </p>
             )}

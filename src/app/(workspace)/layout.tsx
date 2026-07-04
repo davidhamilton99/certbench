@@ -1,59 +1,42 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/server/supabase/server";
+import { getProfile } from "@/server/data/profiles";
+import { listEnrollments } from "@/server/data/enrollments";
+import { listActiveCertifications } from "@/server/data/certifications";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
-import { SessionGuard } from "@/components/auth/SessionGuard";
 
 export default async function WorkspaceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await db.auth.getUser();
+  if (!user) redirect("/login");
 
-  if (!user) {
-    redirect("/login");
-  }
+  const [profile, enrollments, certifications] = await Promise.all([
+    getProfile(db, user.id),
+    listEnrollments(db, user.id),
+    listActiveCertifications(db),
+  ]);
 
-  // Fetch profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, onboarding_completed")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.onboarding_completed) {
+  if (!profile?.onboardingCompleted || enrollments.length === 0) {
     redirect("/onboarding");
   }
 
-  // Fetch active enrollments with certification details
-  const { data: enrollments } = await supabase
-    .from("user_enrollments")
-    .select(
-      `
-      certification_id,
-      certifications (
-        slug,
-        name,
-        exam_code
-      )
-    `
-    )
-    .eq("user_id", user.id)
-    .eq("is_active", true);
+  const certById = new Map(certifications.map((c) => [c.id, c]));
+  const enrolledCerts = enrollments.flatMap((e) => {
+    const cert = certById.get(e.certificationId);
+    return cert
+      ? [{ slug: cert.slug, name: cert.name, examCode: cert.examCode }]
+      : [];
+  });
 
   return (
-    <>
-      <SessionGuard />
-      <WorkspaceShell
-        displayName={profile.display_name}
-        enrollments={(enrollments as any) || []}
-      >
-        {children}
-      </WorkspaceShell>
-    </>
+    <WorkspaceShell certs={enrolledCerts} displayName={profile.displayName}>
+      {children}
+    </WorkspaceShell>
   );
 }

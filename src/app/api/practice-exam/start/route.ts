@@ -1,216 +1,152 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { randomUUID } from "node:crypto";
+import { defineEndpoint } from "@/server/api/define-endpoint";
+import { startPracticeExam } from "@/contracts/practice-exam";
+import { ApiError } from "@/contracts/common";
+import type { ProgressSnapshot } from "@/contracts/quiz";
 import {
   selectPracticeQuestions,
   selectWeakPointsQuestions,
-} from "@/lib/question-selection/select-questions";
-import type {
-  CertQuestion,
-  DomainWeight,
-  QuestionPerformanceRecord,
-} from "@/lib/question-selection/types";
+} from "@/core/question-selection/select-questions";
+import type { CertQuestion } from "@/core/question-selection/types";
 import {
-  FULL_EXAM_QUESTION_COUNT,
   DOMAIN_DRILL_QUESTION_COUNT,
+  FULL_EXAM_QUESTION_COUNT,
   WEAK_POINTS_QUESTION_COUNT,
-} from "@/constants/exam-config";
-import { z } from "zod/v4";
-import { withErrorHandler } from "@/lib/api/errors";
-import { rateLimit } from "@/lib/rate-limit";
+} from "@/core/constants";
+import {
+  getQuestionsByIds,
+  listActiveQuestions,
+} from "@/server/data/questions";
+import { listDomains } from "@/server/data/certifications";
+import { listPerformance } from "@/server/data/performance";
+import {
+  createAttempt,
+  getInFlightAttempt,
+} from "@/server/data/practice-exams";
 
-const startSchema = z.object({
-  certificationId: z.string().uuid(),
-  examType: z.enum(["full", "domain_drill", "weak_points"]).optional().default("full"),
-  domainId: z.string().uuid().optional(),
-}).refine(
-  (data) => data.examType !== "domain_drill" || !!data.domainId,
-  { message: "domainId is required for domain drills" }
-);
-
-async function handler(req: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { limited } = rateLimit(`practice-start:${user.id}`, 10, 3_600_000);
-  if (limited) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429 }
-    );
-  }
-
-  const parsed = startSchema.safeParse(await req.json());
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || "Invalid input" },
-      { status: 400 }
-    );
-  }
-
-  const { certificationId, examType, domainId } = parsed.data;
-
-  // Verify enrollment
-  const { data: enrollment } = await supabase
-    .from("user_enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("certification_id", certificationId)
-    .eq("is_active", true)
-    .single();
-
-  if (!enrollment) {
-    return NextResponse.json(
-      { error: "Not enrolled in this certification" },
-      { status: 403 }
-    );
-  }
-
-  // Fetch questions — filter by domain for drills
-  let questionsQuery = supabase
-    .from("cert_questions")
-    .select(
-      "id, certification_id, domain_id, sub_objective_id, question_text, options, correct_index, explanation, difficulty"
-    )
-    .eq("certification_id", certificationId)
-    .eq("is_active", true);
-
-  if (examType === "domain_drill" && domainId) {
-    questionsQuery = questionsQuery.eq("domain_id", domainId);
-  }
-
-  const [questionsResult, domainsResult, performanceResult] =
-    await Promise.all([
-      questionsQuery,
-      supabase
-        .from("cert_domains")
-        .select("id, domain_number, title, exam_weight")
-        .eq("certification_id", certificationId)
-        .order("sort_order"),
-      supabase
-        .from("question_performance")
-        .select(
-          "question_id, times_seen, times_correct, last_seen_at, suspended_at"
-        )
-        .eq("user_id", user.id)
-        .eq("certification_id", certificationId),
-    ]);
-
-  if (!questionsResult.data || !domainsResult.data) {
-    return NextResponse.json(
-      { error: "Failed to load questions" },
-      { status: 500 }
-    );
-  }
-
-  // Suspended cards stay out of all exam modes. Build an exclusion set
-  // then strip those questions before selection runs.
-  const rawPerformance = performanceResult.data ?? [];
-  const suspendedIds = new Set(
-    rawPerformance.filter((p) => p.suspended_at).map((p) => p.question_id)
-  );
-
-  const allQuestions = (questionsResult.data as CertQuestion[]).filter(
-    (q) => !suspendedIds.has(q.id)
-  );
-  let domains = domainsResult.data as DomainWeight[];
-  const performance = rawPerformance
-    .filter((p) => !p.suspended_at)
-    .map(
-      ({ question_id, times_seen, times_correct, last_seen_at }) => ({
-        question_id,
-        times_seen,
-        times_correct,
-        last_seen_at,
-      })
-    ) as QuestionPerformanceRecord[];
-
-  // For domain drill, use only the target domain with 100% weight
-  if (examType === "domain_drill" && domainId) {
-    const targetDomain = domains.find((d) => d.id === domainId);
-    if (!targetDomain) {
-      return NextResponse.json(
-        { error: "Domain not found" },
-        { status: 404 }
-      );
-    }
-    domains = [{ ...targetDomain, exam_weight: 100 }];
-  }
-
-  const questionCount =
-    examType === "full"
-      ? FULL_EXAM_QUESTION_COUNT
-      : examType === "weak_points"
-        ? WEAK_POINTS_QUESTION_COUNT
-        : DOMAIN_DRILL_QUESTION_COUNT;
-
-  const selectedQuestions =
-    examType === "weak_points"
-      ? selectWeakPointsQuestions(
-          allQuestions,
-          performance,
-          Math.min(questionCount, allQuestions.length)
-        )
-      : selectPracticeQuestions(
-          allQuestions,
-          domains,
-          performance,
-          Math.min(questionCount, allQuestions.length)
-        );
-
-  if (examType === "weak_points" && selectedQuestions.length === 0) {
-    return NextResponse.json(
-      {
-        error:
-          "No weak-point questions yet — answer some questions incorrectly first.",
-      },
-      { status: 400 }
-    );
-  }
-
-  // Create the attempt
-  const { data: attempt, error: attemptError } = await supabase
-    .from("practice_exam_attempts")
-    .insert({
-      user_id: user.id,
-      certification_id: certificationId,
-      exam_type: examType,
-      domain_id: examType === "domain_drill" ? domainId : null,
-      total_questions: selectedQuestions.length,
-    })
-    .select("id")
-    .single();
-
-  if (attemptError || !attempt) {
-    return NextResponse.json(
-      { error: "Failed to create exam attempt" },
-      { status: 500 }
-    );
-  }
-
-  // Return questions without correct answers
-  const sanitizedQuestions = selectedQuestions.map((q) => ({
+function toExamQuestion(q: CertQuestion) {
+  return {
     id: q.id,
-    domain_id: q.domain_id,
     question_text: q.question_text,
-    options: (q.options as { text: string; is_correct: boolean }[]).map(
-      (o) => ({ text: o.text })
-    ),
-  }));
-
-  return NextResponse.json({
-    attemptId: attempt.id,
-    questions: sanitizedQuestions,
-    totalQuestions: selectedQuestions.length,
-    examType,
-  });
+    options: q.options.map((o) => o.text),
+    domain_id: q.domain_id,
+  };
 }
 
-export const POST = withErrorHandler(handler);
+export const POST = defineEndpoint(startPracticeExam, {
+  auth: "user",
+  rateLimit: { limit: 10, windowSeconds: 60 },
+  handler: async ({ input, user, db }) => {
+    if (!user) throw new ApiError("unauthorized");
+    const domainId = input.domainId ?? null;
+
+    // Resume an in-flight attempt of this type if one exists.
+    const inFlight = await getInFlightAttempt(
+      db,
+      user.id,
+      input.certId,
+      input.examType,
+      domainId
+    );
+    if (inFlight?.progressState?.questionIds?.length) {
+      const byId = new Map(
+        (await getQuestionsByIds(db, inFlight.progressState.questionIds)).map(
+          (q) => [q.id, q]
+        )
+      );
+      const ordered = inFlight.progressState.questionIds
+        .map((id) => byId.get(id))
+        .filter((q): q is CertQuestion => !!q);
+      return {
+        attemptId: inFlight.id,
+        examType: inFlight.examType,
+        questions: ordered.map(toExamQuestion),
+        resume: inFlight.progressState,
+      };
+    }
+
+    const [pool, domains, performance] = await Promise.all([
+      listActiveQuestions(db, input.certId),
+      listDomains(db, input.certId),
+      listPerformance(db, user.id, input.certId),
+    ]);
+
+    let selected: CertQuestion[];
+    switch (input.examType) {
+      case "full":
+        selected = selectPracticeQuestions(
+          pool,
+          domains.map((d) => ({
+            id: d.id,
+            domain_number: d.domainNumber,
+            title: d.title,
+            exam_weight: d.examWeight,
+          })),
+          performance,
+          input.questionCount ?? FULL_EXAM_QUESTION_COUNT
+        );
+        break;
+      case "domain_drill": {
+        const domain = domains.find((d) => d.id === domainId);
+        if (!domain) throw new ApiError("not_found", "Domain not found");
+        selected = selectPracticeQuestions(
+          pool.filter((q) => q.domain_id === domain.id),
+          [
+            {
+              id: domain.id,
+              domain_number: domain.domainNumber,
+              title: domain.title,
+              exam_weight: 100,
+            },
+          ],
+          performance,
+          input.questionCount ?? DOMAIN_DRILL_QUESTION_COUNT
+        );
+        break;
+      }
+      case "weak_points":
+        selected = selectWeakPointsQuestions(
+          pool,
+          performance,
+          input.questionCount ?? WEAK_POINTS_QUESTION_COUNT
+        );
+        break;
+    }
+
+    if (selected.length === 0) {
+      throw new ApiError(
+        "not_found",
+        input.examType === "weak_points"
+          ? "No weak-point questions yet — answer more questions first"
+          : "No questions available"
+      );
+    }
+
+    const snapshot: ProgressSnapshot = {
+      index: 0,
+      responses: {},
+      flagged: [],
+      revealed: [],
+      startedAt: new Date().toISOString(),
+      seed: randomUUID(),
+      questionIds: selected.map((q) => q.id),
+    };
+
+    const attemptId = await createAttempt(
+      db,
+      user.id,
+      input.certId,
+      input.examType,
+      domainId,
+      selected.length,
+      snapshot
+    );
+
+    return {
+      attemptId,
+      examType: input.examType,
+      questions: selected.map(toExamQuestion),
+      resume: snapshot,
+    };
+  },
+});

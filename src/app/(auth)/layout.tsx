@@ -1,22 +1,16 @@
+import Link from "next/link";
+
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-bg-page flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <a href="/" className="inline-block">
-            <h1 className="text-[24px] font-bold text-text-primary tracking-tight">
-              CertBench
-            </h1>
-          </a>
-        </div>
-        <div className="bg-bg-surface border border-border rounded-lg p-5 sm:p-6">
-          {children}
-        </div>
-      </div>
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/40 px-4 py-10">
+      <Link href="/" className="text-xl font-semibold tracking-tight">
+        CertBench
+      </Link>
+      <div className="w-full max-w-sm">{children}</div>
     </div>
   );
 }

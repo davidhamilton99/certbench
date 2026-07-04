@@ -1,9 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { StudySetDetail } from "@/components/workspace/StudySetDetail";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/server/supabase/server";
+import {
+  getSetProgress,
+  getStudySet,
+  listSetQuestions,
+} from "@/server/data/study-sets";
+import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
+import { StudySetSettings } from "@/components/workspace/StudySetSettings";
+import { ExportPdfButton } from "@/components/workspace/ExportPdfButton";
+import { QuestionManager } from "@/components/workspace/QuestionManager";
 
 export const metadata = {
-  title: "Study Set — CertBench",
+  title: "Study set",
 };
 
 export default async function StudySetPage({
@@ -12,40 +20,53 @@ export default async function StudySetPage({
   params: Promise<{ setId: string }>;
 }) {
   const { setId } = await params;
-  const supabase = await createClient();
-
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch the study set
-  const { data: studySet } = await supabase
-    .from("user_study_sets")
-    .select("id, user_id, title, category, question_count, is_public, created_at, source_material_preview")
-    .eq("id", setId)
-    .single();
+  const set = await getStudySet(db, setId);
+  if (!set) notFound();
+  const isOwner = set.userId === user.id;
 
-  if (!studySet) redirect("/study-materials");
-
-  // Only owner can view their own sets from this route
-  if (studySet.user_id !== user.id) redirect("/study-materials");
-
-  // Fetch questions
-  const { data: questions } = await supabase
-    .from("user_study_questions")
-    .select(
-      "id, question_type, question_text, options, correct_index, explanation, sort_order"
-    )
-    .eq("study_set_id", setId)
-    .order("sort_order");
+  const [questions, progress] = await Promise.all([
+    listSetQuestions(db, setId),
+    isOwner ? getSetProgress(db, user.id, setId) : Promise.resolve(null),
+  ]);
 
   return (
-    <StudySetDetail
-      studySet={studySet}
-      questions={questions || []}
-      isOwner={true}
-    />
+    <div className="grid gap-6">
+      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{set.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {set.questionCount} question{set.questionCount === 1 ? "" : "s"}
+            {set.description && <> · {set.description}</>}
+          </p>
+        </div>
+        {isOwner && (
+          <div className="flex items-center gap-2">
+            <ExportPdfButton
+              title={set.title}
+              category={set.category}
+              questions={questions}
+            />
+            <StudySetSettings setId={set.id} isPublic={set.isPublic} />
+          </div>
+        )}
+      </div>
+
+      <StudySetPlayer
+        setId={set.id}
+        questions={questions}
+        seed={crypto.randomUUID()}
+        initialIndex={progress?.currentIndex ?? 0}
+        initialCorrect={progress?.correctCount ?? 0}
+        persistProgress={isOwner}
+      />
+
+      {isOwner && <QuestionManager setId={set.id} questions={questions} />}
+    </div>
   );
 }
