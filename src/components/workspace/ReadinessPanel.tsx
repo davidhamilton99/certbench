@@ -68,8 +68,11 @@ export function ReadinessPanel({ plan }: { plan: SessionPlanResult }) {
             {plan.domainScores.map((d) => {
               const domainColor = getScoreColor(d.score);
               return (
-                <div key={d.domainId} className="grid gap-1">
-                  <div className="flex items-baseline justify-between gap-2 text-sm">
+                // min-w-0 lets the truncating title actually shrink; without
+                // it the nowrap text propagates its full width up the grid
+                // and the row overflows the card.
+                <div key={d.domainId} className="grid min-w-0 gap-1">
+                  <div className="flex min-w-0 items-baseline justify-between gap-2 text-sm">
                     <span className="truncate">
                       <span className="font-mono text-xs text-muted-foreground">
                         {d.domainNumber}
