@@ -15,7 +15,6 @@ const PROTECTED_PREFIXES = [
   "/analytics",
   "/srs",
   "/pbq",
-  "/add-certification",
   "/reference",
   "/admin",
 ];

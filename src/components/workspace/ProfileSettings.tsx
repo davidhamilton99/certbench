@@ -6,7 +6,7 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { updateDisplayName, deleteAccount } from "@/contracts/profile";
-import { updateExamDate } from "@/contracts/user";
+import { addCertification, updateExamDate } from "@/contracts/user";
 import { ApiError } from "@/contracts/common";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
@@ -27,14 +27,22 @@ export interface ProfileEnrollment {
   examDate: string | null;
 }
 
+export interface AvailableCert {
+  certId: string;
+  certName: string;
+  examCode: string;
+}
+
 export function ProfileSettings({
   initialDisplayName,
   email,
   enrollments,
+  availableCerts,
 }: {
   initialDisplayName: string;
   email: string;
   enrollments: ProfileEnrollment[];
+  availableCerts: AvailableCert[];
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialDisplayName);
@@ -45,6 +53,8 @@ export function ProfileSettings({
   const [savingDate, setSavingDate] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [newCertId, setNewCertId] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
 
   async function saveName(e: FormEvent) {
     e.preventDefault();
@@ -73,6 +83,21 @@ export function ProfileSettings({
       toast.error(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
       setSavingDate(null);
+    }
+  }
+
+  async function enroll() {
+    if (!newCertId) return;
+    setEnrolling(true);
+    try {
+      await api(addCertification, { certId: newCertId, examDate: null });
+      toast.success("Certification added — set an exam date when you book");
+      setNewCertId("");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Something went wrong");
+    } finally {
+      setEnrolling(false);
     }
   }
 
@@ -159,6 +184,31 @@ export function ProfileSettings({
               </Button>
             </div>
           ))}
+          {availableCerts.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 border-t pt-4">
+              <select
+                value={newCertId}
+                onChange={(e) => setNewCertId(e.target.value)}
+                aria-label="Certification to add"
+                className="h-9 min-w-56 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <option value="">Add a certification…</option>
+                {availableCerts.map((c) => (
+                  <option key={c.certId} value={c.certId}>
+                    {c.certName} ({c.examCode})
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                disabled={!newCertId || enrolling}
+                onClick={enroll}
+              >
+                {enrolling && <Loader2 className="animate-spin" />}
+                Add
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -5,6 +5,7 @@ import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
 import {
   ProfileSettings,
+  type AvailableCert,
   type ProfileEnrollment,
 } from "@/components/workspace/ProfileSettings";
 
@@ -41,6 +42,11 @@ export default async function ProfilePage() {
       : [];
   });
 
+  const enrolledIds = new Set(enrollments.map((e) => e.certificationId));
+  const availableCerts: AvailableCert[] = certifications
+    .filter((c) => !enrolledIds.has(c.id))
+    .map((c) => ({ certId: c.id, certName: c.name, examCode: c.examCode }));
+
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
@@ -48,6 +54,7 @@ export default async function ProfilePage() {
         initialDisplayName={profile.displayName}
         email={user.email ?? ""}
         enrollments={rows}
+        availableCerts={availableCerts}
       />
     </div>
   );
