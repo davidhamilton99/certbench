@@ -23,6 +23,7 @@ import {
   createAttempt,
   getInFlightAttempt,
 } from "@/server/data/practice-exams";
+import { assertCanStartQuiz } from "@/server/services/subscription";
 
 function toExamQuestion(q: CertQuestion) {
   return {
@@ -121,6 +122,10 @@ export const POST = defineEndpoint(startPracticeExam, {
           : "No questions available"
       );
     }
+
+    // Free-tier daily quota — metered on NEW starts only (the resume path
+    // above returns before this point).
+    await assertCanStartQuiz(db, user.id, selected.length);
 
     const snapshot: ProgressSnapshot = {
       index: 0,
