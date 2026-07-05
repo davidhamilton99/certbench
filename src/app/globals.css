@@ -168,3 +168,32 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* One-shot entrance animations for the readiness instrument. Server-rendered
+   (pure CSS): the gauge sweeps from empty to its score, bars grow from the
+   left. Disabled under prefers-reduced-motion. */
+@keyframes gauge-sweep {
+  from {
+    stroke-dashoffset: var(--gauge-track);
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@layer utilities {
+  .animate-gauge {
+    animation: gauge-sweep 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-bar {
+    transform-origin: left;
+    animation: bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-gauge,
+    .animate-bar {
+      animation: none;
+    }
+  }
+}
