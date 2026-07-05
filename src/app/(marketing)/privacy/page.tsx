@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { BackLink } from "@/components/marketing/BackLink";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — CertBench",
+  title: "Privacy Policy",
   description: "CertBench Privacy Policy — how we collect, use, and protect your personal data.",
 };
 

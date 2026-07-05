@@ -27,7 +27,9 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     path: "security-plus-practice-test",
     certSlugs: ["security-plus-sy0-701"],
     title: "Security+ practice test",
-    metaTitle: "Free CompTIA Security+ (SY0-701) Practice Test — CertBench",
+    // NOTE: the root layout template appends "— CertBench" to every title;
+    // keep these base titles ≤ ~48 chars so the full tag stays under 60.
+    metaTitle: "Free CompTIA Security+ Practice Test (SY0-701)",
     metaDescription:
       "Free Security+ SY0-701 practice questions with full explanations, weighted by real exam domains. Take the 25-question diagnostic and get your readiness score.",
     h1: "Free CompTIA Security+ (SY0-701) practice test",
@@ -62,7 +64,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     path: "network-plus-practice-test",
     certSlugs: ["network-plus-n10-009"],
     title: "Network+ practice test",
-    metaTitle: "Free CompTIA Network+ (N10-009) Practice Test — CertBench",
+    metaTitle: "Free CompTIA Network+ Practice Test (N10-009)",
     metaDescription:
       "Free Network+ N10-009 practice questions with explanations, weighted by the real exam domains. Take the free diagnostic and get your readiness score.",
     h1: "Free CompTIA Network+ (N10-009) practice test",
@@ -97,7 +99,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     path: "a-plus-practice-test",
     certSlugs: ["a-plus-core1-220-1101", "a-plus-core2-220-1102"],
     title: "A+ practice test",
-    metaTitle: "Free CompTIA A+ Practice Test (Core 1 & Core 2) — CertBench",
+    metaTitle: "Free CompTIA A+ Practice Test (Core 1 & 2)",
     metaDescription:
       "Free A+ 220-1101 and 220-1102 practice questions with explanations. Try samples from both cores, then take the free diagnostic for your readiness score.",
     h1: "Free CompTIA A+ practice test (Core 1 & Core 2)",
@@ -146,7 +148,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "security-plus-pbq-examples",
     certSlug: "security-plus-sy0-701",
     title: "Security+ PBQ examples",
-    metaTitle: "Security+ PBQ Examples — Try a Real Practice PBQ Free",
+    metaTitle: "Free Interactive Security+ PBQ Examples",
     metaDescription:
       "Interactive Security+ performance-based question examples you can actually work through in your browser — firewall rules, log analysis, and more. Free, no signup.",
     h1: "Security+ PBQ examples you can actually try",
@@ -176,7 +178,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "network-plus-pbq-examples",
     certSlug: "network-plus-n10-009",
     title: "Network+ PBQ examples",
-    metaTitle: "Network+ PBQ Examples — Try a Real Practice PBQ Free",
+    metaTitle: "Free Interactive Network+ PBQ Examples",
     metaDescription:
       "Interactive Network+ performance-based question examples — network topology, configuration, and troubleshooting scenarios you can work through free in your browser.",
     h1: "Network+ PBQ examples you can actually try",

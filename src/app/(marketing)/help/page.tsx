@@ -4,7 +4,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 
 export const metadata = {
-  title: "Help Centre — CertBench",
+  title: "Help Centre",
   description:
     "Everything you need to know about using CertBench to prepare for your CompTIA certification exam.",
 };
