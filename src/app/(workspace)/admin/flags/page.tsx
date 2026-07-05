@@ -23,7 +23,7 @@ export default async function AdminFlagsPage() {
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Flagged questions</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Flagged questions</h1>
         <p className="text-sm text-muted-foreground">
           {flags.length} pending report{flags.length === 1 ? "" : "s"}
         </p>

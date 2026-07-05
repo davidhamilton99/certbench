@@ -25,7 +25,7 @@ export default async function DiagnosticPage({
   return (
     <div className="grid gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h1 className="text-xl font-semibold tracking-tight">Diagnostic</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Diagnostic</h1>
         <p className="text-sm text-muted-foreground">
           {cert.name} · establishes your baseline across every domain
         </p>

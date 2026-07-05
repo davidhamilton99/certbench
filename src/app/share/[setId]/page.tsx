@@ -35,7 +35,7 @@ export default async function SharePage({
         </Button>
       </header>
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">{set.title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{set.title}</h1>
         <p className="text-sm text-muted-foreground">
           {set.questionCount} question{set.questionCount === 1 ? "" : "s"} · shared
           on CertBench

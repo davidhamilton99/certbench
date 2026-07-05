@@ -39,7 +39,7 @@ export default async function ReferencePage({
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Reference tables</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Reference tables</h1>
         <p className="text-sm text-muted-foreground">
           {active.name} · quick lookup for key exam topics
         </p>

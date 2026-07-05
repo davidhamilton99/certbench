@@ -22,6 +22,12 @@ const SCORE_BAR: Record<ReturnType<typeof getScoreColor>, string> = {
   danger: "bg-danger",
 };
 
+const BAND_LABEL: Record<ReturnType<typeof getScoreColor>, string> = {
+  success: "Exam ready",
+  warning: "Getting close",
+  danger: "Needs work",
+};
+
 export function ReadinessPanel({ plan }: { plan: SessionPlanResult }) {
   const color = getScoreColor(plan.readinessScore);
   const trend = plan.readinessTrend;
@@ -45,50 +51,65 @@ export function ReadinessPanel({ plan }: { plan: SessionPlanResult }) {
             {Math.round(plan.readinessScore)}
             <span className="text-2xl">%</span>
           </span>
-          {trend && trend.delta !== 0 && (
-            <span
-              className={cn(
-                "flex items-center gap-1 text-sm font-medium",
-                trend.delta > 0 ? "text-success" : "text-danger"
-              )}
-            >
-              {trend.delta > 0 ? (
-                <TrendingUp className="size-4" />
-              ) : (
-                <TrendingDown className="size-4" />
-              )}
-              {trend.delta > 0 ? "+" : ""}
-              {trend.delta}% in {trend.daysSpan}d
+          <div className="grid gap-0.5">
+            <span className={cn("text-sm font-medium", SCORE_TEXT[color])}>
+              {BAND_LABEL[color]}
             </span>
-          )}
+            {trend && trend.delta !== 0 && (
+              <span
+                className={cn(
+                  "flex items-center gap-1 text-xs font-medium",
+                  trend.delta > 0 ? "text-success" : "text-danger"
+                )}
+              >
+                {trend.delta > 0 ? (
+                  <TrendingUp className="size-3.5" />
+                ) : (
+                  <TrendingDown className="size-3.5" />
+                )}
+                {trend.delta > 0 ? "+" : ""}
+                {trend.delta}% in {trend.daysSpan}d
+              </span>
+            )}
+          </div>
         </div>
 
         {plan.domainScores.length > 0 && (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {plan.domainScores.map((d) => {
               const domainColor = getScoreColor(d.score);
               return (
-                // min-w-0 lets the truncating title actually shrink; without
-                // it the nowrap text propagates its full width up the grid
-                // and the row overflows the card.
-                <div key={d.domainId} className="grid min-w-0 gap-1">
-                  <div className="flex min-w-0 items-baseline justify-between gap-2 text-sm">
-                    <span className="truncate">
-                      <span className="font-mono text-xs text-muted-foreground">
+                // Title gets the full row and wraps — score and exam weight
+                // live on their own line so nothing ever truncates.
+                <div key={d.domainId} className="grid min-w-0 gap-1.5">
+                  <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+                    <span className="leading-snug">
+                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">
                         {d.domainNumber}
-                      </span>{" "}
+                      </span>
                       {d.title}
                     </span>
-                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                      {d.attempted > 0 ? `${Math.round(d.score)}%` : "—"} ·{" "}
-                      {d.examWeight}% of exam
+                    <span
+                      className={cn(
+                        "shrink-0 font-mono text-sm",
+                        d.attempted > 0
+                          ? SCORE_TEXT[domainColor]
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {d.attempted > 0 ? `${Math.round(d.score)}%` : "—"}
                     </span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={cn("h-full rounded-full", SCORE_BAR[domainColor])}
-                      style={{ width: `${Math.max(2, Math.min(100, d.score))}%` }}
-                    />
+                  <div className="flex items-center gap-3">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn("h-full rounded-full", SCORE_BAR[domainColor])}
+                        style={{ width: `${Math.max(2, Math.min(100, d.score))}%` }}
+                      />
+                    </div>
+                    <span className="w-20 shrink-0 text-right font-mono text-[11px] text-muted-foreground">
+                      {d.examWeight}% of exam
+                    </span>
                   </div>
                 </div>
               );

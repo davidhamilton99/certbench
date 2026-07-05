@@ -30,7 +30,7 @@ export default async function DomainDrillPage({
   return (
     <div className="grid gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h1 className="text-xl font-semibold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           Drill: {domain.title}
         </h1>
         <p className="text-sm text-muted-foreground">

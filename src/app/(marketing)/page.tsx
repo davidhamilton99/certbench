@@ -59,40 +59,50 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 pb-20 pt-16 text-center sm:pt-24">
-          <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            Know exactly what to study
+        <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 pb-24 pt-20 text-center sm:pt-28">
+          <h1 className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
+            Know <span className="text-primary">exactly</span> what to study
           </h1>
           <p className="max-w-xl text-balance text-lg text-muted-foreground">
             CertBench builds a personalised study plan from your actual
             performance — adaptive practice exams, spaced repetition, and a
             readiness score for CompTIA certifications.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Button asChild size="lg">
               <Link href="/register">
                 Start studying free
                 <ArrowRight />
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="lg">
+            <Button asChild variant="outline" size="lg">
               <Link href="/pricing">See pricing</Link>
             </Button>
           </div>
-          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-2 font-mono text-xs text-muted-foreground">
+          <div className="flex flex-wrap justify-center gap-2 pt-4">
             {CERTS.map((c) => (
-              <span key={c}>{c}</span>
+              <span
+                key={c}
+                className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
+              >
+                {c}
+              </span>
             ))}
-          </p>
+          </div>
         </section>
 
         {/* Features */}
         <section className="border-t bg-muted/40">
-          <div className="mx-auto grid w-full max-w-5xl gap-6 px-6 py-16 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="grid content-start gap-2">
-                <Icon className="size-5 text-primary" />
-                <h2 className="font-medium">{title}</h2>
+              <div
+                key={title}
+                className="grid content-start gap-3 rounded-xl border bg-card p-6"
+              >
+                <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+                  <Icon className="size-4.5 text-primary" />
+                </span>
+                <h2 className="font-semibold tracking-tight">{title}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {body}
                 </p>
@@ -135,9 +145,9 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section className="border-t">
-          <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-16 text-center">
-            <h2 className="text-2xl font-semibold tracking-tight">
+        <section className="border-t bg-muted/40">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight">
               Stop guessing. Start passing.
             </h2>
             <p className="text-muted-foreground">
