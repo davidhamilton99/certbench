@@ -1,138 +1,109 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/panel";
-import { PricingCheckout } from "@/components/marketing/PricingCheckout";
-import { Footer } from "@/components/marketing/Footer";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PlanPicker } from "@/components/billing/PlanPicker";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
+import { Footer } from "@/components/marketing/Footer";
 
 export const metadata = {
   title: "Pricing — CertBench",
 };
 
 const FREE_FEATURES = [
-  "3 AI quiz generations per month",
-  "Built-in question bank",
-  "Practice exams & diagnostics",
-  "Spaced repetition (SRS)",
+  "25-question diagnostic + readiness score",
+  "20 practice questions every day",
+  "Spaced repetition on everything you miss",
+  "Sample PBQ simulation and drill per cert",
   "Community study sets",
+  "3 AI quiz generations per month",
 ];
 
 const PRO_FEATURES = [
-  "Unlimited AI quiz generations",
-  "Everything in Free",
-  "Priority AI processing",
-  "Upload PDF, DOCX, and more",
-  "Early access to new features",
+  "Unlimited practice questions",
+  "Unlimited full-length practice exams",
+  "Every PBQ simulation and concept drill",
+  "Unlimited AI generation + file upload",
+  "Pass guarantee — 30+ days of Pro study and you don't pass? Last payment refunded",
 ];
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="flex min-h-svh flex-col">
       <MarketingHeader />
 
-      <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
-        <div className="text-center mb-10 sm:mb-12">
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-foreground tracking-tight">
-            Simple pricing
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14 sm:py-20">
+        <div className="mb-10 text-center sm:mb-12">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            Priced for one exam cycle
           </h1>
-          <p className="text-[17px] text-muted-foreground mt-2">
-            Start free, upgrade when you need unlimited AI-generated quizzes.
+          <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
+            Study free every day. Go Pro when you&apos;re serious about your
+            exam date — most people need one quarter.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Free Plan */}
-          <Panel padding="lg">
-            <div className="flex flex-col gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Free</CardTitle>
+              <CardDescription>
+                Enough to study every single day
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-5">
               <div>
-                <h2 className="text-[20px] font-semibold text-foreground">
-                  Free
-                </h2>
-                <div className="mt-2">
-                  <span className="text-[36px] font-bold text-foreground">
-                    $0
-                  </span>
-                  <span className="text-[15px] text-muted-foreground">/month</span>
-                </div>
-                <p className="text-[14px] text-muted-foreground mt-2">
-                  Perfect for trying CertBench out.
-                </p>
+                <span className="font-mono text-4xl font-semibold">$0</span>
+                <span className="text-sm text-muted-foreground"> forever</span>
               </div>
-              <ul className="flex flex-col gap-2.5">
-                {FREE_FEATURES.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 text-[14px] text-muted-foreground"
-                  >
-                    <svg
-                      className="w-4 h-4 text-success shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4.5 12.75l6 6 9-13.5"
-                      />
-                    </svg>
-                    {feature}
+              <ul className="grid flex-1 content-start gap-2.5 text-sm">
+                {FREE_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                    {f}
                   </li>
                 ))}
               </ul>
-              <Link href="/register">
-                <Button variant="secondary" size="lg" className="w-full">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          </Panel>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link href="/register">Start free</Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-          {/* Pro Plan */}
-          <Panel padding="lg" accent="primary">
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-[20px] font-semibold text-foreground">
-                  Pro
-                </h2>
-                <div className="mt-2">
-                  <span className="text-[36px] font-bold text-foreground">
-                    $8
-                  </span>
-                  <span className="text-[15px] text-muted-foreground">/month</span>
-                </div>
-                <p className="text-[14px] text-muted-foreground mt-2">
-                  Unlimited AI quizzes for serious learners.
-                </p>
-              </div>
-              <ul className="flex flex-col gap-2.5">
-                {PRO_FEATURES.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 text-[14px] text-muted-foreground"
-                  >
-                    <svg
-                      className="w-4 h-4 text-primary shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4.5 12.75l6 6 9-13.5"
-                      />
-                    </svg>
-                    {feature}
+          <Card className="border-primary/40 ring-1 ring-primary/20">
+            <CardHeader>
+              <CardTitle>Pro</CardTitle>
+              <CardDescription>
+                Everything, without limits, until you pass
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-5">
+              <ul className="grid content-start gap-2.5 text-sm">
+                {PRO_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                    {f}
                   </li>
                 ))}
               </ul>
-              <PricingCheckout />
-            </div>
-          </Panel>
+              <PlanPicker ctaLabel="Get Pro" />
+            </CardContent>
+          </Card>
         </div>
+
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          Questions?{" "}
+          <Link href="/contact" className="underline underline-offset-4">
+            Get in touch
+          </Link>{" "}
+          — we answer fast.
+        </p>
       </main>
 
       <Footer />

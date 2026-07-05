@@ -7,8 +7,17 @@ import {
 } from "@/server/data/certifications";
 import { listEnrollments } from "@/server/data/enrollments";
 import { getSessionPlan } from "@/server/services/session-plan";
+import { getUserPlan } from "@/server/services/subscription";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlockCard } from "@/components/workspace/SessionBlockCard";
+
+/** Block types metered by the free daily quota (see practice-exam/start). */
+const METERED_TYPES = new Set([
+  "domain_drill",
+  "weak_points",
+  "practice_exam",
+  "new_content",
+]);
 
 export const metadata = {
   title: "Dashboard",
@@ -41,7 +50,14 @@ export default async function DashboardPage({
   }
   if (!active) redirect("/onboarding");
 
-  const plan = await getSessionPlan(db, user.id, active.id, enrollment.examDate);
+  const [plan, userPlan] = await Promise.all([
+    getSessionPlan(db, user.id, active.id, enrollment.examDate),
+    getUserPlan(db, user.id),
+  ]);
+  const remainingToday =
+    userPlan.questionsLimitPerDay === null
+      ? Infinity
+      : Math.max(0, userPlan.questionsLimitPerDay - userPlan.questionsUsedToday);
 
   return (
     <div className="relative mx-auto grid w-full max-w-5xl gap-8">
@@ -77,6 +93,10 @@ export default async function DashboardPage({
               block={block}
               certSlug={active.slug}
               order={i + 1}
+              locked={
+                METERED_TYPES.has(block.type) &&
+                (block.questionCount ?? 0) > remainingToday
+              }
             />
           ))}
           {plan.blocks.length === 0 && (

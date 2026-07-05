@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Lock } from "lucide-react";
 import type {
   AnswerInput,
   ExamQuestion,
@@ -38,6 +39,7 @@ export interface ExamClientProps {
 type ClientState =
   | { phase: "loading" }
   | { phase: "error"; message: string }
+  | { phase: "quota"; message: string }
   | {
       phase: "active";
       attemptId: string;
@@ -85,11 +87,15 @@ export function ExamClient({
         })
       )
       .catch((err) =>
-        setState({
-          phase: "error",
-          message:
-            err instanceof ApiError ? err.message : "Couldn't start the exam",
-        })
+        setState(
+          err instanceof ApiError && err.code === "quota_exceeded"
+            ? { phase: "quota", message: err.message }
+            : {
+                phase: "error",
+                message:
+                  err instanceof ApiError ? err.message : "Couldn't start the exam",
+              }
+        )
       );
     // start is stable per mount by construction (defined inline by wrappers).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,6 +120,27 @@ export function ExamClient({
         >
           Retry
         </Button>
+      </div>
+    );
+  }
+
+  // The paywall moment: the daily free allowance can't cover this session.
+  if (state.phase === "quota") {
+    return (
+      <div className="mx-auto grid max-w-md gap-4 py-16 text-center">
+        <Lock className="mx-auto size-6 text-muted-foreground" />
+        <h2 className="text-lg font-semibold tracking-tight">
+          Daily limit reached
+        </h2>
+        <p className="text-sm text-muted-foreground">{state.message}</p>
+        <div className="flex justify-center gap-2 pt-2">
+          <Button asChild>
+            <Link href="/upgrade?reason=daily-limit">Upgrade to Pro</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard">Back to your plan</Link>
+          </Button>
+        </div>
       </div>
     );
   }

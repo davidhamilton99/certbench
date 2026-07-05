@@ -6,6 +6,7 @@ import {
   Clock,
   Compass,
   Crosshair,
+  Lock,
   RotateCcw,
   Target,
   type LucideIcon,
@@ -54,11 +55,14 @@ export function SessionBlockCard({
   block,
   certSlug,
   order,
+  locked = false,
 }: {
   block: SessionBlock;
   certSlug: string;
   /** 1-based position in today's plan, shown as a step number. */
   order?: number;
+  /** Free plan can't cover this session today — badge it (server enforces). */
+  locked?: boolean;
 }) {
   const Icon = ICON[block.type];
   return (
@@ -74,8 +78,14 @@ export function SessionBlockCard({
             <Icon className="size-5" />
           </span>
           <div className="grid min-w-0 flex-1 gap-0.5">
-            <span className="text-[15px] font-semibold tracking-tight">
+            <span className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
               {block.title}
+              {locked && (
+                <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                  <Lock className="size-3" />
+                  Pro
+                </span>
+              )}
             </span>
             <span className="text-sm text-muted-foreground">
               {block.description}

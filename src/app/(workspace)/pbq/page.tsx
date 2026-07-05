@@ -6,6 +6,7 @@ import {
   listActiveCertifications,
 } from "@/server/data/certifications";
 import { pbqRegistry } from "@/data/pbq";
+import { getUserPlan } from "@/server/services/subscription";
 import { PbqScenarios } from "@/components/workspace/PbqScenarios";
 
 export const metadata = {
@@ -35,6 +36,7 @@ export default async function PbqPage({
   if (!active) redirect("/onboarding");
 
   const scenarios = pbqRegistry[active.slug] ?? [];
+  const plan = await getUserPlan(db, user.id);
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
@@ -50,7 +52,7 @@ export default async function PbqPage({
           No scenarios for this certification yet.
         </p>
       ) : (
-        <PbqScenarios scenarios={scenarios} />
+        <PbqScenarios scenarios={scenarios} isPro={plan.plan === "pro"} />
       )}
     </div>
   );

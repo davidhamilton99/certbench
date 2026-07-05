@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { Lock } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import type { PbqScenario, SimulationScenario, TopologyScenario } from "@/data/pbq/types";
@@ -40,10 +42,14 @@ function drillTypeVariant(t: string): "neutral" | "warning" | "success" {
 function ScenarioList({
   scenarios,
   onSelect,
+  onLocked,
+  lockedIds,
   isSimulation,
 }: {
   scenarios: PbqScenario[];
   onSelect: (s: PbqScenario) => void;
+  onLocked: () => void;
+  lockedIds: ReadonlySet<string>;
   isSimulation: boolean;
 }) {
   const domainGroups = useMemo(() => {
@@ -92,15 +98,20 @@ function ScenarioList({
             {domainLabel}
           </h2>
           <div className="flex flex-col gap-2">
-            {group.map((scenario) => (
+            {group.map((scenario) => {
+              const locked = lockedIds.has(scenario.id);
+              return (
               <button
                 key={scenario.id}
-                onClick={() => onSelect(scenario)}
-                className="w-full text-left bg-card border border-border rounded-lg p-4 hover:border-primary/40 transition-colors duration-150"
+                onClick={() => (locked ? onLocked() : onSelect(scenario))}
+                className={`w-full text-left bg-card border border-border rounded-lg p-4 transition-colors duration-150 ${
+                  locked ? "opacity-70 hover:border-border" : "hover:border-primary/40"
+                }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-[14px] font-medium text-foreground">
+                    <span className="flex items-center gap-1.5 text-[14px] font-medium text-foreground">
+                      {locked && <Lock className="size-3.5 text-muted-foreground" />}
                       {scenario.title}
                     </span>
                     <span className="text-[13px] text-muted-foreground">
@@ -121,23 +132,28 @@ function ScenarioList({
                           : (scenario as TopologyScenario).estimatedMinutes} min
                       </span>
                     )}
-                    <Badge
-                      variant={
-                        scenario.type === "simulation" || scenario.type === "topology"
-                          ? "neutral"
-                          : drillTypeVariant(scenario.type)
-                      }
-                    >
-                      {scenario.type === "simulation"
-                        ? "Simulation"
-                        : scenario.type === "topology"
-                        ? "Topology Lab"
-                        : drillTypeLabel(scenario.type)}
-                    </Badge>
+                    {locked ? (
+                      <Badge variant="neutral">Pro</Badge>
+                    ) : (
+                      <Badge
+                        variant={
+                          scenario.type === "simulation" || scenario.type === "topology"
+                            ? "neutral"
+                            : drillTypeVariant(scenario.type)
+                        }
+                      >
+                        {scenario.type === "simulation"
+                          ? "Simulation"
+                          : scenario.type === "topology"
+                          ? "Topology Lab"
+                          : drillTypeLabel(scenario.type)}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}
@@ -151,9 +167,13 @@ function ScenarioList({
 
 export function PbqScenarios({
   scenarios,
+  isPro = true,
 }: {
   scenarios: PbqScenario[];
+  /** Free users get the first simulation + first drill; the rest lock. */
+  isPro?: boolean;
 }) {
+  const router = useRouter();
   const [activeScenario, setActiveScenario] = useState<PbqScenario | null>(
     null
   );
@@ -169,6 +189,13 @@ export function PbqScenarios({
     () => scenarios.filter((s) => s.type === "simulation" || s.type === "topology"),
     [scenarios]
   );
+
+  const lockedIds = useMemo(() => {
+    if (isPro) return new Set<string>();
+    return new Set(
+      [...simulations.slice(1), ...drills.slice(1)].map((s) => s.id)
+    );
+  }, [isPro, simulations, drills]);
 
   // Default to drills tab if no simulations exist
   const effectiveTab =
@@ -253,6 +280,8 @@ export function PbqScenarios({
       <ScenarioList
         scenarios={effectiveTab === "simulations" ? simulations : drills}
         onSelect={setActiveScenario}
+        onLocked={() => router.push("/upgrade?reason=pbq")}
+        lockedIds={lockedIds}
         isSimulation={effectiveTab === "simulations"}
       />
     </div>
