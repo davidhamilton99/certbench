@@ -103,6 +103,26 @@ export async function getQuestionSubObjectiveMap(
   );
 }
 
+/**
+ * A small, STABLE sample of questions for the public practice-test pages.
+ * Ordered by id so the page content doesn't churn between crawls.
+ */
+export async function listSampleQuestions(
+  db: Db,
+  certId: string,
+  count: number
+): Promise<CertQuestion[]> {
+  const { data, error } = await db
+    .from("cert_questions")
+    .select(QUESTION_COLUMNS)
+    .eq("certification_id", certId)
+    .eq("is_active", true)
+    .order("id")
+    .limit(count);
+  if (error) throw new ApiError("internal", error.message);
+  return (data ?? []).map(mapQuestion);
+}
+
 export async function countActiveQuestions(db: Db, certId: string): Promise<number> {
   const { count, error } = await db
     .from("cert_questions")
