@@ -14,6 +14,7 @@ const FREE_RESOURCES = [
   { href: "/a-plus-practice-test", label: "A+ practice test" },
   { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples" },
   { href: "/network-plus-pbq-examples", label: "Network+ PBQ examples" },
+  { href: "/tools/port-numbers-quiz", label: "Port numbers quiz" },
 ];
 
 export function Footer() {
