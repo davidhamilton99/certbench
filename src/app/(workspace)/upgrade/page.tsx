@@ -39,7 +39,7 @@ export default async function UpgradePage() {
   return (
     <div className="mx-auto grid w-full max-w-lg gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {plan.plan === "pro" ? "Your subscription" : "Upgrade to Pro"}
         </h1>
         <p className="text-sm text-muted-foreground">

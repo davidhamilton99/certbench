@@ -5,14 +5,15 @@
 
 /*
  * CertBench design tokens — modern refined SaaS.
- * Neutral zinc base, blue primary, semantic status colors for readiness bands.
- * Light is default; `.dark` class toggled by next-themes.
+ * Near-neutral base with a cool cast, indigo-blue primary, semantic status
+ * colors reserved for readiness bands. Light is default; `.dark` class
+ * toggled by next-themes.
  */
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
+  --background: oklch(0.988 0.002 265);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
@@ -57,11 +58,11 @@
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
+  --background: oklch(0.135 0.008 265);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
+  --card: oklch(0.195 0.009 265);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
+  --popover: oklch(0.195 0.009 265);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.623 0.214 259.815);
   --primary-foreground: oklch(0.985 0 0);
@@ -90,7 +91,7 @@
   --chart-4: oklch(0.704 0.191 22.216);
   --chart-5: oklch(0.705 0.015 286.067);
 
-  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar: oklch(0.165 0.008 265);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.623 0.214 259.815);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -158,5 +159,12 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-primary/20;
+  }
+  /* Scores, counts, and exam codes line up in columns everywhere. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }

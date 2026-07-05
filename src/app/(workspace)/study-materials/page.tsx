@@ -23,7 +23,7 @@ export default async function StudyMaterialsPage() {
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Study sets</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Study sets</h1>
           <p className="text-sm text-muted-foreground">
             Your own material — created by hand, imported, or AI-generated
           </p>

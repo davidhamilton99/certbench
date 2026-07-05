@@ -34,25 +34,37 @@ function blockHref(block: SessionBlock, certSlug: string): string {
 export function SessionBlockCard({
   block,
   certSlug,
+  order,
 }: {
   block: SessionBlock;
   certSlug: string;
+  /** 1-based position in today's plan, shown as a step number. */
+  order?: number;
 }) {
   return (
     <Link href={blockHref(block, certSlug)} className="group block">
       <Card
         className={cn(
-          "border-l-4 py-4 transition-colors group-hover:bg-accent/40",
+          "border-l-4 py-5 transition-all group-hover:border-l-8 group-hover:bg-accent/40",
           ACCENT[block.color]
         )}
       >
         <CardContent className="flex items-center justify-between gap-4">
-          <div className="grid gap-0.5">
-            <span className="font-medium">{block.title}</span>
+          <div className="grid min-w-0 gap-1">
+            <span className="flex items-baseline gap-2.5">
+              {order !== undefined && (
+                <span className="font-mono text-xs text-muted-foreground/70">
+                  {String(order).padStart(2, "0")}
+                </span>
+              )}
+              <span className="text-[15px] font-semibold tracking-tight">
+                {block.title}
+              </span>
+            </span>
             <span className="text-sm text-muted-foreground">
               {block.description}
             </span>
-            <span className="flex items-center gap-3 pt-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-3 pt-1.5 text-xs text-muted-foreground">
               {block.questionCount !== undefined && (
                 <span className="font-mono">{block.questionCount} questions</span>
               )}
@@ -63,7 +75,7 @@ export function SessionBlockCard({
               )}
             </span>
           </div>
-          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />
         </CardContent>
       </Card>
     </Link>

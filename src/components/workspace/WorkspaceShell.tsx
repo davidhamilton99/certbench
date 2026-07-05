@@ -74,9 +74,15 @@ export function WorkspaceShell({
   return (
     <div className="flex min-h-svh">
       {/* Sidebar (desktop) */}
-      <aside className="sticky top-0 hidden h-svh w-56 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
-        <div className="flex items-center px-5 py-4">
-          <Link href="/dashboard" className="text-base font-semibold tracking-tight">
+      <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
+        <div className="flex items-center px-4 py-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2.5 text-base font-semibold tracking-tight"
+          >
+            <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
+              CB
+            </span>
             CertBench
           </Link>
         </div>
@@ -84,30 +90,41 @@ export function WorkspaceShell({
           <CertSwitcher certs={certs} />
         </Suspense>
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                pathname.startsWith(href)
-                  ? "bg-accent font-medium"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              )}
-            >
-              <Icon className="size-4" />
-              {label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-accent font-medium"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "size-4",
+                    active ? "text-primary" : "text-muted-foreground"
+                  )}
+                />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="flex items-center justify-between border-t px-3 py-2.5">
+        <div className="flex items-center justify-between gap-1 border-t px-3 py-2.5">
           <Link
             href="/profile"
-            className="truncate rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            className="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
-            {displayName}
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[11px] uppercase">
+              {displayName.trim().charAt(0) || "?"}
+            </span>
+            <span className="truncate">{displayName}</span>
           </Link>
-          <div className="flex items-center">
+          <div className="flex shrink-0 items-center">
             <ThemeToggle />
             <SignOutButton />
           </div>

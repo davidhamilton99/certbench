@@ -77,7 +77,7 @@ export default async function AnalyticsPage({
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="text-sm text-muted-foreground">{active.name}</p>
       </div>
 

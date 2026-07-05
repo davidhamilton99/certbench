@@ -49,7 +49,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
       <ProfileSettings
         initialDisplayName={profile.displayName}
         email={user.email ?? ""}

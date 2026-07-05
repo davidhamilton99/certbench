@@ -37,7 +37,7 @@ export default async function CommunitySetPage({
       <AttemptPing setId={set.id} />
       <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">{set.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{set.title}</h1>
           <p className="text-sm text-muted-foreground">
             {set.questionCount} question{set.questionCount === 1 ? "" : "s"}
             {set.description && <> · {set.description}</>}

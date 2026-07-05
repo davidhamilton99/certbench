@@ -39,7 +39,7 @@ export default async function PbqPage({
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">PBQ lab</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">PBQ lab</h1>
         <p className="text-sm text-muted-foreground">
           {active.name} · interactive scenarios that mirror the hands-on exam
           questions

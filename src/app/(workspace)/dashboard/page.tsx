@@ -43,15 +43,24 @@ export default async function DashboardPage({
   const plan = await getSessionPlan(db, user.id, active.id, enrollment.examDate);
 
   return (
-    <div className="mx-auto grid w-full max-w-5xl gap-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">
-          {active.name}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-mono">{active.examCode}</span> · today&apos;s plan,
-          ordered by impact
-        </p>
+    <div className="mx-auto grid w-full max-w-5xl gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {active.name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            <span className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-xs">
+              {active.examCode}
+            </span>{" "}
+            · today&apos;s plan, ordered by impact
+          </p>
+        </div>
+        {plan.daysUntilExam !== null && (
+          <span className="rounded-full border px-3 py-1 font-mono text-xs text-muted-foreground">
+            {plan.daysUntilExam} days to exam
+          </span>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -61,6 +70,7 @@ export default async function DashboardPage({
               key={`${block.type}-${i}`}
               block={block}
               certSlug={active.slug}
+              order={i + 1}
             />
           ))}
           {plan.blocks.length === 0 && (

@@ -55,9 +55,11 @@ export function MultipleChoice({
               onChange({ kind: "single", selectedIndex: originalIndex })
             }
             className={cn(
-              "flex items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors",
+              "flex items-start gap-3 rounded-lg border px-4 py-3.5 text-left text-sm transition-colors",
               !revealed && isSelected && "border-primary bg-primary/5 ring-1 ring-primary",
-              !revealed && !isSelected && "hover:bg-accent",
+              !revealed &&
+                !isSelected &&
+                "hover:border-muted-foreground/40 hover:bg-accent",
               isCorrect && "border-success bg-success/10",
               isWrongPick && "border-danger bg-danger/10",
               revealed && "cursor-default"

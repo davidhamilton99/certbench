@@ -19,7 +19,7 @@ export default async function NewStudySetPage() {
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">New study set</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">New study set</h1>
         <p className="text-sm text-muted-foreground">
           Generate questions with AI, import from any chatbot, or write them by hand
         </p>
