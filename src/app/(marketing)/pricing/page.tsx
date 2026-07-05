@@ -13,7 +13,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 
 export const metadata = {
-  title: "Pricing — CertBench",
+  title: "Pricing",
 };
 
 const FREE_FEATURES = [

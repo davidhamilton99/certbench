@@ -3,7 +3,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 
 export const metadata = {
-  title: "Contact — CertBench",
+  title: "Contact",
   description:
     "Get in touch with the CertBench team. Bug reports, feature requests, feedback — we read and respond to everything.",
 };

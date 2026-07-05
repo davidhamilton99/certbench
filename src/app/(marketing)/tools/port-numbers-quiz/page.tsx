@@ -8,7 +8,7 @@ import { PortQuiz } from "@/components/marketing/PortQuiz";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
-  title: "Port Numbers Quiz — Free CompTIA Ports & Protocols Practice",
+  title: "Free CompTIA Port Numbers Quiz",
   description:
     "Drill the port numbers every CompTIA exam tests — Security+, Network+, and A+. Free endless quiz with instant feedback, no signup needed.",
 };

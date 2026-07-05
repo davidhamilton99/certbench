@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { BackLink } from "@/components/marketing/BackLink";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — CertBench",
+  title: "Terms of Service",
   description: "CertBench Terms of Service — the rules governing your use of our certification study platform.",
 };
 
