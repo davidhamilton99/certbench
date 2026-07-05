@@ -32,7 +32,9 @@ type ServerKey =
   | "ANTHROPIC_API_KEY"
   | "STRIPE_SECRET_KEY"
   | "STRIPE_WEBHOOK_SECRET"
-  | "STRIPE_PRO_PRICE_ID";
+  | "STRIPE_PRO_PRICE_ID"
+  | "RESEND_API_KEY"
+  | "CRON_SECRET";
 
 /**
  * Fetch a required server secret. Throws with the variable name if missing —
@@ -52,6 +54,8 @@ export function serverEnv(key: ServerKey): string {
 }
 
 /** Optional server config (no throw). */
-export function serverEnvOptional(key: "SENTRY_DSN"): string | undefined {
+export function serverEnvOptional(
+  key: "SENTRY_DSN" | "EMAIL_FROM"
+): string | undefined {
   return process.env[key];
 }

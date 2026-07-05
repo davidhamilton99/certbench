@@ -679,6 +679,42 @@ interface DatabaseGenerated {
           count?: number;
         };
       };
+      email_preferences: {
+        Row: {
+          user_id: string;
+          digest_enabled: boolean;
+          unsubscribe_token: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          digest_enabled?: boolean;
+          unsubscribe_token?: string;
+          updated_at?: string;
+        };
+        Update: {
+          digest_enabled?: boolean;
+          updated_at?: string;
+        };
+      };
+      email_log: {
+        Row: {
+          id: number;
+          user_id: string;
+          email_type: string;
+          sent_on: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          email_type: string;
+          sent_on?: string;
+          created_at?: string;
+        };
+        Update: {
+          email_type?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: {
