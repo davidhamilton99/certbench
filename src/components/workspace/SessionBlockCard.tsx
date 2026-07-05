@@ -1,15 +1,34 @@
 import Link from "next/link";
-import { ArrowRight, Clock } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  ClipboardList,
+  Clock,
+  Compass,
+  Crosshair,
+  RotateCcw,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SessionBlock } from "@/core/session-plan/compute-plan";
 import { cn } from "@/lib/utils";
 
-const ACCENT: Record<SessionBlock["color"], string> = {
-  primary: "border-l-primary",
-  success: "border-l-success",
-  warning: "border-l-warning",
-  danger: "border-l-danger",
-  urgency: "border-l-danger",
+const TILE: Record<SessionBlock["color"], string> = {
+  primary: "bg-primary/10 text-primary",
+  success: "bg-success/10 text-success",
+  warning: "bg-warning/15 text-warning",
+  danger: "bg-danger/10 text-danger",
+  urgency: "bg-danger/10 text-danger",
+};
+
+const ICON: Record<SessionBlock["type"], LucideIcon> = {
+  diagnostic: Activity,
+  srs_review: RotateCcw,
+  domain_drill: Target,
+  weak_points: Crosshair,
+  practice_exam: ClipboardList,
+  new_content: Compass,
 };
 
 /** Maps a session block to the route that starts it. */
@@ -41,30 +60,32 @@ export function SessionBlockCard({
   /** 1-based position in today's plan, shown as a step number. */
   order?: number;
 }) {
+  const Icon = ICON[block.type];
   return (
     <Link href={blockHref(block, certSlug)} className="group block">
-      <Card
-        className={cn(
-          "border-l-4 py-5 transition-all group-hover:border-l-8 group-hover:bg-accent/40",
-          ACCENT[block.color]
-        )}
-      >
-        <CardContent className="flex items-center justify-between gap-4">
-          <div className="grid min-w-0 gap-1">
-            <span className="flex items-baseline gap-2.5">
-              {order !== undefined && (
-                <span className="font-mono text-xs text-muted-foreground/70">
-                  {String(order).padStart(2, "0")}
-                </span>
-              )}
-              <span className="text-[15px] font-semibold tracking-tight">
-                {block.title}
-              </span>
+      <Card className="py-5 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-muted-foreground/25 group-hover:shadow-md">
+        <CardContent className="flex items-center gap-4">
+          <span
+            className={cn(
+              "flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105",
+              TILE[block.color]
+            )}
+          >
+            <Icon className="size-5" />
+          </span>
+          <div className="grid min-w-0 flex-1 gap-0.5">
+            <span className="text-[15px] font-semibold tracking-tight">
+              {block.title}
             </span>
             <span className="text-sm text-muted-foreground">
               {block.description}
             </span>
-            <span className="flex items-center gap-3 pt-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-3 pt-1 text-xs text-muted-foreground">
+              {order !== undefined && (
+                <span className="font-mono text-muted-foreground/70">
+                  {String(order).padStart(2, "0")}
+                </span>
+              )}
               {block.questionCount !== undefined && (
                 <span className="font-mono">{block.questionCount} questions</span>
               )}
@@ -75,7 +96,7 @@ export function SessionBlockCard({
               )}
             </span>
           </div>
-          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-foreground" />
         </CardContent>
       </Card>
     </Link>

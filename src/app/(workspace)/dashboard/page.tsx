@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PartyPopper } from "lucide-react";
 import { createClient } from "@/server/supabase/server";
 import {
   getCertificationBySlug,
@@ -43,7 +44,12 @@ export default async function DashboardPage({
   const plan = await getSessionPlan(db, user.id, active.id, enrollment.examDate);
 
   return (
-    <div className="mx-auto grid w-full max-w-5xl gap-8">
+    <div className="relative mx-auto grid w-full max-w-5xl gap-8">
+      {/* Ambient glow behind the readiness column — depth without noise. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 right-0 -z-10 h-72 w-[32rem] rounded-full bg-primary/5 blur-3xl dark:bg-primary/10"
+      />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -74,13 +80,19 @@ export default async function DashboardPage({
             />
           ))}
           {plan.blocks.length === 0 && (
-            <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-              You&apos;re all caught up. Check back tomorrow.
-            </p>
+            <div className="grid justify-items-center gap-2 rounded-xl border border-dashed p-10 text-center">
+              <PartyPopper className="size-6 text-muted-foreground" />
+              <p className="text-sm font-medium">You&apos;re all caught up</p>
+              <p className="text-sm text-muted-foreground">
+                Nothing due today — check back tomorrow.
+              </p>
+            </div>
           )}
         </div>
         <div className="order-1 lg:order-2">
-          <ReadinessPanel plan={plan} />
+          <div className="lg:sticky lg:top-8">
+            <ReadinessPanel plan={plan} />
+          </div>
         </div>
       </div>
     </div>
