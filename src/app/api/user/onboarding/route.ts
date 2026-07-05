@@ -2,6 +2,7 @@ import { defineEndpoint } from "@/server/api/define-endpoint";
 import { completeOnboarding } from "@/contracts/user";
 import { createEnrollment } from "@/server/data/enrollments";
 import { updateProfile } from "@/server/data/profiles";
+import { sendWelcome } from "@/server/services/lifecycle-email";
 import { ApiError } from "@/contracts/common";
 
 export const POST = defineEndpoint(completeOnboarding, {
@@ -16,6 +17,8 @@ export const POST = defineEndpoint(completeOnboarding, {
       if (!(err instanceof ApiError && err.code === "conflict")) throw err;
     }
     await updateProfile(db, user.id, { onboardingCompleted: true });
+    // Deduped internally and never throws — email being down can't block signup.
+    if (user.email) await sendWelcome(user.id, user.email, input.certId);
     return { completed: true };
   },
 });
