@@ -11,6 +11,7 @@ vi.mock("@/env", () => ({
 
 import {
   COUNTDOWN_DAYS,
+  POST_EXAM_DAY,
   daysUntil,
   isTestAccount,
 } from "../lifecycle-email";
@@ -27,6 +28,14 @@ describe("daysUntil", () => {
 
   it("is negative for past dates", () => {
     expect(daysUntil("2026-07-01", now)).toBe(-4);
+  });
+
+  it("fires the post-exam story request N days after the exam", () => {
+    // Cron logic triggers when daysUntil === -POST_EXAM_DAY.
+    const examDate = new Date(
+      Date.UTC(2026, 6, 5 - POST_EXAM_DAY)
+    ).toISOString().slice(0, 10);
+    expect(daysUntil(examDate, now)).toBe(-POST_EXAM_DAY);
   });
 
   it("ignores the time of day of the run", () => {

@@ -16,6 +16,7 @@ const PROTECTED_PREFIXES = [
   "/srs",
   "/pbq",
   "/reference",
+  "/feedback",
   "/admin",
 ];
 

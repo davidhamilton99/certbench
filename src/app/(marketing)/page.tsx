@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
+import { Testimonials } from "@/components/marketing/Testimonials";
+import { createAnonClient } from "@/server/supabase/anon";
+import { listApprovedTestimonials } from "@/server/data/testimonials";
 
 const FEATURES = [
   {
@@ -52,7 +55,15 @@ const CERTS = [
   "A+ Core 2 220-1102",
 ];
 
-export default function LandingPage() {
+export const revalidate = 3600; // refresh approved testimonials hourly
+
+export default async function LandingPage() {
+  // Fail-safe: the homepage must render even if the table is pre-migration
+  // or the DB hiccups. No testimonials → the section simply doesn't show.
+  const testimonials = await listApprovedTestimonials(createAnonClient(), 6).catch(
+    () => []
+  );
+
   return (
     <div className="flex min-h-svh flex-col">
       <MarketingHeader />
@@ -144,8 +155,10 @@ export default function LandingPage() {
           </ol>
         </section>
 
+        {testimonials.length >= 3 && <Testimonials items={testimonials} />}
+
         {/* CTA */}
-        <section className="border-t bg-muted/40">
+        <section className="border-t">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
             <h2 className="text-3xl font-semibold tracking-tight">
               Stop guessing. Start passing.
