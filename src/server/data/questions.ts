@@ -132,3 +132,40 @@ export async function countActiveQuestions(db: Db, certId: string): Promise<numb
   if (error) throw new ApiError("internal", error.message);
   return count ?? 0;
 }
+
+/** Active questions tagged to a sub-objective (stable id order) — objective pages. */
+export async function listQuestionsBySubObjective(
+  db: Db,
+  subObjectiveId: string,
+  limit: number
+): Promise<CertQuestion[]> {
+  const { data, error } = await db
+    .from("cert_questions")
+    .select(QUESTION_COLUMNS)
+    .eq("sub_objective_id", subObjectiveId)
+    .eq("is_active", true)
+    .order("id")
+    .limit(limit);
+  if (error) throw new ApiError("internal", error.message);
+  return (data ?? []).map(mapQuestion);
+}
+
+/** sub_objective_id → active question count for a cert (objective-page gating). */
+export async function countQuestionsBySubObjective(
+  db: Db,
+  certId: string
+): Promise<Map<string, number>> {
+  const { data, error } = await db
+    .from("cert_questions")
+    .select("sub_objective_id")
+    .eq("certification_id", certId)
+    .eq("is_active", true)
+    .not("sub_objective_id", "is", null);
+  if (error) throw new ApiError("internal", error.message);
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    const id = row.sub_objective_id as string;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}

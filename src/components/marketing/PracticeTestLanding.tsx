@@ -21,13 +21,22 @@ export interface PracticeTestLandingData {
   }[];
 }
 
+export interface ObjectiveLink {
+  certSlug: string;
+  code: string;
+  title: string;
+  slug: string;
+}
+
 /** Presentational template for the /​*-practice-test pages; pages load data via @/server/seo. */
 export function PracticeTestLanding({
   page,
   data,
+  objectives = [],
 }: {
   page: PracticeTestPage;
   data: PracticeTestLandingData;
+  objectives?: ObjectiveLink[];
 }) {
   return (
     <div className="flex min-h-svh flex-col">
@@ -97,6 +106,36 @@ export function PracticeTestLanding({
             ))}
           </div>
         </section>
+
+        {/* Practice by objective — hub links to the programmatic pages */}
+        {objectives.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Practice by exam objective
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Drill a specific objective — each page has its own set of
+              questions with explanations.
+            </p>
+            <div className="mt-4 grid gap-1.5">
+              {objectives.map((o) => (
+                <Link
+                  key={`${o.certSlug}/${o.slug}`}
+                  href={`/objectives/${o.certSlug}/${o.slug}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
+                >
+                  <span>
+                    <span className="mr-1.5 font-mono text-xs text-muted-foreground">
+                      {o.code}
+                    </span>
+                    {o.title}
+                  </span>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* CTA */}
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
