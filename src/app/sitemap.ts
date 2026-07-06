@@ -1,9 +1,24 @@
 import { MetadataRoute } from "next";
+import { listObjectivePages } from "@/server/seo/objective-data";
 
 const BASE_URL = "https://certbench.dev";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Programmatic objective pages — fail-safe so a DB hiccup can't break the
+  // whole sitemap.
+  const objectivePages: MetadataRoute.Sitemap = await listObjectivePages()
+    .then((pages) =>
+      pages.map((p) => ({
+        url: `${BASE_URL}/objectives/${p.cert}/${p.code}`,
+        lastModified: new Date(),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      }))
+    )
+    .catch(() => []);
+
   return [
+    ...objectivePages,
     {
       url: BASE_URL,
       lastModified: new Date(),
