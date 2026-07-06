@@ -1,6 +1,7 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -8,6 +9,10 @@ import {
 } from "@/components/ui/card";
 import { getScoreColor } from "@/core/readiness/compute-score";
 import type { SessionPlanResult } from "@/core/session-plan/compute-plan";
+import {
+  ShareReadiness,
+  type ShareReadinessProps,
+} from "@/components/workspace/ShareReadiness";
 import { cn } from "@/lib/utils";
 
 const SCORE_TEXT: Record<ReturnType<typeof getScoreColor>, string> = {
@@ -118,7 +123,14 @@ function ReadinessGauge({ score }: { score: number }) {
   );
 }
 
-export function ReadinessPanel({ plan }: { plan: SessionPlanResult }) {
+export function ReadinessPanel({
+  plan,
+  share,
+}: {
+  plan: SessionPlanResult;
+  /** Owner-only share control; omitted for read-only views. */
+  share?: ShareReadinessProps;
+}) {
   const trend = plan.readinessTrend;
 
   return (
@@ -133,6 +145,11 @@ export function ReadinessPanel({ plan }: { plan: SessionPlanResult }) {
             <> · {plan.daysUntilExam} days until exam</>
           )}
         </CardDescription>
+        {share && (
+          <CardAction>
+            <ShareReadiness {...share} />
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <div className="grid justify-items-center gap-2">
