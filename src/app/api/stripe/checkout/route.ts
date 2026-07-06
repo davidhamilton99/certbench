@@ -3,6 +3,7 @@ import { createCheckout, type BillingInterval } from "@/contracts/billing";
 import { ApiError } from "@/contracts/common";
 import { getStripe } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
+import { pppForCountry } from "@/lib/pricing/ppp";
 import { publicEnv, serverEnv } from "@/env";
 
 /** Stripe lookup keys, created by scripts/setup-stripe-prices.mjs. */
@@ -34,8 +35,17 @@ async function resolvePriceId(interval: BillingInterval): Promise<string> {
 export const POST = defineEndpoint(createCheckout, {
   auth: "user",
   rateLimit: { limit: 5, windowSeconds: 3600 },
-  handler: async ({ input, user }) => {
+  handler: async ({ input, user, request }) => {
     if (!user) throw new ApiError("unauthorized");
+
+    // Purchasing-power discount, derived from the REAL request IP country —
+    // never from client input — so the coupon can't be spoofed. Coupons are
+    // created by scripts/setup-stripe-coupons.mjs; if one is missing (not yet
+    // set up) checkout still proceeds at full price.
+    const pppTier = pppForCountry(request.headers.get("x-vercel-ip-country"));
+    const discounts = pppTier
+      ? [{ coupon: pppTier.couponId }]
+      : undefined;
 
     // The customer-id bootstrap writes through the admin client because the
     // RLS policy only allows users to read their subscription row.
@@ -69,14 +79,33 @@ export const POST = defineEndpoint(createCheckout, {
     }
 
     const origin = publicEnv.NEXT_PUBLIC_APP_URL;
-    const session = await getStripe().checkout.sessions.create({
-      customer: customerId,
-      mode: "subscription",
-      line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
-      success_url: `${origin}/dashboard?upgraded=true`,
-      cancel_url: `${origin}/upgrade`,
-      metadata: { supabase_user_id: user.id },
-    });
+    let session;
+    try {
+      session = await getStripe().checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
+        discounts,
+        success_url: `${origin}/dashboard?upgraded=true`,
+        cancel_url: `${origin}/upgrade`,
+        metadata: { supabase_user_id: user.id },
+      });
+    } catch (err) {
+      // A missing/expired PPP coupon must not block checkout — retry at full price.
+      if (discounts && err instanceof Error && /coupon/i.test(err.message)) {
+        console.error("PPP coupon rejected, falling back to full price:", err.message);
+        session = await getStripe().checkout.sessions.create({
+          customer: customerId,
+          mode: "subscription",
+          line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
+          success_url: `${origin}/dashboard?upgraded=true`,
+          cancel_url: `${origin}/upgrade`,
+          metadata: { supabase_user_id: user.id },
+        });
+      } else {
+        throw err;
+      }
+    }
 
     if (!session.url) throw new ApiError("internal", "Stripe returned no URL");
     return { url: session.url };

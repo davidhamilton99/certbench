@@ -22,3 +22,30 @@ export const createPortal = {
   input: z.object({}),
   output: z.object({ url: z.string() }),
 } as const satisfies EndpointContract;
+
+const intervalPrice = z.object({
+  original: z.string(),
+  discounted: z.string(),
+});
+
+/**
+ * Region-adjusted display pricing (purchasing-power parity). DISPLAY ONLY —
+ * the checkout endpoint re-derives the real discount from the request IP,
+ * so this response can never be used to obtain a discount fraudulently.
+ */
+export const getRegionPricing = {
+  path: "/api/pricing/region",
+  method: "GET",
+  input: z.object({
+    /** Dev/test override; ignored in production (real geo header wins). */
+    country: z.string().length(2).optional(),
+  }),
+  output: z.object({
+    discountPercent: z.number().nullable(),
+    prices: z.object({
+      monthly: intervalPrice,
+      quarterly: intervalPrice,
+      annual: intervalPrice,
+    }),
+  }),
+} as const satisfies EndpointContract;
