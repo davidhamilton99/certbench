@@ -60,6 +60,70 @@ function CertSwitcher({ certs }: { certs: ShellCert[] }) {
   );
 }
 
+/**
+ * Keep the selected certification (?cert=) across navigation. Without this,
+ * clicking a nav item drops the query param and cert-scoped pages fall back
+ * to the first enrollment.
+ */
+function withCert(href: string, cert: string | null): string {
+  return cert ? `${href}?cert=${cert}` : href;
+}
+
+function DesktopNav() {
+  const pathname = usePathname();
+  const cert = useSearchParams().get("cert");
+  return (
+    <nav className="flex flex-1 flex-col gap-0.5 p-3">
+      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        const active = pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={withCert(href, cert)}
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+              active
+                ? "bg-accent font-medium"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            )}
+          >
+            <Icon
+              className={cn(
+                "size-4",
+                active ? "text-primary" : "text-muted-foreground"
+              )}
+            />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function MobileNav() {
+  const pathname = usePathname();
+  const cert = useSearchParams().get("cert");
+  return (
+    <nav className="flex gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
+      {NAV_ITEMS.map(({ href, label }) => (
+        <Link
+          key={href}
+          href={withCert(href, cert)}
+          className={cn(
+            "whitespace-nowrap rounded-full px-3 py-1 text-xs transition-colors",
+            pathname.startsWith(href)
+              ? "bg-accent font-medium"
+              : "text-muted-foreground hover:bg-accent/50"
+          )}
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function WorkspaceShell({
   certs,
   displayName,
@@ -69,8 +133,6 @@ export function WorkspaceShell({
   displayName: string;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
   return (
     <div className="flex min-h-svh">
       {/* Sidebar (desktop) */}
@@ -89,31 +151,9 @@ export function WorkspaceShell({
         <Suspense>
           <CertSwitcher certs={certs} />
         </Suspense>
-        <nav className="flex flex-1 flex-col gap-0.5 p-3">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-accent font-medium"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "size-4",
-                    active ? "text-primary" : "text-muted-foreground"
-                  )}
-                />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+        <Suspense>
+          <DesktopNav />
+        </Suspense>
         <div className="flex items-center justify-between gap-1 border-t px-3 py-2.5">
           <Link
             href="/profile"
@@ -142,22 +182,9 @@ export function WorkspaceShell({
             <SignOutButton />
           </div>
         </header>
-        <nav className="flex gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
-          {NAV_ITEMS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "whitespace-nowrap rounded-full px-3 py-1 text-xs transition-colors",
-                pathname.startsWith(href)
-                  ? "bg-accent font-medium"
-                  : "text-muted-foreground hover:bg-accent/50"
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <Suspense>
+          <MobileNav />
+        </Suspense>
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </div>
     </div>
