@@ -6,10 +6,14 @@ import {
   listActiveCertifications,
 } from "@/server/data/certifications";
 import { listEnrollments } from "@/server/data/enrollments";
+import { getProfile } from "@/server/data/profiles";
 import { getSessionPlan } from "@/server/services/session-plan";
 import { getUserPlan } from "@/server/services/subscription";
+import { signShare, shareName } from "@/server/share/readiness-token";
+import { publicEnv } from "@/env";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlockCard } from "@/components/workspace/SessionBlockCard";
+import type { ShareReadinessProps } from "@/components/workspace/ShareReadiness";
 
 /** Block types metered by the free daily quota (see practice-exam/start). */
 const METERED_TYPES = new Set([
@@ -50,14 +54,35 @@ export default async function DashboardPage({
   }
   if (!active) redirect("/onboarding");
 
-  const [plan, userPlan] = await Promise.all([
+  const [plan, userPlan, profile] = await Promise.all([
     getSessionPlan(db, user.id, active.id, enrollment.examDate),
     getUserPlan(db, user.id),
+    getProfile(db, user.id),
   ]);
   const remainingToday =
     userPlan.questionsLimitPerDay === null
       ? Infinity
       : Math.max(0, userPlan.questionsLimitPerDay - userPlan.questionsUsedToday);
+
+  // Shareable readiness card — only once there's a real score to show.
+  let share: ShareReadinessProps | undefined;
+  if (plan.totalQuestionsSeen > 0) {
+    const token = signShare({
+      n: shareName(profile?.displayName ?? "A CertBench user"),
+      c: active.name,
+      x: active.examCode,
+      s: Math.round(plan.readinessScore),
+      p: plan.readinessIsPreliminary ? 1 : 0,
+      d: plan.domainScores
+        .slice(0, 5)
+        .map((dom) => [dom.title, Math.round(dom.score)]),
+    });
+    share = {
+      url: `${publicEnv.NEXT_PUBLIC_APP_URL}/readiness/${token}`,
+      score: Math.round(plan.readinessScore),
+      certName: active.name,
+    };
+  }
 
   return (
     <div className="relative mx-auto grid w-full max-w-5xl gap-8">
@@ -111,7 +136,7 @@ export default async function DashboardPage({
         </div>
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-8">
-            <ReadinessPanel plan={plan} />
+            <ReadinessPanel plan={plan} share={share} />
           </div>
         </div>
       </div>
