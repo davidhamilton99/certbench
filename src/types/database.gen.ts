@@ -715,6 +715,33 @@ interface DatabaseGenerated {
           email_type?: string;
         };
       };
+      testimonials: {
+        Row: {
+          id: string;
+          user_id: string;
+          certification_id: string | null;
+          passed: boolean;
+          quote: string;
+          display_name: string;
+          status: "pending" | "approved" | "hidden";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          certification_id?: string | null;
+          passed: boolean;
+          quote: string;
+          display_name: string;
+          status?: "pending" | "approved" | "hidden";
+          created_at?: string;
+        };
+        Update: {
+          status?: "pending" | "approved" | "hidden";
+          quote?: string;
+          display_name?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: {

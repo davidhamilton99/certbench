@@ -11,11 +11,15 @@ import { sendEmail } from "@/server/email/resend";
 import {
   countdownEmail,
   digestEmail,
+  postExamEmail,
   welcomeEmail,
 } from "@/server/email/templates";
 
 /** Exam-countdown days that trigger an email. */
 export const COUNTDOWN_DAYS = [14, 7, 3, 1] as const;
+
+/** Days AFTER the exam date to send the "how did it go?" story request. */
+export const POST_EXAM_DAY = 2;
 
 /** Whole days from `now` until a yyyy-mm-dd exam date (UTC calendar). */
 export function daysUntil(examDate: string, now: Date): number {
@@ -118,6 +122,7 @@ export interface LifecycleRunResult {
   users: number;
   digests: number;
   countdowns: number;
+  postExam: number;
 }
 
 /**
@@ -131,7 +136,12 @@ export async function runLifecycleEmails(
 ): Promise<LifecycleRunResult> {
   const admin = createAdminClient();
   const isMonday = now.getUTCDay() === 1;
-  const result: LifecycleRunResult = { users: 0, digests: 0, countdowns: 0 };
+  const result: LifecycleRunResult = {
+    users: 0,
+    digests: 0,
+    countdowns: 0,
+    postExam: 0,
+  };
 
   const { data: userPage, error } = await admin.auth.admin.listUsers({
     perPage: 1000,
@@ -172,10 +182,31 @@ async function processUser(
   const profile = await getProfile(admin, userId);
   const displayName = profile?.displayName ?? "there";
 
-  // ---- exam countdowns (any enrollment with a date) ----
+  // ---- exam countdowns + post-exam story request (per enrollment) ----
   for (const enrollment of enrollments) {
     if (!enrollment.examDate) continue;
     const days = daysUntil(enrollment.examDate, now);
+
+    // Post-exam: a couple of days after the date, ask how it went. This is
+    // the testimonial-flywheel trigger. Keyed per cert so a reschedule of a
+    // different cert can still fire.
+    if (days === -POST_EXAM_DAY) {
+      const cert = await getCertification(admin, enrollment.certificationId);
+      if (cert && (await claimSend(admin, userId, `postexam_${cert.id}`))) {
+        const sent = await sendEmail({
+          to: email,
+          headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
+          ...postExamEmail({
+            displayName,
+            certName: cert.name,
+            unsubscribeUrl: prefs.unsubscribeUrl,
+          }),
+        });
+        if (sent) result.postExam += 1;
+      }
+      continue;
+    }
+
     if (!COUNTDOWN_DAYS.includes(days as (typeof COUNTDOWN_DAYS)[number])) {
       continue;
     }

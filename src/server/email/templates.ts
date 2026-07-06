@@ -109,6 +109,36 @@ export function digestEmail(input: {
   };
 }
 
+export function postExamEmail(input: {
+  displayName: string;
+  certName: string;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const first = input.displayName.split(" ")[0] || input.displayName;
+  const app = APP();
+  return {
+    subject: `How did your ${input.certName} exam go?`,
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 12px;">How did it go, ${first}?</h1>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 16px;">
+        Your ${input.certName} exam date has passed — we're pulling for you.
+        Let us know how it went:
+      </p>
+      <div style="margin:0 0 8px;">
+        ${button(`${app}/feedback?r=pass`, "I passed 🎉")}
+      </div>
+      <p style="font-size:14px;line-height:1.7;margin:8px 0 0;">
+        Didn't get it this time?
+        <a href="${app}/feedback?r=fail" style="color:#2563eb;">We'll help you regroup →</a>
+      </p>
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `How did your ${input.certName} exam go?\n\nPassed? Tell us: ${app}/feedback?r=pass\nNot this time? We'll help you regroup: ${app}/feedback?r=fail\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+  };
+}
+
 export function countdownEmail(input: {
   displayName: string;
   certName: string;
