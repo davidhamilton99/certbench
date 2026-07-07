@@ -14,6 +14,7 @@ import { publicEnv } from "@/env";
 import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlockCard } from "@/components/workspace/SessionBlockCard";
 import type { ShareReadinessProps } from "@/components/workspace/ShareReadiness";
+import { DiagnosticGate } from "@/components/workspace/DiagnosticGate";
 
 /** Block types metered by the free daily quota (see practice-exam/start). */
 const METERED_TYPES = new Set([
@@ -59,6 +60,21 @@ export default async function DashboardPage({
     getUserPlan(db, user.id),
     getProfile(db, user.id),
   ]);
+
+  // First-run: before the diagnostic, the plan is a single diagnostic block.
+  // Show a focused "start here" gate instead of an empty readiness gauge.
+  const needsDiagnostic =
+    plan.blocks.length === 1 && plan.blocks[0].type === "diagnostic";
+  if (needsDiagnostic) {
+    return (
+      <DiagnosticGate
+        certName={active.name}
+        examCode={active.examCode}
+        href={`/certifications/${active.slug}/diagnostic`}
+      />
+    );
+  }
+
   const remainingToday =
     userPlan.questionsLimitPerDay === null
       ? Infinity
