@@ -103,6 +103,16 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
               <ArrowRight />
             </Link>
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Not ready to sign up?{" "}
+            <Link
+              href={`/readiness-check/${data.certSlug}`}
+              className="text-primary underline underline-offset-4"
+            >
+              Try the 3-minute readiness check
+            </Link>{" "}
+            — no account needed.
+          </p>
         </section>
 
         {/* Sibling objectives — internal linking within the domain */}

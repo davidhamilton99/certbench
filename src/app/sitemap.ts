@@ -1,11 +1,11 @@
 import { MetadataRoute } from "next";
 import { listObjectivePages } from "@/server/seo/objective-data";
+import { listReadinessCheckCerts } from "@/server/seo/readiness-check-data";
 
 const BASE_URL = "https://certbench.dev";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Programmatic objective pages — fail-safe so a DB hiccup can't break the
-  // whole sitemap.
+  // Programmatic pages — fail-safe so a DB hiccup can't break the sitemap.
   const objectivePages: MetadataRoute.Sitemap = await listObjectivePages()
     .then((pages) =>
       pages.map((p) => ({
@@ -17,7 +17,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     .catch(() => []);
 
+  const readinessChecks: MetadataRoute.Sitemap = await listReadinessCheckCerts()
+    .then((certs) =>
+      certs.map((c) => ({
+        url: `${BASE_URL}/readiness-check/${c.cert}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      }))
+    )
+    .catch(() => []);
+
   return [
+    ...readinessChecks,
     ...objectivePages,
     {
       url: BASE_URL,
