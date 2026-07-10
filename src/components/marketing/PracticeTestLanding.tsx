@@ -153,6 +153,16 @@ export function PracticeTestLanding({
               <ArrowRight />
             </Link>
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Not ready to sign up?{" "}
+            <Link
+              href={`/readiness-check/${page.certSlugs[0]}`}
+              className="text-primary underline underline-offset-4"
+            >
+              Try the 3-minute readiness check
+            </Link>{" "}
+            — no account needed.
+          </p>
         </section>
 
         <FaqSection faqs={page.faqs} />
