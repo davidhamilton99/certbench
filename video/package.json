@@ -1,0 +1,24 @@
+{
+  "name": "certbench-video",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Programmatic TikTok/Shorts quiz videos rendered from the CertBench question bank",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "fetch": "node scripts/fetch-questions.mjs",
+    "render": "node scripts/render-batch.mjs",
+    "still": "remotion still src/index.ts"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0",
+    "@remotion/cli": "^4.0.0"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@types/react": "^19.0.0",
+    "dotenv": "^16.4.0",
+    "typescript": "^5.6.0"
+  }
+}
