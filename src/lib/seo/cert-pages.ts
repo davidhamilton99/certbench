@@ -93,6 +93,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
         answer:
           "No — they're original questions mapped to the same N10-009 objectives at exam-level difficulty. Braindumps violate CompTIA policy and can void your certification.",
       },
+      {
+        question: "Is there a free N10-009 practice test here?",
+        answer:
+          "Yes — the questions on this page are free with no account, and a free account adds a 25-question N10-009 diagnostic with a readiness score, plus 20 practice questions every day. N10-009 is the current Network+ exam version, so everything here targets it.",
+      },
     ],
   },
   {
@@ -127,6 +132,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
         question: "Are these real A+ exam questions?",
         answer:
           "No — they're original questions written to the 220-1101/1102 objectives at exam-level difficulty, with explanations. Braindumps violate CompTIA policy and can void your certification.",
+      },
+      {
+        question: "Is this a free A+ exam practice test?",
+        answer:
+          "Yes — the sample questions on this page are free with no account, split between Core 1 (220-1101) and Core 2 (220-1102). A free account adds a full 25-question diagnostic per core, a readiness score, and 20 practice questions a day.",
       },
     ],
   },

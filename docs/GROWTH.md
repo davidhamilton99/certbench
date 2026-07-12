@@ -30,38 +30,36 @@ of the remaining levers are human ones. This is the ordered playbook.
 
 ## Week 1–2 — the communities (this is where cert students actually are)
 
-**r/CompTIA (~1M members) — the single most important channel.**
-Rules of engagement: the sub bans drive-by self-promo but loves genuinely
-useful tools from people who participate. Comment helpfully on a few
-threads first (there's a daily stream of "how do I memorize ports?" and
-"how do I practice PBQs?" posts where your pages are the literal answer).
-Then post value-first. Two ready-to-adapt drafts:
+**r/CompTIA reality check (verified 2026-07): the sub prohibits
+advertising outright — promotional posts are not allowed, full stop.**
+Don't fight it; route around it:
 
-> **Draft A — the PBQ post (strongest hook):**
-> Title: "I built an interactive Security+ PBQ you can try in the browser
-> (free, no signup) — because reading about PBQs isn't the same as doing one"
->
-> Body: When I was prepping, PBQs scared me more than anything because
-> every practice resource just *describes* them. So I built playable ones —
-> firewall rules, log analysis, ordering IR steps — graded with partial
-> credit like the real exam. First one's free without an account:
-> certbench.dev/security-plus-pbq-examples. Would love feedback on whether
-> the difficulty feels right vs the real SY0-701.
+- **Helpful comments, links only when asked.** Answer the daily "how do I
+  memorize ports?" / "how do I practice PBQs?" threads with genuine advice
+  in your own words. If someone asks "where?" or "what did you use?",
+  answering with a link is a reply, not an ad. Never open with the link.
+- **Modmail the sanctioned route.** Some cert subs keep a mod-maintained
+  resources wiki. One polite modmail asking whether the free no-signup
+  tools (PBQ examples, port quiz, readiness check) qualify for the wiki is
+  allowed, durable if accepted, and costs five minutes.
+- **Discords over subreddits.** Professor Messer's Discord and other study
+  servers are conversation-first — being the person who answers questions
+  well travels further there than any post.
+- **Let users be the mouthpiece.** The endgame is organic mentions in
+  "what did you study with?" threads — that comes from the product and the
+  post-pass testimonial email, not from you posting. Never astroturf.
 
-> **Draft B — the port quiz post:**
-> Title: "Made a free endless port-numbers drill (both directions:
-> port→protocol and protocol→port), no signup"
->
-> Body: Every 'how do I memorize ports' thread says flashcards, so here's
-> one better: certbench.dev/tools/port-numbers-quiz — endless quiz over the
-> ~30 ports CompTIA actually tests, with the TCP/UDP detail Net+ asks
-> about. Free, no account. Tell me which ports I'm missing.
+**Backlinks without Reddit** (the SEO authority you'd have gotten from a
+popular post has to come from somewhere):
 
-- Post from your personal account, reply to every comment, and take the
-  feedback seriously — a thread where the builder engages gets 10x the
-  traction. One post per sub per few weeks max.
-- Also worth a presence: r/CompTIA's Discord, Professor Messer's Discord
-  (#study-groups), r/ITCareerQuestions (advice threads, not links).
+- Submit the free tools to directories: AlternativeTo, free-for.dev,
+  Product Hunt (a proper launch doubles as a link + traffic spike),
+  IndieHackers.
+- IT instructors and bootcamps (start with Medicine Hat College warm
+  contacts) — one course page or LMS link from an .edu-adjacent source is
+  worth dozens of directory links.
+- YouTube/TikTok descriptions on your own videos all link back — volume
+  adds up.
 
 **Non-US channels (the "across the globe" part):** CompTIA's biggest
 growth markets are India, Nigeria, the Philippines, and the UK — all

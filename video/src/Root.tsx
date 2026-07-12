@@ -1,6 +1,7 @@
 import React from "react";
-import { Composition } from "remotion";
+import { Composition, Still } from "remotion";
 import { QuizVideo, TOTAL_FRAMES, type QuizVideoProps } from "./QuizVideo";
+import { Avatar } from "./Avatar";
 
 const DEFAULT_PROPS: QuizVideoProps = {
   certName: "CompTIA Security+",
@@ -16,14 +17,17 @@ const DEFAULT_PROPS: QuizVideoProps = {
 
 export const Root: React.FC = () => {
   return (
-    <Composition
-      id="QuizVideo"
-      component={QuizVideo}
-      durationInFrames={TOTAL_FRAMES}
-      fps={30}
-      width={1080}
-      height={1920}
-      defaultProps={DEFAULT_PROPS}
-    />
+    <>
+      <Composition
+        id="QuizVideo"
+        component={QuizVideo}
+        durationInFrames={TOTAL_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={DEFAULT_PROPS}
+      />
+      <Still id="Avatar" component={Avatar} width={1080} height={1080} />
+    </>
   );
 };
