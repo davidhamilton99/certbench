@@ -97,13 +97,13 @@ export function PlanPicker({ ctaLabel = "Upgrade to Pro" }: { ctaLabel?: string 
             aria-checked={interval === o.interval}
             onClick={() => setInterval(o.interval)}
             className={cn(
-              "flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors",
+              "flex items-center justify-between gap-4 rounded-lg border px-4 py-3.5 text-left text-sm transition-colors",
               interval === o.interval
                 ? "border-primary bg-primary/5 ring-1 ring-primary"
                 : "hover:border-muted-foreground/40"
             )}
           >
-            <span className="flex items-center gap-2 font-medium">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
               {o.label}
               {o.note && (
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
@@ -111,11 +111,13 @@ export function PlanPicker({ ctaLabel = "Upgrade to Pro" }: { ctaLabel?: string 
                 </span>
               )}
             </span>
-            <span>
+            <span className="shrink-0 text-right leading-tight">
               <span className="font-mono text-base font-semibold">
                 {region.prices[o.key].discounted}
-              </span>{" "}
-              <span className="text-xs text-muted-foreground">{o.per}</span>
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {o.per}
+              </span>
             </span>
           </button>
         ))}
