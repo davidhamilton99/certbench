@@ -90,6 +90,16 @@ export default async function LandingPage() {
               <Link href="/pricing">See pricing</Link>
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Not sure where you stand?{" "}
+            <Link
+              href="/readiness-check/security-plus-sy0-701"
+              className="text-foreground underline underline-offset-4"
+            >
+              Take the 3-minute readiness check
+            </Link>{" "}
+            — no account needed.
+          </p>
           <div className="flex flex-wrap justify-center gap-2 pt-4">
             {CERTS.map((c) => (
               <span

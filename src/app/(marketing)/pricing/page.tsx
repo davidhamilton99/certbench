@@ -62,10 +62,10 @@ export default function PricingPage() {
                 <span className="font-mono text-4xl font-semibold">$0</span>
                 <span className="text-sm text-muted-foreground"> forever</span>
               </div>
-              <ul className="grid flex-1 content-start gap-2.5 text-sm">
+              <ul className="grid flex-1 content-start gap-3 text-sm leading-relaxed">
                 {FREE_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check className="mt-1 size-4 shrink-0 text-success" />
                     {f}
                   </li>
                 ))}
@@ -84,10 +84,10 @@ export default function PricingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-5">
-              <ul className="grid content-start gap-2.5 text-sm">
+              <ul className="grid content-start gap-3 text-sm leading-relaxed">
                 {PRO_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check className="mt-1 size-4 shrink-0 text-primary" />
                     {f}
                   </li>
                 ))}
@@ -98,6 +98,16 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
+          Not sure where you stand?{" "}
+          <Link
+            href="/readiness-check/security-plus-sy0-701"
+            className="underline underline-offset-4"
+          >
+            Take the free 3-minute readiness check
+          </Link>{" "}
+          — no account needed.
+        </p>
+        <p className="mt-3 text-center text-sm text-muted-foreground">
           Questions?{" "}
           <Link href="/contact" className="underline underline-offset-4">
             Get in touch
