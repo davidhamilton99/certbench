@@ -13,11 +13,15 @@ export interface PracticeTestLandingData {
     domains: { id: string; domainNumber: string; title: string; examWeight: number }[];
   }[];
   totalQuestions: number;
-  samples: {
-    questionText: string;
-    options: string[];
-    correctIndex: number;
-    explanation: string;
+  sampleGroups: {
+    certName: string;
+    examCode: string;
+    questions: {
+      questionText: string;
+      options: string[];
+      correctIndex: number;
+      explanation: string;
+    }[];
   }[];
 }
 
@@ -90,7 +94,7 @@ export function PracticeTestLanding({
           ))}
         </section>
 
-        {/* Interactive samples */}
+        {/* Interactive samples, sectioned per exam (A+ gets Core 1 / Core 2) */}
         <section className="mt-10">
           <h2 className="text-xl font-semibold tracking-tight">
             Sample questions
@@ -100,11 +104,29 @@ export function PracticeTestLanding({
             same experience as the full bank of{" "}
             {data.totalQuestions.toLocaleString()} questions.
           </p>
-          <div className="mt-4 grid gap-4">
-            {data.samples.map((q, i) => (
-              <SampleQuestion key={i} number={i + 1} question={q} />
-            ))}
-          </div>
+          {data.sampleGroups.map((group, gi) => {
+            // Continuous numbering across groups, computed purely.
+            const offset = data.sampleGroups
+              .slice(0, gi)
+              .reduce((sum, g) => sum + g.questions.length, 0);
+            return (
+              <div key={group.examCode} className="mt-5">
+                {data.sampleGroups.length > 1 && (
+                  <h3 className="mb-3 text-sm font-medium">
+                    {group.certName}{" "}
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {group.examCode}
+                    </span>
+                  </h3>
+                )}
+                <div className="grid gap-4">
+                  {group.questions.map((q, i) => (
+                    <SampleQuestion key={i} number={offset + i + 1} question={q} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </section>
 
         {/* Practice by objective — hub links to the programmatic pages */}

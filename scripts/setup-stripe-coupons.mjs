@@ -17,10 +17,12 @@ if (!key) {
 const stripe = new Stripe(key);
 const mode = key.startsWith("sk_live") ? "LIVE" : "test";
 
+// Plain name on purpose: it appears as a line item in Stripe Checkout, and
+// "Regional pricing" reads like policy — not a promotion.
 const COUPONS = [
-  { id: "ppp60", percent_off: 60, name: "Regional pricing — 60% off" },
-  { id: "ppp40", percent_off: 40, name: "Regional pricing — 40% off" },
-  { id: "ppp25", percent_off: 25, name: "Regional pricing — 25% off" },
+  { id: "ppp60", percent_off: 60, name: "Regional pricing" },
+  { id: "ppp40", percent_off: 40, name: "Regional pricing" },
+  { id: "ppp25", percent_off: 25, name: "Regional pricing" },
 ];
 
 async function main() {
