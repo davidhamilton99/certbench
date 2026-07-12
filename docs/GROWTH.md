@@ -42,9 +42,9 @@ Don't fight it; route around it:
   resources wiki. One polite modmail asking whether the free no-signup
   tools (PBQ examples, port quiz, readiness check) qualify for the wiki is
   allowed, durable if accepted, and costs five minutes.
-- **Discords over subreddits.** Professor Messer's Discord and other study
-  servers are conversation-first — being the person who answers questions
-  well travels further there than any post.
+- **Discords over subreddits.** Conversation-first; being the person who
+  answers questions well travels further than any post. Verified server
+  directory below — join the top six, not twenty.
 - **Let users be the mouthpiece.** The endgame is organic mentions in
   "what did you study with?" threads — that comes from the product and the
   post-pass testimonial email, not from you posting. Never astroturf.
@@ -61,12 +61,81 @@ popular post has to come from somewhere):
 - YouTube/TikTok descriptions on your own videos all link back — volume
   adds up.
 
-**Non-US channels (the "across the globe" part):** CompTIA's biggest
-growth markets are India, Nigeria, the Philippines, and the UK — all
-studying in English, all reachable through the exact same pages and
-subreddits (r/CompTIA is global). No localisation needed yet; if analytics
-later shows a big non-US country, a pricing experiment (PPP discounts via
-Stripe promotion codes) is the move — not translation.
+### Discord directory (member counts verified 2026-07)
+
+There is no scene of small CompTIA study servers — Disboard's `comptia`
+tag has essentially one tiny server. The audience concentrates in a few
+giant creator-run servers. Join the top six; 20 min/day in the cert-study
+channels of these beats hours anywhere else:
+
+| Server | Members | Invite | Where cert students are |
+|---|---|---|---|
+| Professor Messer | ~80,000 | discord.gg/professormesser | THE CompTIA study server — per-exam channels (A+/Net+/Sec+) |
+| David Bombal | ~119,000 | discord.com/invite/usKSyzb | cert + career channels, big non-US audience |
+| NetworkChuck | ~98,000 | discord.com/invite/networkchuck | beginner-heavy, A+/Net+ questions daily |
+| TCM Security | ~70,000 | discord.com/invite/tcm | career-changers; Sec+ is the standard first step |
+| InfoSec Prep | ~17,000 | discord.com/invite/6jjPnEG85h | literally a cert-prep server |
+| WGU Unofficial | ~15,000 | discord.com/invite/unwgu | WGU IT degrees EMBED CompTIA certs — every student must pass them |
+| TryHackMe / HackTheBox | ~370,000 each | discord.com/invite/tryhackme · /hackthebox | adjacent; join, lower priority |
+
+Entry protocol (same as Reddit): two weeks of genuinely helpful answers
+before any link; links only when someone asks "what did you use?"; put
+certbench.dev in your Discord profile bio — that's passive, allowed, and
+people do click profiles of helpful posters. Watch each server's rules
+channel; some have a self-promo channel where a link IS allowed.
+
+The competitor note: secplusmastery.com runs its own study Discord as the
+community layer of their product. Not worth copying until CertBench has
+~500 active users — an empty Discord is worse than none.
+
+### Facebook groups — the unpriced channel
+
+Reddit prohibits promotion; Facebook groups mostly don't, and multiple
+CompTIA study groups have tens of thousands of members. This is also
+where the Nigeria/Philippines audience actually is (Facebook is the
+default internet there). Join, answer questions, and share the free
+no-signup tools directly — post acceptance is moderator-gated, so lead
+with the port quiz / PBQ examples / readiness check, never the paywall:
+
+- facebook.com/groups/comsecplus — "CompTIA Security+ (study group)"
+- facebook.com/groups/CompTIa.Students — A+/Net+/Sec+ students group
+- facebook.com/groups/2411609635806164 — ITF+/A+/Net+/Sec+ study group
+- facebook.com/groups/2108683329385288 — multi-cert study group
+- Search "CompTIA" in FB Groups, sort by size; join the top 5–8.
+
+### The rest of the global map (verified starting points)
+
+- **Nairaland (Nigeria's biggest forum):** certification threads live for
+  years and rank on Google Nigeria — e.g. nairaland.com/6340276
+  ("IT Career With CompTIA Certifications") and nairaland.com/5880030.
+  One helpful reply with the free tools reaches an audience actively
+  asking for exactly this.
+- **Telegram (India/Nigeria default for study groups):** several CompTIA
+  channels exist (e.g. t.me/comptia_cysa; tgstat.com lists @CompTIA).
+  Join the big ones, same helpful-first protocol. Beware: many Telegram
+  cert channels are braindump bazaars — never associate with dumps;
+  "no-dumps original questions" is the differentiator to say out loud.
+- **Quora:** "how do I pass Security+ without experience" questions rank
+  on Google for years. 10 genuinely good answers with a profile link +
+  one contextual link each is durable, compounding visibility.
+- **LinkedIn (the Josh Madakor model):** he posts "FREE CompTIA A+
+  practice test, 1150+ questions" natively and it performs — career
+  switchers live on LinkedIn. Post the free tools + readiness check as
+  plain personal posts; no company page needed.
+- **Quizlet + AnkiWeb distribution:** cert students search INSIDE
+  Quizlet/Anki, and popular sets also rank in Google. Publish
+  CertBench-branded free sets (port numbers, acronyms, Core 1 vs Core 2
+  quick facts) with certbench.dev on the profile and in set descriptions.
+  One evening of work, permanent shelf space on the platforms students
+  already use.
+- **Answer engines:** perplexity.ai already cites certbench.dev pages.
+  Every answer-the-question page (below) doubles as AEO — lead each page
+  with a direct 2–3 sentence answer so LLMs can quote it cleanly.
+
+**Non-US markets:** India, Nigeria, the Philippines, and the UK all study
+in English — reach them through the channels above (Facebook + Telegram +
+Nairaland skew exactly there). Regional pricing is already live, so the
+checkout no longer loses them at the price. No translation needed.
 
 ## Week 2–4 — compounding assets
 
