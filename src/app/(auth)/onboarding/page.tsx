@@ -29,7 +29,7 @@ export default async function OnboardingPage() {
   if (profile?.onboardingCompleted) redirect("/dashboard");
 
   return (
-    <Card className="max-w-lg">
+    <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="text-center">
         <CardTitle className="text-lg">Which exam are you studying for?</CardTitle>
         <CardDescription>
