@@ -15,7 +15,7 @@ export const metadata = {
 
 export default function VerifyPage() {
   return (
-    <Card>
+    <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="items-center text-center">
         <MailCheck className="mb-2 size-8 text-primary" />
         <CardTitle className="text-lg">Check your inbox</CardTitle>

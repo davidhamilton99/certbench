@@ -10,7 +10,8 @@ export default function AuthLayout({
       <Link href="/" className="text-xl font-semibold tracking-tight">
         CertBench
       </Link>
-      <div className="w-full max-w-sm">{children}</div>
+      {/* Pages own their width so register can widen for its value rail. */}
+      <div className="w-full">{children}</div>
     </div>
   );
 }

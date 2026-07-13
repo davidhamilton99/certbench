@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <Card>
+    <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="text-center">
         <CardTitle className="text-lg">Reset your password</CardTitle>
         <CardDescription>
