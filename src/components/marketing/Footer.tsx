@@ -15,6 +15,7 @@ const FREE_RESOURCES = [
   { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples" },
   { href: "/network-plus-pbq-examples", label: "Network+ PBQ examples" },
   { href: "/tools/port-numbers-quiz", label: "Port numbers quiz" },
+  { href: "/tools/subnetting-practice", label: "Subnetting practice" },
 ];
 
 export function Footer() {
