@@ -177,3 +177,98 @@ describe("generator sweep (seeded)", () => {
     }
   });
 });
+
+describe("combination coverage (every variant appears)", () => {
+  function sweep(mode: Parameters<typeof generateQuestion>[0], d: Difficulty, n: number) {
+    const rng = seeded(2026);
+    const qs: DrillQuestion[] = [];
+    for (let i = 0; i < n; i++) qs.push(generateQuestion(mode, d, rng));
+    return qs;
+  }
+
+  function promptPrefix(q: DrillQuestion): number | null {
+    const m = q.promptValue.match(/\/(\d+)$/);
+    return m ? Number(m[1]) : null;
+  }
+
+  it("binary drills both directions in both difficulties", () => {
+    for (const d of ["standard", "any-prefix"] as const) {
+      const qs = sweep("binary", d, 300);
+      expect(qs.some((q) => q.prompt.includes("8-bit binary"))).toBe(true);
+      expect(qs.some((q) => q.prompt.includes("Convert to decimal"))).toBe(true);
+    }
+    // Standard mixes mask octets AND familiar octets.
+    const values = new Set(
+      sweep("binary", "standard", 400).map((q) =>
+        q.answerKind === "count" ? Number(q.answer) : parseInt(q.answer, 2)
+      )
+    );
+    expect(values.has(192)).toBe(true); // mask octet
+    expect(values.has(10)).toBe(true); // familiar octet
+  });
+
+  it("cidr-mask asks both directions and covers every prefix /8–/30", () => {
+    const qs = sweep("cidr-mask", "any-prefix", 2000);
+    expect(qs.some((q) => q.answerKind === "dotted")).toBe(true);
+    expect(qs.some((q) => q.answerKind === "cidr")).toBe(true);
+    const prefixes = new Set(
+      qs.map((q) =>
+        q.answerKind === "cidr" ? Number(q.answer) : prefixFromMask(q.answer)
+      )
+    );
+    for (let p = 8; p <= 30; p++) expect(prefixes.has(p), `/${p}`).toBe(true);
+  });
+
+  it("network-id any-prefix covers every prefix /8–/30", () => {
+    const prefixes = new Set(
+      sweep("network-id", "any-prefix", 2000).map(promptPrefix)
+    );
+    for (let p = 8; p <= 30; p++) expect(prefixes.has(p), `/${p}`).toBe(true);
+  });
+
+  it("network-id standard covers every prefix /24–/30", () => {
+    const prefixes = new Set(
+      sweep("network-id", "standard", 600).map(promptPrefix)
+    );
+    for (let p = 24; p <= 30; p++) expect(prefixes.has(p), `/${p}`).toBe(true);
+  });
+
+  it("broadcast-range rotates through all three asks", () => {
+    const qs = sweep("broadcast-range", "any-prefix", 300);
+    expect(qs.some((q) => q.prompt.includes("broadcast"))).toBe(true);
+    expect(qs.some((q) => q.prompt.includes("first usable"))).toBe(true);
+    expect(qs.some((q) => q.prompt.includes("last usable"))).toBe(true);
+  });
+
+  it("host-math asks both directions and includes /30 in both", () => {
+    for (const d of ["standard", "any-prefix"] as const) {
+      const qs = sweep("host-math", d, 1200);
+      const p2h = qs.filter((q) => q.answerKind === "count");
+      const h2p = qs.filter((q) => q.answerKind === "cidr");
+      expect(p2h.length).toBeGreaterThan(0);
+      expect(h2p.length).toBeGreaterThan(0);
+      // /30 → 2 usable, and 1–2 hosts → /30: the point-to-point classic.
+      expect(p2h.some((q) => q.promptValue === "/30")).toBe(true);
+      expect(h2p.some((q) => q.answer === "30")).toBe(true);
+      // Full prefix coverage for the difficulty's range.
+      const lo = d === "standard" ? 24 : 18;
+      const seen = new Set(p2h.map((q) => Number(q.promptValue.replace("/", ""))));
+      for (let p = lo; p <= 30; p++) expect(seen.has(p), `${d} /${p}`).toBe(true);
+    }
+  });
+
+  it("same-subnet produces both yes and no answers in both difficulties", () => {
+    for (const d of ["standard", "any-prefix"] as const) {
+      const answers = new Set(sweep("same-subnet", d, 200).map((q) => q.answer));
+      expect(answers.has("yes")).toBe(true);
+      expect(answers.has("no")).toBe(true);
+    }
+  });
+
+  it("gauntlet reaches every mode", () => {
+    const rng = seeded(5);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) seen.add(pickGauntletMode(rng));
+    expect(seen.size).toBe(MODES.length);
+  });
+});

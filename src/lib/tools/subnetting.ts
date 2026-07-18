@@ -151,8 +151,8 @@ const FAMILIAR_OCTETS = [1, 10, 64, 100, 127, 168, 172, 192, 200, 254] as const;
 
 function drillPrefix(rng: Rng, difficulty: Difficulty): number {
   // /24–/30 keeps the interesting math in the last octet; any-prefix opens
-  // the middle octets (/9–/30) the way Network+ and CCNA actually ask.
-  return difficulty === "standard" ? randInt(rng, 24, 30) : randInt(rng, 9, 30);
+  // every prefix /8–/30 the way Network+ and CCNA actually ask.
+  return difficulty === "standard" ? randInt(rng, 24, 30) : randInt(rng, 8, 30);
 }
 
 function randomIp(rng: Rng): number {
@@ -322,7 +322,8 @@ function genBroadcastRange(rng: Rng, difficulty: Difficulty): DrillQuestion {
 }
 
 function genHostMath(rng: Rng, difficulty: Difficulty): DrillQuestion {
-  const range = difficulty === "standard" ? ([24, 29] as const) : ([18, 29] as const);
+  // Includes /30 so the classic point-to-point fact (2 usable) gets asked.
+  const range = difficulty === "standard" ? ([24, 30] as const) : ([18, 30] as const);
   const prefix = randInt(rng, range[0], range[1]);
   if (rng() < 0.5) {
     return {
