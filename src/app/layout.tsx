@@ -74,6 +74,12 @@ export const metadata: Metadata = {
     follow: true,
   },
   metadataBase: new URL("https://certbench.dev"),
+  // Self-referencing canonical per route ("./" resolves against the current
+  // path). Declares certbench.dev authoritative even when the same content is
+  // served from certbench.vercel.app.
+  alternates: {
+    canonical: "./",
+  },
 };
 
 export default function RootLayout({
