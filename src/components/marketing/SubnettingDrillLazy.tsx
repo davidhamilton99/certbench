@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
  * render on the server (SSR output would never match hydration). ssr:false
  * lets the drill create its first question in a plain state initializer.
  */
-export const SubnettingDrillLazy = dynamic(
+const LazyInner = dynamic(
   () =>
     import("@/components/marketing/SubnettingDrill").then(
       (m) => m.SubnettingDrill
@@ -21,3 +21,11 @@ export const SubnettingDrillLazy = dynamic(
     ),
   }
 );
+
+export function SubnettingDrillLazy({
+  showRegisterCta = true,
+}: {
+  showRegisterCta?: boolean;
+} = {}) {
+  return <LazyInner showRegisterCta={showRegisterCta} />;
+}

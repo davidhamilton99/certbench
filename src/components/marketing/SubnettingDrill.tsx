@@ -35,8 +35,15 @@ function makeQuestion(mode: PickerMode, difficulty: Difficulty): DrillQuestion {
  * question can be created in the state initializer — every later question
  * is created inside event handlers, keeping all state changes out of
  * effects.
+ *
+ * `showRegisterCta` is off in the logged-in workspace, where the signup
+ * upsell would be noise.
  */
-export function SubnettingDrill() {
+export function SubnettingDrill({
+  showRegisterCta = true,
+}: {
+  showRegisterCta?: boolean;
+} = {}) {
   const [mode, setMode] = useState<PickerMode>("network-id");
   const [difficulty, setDifficulty] = useState<Difficulty>("standard");
   const [question, setQuestion] = useState<DrillQuestion>(() =>
@@ -292,7 +299,7 @@ export function SubnettingDrill() {
         )}
       </div>
 
-      {score.answered >= 10 && (
+      {showRegisterCta && score.answered >= 10 && (
         <p className="text-center text-xs text-muted-foreground">
           Want your misses to come back right before you&apos;d forget them?{" "}
           <Link
