@@ -31,6 +31,42 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    {
+      // Defense-in-depth headers on every response. Deliberately does NOT
+      // set a script/style CSP: the app relies on inline scripts (PostHog
+      // init, theme bootstrap, JSON-LD) and third-party origins (Stripe,
+      // Supabase, Sentry) that a strict policy would break without nonces.
+      // The CSP here is limited to the directives that are safe to enforce
+      // globally and add real value — anti-clickjacking, anti-base-tag
+      // injection, and blocking plugin/object embeds.
+      source: "/:path*",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+        },
+        // Legacy equivalent of frame-ancestors for older browsers.
+        { key: "X-Frame-Options", value: "DENY" },
+        // Stop MIME sniffing (drive-by content-type confusion).
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        // Don't leak full URLs (which can carry tokens) to other origins.
+        {
+          key: "Referrer-Policy",
+          value: "strict-origin-when-cross-origin",
+        },
+        // Deny powerful features the app never uses.
+        {
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+        },
+        // Force HTTPS for two years, including subdomains (Vercel also sets
+        // this on the apex; explicit here so it's part of the codebase).
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+      ],
+    },
   ],
 };
 
