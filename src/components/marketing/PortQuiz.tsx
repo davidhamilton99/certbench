@@ -40,9 +40,16 @@ function makeQuestion(entries: PortEntry[]): QuizQuestion {
 /**
  * Endless port-numbers drill. Question generation is random, so the first
  * question is created after mount — SSR renders a stable placeholder and
- * hydration never mismatches.
+ * hydration never mismatches. `showRegisterCta` is off in the logged-in
+ * workspace, where the signup upsell would be noise.
  */
-export function PortQuiz({ entries }: { entries: PortEntry[] }) {
+export function PortQuiz({
+  entries,
+  showRegisterCta = true,
+}: {
+  entries: PortEntry[];
+  showRegisterCta?: boolean;
+}) {
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [picked, setPicked] = useState<PortEntry | null>(null);
   const [score, setScore] = useState({ correct: 0, answered: 0 });
@@ -161,7 +168,7 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
         <Button onClick={next} disabled={!revealed} className="min-w-28">
           Next
         </Button>
-        {score.answered >= 10 && (
+        {showRegisterCta && score.answered >= 10 && (
           <span className="text-xs text-muted-foreground">
             Want the ones you miss to come back tomorrow?{" "}
             <Link href="/register" className="text-primary underline underline-offset-4">
