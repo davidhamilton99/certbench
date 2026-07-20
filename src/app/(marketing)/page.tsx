@@ -12,8 +12,44 @@ import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { Testimonials } from "@/components/marketing/Testimonials";
+import { HeroQuestion } from "@/components/marketing/HeroQuestion";
+import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
 import { createAnonClient } from "@/server/supabase/anon";
 import { listApprovedTestimonials } from "@/server/data/testimonials";
+import { getCertificationBySlug } from "@/server/data/certifications";
+import { listSampleQuestions } from "@/server/data/questions";
+
+/**
+ * A hero-sized Security+ question: fetched with the anon client (ISR-safe),
+ * shortest of the sample set so the card stays compact on mobile. Fail-safe
+ * null hides the card rather than ever breaking the homepage.
+ */
+async function loadHeroQuestion(): Promise<SampleQuestionData | null> {
+  try {
+    const db = createAnonClient();
+    const cert = await getCertificationBySlug(db, "security-plus-sy0-701");
+    if (!cert) return null;
+    const samples = await listSampleQuestions(db, cert.id, 8);
+    const fits = samples
+      .filter(
+        (q) =>
+          q.question_text.length <= 220 &&
+          q.options.length === 4 &&
+          q.options.every((o) => o.text.length <= 90)
+      )
+      .sort((a, b) => a.question_text.length - b.question_text.length);
+    const best = fits[0] ?? null;
+    if (!best) return null;
+    return {
+      questionText: best.question_text,
+      options: best.options.map((o) => o.text),
+      correctIndex: best.correct_index,
+      explanation: best.explanation,
+    };
+  } catch {
+    return null;
+  }
+}
 
 const FEATURES = [
   {
@@ -63,6 +99,7 @@ export default async function LandingPage() {
   const testimonials = await listApprovedTestimonials(createAnonClient(), 6).catch(
     () => []
   );
+  const heroQuestion = await loadHeroQuestion();
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -100,6 +137,13 @@ export default async function LandingPage() {
             </Link>{" "}
             — no account needed.
           </p>
+          {heroQuestion && (
+            <div className="w-full pt-6">
+              <div className="flex justify-center">
+                <HeroQuestion question={heroQuestion} />
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap justify-center gap-2 pt-4">
             {CERTS.map((c) => (
               <span
