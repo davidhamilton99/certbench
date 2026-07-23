@@ -34,11 +34,11 @@ const sections: Section[] = [
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is a free practice and study tool for CompTIA certification exams. It tracks your performance across every exam domain, builds a personalised study plan each day, and gives you a readiness score so you know when you\u2019re genuinely prepared to sit your exam. It currently covers Security+ SY0-701, Network+ N10-009, A+ Core 1 (220-1101), and A+ Core 2 (220-1102).",
+        a: "CertBench is a practice and study tool for CompTIA certification exams. It tracks your performance across every exam domain, builds a personalised study plan each day, and gives you a readiness score so you know when you\u2019re genuinely prepared to sit your exam. It currently covers Security+ SY0-701, Network+ N10-009, A+ Core 1 (220-1101), and A+ Core 2 (220-1102).",
       },
       {
         q: "Is CertBench free?",
-        a: "Yes. The full question bank (2,000+ questions), diagnostic exam, practice exams, spaced repetition, readiness score, cheat sheets, PBQ practice, and daily study plans are all completely free. There is an optional Pro plan at $8/month that unlocks unlimited AI quiz generation from your own notes — but the core product costs nothing.",
+        a: "Free to start, and generous enough to study every single day: the 25-question diagnostic and readiness score, 20 practice questions per day, spaced repetition on everything you miss, a sample PBQ simulation and drill per certification, the subnetting and port-number drills, community study sets, and 3 AI quiz generations per month all cost nothing — no credit card required. Pro removes the limits: unlimited practice questions and full-length exams, every PBQ simulation, and unlimited AI generation. See the pricing page for current plans.",
       },
       {
         q: "Is this an exam dump?",
@@ -170,7 +170,7 @@ const sections: Section[] = [
       },
       {
         q: "What are the limits on AI generation?",
-        a: "Free accounts get 3 AI quiz generations per month. Pro accounts ($8/month) get unlimited generations. Each generation can produce up to 50 questions. The input content limit is 200,000 characters.",
+        a: "Free accounts get 3 AI quiz generations per month. Pro accounts get unlimited generations. Each generation can produce up to 50 questions. The input content limit is 200,000 characters.",
       },
       {
         q: "Can I share my AI-generated study sets?",
@@ -200,6 +200,10 @@ const sections: Section[] = [
     description:
       "Managing your account, certifications, and subscription.",
     items: [
+      {
+        q: "What does Pro cost, and what does it include?",
+        a: "Pro is $19/month, $39 for 3 months (one exam cycle — the most popular), or $99/year, in USD and adjusted for your region. It unlocks unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation — plus the pass guarantee: study 30+ days on Pro and don’t pass, and your last payment is refunded. Cancel anytime from the billing portal.",
+      },
       {
         q: "Can I study for multiple certifications?",
         a: "Yes. You can enroll in as many certifications as you want. Each certification has its own readiness score, study plan, and progress tracking. Use the sidebar to switch between certifications, or add a new one from the \u201cAdd certification\u201d link.",
