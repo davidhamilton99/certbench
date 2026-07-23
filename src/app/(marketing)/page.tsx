@@ -13,6 +13,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { Testimonials } from "@/components/marketing/Testimonials";
 import { HeroQuestion } from "@/components/marketing/HeroQuestion";
+import { HeroShowcase } from "@/components/marketing/HeroShowcase";
 import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
 import { createAnonClient } from "@/server/supabase/anon";
 import { listApprovedTestimonials } from "@/server/data/testimonials";
@@ -107,52 +108,65 @@ export default async function LandingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 pb-24 pt-20 text-center sm:pt-28">
-          <h1 className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
-            Know <span className="text-primary">exactly</span> what to study
-          </h1>
-          <p className="max-w-xl text-balance text-lg text-muted-foreground">
-            CertBench builds a personalised study plan from your actual
-            performance — adaptive practice exams, spaced repetition, and a
-            readiness score for CompTIA certifications.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Button asChild size="lg">
-              <Link href="/register">
-                Start studying free
-                <ArrowRight />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/pricing">See pricing</Link>
-            </Button>
+        <section className="relative overflow-hidden">
+          {/* Atmosphere: primary glow + faint blueprint grid fading out */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute left-1/2 top-[-30%] h-[34rem] w-[54rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+            <div
+              className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_35%,black,transparent)]"
+            />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Not sure where you stand?{" "}
-            <Link
-              href="/readiness-check/security-plus-sy0-701"
-              className="text-foreground underline underline-offset-4"
-            >
-              Take the 3-minute readiness check
-            </Link>{" "}
-            — no account needed.
-          </p>
-          {heroQuestion && (
-            <div className="w-full pt-6">
-              <div className="flex justify-center">
-                <HeroQuestion question={heroQuestion} />
+
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-24 pt-16 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-16">
+            <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
+              <h1 className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
+                Know{" "}
+                <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  exactly
+                </span>{" "}
+                what to study
+              </h1>
+              <p className="max-w-xl text-balance text-lg text-muted-foreground">
+                CertBench builds a personalised study plan from your actual
+                performance — adaptive practice exams, spaced repetition, and a
+                readiness score for CompTIA certifications.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2 lg:justify-start">
+                <Button asChild size="lg">
+                  <Link href="/register">
+                    Start studying free
+                    <ArrowRight />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/pricing">See pricing</Link>
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Not sure where you stand?{" "}
+                <Link
+                  href="/readiness-check/security-plus-sy0-701"
+                  className="text-foreground underline underline-offset-4"
+                >
+                  Take the 3-minute readiness check
+                </Link>{" "}
+                — no account needed.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 pt-2 lg:justify-start">
+                {CERTS.map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
+                  >
+                    {c}
+                  </span>
+                ))}
               </div>
             </div>
-          )}
-          <div className="flex flex-wrap justify-center gap-2 pt-4">
-            {CERTS.map((c) => (
-              <span
-                key={c}
-                className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
-              >
-                {c}
-              </span>
-            ))}
+
+            <div className="flex justify-center lg:justify-end">
+              <HeroShowcase />
+            </div>
           </div>
         </section>
 
@@ -175,6 +189,22 @@ export default async function LandingPage() {
             ))}
           </div>
         </section>
+
+        {/* Try one — kept for the visitors who want proof in their hands */}
+        {heroQuestion && (
+          <section className="mx-auto w-full max-w-3xl px-6 py-16">
+            <h2 className="text-center text-2xl font-semibold tracking-tight">
+              Try a real exam question
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
+              Original, written to the SY0-701 objectives, with the
+              explanation — the same experience as the full bank.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <HeroQuestion question={heroQuestion} />
+            </div>
+          </section>
+        )}
 
         {/* How it works */}
         <section className="mx-auto w-full max-w-3xl px-6 py-16">
