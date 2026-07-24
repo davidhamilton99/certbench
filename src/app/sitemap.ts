@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { listObjectivePages } from "@/server/seo/objective-data";
 import { listReadinessCheckCerts } from "@/server/seo/readiness-check-data";
+import { VS_PAGES } from "@/lib/seo/comparison-pages";
 
 const BASE_URL = "https://certbench.dev";
 
@@ -85,6 +86,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${BASE_URL}/best-security-plus-practice-tests`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...VS_PAGES.map((p) => ({
+      url: `${BASE_URL}/compare/${p.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     {
       url: `${BASE_URL}/help`,
       lastModified: new Date(),
