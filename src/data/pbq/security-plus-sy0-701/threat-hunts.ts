@@ -89,4 +89,77 @@ export const securityPlusThreatHunts: ThreatHuntScenario[] = [
       "The pattern is a textbook brute-force compromise. A single external IP (203.0.113.77) generates a rapid burst of failed root and admin logins, then lands an 'Accepted password for root' from that same IP — the guessing succeeded. What follows confirms compromise: a sudo-run wget pulling a script from the attacker's own address (payload staging), then the session disconnecting. The internal deploy logins and the cron session are ordinary noise. It isn't DDoS (the goal is access, not availability), a backup job wouldn't succeed as root then download a payload, and the deploy key logins are from an internal host, not the attacker. Response: isolate the host, block the IP, rotate credentials, and treat root as compromised — rebuild rather than clean.",
     estimatedMinutes: 4,
   },
+  {
+    type: "threat-hunt",
+    id: "sec-hunt-sql-injection",
+    title: "Something's hitting the web app",
+    briefing:
+      "The database team reports odd query load on the shop app. Read the web server access log and flag every request that is part of an attack, then identify what it is. Normal shopping traffic is mixed in.",
+    domain_number: "2.0",
+    domain_title: "Threats, Vulnerabilities, and Mitigations",
+    logSource: "/var/log/nginx/access.log · shop-web-02",
+    lines: [
+      {
+        text: '192.0.2.55 - - "GET /products?category=shoes HTTP/1.1" 200 4821',
+        malicious: false,
+        note: "Ordinary catalog browse — benign.",
+      },
+      {
+        text: "192.0.2.55 - - \"GET /products?id=14 HTTP/1.1\" 200 3110",
+        malicious: false,
+        note: "A normal product lookup by id.",
+      },
+      {
+        text: "203.0.113.9 - - \"GET /products?id=14' HTTP/1.1\" 500 219",
+        malicious: true,
+        note: "A single quote triggering a 500 — the attacker is probing for SQL injection.",
+      },
+      {
+        text: "203.0.113.9 - - \"GET /products?id=14' OR '1'='1 HTTP/1.1\" 200 88213",
+        malicious: true,
+        note: "Classic tautology injection; the huge response size means the WHERE clause was bypassed and every row returned.",
+      },
+      {
+        text: '198.51.100.7 - - "POST /cart/add HTTP/1.1" 200 512',
+        malicious: false,
+        note: "A different user adding to cart — benign.",
+      },
+      {
+        text: "203.0.113.9 - - \"GET /products?id=14 UNION SELECT username,password,3 FROM users HTTP/1.1\" 200 51022",
+        malicious: true,
+        note: "UNION-based injection pulling credentials out of the users table — data exfiltration.",
+      },
+      {
+        text: "203.0.113.9 - - \"GET /products?id=14 AND SLEEP(5) HTTP/1.1\" 200 3110",
+        malicious: true,
+        note: "Time-based blind injection probe from the same attacker IP.",
+      },
+      {
+        text: '192.0.2.55 - - "GET /favicon.ico HTTP/1.1" 404 0',
+        malicious: false,
+        note: "A missing favicon — routine noise, not an attack.",
+      },
+      {
+        text: '198.51.100.7 - - "POST /checkout HTTP/1.1" 302 0',
+        malicious: false,
+        note: "A legitimate checkout redirect — benign.",
+      },
+      {
+        text: "203.0.113.9 - - \"GET /products?id=14; DROP TABLE users;-- HTTP/1.1\" 500 219",
+        malicious: true,
+        note: "A stacked-query injection attempting to drop a table — same attacker, escalating.",
+      },
+    ],
+    question: "What does this evidence indicate?",
+    options: [
+      "Cross-site scripting (XSS) targeting shop visitors",
+      "A SQL injection attack probing and then exfiltrating data from the database",
+      "A brute-force attack against the checkout login form",
+      "Normal traffic that a misconfigured WAF is flagging",
+    ],
+    correctOption: 1,
+    explanation:
+      "Every attack line comes from 203.0.113.9 and manipulates the id parameter with SQL syntax: a lone quote to force an error, an OR '1'='1 tautology that dumps the whole table (note the 88 KB response), a UNION SELECT pulling usernames and passwords, a SLEEP() time-based blind probe, and finally a stacked DROP TABLE. That progression — error-probe, extract, then destructive — is SQL injection, not XSS (which targets the browser, not the database) and not brute force (no repeated auth failures). The legitimate cart and checkout POSTs from other IPs, and the favicon 404, are noise. Mitigation: parameterised queries/prepared statements, least-privilege DB accounts, input validation, and a WAF rule — then rotate any credentials that UNION SELECT exposed.",
+    estimatedMinutes: 4,
+  },
 ];
