@@ -28,6 +28,9 @@ export function gradeScenario(
     case "topology":
       // Topologies use gradeTopologyScenario from grade-topology.ts
       return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeTopologyScenario for topology scenarios."] };
+    case "threat-hunt":
+      // Threat hunts use gradeThreatHunt from grade-threat-hunt.ts
+      return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeThreatHunt for threat-hunt scenarios."] };
   }
 }
 

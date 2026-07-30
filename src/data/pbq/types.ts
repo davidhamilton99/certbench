@@ -204,12 +204,63 @@ export interface TopologyScenario {
 /** Field answer union for topology scenarios (same as simulation fields). */
 export type TopoFieldAnswer = SimFieldAnswer;
 
+/* ================================================================ */
+/*  Threat Hunt Scenario Types                                       */
+/* ================================================================ */
+
+/** One line in the log/SIEM console the candidate hunts through. */
+export interface ThreatHuntLogLine {
+  /** Raw log text, rendered monospace. */
+  text: string;
+  /** True when this line is evidence of the attack (should be flagged). */
+  malicious: boolean;
+  /** Shown on the line in the reveal — why it is or isn't evidence. */
+  note?: string;
+}
+
+/**
+ * Interactive log analysis: the candidate taps the malicious lines in a
+ * realistic log console, then identifies the attack. Touch-native and
+ * immediately graspable — the inviting on-ramp to hands-on PBQs.
+ */
+export interface ThreatHuntScenario {
+  type: "threat-hunt";
+  id: string;
+  title: string;
+  /** The situation the analyst walks into. */
+  briefing: string;
+  domain_number: string;
+  domain_title: string;
+  /** Log origin shown as a console header, e.g. "/var/log/auth.log". */
+  logSource: string;
+  /** The log lines to hunt through. */
+  lines: ThreatHuntLogLine[];
+  /** The payoff question after flagging. */
+  question: string;
+  /** Options for the attack-identification question. */
+  options: string[];
+  /** Index of the correct option. */
+  correctOption: number;
+  /** Overall explanation shown after grading. */
+  explanation: string;
+  estimatedMinutes: number;
+}
+
+/** Answer shape for a threat hunt: flagged line indices + chosen attack. */
+export interface ThreatHuntAnswer {
+  /** Indices of lines the candidate flagged as malicious. */
+  flagged: number[];
+  /** Index of the chosen attack option, or -1 if unanswered. */
+  attackChoice: number;
+}
+
 export type PbqScenario =
   | OrderingScenario
   | MatchingScenario
   | CategorizationScenario
   | SimulationScenario
-  | TopologyScenario;
+  | TopologyScenario
+  | ThreatHuntScenario;
 
 /** Grading result for a PBQ scenario. */
 export interface PbqGradeResult {

@@ -15,6 +15,7 @@ import type {
 import { gradeScenario } from "@/core/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
+import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -81,6 +82,11 @@ export function PbqPlayer({
   /* Topology scenarios use the topology player */
   if (scenario.type === "topology") {
     return <TopologyPlayer scenario={scenario} onBack={onBack} />;
+  }
+
+  /* Threat hunts use the log-console player */
+  if (scenario.type === "threat-hunt") {
+    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} />;
   }
 
   return (

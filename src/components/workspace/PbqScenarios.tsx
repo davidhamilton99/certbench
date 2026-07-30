@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
-import type { PbqScenario, SimulationScenario, TopologyScenario } from "@/data/pbq/types";
+import type {
+  PbqScenario,
+  SimulationScenario,
+  TopologyScenario,
+  ThreatHuntScenario,
+} from "@/data/pbq/types";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
+
+/** Types shown under the hands-on "Exam Simulations" tab (vs concept drills). */
+const HANDS_ON_TYPES = new Set(["simulation", "topology", "threat-hunt"]);
 
 function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
@@ -119,17 +127,23 @@ function ScenarioList({
                         ? truncate((scenario as SimulationScenario).briefing, 120)
                         : scenario.type === "topology"
                         ? truncate((scenario as TopologyScenario).briefing, 120)
+                        : scenario.type === "threat-hunt"
+                        ? truncate((scenario as ThreatHuntScenario).briefing, 120)
                         : "description" in scenario
                         ? (scenario as { description: string }).description
                         : ""}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {(scenario.type === "simulation" || scenario.type === "topology") && (
+                    {(scenario.type === "simulation" ||
+                      scenario.type === "topology" ||
+                      scenario.type === "threat-hunt") && (
                       <span className="text-[12px] text-muted-foreground font-mono">
                         ~{scenario.type === "simulation"
                           ? (scenario as SimulationScenario).estimatedMinutes
-                          : (scenario as TopologyScenario).estimatedMinutes} min
+                          : scenario.type === "topology"
+                          ? (scenario as TopologyScenario).estimatedMinutes
+                          : (scenario as ThreatHuntScenario).estimatedMinutes} min
                       </span>
                     )}
                     {locked ? (
@@ -137,8 +151,11 @@ function ScenarioList({
                     ) : (
                       <Badge
                         variant={
-                          scenario.type === "simulation" || scenario.type === "topology"
+                          scenario.type === "simulation" ||
+                          scenario.type === "topology"
                             ? "neutral"
+                            : scenario.type === "threat-hunt"
+                            ? "warning"
                             : drillTypeVariant(scenario.type)
                         }
                       >
@@ -146,6 +163,8 @@ function ScenarioList({
                           ? "Simulation"
                           : scenario.type === "topology"
                           ? "Topology Lab"
+                          : scenario.type === "threat-hunt"
+                          ? "Threat Hunt"
                           : drillTypeLabel(scenario.type)}
                       </Badge>
                     )}
@@ -182,11 +201,11 @@ export function PbqScenarios({
   );
 
   const drills = useMemo(
-    () => scenarios.filter((s) => s.type !== "simulation" && s.type !== "topology"),
+    () => scenarios.filter((s) => !HANDS_ON_TYPES.has(s.type)),
     [scenarios]
   );
   const simulations = useMemo(
-    () => scenarios.filter((s) => s.type === "simulation" || s.type === "topology"),
+    () => scenarios.filter((s) => HANDS_ON_TYPES.has(s.type)),
     [scenarios]
   );
 
