@@ -20,6 +20,13 @@ import { listApprovedTestimonials } from "@/server/data/testimonials";
 import { getCertificationBySlug } from "@/server/data/certifications";
 import { listSampleQuestions } from "@/server/data/questions";
 
+// The root layout's self-referencing canonical ("./") resolves to
+// "/index" for the home route — pin the homepage's canonical to the site
+// root so Google consolidates on https://certbench.dev/.
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 /**
  * A hero-sized Security+ question: fetched with the anon client (ISR-safe),
  * shortest of the sample set so the card stays compact on mobile. Fail-safe
