@@ -196,7 +196,19 @@ export interface RoundupTool {
   compareSlug?: string;
 }
 
-export const ROUNDUP = {
+export interface RoundupData {
+  path: string;
+  metaTitle: string;
+  metaDescription: string;
+  h1: string;
+  intro: string[];
+  tools: RoundupTool[];
+  faqs: CertPageFaq[];
+  /** The practice-test page this roundup funnels to ("try questions first"). */
+  practiceTestPath: string;
+}
+
+export const ROUNDUP: RoundupData = {
   path: "best-security-plus-practice-tests",
   metaTitle: "Best Security+ Practice Tests in 2026",
   metaDescription:
@@ -310,5 +322,247 @@ export const ROUNDUP = {
       answer:
         "Two is the sweet spot for most people: one daily system and one final-stretch simulator. Buying three or four question banks mostly buys you overlap — the marginal questions teach less than reviewing your existing misses properly would.",
     },
-  ] satisfies CertPageFaq[],
+  ],
+  practiceTestPath: "security-plus-practice-test",
 };
+
+export const A_PLUS_ROUNDUP: RoundupData = {
+  path: "best-a-plus-practice-tests",
+  metaTitle: "Best CompTIA A+ Practice Tests in 2026",
+  metaDescription:
+    "An honest guide to the best CompTIA A+ (220-1101 & 220-1102) practice tests in 2026 — Mike Meyers, Professor Messer, Jason Dion, Boson, CertMaster, and CertBench — with real strengths, weaknesses, and prices.",
+  h1: "The best CompTIA A+ practice tests in 2026",
+  intro: [
+    "The disclosure first: CertBench is our product and it's on this list. Every entry is honest anyway — including where the others beat us — because A+ is most people's first cert, you'll spot a dishonest guide fast, and one that lies isn't worth ranking.",
+    "The thing to understand about A+: it's two separate exams — Core 1 (220-1101: hardware, networking, mobile, cloud) and Core 2 (220-1102: operating systems, security, troubleshooting) — and you pass them one at a time. So a good practice tool has to track two exams' readiness independently, and the best A+ prep pairs a daily practice system with one realistic simulator per core before you book.",
+  ],
+  tools: [
+    {
+      name: "Mike Meyers / Total Seminars (TotalTester)",
+      price: "About $60 per core, or bundled with his course",
+      bestFor: "The A+ name most people already own",
+      strengths: [
+        "The default A+ practice bank for a generation — huge question pool per core",
+        "Pairs naturally with the Mike Meyers All-in-One book and video course most A+ students already use",
+      ],
+      weaknesses: [
+        "A traditional test-bank experience — no adaptive daily plan or spaced repetition",
+        "Interface and reporting feel dated next to modern web apps",
+      ],
+    },
+    {
+      name: "CertBench",
+      price: "Free tier; Pro $19/mo or $39 per exam cycle",
+      bestFor: "The daily adaptive system across both cores",
+      isSelf: true,
+      strengths: [
+        "Tracks Core 1 and Core 2 readiness separately, each with its own daily plan and conservative readiness score",
+        "Spaced repetition on every miss, plus playable PBQ simulations in the browser",
+        "A free tier deep enough to study on every day — 1,100+ A+ questions across the two cores",
+      ],
+      weaknesses: [
+        "Web app only — no native mobile app or offline mode yet",
+        "Newer question bank than the decades-old incumbents",
+      ],
+    },
+    {
+      name: "Professor Messer A+ practice exams",
+      price: "About $25–30 per core (PDF)",
+      bestFor: "Pairing with his free A+ video course",
+      strengths: [
+        "The natural companion if his free videos are already your primary course",
+        "Solid question quality with written walkthroughs",
+      ],
+      weaknesses: [
+        "Static PDFs — no tracking, timing, adaptivity, or review tooling",
+      ],
+    },
+    {
+      name: "Jason Dion A+ practice exams (Udemy)",
+      price: "Often $15–25 per core on Udemy sales",
+      bestFor: "Cheap volume of full-length exams",
+      strengths: [
+        "Full-length exams per core with explanations at an impulse-buy price",
+        "Udemy's player handles timing and basic review",
+      ],
+      weaknesses: [
+        "Community consensus says difficulty runs slightly off-real in places",
+        "No study system around the exams — you manage your own loop",
+      ],
+    },
+    {
+      name: "Boson ExSim-Max for A+",
+      price: "About $99 per core",
+      bestFor: "The final-week dress rehearsal",
+      strengths: [
+        "The most exam-realistic full-length simulation, per core",
+        "Famously detailed explanations",
+      ],
+      weaknesses: [
+        "No study system: no plan, spaced repetition, or adaptivity",
+        "Priced per core, so both exams get expensive",
+      ],
+      compareSlug: "certbench-vs-boson",
+    },
+    {
+      name: "CompTIA CertMaster Practice for A+",
+      price: "Typically $150+ per core",
+      bestFor: "When your employer or school pays",
+      strengths: [
+        "Official vendor content aligned to the 220-1101/1102 objectives",
+        "Integrates with CompTIA courseware and instructor programmes",
+      ],
+      weaknesses: [
+        "By far the most expensive option for self-funders — and it's per core",
+        "Closer to a tracked question bank than an adaptive system",
+      ],
+      compareSlug: "certbench-vs-certmaster",
+    },
+  ],
+  faqs: [
+    {
+      question: "What's the best A+ practice test?",
+      answer:
+        "For most people the honest answer is a pairing, not a single product: a daily adaptive system that tracks Core 1 and Core 2 separately (the job CertBench was built for), plus one realistic simulator run per core in the final week. Mike Meyers' TotalTester is the traditional bank most A+ students already own; Boson is the closest to exam-day realism. If your budget is zero, a free video course plus free practice questions genuinely gets you a long way on A+.",
+    },
+    {
+      question: "How many practice questions do I need to pass A+?",
+      answer:
+        "Per core, aim to exercise every domain and revisit every miss until it sticks, with at least one full-length timed exam for stamina. Most people who pass comfortably see a few hundred distinct questions per core — but disciplined review of the ones you miss matters far more than raw volume. Remember A+ includes performance-based questions, so practise those hands-on, not just multiple choice.",
+    },
+    {
+      question: "Do I need separate practice for Core 1 and Core 2?",
+      answer:
+        "Yes — they're different exams with different content (Core 1 is hardware/networking/mobile/cloud; Core 2 is operating systems/security/troubleshooting) and you book and pass them separately. Track readiness for each core on its own so you know which one you're ready to sit; being ready for Core 1 tells you little about Core 2.",
+    },
+    {
+      question: "Are free A+ practice tests good enough?",
+      answer:
+        "Free resources cover A+ knowledge well in 2026 — free question banks, video courses, and topic quizzes. What free options rarely include is the feedback machinery: per-core readiness measurement, spaced repetition, and realistic full-length simulation. On a zero budget it's doable; if you can spend anything, spend it there.",
+    },
+  ],
+  practiceTestPath: "a-plus-practice-test",
+};
+
+export const NETWORK_PLUS_ROUNDUP: RoundupData = {
+  path: "best-network-plus-practice-tests",
+  metaTitle: "Best CompTIA Network+ Practice Tests in 2026",
+  metaDescription:
+    "An honest guide to the best CompTIA Network+ (N10-009) practice tests in 2026 — Boson, Jason Dion, Professor Messer, CertMaster, and CertBench — with real strengths, weaknesses, prices, and subnetting practice.",
+  h1: "The best CompTIA Network+ practice tests in 2026",
+  intro: [
+    "The disclosure first: CertBench is our product and it's on this list, kept honest alongside the rest — a guide that lies about the competition isn't worth ranking, and you'd catch it within a week anyway.",
+    "The Network+ (N10-009) specific: subnetting and ports carry disproportionate weight, and they show up inside performance-based questions, so the best Network+ prep isn't just a question bank — it's a bank plus targeted drills for the math you'll be timed on. The strongest setup is a daily practice system plus one realistic simulator before you book.",
+  ],
+  tools: [
+    {
+      name: "CertBench",
+      price: "Free tier; Pro $19/mo or $39 per exam cycle",
+      bestFor: "Adaptive practice plus subnetting drills",
+      isSelf: true,
+      strengths: [
+        "Adaptive daily plan and a conservative readiness score across all N10-009 domains, with spaced repetition on every miss",
+        "Free subnetting and port-number drills for the timed math Network+ leans on, plus playable network-topology PBQs",
+        "A free tier deep enough to study on every day — 600+ Network+ questions",
+      ],
+      weaknesses: [
+        "Web app only — no native mobile app or offline mode yet",
+        "Newer question bank than the incumbents",
+      ],
+    },
+    {
+      name: "Boson ExSim-Max for Network+",
+      price: "About $99 per exam",
+      bestFor: "The final-week dress rehearsal",
+      strengths: [
+        "The most exam-realistic full-length simulation available",
+        "Famously detailed explanations, including on subnetting items",
+      ],
+      weaknesses: [
+        "No study system: no plan, spaced repetition, or adaptivity",
+        "Priced per exam, and the interface shows its age",
+      ],
+      compareSlug: "certbench-vs-boson",
+    },
+    {
+      name: "Jason Dion Network+ practice exams (Udemy)",
+      price: "Often $15–25 on Udemy sales",
+      bestFor: "Cheap volume of full-length exams",
+      strengths: [
+        "Six full-length exams with explanations at an impulse-buy price",
+        "Udemy's player handles timing and basic review",
+      ],
+      weaknesses: [
+        "Difficulty is reported to run slightly off-real in places",
+        "No system around the exams — and no dedicated subnetting drilling",
+      ],
+    },
+    {
+      name: "Professor Messer Network+ practice exams",
+      price: "About $25–30 per set (PDF)",
+      bestFor: "Pairing with his free video course",
+      strengths: [
+        "Natural companion to his free Network+ videos",
+        "Solid questions with written walkthroughs",
+      ],
+      weaknesses: [
+        "Static PDFs — no tracking, timing, adaptivity, or review tooling",
+      ],
+    },
+    {
+      name: "CompTIA CertMaster Practice for Network+",
+      price: "Typically $150+ per exam",
+      bestFor: "When your employer or school pays",
+      strengths: [
+        "Official vendor content aligned to the N10-009 objectives",
+        "Integrates with CompTIA courseware and instructor programmes",
+      ],
+      weaknesses: [
+        "The most expensive option for self-funders by a wide margin",
+        "Closer to a tracked question bank than an adaptive system",
+      ],
+      compareSlug: "certbench-vs-certmaster",
+    },
+    {
+      name: "Subnetting.org / free subnetting quizzes",
+      price: "Free",
+      bestFor: "Raw subnetting reps",
+      strengths: [
+        "Endless free subnetting practice — useful for building speed",
+      ],
+      weaknesses: [
+        "Subnetting only — no full exam coverage, tracking, or explanations of the rest",
+        "Dated interfaces; no readiness picture",
+      ],
+    },
+  ],
+  faqs: [
+    {
+      question: "What's the best Network+ practice test?",
+      answer:
+        "For most people it's a pairing: a daily adaptive system with spaced repetition and dedicated subnetting drills (the job CertBench was built for), plus one realistic simulator — Boson is the benchmark for exam-day realism — in the final week. Because Network+ times you on subnetting and ports, make sure whatever you choose lets you drill that math to reflex, not just answer it once.",
+    },
+    {
+      question: "How important is subnetting on the Network+ exam?",
+      answer:
+        "Very — subnetting and port/protocol knowledge appear throughout N10-009, including inside performance-based questions, and they're the parts you're most likely to run short on time for. Practising them until they're reflex (dedicated drills, not just mixed questions) is one of the highest-leverage things you can do for a Network+ pass.",
+    },
+    {
+      question: "How many practice questions do I need for Network+?",
+      answer:
+        "Exercise every N10-009 domain, revisit every miss until it sticks, and sit at least two full-length timed exams for stamina. Most people who pass comfortably see somewhere around 500–1,000 distinct questions across their prep — but reviewing your misses and drilling subnetting matters more than raw question count.",
+    },
+    {
+      question: "Are free Network+ practice tests good enough?",
+      answer:
+        "Free resources cover the knowledge well, and free subnetting drills are genuinely valuable. What free options rarely include together is the whole feedback machinery — weighted readiness measurement, spaced repetition, realistic full-length simulation, and PBQ practice — in one place. On a zero budget it's doable; if you can spend anything, spend it there.",
+    },
+  ],
+  practiceTestPath: "network-plus-practice-test",
+};
+
+export const ROUNDUPS: RoundupData[] = [
+  ROUNDUP,
+  A_PLUS_ROUNDUP,
+  NETWORK_PLUS_ROUNDUP,
+];
