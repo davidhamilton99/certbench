@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Flame, X } from "lucide-react";
+import { ArrowRight, Check, Flame, X } from "lucide-react";
 import type { PortEntry } from "@/lib/tools/port-quiz-data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,7 @@ export function PortQuiz({
   const [score, setScore] = useState({ correct: 0, answered: 0 });
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [ctaDismissed, setCtaDismissed] = useState(false);
 
   useEffect(() => {
     setQuestion(makeQuestion(entries));
@@ -89,8 +90,16 @@ export function PortQuiz({
     setQuestion(makeQuestion(entries));
   }
 
+  const accuracy =
+    score.answered > 0 ? Math.round((score.correct / score.answered) * 100) : 0;
+  // Surface the reframe only after a real session (not a drive-by), and only
+  // on the public tool — never in the logged-in workspace.
+  const showReframe =
+    showRegisterCta && !ctaDismissed && score.answered >= 15;
+
   return (
-    <div className="grid gap-4 rounded-xl border bg-card p-6">
+    <div className="grid gap-4">
+      <div className="grid gap-4 rounded-xl border bg-card p-6">
       {/* Scoreboard */}
       <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
         <span>
@@ -164,20 +173,57 @@ export function PortQuiz({
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
         <Button onClick={next} disabled={!revealed} className="min-w-28">
           Next
         </Button>
-        {showRegisterCta && score.answered >= 10 && (
-          <span className="text-xs text-muted-foreground">
-            Want the ones you miss to come back tomorrow?{" "}
-            <Link href="/register" className="text-primary underline underline-offset-4">
-              Free account
-            </Link>{" "}
-            adds spaced repetition.
-          </span>
-        )}
       </div>
+
+      {/* Reframe: a ports grinder is over-indexing on ~5% of the exam. Meeting
+          them with genuinely useful perspective converts better than a
+          "sign up for more" nudge — and routes to the no-account readiness
+          check, the funnel that actually converts the hesitant. */}
+      {showReframe && (
+        <div className="relative grid gap-3 rounded-xl border border-primary/30 bg-card p-6">
+          <button
+            type="button"
+            onClick={() => setCtaDismissed(true)}
+            aria-label="Dismiss"
+            className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+          <div>
+            <h3 className="pr-6 font-semibold tracking-tight">
+              You&apos;ve got ports handled — {score.answered} drilled at {accuracy}%.
+            </h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              Here&apos;s the thing: ports are only about{" "}
+              <span className="font-medium text-foreground">5% of the exam</span>.
+              You&apos;ve nailed the easy part — the other 95% (scenarios, PBQs,
+              the domains that actually decide pass/fail) is where most people
+              fall short. See exactly where you stand:
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild>
+              <Link href="/readiness-check/security-plus-sy0-701">
+                Take the free readiness check
+                <ArrowRight />
+              </Link>
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              3 minutes, no account · or{" "}
+              <Link
+                href="/register"
+                className="text-primary underline underline-offset-4"
+              >
+                start free
+              </Link>{" "}
+              for the full drill + 2,600 questions with spaced repetition.
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
