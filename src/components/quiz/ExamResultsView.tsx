@@ -42,8 +42,11 @@ export function ExamResultsView({
             {result.readiness && (
               <>
                 {" "}
-                · readiness now {Math.round(result.readiness.overallScore)}%
-                {result.readiness.isPreliminary && " (preliminary)"}
+                · readiness{" "}
+                {result.readiness.isPreliminary ? "starts at" : "now"}{" "}
+                {Math.round(result.readiness.overallScore)}%
+                {result.readiness.isPreliminary &&
+                  " and climbs as you study each domain"}
               </>
             )}
           </CardDescription>
