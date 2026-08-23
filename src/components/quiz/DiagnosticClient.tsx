@@ -29,6 +29,7 @@ export function DiagnosticClient({ certId }: { certId: string }) {
       resultsTitle="Diagnostic complete"
       backHref="/dashboard"
       backLabel="See your study plan"
+      diagnosticCertId={certId}
     />
   );
 }

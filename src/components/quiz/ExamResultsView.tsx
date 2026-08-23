@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getScoreColor } from "@/core/readiness/compute-score";
 import { QuestionFlagButton } from "./QuestionFlagButton";
+import { DiagnosticPathForward } from "./DiagnosticPathForward";
 import { cn } from "@/lib/utils";
 
 const SCORE_TEXT: Record<ReturnType<typeof getScoreColor>, string> = {
@@ -24,11 +25,14 @@ export function ExamResultsView({
   result,
   backHref,
   backLabel,
+  diagnosticCertId,
 }: {
   title: string;
   result: ExamResult;
   backHref: string;
   backLabel: string;
+  /** Present for the diagnostic — renders the post-diagnostic path forward. */
+  diagnosticCertId?: string;
 }) {
   const color = getScoreColor(result.scorePercent);
 
@@ -76,11 +80,21 @@ export function ExamResultsView({
             ))}
           </div>
 
-          <Button asChild className="justify-self-start">
-            <Link href={backHref}>{backLabel}</Link>
-          </Button>
+          {!diagnosticCertId && (
+            <Button asChild className="justify-self-start">
+              <Link href={backHref}>{backLabel}</Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
+
+      {diagnosticCertId && (
+        <DiagnosticPathForward
+          result={result}
+          certId={diagnosticCertId}
+          dashboardHref={backHref}
+        />
+      )}
 
       <div className="grid gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">
