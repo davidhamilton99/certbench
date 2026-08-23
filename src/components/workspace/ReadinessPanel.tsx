@@ -55,9 +55,22 @@ function arcPoint(t: number, r: number): { x: number; y: number } {
  * The readiness instrument: score swept around a 270° dial with a tick at
  * the 75% "exam ready" threshold. Pure server-rendered SVG; the sweep and
  * bar-growth entrance animations are CSS-only (see globals.css).
+ *
+ * While `preliminary`, the score is confidence-penalised for a small
+ * sample, so a strong performer can show a low number — we render it in a
+ * neutral "building" treatment (primary, not danger) rather than shouting
+ * "Needs work" at someone who just aced the diagnostic.
  */
-function ReadinessGauge({ score }: { score: number }) {
-  const color = getScoreColor(score);
+function ReadinessGauge({
+  score,
+  preliminary,
+}: {
+  score: number;
+  preliminary?: boolean;
+}) {
+  const band = getScoreColor(score);
+  const colorClass = preliminary ? "text-primary" : SCORE_TEXT[band];
+  const bandLabel = preliminary ? "Building baseline" : BAND_LABEL[band];
   const clamped = Math.max(0, Math.min(100, score));
   const sweep = ARC_LENGTH * (clamped / 100);
   const tickOuter = arcPoint(0.75, GAUGE_R + GAUGE_STROKE / 2 + 4);
@@ -90,7 +103,7 @@ function ReadinessGauge({ score }: { score: number }) {
             r={GAUGE_R}
             fill="none"
             stroke="currentColor"
-            className={cn("animate-gauge", SCORE_TEXT[color])}
+            className={cn("animate-gauge", colorClass)}
             strokeWidth={GAUGE_STROKE}
             strokeLinecap="round"
             strokeDasharray={`${sweep} ${CIRCUMFERENCE}`}
@@ -111,12 +124,12 @@ function ReadinessGauge({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-        <span className={cn("font-mono text-[42px] font-semibold leading-none", SCORE_TEXT[color])}>
+        <span className={cn("font-mono text-[42px] font-semibold leading-none", colorClass)}>
           {Math.round(clamped)}
           <span className="text-xl">%</span>
         </span>
-        <span className={cn("text-sm font-medium", SCORE_TEXT[color])}>
-          {BAND_LABEL[color]}
+        <span className={cn("text-sm font-medium", colorClass)}>
+          {bandLabel}
         </span>
       </div>
     </div>
@@ -132,14 +145,22 @@ export function ReadinessPanel({
   share?: ShareReadinessProps;
 }) {
   const trend = plan.readinessTrend;
+  const preliminary = plan.readinessIsPreliminary;
+
+  // Raw accuracy across everything answered so far — the "how you're
+  // actually doing" number, separate from the confidence-penalised score.
+  const totalAttempted = plan.domainScores.reduce((s, d) => s + d.attempted, 0);
+  const totalCorrect = plan.domainScores.reduce((s, d) => s + d.correct, 0);
+  const rawAccuracy =
+    totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : null;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Readiness</CardTitle>
         <CardDescription>
-          {plan.readinessIsPreliminary
-            ? "Preliminary — answer more questions per domain to firm this up"
+          {preliminary
+            ? "Preliminary — it climbs as you answer more in each domain"
             : `Based on ${plan.totalQuestionsSeen} answered questions`}
           {plan.daysUntilExam !== null && (
             <> · {plan.daysUntilExam} days until exam</>
@@ -153,7 +174,15 @@ export function ReadinessPanel({
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <div className="grid justify-items-center gap-2">
-          <ReadinessGauge score={plan.readinessScore} />
+          <ReadinessGauge score={plan.readinessScore} preliminary={preliminary} />
+          {preliminary && rawAccuracy !== null && (
+            <p className="max-w-xs text-balance text-center text-sm text-muted-foreground">
+              You&apos;re answering{" "}
+              <span className="font-medium text-foreground">{rawAccuracy}%</span>{" "}
+              correctly so far. Your readiness starts low on purpose and climbs
+              as you cover more of each domain — keep going.
+            </p>
+          )}
           {trend && trend.delta !== 0 && (
             <span
               className={cn(

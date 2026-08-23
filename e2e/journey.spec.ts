@@ -31,7 +31,7 @@ test("signup through diagnostic to dashboard readiness", async ({ page }) => {
   // ---- Dashboard shows the diagnostic gate ----
   await page.waitForURL("**/dashboard");
   const diagnosticBlock = page.getByRole("link", {
-    name: /Take Your Diagnostic/i,
+    name: /Start the diagnostic/i,
   });
   await expect(diagnosticBlock).toBeVisible();
   await diagnosticBlock.click();
@@ -68,13 +68,19 @@ test("signup through diagnostic to dashboard readiness", async ({ page }) => {
     timeout: 30_000,
   });
   await expect(page.getByText(/of 25 correct/)).toBeVisible();
-  await expect(page.getByText(/readiness now \d+%/)).toBeVisible();
+  // Diagnostic-only sample is confidence-preliminary → "starts at N%".
+  await expect(page.getByText(/readiness starts at \d+%/)).toBeVisible();
+
+  // The post-diagnostic path-forward is the hero of the results screen.
+  await expect(page.getByRole("heading", { name: "Your path forward" })).toBeVisible();
 
   // ---- Dashboard now shows a real plan ----
-  await page.getByRole("link", { name: "See your study plan" }).click();
+  // The path-forward's next-step CTA is adaptive (gap-drill vs PBQ challenge),
+  // so navigate to the dashboard directly rather than couple to one branch.
+  await page.goto("/dashboard");
   await page.waitForURL("**/dashboard");
-  await expect(page.getByText("Readiness")).toBeVisible();
+  await expect(page.getByText("Readiness", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Take Your Diagnostic/i })
+    page.getByRole("link", { name: /Start the diagnostic/i })
   ).toHaveCount(0);
 });
