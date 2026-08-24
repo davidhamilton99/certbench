@@ -49,14 +49,27 @@ const FALLBACK: RegionPricing = {
  * banners; big companies treat regional pricing as invisible, and so do we.
  * A single muted footnote explains the adjustment. The authoritative price
  * is derived server-side at checkout from the request IP.
+ *
+ * `initialPricing` is the region price computed on the server from the
+ * request's country header, so the first paint already shows the correct
+ * price — no flash of the full list price before a client fetch resolves.
+ * When it's provided the client lookup is skipped entirely.
  */
-export function PlanPicker({ ctaLabel = "Upgrade to Pro" }: { ctaLabel?: string }) {
+export function PlanPicker({
+  ctaLabel = "Upgrade to Pro",
+  initialPricing,
+}: {
+  ctaLabel?: string;
+  initialPricing?: RegionPricing;
+}) {
   const [interval, setInterval] = useState<BillingInterval>("quarterly");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [region, setRegion] = useState<RegionPricing>(FALLBACK);
+  const [region, setRegion] = useState<RegionPricing>(initialPricing ?? FALLBACK);
 
   useEffect(() => {
+    // Server already resolved the region price → no fetch, no swap, no flicker.
+    if (initialPricing) return;
     let active = true;
     api(getRegionPricing, {})
       .then((r) => active && setRegion(r))
@@ -66,7 +79,7 @@ export function PlanPicker({ ctaLabel = "Upgrade to Pro" }: { ctaLabel?: string 
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialPricing]);
 
   async function checkout() {
     setBusy(true);

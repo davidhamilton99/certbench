@@ -1,6 +1,8 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Check, Lock } from "lucide-react";
 import { createClient } from "@/server/supabase/server";
+import { regionPricing } from "@/lib/pricing/ppp";
 import {
   FREE_DAILY_QUESTION_LIMIT,
   FREE_GENERATION_LIMIT,
@@ -47,6 +49,10 @@ export default async function UpgradePage({
 
   const plan = await getUserPlan(db, user.id);
   const reasonText = reason ? REASONS[reason] : undefined;
+  // Resolve the region price server-side so the first paint is correct —
+  // no flash of the full list price before a client fetch resolves.
+  const country = (await headers()).get("x-vercel-ip-country");
+  const pricing = regionPricing(country);
 
   return (
     <div className="mx-auto grid w-full max-w-lg gap-6">
@@ -89,7 +95,7 @@ export default async function UpgradePage({
               <ManageBillingButton />
             </div>
           ) : (
-            <PlanPicker />
+            <PlanPicker initialPricing={pricing} />
           )}
         </CardContent>
       </Card>

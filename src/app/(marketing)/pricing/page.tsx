@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { regionPricing } from "@/lib/pricing/ppp";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,7 +35,12 @@ const PRO_FEATURES = [
   "Pass guarantee — 30+ days of Pro study and you don't pass? Last payment refunded",
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  // Region price resolved server-side (from the request country header) so
+  // the correct price paints immediately — no flash of the full list price.
+  const country = (await headers()).get("x-vercel-ip-country");
+  const pricing = regionPricing(country);
+
   return (
     <div className="flex min-h-svh flex-col">
       <MarketingHeader />
@@ -92,7 +99,7 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <PlanPicker ctaLabel="Get Pro" />
+              <PlanPicker ctaLabel="Get Pro" initialPricing={pricing} />
             </CardContent>
           </Card>
         </div>
