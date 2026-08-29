@@ -119,28 +119,93 @@ export function buildDeck(
     .map((e) => e.columns)
     .filter((c) => c[config.ask.key] && c[config.answer.key]);
 
-  if (rows.length < 4) {
+  if (rows.length < 3) {
     throw new Error(
-      `Recall deck "${config.id}": only ${rows.length} usable rows (need ≥4)`
+      `Recall deck "${config.id}": only ${rows.length} usable rows (need ≥3)`
     );
   }
 
-  // Choice mode needs four distinct options in every direction it can ask.
+  // Choice mode needs at least one distractor (≥2 distinct) in every direction
+  // it can ask. Rich tables yield the full four options; sparse ones fewer.
   if (config.mode === "choice") {
     const dirs = config.bidirectional
       ? [config.answer.key, config.ask.key]
       : [config.answer.key];
     for (const key of dirs) {
       const distinct = distinctValues(rows, key).length;
-      if (distinct < 4) {
+      if (distinct < 2) {
         throw new Error(
-          `Recall deck "${config.id}": column "${key}" has ${distinct} distinct values (need ≥4 for choice mode)`
+          `Recall deck "${config.id}": column "${key}" has ${distinct} distinct values (need ≥2 for choice mode)`
         );
       }
     }
   }
 
   return { config, rows };
+}
+
+/** Longer than this and a column makes poor (unreadable) answer options. */
+const MAX_ANSWER_LEN = 64;
+
+function avgLen(rows: ResolvedDeck["rows"], key: string): number {
+  const vals = rows.map((r) => r[key]?.trim() ?? "").filter(Boolean);
+  if (vals.length === 0) return 0;
+  return vals.reduce((sum, v) => sum + v.length, 0) / vals.length;
+}
+
+/** A column usable as an answer: enough distinct values, not too long to read. */
+function isAnswerable(rows: ResolvedDeck["rows"], key: string): boolean {
+  return distinctValues(rows, key).length >= 3 && avgLen(rows, key) <= MAX_ANSWER_LEN;
+}
+
+/**
+ * Derive a sensible deck for any reference table without a hand-written config
+ * — the cue is the table's first (identifying) column and the answer is its
+ * most informative short column. Bidirectional when both sides read cleanly as
+ * options. Returns null for tables too thin to drill. This is what lets Recall
+ * cover every reference table, curated or not.
+ */
+export function autoDeckConfig(table: ReferenceTable): RecallDeckConfig | null {
+  const cols = table.columnHeaders;
+  if (cols.length < 2) return null;
+  const rows = table.entries.map((e) => e.columns);
+
+  let candidates = cols.filter((c) => isAnswerable(rows, c.key));
+  if (candidates.length === 0) {
+    // Fall back to any column with enough variety, even if long.
+    candidates = cols.filter((c) => distinctValues(rows, c.key).length >= 3);
+  }
+  if (candidates.length === 0) return null;
+
+  // Answer = the most informative candidate (most distinct values).
+  const answerCol = candidates.reduce((best, c) =>
+    distinctValues(rows, c.key).length > distinctValues(rows, best.key).length ? c : best
+  );
+  // Cue = the first column that identifies a row, distinct from the answer.
+  const promptCol = cols.find((c) => c.key !== answerCol.key);
+  if (!promptCol) return null;
+
+  const bidirectional = isAnswerable(rows, promptCol.key);
+  const detailKeys = cols
+    .filter((c) => c.key !== answerCol.key && c.key !== promptCol.key)
+    .map((c) => c.key);
+
+  return {
+    id: `auto-${table.id}`,
+    label: table.title,
+    blurb: table.description,
+    tableId: table.id,
+    mode: "choice",
+    ask: { key: promptCol.key, label: promptCol.label.toLowerCase() },
+    answer: { key: answerCol.key, label: answerCol.label.toLowerCase() },
+    bidirectional,
+    detailKeys,
+  };
+}
+
+/** Whether {@link autoDeckConfig} can produce a drill for this table. */
+export function canAutoDrill(table: ReferenceTable): boolean {
+  return autoDeckConfig(table) !== null;
 }
 
 /** Generate one question. `rng` defaults to `Math.random` for the live drill. */

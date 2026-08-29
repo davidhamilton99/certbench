@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ReferenceTable } from "@/data/reference/types";
-import { recallRegistry } from "@/data/recall";
+import { getRecallDecks } from "@/data/recall";
 import { referenceRegistry } from "@/data/reference";
 import { acceptableAnswers, normalizeAnswer } from "../normalize";
 import {
+  autoDeckConfig,
   buildDeck,
   generateRecallQuestion,
   gradeRecall,
@@ -81,12 +82,24 @@ describe("buildDeck validation", () => {
     ).toThrow(/not in table/);
   });
 
-  it("throws when choice mode lacks four distinct options", () => {
+  it("throws when a table has too few rows to drill", () => {
     const thin: ReferenceTable = {
       ...synthetic,
-      entries: synthetic.entries.slice(0, 3),
+      entries: synthetic.entries.slice(0, 2),
     };
     expect(() => buildDeck(base, thin)).toThrow(/usable rows/);
+  });
+
+  it("throws when the answer column has no distractors", () => {
+    const flat: ReferenceTable = {
+      ...synthetic,
+      entries: [
+        { columns: { term: "A", def: "same", note: "" } },
+        { columns: { term: "B", def: "same", note: "" } },
+        { columns: { term: "C", def: "same", note: "" } },
+      ],
+    };
+    expect(() => buildDeck(base, flat)).toThrow(/distinct/);
   });
 
   it("drops rows missing either drilled field", () => {
@@ -202,11 +215,40 @@ describe("generateRecallQuestion (type)", () => {
   });
 });
 
-describe("real Security+ recall decks", () => {
-  const decks = recallRegistry["security-plus-sy0-701"];
+describe("autoDeckConfig", () => {
+  it("derives a valid, self-consistent deck from a plain table", () => {
+    const cfg = autoDeckConfig(synthetic);
+    expect(cfg).not.toBeNull();
+    expect(cfg!.mode).toBe("choice");
+    const deck = buildDeck(cfg!, synthetic);
+    const rng = seeded(1);
+    for (let i = 0; i < 200; i++) {
+      const q = generateRecallQuestion(deck, rng);
+      expect(gradeRecall(q, q.answer)).toBe(true);
+    }
+  });
 
-  it("all decks resolve", () => {
-    expect(decks.length).toBeGreaterThanOrEqual(3);
+  it("returns null for a single-column table", () => {
+    const oneCol: ReferenceTable = {
+      id: "x",
+      title: "x",
+      description: "",
+      columnHeaders: [{ key: "a", label: "A" }],
+      entries: [{ columns: { a: "1" } }, { columns: { a: "2" } }],
+    };
+    expect(autoDeckConfig(oneCol)).toBeNull();
+  });
+});
+
+describe("real Security+ recall decks", () => {
+  const decks = getRecallDecks("security-plus-sy0-701");
+
+  it("covers the curated tables plus auto-derived ones", () => {
+    const tableIds = decks.map((d) => d.config.tableId);
+    // Curated
+    expect(tableIds).toEqual(expect.arrayContaining(["acronyms", "ports-protocols", "encryption-algorithms"]));
+    // Auto-derived from the remaining reference tables
+    expect(decks.length).toBeGreaterThan(3);
   });
 
   it("every generated question is self-consistent across a sweep", () => {
@@ -216,8 +258,9 @@ describe("real Security+ recall decks", () => {
         const q = generateRecallQuestion(deck, rng);
         expect(gradeRecall(q, q.answer), `${deck.config.id}: ${q.promptValue}`).toBe(true);
         if (q.mode === "choice") {
-          expect(q.options).toHaveLength(4);
-          expect(new Set(q.options).size).toBe(4);
+          expect(q.options.length).toBeGreaterThanOrEqual(2);
+          expect(q.options.length).toBeLessThanOrEqual(4);
+          expect(new Set(q.options).size).toBe(q.options.length);
           expect(q.options).toContain(q.answer);
         }
       }

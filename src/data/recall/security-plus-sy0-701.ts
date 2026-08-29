@@ -1,19 +1,12 @@
-import { referenceRegistry } from "@/data/reference";
-import {
-  buildDeck,
-  type RecallDeckConfig,
-  type ResolvedDeck,
-} from "@/lib/recall/recall-deck";
+import type { RecallDeckConfig } from "@/lib/recall/recall-deck";
 
 /**
- * Recall decks for Security+ SY0-701 — the memorization layer, drilled. Each
- * deck is a config over a verified reference table; {@link buildDeck} validates
- * it at module load so a mis-mapped column fails the build, never a user.
+ * Curated Recall decks for Security+ SY0-701 — hand-tuned column pairs, modes,
+ * and bidirectionality for the highest-value memorization tables. Any reference
+ * table without a curated config here is still drillable via the engine's
+ * auto-deck heuristic; these just get the sharper treatment.
  */
-
-const CERT_SLUG = "security-plus-sy0-701";
-
-const CONFIGS: RecallDeckConfig[] = [
+export const securityPlusRecallConfigs: RecallDeckConfig[] = [
   {
     id: "sec-acronyms",
     label: "Acronyms",
@@ -47,18 +40,3 @@ const CONFIGS: RecallDeckConfig[] = [
     detailKeys: ["keySize", "use"],
   },
 ];
-
-function resolve(): ResolvedDeck[] {
-  const tables = referenceRegistry[CERT_SLUG] ?? [];
-  return CONFIGS.map((config) => {
-    const table = tables.find((t) => t.id === config.tableId);
-    if (!table) {
-      throw new Error(
-        `Recall: reference table "${config.tableId}" missing for ${CERT_SLUG}`
-      );
-    }
-    return buildDeck(config, table);
-  });
-}
-
-export const securityPlusRecallDecks: ResolvedDeck[] = resolve();

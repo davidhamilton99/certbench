@@ -5,8 +5,8 @@ import {
   getCertificationBySlug,
   listActiveCertifications,
 } from "@/server/data/certifications";
-import { recallRegistry } from "@/data/recall";
-import { RecallPlayer } from "@/components/recall/RecallPlayer";
+import { getRecallDecks } from "@/data/recall";
+import { RecallSurface } from "@/components/recall/RecallSurface";
 
 export const metadata = {
   title: "Recall",
@@ -15,9 +15,9 @@ export const metadata = {
 export default async function RecallPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cert?: string }>;
+  searchParams: Promise<{ cert?: string; deck?: string }>;
 }) {
-  const { cert: certSlug } = await searchParams;
+  const { cert: certSlug, deck } = await searchParams;
   const db = await createClient();
   const {
     data: { user },
@@ -34,24 +34,18 @@ export default async function RecallPage({
   }
   if (!active) redirect("/onboarding");
 
-  const decks = recallRegistry[active.slug] ?? null;
+  const decks = getRecallDecks(active.slug);
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Recall</h1>
         <p className="text-sm text-muted-foreground">
-          {active.name} · speed-drill the facts you have to know cold — ports,
-          acronyms, and crypto. Answer with the number keys.
+          {active.name} · speed-drill the facts you have to know cold. Answer
+          with the number keys — correct answers fly by, misses come back.
         </p>
       </div>
-      {!decks ? (
-        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          Recall decks for this certification are coming soon.
-        </p>
-      ) : (
-        <RecallPlayer decks={decks} />
-      )}
+      <RecallSurface decks={decks} initialDeckKey={deck} />
     </div>
   );
 }

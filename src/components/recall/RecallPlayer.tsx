@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Flame, Shuffle, X } from "lucide-react";
+import { Check, Flame, X } from "lucide-react";
 import {
   generateRecallQuestion,
   gradeRecall,
@@ -11,22 +11,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const MIXED = "__mixed__";
+/** Sentinel deck key: draw each question from a random deck. */
+export const MIXED_DECK_KEY = "__mixed__";
 /** How often a previously-missed item resurfaces instead of a fresh one. */
 const RESURFACE_RATE = 0.3;
 /** Pause on a correct answer before auto-advancing (ms). */
 const ADVANCE_MS = 550;
 
 /**
- * The Recall drill. A fast, keyboard-first recall loop over verified reference
- * decks — pick a deck or mix them, answer with the number keys, and correct
- * answers auto-advance so a session stays in flow. Missed items resurface until
- * you get them right. Question generation is random, so the first question is
- * created after mount (SSR renders a stable placeholder; no hydration mismatch).
+ * The Recall drill for one selection — a single deck (by its table id) or
+ * MIXED across all of them. Fast and keyboard-first: number keys answer,
+ * correct answers auto-advance to keep a session in flow, and missed items
+ * resurface until you get them right. The parent owns selection and remounts
+ * this (via `key={deckKey}`) to start a fresh session, so state is simple.
+ *
+ * Question generation is random, so the first question is created after mount —
+ * SSR renders a stable placeholder and hydration never mismatches.
  */
-export function RecallPlayer({ decks }: { decks: ResolvedDeck[] }) {
-  const canMix = decks.length > 1;
-  const [deckKey, setDeckKey] = useState<string>(decks[0]?.config.id ?? MIXED);
+export function RecallPlayer({
+  decks,
+  deckKey,
+}: {
+  decks: ResolvedDeck[];
+  deckKey: string;
+}) {
   const [question, setQuestion] = useState<RecallQuestion | null>(null);
   const [answerValue, setAnswerValue] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
@@ -39,51 +47,37 @@ export function RecallPlayer({ decks }: { decks: ResolvedDeck[] }) {
   const missQueue = useRef<RecallQuestion[]>([]);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function deckFor(key: string): ResolvedDeck {
-    if (key === MIXED) return decks[Math.floor(Math.random() * decks.length)];
-    return decks.find((d) => d.config.id === key) ?? decks[0];
+  function deckFor(): ResolvedDeck {
+    if (deckKey === MIXED_DECK_KEY) {
+      return decks[Math.floor(Math.random() * decks.length)];
+    }
+    return decks.find((d) => d.config.tableId === deckKey) ?? decks[0];
   }
 
-  function nextQuestion(key: string): RecallQuestion {
+  function nextQuestion(): RecallQuestion {
     if (missQueue.current.length > 0 && Math.random() < RESURFACE_RATE) {
       return missQueue.current.shift()!;
     }
-    return generateRecallQuestion(deckFor(key));
+    return generateRecallQuestion(deckFor());
   }
 
   // First question after mount (random → client-only). Single setState.
   useEffect(() => {
     startedAt.current = Date.now();
-    setQuestion(generateRecallQuestion(deckFor(decks[0]?.config.id ?? MIXED)));
+    setQuestion(generateRecallQuestion(deckFor()));
     return () => {
       if (advanceTimer.current) clearTimeout(advanceTimer.current);
     };
-    // Mount only; deck switches are handled in selectDeck.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const revealed = answerValue !== null;
 
-  function selectDeck(key: string) {
-    if (key === deckKey) return;
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    missQueue.current = [];
-    startedAt.current = Date.now();
-    setDeckKey(key);
-    setScore({ correct: 0, answered: 0 });
-    setStreak(0);
-    setBest(0);
-    setQpm(0);
-    setAnswerValue(null);
-    setTyped("");
-    setQuestion(generateRecallQuestion(deckFor(key)));
-  }
-
   function advance() {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setAnswerValue(null);
     setTyped("");
-    setQuestion(nextQuestion(deckKey));
+    setQuestion(nextQuestion());
   }
 
   function record(value: string) {
@@ -146,44 +140,6 @@ export function RecallPlayer({ decks }: { decks: ResolvedDeck[] }) {
 
   return (
     <div className="grid gap-4">
-      {/* Deck picker */}
-      <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Deck">
-        {decks.map((d) => (
-          <button
-            key={d.config.id}
-            type="button"
-            role="tab"
-            aria-selected={deckKey === d.config.id}
-            onClick={() => selectDeck(d.config.id)}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-              deckKey === d.config.id
-                ? "border-primary bg-primary text-primary-foreground"
-                : "hover:border-muted-foreground/40"
-            )}
-          >
-            {d.config.label}
-          </button>
-        ))}
-        {canMix && (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={deckKey === MIXED}
-            onClick={() => selectDeck(MIXED)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-              deckKey === MIXED
-                ? "border-primary bg-primary text-primary-foreground"
-                : "hover:border-muted-foreground/40"
-            )}
-          >
-            <Shuffle className="size-3.5" />
-            Mixed
-          </button>
-        )}
-      </div>
-
       {/* Scoreboard */}
       <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
         <span>
@@ -237,10 +193,7 @@ export function RecallPlayer({ decks }: { decks: ResolvedDeck[] }) {
                   )}
                 >
                   <span
-                    className={cn(
-                      "flex size-5 shrink-0 items-center justify-center rounded border font-mono text-[11px]",
-                      "text-muted-foreground"
-                    )}
+                    className="flex size-5 shrink-0 items-center justify-center rounded border font-mono text-[11px] text-muted-foreground"
                     aria-hidden
                   >
                     {i + 1}

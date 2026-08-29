@@ -12,17 +12,18 @@ import {
 } from "../src/lib/tools/subnetting";
 
 /**
- * Workspace drills: register -> onboard -> /drills via the sidebar, then
- * actually beat the subnetting drill (solver mirrors the lib) and confirm
- * the register upsell never appears for a signed-in user.
+ * Recall is the unified drill hub — the old Drills tab (subnetting) folded in
+ * alongside the verified recall decks. register -> onboard -> Recall via the
+ * sidebar; a recall deck renders, the subnetting drill is beatable with the
+ * real math, and the register upsell never shows for a signed-in user.
  */
-test("logged-in drills: nav entry, subnetting solve streak, port quiz tab", async ({
+test("logged-in recall: nav entry, deck renders, subnetting solve streak", async ({
   page,
 }) => {
-  const email = e2eEmail("drills");
+  const email = e2eEmail("recall");
 
   await page.goto("/register");
-  await page.fill("#displayName", "E2E Drills");
+  await page.fill("#displayName", "E2E Recall");
   await page.fill("#email", email);
   await page.fill("#password", E2E_PASSWORD);
   await page.click('button[type="submit"]');
@@ -38,14 +39,20 @@ test("logged-in drills: nav entry, subnetting solve streak, port quiz tab", asyn
   await page.getByRole("button", { name: "Start studying" }).click();
   await page.waitForURL("**/dashboard");
 
-  // Sidebar entry reaches the drills page.
-  await page.getByRole("link", { name: "Drills" }).first().click();
-  await page.waitForURL("**/drills");
+  // Sidebar entry reaches Recall.
+  await page.getByRole("link", { name: "Recall" }).first().click();
+  await page.waitForURL("**/recall");
   await expect(
-    page.getByRole("heading", { name: "Drills", exact: true })
+    page.getByRole("heading", { name: "Recall", exact: true })
   ).toBeVisible();
 
-  // ---- Subnetting tab: answer 11 questions correctly via the real math ----
+  // A recall deck renders by default with multiple-choice options.
+  const options = page.locator('[role="radio"]');
+  await expect(options.first()).toBeVisible({ timeout: 15_000 });
+  expect(await options.count()).toBeGreaterThanOrEqual(2);
+
+  // ---- Subnetting pill: answer 11 questions correctly via the real math ----
+  await page.getByRole("tab", { name: "Subnetting" }).click();
   const input = page.getByLabel("Your answer");
   await expect(input).toBeVisible({ timeout: 15_000 });
 
@@ -102,19 +109,6 @@ test("logged-in drills: nav entry, subnetting solve streak, port quiz tab", asyn
   }
   await expect(page.getByText("11 / 11 correct")).toBeVisible();
 
-  // Signed-in users never see the register upsell (10+ answers would show
-  // it on the public page).
-  await expect(page.getByText(/free account/i)).toHaveCount(0);
-
-  // ---- Port numbers tab works and also stays upsell-free ----
-  await page.getByRole("tab", { name: "Port numbers" }).click();
-  await expect(page.locator('[role="radiogroup"]')).toBeVisible({
-    timeout: 15_000,
-  });
-  for (let i = 0; i < 10; i++) {
-    await page.locator('[role="radio"]').first().click();
-    await page.getByRole("button", { name: "Next", exact: true }).click();
-  }
-  await expect(page.getByText(/10 answered|\/ 10 correct/).first()).toBeVisible();
+  // Signed-in users never see the register upsell.
   await expect(page.getByText(/free account/i)).toHaveCount(0);
 });

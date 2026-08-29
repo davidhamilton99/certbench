@@ -11,7 +11,6 @@ import {
   ListChecks,
   Table2,
   Users,
-  Zap,
 } from "lucide-react";
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
@@ -30,7 +29,6 @@ const NAV_ITEMS = [
   { href: "/community", label: "Community", icon: Users },
   { href: "/pbq", label: "PBQ lab", icon: FlaskConical },
   { href: "/recall", label: "Recall", icon: Brain },
-  { href: "/drills", label: "Drills", icon: Zap },
   { href: "/reference", label: "Reference", icon: Table2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/review", label: "Review", icon: ListChecks },

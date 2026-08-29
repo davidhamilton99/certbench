@@ -6,6 +6,7 @@ import {
   listActiveCertifications,
 } from "@/server/data/certifications";
 import { referenceRegistry } from "@/data/reference";
+import { getRecallDecks } from "@/data/recall";
 import { ReferenceTableViewer } from "@/components/workspace/ReferenceTableViewer";
 
 export const metadata = {
@@ -35,6 +36,9 @@ export default async function ReferencePage({
   if (!active) redirect("/onboarding");
 
   const tables = referenceRegistry[active.slug] ?? null;
+  const drillableTableIds = getRecallDecks(active.slug).map(
+    (d) => d.config.tableId
+  );
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
@@ -49,7 +53,11 @@ export default async function ReferencePage({
           No reference tables for this certification yet.
         </p>
       ) : (
-        <ReferenceTableViewer tables={tables} />
+        <ReferenceTableViewer
+          tables={tables}
+          certSlug={active.slug}
+          drillableTableIds={drillableTableIds}
+        />
       )}
     </div>
   );
