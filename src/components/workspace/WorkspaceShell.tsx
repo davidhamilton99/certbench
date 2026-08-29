@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
+  Brain,
   FlaskConical,
   LayoutDashboard,
   Library,
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/study-materials", label: "Study sets", icon: Library },
   { href: "/community", label: "Community", icon: Users },
   { href: "/pbq", label: "PBQ lab", icon: FlaskConical },
+  { href: "/recall", label: "Recall", icon: Brain },
   { href: "/drills", label: "Drills", icon: Zap },
   { href: "/reference", label: "Reference", icon: Table2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

@@ -4,6 +4,7 @@ import { encryptionAlgorithms } from "./encryption-algorithms";
 import { authenticationTypes } from "./authentication-types";
 import { attackTypes } from "./attack-types";
 import { osiModel } from "./osi-model";
+import { acronyms } from "./acronyms";
 
 export const tables: ReferenceTable[] = [
   portsProtocols,
@@ -11,4 +12,5 @@ export const tables: ReferenceTable[] = [
   authenticationTypes,
   attackTypes,
   osiModel,
+  acronyms,
 ];
