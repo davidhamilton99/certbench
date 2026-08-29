@@ -164,6 +164,18 @@ describe("generateRecallQuestion (choice)", () => {
     const q = generateRecallQuestion(deck, seeded(4));
     expect(["crypto", "network", "iam"]).toContain(q.detail);
   });
+
+  it("tags each question with a stable item id from the cue column", () => {
+    const terms = new Set(synthetic.entries.map((e) => e.columns.term));
+    expect(deck.itemCount).toBe(terms.size);
+    const rng = seeded(5);
+    for (let i = 0; i < 200; i++) {
+      const q = generateRecallQuestion(deck, rng);
+      expect(q.tableId).toBe("synthetic");
+      // The item id is always a cue-column value, even when direction flips.
+      expect(terms.has(q.itemId)).toBe(true);
+    }
+  });
 });
 
 describe("generateRecallQuestion (type)", () => {

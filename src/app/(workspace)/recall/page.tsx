@@ -45,7 +45,11 @@ export default async function RecallPage({
           with the number keys — correct answers fly by, misses come back.
         </p>
       </div>
-      <RecallSurface decks={decks} initialDeckKey={deck} />
+      <RecallSurface
+        decks={decks}
+        certSlug={active.slug}
+        initialDeckKey={deck}
+      />
     </div>
   );
 }

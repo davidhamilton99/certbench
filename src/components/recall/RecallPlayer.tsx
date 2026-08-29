@@ -31,9 +31,11 @@ const ADVANCE_MS = 550;
 export function RecallPlayer({
   decks,
   deckKey,
+  onAnswer,
 }: {
   decks: ResolvedDeck[];
   deckKey: string;
+  onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
 }) {
   const [question, setQuestion] = useState<RecallQuestion | null>(null);
   const [answerValue, setAnswerValue] = useState<string | null>(null);
@@ -84,6 +86,7 @@ export function RecallPlayer({
     if (revealed || !question) return;
     const correct = gradeRecall(question, value);
     setAnswerValue(value);
+    onAnswer?.(question.tableId, question.itemId, correct);
 
     const answered = score.answered + 1;
     setScore({ correct: score.correct + (correct ? 1 : 0), answered });

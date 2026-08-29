@@ -48,10 +48,20 @@ export interface ResolvedDeck {
   config: RecallDeckConfig;
   /** Rows that have a non-empty value for every field the deck touches. */
   rows: Array<Record<string, string>>;
+  /** Distinct drillable items (by the cue column) — the deck's mastery total. */
+  itemCount: number;
 }
 
 export interface RecallQuestion {
   deckId: string;
+  /** The reference table this deck drills — the mastery bucket key. */
+  tableId: string;
+  /**
+   * Stable identity of the fact being drilled (the cue-column value in the
+   * deck's canonical orientation), so mastery counts an item once regardless
+   * of which direction it was asked.
+   */
+  itemId: string;
   mode: RecallMode;
   /** The cue value shown big, e.g. "HTTPS" or "AES". */
   promptValue: string;
@@ -141,7 +151,7 @@ export function buildDeck(
     }
   }
 
-  return { config, rows };
+  return { config, rows, itemCount: distinctValues(rows, config.ask.key).length };
 }
 
 /** Longer than this and a column makes poor (unreadable) answer options. */
@@ -240,6 +250,8 @@ export function generateRecallQuestion(
 
   return {
     deckId: config.id,
+    tableId: config.tableId,
+    itemId: row[config.ask.key],
     mode: config.mode,
     promptValue,
     askLabel: askField.label,
