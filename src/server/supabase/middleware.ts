@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "@/env";
 
@@ -56,9 +57,18 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // A transient auth-token validation error — most notably "JWT issued at
+  // future" from clock skew between the token issuer and this instance — must
+  // never take down a page load. Fail closed to "no session" for this one
+  // request: auth pages still render, protected routes fall back to /login,
+  // and the rotated cookie validates cleanly on the very next request.
+  let user: User | null = null;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+  } catch (err) {
+    console.warn("[proxy] auth.getUser failed; continuing unauthenticated", err);
+  }
 
   const { pathname } = request.nextUrl;
 

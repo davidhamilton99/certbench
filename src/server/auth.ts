@@ -15,9 +15,16 @@ export async function getOptionalUser(): Promise<{
   user: User | null;
 }> {
   const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
+  // Guard against transient JWT validation errors (e.g. "JWT issued at future"
+  // from clock skew) so an auth-token hiccup degrades to "logged out" for this
+  // request instead of throwing an unhandled 500 during server render.
+  let user: User | null = null;
+  try {
+    const result = await db.auth.getUser();
+    user = result.data.user;
+  } catch (err) {
+    console.warn("[auth] getUser failed; treating as unauthenticated", err);
+  }
   return { db, user };
 }
 
