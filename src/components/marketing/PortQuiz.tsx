@@ -4,38 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Flame, X } from "lucide-react";
 import type { PortEntry } from "@/lib/tools/port-quiz-data";
+import { makeQuestion, type QuizQuestion } from "@/lib/tools/port-quiz";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-/** "Which port?" given a protocol, or "which protocol?" given a port. */
-interface QuizQuestion {
-  direction: "port" | "protocol";
-  answer: PortEntry;
-  options: PortEntry[]; // 4, shuffled, includes answer
-}
-
-function pick<T>(arr: T[], n: number, exclude: T): T[] {
-  const pool = arr.filter((x) => x !== exclude);
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, n);
-}
-
-function makeQuestion(entries: PortEntry[]): QuizQuestion {
-  const answer = entries[Math.floor(Math.random() * entries.length)];
-  const options = [...pick(entries, 3, answer), answer];
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
-  }
-  return {
-    direction: Math.random() < 0.5 ? "port" : "protocol",
-    answer,
-    options,
-  };
-}
 
 /**
  * Endless port-numbers drill. Question generation is random, so the first
@@ -135,7 +106,7 @@ export function PortQuiz({
             question.direction === "port" ? option.port : option.protocol;
           return (
             <button
-              key={option.protocol}
+              key={option.port}
               type="button"
               role="radio"
               aria-checked={picked === option}
