@@ -5,20 +5,19 @@ import {
   getCertificationBySlug,
   listActiveCertifications,
 } from "@/server/data/certifications";
-import { referenceRegistry } from "@/data/reference";
 import { getRecallDecks } from "@/data/recall";
-import { ReferenceTableViewer } from "@/components/workspace/ReferenceTableViewer";
+import { RecallSurface } from "@/components/recall/RecallSurface";
 
 export const metadata = {
-  title: "Reference",
+  title: "Recall",
 };
 
-export default async function ReferencePage({
+export default async function RecallPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cert?: string }>;
+  searchParams: Promise<{ cert?: string; deck?: string }>;
 }) {
-  const { cert: certSlug } = await searchParams;
+  const { cert: certSlug, deck } = await searchParams;
   const db = await createClient();
   const {
     data: { user },
@@ -35,30 +34,22 @@ export default async function ReferencePage({
   }
   if (!active) redirect("/onboarding");
 
-  const tables = referenceRegistry[active.slug] ?? null;
-  const drillableTableIds = getRecallDecks(active.slug).map(
-    (d) => d.config.tableId
-  );
+  const decks = getRecallDecks(active.slug);
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-6">
+    <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Reference tables</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Recall</h1>
         <p className="text-sm text-muted-foreground">
-          {active.name} · quick lookup for key exam topics
+          {active.name} · speed-drill the facts you have to know cold. Answer
+          with the number keys — correct answers fly by, misses come back.
         </p>
       </div>
-      {!tables ? (
-        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          No reference tables for this certification yet.
-        </p>
-      ) : (
-        <ReferenceTableViewer
-          tables={tables}
-          certSlug={active.slug}
-          drillableTableIds={drillableTableIds}
-        />
-      )}
+      <RecallSurface
+        decks={decks}
+        certSlug={active.slug}
+        initialDeckKey={deck}
+      />
     </div>
   );
 }
