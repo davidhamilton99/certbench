@@ -6,6 +6,9 @@ import {
   type ResolvedDeck,
 } from "@/lib/recall/recall-deck";
 import { securityPlusRecallConfigs } from "./security-plus-sy0-701";
+import { networkPlusRecallConfigs } from "./network-plus-n10-009";
+import { aPlusCore1RecallConfigs } from "./a-plus-core1-220-1101";
+import { aPlusCore2RecallConfigs } from "./a-plus-core2-220-1102";
 
 /**
  * Curated deck configs by certification slug. A cert with no entry (or a table
@@ -14,6 +17,9 @@ import { securityPlusRecallConfigs } from "./security-plus-sy0-701";
  */
 const curatedConfigs: Record<string, RecallDeckConfig[]> = {
   "security-plus-sy0-701": securityPlusRecallConfigs,
+  "network-plus-n10-009": networkPlusRecallConfigs,
+  "a-plus-core1-220-1101": aPlusCore1RecallConfigs,
+  "a-plus-core2-220-1102": aPlusCore2RecallConfigs,
 };
 
 /**

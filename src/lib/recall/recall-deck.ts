@@ -236,8 +236,16 @@ export function generateRecallQuestion(
 
   let options: string[] = [];
   if (config.mode === "choice") {
+    // A cue can map to more than one row (e.g. two RADIUS ports). Exclude every
+    // answer that's valid for THIS cue from the distractors, so exactly one
+    // option is ever correct — the question is never ambiguous.
+    const alsoValid = new Set(
+      rows
+        .filter((r) => r[askField.key] === promptValue)
+        .map((r) => r[ansField.key])
+    );
     const distractors = shuffle(
-      distinctValues(rows, ansField.key).filter((v) => v !== answer),
+      distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v)),
       rng
     ).slice(0, 3);
     options = shuffle([answer, ...distractors], rng);
