@@ -252,28 +252,72 @@ describe("autoDeckConfig", () => {
   });
 });
 
-describe("real Security+ recall decks", () => {
-  const decks = getRecallDecks("security-plus-sy0-701");
+describe("duplicate-cue safety", () => {
+  it("never offers two valid answers for a cue mapping to multiple rows", () => {
+    const table: ReferenceTable = {
+      id: "dup",
+      title: "d",
+      description: "",
+      columnHeaders: [
+        { key: "cue", label: "Cue" },
+        { key: "ans", label: "Ans" },
+      ],
+      entries: [
+        { columns: { cue: "RADIUS", ans: "1812" } },
+        { columns: { cue: "RADIUS", ans: "1645" } },
+        { columns: { cue: "SSH", ans: "22" } },
+        { columns: { cue: "HTTP", ans: "80" } },
+        { columns: { cue: "DNS", ans: "53" } },
+      ],
+    };
+    const deck = buildDeck(
+      { id: "t", label: "t", tableId: "dup", mode: "choice", ask: { key: "cue", label: "cue" }, answer: { key: "ans", label: "ans" } },
+      table
+    );
+    const rng = seeded(3);
+    let sawRadius = false;
+    for (let i = 0; i < 500; i++) {
+      const q = generateRecallQuestion(deck, rng);
+      if (q.promptValue !== "RADIUS") continue;
+      sawRadius = true;
+      // Both 1812 and 1645 are valid for RADIUS; only the shown answer may appear.
+      const validInOptions = q.options.filter((o) => o === "1812" || o === "1645");
+      expect(validInOptions).toEqual([q.answer]);
+    }
+    expect(sawRadius).toBe(true);
+  });
+});
 
-  it("covers the curated tables plus auto-derived ones", () => {
-    const tableIds = decks.map((d) => d.config.tableId);
-    // Curated
-    expect(tableIds).toEqual(expect.arrayContaining(["acronyms", "ports-protocols", "encryption-algorithms"]));
-    // Auto-derived from the remaining reference tables
-    expect(decks.length).toBeGreaterThan(3);
+describe("all recall decks (every cert)", () => {
+  const slugs = [
+    "security-plus-sy0-701",
+    "network-plus-n10-009",
+    "a-plus-core1-220-1101",
+    "a-plus-core2-220-1102",
+  ];
+
+  it("Security+ covers its curated tables plus auto-derived ones", () => {
+    const tableIds = getRecallDecks("security-plus-sy0-701").map((d) => d.config.tableId);
+    expect(tableIds).toEqual(
+      expect.arrayContaining(["acronyms", "ports-protocols", "encryption-algorithms", "attack-types", "authentication-types"])
+    );
   });
 
-  it("every generated question is self-consistent across a sweep", () => {
+  it("every deck across every cert generates self-consistent questions", () => {
     const rng = seeded(2026);
-    for (const deck of decks) {
-      for (let i = 0; i < 400; i++) {
-        const q = generateRecallQuestion(deck, rng);
-        expect(gradeRecall(q, q.answer), `${deck.config.id}: ${q.promptValue}`).toBe(true);
-        if (q.mode === "choice") {
-          expect(q.options.length).toBeGreaterThanOrEqual(2);
-          expect(q.options.length).toBeLessThanOrEqual(4);
-          expect(new Set(q.options).size).toBe(q.options.length);
-          expect(q.options).toContain(q.answer);
+    for (const slug of slugs) {
+      const decks = getRecallDecks(slug);
+      expect(decks.length, slug).toBeGreaterThan(0);
+      for (const deck of decks) {
+        for (let i = 0; i < 200; i++) {
+          const q = generateRecallQuestion(deck, rng);
+          expect(gradeRecall(q, q.answer), `${slug}/${deck.config.id}: ${q.promptValue}`).toBe(true);
+          if (q.mode === "choice") {
+            expect(q.options.length).toBeGreaterThanOrEqual(2);
+            expect(q.options.length).toBeLessThanOrEqual(4);
+            expect(new Set(q.options).size).toBe(q.options.length);
+            expect(q.options).toContain(q.answer);
+          }
         }
       }
     }
