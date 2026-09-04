@@ -213,7 +213,7 @@ describe("generateRecallQuestion (type)", () => {
     let sawCompound = false;
     for (let i = 0; i < 300; i++) {
       const q = generateRecallQuestion(deck, rng);
-      expect(q.options).toHaveLength(0);
+      expect(q.options).toContain(q.answer);
       expect(gradeRecall(q, q.answer)).toBe(true);
       expect(gradeRecall(q, "  ")).toBe(false);
       if (q.answer === "20/21") {
@@ -285,6 +285,30 @@ describe("duplicate-cue safety", () => {
       expect(validInOptions).toEqual([q.answer]);
     }
     expect(sawRadius).toBe(true);
+  });
+});
+
+describe("typed mode", () => {
+  it("marks short-answer decks typeable and long-answer decks not", () => {
+    const decks = getRecallDecks("security-plus-sy0-701");
+    const ports = decks.find((d) => d.config.tableId === "ports-protocols")!;
+    const acronyms = decks.find((d) => d.config.tableId === "acronyms")!;
+    expect(ports.typeable).toBe(true);
+    expect(acronyms.typeable).toBe(false);
+  });
+
+  it("noSwap always asks in the deck's default direction", () => {
+    // Ports is bidirectional (protocol <-> port); noSwap must always ask
+    // protocol -> port, so you type the port, never a long protocol name.
+    const ports = getRecallDecks("security-plus-sy0-701").find(
+      (d) => d.config.tableId === "ports-protocols"
+    )!;
+    const rng = seeded(11);
+    for (let i = 0; i < 200; i++) {
+      const q = generateRecallQuestion(ports, rng, { noSwap: true });
+      expect(q.answerLabel).toBe("port");
+      expect(gradeRecall(q, q.answer)).toBe(true);
+    }
   });
 });
 
