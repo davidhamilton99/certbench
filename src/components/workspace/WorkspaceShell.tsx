@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BarChart3,
   Brain,
@@ -12,7 +12,7 @@ import {
   Table2,
   Users,
 } from "lucide-react";
-import { Suspense } from "react";
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { SignOutButton } from "./SignOutButton";
@@ -34,9 +34,28 @@ const NAV_ITEMS = [
   { href: "/review", label: "Review", icon: ListChecks },
 ];
 
+/**
+ * The active certification from `?cert=`, read on the client only. It's `null`
+ * on the server and the first client render, so the nav hydrates identically
+ * and never mismatches; the cert is applied right after mount and whenever the
+ * route changes. Reading `window.location` deliberately avoids Next's
+ * `useSearchParams`, which forces its subtree into a Suspense/CSR bailout that
+ * produced a hydration mismatch on every workspace page.
+ */
+function useCertParam(): string | null {
+  // usePathname re-renders this on every client navigation, so the external
+  // snapshot below is re-read; getServerSnapshot keeps SSR and the first client
+  // paint at null, so the nav hydrates identically.
+  usePathname();
+  return useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("cert"),
+    () => null
+  );
+}
+
 function CertSwitcher({ certs }: { certs: ShellCert[] }) {
-  const searchParams = useSearchParams();
-  const activeSlug = searchParams.get("cert") ?? certs[0]?.slug;
+  const activeSlug = useCertParam() ?? certs[0]?.slug;
 
   if (certs.length <= 1) return null;
   return (
@@ -73,7 +92,7 @@ function withCert(href: string, cert: string | null): string {
 
 function DesktopNav() {
   const pathname = usePathname();
-  const cert = useSearchParams().get("cert");
+  const cert = useCertParam();
   return (
     <nav className="flex flex-1 flex-col gap-0.5 p-3">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -105,7 +124,7 @@ function DesktopNav() {
 
 function MobileNav() {
   const pathname = usePathname();
-  const cert = useSearchParams().get("cert");
+  const cert = useCertParam();
   return (
     <nav className="flex gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
       {NAV_ITEMS.map(({ href, label }) => (
@@ -150,12 +169,8 @@ export function WorkspaceShell({
             CertBench
           </Link>
         </div>
-        <Suspense>
-          <CertSwitcher certs={certs} />
-        </Suspense>
-        <Suspense>
-          <DesktopNav />
-        </Suspense>
+        <CertSwitcher certs={certs} />
+        <DesktopNav />
         <div className="flex items-center justify-between gap-1 border-t px-3 py-2.5">
           <Link
             href="/profile"
@@ -184,9 +199,7 @@ export function WorkspaceShell({
             <SignOutButton />
           </div>
         </header>
-        <Suspense>
-          <MobileNav />
-        </Suspense>
+        <MobileNav />
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </div>
     </div>
