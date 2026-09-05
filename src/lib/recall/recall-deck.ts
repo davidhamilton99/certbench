@@ -50,6 +50,8 @@ export interface ResolvedDeck {
   rows: Array<Record<string, string>>;
   /** Distinct drillable items (by the cue column) — the deck's mastery total. */
   itemCount: number;
+  /** Answers short enough to type — enables the active-recall "type it" mode. */
+  typeable: boolean;
 }
 
 export interface RecallQuestion {
@@ -70,9 +72,9 @@ export interface RecallQuestion {
   answerLabel: string;
   /** Canonical answer, for display on reveal. */
   answer: string;
-  /** Normalized forms accepted in `type` mode. */
+  /** Normalized accepted forms — grades both typed answers and chosen options. */
   acceptable: string[];
-  /** Four shuffled options in `choice` mode; empty in `type` mode. */
+  /** Up to four shuffled options (the answer plus distractors). */
   options: string[];
   /** Context line shown on reveal ("" when the deck defines no detail). */
   detail: string;
@@ -151,7 +153,13 @@ export function buildDeck(
     }
   }
 
-  return { config, rows, itemCount: distinctValues(rows, config.ask.key).length };
+  return {
+    config,
+    rows,
+    itemCount: distinctValues(rows, config.ask.key).length,
+    // Short answers (ports, etc.) can be typed; long ones (definitions) can't.
+    typeable: avgLen(rows, config.answer.key) <= 8,
+  };
 }
 
 /** Longer than this and a column makes poor (unreadable) answer options. */
@@ -218,15 +226,22 @@ export function canAutoDrill(table: ReferenceTable): boolean {
   return autoDeckConfig(table) !== null;
 }
 
-/** Generate one question. `rng` defaults to `Math.random` for the live drill. */
+/**
+ * Generate one question. `rng` defaults to `Math.random` for the live drill.
+ * Every question carries both multiple-choice `options` and the accepted typed
+ * `acceptable` forms, so the UI can render it either way. Pass `noSwap` (used by
+ * typed mode) to always ask in the deck's default direction.
+ */
 export function generateRecallQuestion(
   deck: ResolvedDeck,
-  rng: Rng = Math.random
+  rng: Rng = Math.random,
+  opts?: { noSwap?: boolean }
 ): RecallQuestion {
   const { config, rows } = deck;
 
   // Direction: swap cue/answer for bidirectional decks half the time.
-  const swap = config.bidirectional === true && rng() < 0.5;
+  const swap =
+    config.bidirectional === true && !opts?.noSwap && rng() < 0.5;
   const askField = swap ? config.answer : config.ask;
   const ansField = swap ? config.ask : config.answer;
 
@@ -234,22 +249,19 @@ export function generateRecallQuestion(
   const answer = row[ansField.key];
   const promptValue = row[askField.key];
 
-  let options: string[] = [];
-  if (config.mode === "choice") {
-    // A cue can map to more than one row (e.g. two RADIUS ports). Exclude every
-    // answer that's valid for THIS cue from the distractors, so exactly one
-    // option is ever correct — the question is never ambiguous.
-    const alsoValid = new Set(
-      rows
-        .filter((r) => r[askField.key] === promptValue)
-        .map((r) => r[ansField.key])
-    );
-    const distractors = shuffle(
-      distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v)),
-      rng
-    ).slice(0, 3);
-    options = shuffle([answer, ...distractors], rng);
-  }
+  // A cue can map to more than one row (e.g. two RADIUS ports). Exclude every
+  // answer that's valid for THIS cue from the distractors, so exactly one option
+  // is ever correct — the question is never ambiguous.
+  const alsoValid = new Set(
+    rows
+      .filter((r) => r[askField.key] === promptValue)
+      .map((r) => r[ansField.key])
+  );
+  const distractors = shuffle(
+    distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v)),
+    rng
+  ).slice(0, 3);
+  const options = shuffle([answer, ...distractors], rng);
 
   const detail = (config.detailKeys ?? [])
     .map((k) => row[k])
@@ -265,18 +277,17 @@ export function generateRecallQuestion(
     askLabel: askField.label,
     answerLabel: ansField.label,
     answer,
-    acceptable:
-      config.mode === "type" ? acceptableAnswers(answer, config.accept) : [],
+    acceptable: acceptableAnswers(answer, config.accept),
     options,
     detail,
   };
 }
 
-/** Grade a typed answer (type mode) or a chosen option (choice mode). */
+/**
+ * Grade an answer — a typed string or a chosen option. Both are checked against
+ * the same accepted forms, so the caller doesn't need to know the display mode.
+ */
 export function gradeRecall(question: RecallQuestion, input: string): boolean {
-  if (question.mode === "type") {
-    const norm = normalizeAnswer(input);
-    return norm !== "" && question.acceptable.includes(norm);
-  }
-  return normalizeAnswer(input) === normalizeAnswer(question.answer);
+  const norm = normalizeAnswer(input);
+  return norm !== "" && question.acceptable.includes(norm);
 }

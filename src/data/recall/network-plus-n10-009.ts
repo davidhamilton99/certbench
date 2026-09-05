@@ -16,6 +16,7 @@ export const networkPlusRecallConfigs: RecallDeckConfig[] = [
     ask: { key: "protocol", label: "protocol" },
     answer: { key: "port", label: "port" },
     bidirectional: true,
+    accept: "numeric-parts",
     detailKeys: ["service", "transport"],
   },
   {

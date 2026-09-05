@@ -31,15 +31,18 @@ const ADVANCE_MS = 550;
 export function RecallPlayer({
   decks,
   deckKey,
+  typed = false,
   onAnswer,
 }: {
   decks: ResolvedDeck[];
   deckKey: string;
+  /** Render a typed-answer input instead of multiple choice (active recall). */
+  typed?: boolean;
   onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
 }) {
   const [question, setQuestion] = useState<RecallQuestion | null>(null);
   const [answerValue, setAnswerValue] = useState<string | null>(null);
-  const [typed, setTyped] = useState("");
+  const [entry, setEntry] = useState("");
   const [score, setScore] = useState({ correct: 0, answered: 0 });
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(0);
@@ -48,6 +51,7 @@ export function RecallPlayer({
   const startedAt = useRef<number | null>(null);
   const missQueue = useRef<RecallQuestion[]>([]);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function deckFor(): ResolvedDeck {
     if (deckKey === MIXED_DECK_KEY) {
@@ -56,29 +60,42 @@ export function RecallPlayer({
     return decks.find((d) => d.config.tableId === deckKey) ?? decks[0];
   }
 
+  // Typed mode always asks in the deck's default direction (you type the answer,
+  // e.g. the port number), so a bidirectional deck never asks you to type a long
+  // protocol name.
+  function gen(): RecallQuestion {
+    return generateRecallQuestion(deckFor(), Math.random, { noSwap: typed });
+  }
+
   function nextQuestion(): RecallQuestion {
     if (missQueue.current.length > 0 && Math.random() < RESURFACE_RATE) {
       return missQueue.current.shift()!;
     }
-    return generateRecallQuestion(deckFor());
+    return gen();
   }
 
   // First question after mount (random → client-only). Single setState.
   useEffect(() => {
     startedAt.current = Date.now();
-    setQuestion(generateRecallQuestion(deckFor()));
+    setQuestion(gen());
     return () => {
       if (advanceTimer.current) clearTimeout(advanceTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Keep the typed input focused as questions fly by.
+  useEffect(() => {
+    if (typed && !answerValue) inputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question]);
+
   const revealed = answerValue !== null;
 
   function advance() {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     setAnswerValue(null);
-    setTyped("");
+    setEntry("");
     setQuestion(nextQuestion());
   }
 
@@ -116,7 +133,7 @@ export function RecallPlayer({
         }
         return;
       }
-      if (question.mode === "choice") {
+      if (!typed) {
         const idx = Number(e.key) - 1;
         if (Number.isInteger(idx) && idx >= 0 && idx < question.options.length) {
           e.preventDefault();
@@ -173,7 +190,7 @@ export function RecallPlayer({
           </p>
         </div>
 
-        {question.mode === "choice" ? (
+        {!typed ? (
           <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
             {question.options.map((option, i) => {
               const isAnswer = revealed && option === question.answer;
@@ -212,15 +229,16 @@ export function RecallPlayer({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!revealed && typed.trim()) record(typed);
+              if (!revealed && entry.trim()) record(entry);
             }}
             className="grid gap-2"
           >
             <input
+              ref={inputRef}
               autoFocus
-              value={typed}
+              value={entry}
               disabled={revealed}
-              onChange={(e) => setTyped(e.target.value)}
+              onChange={(e) => setEntry(e.target.value)}
               placeholder={`Type the ${question.answerLabel}…`}
               inputMode="text"
               autoComplete="off"

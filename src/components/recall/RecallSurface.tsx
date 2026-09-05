@@ -50,6 +50,7 @@ export function RecallSurface({
   const [mastery, setMastery] = useState<MasteryMap>({});
   const [session, setSession] = useState({ answered: 0, correct: 0 });
   const [reframeDismissed, setReframeDismissed] = useState(false);
+  const [typed, setTyped] = useState(false);
 
   // Load saved mastery after mount (localStorage is client-only, so SSR and
   // the first client render both start empty — no hydration mismatch).
@@ -75,6 +76,11 @@ export function RecallSurface({
     decks.map((d) => ({ tableId: d.config.tableId, itemCount: d.itemCount })),
     mastery
   );
+
+  // Typed (active-recall) mode is offered only for decks with short answers.
+  const activeDeck = decks.find((d) => d.config.tableId === active);
+  const canType = !!activeDeck?.typeable;
+  const typedMode = typed && canType;
 
   const pills: { key: string; label: string; icon?: typeof Shuffle }[] = [
     ...decks.map((d) => ({ key: d.config.tableId, label: d.config.label })),
@@ -113,13 +119,42 @@ export function RecallSurface({
 
       {total > 0 && <RecallMastery mastered={mastered} total={total} />}
 
+      {canType && (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+            Answer with
+          </span>
+          <div className="flex overflow-hidden rounded-full border text-xs">
+            {([
+              ["Multiple choice", false],
+              ["Type it", true],
+            ] as const).map(([label, val]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setTyped(val)}
+                className={cn(
+                  "px-3 py-1 font-medium transition-colors",
+                  typed === val
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {active === SUBNETTING_KEY ? (
         <SubnettingDrillLazy showRegisterCta={false} />
       ) : (
         <RecallPlayer
-          key={active}
+          key={`${active}:${typedMode}`}
           decks={decks}
           deckKey={active}
+          typed={typedMode}
           onAnswer={handleAnswer}
         />
       )}
