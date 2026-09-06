@@ -37,6 +37,7 @@ export const networkPlusRecallConfigs: RecallDeckConfig[] = [
     mode: "choice",
     ask: { key: "protocol", label: "protocol" },
     answer: { key: "ad", label: "admin distance" },
+    distractorGroupKey: "type",
     detailKeys: ["type", "algorithm", "metric"],
   },
   {
@@ -47,6 +48,7 @@ export const networkPlusRecallConfigs: RecallDeckConfig[] = [
     mode: "choice",
     ask: { key: "cable", label: "cable" },
     answer: { key: "maxSpeed", label: "max speed" },
+    distractorGroupKey: "category",
     detailKeys: ["maxDistance", "connector", "category"],
   },
 ];

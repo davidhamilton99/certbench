@@ -30,6 +30,7 @@ export const aPlusCore2RecallConfigs: RecallDeckConfig[] = [
     mode: "choice",
     ask: { key: "description", label: "description" },
     answer: { key: "concept", label: "concept" },
+    distractorGroupKey: "type",
     detailKeys: ["type", "example"],
   },
 ];
