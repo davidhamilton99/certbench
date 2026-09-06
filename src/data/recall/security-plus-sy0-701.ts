@@ -16,6 +16,7 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
     ask: { key: "acronym", label: "acronym" },
     answer: { key: "expansion", label: "expansion" },
     bidirectional: true,
+    distractorGroupKey: "category",
     detailKeys: ["category"],
   },
   {
@@ -48,6 +49,7 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
     mode: "choice",
     ask: { key: "description", label: "description" },
     answer: { key: "attack", label: "attack" },
+    distractorGroupKey: "category",
     detailKeys: ["category", "mitigation"],
   },
   {
@@ -58,6 +60,7 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
     mode: "choice",
     ask: { key: "description", label: "description" },
     answer: { key: "method", label: "method" },
+    distractorGroupKey: "category",
     detailKeys: ["category", "port"],
   },
 ];

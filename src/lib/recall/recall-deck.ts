@@ -40,6 +40,12 @@ export interface RecallDeckConfig {
   bidirectional?: boolean;
   /** `type`-mode grading. `numeric-parts` accepts a single port of "20/21". */
   accept?: "exact" | "numeric-parts";
+  /**
+   * Column whose value groups confusable distractors: options are drawn from
+   * the answer's own category first (e.g. other crypto acronyms), so the right
+   * answer can't be spotted by elimination.
+   */
+  distractorGroupKey?: string;
   /** Extra columns surfaced on reveal, for the "oh right" context. */
   detailKeys?: string[];
 }
@@ -117,6 +123,7 @@ export function buildDeck(
   const touched = [
     config.ask.key,
     config.answer.key,
+    ...(config.distractorGroupKey ? [config.distractorGroupKey] : []),
     ...(config.detailKeys ?? []),
   ];
   for (const key of touched) {
@@ -208,6 +215,18 @@ export function autoDeckConfig(table: ReferenceTable): RecallDeckConfig | null {
     .filter((c) => c.key !== answerCol.key && c.key !== promptCol.key)
     .map((c) => c.key);
 
+  // A low-cardinality attribute column makes a good distractor group (a
+  // category), so auto-decks also draw confusable options rather than random.
+  const groupKey = detailKeys
+    .map((k) => ({ key: k, n: distinctValues(rows, k).length }))
+    .filter(
+      (c) =>
+        c.n >= 2 &&
+        c.n <= Math.max(2, Math.floor(rows.length / 2)) &&
+        avgLen(rows, c.key) <= 24
+    )
+    .sort((a, b) => a.n - b.n)[0]?.key;
+
   return {
     id: `auto-${table.id}`,
     label: table.title,
@@ -217,6 +236,7 @@ export function autoDeckConfig(table: ReferenceTable): RecallDeckConfig | null {
     ask: { key: promptCol.key, label: promptCol.label.toLowerCase() },
     answer: { key: answerCol.key, label: answerCol.label.toLowerCase() },
     bidirectional,
+    distractorGroupKey: groupKey,
     detailKeys,
   };
 }
@@ -257,10 +277,24 @@ export function generateRecallQuestion(
       .filter((r) => r[askField.key] === promptValue)
       .map((r) => r[ansField.key])
   );
-  const distractors = shuffle(
-    distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v)),
-    rng
-  ).slice(0, 3);
+  const pool = distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v));
+  // Prefer confusable distractors — same category as the answer — so the right
+  // option can't be found by elimination ("the only crypto term"). Fall back to
+  // the rest when a category has too few other members.
+  const groupKey = config.distractorGroupKey;
+  let distractors: string[];
+  if (groupKey && row[groupKey]) {
+    const sameGroup = new Set(
+      rows
+        .filter((r) => r[groupKey] === row[groupKey])
+        .map((r) => r[ansField.key])
+    );
+    distractors = shuffle(pool.filter((v) => sameGroup.has(v)), rng)
+      .concat(shuffle(pool.filter((v) => !sameGroup.has(v)), rng))
+      .slice(0, 3);
+  } else {
+    distractors = shuffle(pool, rng).slice(0, 3);
+  }
   const options = shuffle([answer, ...distractors], rng);
 
   const detail = (config.detailKeys ?? [])

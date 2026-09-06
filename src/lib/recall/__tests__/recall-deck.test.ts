@@ -288,6 +288,56 @@ describe("duplicate-cue safety", () => {
   });
 });
 
+describe("confusable distractors", () => {
+  it("draws distractors from the answer's category when grouped", () => {
+    const table: ReferenceTable = {
+      id: "acr",
+      title: "A",
+      description: "",
+      columnHeaders: [
+        { key: "acr", label: "Acronym" },
+        { key: "exp", label: "Expansion" },
+        { key: "cat", label: "Category" },
+      ],
+      entries: [
+        { columns: { acr: "AES", exp: "Advanced Encryption Standard", cat: "Crypto" } },
+        { columns: { acr: "RSA", exp: "Rivest Shamir Adleman", cat: "Crypto" } },
+        { columns: { acr: "SHA", exp: "Secure Hash Algorithm", cat: "Crypto" } },
+        { columns: { acr: "PKI", exp: "Public Key Infrastructure", cat: "Crypto" } },
+        { columns: { acr: "DNS", exp: "Domain Name System", cat: "Network" } },
+        { columns: { acr: "ARP", exp: "Address Resolution Protocol", cat: "Network" } },
+        { columns: { acr: "NAT", exp: "Network Address Translation", cat: "Network" } },
+        { columns: { acr: "BGP", exp: "Border Gateway Protocol", cat: "Network" } },
+      ],
+    };
+    const deck = buildDeck(
+      {
+        id: "t",
+        label: "t",
+        tableId: "acr",
+        mode: "choice",
+        ask: { key: "acr", label: "acronym" },
+        answer: { key: "exp", label: "expansion" },
+        distractorGroupKey: "cat",
+        detailKeys: ["cat"],
+      },
+      table
+    );
+    const catOf: Record<string, string> = {};
+    for (const e of table.entries) catOf[e.columns.exp] = e.columns.cat;
+
+    const rng = seeded(7);
+    for (let i = 0; i < 300; i++) {
+      const q = generateRecallQuestion(deck, rng);
+      // Each category has 4 members → 3 same-category distractors available, so
+      // every option shares the answer's category.
+      for (const opt of q.options) {
+        expect(catOf[opt], `${q.promptValue}: ${opt}`).toBe(catOf[q.answer]);
+      }
+    }
+  });
+});
+
 describe("typed mode", () => {
   it("marks short-answer decks typeable and long-answer decks not", () => {
     const decks = getRecallDecks("security-plus-sy0-701");
