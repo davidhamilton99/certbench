@@ -110,7 +110,7 @@ export default async function LandingPage() {
   const heroQuestion = await loadHeroQuestion();
 
   return (
-    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
 
       <main className="flex-1">
@@ -163,7 +163,7 @@ export default async function LandingPage() {
                 {CERTS.map((c) => (
                   <span
                     key={c}
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-xs text-muted-foreground"
+                    className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
                   >
                     {c}
                   </span>
@@ -178,12 +178,12 @@ export default async function LandingPage() {
         </section>
 
         {/* Features */}
-        <section className="border-t border-white/10 bg-white/[0.015]">
+        <section className="border-t bg-muted/30">
           <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="grid content-start gap-3 rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/30"
+                className="grid content-start gap-3 rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/40"
               >
                 <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
                   <Icon className="size-5 text-primary" />
@@ -249,7 +249,7 @@ export default async function LandingPage() {
         {testimonials.length >= 3 && <Testimonials items={testimonials} />}
 
         {/* CTA */}
-        <section className="border-t border-white/10">
+        <section className="border-t">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
             <h2 className="font-display text-3xl font-semibold tracking-tight">
               Stop guessing. Start passing.

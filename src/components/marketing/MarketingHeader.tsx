@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 
 export function MarketingHeader() {
   return (
@@ -7,7 +8,7 @@ export function MarketingHeader() {
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3">
         <Link
           href="/"
-          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
+          className="flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight"
         >
           <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
             CB
@@ -15,6 +16,7 @@ export function MarketingHeader() {
           CertBench
         </Link>
         <nav className="flex items-center gap-1">
+          <ThemeToggle />
           <Button asChild variant="ghost" size="sm">
             <Link href="/pricing">Pricing</Link>
           </Button>
