@@ -40,18 +40,22 @@ const TICKS = Array.from({ length: 41 }, (_, i) => {
 /**
  * The readiness instrument dial — a 300° arc whose glowing sweep and centre
  * number count up together on mount, with a comet head at the leading edge and
- * an "exam-ready" tick at 75. Reusable across CertBench 2.0 surfaces; the band
- * drives every accent through the injected --rv-accent* custom properties.
+ * an "exam-ready" tick at 75. Self-contained and size-fluid (container-query
+ * units), so it drops onto any dark surface — the reveal, the dashboard — at any
+ * `size`. The band drives every accent through the injected --rv-accent* props.
  */
 export function ReadinessDial({
   score,
   band,
   caption = "Readiness",
+  size = 360,
   className,
 }: {
   score: number;
   band: Band;
   caption?: string;
+  /** Target diameter in px (capped to 82vw); everything scales with it. */
+  size?: number;
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -67,6 +71,7 @@ export function ReadinessDial({
     const root = rootRef.current;
     if (!num || !sweep || !comet || !root) return;
 
+    root.classList.add("rv-live"); // fades in the scan sheen + ready label
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const ease = (p: number) => 1 - Math.pow(1 - p, 3);
 
@@ -110,7 +115,8 @@ export function ReadinessDial({
   return (
     <div
       ref={rootRef}
-      className={cn("rv-dial relative mx-auto aspect-square w-[min(360px,78vw)]", className)}
+      className={cn("rv-dial relative mx-auto aspect-square", className)}
+      style={{ width: `min(${size}px, 82vw)`, containerType: "inline-size" }}
     >
       <div className="rv-scan" aria-hidden />
       <svg viewBox="0 0 240 240" className="absolute inset-0 size-full [overflow:visible]" aria-hidden>
@@ -154,15 +160,20 @@ export function ReadinessDial({
         />
         <circle ref={cometRef} className="rv-comet" r={6.5} cx={cx0} cy={cy0} style={{ opacity: 0 }} />
       </svg>
-      <div className="absolute inset-0 grid content-center justify-items-center gap-0.5 text-center">
-        <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-[var(--rv-muted-2)]">
+      <div className="absolute inset-0 grid content-center justify-items-center gap-[1cqw] text-center">
+        <div
+          className="font-mono uppercase tracking-[0.3em] text-[var(--rv-muted-2,#626a82)]"
+          style={{ fontSize: "3cqw" }}
+        >
           {caption}
         </div>
-        <div className="rv-score leading-[0.9]" style={{ fontSize: "clamp(48px, 14vw, 72px)" }}>
+        <div className="rv-score leading-[0.9]" style={{ fontSize: "20cqw" }}>
           <span ref={numRef}>0</span>
-          <span className="text-[0.42em] text-[var(--rv-muted)]">%</span>
+          <span className="text-[0.42em] text-[var(--rv-muted,#8b93ab)]">%</span>
         </div>
-        <div className="rv-band text-[17px] font-semibold">{band.label}</div>
+        <div className="rv-band font-semibold" style={{ fontSize: "4.7cqw" }}>
+          {band.label}
+        </div>
       </div>
     </div>
   );

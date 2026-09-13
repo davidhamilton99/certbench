@@ -8,7 +8,7 @@ import { getScoreColor } from "@/core/readiness/compute-score";
  * app-wide {@link getScoreColor} thresholds (ready ≥ 75, close ≥ 40) so the
  * reveal, the dashboard and everything else agree on where the lines are.
  */
-export type BandKey = "work" | "close" | "ready";
+export type BandKey = "work" | "close" | "ready" | "building";
 
 export interface Band {
   key: BandKey;
@@ -20,7 +20,21 @@ export interface Band {
   dim: string;
 }
 
-const BANDS: Record<BandKey, Band> = {
+/**
+ * Neutral "building" treatment for a confidence-penalised preliminary score —
+ * a small sample can read low even for a strong performer, so we show a calm
+ * indigo "baseline building" instead of shouting "Needs work".
+ */
+export const BUILDING_BAND: Band = {
+  key: "building",
+  label: "Building baseline",
+  accent: "#818cf8",
+  accent2: "#c7d2fe",
+  soft: "rgba(129, 140, 248, 0.45)",
+  dim: "rgba(129, 140, 248, 0.14)",
+};
+
+const BANDS: Record<Exclude<BandKey, "building">, Band> = {
   work: {
     key: "work",
     label: "Needs work",
@@ -47,7 +61,10 @@ const BANDS: Record<BandKey, Band> = {
   },
 };
 
-const COLOR_TO_BAND: Record<ReturnType<typeof getScoreColor>, BandKey> = {
+const COLOR_TO_BAND: Record<
+  ReturnType<typeof getScoreColor>,
+  Exclude<BandKey, "building">
+> = {
   danger: "work",
   warning: "close",
   success: "ready",

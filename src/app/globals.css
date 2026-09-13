@@ -255,7 +255,7 @@
   transition: opacity 1s ease 0.3s;
   animation: rv-spin 9s linear infinite;
 }
-.rv-revealed .rv-scan { opacity: 0.7; }
+.rv-live .rv-scan { opacity: 0.7; }
 @keyframes rv-spin { to { transform: rotate(360deg); } }
 
 .rv-track { stroke: rgba(255, 255, 255, 0.06); }
@@ -276,7 +276,7 @@
   opacity: 0;
   transition: opacity 0.5s ease 0.5s;
 }
-.rv-revealed .rv-ready-label { opacity: 0.9; }
+.rv-live .rv-ready-label { opacity: 0.9; }
 
 .rv-score {
   font-family: var(--font-mono);
