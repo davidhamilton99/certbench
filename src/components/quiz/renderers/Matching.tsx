@@ -48,9 +48,9 @@ export function Matching({
           <div
             key={leftIndex}
             className={cn(
-              "flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 text-sm",
-              isRight && "border-success bg-success/10",
-              revealed && !isRight && "border-danger bg-danger/10"
+              "flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm",
+              isRight && "border-success/60 bg-success/10",
+              revealed && !isRight && "border-danger/60 bg-danger/10"
             )}
           >
             <span className="min-w-32 flex-1 font-medium leading-relaxed">
@@ -70,7 +70,7 @@ export function Matching({
                 aria-label={`Match for ${pair.left}`}
                 value={picked ?? ""}
                 onChange={(e) => pick(leftIndex, e.target.value)}
-                className="h-9 min-w-40 flex-1 rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="h-9 min-w-40 flex-1 rounded-lg border border-white/15 bg-white/5 px-2 text-sm outline-none [color-scheme:dark] focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
               >
                 <option value="" disabled>
                   Choose…

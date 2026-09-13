@@ -15,7 +15,6 @@ import { ApiError } from "@/contracts/common";
 import type { ResponseValue } from "@/core/quiz-engine/types";
 import { MultipleChoice } from "./renderers/MultipleChoice";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface Grade {
@@ -108,7 +107,7 @@ export function SrsReviewClient({ certId }: { certId: string }) {
   if (state.phase === "done") {
     return (
       <div className="mx-auto grid max-w-md gap-4 py-16 text-center">
-        <p className="text-2xl font-semibold">
+        <p className="font-display text-3xl font-semibold">
           {state.correct}/{state.total}
         </p>
         <p className="text-sm text-muted-foreground">
@@ -179,19 +178,22 @@ export function SrsReviewClient({ certId }: { certId: string }) {
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-4">
       <div className="flex items-baseline justify-between text-sm">
-        <span className="font-mono">
-          {index + 1} / {cards.length}
+        <span className="font-mono tracking-wide">
+          {String(index + 1).padStart(2, "0")}
+          <span className="text-muted-foreground"> / {cards.length}</span>
         </span>
-        <span className="text-muted-foreground">
+        <span className="font-mono text-xs text-muted-foreground">
           {card.overdueDays > 0
             ? `${card.overdueDays}d overdue`
             : "due today"}
         </span>
       </div>
 
-      <Card>
-        <CardContent className="grid gap-5">
-          <p className="leading-relaxed">{card.questionText}</p>
+      <div className="rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+        <div className="grid gap-5">
+          <p className="text-[15px] leading-relaxed text-foreground">
+            {card.questionText}
+          </p>
           <MultipleChoice
             questionId={card.questionId}
             options={card.options}
@@ -202,7 +204,7 @@ export function SrsReviewClient({ certId }: { certId: string }) {
             correctIndex={grade?.correctIndex}
           />
           {grade && (
-            <div className="grid gap-3 border-t pt-4 text-sm">
+            <div className="grid gap-3 border-t border-white/10 pt-4 text-sm">
               {grade.explanation && (
                 <p className="text-muted-foreground">{grade.explanation}</p>
               )}
@@ -219,8 +221,8 @@ export function SrsReviewClient({ certId }: { certId: string }) {
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between">
         <Button

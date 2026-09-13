@@ -52,9 +52,9 @@ export function Ordering({
           <li
             key={originalIndex}
             className={cn(
-              "flex items-center gap-3 rounded-lg border px-4 py-2.5 text-sm",
-              isRight && "border-success bg-success/10",
-              revealed && !isRight && "border-danger bg-danger/10"
+              "flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm",
+              isRight && "border-success/60 bg-success/10",
+              revealed && !isRight && "border-danger/60 bg-danger/10"
             )}
           >
             <span className="font-mono text-xs text-muted-foreground">
