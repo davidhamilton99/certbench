@@ -110,7 +110,7 @@ export default async function LandingPage() {
   const heroQuestion = await loadHeroQuestion();
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
 
       <main className="flex-1">
@@ -126,7 +126,7 @@ export default async function LandingPage() {
 
           <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-24 pt-16 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-16">
             <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
-              <h1 className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
+              <h1 className="text-balance font-display text-5xl font-semibold tracking-tight sm:text-6xl">
                 Know{" "}
                 <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   exactly
@@ -163,7 +163,7 @@ export default async function LandingPage() {
                 {CERTS.map((c) => (
                   <span
                     key={c}
-                    className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
+                    className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-xs text-muted-foreground"
                   >
                     {c}
                   </span>
@@ -178,17 +178,17 @@ export default async function LandingPage() {
         </section>
 
         {/* Features */}
-        <section className="border-t bg-muted/40">
+        <section className="border-t border-white/10 bg-white/[0.015]">
           <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="grid content-start gap-3 rounded-xl border bg-card p-6"
+                className="grid content-start gap-3 rounded-2xl border border-white/10 bg-card p-6 transition-colors hover:border-primary/30"
               >
-                <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="size-4.5 text-primary" />
+                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
+                  <Icon className="size-5 text-primary" />
                 </span>
-                <h2 className="font-semibold tracking-tight">{title}</h2>
+                <h2 className="font-display font-semibold tracking-tight">{title}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {body}
                 </p>
@@ -200,7 +200,7 @@ export default async function LandingPage() {
         {/* Try one — kept for the visitors who want proof in their hands */}
         {heroQuestion && (
           <section className="mx-auto w-full max-w-3xl px-6 py-16">
-            <h2 className="text-center text-2xl font-semibold tracking-tight">
+            <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
               Try a real exam question
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
@@ -215,7 +215,7 @@ export default async function LandingPage() {
 
         {/* How it works */}
         <section className="mx-auto w-full max-w-3xl px-6 py-16">
-          <h2 className="text-center text-2xl font-semibold tracking-tight">
+          <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
             How it works
           </h2>
           <ol className="mt-8 grid gap-6">
@@ -249,9 +249,9 @@ export default async function LandingPage() {
         {testimonials.length >= 3 && <Testimonials items={testimonials} />}
 
         {/* CTA */}
-        <section className="border-t">
+        <section className="border-t border-white/10">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
               Stop guessing. Start passing.
             </h2>
             <p className="text-muted-foreground">
