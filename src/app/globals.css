@@ -146,6 +146,7 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -195,5 +196,139 @@
     .animate-bar {
       animation: none;
     }
+  }
+}
+
+/* =========================================================================
+ * Instrument design language — CertBench 2.0
+ * A self-contained, cinematic dark "stage" for reveal moments (the diagnostic
+ * readiness reveal is the first). Stage colours are fixed (a committed dark
+ * instrument look, independent of the app light/dark theme); the accent is
+ * injected per-band via inline --rv-accent* custom properties (see band.ts).
+ * The score count-up + dial sweep are driven in JS; entrance + bar-fill are
+ * pure CSS, gated by the .rv-revealed class the component adds on mount.
+ * ========================================================================= */
+.rv-stage {
+  --rv-ink: #eef1f9;
+  --rv-muted: #8b93ab;
+  --rv-muted-2: #626a82;
+  --rv-line: rgba(255, 255, 255, 0.07);
+  --rv-line-strong: rgba(255, 255, 255, 0.12);
+  --rv-surface: #171c2c;
+  --rv-surface-2: #141826;
+  position: relative;
+  overflow: hidden;
+  color: var(--rv-ink);
+  background:
+    radial-gradient(1100px 620px at 50% -12%, rgba(99, 102, 241, 0.1), transparent 60%),
+    radial-gradient(880px 520px at 50% 4%, var(--rv-accent-dim), transparent 55%),
+    linear-gradient(180deg, #0e1119, #0a0c12);
+}
+
+/* Entrance primitives */
+.rv-rise {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rv-revealed .rv-rise {
+  opacity: 1;
+  transform: none;
+}
+.rv-revealed .rv-rise[data-d="1"] { transition-delay: 0.05s; }
+.rv-revealed .rv-rise[data-d="2"] { transition-delay: 0.15s; }
+.rv-revealed .rv-rise[data-d="3"] { transition-delay: 1.35s; }
+.rv-revealed .rv-rise[data-d="4"] { transition-delay: 1.5s; }
+.rv-revealed .rv-rise[data-d="5"] { transition-delay: 2.35s; }
+.rv-revealed .rv-rise[data-d="6"] { transition-delay: 2.55s; }
+
+/* Instrument dial */
+.rv-scan {
+  position: absolute;
+  inset: 8%;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, transparent 0deg, var(--rv-accent-dim) 40deg, transparent 80deg);
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity 1s ease 0.3s;
+  animation: rv-spin 9s linear infinite;
+}
+.rv-revealed .rv-scan { opacity: 0.7; }
+@keyframes rv-spin { to { transform: rotate(360deg); } }
+
+.rv-track { stroke: rgba(255, 255, 255, 0.06); }
+.rv-tick { stroke: rgba(255, 255, 255, 0.16); }
+.rv-tick.major { stroke: rgba(255, 255, 255, 0.34); }
+.rv-tick.ready { stroke: var(--rv-accent); }
+.rv-sweep {
+  stroke: var(--rv-accent);
+  filter: drop-shadow(0 0 7px var(--rv-accent-soft)) drop-shadow(0 0 2px var(--rv-accent-soft));
+  transition: stroke 0.4s ease;
+}
+.rv-comet { fill: var(--rv-accent-2); filter: drop-shadow(0 0 6px var(--rv-accent)); }
+.rv-ready-label {
+  fill: var(--rv-accent);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.5s;
+}
+.rv-revealed .rv-ready-label { opacity: 0.9; }
+
+.rv-score {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--rv-accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 34px var(--rv-accent-soft);
+}
+.rv-band {
+  font-family: var(--font-display);
+  color: var(--rv-accent);
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.2, 1.4, 0.3, 1);
+}
+.rv-scored .rv-band { opacity: 1; transform: none; }
+
+/* Domain cascade */
+.rv-fill {
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--dc-dim), var(--dc));
+  transition: width 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rv-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5));
+  opacity: 0.7;
+}
+.rv-revealed .rv-fill { width: var(--w); }
+
+.rv-chip {
+  color: var(--rv-accent);
+  background: var(--rv-accent-dim);
+  border: 1px solid var(--rv-accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-rise,
+  .rv-fill,
+  .rv-band,
+  .rv-scan,
+  .rv-sweep {
+    transition: none !important;
+    animation: none !important;
   }
 }

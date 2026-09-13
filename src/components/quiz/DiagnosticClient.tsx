@@ -16,7 +16,17 @@ const DIAGNOSTIC_CONFIG: QuizConfig = {
   allowReview: true,
 };
 
-export function DiagnosticClient({ certId }: { certId: string }) {
+export function DiagnosticClient({
+  certId,
+  certName,
+  examCode,
+  domainWeights,
+}: {
+  certId: string;
+  certName: string;
+  examCode: string;
+  domainWeights: Record<string, number>;
+}) {
   return (
     <ExamClient
       config={DIAGNOSTIC_CONFIG}
@@ -30,6 +40,9 @@ export function DiagnosticClient({ certId }: { certId: string }) {
       backHref="/dashboard"
       backLabel="See your study plan"
       diagnosticCertId={certId}
+      certName={certName}
+      examCode={examCode}
+      domainWeights={domainWeights}
     />
   );
 }

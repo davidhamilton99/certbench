@@ -1,6 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/server/supabase/server";
-import { getCertificationBySlug } from "@/server/data/certifications";
+import {
+  getCertificationBySlug,
+  listDomains,
+} from "@/server/data/certifications";
 import { DiagnosticClient } from "@/components/quiz/DiagnosticClient";
 
 export const metadata = {
@@ -22,6 +25,11 @@ export default async function DiagnosticPage({
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
 
+  const domains = await listDomains(db, cert.id);
+  const domainWeights = Object.fromEntries(
+    domains.map((d) => [d.id, d.examWeight])
+  );
+
   return (
     <div className="grid gap-6">
       <div className="mx-auto w-full max-w-2xl">
@@ -30,7 +38,12 @@ export default async function DiagnosticPage({
           {cert.name} · establishes your baseline across every domain
         </p>
       </div>
-      <DiagnosticClient certId={cert.id} />
+      <DiagnosticClient
+        certId={cert.id}
+        certName={cert.name}
+        examCode={cert.examCode}
+        domainWeights={domainWeights}
+      />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getScoreColor } from "@/core/readiness/compute-score";
 import { QuestionFlagButton } from "./QuestionFlagButton";
-import { DiagnosticPathForward } from "./DiagnosticPathForward";
+import { ReadinessReveal } from "@/components/instrument/ReadinessReveal";
 import { cn } from "@/lib/utils";
 
 const SCORE_TEXT: Record<ReturnType<typeof getScoreColor>, string> = {
@@ -26,74 +26,82 @@ export function ExamResultsView({
   backHref,
   backLabel,
   diagnosticCertId,
+  certName,
+  examCode,
+  domainWeights,
 }: {
   title: string;
   result: ExamResult;
   backHref: string;
   backLabel: string;
-  /** Present for the diagnostic — renders the post-diagnostic path forward. */
+  /** Present for the diagnostic — renders the cinematic readiness reveal. */
   diagnosticCertId?: string;
+  certName?: string;
+  examCode?: string;
+  domainWeights?: Record<string, number>;
 }) {
   const color = getScoreColor(result.scorePercent);
+  const isDiagnostic = Boolean(diagnosticCertId && certName && examCode);
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
-            {result.correctCount} of {result.totalQuestions} correct
-            {result.readiness && (
-              <>
-                {" "}
-                · readiness{" "}
-                {result.readiness.isPreliminary ? "starts at" : "now"}{" "}
-                {Math.round(result.readiness.overallScore)}%
-                {result.readiness.isPreliminary &&
-                  " and climbs as you study each domain"}
-              </>
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <span className={cn("font-mono text-5xl font-semibold", SCORE_TEXT[color])}>
-            {result.scorePercent}
-            <span className="text-2xl">%</span>
-          </span>
+      {isDiagnostic ? (
+        <ReadinessReveal
+          result={result}
+          certId={diagnosticCertId!}
+          certName={certName!}
+          examCode={examCode!}
+          dashboardHref={backHref}
+          domainWeights={domainWeights}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>
+              {result.correctCount} of {result.totalQuestions} correct
+              {result.readiness && (
+                <>
+                  {" "}
+                  · readiness{" "}
+                  {result.readiness.isPreliminary ? "starts at" : "now"}{" "}
+                  {Math.round(result.readiness.overallScore)}%
+                  {result.readiness.isPreliminary &&
+                    " and climbs as you study each domain"}
+                </>
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <span className={cn("font-mono text-5xl font-semibold", SCORE_TEXT[color])}>
+              {result.scorePercent}
+              <span className="text-2xl">%</span>
+            </span>
 
-          <div className="grid gap-2">
-            {result.domainBreakdown.map((d) => (
-              <div
-                key={d.domainId}
-                className="flex items-baseline justify-between gap-3 text-sm"
-              >
-                <span className="truncate">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {d.domainNumber}
-                  </span>{" "}
-                  {d.title}
-                </span>
-                <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                  {d.correct}/{d.total}
-                </span>
-              </div>
-            ))}
-          </div>
+            <div className="grid gap-2">
+              {result.domainBreakdown.map((d) => (
+                <div
+                  key={d.domainId}
+                  className="flex items-baseline justify-between gap-3 text-sm"
+                >
+                  <span className="truncate">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {d.domainNumber}
+                    </span>{" "}
+                    {d.title}
+                  </span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                    {d.correct}/{d.total}
+                  </span>
+                </div>
+              ))}
+            </div>
 
-          {!diagnosticCertId && (
             <Button asChild className="justify-self-start">
               <Link href={backHref}>{backLabel}</Link>
             </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {diagnosticCertId && (
-        <DiagnosticPathForward
-          result={result}
-          certId={diagnosticCertId}
-          dashboardHref={backHref}
-        />
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-3">
