@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils";
  * Fully controlled single-select renderer. Options display in a seeded
  * shuffle (stable across resume); indexes reported through onChange are
  * always ORIGINAL indexes so grading never depends on display order.
+ *
+ * Styled for the CertBench 2.0 dark instrument surfaces (exam, SRS, study):
+ * a clear accent-lit selected state, calm hover, and emerald/rose correctness
+ * when revealed.
  */
 export function MultipleChoice({
   questionId,
@@ -39,7 +43,7 @@ export function MultipleChoice({
     value?.kind === "single" ? value.selectedIndex : undefined;
 
   return (
-    <div role="radiogroup" className="grid gap-2">
+    <div role="radiogroup" className="grid gap-2.5">
       {permutation.map((originalIndex, displayPos) => {
         const isSelected = selectedOriginal === originalIndex;
         const isCorrect = revealed && originalIndex === correctIndex;
@@ -55,33 +59,39 @@ export function MultipleChoice({
               onChange({ kind: "single", selectedIndex: originalIndex })
             }
             className={cn(
-              "flex items-start gap-3 rounded-lg border px-4 py-3.5 text-left text-sm transition-colors",
-              !revealed && isSelected && "border-primary bg-primary/5 ring-1 ring-primary",
+              "flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
+              !revealed &&
+                isSelected &&
+                "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-[0_10px_28px_-16px_var(--color-primary)]",
               !revealed &&
                 !isSelected &&
-                "hover:border-muted-foreground/40 hover:bg-accent",
-              isCorrect && "border-success bg-success/10",
-              isWrongPick && "border-danger bg-danger/10",
+                "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]",
+              isCorrect && "border-success/60 bg-success/10",
+              isWrongPick && "border-danger/60 bg-danger/10",
               revealed && "cursor-default"
             )}
           >
             <span
               className={cn(
-                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border font-mono text-[11px]",
-                isSelected && !revealed && "border-primary bg-primary text-primary-foreground",
+                "mt-px flex size-6 shrink-0 items-center justify-center rounded-full border border-white/15 font-mono text-[11px] text-muted-foreground transition-colors",
+                isSelected &&
+                  !revealed &&
+                  "border-primary bg-primary text-primary-foreground",
                 isCorrect && "border-success bg-success text-success-foreground",
                 isWrongPick && "border-danger bg-danger text-danger-foreground"
               )}
             >
               {isCorrect ? (
-                <Check className="size-3" />
+                <Check className="size-3.5" />
               ) : isWrongPick ? (
-                <X className="size-3" />
+                <X className="size-3.5" />
               ) : (
                 String.fromCharCode(65 + displayPos)
               )}
             </span>
-            <span className="leading-relaxed">{options[originalIndex]}</span>
+            <span className="leading-relaxed text-foreground">
+              {options[originalIndex]}
+            </span>
           </button>
         );
       })}
