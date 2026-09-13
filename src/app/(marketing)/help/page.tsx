@@ -258,7 +258,7 @@ function SectionBlock({ section }: { section: Section }) {
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
       <MarketingHeader />
 
       <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">

@@ -18,10 +18,10 @@ function certLabel(path: string): string {
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           {data.h1}
         </h1>
         <div className="mt-4 grid gap-3 text-muted-foreground">

@@ -36,7 +36,7 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
   const hub = PRACTICE_HUB[data.certSlug] ?? "/register";
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         {/* Breadcrumb */}
@@ -57,7 +57,7 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
         <p className="font-mono text-xs text-muted-foreground">
           {data.certName} · {data.examCode}
         </p>
-        <h1 className="mt-1 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           Objective {data.code}: {data.title}
         </h1>
 

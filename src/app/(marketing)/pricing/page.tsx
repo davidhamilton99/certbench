@@ -42,12 +42,12 @@ export default async function PricingPage() {
   const pricing = regionPricing(country);
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14 sm:py-20">
         <div className="mb-10 text-center sm:mb-12">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Priced for one exam cycle
           </h1>
           <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
