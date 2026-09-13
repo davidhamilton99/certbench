@@ -23,6 +23,10 @@ export function ReadinessChart({ points }: { points: ReadinessPoint[] }) {
   const path = points
     .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.score).toFixed(1)}`)
     .join(" ");
+  const baseline = PAD.top + innerH;
+  const areaPath = `${path} L${x(points.length - 1).toFixed(1)},${baseline} L${x(0).toFixed(1)},${baseline} Z`;
+  const lastX = x(points.length - 1);
+  const lastY = y(points[points.length - 1].score);
 
   const gridLines = [0, 25, 50, 75, 100];
   const firstDay = points[0].day.slice(5);
@@ -35,6 +39,13 @@ export function ReadinessChart({ points }: { points: ReadinessPoint[] }) {
       aria-label={`Readiness trend from ${points[0].day} to ${points[points.length - 1].day}`}
       className="w-full"
     >
+      <defs>
+        <linearGradient id="rv-readiness-fill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="var(--color-primary)" stopOpacity="0.28" />
+          <stop offset="1" stopColor="var(--color-primary)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {points.length > 1 && <path d={areaPath} fill="url(#rv-readiness-fill)" />}
       {gridLines.map((g) => (
         <g key={g}>
           <line
@@ -55,7 +66,15 @@ export function ReadinessChart({ points }: { points: ReadinessPoint[] }) {
           </text>
         </g>
       ))}
-      <path d={path} fill="none" className="stroke-primary" strokeWidth="2" />
+      <path
+        d={path}
+        fill="none"
+        className="stroke-primary"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ filter: "drop-shadow(0 2px 6px var(--color-primary))" }}
+      />
       {points.map((p, i) => (
         <circle
           key={p.day}
@@ -67,6 +86,10 @@ export function ReadinessChart({ points }: { points: ReadinessPoint[] }) {
           <title>{`${p.day}: ${p.score}%`}</title>
         </circle>
       ))}
+      {/* Emphasised endpoint — where the trend stands today. */}
+      <circle cx={lastX} cy={lastY} r="6" className="fill-primary/25" />
+      <circle cx={lastX} cy={lastY} r="3.5" className="fill-primary" />
+      <circle cx={lastX} cy={lastY} r="1.5" className="fill-background" />
       <text
         x={PAD.left}
         y={H - 6}
