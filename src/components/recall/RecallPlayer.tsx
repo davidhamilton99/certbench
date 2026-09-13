@@ -148,7 +148,7 @@ export function RecallPlayer({
 
   if (!question) {
     return (
-      <div className="grid min-h-72 place-items-center rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+      <div className="grid min-h-72 place-items-center rounded-2xl border border-white/10 bg-card p-6 text-sm text-muted-foreground">
         Loading the drill…
       </div>
     );
@@ -180,12 +180,12 @@ export function RecallPlayer({
       </div>
 
       {/* Question card */}
-      <div className="grid gap-5 rounded-xl border bg-card p-6">
+      <div className="grid gap-5 rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
         <div className="grid gap-1.5 text-center">
           <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
             name the {question.answerLabel}
           </span>
-          <p className="text-balance text-2xl font-semibold tracking-tight">
+          <p className="text-balance font-display text-2xl font-semibold tracking-tight">
             {question.promptValue}
           </p>
         </div>
@@ -205,15 +205,15 @@ export function RecallPlayer({
                   disabled={revealed}
                   onClick={() => record(option)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors",
-                    !revealed && "hover:border-muted-foreground/40 hover:bg-accent",
-                    isAnswer && "border-success bg-success/10",
-                    isWrongPick && "border-danger bg-danger/10",
+                    "flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
+                    !revealed && "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]",
+                    isAnswer && "border-success/60 bg-success/10",
+                    isWrongPick && "border-danger/60 bg-danger/10",
                     revealed && "cursor-default"
                   )}
                 >
                   <span
-                    className="flex size-5 shrink-0 items-center justify-center rounded border font-mono text-[11px] text-muted-foreground"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full border border-white/15 font-mono text-[11px] text-muted-foreground"
                     aria-hidden
                   >
                     {i + 1}
@@ -243,11 +243,11 @@ export function RecallPlayer({
               inputMode="text"
               autoComplete="off"
               className={cn(
-                "w-full rounded-lg border bg-background px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary",
+                "w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3.5 font-mono text-sm outline-none transition-colors focus:border-primary",
                 revealed &&
                   (wasCorrect
-                    ? "border-success bg-success/10"
-                    : "border-danger bg-danger/10")
+                    ? "border-success/60 bg-success/10"
+                    : "border-danger/60 bg-danger/10")
               )}
             />
           </form>
