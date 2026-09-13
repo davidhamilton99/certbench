@@ -60,10 +60,10 @@ export function OnboardingForm({
             aria-checked={certId === cert.id}
             onClick={() => setCertId(cert.id)}
             className={cn(
-              "flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors",
+              "flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
               certId === cert.id
-                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                : "hover:bg-accent"
+                ? "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-[0_10px_28px_-16px_var(--color-primary)]"
+                : "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]"
             )}
           >
             <span className="font-medium">{cert.name}</span>
@@ -85,6 +85,7 @@ export function OnboardingForm({
           value={examDate}
           onChange={(e) => setExamDate(e.target.value)}
           min={new Date().toISOString().slice(0, 10)}
+          className="[color-scheme:dark]"
         />
         <p className="text-xs text-muted-foreground">
           With a date set, your study plan adapts as the exam approaches.
