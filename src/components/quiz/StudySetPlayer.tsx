@@ -173,7 +173,7 @@ export function StudySetPlayer({
         </span>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
         <div className="grid gap-5">
           <p className="text-[15px] leading-relaxed text-foreground">
             {question.question_text}
@@ -189,7 +189,7 @@ export function StudySetPlayer({
             revealed={revealed}
           />
           {revealed && (
-            <div className="grid gap-2 border-t border-white/10 pt-4 text-sm">
+            <div className="grid gap-2 border-t border-border pt-4 text-sm">
               <p
                 className={cn(
                   "font-medium",

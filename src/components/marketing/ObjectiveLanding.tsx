@@ -36,7 +36,7 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
   const hub = PRACTICE_HUB[data.certSlug] ?? "/register";
 
   return (
-    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         {/* Breadcrumb */}

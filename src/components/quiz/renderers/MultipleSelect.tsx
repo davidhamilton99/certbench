@@ -53,11 +53,11 @@ export function MultipleSelect({
             disabled={revealed}
             onClick={() => toggle(originalIndex)}
             className={cn(
-              "flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
+              "flex items-start gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
               !revealed &&
                 isSelected &&
                 "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-[0_10px_28px_-16px_var(--color-primary)]",
-              !revealed && !isSelected && "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]",
+              !revealed && !isSelected && "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.05]",
               isCorrect && "border-success/60 bg-success/10",
               isWrongPick && "border-danger/60 bg-danger/10",
               revealed && "cursor-default"

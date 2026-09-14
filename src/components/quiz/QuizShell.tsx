@@ -181,7 +181,7 @@ export function QuizShell({
                   dispatch({ type: "NAVIGATE", to: i });
                 }}
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-lg border border-white/10 font-mono text-xs transition-colors hover:border-white/25",
+                  "flex size-9 items-center justify-center rounded-lg border border-border font-mono text-xs transition-colors hover:border-foreground/30",
                   has ? "border-primary/50 bg-primary/15 text-foreground" : "text-muted-foreground",
                   isFlagged && "ring-1 ring-warning"
                 )}
@@ -217,7 +217,7 @@ export function QuizShell({
               {answered} answered
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/[0.06]">
             <div
               className="h-full rounded-full bg-primary shadow-[0_0_12px_var(--color-primary)] transition-all duration-300"
               style={{ width: `${(answered / total) * 100}%` }}
@@ -241,7 +241,7 @@ export function QuizShell({
 
       {/* Question */}
       {question && (
-        <div className="rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
           <div className="grid gap-5">
             <p className="text-[15px] leading-relaxed text-foreground">
               {question.question_text}

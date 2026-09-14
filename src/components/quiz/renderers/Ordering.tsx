@@ -52,7 +52,7 @@ export function Ordering({
           <li
             key={originalIndex}
             className={cn(
-              "flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm",
+              "flex items-center gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-2.5 text-sm",
               isRight && "border-success/60 bg-success/10",
               revealed && !isRight && "border-danger/60 bg-danger/10"
             )}

@@ -42,7 +42,7 @@ export default async function PricingPage() {
   const pricing = regionPricing(country);
 
   return (
-    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14 sm:py-20">

@@ -105,10 +105,10 @@ export function RecallSurface({
             aria-selected={active === p.key}
             onClick={() => setActive(p.key)}
             className={cn(
-              "flex items-center gap-1.5 rounded-full border border-white/10 px-3.5 py-1.5 text-sm font-medium transition-all",
+              "flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm font-medium transition-all",
               active === p.key
                 ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_var(--color-primary)]"
-                : "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.03]"
+                : "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.03]"
             )}
           >
             {p.icon && <p.icon className="size-3.5" />}
@@ -124,7 +124,7 @@ export function RecallSurface({
           <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
             Answer with
           </span>
-          <div className="flex overflow-hidden rounded-full border border-white/10 text-xs">
+          <div className="flex overflow-hidden rounded-full border border-border text-xs">
             {([
               ["Multiple choice", false],
               ["Type it", true],

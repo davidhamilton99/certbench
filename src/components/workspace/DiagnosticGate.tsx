@@ -47,7 +47,7 @@ export function DiagnosticGate({
         </p>
       </div>
 
-      <div className="relative grid justify-items-center gap-5 overflow-hidden rounded-2xl border border-white/10 bg-card p-8 text-center shadow-sm">
+      <div className="relative grid justify-items-center gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
         {/* Ambient glow — a calm signal that something's about to begin. */}
         <div
           aria-hidden
@@ -86,7 +86,7 @@ export function DiagnosticGate({
         {PERKS.map(({ icon: Icon, title, body }) => (
           <div
             key={title}
-            className="grid content-start gap-1.5 rounded-xl border border-white/10 bg-card p-4"
+            className="grid content-start gap-1.5 rounded-xl border border-border bg-card p-4"
           >
             <Icon className="size-4 text-primary" />
             <span className="font-display text-sm font-medium">{title}</span>

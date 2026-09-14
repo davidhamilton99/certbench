@@ -189,7 +189,7 @@ export function SrsReviewClient({ certId }: { certId: string }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
         <div className="grid gap-5">
           <p className="text-[15px] leading-relaxed text-foreground">
             {card.questionText}
@@ -204,7 +204,7 @@ export function SrsReviewClient({ certId }: { certId: string }) {
             correctIndex={grade?.correctIndex}
           />
           {grade && (
-            <div className="grid gap-3 border-t border-white/10 pt-4 text-sm">
+            <div className="grid gap-3 border-t border-border pt-4 text-sm">
               {grade.explanation && (
                 <p className="text-muted-foreground">{grade.explanation}</p>
               )}

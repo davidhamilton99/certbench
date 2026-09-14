@@ -59,13 +59,13 @@ export function MultipleChoice({
               onChange({ kind: "single", selectedIndex: originalIndex })
             }
             className={cn(
-              "flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
+              "flex items-start gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
               !revealed &&
                 isSelected &&
                 "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-[0_10px_28px_-16px_var(--color-primary)]",
               !revealed &&
                 !isSelected &&
-                "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]",
+                "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.05]",
               isCorrect && "border-success/60 bg-success/10",
               isWrongPick && "border-danger/60 bg-danger/10",
               revealed && "cursor-default"
@@ -73,7 +73,7 @@ export function MultipleChoice({
           >
             <span
               className={cn(
-                "mt-px flex size-6 shrink-0 items-center justify-center rounded-full border border-white/15 font-mono text-[11px] text-muted-foreground transition-colors",
+                "mt-px flex size-6 shrink-0 items-center justify-center rounded-full border border-border font-mono text-[11px] text-muted-foreground transition-colors",
                 isSelected &&
                   !revealed &&
                   "border-primary bg-primary text-primary-foreground",

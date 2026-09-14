@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 import { SignOutButton } from "./SignOutButton";
 
 export interface ShellCert {
@@ -157,7 +158,7 @@ export function WorkspaceShell({
     // CertBench 2.0 commits the workspace to the dark instrument identity —
     // forced here (independent of the user's global theme, which still governs
     // the marketing surfaces until they're redesigned in turn).
-    <div className="dark flex min-h-svh bg-background text-foreground">
+    <div className="flex min-h-svh bg-background text-foreground">
       {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center px-4 py-4">
@@ -184,6 +185,7 @@ export function WorkspaceShell({
             <span className="truncate">{displayName}</span>
           </Link>
           <div className="flex shrink-0 items-center">
+            <ThemeToggle />
             <SignOutButton />
           </div>
         </div>
@@ -196,6 +198,7 @@ export function WorkspaceShell({
             CertBench
           </Link>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <SignOutButton />
           </div>
         </header>

@@ -148,7 +148,7 @@ export function RecallPlayer({
 
   if (!question) {
     return (
-      <div className="grid min-h-72 place-items-center rounded-2xl border border-white/10 bg-card p-6 text-sm text-muted-foreground">
+      <div className="grid min-h-72 place-items-center rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
         Loading the drill…
       </div>
     );
@@ -180,7 +180,7 @@ export function RecallPlayer({
       </div>
 
       {/* Question card */}
-      <div className="grid gap-5 rounded-2xl border border-white/10 bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="grid gap-5 rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
         <div className="grid gap-1.5 text-center">
           <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
             name the {question.answerLabel}
@@ -205,15 +205,15 @@ export function RecallPlayer({
                   disabled={revealed}
                   onClick={() => record(option)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
-                    !revealed && "hover:-translate-y-px hover:border-primary/40 hover:bg-white/[0.05]",
+                    "flex items-center gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
+                    !revealed && "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.05]",
                     isAnswer && "border-success/60 bg-success/10",
                     isWrongPick && "border-danger/60 bg-danger/10",
                     revealed && "cursor-default"
                   )}
                 >
                   <span
-                    className="flex size-6 shrink-0 items-center justify-center rounded-full border border-white/15 font-mono text-[11px] text-muted-foreground"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border font-mono text-[11px] text-muted-foreground"
                     aria-hidden
                   >
                     {i + 1}
@@ -243,7 +243,7 @@ export function RecallPlayer({
               inputMode="text"
               autoComplete="off"
               className={cn(
-                "w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3.5 font-mono text-sm outline-none transition-colors focus:border-primary",
+                "w-full rounded-xl border border-border bg-foreground/5 px-4 py-3.5 font-mono text-sm outline-none transition-colors focus:border-primary",
                 revealed &&
                   (wasCorrect
                     ? "border-success/60 bg-success/10"

@@ -19,7 +19,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const rest = scenarios.filter((s) => s.id !== demo?.id);
 
   return (
-    <div className="dark flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
