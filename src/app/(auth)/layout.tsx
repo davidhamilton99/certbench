@@ -7,7 +7,7 @@ export default function AuthLayout({
 }) {
   return (
     // Dark instrument identity, matching the workspace — the entry into the app.
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-background px-4 pb-10 pt-8 text-foreground">
+    <div className="relative flex min-h-svh flex-col overflow-hidden aurora-bg px-4 pb-10 pt-8 text-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-32 left-1/2 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"

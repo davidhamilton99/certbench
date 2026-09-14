@@ -43,7 +43,7 @@ export function PracticeTestLanding({
   objectives?: ObjectiveLink[];
 }) {
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
