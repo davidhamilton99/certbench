@@ -155,7 +155,7 @@ export function HeroShowcase() {
     <div
       ref={rootRef}
       aria-label={`Example dashboard: readiness ${SCORE} percent with per-domain breakdown`}
-      className="relative w-full max-w-md rounded-2xl border bg-card/80 p-6 shadow-xl backdrop-blur"
+      className="glass relative w-full max-w-md rounded-2xl p-6"
     >
       {/* sheen */}
       <div

@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 
 export function MarketingHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+    <header className="glass-nav sticky top-0 z-40">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3">
         <Link
           href="/"

@@ -110,7 +110,19 @@ export default async function LandingPage() {
   const heroQuestion = await loadHeroQuestion();
 
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
+    <div
+      className="relative flex min-h-svh flex-col text-foreground"
+      style={{
+        // Soft colour field, spread down the page, that the frosted glass refracts.
+        background:
+          "radial-gradient(46rem 40rem at 8% 2%, color-mix(in srgb, var(--color-primary) 20%, transparent), transparent 55%)," +
+          "radial-gradient(40rem 36rem at 97% 11%, color-mix(in srgb, #8b5cf6 16%, transparent), transparent 52%)," +
+          "radial-gradient(42rem 40rem at 16% 40%, color-mix(in srgb, #0ea5e9 13%, transparent), transparent 50%)," +
+          "radial-gradient(40rem 40rem at 92% 64%, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 50%)," +
+          "radial-gradient(44rem 42rem at 32% 95%, color-mix(in srgb, #8b5cf6 12%, transparent), transparent 52%)," +
+          "var(--background)",
+      }}
+    >
       <MarketingHeader />
 
       <main className="flex-1">
@@ -178,12 +190,12 @@ export default async function LandingPage() {
         </section>
 
         {/* Features */}
-        <section className="border-t bg-muted/30">
+        <section className="border-t border-border/50">
           <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="grid content-start gap-3 rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/40"
+                className="glass grid content-start gap-3 rounded-2xl p-6 transition-colors hover:border-primary/40"
               >
                 <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
                   <Icon className="size-5 text-primary" />
