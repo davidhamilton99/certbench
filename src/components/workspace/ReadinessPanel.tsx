@@ -33,7 +33,7 @@ export function ReadinessPanel({
 
   return (
     <div
-      className="dark relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6 text-foreground"
+      className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm"
       style={bandVars(band)}
     >
       {/* Ambient accent glow behind the instrument. */}
@@ -94,7 +94,7 @@ export function ReadinessPanel({
       </div>
 
       {plan.domainScores.length > 0 && (
-        <div className="relative mt-6 grid gap-4 border-t border-white/10 pt-5">
+        <div className="relative mt-6 grid gap-4 border-t border-border pt-5">
           {plan.domainScores.map((d, i) => {
             const dc = bandFor(d.score).accent;
             const scored = d.attempted > 0;
@@ -115,7 +115,7 @@ export function ReadinessPanel({
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/[0.08]">
                     {scored && (
                       <div
                         className="animate-bar h-full rounded-full"

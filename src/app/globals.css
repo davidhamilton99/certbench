@@ -303,9 +303,9 @@
   [style*="rv-pop"] { animation: none !important; }
 }
 
-.rv-track { stroke: rgba(255, 255, 255, 0.06); }
-.rv-tick { stroke: rgba(255, 255, 255, 0.16); }
-.rv-tick.major { stroke: rgba(255, 255, 255, 0.34); }
+.rv-track { stroke: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.rv-tick { stroke: color-mix(in srgb, var(--foreground) 22%, transparent); }
+.rv-tick.major { stroke: color-mix(in srgb, var(--foreground) 42%, transparent); }
 .rv-tick.ready { stroke: var(--rv-accent); }
 .rv-sweep {
   stroke: var(--rv-accent);
