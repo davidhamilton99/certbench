@@ -134,7 +134,7 @@ export function ReadinessReveal({
 
   return (
     <div
-      className={cn("rv-stage rounded-3xl border border-white/10 p-6 sm:p-9", revealed && "rv-revealed")}
+      className={cn("dark rv-stage rounded-3xl border border-white/10 p-6 sm:p-9", revealed && "rv-revealed")}
       style={bandVars(band)}
     >
       {/* Eyebrow */}
