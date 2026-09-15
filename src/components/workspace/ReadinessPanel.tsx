@@ -33,7 +33,7 @@ export function ReadinessPanel({
 
   return (
     <div
-      className="dark relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6"
+      className="dark relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6 text-foreground"
       style={bandVars(band)}
     >
       {/* Ambient accent glow behind the instrument. */}
