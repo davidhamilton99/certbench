@@ -295,6 +295,13 @@
 }
 .rv-live .rv-scan { opacity: 0.7; }
 @keyframes rv-spin { to { transform: rotate(360deg); } }
+@keyframes rv-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="rv-pop"] { animation: none !important; }
+}
 
 .rv-track { stroke: rgba(255, 255, 255, 0.06); }
 .rv-tick { stroke: rgba(255, 255, 255, 0.16); }

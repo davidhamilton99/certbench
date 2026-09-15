@@ -4,6 +4,8 @@ import { getProfile } from "@/server/data/profiles";
 import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
+import { WelcomeV2Modal } from "@/components/workspace/WelcomeV2Modal";
+import { CERTBENCH_V2_LAUNCH } from "@/lib/launch";
 
 export default async function WorkspaceLayout({
   children,
@@ -34,9 +36,15 @@ export default async function WorkspaceLayout({
       : [];
   });
 
+  // Returning users (account predates 2.0) get the one-time welcome popup.
+  const isReturning =
+    !!user.created_at &&
+    new Date(user.created_at) < new Date(CERTBENCH_V2_LAUNCH);
+
   return (
     <WorkspaceShell certs={enrolledCerts} displayName={profile.displayName}>
       {children}
+      <WelcomeV2Modal enabled={isReturning} />
     </WorkspaceShell>
   );
 }
