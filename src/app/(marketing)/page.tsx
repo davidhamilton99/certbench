@@ -110,7 +110,19 @@ export default async function LandingPage() {
   const heroQuestion = await loadHeroQuestion();
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div
+      className="relative flex min-h-svh flex-col text-foreground"
+      style={{
+        // Soft colour field, spread down the page, that the frosted glass refracts.
+        background:
+          "radial-gradient(46rem 40rem at 8% 2%, color-mix(in srgb, var(--color-primary) 20%, transparent), transparent 55%)," +
+          "radial-gradient(40rem 36rem at 97% 11%, color-mix(in srgb, #8b5cf6 16%, transparent), transparent 52%)," +
+          "radial-gradient(42rem 40rem at 16% 40%, color-mix(in srgb, #0ea5e9 13%, transparent), transparent 50%)," +
+          "radial-gradient(40rem 40rem at 92% 64%, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 50%)," +
+          "radial-gradient(44rem 42rem at 32% 95%, color-mix(in srgb, #8b5cf6 12%, transparent), transparent 52%)," +
+          "var(--background)",
+      }}
+    >
       <MarketingHeader />
 
       <main className="flex-1">
@@ -126,7 +138,7 @@ export default async function LandingPage() {
 
           <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-24 pt-16 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-16">
             <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
-              <h1 className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
+              <h1 className="text-balance font-display text-5xl font-semibold tracking-tight sm:text-6xl">
                 Know{" "}
                 <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   exactly
@@ -178,17 +190,17 @@ export default async function LandingPage() {
         </section>
 
         {/* Features */}
-        <section className="border-t bg-muted/40">
+        <section className="border-t border-border/50">
           <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="grid content-start gap-3 rounded-xl border bg-card p-6"
+                className="glass grid content-start gap-3 rounded-2xl p-6 transition-colors hover:border-primary/40"
               >
-                <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="size-4.5 text-primary" />
+                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
+                  <Icon className="size-5 text-primary" />
                 </span>
-                <h2 className="font-semibold tracking-tight">{title}</h2>
+                <h2 className="font-display font-semibold tracking-tight">{title}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {body}
                 </p>
@@ -200,7 +212,7 @@ export default async function LandingPage() {
         {/* Try one — kept for the visitors who want proof in their hands */}
         {heroQuestion && (
           <section className="mx-auto w-full max-w-3xl px-6 py-16">
-            <h2 className="text-center text-2xl font-semibold tracking-tight">
+            <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
               Try a real exam question
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
@@ -215,7 +227,7 @@ export default async function LandingPage() {
 
         {/* How it works */}
         <section className="mx-auto w-full max-w-3xl px-6 py-16">
-          <h2 className="text-center text-2xl font-semibold tracking-tight">
+          <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
             How it works
           </h2>
           <ol className="mt-8 grid gap-6">
@@ -251,7 +263,7 @@ export default async function LandingPage() {
         {/* CTA */}
         <section className="border-t">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
               Stop guessing. Start passing.
             </h2>
             <p className="text-muted-foreground">

@@ -17,7 +17,6 @@ import { seededPermutation } from "@/core/quiz-engine/shuffle";
 import type { ResponseValue } from "@/core/quiz-engine/types";
 import { StudyQuestionRenderer } from "./StudyQuestionRenderer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type Phase =
@@ -165,15 +164,20 @@ export function StudySetPlayer({
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-4">
       <div className="flex items-baseline justify-between text-sm">
-        <span className="font-mono">
-          {index + 1} / {total}
+        <span className="font-mono tracking-wide">
+          {String(index + 1).padStart(2, "0")}
+          <span className="text-muted-foreground"> / {total}</span>
         </span>
-        <span className="text-muted-foreground">{correct} correct so far</span>
+        <span className="font-mono text-xs text-muted-foreground">
+          {correct} correct so far
+        </span>
       </div>
 
-      <Card>
-        <CardContent className="grid gap-5">
-          <p className="leading-relaxed">{question.question_text}</p>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+        <div className="grid gap-5">
+          <p className="text-[15px] leading-relaxed text-foreground">
+            {question.question_text}
+          </p>
           <StudyQuestionRenderer
             question={question}
             seed={seed}
@@ -185,7 +189,7 @@ export function StudySetPlayer({
             revealed={revealed}
           />
           {revealed && (
-            <div className="grid gap-2 border-t pt-4 text-sm">
+            <div className="grid gap-2 border-t border-border pt-4 text-sm">
               <p
                 className={cn(
                   "font-medium",
@@ -201,8 +205,8 @@ export function StudySetPlayer({
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="flex justify-end">
         {revealed ? (

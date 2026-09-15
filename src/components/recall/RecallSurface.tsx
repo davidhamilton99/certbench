@@ -105,10 +105,10 @@ export function RecallSurface({
             aria-selected={active === p.key}
             onClick={() => setActive(p.key)}
             className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+              "flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm font-medium transition-all",
               active === p.key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "hover:border-muted-foreground/40"
+                ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_var(--color-primary)]"
+                : "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.03]"
             )}
           >
             {p.icon && <p.icon className="size-3.5" />}
@@ -124,7 +124,7 @@ export function RecallSurface({
           <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
             Answer with
           </span>
-          <div className="flex overflow-hidden rounded-full border text-xs">
+          <div className="flex overflow-hidden rounded-full border border-border text-xs">
             {([
               ["Multiple choice", false],
               ["Type it", true],
@@ -160,7 +160,7 @@ export function RecallSurface({
       )}
 
       {showReframe && (
-        <div className="relative grid gap-3 rounded-xl border border-primary/30 bg-card p-6">
+        <div className="relative grid gap-3 rounded-2xl border border-primary/30 bg-card p-6">
           <button
             type="button"
             onClick={() => setReframeDismissed(true)}
@@ -170,7 +170,7 @@ export function RecallSurface({
             <X className="size-4" />
           </button>
           <div>
-            <h3 className="pr-6 font-semibold tracking-tight">
+            <h3 className="pr-6 font-display font-semibold tracking-tight">
               Recall&apos;s the easy part — and you&apos;re on it
               {session.answered > 0 ? ` (${session.answered} drilled at ${sessionAccuracy}%)` : ""}.
             </h3>

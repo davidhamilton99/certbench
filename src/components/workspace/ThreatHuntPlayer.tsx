@@ -110,17 +110,17 @@ export function ThreatHuntPlayer({
 
       {/* Console */}
       <div className="overflow-hidden rounded-xl border bg-[#0b0f17] text-[#d6deeb]">
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2">
+        <div className="flex items-center gap-2 border-b border-border px-4 py-2">
           <span className="flex gap-1.5">
             <span className="size-2.5 rounded-full bg-[#ff5f56]" />
             <span className="size-2.5 rounded-full bg-[#ffbd2e]" />
             <span className="size-2.5 rounded-full bg-[#27c93f]" />
           </span>
-          <span className="ml-1 truncate font-mono text-[11px] text-white/50">
+          <span className="ml-1 truncate font-mono text-[11px] text-primary-foreground/50">
             {scenario.logSource}
           </span>
           {!revealed && (
-            <span className="ml-auto font-mono text-[11px] text-white/40">
+            <span className="ml-auto font-mono text-[11px] text-primary-foreground/40">
               {flagged.size} flagged · tap to flag
             </span>
           )}
@@ -140,7 +140,7 @@ export function ThreatHuntPlayer({
                   disabled={revealed}
                   className={cn(
                     "flex w-full items-start gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-[12px] leading-relaxed transition-colors",
-                    !revealed && "hover:bg-white/[0.06]",
+                    !revealed && "hover:bg-foreground/[0.06]",
                     !revealed && isFlagged && "bg-amber-400/15 ring-1 ring-amber-400/40",
                     correctFlag && "bg-success/15 ring-1 ring-success/50",
                     missed && "bg-danger/15 ring-1 ring-danger/50",
@@ -148,7 +148,7 @@ export function ThreatHuntPlayer({
                     revealed && "cursor-default"
                   )}
                 >
-                  <span className="mt-0.5 w-6 shrink-0 select-none text-right text-white/30">
+                  <span className="mt-0.5 w-6 shrink-0 select-none text-right text-primary-foreground/30">
                     {i + 1}
                   </span>
                   <span className="mt-0.5 shrink-0">
@@ -169,7 +169,7 @@ export function ThreatHuntPlayer({
                   <span
                     className={cn(
                       "min-w-0 whitespace-pre-wrap break-words",
-                      revealed && !line.malicious && !falseAlarm && "text-white/40"
+                      revealed && !line.malicious && !falseAlarm && "text-primary-foreground/40"
                     )}
                   >
                     {line.text}

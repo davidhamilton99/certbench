@@ -155,7 +155,9 @@ export function WorkspaceShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-svh">
+    // Theme-aware workspace on the soft aurora field; the readiness instrument
+    // panels stay dark islands within it (see ReadinessPanel).
+    <div className="flex min-h-svh aurora-bg text-foreground">
       {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center px-4 py-4">

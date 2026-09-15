@@ -112,8 +112,8 @@ function ScenarioList({
               <button
                 key={scenario.id}
                 onClick={() => (locked ? onLocked() : onSelect(scenario))}
-                className={`w-full text-left bg-card border border-border rounded-lg p-4 transition-colors duration-150 ${
-                  locked ? "opacity-70 hover:border-border" : "hover:border-primary/40"
+                className={`w-full text-left bg-card border border-border rounded-xl p-4 transition-all duration-150 ${
+                  locked ? "opacity-70 hover:border-border" : "hover:-translate-y-px hover:border-primary/40"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">

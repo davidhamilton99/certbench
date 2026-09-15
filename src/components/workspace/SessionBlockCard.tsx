@@ -67,7 +67,7 @@ export function SessionBlockCard({
   const Icon = ICON[block.type];
   return (
     <Link href={blockHref(block, certSlug)} className="group block">
-      <Card className="py-5 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-muted-foreground/25 group-hover:shadow-md">
+      <Card className="py-5 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-[0_14px_34px_-18px_var(--color-primary)]">
         <CardContent className="flex items-center gap-4">
           <span
             className={cn(
@@ -78,7 +78,7 @@ export function SessionBlockCard({
             <Icon className="size-5" />
           </span>
           <div className="grid min-w-0 flex-1 gap-0.5">
-            <span className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+            <span className="flex items-center gap-2 font-display text-[15px] font-semibold tracking-tight">
               {block.title}
               {locked && (
                 <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">

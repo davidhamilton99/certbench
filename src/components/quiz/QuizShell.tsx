@@ -160,7 +160,7 @@ export function QuizShell({
     const unanswered = unansweredIndexes(state, questions.map((q) => q.id));
     return (
       <div className="mx-auto grid w-full max-w-2xl gap-4">
-        <h2 className="text-lg font-semibold">Review before submitting</h2>
+        <h2 className="font-display text-lg font-semibold">Review before submitting</h2>
         <p className="text-sm text-muted-foreground">
           {answered} of {total} answered
           {unanswered.length > 0 && (
@@ -181,8 +181,8 @@ export function QuizShell({
                   dispatch({ type: "NAVIGATE", to: i });
                 }}
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-md border font-mono text-xs transition-colors hover:bg-accent",
-                  has ? "bg-primary/10 border-primary/40" : "text-muted-foreground",
+                  "flex size-9 items-center justify-center rounded-lg border border-border font-mono text-xs transition-colors hover:border-foreground/30",
+                  has ? "border-primary/50 bg-primary/15 text-foreground" : "text-muted-foreground",
                   isFlagged && "ring-1 ring-warning"
                 )}
               >
@@ -209,14 +209,17 @@ export function QuizShell({
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-baseline justify-between text-sm">
-            <span className="font-mono">
-              {index + 1} / {total}
+            <span className="font-mono tracking-wide">
+              {String(index + 1).padStart(2, "0")}
+              <span className="text-muted-foreground"> / {total}</span>
             </span>
-            <span className="text-muted-foreground">{answered} answered</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {answered} answered
+            </span>
           </div>
-          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/[0.06]">
             <div
-              className="h-full rounded-full bg-primary transition-all"
+              className="h-full rounded-full bg-primary shadow-[0_0_12px_var(--color-primary)] transition-all duration-300"
               style={{ width: `${(answered / total) * 100}%` }}
             />
           </div>
@@ -238,9 +241,11 @@ export function QuizShell({
 
       {/* Question */}
       {question && (
-        <Card>
-          <CardContent className="grid gap-5">
-            <p className="leading-relaxed">{question.question_text}</p>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
+          <div className="grid gap-5">
+            <p className="text-[15px] leading-relaxed text-foreground">
+              {question.question_text}
+            </p>
             <MultipleChoice
               questionId={question.id}
               options={question.options}
@@ -250,8 +255,8 @@ export function QuizShell({
                 dispatch({ type: "ANSWER", questionId: question.id, value })
               }
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Footer nav */}

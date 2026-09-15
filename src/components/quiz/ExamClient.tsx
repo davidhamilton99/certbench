@@ -34,8 +34,11 @@ export interface ExamClientProps {
   resultsTitle: string;
   backHref: string;
   backLabel: string;
-  /** Set for the diagnostic only — renders the post-diagnostic path-forward. */
+  /** Set for the diagnostic only — renders the cinematic readiness reveal. */
   diagnosticCertId?: string;
+  certName?: string;
+  examCode?: string;
+  domainWeights?: Record<string, number>;
 }
 
 type ClientState =
@@ -65,6 +68,9 @@ export function ExamClient({
   backHref,
   backLabel,
   diagnosticCertId,
+  certName,
+  examCode,
+  domainWeights,
 }: ExamClientProps) {
   const [state, setState] = useState<ClientState>({ phase: "loading" });
   const started = useRef(false);
@@ -156,6 +162,9 @@ export function ExamClient({
         backHref={backHref}
         backLabel={backLabel}
         diagnosticCertId={diagnosticCertId}
+        certName={certName}
+        examCode={examCode}
+        domainWeights={domainWeights}
       />
     );
   }

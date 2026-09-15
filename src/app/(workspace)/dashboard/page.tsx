@@ -109,7 +109,7 @@ export default async function DashboardPage({
       />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
             {active.name}
           </h1>
           <p className="text-sm text-muted-foreground">

@@ -39,7 +39,7 @@ export default async function ReadinessCheckPage({
   if (!data || data.questions.length === 0) notFound();
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">

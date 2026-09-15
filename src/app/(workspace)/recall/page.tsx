@@ -39,7 +39,7 @@ export default async function RecallPage({
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Recall</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Recall</h1>
         <p className="text-sm text-muted-foreground">
           {active.name} · speed-drill the facts you have to know cold. Answer
           with the number keys — correct answers fly by, misses come back.

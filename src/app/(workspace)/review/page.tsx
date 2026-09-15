@@ -44,7 +44,7 @@ export default async function ReviewPage({
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Review</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Review</h1>
         <p className="text-sm text-muted-foreground">
           {active.name} · questions you&apos;ve missed, worst first
         </p>
@@ -64,7 +64,7 @@ export default async function ReviewPage({
           {missed.map((m, i) => (
             <details
               key={m.question.id}
-              className="group rounded-lg border bg-card px-4 py-3"
+              className="group rounded-xl border border-border bg-card px-4 py-3"
             >
               <summary className="flex cursor-pointer items-start gap-3 text-sm [&::-webkit-details-marker]:hidden">
                 <span className="mt-0.5 shrink-0 rounded bg-danger/10 px-1.5 py-0.5 font-mono text-[11px] text-danger">
