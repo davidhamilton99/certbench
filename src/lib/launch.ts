@@ -9,4 +9,4 @@
  * who sign up between here and the real launch miss it) rather than annoying
  * genuinely new users, which is the safer error.
  */
-export const CERTBENCH_V2_LAUNCH = "2026-09-14T00:00:00Z";
+export const CERTBENCH_V2_LAUNCH = "2026-09-15T03:30:00Z";
