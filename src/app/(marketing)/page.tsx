@@ -110,19 +110,7 @@ export default async function LandingPage() {
   const heroQuestion = await loadHeroQuestion();
 
   return (
-    <div
-      className="relative flex min-h-svh flex-col text-foreground"
-      style={{
-        // Soft colour field, spread down the page, that the frosted glass refracts.
-        background:
-          "radial-gradient(46rem 40rem at 8% 2%, color-mix(in srgb, var(--color-primary) 20%, transparent), transparent 55%)," +
-          "radial-gradient(40rem 36rem at 97% 11%, color-mix(in srgb, #8b5cf6 16%, transparent), transparent 52%)," +
-          "radial-gradient(42rem 40rem at 16% 40%, color-mix(in srgb, #0ea5e9 13%, transparent), transparent 50%)," +
-          "radial-gradient(40rem 40rem at 92% 64%, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 50%)," +
-          "radial-gradient(44rem 42rem at 32% 95%, color-mix(in srgb, #8b5cf6 12%, transparent), transparent 52%)," +
-          "var(--background)",
-      }}
-    >
+    <div className="relative flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
 
       <main className="flex-1">
