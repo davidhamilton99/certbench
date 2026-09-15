@@ -226,7 +226,9 @@
   border-bottom: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 /* Soft aurora colour field, spread down the page, that the frosted glass
-   refracts. Reusable page background (includes the base --background). */
+   refracts. Reusable page background (includes the base --background).
+   Light mode only — in dark it reads as distracting colour behind text, so
+   dark falls back to a clean flat background (see the .dark override). */
 .aurora-bg {
   background:
     radial-gradient(46rem 40rem at 8% 2%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 55%),
@@ -235,6 +237,9 @@
     radial-gradient(40rem 40rem at 92% 70%, color-mix(in srgb, var(--color-primary) 11%, transparent), transparent 50%),
     radial-gradient(44rem 42rem at 34% 98%, color-mix(in srgb, #8b5cf6 10%, transparent), transparent 52%),
     var(--background);
+}
+.dark .aurora-bg {
+  background: var(--background);
 }
 
 /* =========================================================================
