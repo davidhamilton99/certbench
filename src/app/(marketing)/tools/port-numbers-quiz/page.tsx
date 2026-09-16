@@ -68,7 +68,7 @@ export default function PortQuizPage() {
               </thead>
               <tbody>
                 {PORT_ENTRIES.map((e) => (
-                  <tr key={e.protocol} className="border-b last:border-0">
+                  <tr key={e.port} className="border-b last:border-0">
                     <td className="px-4 py-2 font-mono text-xs">{e.port}</td>
                     <td className="px-4 py-2">{e.protocol}</td>
                     <td className="hidden px-4 py-2 text-muted-foreground sm:table-cell">
