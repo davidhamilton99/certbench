@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import type { PracticeTestPage } from "@/lib/seo/cert-pages";
+import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
@@ -42,6 +42,7 @@ export function PracticeTestLanding({
   data: PracticeTestLandingData;
   objectives?: ObjectiveLink[];
 }) {
+  const otherHubs = PRACTICE_TEST_PAGES.filter((p) => p.path !== page.path);
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
@@ -152,6 +153,53 @@ export function PracticeTestLanding({
                     </span>
                     {o.title}
                   </span>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Related free resources — internal links to tools, PBQ pages, roundup */}
+        {page.related && page.related.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Keep practising — free
+            </h2>
+            <div className="mt-4 grid gap-1.5">
+              {page.related.map((r) => (
+                <Link
+                  key={r.href}
+                  href={r.href}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:border-muted-foreground/40"
+                >
+                  <span>
+                    <span className="font-medium">{r.label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {r.note}
+                    </span>
+                  </span>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Other CompTIA practice tests — cross-link the sibling hubs */}
+        {otherHubs.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Other CompTIA practice tests
+            </h2>
+            <div className="mt-4 grid gap-1.5 sm:grid-cols-2">
+              {otherHubs.map((h) => (
+                <Link
+                  key={h.path}
+                  href={`/${h.path}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:border-muted-foreground/40"
+                >
+                  <span className="font-medium">{h.title}</span>
                   <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
                 </Link>
               ))}
