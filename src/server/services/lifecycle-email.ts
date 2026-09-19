@@ -10,6 +10,7 @@ import { getSessionPlan } from "@/server/services/session-plan";
 import { sendEmail } from "@/server/email/resend";
 import {
   countdownEmail,
+  dailyReminderEmail,
   digestEmail,
   postExamEmail,
   welcomeEmail,
@@ -36,14 +37,19 @@ export function isTestAccount(email: string): boolean {
 
 interface EmailPrefs {
   digestEnabled: boolean;
+  dailyReminderEnabled: boolean;
+  /** Turns off all lifecycle mail. */
   unsubscribeUrl: string;
+  /** Turns off just the daily reminder (keeps exam countdowns + digest). */
+  dailyUnsubscribeUrl: string;
 }
 
 /** Fetch-or-create the user's email preferences row. */
 async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
+  const cols = "digest_enabled, daily_reminder_enabled, unsubscribe_token";
   const { data } = await admin
     .from("email_preferences")
-    .select("digest_enabled, unsubscribe_token")
+    .select(cols)
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -52,15 +58,38 @@ async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
     const { data: inserted, error } = await admin
       .from("email_preferences")
       .upsert({ user_id: userId }, { onConflict: "user_id" })
-      .select("digest_enabled, unsubscribe_token")
+      .select(cols)
       .single();
     if (error) throw new Error(`email prefs upsert failed: ${error.message}`);
     row = inserted;
   }
+  const base = `${publicEnv.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${row.unsubscribe_token}`;
   return {
     digestEnabled: row.digest_enabled,
-    unsubscribeUrl: `${publicEnv.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${row.unsubscribe_token}`,
+    dailyReminderEnabled: row.daily_reminder_enabled,
+    unsubscribeUrl: base,
+    dailyUnsubscribeUrl: `${base}&scope=daily`,
   };
+}
+
+/**
+ * Gate for the daily study reminder — pure so the cron's trickiest decision
+ * is unit-testable. Only nudge learners who have real reviews waiting, have
+ * the channel on, and haven't already gotten a study email today (so a
+ * countdown or the Monday digest never doubles up with a reminder).
+ */
+export function shouldSendDailyReminder(input: {
+  dailyReminderEnabled: boolean;
+  hasActivity: boolean;
+  dueCards: number;
+  sentStudyEmailToday: boolean;
+}): boolean {
+  return (
+    input.dailyReminderEnabled &&
+    input.hasActivity &&
+    input.dueCards > 0 &&
+    !input.sentStudyEmailToday
+  );
 }
 
 /**
@@ -123,13 +152,16 @@ export interface LifecycleRunResult {
   digests: number;
   countdowns: number;
   postExam: number;
+  dailyReminders: number;
 }
 
 /**
  * Daily lifecycle pass, driven by the Vercel cron:
  *  - exam-countdown emails at T-14/7/3/1 for every enrollment with a date
  *  - weekly readiness digest on Mondays (UTC) for users with activity
- * All sends respect digest_enabled and are deduped per day via email_log.
+ *  - daily study reminder on any day the learner has SRS cards due
+ * All sends respect digest_enabled, are deduped per day via email_log, and
+ * are capped at one "study" email per user per day (see sentStudyEmailToday).
  */
 export async function runLifecycleEmails(
   now: Date = new Date()
@@ -141,6 +173,7 @@ export async function runLifecycleEmails(
     digests: 0,
     countdowns: 0,
     postExam: 0,
+    dailyReminders: 0,
   };
 
   const { data: userPage, error } = await admin.auth.admin.listUsers({
@@ -181,6 +214,9 @@ async function processUser(
 
   const profile = await getProfile(admin, userId);
   const displayName = profile?.displayName ?? "there";
+
+  // At most one "study" email (countdown / digest / reminder) per user per day.
+  let sentStudyEmailToday = false;
 
   // ---- exam countdowns + post-exam story request (per enrollment) ----
   for (const enrollment of enrollments) {
@@ -225,31 +261,63 @@ async function processUser(
         unsubscribeUrl: prefs.unsubscribeUrl,
       }),
     });
-    if (sent) result.countdowns += 1;
+    if (sent) {
+      result.countdowns += 1;
+      sentStudyEmailToday = true;
+    }
   }
 
-  // ---- weekly digest (Mondays, primary enrollment, needs activity) ----
-  if (!isMonday) return;
+  // ---- primary-enrollment plan (drives the digest + the daily reminder) ----
   const primary = enrollments[0];
   const cert = await getCertification(admin, primary.certificationId);
   if (!cert) return;
   const plan = await getSessionPlan(admin, userId, cert.id, primary.examDate);
-  if (plan.totalQuestionsSeen === 0) return; // nothing to report yet
-  if (!(await claimSend(admin, userId, "digest"))) return;
+  const hasActivity = plan.totalQuestionsSeen > 0;
   const dueCards =
     plan.blocks.find((b) => b.type === "srs_review")?.questionCount ?? 0;
-  const sent = await sendEmail({
-    to: email,
-    headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
-    ...digestEmail({
-      displayName,
-      certName: cert.name,
-      readinessScore: plan.readinessScore,
-      trendDelta: plan.readinessTrend?.delta ?? null,
+
+  // ---- weekly digest (Mondays only, needs activity) ----
+  if (isMonday && hasActivity && (await claimSend(admin, userId, "digest"))) {
+    const sent = await sendEmail({
+      to: email,
+      headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
+      ...digestEmail({
+        displayName,
+        certName: cert.name,
+        readinessScore: plan.readinessScore,
+        trendDelta: plan.readinessTrend?.delta ?? null,
+        dueCards,
+        daysUntilExam: plan.daysUntilExam,
+        unsubscribeUrl: prefs.unsubscribeUrl,
+      }),
+    });
+    if (sent) {
+      result.digests += 1;
+      sentStudyEmailToday = true;
+    }
+  }
+
+  // ---- daily study reminder (any day the learner has reviews waiting) ----
+  if (
+    shouldSendDailyReminder({
+      dailyReminderEnabled: prefs.dailyReminderEnabled,
+      hasActivity,
       dueCards,
-      daysUntilExam: plan.daysUntilExam,
-      unsubscribeUrl: prefs.unsubscribeUrl,
-    }),
-  });
-  if (sent) result.digests += 1;
+      sentStudyEmailToday,
+    }) &&
+    (await claimSend(admin, userId, "daily_reminder"))
+  ) {
+    const sent = await sendEmail({
+      to: email,
+      headers: { "List-Unsubscribe": `<${prefs.dailyUnsubscribeUrl}>` },
+      ...dailyReminderEmail({
+        displayName,
+        certName: cert.name,
+        dueCards,
+        readinessScore: plan.readinessScore,
+        unsubscribeUrl: prefs.dailyUnsubscribeUrl,
+      }),
+    });
+    if (sent) result.dailyReminders += 1;
+  }
 }

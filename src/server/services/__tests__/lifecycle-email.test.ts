@@ -14,6 +14,7 @@ import {
   POST_EXAM_DAY,
   daysUntil,
   isTestAccount,
+  shouldSendDailyReminder,
 } from "../lifecycle-email";
 
 describe("daysUntil", () => {
@@ -61,5 +62,38 @@ describe("isTestAccount", () => {
   it("allows real addresses", () => {
     expect(isTestAccount("student@example.com")).toBe(false);
     expect(isTestAccount("david.nash.hamilton@gmail.com")).toBe(false);
+  });
+});
+
+describe("shouldSendDailyReminder", () => {
+  const base = {
+    dailyReminderEnabled: true,
+    hasActivity: true,
+    dueCards: 5,
+    sentStudyEmailToday: false,
+  };
+
+  it("sends when the learner has cards due and no email went out yet", () => {
+    expect(shouldSendDailyReminder(base)).toBe(true);
+  });
+
+  it("never nags when there are no cards due", () => {
+    expect(shouldSendDailyReminder({ ...base, dueCards: 0 })).toBe(false);
+  });
+
+  it("skips brand-new accounts with no activity", () => {
+    expect(shouldSendDailyReminder({ ...base, hasActivity: false })).toBe(false);
+  });
+
+  it("respects the per-channel opt-out", () => {
+    expect(
+      shouldSendDailyReminder({ ...base, dailyReminderEnabled: false })
+    ).toBe(false);
+  });
+
+  it("never doubles up with a countdown or digest sent the same day", () => {
+    expect(
+      shouldSendDailyReminder({ ...base, sentStudyEmailToday: true })
+    ).toBe(false);
   });
 });

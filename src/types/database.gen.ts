@@ -683,17 +683,20 @@ interface DatabaseGenerated {
         Row: {
           user_id: string;
           digest_enabled: boolean;
+          daily_reminder_enabled: boolean;
           unsubscribe_token: string;
           updated_at: string;
         };
         Insert: {
           user_id: string;
           digest_enabled?: boolean;
+          daily_reminder_enabled?: boolean;
           unsubscribe_token?: string;
           updated_at?: string;
         };
         Update: {
           digest_enabled?: boolean;
+          daily_reminder_enabled?: boolean;
           updated_at?: string;
         };
       };
