@@ -20,6 +20,8 @@ export interface PracticeTestPage {
   h1: string;
   intro: string[];
   faqs: CertPageFaq[];
+  /** Curated internal links to related free resources (useful + spreads link equity). */
+  related?: { href: string; label: string; note: string }[];
 }
 
 export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
@@ -57,6 +59,28 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
         question: "How should I use practice tests to prepare?",
         answer:
           "Take a diagnostic first to find your weak domains, drill those domains until they turn green, and use spaced repetition on every question you miss. Save full-length timed exams for the final two weeks. CertBench automates that sequence into a daily plan.",
+      },
+    ],
+    related: [
+      {
+        href: "/security-plus-pbq-examples",
+        label: "Security+ PBQ examples",
+        note: "Work through interactive performance-based questions",
+      },
+      {
+        href: "/best-security-plus-practice-tests",
+        label: "Best Security+ practice tests, compared",
+        note: "How the top SY0-701 question banks stack up",
+      },
+      {
+        href: "/tools/port-numbers-quiz",
+        label: "Port numbers quiz",
+        note: "Drill the ports Security+ loves to test",
+      },
+      {
+        href: "/tools/security-plus-acronyms-quiz",
+        label: "Security+ acronyms quiz",
+        note: "Master the SY0-701 acronym soup",
       },
     ],
   },
@@ -99,6 +123,28 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
           "Yes — the questions on this page are free with no account, and a free account adds a 25-question N10-009 diagnostic with a readiness score, plus 20 practice questions every day. N10-009 is the current Network+ exam version, so everything here targets it.",
       },
     ],
+    related: [
+      {
+        href: "/network-plus-pbq-examples",
+        label: "Network+ PBQ examples",
+        note: "Try interactive topology and troubleshooting scenarios",
+      },
+      {
+        href: "/best-network-plus-practice-tests",
+        label: "Best Network+ practice tests, compared",
+        note: "How the top N10-009 question banks stack up",
+      },
+      {
+        href: "/tools/subnetting-practice",
+        label: "Subnetting practice",
+        note: "Endless CIDR and subnet-mask drills",
+      },
+      {
+        href: "/tools/port-numbers-quiz",
+        label: "Port numbers quiz",
+        note: "The ports and protocols N10-009 tests hardest",
+      },
+    ],
   },
   {
     path: "a-plus-practice-test",
@@ -137,6 +183,23 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
         question: "Is this a free A+ exam practice test?",
         answer:
           "Yes — the sample questions on this page are free with no account, split between Core 1 (220-1101) and Core 2 (220-1102). A free account adds a full 25-question diagnostic per core, a readiness score, and 20 practice questions a day.",
+      },
+    ],
+    related: [
+      {
+        href: "/best-a-plus-practice-tests",
+        label: "Best A+ practice tests, compared",
+        note: "How the top A+ Core 1 & 2 question banks stack up",
+      },
+      {
+        href: "/tools/port-numbers-quiz",
+        label: "Port numbers quiz",
+        note: "Core 1 networking — the ports you need cold",
+      },
+      {
+        href: "/tools/subnetting-practice",
+        label: "Subnetting practice",
+        note: "Core 1 IP addressing, drilled",
       },
     ],
   },
