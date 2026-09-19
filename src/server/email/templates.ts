@@ -109,6 +109,39 @@ export function digestEmail(input: {
   };
 }
 
+export function dailyReminderEmail(input: {
+  displayName: string;
+  certName: string;
+  dueCards: number;
+  readinessScore: number;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const first = input.displayName.split(" ")[0] || input.displayName;
+  const score = Math.round(input.readinessScore);
+  const n = input.dueCards;
+  const cards = `${n} card${n === 1 ? "" : "s"}`;
+  return {
+    subject: `${n} review${n === 1 ? "" : "s"} due today — ${input.certName}`,
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 12px;">${cards} due, ${first}</h1>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
+        Spaced repetition only works when you clear reviews the day they come
+        due — that's how ${input.certName} facts settle into long-term memory
+        before exam day. A few minutes is all it takes.
+      </p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 16px;color:#71717a;">
+        Current readiness:
+        <strong style="color:${scoreColor(score)};">${score}%</strong>
+      </p>
+      ${button(`${APP()}/dashboard`, `Review ${cards}`)}
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `${cards} due for review today.\nReadiness: ${score}%.\nClear them before you forget: ${APP()}/dashboard\n\nStop daily reminders: ${input.unsubscribeUrl}`,
+  };
+}
+
 export function postExamEmail(input: {
   displayName: string;
   certName: string;

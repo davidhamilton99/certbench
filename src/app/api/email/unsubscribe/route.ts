@@ -25,10 +25,17 @@ export async function GET(req: NextRequest) {
     return page("Invalid link", "This unsubscribe link isn't valid.", 400);
   }
 
+  // scope=daily turns off just the daily study reminder; no scope unsubscribes
+  // from all lifecycle mail (the default one-click behaviour).
+  const daily = req.nextUrl.searchParams.get("scope") === "daily";
+  const patch = daily
+    ? { daily_reminder_enabled: false, updated_at: new Date().toISOString() }
+    : { digest_enabled: false, updated_at: new Date().toISOString() };
+
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("email_preferences")
-    .update({ digest_enabled: false, updated_at: new Date().toISOString() })
+    .update(patch)
     .eq("unsubscribe_token", token)
     .select("user_id");
 
@@ -40,6 +47,8 @@ export async function GET(req: NextRequest) {
   }
   return page(
     "You're unsubscribed",
-    "You won't receive study digests or exam reminders anymore. You can keep using CertBench as usual."
+    daily
+      ? "You won't receive daily study reminders anymore — your weekly digest and exam reminders are unchanged. You can keep using CertBench as usual."
+      : "You won't receive study digests or exam reminders anymore. You can keep using CertBench as usual."
   );
 }
