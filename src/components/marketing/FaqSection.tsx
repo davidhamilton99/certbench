@@ -1,6 +1,7 @@
 import type { CertPageFaq } from "@/lib/seo/cert-pages";
+import { JsonLd } from "@/components/seo/JsonLd";
 
-/** FAQ block with FAQPage structured data for rich results. */
+/** FAQ block with FAQPage structured data for rich results + LLM citation. */
 export function FaqSection({ faqs }: { faqs: CertPageFaq[] }) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -27,10 +28,7 @@ export function FaqSection({ faqs }: { faqs: CertPageFaq[] }) {
           </div>
         ))}
       </div>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
     </section>
   );
 }
