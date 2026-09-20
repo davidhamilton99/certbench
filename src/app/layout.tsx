@@ -3,7 +3,32 @@ import Script from "next/script";
 import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { JsonLd } from "@/components/seo/JsonLd";
 import "./globals.css";
+
+// Sitewide entity graph — helps search + generative engines recognise
+// "CertBench" as a brand they can name and cite, not just a set of pages.
+const SITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://certbench.dev/#org",
+      name: "CertBench",
+      url: "https://certbench.dev",
+      logo: "https://certbench.dev/icon-512.png",
+      description:
+        "Adaptive CompTIA exam prep — personalised study plans, adaptive practice exams, spaced repetition, and a conservative readiness score for Security+, Network+, and A+.",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://certbench.dev/#website",
+      name: "CertBench",
+      url: "https://certbench.dev",
+      publisher: { "@id": "https://certbench.dev/#org" },
+    },
+  ],
+};
 
 const inter = Inter({
   subsets: ["latin"],
@@ -103,6 +128,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <JsonLd data={SITE_JSONLD} />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

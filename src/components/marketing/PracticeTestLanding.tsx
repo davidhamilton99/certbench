@@ -5,6 +5,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 
 export interface PracticeTestLandingData {
@@ -43,8 +44,30 @@ export function PracticeTestLanding({
   objectives?: ObjectiveLink[];
 }) {
   const otherHubs = PRACTICE_TEST_PAGES.filter((p) => p.path !== page.path);
+
+  // GEO/SEO: mark the page as a free educational practice resource so search
+  // and generative engines can identify and cite it for "free CompTIA … test".
+  const learningResource = {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: page.metaTitle,
+    description: page.metaDescription,
+    url: `https://certbench.dev/${page.path}`,
+    learningResourceType: "Practice test",
+    educationalUse: "Practice",
+    isAccessibleForFree: true,
+    inLanguage: "en",
+    provider: {
+      "@type": "Organization",
+      name: "CertBench",
+      url: "https://certbench.dev",
+    },
+    about: data.certs.map(({ cert }) => ({ "@type": "Thing", name: cert.name })),
+  };
+
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+      <JsonLd data={learningResource} />
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">

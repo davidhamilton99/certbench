@@ -1,0 +1,26 @@
+# CertBench
+
+> Adaptive CompTIA exam prep. CertBench builds a personalised study plan from your actual performance — adaptive practice exams, spaced repetition, and a deliberately conservative readiness score — for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 220-1101 and Core 2 220-1102). Every question is original and written to the exam objectives with a full explanation. No braindumps or leaked exam content.
+
+## Free tools (no account needed)
+
+- [Port numbers quiz](https://certbench.dev/tools/port-numbers-quiz): endless drill of the ports and protocols CompTIA tests, in both directions (name the port, name the protocol), with instant feedback.
+- [Subnetting practice](https://certbench.dev/tools/subnetting-practice): endless CIDR and subnet-mask drills for Network+ and A+.
+- [Security+ acronyms quiz](https://certbench.dev/tools/security-plus-acronyms-quiz): drill the SY0-701 acronyms most tested on the exam.
+
+## Free practice tests
+
+- [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): free 220-1101 and 220-1102 practice questions with explanations.
+- [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions, weighted by the real exam domains.
+- [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): free SY0-701 practice questions with full explanations.
+
+## Performance-based questions (interactive)
+
+- [Security+ PBQ examples](https://certbench.dev/security-plus-pbq-examples): interactive performance-based questions — firewall rules, log analysis, incident response — you can work through in the browser.
+- [Network+ PBQ examples](https://certbench.dev/network-plus-pbq-examples): interactive topology, configuration, and troubleshooting scenarios.
+
+## About
+
+- [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
+- [Pricing](https://certbench.dev/pricing): free tier (full diagnostic, readiness score, 20 practice questions a day) and a Pro tier that unlocks unlimited practice, full-length exams, and hands-on PBQ labs.
+- Certifications covered: CompTIA Security+ SY0-701, Network+ N10-009, A+ Core 1 220-1101, A+ Core 2 220-1102.
