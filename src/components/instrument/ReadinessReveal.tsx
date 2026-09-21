@@ -193,13 +193,13 @@ export function ReadinessReveal({
             return (
               <div key={d.domainId}>
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="font-mono text-[12px] text-[var(--rv-muted-2)]">
                       {d.domainNumber}
                     </span>
                     <span className="text-[14.5px] text-[var(--rv-ink)]">{d.title}</span>
                     {isWeak && (
-                      <span className="rv-chip ml-1 shrink-0 rounded-full px-2 py-px font-mono text-[10px] tracking-wide">
+                      <span className="rv-chip shrink-0 rounded-full px-2 py-px font-mono text-[10px] tracking-wide">
                         biggest opportunity
                       </span>
                     )}
