@@ -5,6 +5,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PortQuiz } from "@/components/marketing/PortQuiz";
+import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
@@ -97,6 +98,10 @@ export default function PortQuizPage() {
               <ArrowRight />
             </Link>
           </Button>
+        </section>
+
+        <section className="mt-10">
+          <ToolEmailCapture source="port-numbers-quiz" />
         </section>
 
         <FaqSection faqs={FAQS} />

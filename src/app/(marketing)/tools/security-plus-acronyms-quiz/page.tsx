@@ -6,6 +6,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { AcronymDrill } from "@/components/marketing/AcronymDrill";
+import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { Button } from "@/components/ui/button";
 
 const COUNT = acronyms.entries.length;
@@ -110,6 +111,10 @@ export default function AcronymsQuizPage() {
               <ArrowRight />
             </Link>
           </Button>
+        </section>
+
+        <section className="mt-10">
+          <ToolEmailCapture source="security-plus-acronyms-quiz" />
         </section>
 
         <FaqSection faqs={FAQS} />

@@ -25,14 +25,33 @@ export async function GET(req: NextRequest) {
     return page("Invalid link", "This unsubscribe link isn't valid.", 400);
   }
 
+  const scope = req.nextUrl.searchParams.get("scope");
+  const admin = createAdminClient();
+
+  // scope=lead: a free-tool study-plan lead (separate tool_leads table).
+  if (scope === "lead") {
+    const { data, error } = await admin
+      .from("tool_leads")
+      .update({ unsubscribed: true, updated_at: new Date().toISOString() })
+      .eq("unsubscribe_token", token)
+      .select("id");
+    if (error) return page("Something went wrong", "Please try again later.", 500);
+    if (!data || data.length === 0) {
+      return page("Invalid link", "This unsubscribe link isn't valid.", 400);
+    }
+    return page(
+      "You're unsubscribed",
+      "You won't receive study-plan emails from CertBench anymore."
+    );
+  }
+
   // scope=daily turns off just the daily study reminder; no scope unsubscribes
   // from all lifecycle mail (the default one-click behaviour).
-  const daily = req.nextUrl.searchParams.get("scope") === "daily";
+  const daily = scope === "daily";
   const patch = daily
     ? { daily_reminder_enabled: false, updated_at: new Date().toISOString() }
     : { digest_enabled: false, updated_at: new Date().toISOString() };
 
-  const admin = createAdminClient();
   const { data, error } = await admin
     .from("email_preferences")
     .update(patch)

@@ -4,6 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnettingDrillLazy } from "@/components/marketing/SubnettingDrillLazy";
+import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { MODES } from "@/lib/tools/subnetting";
 import { Button } from "@/components/ui/button";
 
@@ -146,6 +147,10 @@ export default function SubnettingPracticePage() {
             </Link>{" "}
             — no account needed.
           </p>
+        </section>
+
+        <section className="mt-10">
+          <ToolEmailCapture source="subnetting-practice" />
         </section>
 
         <FaqSection faqs={FAQS} />
