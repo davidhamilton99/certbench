@@ -6,6 +6,7 @@
 
 - [Port numbers quiz](https://certbench.dev/tools/port-numbers-quiz): endless drill of the ports and protocols CompTIA tests, in both directions (name the port, name the protocol), with instant feedback.
 - [Subnetting practice](https://certbench.dev/tools/subnetting-practice): endless CIDR and subnet-mask drills for Network+ and A+.
+- [Subnet calculator](https://certbench.dev/tools/subnet-calculator): enter an IPv4 address and CIDR prefix to get the network, broadcast, usable host range, subnet mask, wildcard mask, and host count.
 - [Security+ acronyms quiz](https://certbench.dev/tools/security-plus-acronyms-quiz): drill the SY0-701 acronyms most tested on the exam.
 
 ## Free practice tests
