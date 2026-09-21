@@ -718,6 +718,35 @@ interface DatabaseGenerated {
           email_type?: string;
         };
       };
+      tool_leads: {
+        Row: {
+          id: string;
+          email: string;
+          source: string;
+          context: Json;
+          unsubscribe_token: string;
+          unsubscribed: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          source: string;
+          context?: Json;
+          unsubscribe_token?: string;
+          unsubscribed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          email?: string;
+          source?: string;
+          context?: Json;
+          unsubscribed?: boolean;
+          updated_at?: string;
+        };
+      };
       testimonials: {
         Row: {
           id: string;

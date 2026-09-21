@@ -13,6 +13,7 @@ import type { Db } from "./server";
  *   - Rate limiter RPC (server/rate-limit.ts)
  *   - Admin flag actions
  *   - Account deletion / e2e teardown
+ *   - Lifecycle + tool-lead email (server/services/lifecycle-email, tool-leads)
  *
  * Never pass this client into repository functions that serve user requests.
  */

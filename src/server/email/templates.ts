@@ -1,6 +1,7 @@
 import "server-only";
 
 import { publicEnv } from "@/env";
+import type { ToolSource } from "@/contracts/tools";
 
 /**
  * Hand-rolled HTML email templates. Inline styles only (email clients strip
@@ -139,6 +140,54 @@ export function dailyReminderEmail(input: {
       input.unsubscribeUrl
     ),
     text: `${cards} due for review today.\nReadiness: ${score}%.\nClear them before you forget: ${APP()}/dashboard\n\nStop daily reminders: ${input.unsubscribeUrl}`,
+  };
+}
+
+const TOOL_INTRO: Record<ToolSource, string> = {
+  "port-numbers-quiz": "You've been drilling port numbers on CertBench",
+  "subnetting-practice": "You've been drilling subnetting on CertBench",
+  "security-plus-acronyms-quiz":
+    "You've been drilling Security+ acronyms on CertBench",
+};
+
+/**
+ * Sent when an anonymous free-tool user hands over their email for a study
+ * plan. Delivers a genuinely useful next-steps plan, then routes to a free
+ * account — the whole point of capturing the lead.
+ */
+export function studyPlanEmail(input: {
+  source: ToolSource;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const app = APP();
+  const intro = TOOL_INTRO[input.source];
+  return {
+    subject: "Your CompTIA study plan — start here",
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 12px;">Here's your study plan</h1>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
+        ${intro} — nice work. Drills like that are the easy wins; here's how
+        to turn them into a pass:
+      </p>
+      <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
+        <li><strong>Take the 25-question diagnostic</strong> — ~20 minutes, and you get a readiness score across every exam domain, so you know exactly where you stand.</li>
+        <li><strong>Drill your weakest domains first</strong> — CertBench orders each day's work by impact instead of leaving you to guess.</li>
+        <li><strong>Let spaced repetition do the remembering</strong> — miss a question and it comes back right before you'd forget it.</li>
+      </ol>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
+        Create a free account to save your progress and start the diagnostic:
+      </p>
+      ${button(`${app}/register`, "Start free")}
+      <p style="font-size:13px;line-height:1.7;margin:14px 0 0;color:#71717a;">
+        Not ready for an account? The
+        <a href="${app}/readiness-check/security-plus-sy0-701" style="color:#2563eb;">3-minute readiness check</a>
+        needs no signup.
+      </p>
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Take the 25-question diagnostic for a readiness score across every domain.\n2. Drill your weakest domains first.\n3. Let spaced repetition bring back what you miss.\n\nStart free: ${app}/register\nNo account needed: ${app}/readiness-check/security-plus-sy0-701\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 
