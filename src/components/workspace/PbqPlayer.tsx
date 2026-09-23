@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,12 +41,23 @@ function shuffleGuaranteed(length: number): number[] {
 /*  Main Player                                                        */
 /* ------------------------------------------------------------------ */
 
+/** Post-result CTA — "convert at the win", shown after a scenario is graded. */
+export interface PbqUpsell {
+  heading: string;
+  note: string;
+  href: string;
+  label: string;
+}
+
 export function PbqPlayer({
   scenario,
   onBack,
+  upsell,
 }: {
   scenario: PbqScenario;
   onBack: () => void;
+  /** Optional CTA rendered after grading (ordering/matching/categorization). */
+  upsell?: PbqUpsell;
 }) {
   const [result, setResult] = useState<PbqGradeResult | null>(null);
   const [, setUserAnswer] = useState<number[] | null>(null);
@@ -145,6 +157,7 @@ export function PbqPlayer({
           result={result}
           onRetry={handleRetry}
           onBack={onBack}
+          upsell={upsell}
         />
       ) : (
         <>
@@ -184,11 +197,13 @@ function ResultView({
   result,
   onRetry,
   onBack,
+  upsell,
 }: {
   scenario: PbqScenario;
   result: PbqGradeResult;
   onRetry: () => void;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const scoreColor =
     result.score >= 75
@@ -255,6 +270,21 @@ function ResultView({
           {scenario.explanation}
         </p>
       </Panel>
+
+      {/* Convert at the win — surface the value right after a success */}
+      {upsell && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-5">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {upsell.heading}
+          </h3>
+          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+            {upsell.note}
+          </p>
+          <Button asChild className="mt-3">
+            <Link href={upsell.href}>{upsell.label}</Link>
+          </Button>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-3">
