@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import Link from "next/link";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  PbqUpsellCard,
+  type PbqUpsell,
+} from "@/components/workspace/pbq-upsell";
 import type {
   PbqScenario,
   PbqGradeResult,
@@ -41,13 +44,8 @@ function shuffleGuaranteed(length: number): number[] {
 /*  Main Player                                                        */
 /* ------------------------------------------------------------------ */
 
-/** Post-result CTA — "convert at the win", shown after a scenario is graded. */
-export interface PbqUpsell {
-  heading: string;
-  note: string;
-  href: string;
-  label: string;
-}
+// Re-exported so existing importers of PbqPlayer keep resolving the type.
+export type { PbqUpsell } from "@/components/workspace/pbq-upsell";
 
 export function PbqPlayer({
   scenario,
@@ -88,17 +86,17 @@ export function PbqPlayer({
 
   /* Simulation scenarios use their own self-contained player */
   if (scenario.type === "simulation") {
-    return <SimulationPlayer scenario={scenario} onBack={onBack} />;
+    return <SimulationPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   /* Topology scenarios use the topology player */
   if (scenario.type === "topology") {
-    return <TopologyPlayer scenario={scenario} onBack={onBack} />;
+    return <TopologyPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   /* Threat hunts use the log-console player */
   if (scenario.type === "threat-hunt") {
-    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} />;
+    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   return (
@@ -272,19 +270,7 @@ function ResultView({
       </Panel>
 
       {/* Convert at the win — surface the value right after a success */}
-      {upsell && (
-        <div className="rounded-xl border border-primary/40 bg-primary/5 p-5">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {upsell.heading}
-          </h3>
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            {upsell.note}
-          </p>
-          <Button asChild className="mt-3">
-            <Link href={upsell.href}>{upsell.label}</Link>
-          </Button>
-        </div>
-      )}
+      {upsell && <PbqUpsellCard upsell={upsell} />}
 
       {/* Actions */}
       <div className="flex gap-3">

@@ -10,6 +10,7 @@ import type {
   ThreatHuntScenario,
 } from "@/data/pbq/types";
 import { gradeThreatHunt } from "@/core/pbq/grade-threat-hunt";
+import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,9 +22,11 @@ import { cn } from "@/lib/utils";
 export function ThreatHuntPlayer({
   scenario,
   onBack,
+  upsell,
 }: {
   scenario: ThreatHuntScenario;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [attackChoice, setAttackChoice] = useState<number>(-1);
@@ -240,6 +243,9 @@ export function ThreatHuntPlayer({
           </p>
         </Panel>
       )}
+
+      {/* Convert at the win — surface the value right after a success */}
+      {revealed && upsell && <PbqUpsellCard upsell={upsell} />}
 
       {/* Actions */}
       {revealed ? (
