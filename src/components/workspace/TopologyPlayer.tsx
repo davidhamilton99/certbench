@@ -14,6 +14,7 @@ import type {
 import { gradeTopologyScenario } from "@/core/pbq/grade-topology";
 import { TopologyDiagram } from "@/components/workspace/TopologyDiagram";
 import { DeviceConfigPanel } from "@/components/workspace/DeviceConfigPanel";
+import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
 
 /* ------------------------------------------------------------------ */
 /*  Results View                                                       */
@@ -25,12 +26,14 @@ function TopologyResults({
   deviceResults,
   onRetry,
   onBack,
+  upsell,
 }: {
   scenario: TopologyScenario;
   result: PbqGradeResult;
   deviceResults: TopoDeviceGradeResult[];
   onRetry: () => void;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const scoreColor =
     result.score >= 75
@@ -127,6 +130,9 @@ function TopologyResults({
         </p>
       </Panel>
 
+      {/* Convert at the win — surface the value right after a success */}
+      {upsell && <PbqUpsellCard upsell={upsell} />}
+
       {/* Actions */}
       <div className="flex gap-3">
         <Button onClick={onRetry}>
@@ -147,9 +153,11 @@ function TopologyResults({
 export function TopologyPlayer({
   scenario,
   onBack,
+  upsell,
 }: {
   scenario: TopologyScenario;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const [answers, setAnswers] = useState<Record<string, TopoFieldAnswer>>({});
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
@@ -294,6 +302,7 @@ export function TopologyPlayer({
           deviceResults={gradeResult.deviceResults}
           onRetry={handleRetry}
           onBack={onBack}
+          upsell={upsell}
         />
       ) : (
         <>

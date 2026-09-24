@@ -20,6 +20,7 @@ import {
   TextInputFieldRenderer,
   SelectManyFieldRenderer,
 } from "@/components/workspace/PbqFieldRenderers";
+import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
 
 /* ------------------------------------------------------------------ */
 /*  Simulation-Only Field Renderers                                    */
@@ -199,12 +200,14 @@ function SimulationResults({
   taskResults,
   onRetry,
   onBack,
+  upsell,
 }: {
   scenario: SimulationScenario;
   result: PbqGradeResult;
   taskResults: SimTaskGradeResult[];
   onRetry: () => void;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const scoreColor =
     result.score >= 75
@@ -298,6 +301,9 @@ function SimulationResults({
         </Panel>
       ))}
 
+      {/* Convert at the win — surface the value right after a success */}
+      {upsell && <PbqUpsellCard upsell={upsell} />}
+
       {/* Actions */}
       <div className="flex gap-3">
         <Button onClick={onRetry}>
@@ -318,9 +324,11 @@ function SimulationResults({
 export function SimulationPlayer({
   scenario,
   onBack,
+  upsell,
 }: {
   scenario: SimulationScenario;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const [answers, setAnswers] = useState<Record<string, SimFieldAnswer>>({});
   const [activeTaskIdx, setActiveTaskIdx] = useState(0);
@@ -449,6 +457,7 @@ export function SimulationPlayer({
           taskResults={gradeResult.taskResults}
           onRetry={handleRetry}
           onBack={onBack}
+          upsell={upsell}
         />
       ) : (
         <>

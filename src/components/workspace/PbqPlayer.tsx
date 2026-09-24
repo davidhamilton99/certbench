@@ -5,6 +5,10 @@ import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  PbqUpsellCard,
+  type PbqUpsell,
+} from "@/components/workspace/pbq-upsell";
 import type {
   PbqScenario,
   PbqGradeResult,
@@ -21,14 +25,42 @@ import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
 /*  Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Fisher-Yates shuffle that guarantees the result differs from the input order. */
-function shuffleGuaranteed(length: number): number[] {
+/** Deterministic string → 32-bit seed (FNV-1a), so a scenario shuffles the same every time. */
+function seedFromString(str: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** mulberry32 — a small, fast, deterministic PRNG. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Fisher-Yates shuffle, seeded deterministically and guaranteed to differ from
+ * the identity order. Deterministic on purpose: the same seed yields the same
+ * order on the server and the client, so a shuffled list hydrates without a
+ * mismatch. (A Math.random() shuffle differs between SSR and hydration, which
+ * makes React throw away the server markup and re-render — a visible flash.)
+ */
+function shuffleSeeded(length: number, seed: number): number[] {
+  const rand = mulberry32(seed);
   const indices = Array.from({ length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  // If the shuffle accidentally produced the identity (correct) order, swap the first two
+  // If the shuffle happened to produce the identity (correct) order, swap the first two.
   const isIdentity = indices.every((v, i) => v === i);
   if (isIdentity && indices.length > 1) {
     [indices[0], indices[1]] = [indices[1], indices[0]];
@@ -40,12 +72,18 @@ function shuffleGuaranteed(length: number): number[] {
 /*  Main Player                                                        */
 /* ------------------------------------------------------------------ */
 
+// Re-exported so existing importers of PbqPlayer keep resolving the type.
+export type { PbqUpsell } from "@/components/workspace/pbq-upsell";
+
 export function PbqPlayer({
   scenario,
   onBack,
+  upsell,
 }: {
   scenario: PbqScenario;
   onBack: () => void;
+  /** Optional CTA rendered after grading (ordering/matching/categorization). */
+  upsell?: PbqUpsell;
 }) {
   const [result, setResult] = useState<PbqGradeResult | null>(null);
   const [, setUserAnswer] = useState<number[] | null>(null);
@@ -76,17 +114,17 @@ export function PbqPlayer({
 
   /* Simulation scenarios use their own self-contained player */
   if (scenario.type === "simulation") {
-    return <SimulationPlayer scenario={scenario} onBack={onBack} />;
+    return <SimulationPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   /* Topology scenarios use the topology player */
   if (scenario.type === "topology") {
-    return <TopologyPlayer scenario={scenario} onBack={onBack} />;
+    return <TopologyPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   /* Threat hunts use the log-console player */
   if (scenario.type === "threat-hunt") {
-    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} />;
+    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   return (
@@ -145,6 +183,7 @@ export function PbqPlayer({
           result={result}
           onRetry={handleRetry}
           onBack={onBack}
+          upsell={upsell}
         />
       ) : (
         <>
@@ -184,11 +223,13 @@ function ResultView({
   result,
   onRetry,
   onBack,
+  upsell,
 }: {
   scenario: PbqScenario;
   result: PbqGradeResult;
   onRetry: () => void;
   onBack: () => void;
+  upsell?: PbqUpsell;
 }) {
   const scoreColor =
     result.score >= 75
@@ -256,6 +297,9 @@ function ResultView({
         </p>
       </Panel>
 
+      {/* Convert at the win — surface the value right after a success */}
+      {upsell && <PbqUpsellCard upsell={upsell} />}
+
       {/* Actions */}
       <div className="flex gap-3">
         <Button onClick={onRetry}>
@@ -282,10 +326,11 @@ function OrderingPlayer({
   onSubmit: (answer: number[]) => void;
   onInteract: () => void;
 }) {
-  // Shuffle — guaranteed to differ from identity order
+  // Shuffle — deterministic per scenario so SSR and client agree; guaranteed to
+  // differ from the identity (correct) order.
   const initialOrder = useMemo(
-    () => shuffleGuaranteed(scenario.items.length),
-    [scenario.items.length]
+    () => shuffleSeeded(scenario.items.length, seedFromString(scenario.id + ":order")),
+    [scenario.id, scenario.items.length]
   );
 
   const [order, setOrder] = useState<number[]>(initialOrder);
@@ -421,16 +466,11 @@ function MatchingPlayer({
   );
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
-  // Shuffle right column display order once per mount (lazy init keeps the
-  // impure shuffle out of render).
-  const [shuffledRight] = useState<number[]>(() => {
-    const indices = scenario.right.map((_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  });
+  // Shuffle right column display order — deterministic per scenario so the
+  // server and client render the same order (no hydration mismatch).
+  const [shuffledRight] = useState<number[]>(() =>
+    shuffleSeeded(scenario.right.length, seedFromString(scenario.id + ":match"))
+  );
 
   // Track which right-side options are already used
   const usedRightIndices = new Set(selections.filter((s) => s !== -1));
@@ -544,15 +584,11 @@ function CategorizationPlayer({
   );
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
-  // Shuffled item display order, fixed per mount.
-  const [shuffledItems] = useState<number[]>(() => {
-    const indices = scenario.items.map((_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    return indices;
-  });
+  // Shuffled item display order — deterministic per scenario so the server and
+  // client render the same order (no hydration mismatch).
+  const [shuffledItems] = useState<number[]>(() =>
+    shuffleSeeded(scenario.items.length, seedFromString(scenario.id + ":cat"))
+  );
 
   const placeItem = (itemIdx: number, categoryIdx: number) => {
     const next = [...placements];

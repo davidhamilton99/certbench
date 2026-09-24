@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type {
   PbqScenario,
   SimulationScenario,
   TopologyScenario,
   ThreatHuntScenario,
 } from "@/data/pbq/types";
-import { PbqPlayer } from "@/components/workspace/PbqPlayer";
+import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -216,6 +218,14 @@ export function PbqScenarios({
     );
   }, [isPro, simulations, drills]);
 
+  // Convert at the win — shown to free users after they finish a scenario.
+  const proUpsell: PbqUpsell = {
+    heading: "You've clearly got the hang of these.",
+    note: `Pro unlocks all ${scenarios.length} labs — every simulation, topology, and threat hunt — plus full practice exams and unlimited daily questions.`,
+    href: "/upgrade?reason=pbq",
+    label: "Unlock Pro →",
+  };
+
   // Default to drills tab if no simulations exist
   const effectiveTab =
     activeTab === "simulations" && simulations.length === 0 ? "drills" : activeTab;
@@ -251,12 +261,32 @@ export function PbqScenarios({
       <PbqPlayer
         scenario={activeScenario}
         onBack={() => setActiveScenario(null)}
+        upsell={isPro ? undefined : proUpsell}
       />
     );
   }
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Sell at the lock — a real pitch, not just grey "Pro" badges */}
+      {!isPro && lockedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-foreground">
+              {lockedIds.size} more labs unlock with Pro
+            </p>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              Every simulation, topology, and threat hunt — the hands-on part
+              that decides pass/fail — plus full practice exams and unlimited
+              daily questions.
+            </p>
+          </div>
+          <Button asChild className="shrink-0">
+            <Link href="/upgrade?reason=pbq">Unlock Pro</Link>
+          </Button>
+        </div>
+      )}
+
       {/* Tab switcher */}
       <div className="flex items-center gap-1 border-b border-border">
         <button
