@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import type { PbqScenario } from "@/data/pbq/types";
 import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const TIER_LABEL: Record<PbqScenario["type"], string> = {
@@ -32,6 +33,18 @@ export function PbqTryChooser({
   // Bumped to remount the player — on scenario switch and on "back"/retry.
   const [attempt, setAttempt] = useState(0);
   const active = scenarios[selected];
+  const activeId = active?.id;
+  const activeType = active?.type;
+
+  useEffect(() => {
+    if (!activeId || !activeType) return;
+    track("pbq_started", {
+      scenario_id: activeId,
+      scenario_type: activeType,
+      surface: "public",
+    });
+  }, [activeId, activeType]);
+
   if (!active) return null;
 
   function pick(i: number) {

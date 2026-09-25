@@ -5,13 +5,8 @@ import Link from "next/link";
 import { ArrowRight, Check, X } from "lucide-react";
 import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-
-declare global {
-  interface Window {
-    posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
-  }
-}
 
 /**
  * A live, gradeable exam question in the landing hero. Session replays show
@@ -27,9 +22,7 @@ export function HeroQuestion({ question }: { question: SampleQuestionData }) {
   function choose(i: number) {
     if (revealed) return;
     setPicked(i);
-    window.posthog?.capture("hero_question_answered", {
-      correct: i === question.correctIndex,
-    });
+    track("hero_question_answered", { correct: i === question.correctIndex });
   }
 
   return (

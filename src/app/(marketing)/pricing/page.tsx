@@ -99,7 +99,7 @@ export default async function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <PlanPicker ctaLabel="Get Pro" initialPricing={pricing} />
+              <PlanPicker ctaLabel="Get Pro" initialPricing={pricing} surface="pricing" />
             </CardContent>
           </Card>
         </div>

@@ -14,6 +14,7 @@ import type {
   ThreatHuntScenario,
 } from "@/data/pbq/types";
 import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
+import { track } from "@/lib/analytics";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -224,7 +225,17 @@ export function PbqScenarios({
     note: `Pro unlocks all ${scenarios.length} labs — every simulation, topology, and threat hunt — plus full practice exams and unlimited daily questions.`,
     href: "/upgrade?reason=pbq",
     label: "Unlock Pro →",
+    context: "authed_pbq",
   };
+
+  function openScenario(s: PbqScenario) {
+    track("pbq_started", {
+      scenario_id: s.id,
+      scenario_type: s.type,
+      surface: "authed",
+    });
+    setActiveScenario(s);
+  }
 
   // Default to drills tab if no simulations exist
   const effectiveTab =
@@ -328,7 +339,7 @@ export function PbqScenarios({
       {/* Scenario list */}
       <ScenarioList
         scenarios={effectiveTab === "simulations" ? simulations : drills}
-        onSelect={setActiveScenario}
+        onSelect={openScenario}
         onLocked={() => router.push("/upgrade?reason=pbq")}
         lockedIds={lockedIds}
         isSimulation={effectiveTab === "simulations"}

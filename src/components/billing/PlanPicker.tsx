@@ -10,6 +10,7 @@ import {
 } from "@/contracts/billing";
 import type { ContractOutput } from "@/contracts/common";
 import { ApiError } from "@/contracts/common";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -58,14 +59,21 @@ const FALLBACK: RegionPricing = {
 export function PlanPicker({
   ctaLabel = "Upgrade to Pro",
   initialPricing,
+  surface = "upgrade",
 }: {
   ctaLabel?: string;
   initialPricing?: RegionPricing;
+  /** Which page the picker is on — labels the pricing_viewed funnel step. */
+  surface?: "upgrade" | "pricing";
 }) {
   const [interval, setInterval] = useState<BillingInterval>("quarterly");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [region, setRegion] = useState<RegionPricing>(initialPricing ?? FALLBACK);
+
+  useEffect(() => {
+    track("pricing_viewed", { surface });
+  }, [surface]);
 
   useEffect(() => {
     // Server already resolved the region price → no fetch, no swap, no flicker.
@@ -84,6 +92,7 @@ export function PlanPicker({
   async function checkout() {
     setBusy(true);
     setError("");
+    track("checkout_started", { interval });
     try {
       const { url } = await api(createCheckout, { interval });
       window.location.href = url;
