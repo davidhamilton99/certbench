@@ -5,6 +5,7 @@ import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 import { WelcomeV2Modal } from "@/components/workspace/WelcomeV2Modal";
+import { AnalyticsIdentify } from "@/components/analytics/AnalyticsIdentify";
 import { CERTBENCH_V2_LAUNCH } from "@/lib/launch";
 
 export default async function WorkspaceLayout({
@@ -45,6 +46,7 @@ export default async function WorkspaceLayout({
     <WorkspaceShell certs={enrolledCerts} displayName={profile.displayName}>
       {children}
       <WelcomeV2Modal enabled={isReturning} />
+      <AnalyticsIdentify userId={user.id} email={user.email} />
     </WorkspaceShell>
   );
 }

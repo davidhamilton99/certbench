@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
+import { captureServerEvent } from "@/server/analytics";
 import { serverEnv } from "@/env";
 
 /**
@@ -60,6 +61,14 @@ export async function POST(req: NextRequest) {
         },
         { onConflict: "user_id" }
       );
+
+      // The conversion event — fired server-side (reliable source of truth,
+      // unlike a success-redirect the user may never reach). distinct_id is the
+      // Supabase user id, so it joins the funnel this person built in-browser.
+      await captureServerEvent(userId, "subscription_activated", {
+        stripe_subscription_id: subscription.id,
+        plan: "pro",
+      });
       break;
     }
 

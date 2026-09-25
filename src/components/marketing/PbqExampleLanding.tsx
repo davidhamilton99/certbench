@@ -55,6 +55,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
     note: "Performance-based questions are the part most people underestimate — and the part that decides pass/fail. Create a free account to keep going, unlock more hands-on labs, and track your readiness across every domain.",
     href: "/register",
     label: "Start free →",
+    context: "public_pbq",
   };
 
   return (
