@@ -20,9 +20,15 @@ export function ForgotPasswordForm() {
     setLoading(true);
 
     const supabase = createClient();
+    // Route the recovery link through /auth/callback so the recovery code is
+    // exchanged for a session (in cookies) BEFORE the user reaches the
+    // set-password form. Linking straight to /reset-password left the page
+    // with no session, so updateUser() failed with "Auth session missing!".
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
-      { redirectTo: `${window.location.origin}/reset-password` }
+      {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      }
     );
 
     setLoading(false);
