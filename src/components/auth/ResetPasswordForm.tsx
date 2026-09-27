@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
@@ -13,6 +14,7 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [sessionError, setSessionError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -31,7 +33,18 @@ export function ResetPasswordForm() {
     });
 
     if (updateError) {
-      setError(updateError.message);
+      // A missing/expired recovery session (e.g. the link was opened on a
+      // different device, or it expired) surfaces as "Auth session missing".
+      // Show a recoverable message instead of a raw error dead-end.
+      const isSession = /session|expired|invalid|missing|token/i.test(
+        updateError.message
+      );
+      setSessionError(isSession);
+      setError(
+        isSession
+          ? "Your reset link has expired or was opened on a different device. Request a new one below."
+          : updateError.message
+      );
       setLoading(false);
       return;
     }
@@ -70,12 +83,20 @@ export function ResetPasswordForm() {
       </div>
 
       {error && (
-        <p
+        <div
           role="alert"
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         >
-          {error}
-        </p>
+          <p>{error}</p>
+          {sessionError && (
+            <Link
+              href="/forgot-password"
+              className="mt-1 inline-block font-medium underline underline-offset-2"
+            >
+              Request a new reset link
+            </Link>
+          )}
+        </div>
       )}
 
       <Button type="submit" disabled={loading}>
