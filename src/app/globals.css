@@ -13,11 +13,10 @@
 :root {
   --radius: 0.625rem;
 
-  /* CertBench 2.0 light — a premium cool "paper" theme (deliberately not pitch
-   * white): a soft blue-grey ground that lets white cards elevate above it,
-   * rich cool ink, and the indigo accent carried through. The instrument
-   * moments (reveal, readiness dial) stay dark as islands on this ground. */
-  --background: oklch(0.966 0.004 264);
+  /* CertBench 2.0 light — a clean plain-white ground, rich cool ink, and the
+   * indigo accent carried through. The instrument moments (reveal, readiness
+   * dial) stay dark as islands on this ground. */
+  --background: oklch(1 0 0);
   --foreground: oklch(0.19 0.014 267);
   --card: oklch(0.996 0.001 264);
   --card-foreground: oklch(0.19 0.014 267);
@@ -225,20 +224,9 @@
   -webkit-backdrop-filter: blur(20px) saturate(1.8);
   border-bottom: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
 }
-/* Soft aurora colour field, spread down the page, that the frosted glass
-   refracts. Reusable page background (includes the base --background).
-   Light mode only — in dark it reads as distracting colour behind text, so
-   dark falls back to a clean flat background (see the .dark override). */
+/* Plain page background. Previously a soft aurora colour field in light mode;
+   now flat so the light theme reads as plain white (dark was already flat). */
 .aurora-bg {
-  background:
-    radial-gradient(46rem 40rem at 8% 2%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 55%),
-    radial-gradient(40rem 36rem at 96% 12%, color-mix(in srgb, #8b5cf6 14%, transparent), transparent 52%),
-    radial-gradient(42rem 40rem at 18% 42%, color-mix(in srgb, #0ea5e9 11%, transparent), transparent 50%),
-    radial-gradient(40rem 40rem at 92% 70%, color-mix(in srgb, var(--color-primary) 11%, transparent), transparent 50%),
-    radial-gradient(44rem 42rem at 34% 98%, color-mix(in srgb, #8b5cf6 10%, transparent), transparent 52%),
-    var(--background);
-}
-.dark .aurora-bg {
   background: var(--background);
 }
 
