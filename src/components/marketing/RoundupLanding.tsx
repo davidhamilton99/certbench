@@ -4,6 +4,7 @@ import { ROUNDUPS, type RoundupData } from "@/lib/seo/comparison-pages";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 
 /** "CompTIA A+" from "best-a-plus-practice-tests". */
@@ -17,8 +18,24 @@ function certLabel(path: string): string {
 /** Presentational template for the "best {cert} practice tests" roundups. */
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
+
+  // ItemList structured data so search and generative engines read this as a
+  // genuine roundup of tools. No fabricated ratings — just the ranked list.
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: data.metaTitle,
+    description: data.metaDescription,
+    itemListElement: data.tools.map((tool, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: tool.name,
+    })),
+  };
+
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+      <JsonLd data={itemList} />
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
