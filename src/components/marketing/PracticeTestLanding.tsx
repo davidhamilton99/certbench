@@ -81,7 +81,51 @@ export function PracticeTestLanding({
           ))}
         </div>
 
-        {/* Domain weights — useful content and it shows we mirror the real exam */}
+        {/* Interactive samples FIRST — someone who searched "practice test"
+            should be answering a real question right away, not reading a pitch
+            and a table. Sorted shortest-first so the opener is approachable
+            rather than the most daunting question. */}
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Sample questions
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pick an answer to see instant grading and the explanation — the
+            same experience as the full bank of{" "}
+            {data.totalQuestions.toLocaleString()} questions.
+          </p>
+          {data.sampleGroups.map((group, gi) => {
+            // Continuous numbering across groups, computed purely.
+            const offset = data.sampleGroups
+              .slice(0, gi)
+              .reduce((sum, g) => sum + g.questions.length, 0);
+            // Lead with the shortest (least intimidating) question, then ramp up.
+            const ordered = [...group.questions].sort(
+              (a, b) => a.questionText.length - b.questionText.length
+            );
+            return (
+              <div key={group.examCode} className="mt-5">
+                {data.sampleGroups.length > 1 && (
+                  <h3 className="mb-3 text-sm font-medium">
+                    {group.certName}{" "}
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {group.examCode}
+                    </span>
+                  </h3>
+                )}
+                <div className="grid gap-4">
+                  {ordered.map((q, i) => (
+                    <SampleQuestion key={i} number={offset + i + 1} question={q} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </section>
+
+        {/* Domain weights — useful, fully-indexed content that shows we mirror
+            the real exam. Kept on the page, just moved below the interactive
+            moment so it never blocks a visitor from doing a question. */}
         <section className="mt-10">
           <h2 className="text-xl font-semibold tracking-tight">
             What the exam covers
@@ -116,41 +160,6 @@ export function PracticeTestLanding({
               </div>
             </div>
           ))}
-        </section>
-
-        {/* Interactive samples, sectioned per exam (A+ gets Core 1 / Core 2) */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Sample questions
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick an answer to see instant grading and the explanation — the
-            same experience as the full bank of{" "}
-            {data.totalQuestions.toLocaleString()} questions.
-          </p>
-          {data.sampleGroups.map((group, gi) => {
-            // Continuous numbering across groups, computed purely.
-            const offset = data.sampleGroups
-              .slice(0, gi)
-              .reduce((sum, g) => sum + g.questions.length, 0);
-            return (
-              <div key={group.examCode} className="mt-5">
-                {data.sampleGroups.length > 1 && (
-                  <h3 className="mb-3 text-sm font-medium">
-                    {group.certName}{" "}
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {group.examCode}
-                    </span>
-                  </h3>
-                )}
-                <div className="grid gap-4">
-                  {group.questions.map((q, i) => (
-                    <SampleQuestion key={i} number={offset + i + 1} question={q} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
         </section>
 
         {/* Practice by objective — hub links to the programmatic pages */}
