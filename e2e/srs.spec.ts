@@ -1,11 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
-import {
-  E2E_PASSWORD,
-  confirmE2eEmail,
-  e2eEmail,
-  loadLocalEnv,
-} from "./helpers";
+import { loadLocalEnv, registerOnboardPro } from "./helpers";
 
 /**
  * SRS: complete a short history, backdate the cards via the service role,
@@ -19,32 +14,17 @@ test("srs review reschedules an overdue card", async ({ page }) => {
     "needs service role for card backdating"
   );
 
-  const email = e2eEmail("srs");
   const admin = createClient(
     env.NEXT_PUBLIC_SUPABASE_URL!,
     env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  // ---- Register + onboard ----
-  await page.goto("/register");
-  await page.fill("#displayName", "E2E SRS");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/verify");
-  await confirmE2eEmail(email);
-  await page.goto("/login");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/onboarding");
-  await page.getByRole("radio", { name: /Security\+/ }).click();
-  await page.getByRole("button", { name: "Start studying" }).click();
-  await page.waitForURL("**/dashboard");
+  // ---- Register + onboard (Pro — the app is Pro-only) ----
+  const email = await registerOnboardPro(page, { tag: "srs", cert: /Security\+/ });
 
   // ---- Build history: run the diagnostic quickly ----
-  await page.getByRole("link", { name: /Take Your Diagnostic/i }).click();
+  await page.getByRole("link", { name: /Start the diagnostic/i }).click();
   await page.waitForURL("**/diagnostic");
   const next = page.getByRole("button", { name: "Next", exact: true });
   for (let i = 0; i < 25; i++) {

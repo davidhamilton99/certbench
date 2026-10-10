@@ -4,6 +4,7 @@ import {
   getCertificationBySlug,
   listDomains,
 } from "@/server/data/certifications";
+import { canAccessCert } from "@/server/data/enrollments";
 import { PracticeExamClient } from "@/components/quiz/PracticeExamClient";
 
 export const metadata = {
@@ -24,6 +25,9 @@ export default async function DomainDrillPage({
 
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
+  if (!(await canAccessCert(db, user.id, cert.id))) {
+    redirect(`/upgrade?reason=cert-locked&cert=${slug}`);
+  }
   const domain = (await listDomains(db, cert.id)).find((d) => d.id === domainId);
   if (!domain) notFound();
 

@@ -26,7 +26,7 @@ export function RegisterForm() {
 
     const supabase = createClient();
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -44,7 +44,11 @@ export function RegisterForm() {
     }
 
     track("signup_submitted", { method: "email" });
-    router.push("/verify");
+    // With email confirmation OFF, signUp returns a live session — drop them
+    // straight into the goal-setting flow, no inbox detour. If confirmation is
+    // still on (no session yet), fall back to the verify screen.
+    router.push(data.session ? "/onboarding" : "/verify");
+    router.refresh();
   }
 
   return (

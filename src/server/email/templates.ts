@@ -152,8 +152,8 @@ const TOOL_INTRO: Record<ToolSource, string> = {
 
 /**
  * Sent when an anonymous free-tool user hands over their email for a study
- * plan. Delivers a genuinely useful next-steps plan, then routes to a free
- * account — the whole point of capturing the lead.
+ * plan. Delivers a genuinely useful next-steps plan, then routes to building
+ * a plan — the whole point of capturing the lead.
  */
 export function studyPlanEmail(input: {
   source: ToolSource;
@@ -176,9 +176,9 @@ export function studyPlanEmail(input: {
         <li><strong>Let spaced repetition do the remembering</strong> — miss a question and it comes back right before you'd forget it.</li>
       </ol>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        Create a free account to save your progress and start the diagnostic:
+        Build your study plan and turn these steps into your daily path to a pass:
       </p>
-      ${button(`${app}/register`, "Start free")}
+      ${button(`${app}/register`, "Build my study plan")}
       <p style="font-size:13px;line-height:1.7;margin:14px 0 0;color:#71717a;">
         Not ready for an account? The
         <a href="${app}/readiness-check/security-plus-sy0-701" style="color:#2563eb;">3-minute readiness check</a>
@@ -187,7 +187,7 @@ export function studyPlanEmail(input: {
     `,
       input.unsubscribeUrl
     ),
-    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Take the 25-question diagnostic for a readiness score across every domain.\n2. Drill your weakest domains first.\n3. Let spaced repetition bring back what you miss.\n\nStart free: ${app}/register\nNo account needed: ${app}/readiness-check/security-plus-sy0-701\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Take the 25-question diagnostic for a readiness score across every domain.\n2. Drill your weakest domains first.\n3. Let spaced repetition bring back what you miss.\n\nBuild your plan: ${app}/register\nNo account needed: ${app}/readiness-check/security-plus-sy0-701\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_PASSWORD, confirmE2eEmail, e2eEmail } from "./helpers";
+import { registerOnboardPro } from "./helpers";
 
 /**
  * Threat Hunt PBQ: register -> onboard -> PBQ lab -> open the threat hunt,
@@ -10,24 +10,7 @@ import { E2E_PASSWORD, confirmE2eEmail, e2eEmail } from "./helpers";
 test("threat hunt: flag evidence, identify attack, perfect score", async ({
   page,
 }) => {
-  const email = e2eEmail("threathunt");
-
-  await page.goto("/register");
-  await page.fill("#displayName", "E2E Hunt");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/verify");
-  await confirmE2eEmail(email);
-  await page.goto("/login");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-
-  await page.waitForURL("**/onboarding");
-  await page.getByRole("radio", { name: /Security\+/ }).click();
-  await page.getByRole("button", { name: "Start studying" }).click();
-  await page.waitForURL("**/dashboard");
+  await registerOnboardPro(page, { tag: "threathunt", cert: /Security\+/ });
 
   // Into the PBQ lab.
   await page.getByRole("link", { name: "PBQ lab" }).first().click();

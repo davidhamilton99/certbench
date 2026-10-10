@@ -52,9 +52,9 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
 
   const upsell: PbqUpsell = {
     heading: "That's a real exam-style PBQ — and you handled it.",
-    note: "Performance-based questions are the part most people underestimate — and the part that decides pass/fail. Create a free account to keep going, unlock more hands-on labs, and track your readiness across every domain.",
+    note: "Performance-based questions are the part most people underestimate — and the part that decides pass/fail. Build your study plan to unlock every hands-on lab and a readiness score across every domain.",
     href: "/register",
-    label: "Start free →",
+    label: "Build my plan →",
     context: "public_pbq",
   };
 
@@ -85,7 +85,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
         {rest.length > 0 && (
           <section className="mt-12 rounded-2xl border bg-muted/40 p-6">
             <h2 className="text-xl font-semibold tracking-tight">
-              {rest.length} more hands-on labs in a free account
+              {rest.length} more hands-on labs in your plan
             </h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
               Every style the real exam uses — firewall configs, log analysis,
@@ -130,7 +130,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Start studying free
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

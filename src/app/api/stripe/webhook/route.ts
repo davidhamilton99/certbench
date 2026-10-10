@@ -37,7 +37,29 @@ export async function POST(req: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.supabase_user_id;
-      if (!userId || !session.subscription) break;
+      if (!userId) break;
+
+      // One-time cert add-on (mode=payment): grant/reactivate the enrollment
+      // in the purchased cert. Access still requires active Pro, so this just
+      // adds the cert to the user's plan. Upsert is idempotent on retries.
+      if (session.metadata?.kind === "cert_addon") {
+        const certId = session.metadata.cert_id;
+        if (certId) {
+          const { error } = await supabase.from("user_enrollments").upsert(
+            { user_id: userId, certification_id: certId, is_active: true },
+            { onConflict: "user_id,certification_id" }
+          );
+          if (error) {
+            console.error("cert add-on enrollment failed:", error.message);
+          }
+          await captureServerEvent(userId, "cert_added", {
+            certification_id: certId,
+          });
+        }
+        break;
+      }
+
+      if (!session.subscription) break;
 
       const subscription = await getStripe().subscriptions.retrieve(
         session.subscription as string

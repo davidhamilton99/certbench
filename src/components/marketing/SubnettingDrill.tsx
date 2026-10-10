@@ -306,7 +306,7 @@ export function SubnettingDrill({
             href="/register"
             className="text-primary underline underline-offset-4"
           >
-            A free account
+            Your study plan
           </Link>{" "}
           adds spaced repetition on the full Network+ bank.
         </p>

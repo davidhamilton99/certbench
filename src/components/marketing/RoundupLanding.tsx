@@ -112,13 +112,13 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
             Start with a measurement, not a purchase
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Whatever stack you choose, choose it from data: the free
-            25-question diagnostic gives you a readiness score and your weak
-            domains in about twenty minutes.
+            Whatever stack you choose, choose it from data: the free 3-minute
+            readiness check gives you a readiness score and your weak domains —
+            no account, no card.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Take the free diagnostic
+            <Link href="/readiness-check/security-plus-sy0-701">
+              Take the free readiness check
               <ArrowRight />
             </Link>
           </Button>

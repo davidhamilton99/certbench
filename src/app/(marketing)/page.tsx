@@ -139,21 +139,21 @@ export default async function LandingPage() {
                 readiness score for CompTIA certifications.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2 lg:justify-start">
-                <Button asChild size="lg">
+                <Button asChild size="lg" className="h-12 px-6 text-base">
                   <Link href="/register">
-                    Start studying free
+                    Build my study plan
                     <ArrowRight />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
+                <Button asChild variant="outline" size="lg" className="h-12 px-6 text-base">
                   <Link href="/pricing">See pricing</Link>
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                Not sure where you stand?{" "}
+                Want a taste first?{" "}
                 <Link
                   href="/readiness-check/security-plus-sy0-701"
-                  className="text-foreground underline underline-offset-4"
+                  className="font-medium text-foreground underline underline-offset-4"
                 >
                   Take the 3-minute readiness check
                 </Link>{" "}
@@ -251,16 +251,16 @@ export default async function LandingPage() {
         {/* CTA */}
         <section className="border-t">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
-            <h2 className="font-display text-3xl font-semibold tracking-tight">
+            <h2 className="text-balance font-display text-4xl font-bold tracking-tight">
               Stop guessing. Start passing.
             </h2>
-            <p className="text-muted-foreground">
-              Free to start — 2,300+ exam-style questions across four CompTIA
-              certifications.
+            <p className="max-w-md text-balance text-muted-foreground">
+              Your plan in two minutes — then study with Pro, backed by a pass
+              guarantee.
             </p>
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="mt-1 h-12 px-6 text-base">
               <Link href="/register">
-                Create your free account
+                Build my study plan
                 <ArrowRight />
               </Link>
             </Button>

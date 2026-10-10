@@ -188,7 +188,7 @@ export function PortQuiz({
                 href="/register"
                 className="text-primary underline underline-offset-4"
               >
-                start free
+                build your plan
               </Link>{" "}
               for the full drill + 2,600 questions with spaced repetition.
             </span>

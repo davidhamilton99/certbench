@@ -100,8 +100,8 @@ export default function TermsPage() {
 
           <Section title="5. Subscriptions, Billing, and Cancellation">
             <p>
-              CertBench offers both a free tier and a paid Pro subscription.
-              Details of what each tier includes are described on our{" "}
+              CertBench offers free, no-account tools and a paid Pro
+              subscription. Details of what each includes are described on our{" "}
               <a href="/pricing" className="text-primary hover:underline">
                 Pricing page
               </a>
@@ -119,7 +119,8 @@ export default function TermsPage() {
               subscription at any time through the billing portal in your
               account settings. Upon cancellation, your Pro access continues
               until the end of the current billing period, after which your
-              account reverts to the free tier.
+              account loses Pro access (the free, no-account tools remain
+              available).
             </p>
             <p>
               <strong>Refunds.</strong> We do not provide refunds for partial

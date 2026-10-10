@@ -92,11 +92,11 @@ export function HeroQuestion({ question }: { question: SampleQuestionData }) {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              That&apos;s 1 of 2,600+ — find out if you&apos;d pass today.
+              That&apos;s 1 of 2,600+ — build the plan that gets you there.
             </p>
             <Button asChild size="sm">
               <Link href="/register">
-                Take the free diagnostic
+                Build my plan
                 <ArrowRight />
               </Link>
             </Button>

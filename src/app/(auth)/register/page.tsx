@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+import { ShieldCheck, Sparkles, Target } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,43 +14,48 @@ export const metadata = {
 };
 
 /**
- * Steps mirror the landing page's "How it works" — same claims, same
- * numbered-circle style — so the page reassures without introducing
- * anything new to evaluate. Session replays show visitors arriving here
- * convinced but stalling at the bare form; the rail (desktop only, so the
- * form stays first on mobile) answers "what happens next?" and "does this
- * cost anything?" at the exact moment those questions kill signups.
+ * The rail sets up the goal-setting flow the user is about to enter — in the
+ * flow's own voice (desktop only, so the form stays first on mobile). Replays
+ * showed visitors arriving convinced but stalling at the bare form; this
+ * answers "what happens next?" and "what's this going to cost?" honestly, at
+ * the moment those questions kill signups.
  */
-const NEXT_STEPS: [string, string][] = [
-  [
-    "Take the 25-question diagnostic",
-    "Establishes your baseline across every exam domain in about twenty minutes.",
-  ],
-  [
-    "See your readiness score",
-    "A domain-by-domain breakdown of exactly where you stand today.",
-  ],
-  [
-    "Follow your daily plan",
-    "Ordered by impact: overdue reviews first, then your weakest domain.",
-  ],
+const NEXT_STEPS: { icon: ComponentType<{ className?: string }>; title: string; body: string }[] = [
+  {
+    icon: Target,
+    title: "Set your goal",
+    body: "Your cert, your exam date, and how you study.",
+  },
+  {
+    icon: Sparkles,
+    title: "Get your plan",
+    body: "Built around your exam and your pace — in two minutes.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Pass, guaranteed",
+    body: "Study with Pro, or your money back.",
+  },
 ];
 
 export default function RegisterPage() {
   return (
     <div className="mx-auto w-full max-w-sm lg:grid lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-16">
       <aside className="hidden lg:block">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          What happens next
+        <h1 className="text-balance font-display text-3xl font-bold tracking-tight">
+          Build your study plan
         </h1>
-        <ol className="mt-6 grid gap-5">
-          {NEXT_STEPS.map(([title, body], i) => (
+        <p className="mt-3 text-muted-foreground">
+          Two minutes to set up. Then just show up.
+        </p>
+        <ol className="mt-8 grid gap-5">
+          {NEXT_STEPS.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-4">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-sm font-semibold text-primary">
-                {i + 1}
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Icon className="size-5" />
               </span>
               <div>
-                <h2 className="font-medium">{title}</h2>
+                <h2 className="font-semibold">{title}</h2>
                 <p className="text-sm text-muted-foreground">{body}</p>
               </div>
             </li>
@@ -57,12 +64,14 @@ export default function RegisterPage() {
       </aside>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-lg">Create your account</CardTitle>
+          <CardTitle className="font-display text-xl font-bold tracking-tight">
+            Create your account
+          </CardTitle>
           <CardDescription>
-            Start studying with a personalised plan
+            Then build your plan — it takes two minutes.
           </CardDescription>
           <p className="text-xs text-muted-foreground">
-            Free forever · No credit card required
+            No card to start · Pass guarantee
           </p>
         </CardHeader>
         <CardContent>

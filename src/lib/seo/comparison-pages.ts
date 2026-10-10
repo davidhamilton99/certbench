@@ -53,7 +53,7 @@ export const VS_PAGES: VsPage[] = [
     chooseUs: [
       "You want a system that tells you what to study every day, not just how you did on a mock",
       "You want spaced repetition on your misses built in, instead of managing Anki separately",
-      "You want to start free and pay only for the months you actually study (or use the free tier the whole way)",
+      "You want to try everything free first — no account — then pay only for the months you actually study",
     ],
     rows: [
       { feature: "Full-length exam realism", certbench: "Weighted, timed practice exams", competitor: "Best in class — the closest sim to the real thing" },
@@ -62,8 +62,8 @@ export const VS_PAGES: VsPage[] = [
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "No" },
       { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Per-exam score reports" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "Limited" },
-      { feature: "Free tier", certbench: "Diagnostic, readiness score, 20 questions/day, drills", competitor: "Demo only" },
-      { feature: "Price", certbench: "Free; Pro $19/mo or $39 per exam cycle", competitor: "About $99 per exam" },
+      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "Demo only" },
+      { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "About $99 per exam" },
     ],
     faqs: [
       {
@@ -79,7 +79,7 @@ export const VS_PAGES: VsPage[] = [
       {
         question: "Why is CertBench so much cheaper than Boson?",
         answer:
-          "Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench is free to study on every day (20 questions daily, diagnostic, readiness score, drills), with a Pro tier at $19/month or $39 for a three-month exam cycle for unlimited everything. Prices in USD, adjusted regionally, and Pro carries a pass guarantee.",
+          "Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench's tools are free to try with no account — the readiness check, practice-test previews, and PBQ examples — and Pro is $19/month or $39 for a three-month exam cycle for the full study system: unlimited everything. Prices in USD, adjusted regionally, and Pro carries a pass guarantee.",
       },
     ],
   },
@@ -110,8 +110,8 @@ export const VS_PAGES: VsPage[] = [
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "No true SRS scheduling" },
       { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Progress and topic mastery indicators" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "In CertMaster Labs (sold separately)" },
-      { feature: "Free tier", certbench: "Diagnostic, readiness score, 20 questions/day, drills", competitor: "No" },
-      { feature: "Price", certbench: "Free; Pro $19/mo or $39 per exam cycle", competitor: "Typically $150+ per exam" },
+      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "No" },
+      { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "Typically $150+ per exam" },
     ],
     faqs: [
       {
@@ -159,8 +159,8 @@ export const VS_PAGES: VsPage[] = [
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "Missed-question review, not scheduled SRS" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "No" },
       { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Average-score tracking" },
-      { feature: "Free tier", certbench: "Diagnostic, readiness score, 20 questions/day, drills", competitor: "Limited free question sample" },
-      { feature: "Price", certbench: "Free; Pro $19/mo or $39 per exam cycle", competitor: "Subscription, roughly comparable monthly" },
+      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "Limited free question sample" },
+      { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "Subscription, roughly comparable monthly" },
     ],
     faqs: [
       {
@@ -176,7 +176,7 @@ export const VS_PAGES: VsPage[] = [
       {
         question: "Can I switch from Pocket Prep to CertBench mid-study?",
         answer:
-          "Yes, and the transition is fast: take the free 25-question diagnostic and CertBench rebuilds your picture from scratch — your readiness score and weak domains are measured directly rather than imported, so a switch costs one 20-minute session.",
+          "Yes, and the transition is fast: the 25-question diagnostic rebuilds your picture from scratch — your readiness score and weak domains are measured directly rather than imported, so a switch costs one 20-minute session.",
       },
     ],
   },
@@ -236,13 +236,13 @@ export const ROUNDUP: RoundupData = {
     },
     {
       name: "CertBench",
-      price: "Free tier; Pro $19/mo or $39 per exam cycle",
+      price: "Pro $19/mo or $39 per exam cycle",
       bestFor: "The daily adaptive study system",
       isSelf: true,
       strengths: [
         "Adaptive daily plan rebuilt from your actual performance, with spaced repetition on every miss",
         "A domain-weighted, deliberately conservative readiness score that tells you when to book",
-        "Playable PBQ simulations in the browser, and a free tier deep enough to study on every day",
+        "Playable PBQ simulations in the browser, and free tools to try before you commit — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
@@ -352,13 +352,13 @@ export const A_PLUS_ROUNDUP: RoundupData = {
     },
     {
       name: "CertBench",
-      price: "Free tier; Pro $19/mo or $39 per exam cycle",
+      price: "Pro $19/mo or $39 per exam cycle",
       bestFor: "The daily adaptive system across both cores",
       isSelf: true,
       strengths: [
         "Tracks Core 1 and Core 2 readiness separately, each with its own daily plan and conservative readiness score",
         "Spaced repetition on every miss, plus playable PBQ simulations in the browser",
-        "A free tier deep enough to study on every day — 1,100+ A+ questions across the two cores",
+        "1,100+ A+ questions across the two cores, plus free tools to try before you sign up — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
@@ -457,13 +457,13 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
   tools: [
     {
       name: "CertBench",
-      price: "Free tier; Pro $19/mo or $39 per exam cycle",
+      price: "Pro $19/mo or $39 per exam cycle",
       bestFor: "Adaptive practice plus subnetting drills",
       isSelf: true,
       strengths: [
         "Adaptive daily plan and a conservative readiness score across all N10-009 domains, with spaced repetition on every miss",
         "Free subnetting and port-number drills for the timed math Network+ leans on, plus playable network-topology PBQs",
-        "A free tier deep enough to study on every day — 600+ Network+ questions",
+        "600+ Network+ questions, plus free tools to try before you sign up — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",

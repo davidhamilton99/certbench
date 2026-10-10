@@ -33,11 +33,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     // keep these base titles ≤ ~48 chars so the full tag stays under 60.
     metaTitle: "Free CompTIA Security+ Practice Test (SY0-701)",
     metaDescription:
-      "Free Security+ SY0-701 practice questions with full explanations, weighted by real exam domains. Take the 25-question diagnostic and get your readiness score.",
+      "Free Security+ SY0-701 practice questions with full explanations, weighted by real exam domains. Take the free readiness check and get your readiness score.",
     h1: "Free CompTIA Security+ (SY0-701) practice test",
     intro: [
       "Every question below is original, written against the SY0-701 exam objectives, and comes with a full explanation — no braindumps, no recycled question banks. CertBench holds 800+ Security+ questions across all five domains, weighted the way the real exam weights them.",
-      "Try the samples, then take the free 25-question diagnostic to get a readiness score that tells you exactly which domains need work.",
+      "Try the samples, then take the free 3-minute readiness check for a readiness score that tells you exactly which domains need work — no account.",
     ],
     faqs: [
       {
@@ -90,11 +90,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "Network+ practice test",
     metaTitle: "Free CompTIA Network+ Practice Test (N10-009)",
     metaDescription:
-      "Free Network+ N10-009 practice questions with explanations, weighted by the real exam domains. Take the free diagnostic and get your readiness score.",
+      "Free Network+ N10-009 practice questions with explanations, weighted by the real exam domains. Take the free readiness check and get your readiness score.",
     h1: "Free CompTIA Network+ (N10-009) practice test",
     intro: [
       "These are original questions written against the N10-009 objectives — subnetting, routing, wireless, troubleshooting — each with a full explanation. CertBench holds 600+ Network+ questions weighted by the real exam domains.",
-      "Try the samples, then take the free 25-question diagnostic to see your readiness score and weakest domains.",
+      "Try the samples, then take the free 3-minute readiness check to see your readiness score and weakest domains — no account.",
     ],
     faqs: [
       {
@@ -120,7 +120,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Is there a free N10-009 practice test here?",
         answer:
-          "Yes — the questions on this page are free with no account, and a free account adds a 25-question N10-009 diagnostic with a readiness score, plus 20 practice questions every day. N10-009 is the current Network+ exam version, so everything here targets it.",
+          "Yes — the questions on this page are free with no account, and the free 3-minute readiness check gives you a readiness score. Pro adds the full 25-question N10-009 diagnostic, a personalised daily plan, and unlimited practice. N10-009 is the current Network+ exam version, so everything here targets it.",
       },
     ],
     related: [
@@ -152,11 +152,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "A+ practice test",
     metaTitle: "Free CompTIA A+ Practice Test (Core 1 & 2)",
     metaDescription:
-      "Free A+ 220-1101 and 220-1102 practice questions with explanations. Try samples from both cores, then take the free diagnostic for your readiness score.",
+      "Free A+ 220-1101 and 220-1102 practice questions with explanations. Try samples from both cores, then take the free readiness check for your readiness score.",
     h1: "Free CompTIA A+ practice test (Core 1 & Core 2)",
     intro: [
       "A+ is two exams — Core 1 (220-1101: hardware, networking, mobile, cloud) and Core 2 (220-1102: operating systems, security, software troubleshooting). The samples below come from both, each with a full explanation. CertBench holds 1,100+ A+ questions across the two cores.",
-      "Try them, then take the free diagnostic for whichever core you're sitting first.",
+      "Try them, then take the free readiness check for whichever core you're sitting first.",
     ],
     faqs: [
       {
@@ -182,7 +182,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Is this a free A+ exam practice test?",
         answer:
-          "Yes — the sample questions on this page are free with no account, split between Core 1 (220-1101) and Core 2 (220-1102). A free account adds a full 25-question diagnostic per core, a readiness score, and 20 practice questions a day.",
+          "Yes — the sample questions on this page are free with no account, split between Core 1 (220-1101) and Core 2 (220-1102). The free readiness check gives you a score, and Pro adds the full 25-question diagnostic per core, a personalised daily plan, and unlimited practice.",
       },
     ],
     related: [

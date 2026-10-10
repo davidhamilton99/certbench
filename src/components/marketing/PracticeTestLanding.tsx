@@ -245,13 +245,12 @@ export function PracticeTestLanding({
             Find out if you&apos;d pass today
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Take the free 25-question diagnostic and get a readiness score with
-            a domain-by-domain breakdown — then a daily study plan built from
-            your actual weak spots.
+            Build your study plan: a readiness score with a domain-by-domain
+            breakdown, then a daily plan built from your actual weak spots.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Take the free diagnostic
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

@@ -38,7 +38,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: "Free to start, and generous enough to study every single day: the 25-question diagnostic and readiness score, 20 practice questions per day, spaced repetition on everything you miss, a sample PBQ simulation and drill per certification, the subnetting and port-number drills, community study sets, and 3 AI quiz generations per month all cost nothing — no credit card required. Pro removes the limits: unlimited practice questions and full-length exams, every PBQ simulation, and unlimited AI generation. See the pricing page for current plans.",
+        a: "You can try CertBench free with no account — the 3-minute readiness check, full-length practice-test previews, PBQ examples, and the subnetting, port-number, and acronym trainers. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation — all backed by a pass guarantee. It's priced for one exam cycle; see the pricing page for current plans.",
       },
       {
         q: "Is this an exam dump?",
@@ -170,7 +170,7 @@ const sections: Section[] = [
       },
       {
         q: "What are the limits on AI generation?",
-        a: "Free accounts get 3 AI quiz generations per month. Pro accounts get unlimited generations. Each generation can produce up to 50 questions. The input content limit is 200,000 characters.",
+        a: "AI question generation is a Pro feature: unlimited generations, each producing up to 50 questions, with an input limit of 200,000 characters.",
       },
       {
         q: "Can I share my AI-generated study sets?",
