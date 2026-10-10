@@ -18,20 +18,22 @@ export const metadata = {
   title: "Pricing",
 };
 
-const FREE_FEATURES = [
-  "25-question diagnostic + readiness score",
-  "20 practice questions every day",
-  "Spaced repetition on everything you miss",
-  "Sample PBQ simulation and drill per cert",
-  "Community study sets",
-  "3 AI quiz generations per month",
+// The free offering is the public, no-account tools — the in-app study
+// experience is Pro. These are the real pages a visitor can use right now.
+const FREE_TOOLS = [
+  "3-minute readiness check — no account",
+  "Full-length practice-test previews",
+  "PBQ examples for every cert",
+  "Subnetting, ports & acronym trainers",
+  "Exam-objective study guides",
 ];
 
 const PRO_FEATURES = [
-  "Unlimited practice questions",
-  "Unlimited full-length practice exams",
+  "A personalised daily plan, ordered by impact",
+  "Unlimited practice questions + full-length exams",
   "Every PBQ simulation and concept drill",
-  "Unlimited AI generation + file upload",
+  "Spaced repetition + a readiness score you can trust",
+  "Unlimited AI question generation from your notes",
   "Pass guarantee — 30+ days of Pro study and you don't pass? Last payment refunded",
 ];
 
@@ -47,30 +49,33 @@ export default async function PricingPage() {
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14 sm:py-20">
         <div className="mb-10 text-center sm:mb-12">
-          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl">
             Priced for one exam cycle
           </h1>
           <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
-            Study free every day. Go Pro when you&apos;re serious about your
-            exam date — most people need one quarter.
+            Try the tools free — no account. Go Pro to get the plan that gets
+            you certified. Most people need one quarter.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Free</CardTitle>
+              <CardTitle>Free tools</CardTitle>
               <CardDescription>
-                Enough to study every single day
+                Try CertBench before you commit — no account
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-5">
               <div>
                 <span className="font-mono text-4xl font-semibold">$0</span>
-                <span className="text-sm text-muted-foreground"> forever</span>
+                <span className="text-sm text-muted-foreground">
+                  {" "}
+                  no sign-up
+                </span>
               </div>
               <ul className="grid flex-1 content-start gap-3 text-sm leading-relaxed">
-                {FREE_FEATURES.map((f) => (
+                {FREE_TOOLS.map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check className="mt-1 size-4 shrink-0 text-success" />
                     {f}
@@ -78,7 +83,9 @@ export default async function PricingPage() {
                 ))}
               </ul>
               <Button asChild variant="outline" size="lg" className="w-full">
-                <Link href="/register">Start free</Link>
+                <Link href="/readiness-check/security-plus-sy0-701">
+                  Take the readiness check
+                </Link>
               </Button>
             </CardContent>
           </Card>

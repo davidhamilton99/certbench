@@ -1,35 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { E2E_PASSWORD, confirmE2eEmail, e2eEmail } from "./helpers";
+import { registerOnboardPro } from "./helpers";
 
 /**
- * The critical path: register -> onboarding -> diagnostic (with a mid-exam
- * reload to prove resume) -> results -> dashboard readiness.
+ * The critical path: register -> goal-setting onboarding -> (Pro) diagnostic
+ * with a mid-exam reload to prove resume -> results -> dashboard readiness.
+ * The signed-in app is Pro-only, so setup grants Pro before driving the app.
  */
 test("signup through diagnostic to dashboard readiness", async ({ page }) => {
-  const email = e2eEmail("journey");
-
-  // ---- Register ----
-  await page.goto("/register");
-  await page.fill("#displayName", "E2E Journey");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/verify");
-
-  // Confirm the account via the admin API (no mailbox round-trip in tests).
-  await confirmE2eEmail(email);
-  await page.goto("/login");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-
-  // ---- Onboarding ----
-  await page.waitForURL("**/onboarding");
-  await page.getByRole("radio", { name: /Security\+/ }).click();
-  await page.getByRole("button", { name: "Start studying" }).click();
+  await registerOnboardPro(page, { tag: "journey", cert: /Security\+/ });
 
   // ---- Dashboard shows the diagnostic gate ----
-  await page.waitForURL("**/dashboard");
   const diagnosticBlock = page.getByRole("link", {
     name: /Start the diagnostic/i,
   });
@@ -63,23 +43,24 @@ test("signup through diagnostic to dashboard readiness", async ({ page }) => {
   }
   await page.getByRole("button", { name: "Finish diagnostic" }).click();
 
-  // ---- Results ----
+  // ---- Results: the ReadinessReveal instrument ----
   await expect(page.getByText("Diagnostic complete")).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByText(/of 25 correct/)).toBeVisible();
-  // Diagnostic-only sample is confidence-preliminary → "starts at N%".
-  await expect(page.getByText(/readiness starts at \d+%/)).toBeVisible();
-
-  // The post-diagnostic path-forward is the hero of the results screen.
-  await expect(page.getByRole("heading", { name: "Your path forward" })).toBeVisible();
+  // The dial reports the score; the domain cascade breaks it down by exam area.
+  await expect(page.getByText("Diagnostic score")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Domain breakdown" })
+  ).toBeVisible();
 
   // ---- Dashboard now shows a real plan ----
   // The path-forward's next-step CTA is adaptive (gap-drill vs PBQ challenge),
   // so navigate to the dashboard directly rather than couple to one branch.
   await page.goto("/dashboard");
   await page.waitForURL("**/dashboard");
-  await expect(page.getByText("Readiness", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Readiness" })
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /Start the diagnostic/i })
   ).toHaveCount(0);

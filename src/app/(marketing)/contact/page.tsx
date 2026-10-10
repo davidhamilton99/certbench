@@ -15,7 +15,7 @@ export default function ContactPage() {
 
       <main className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-[36px] sm:text-[40px] font-bold text-foreground tracking-tight">
+          <h1 className="font-display text-[36px] sm:text-[40px] font-bold text-foreground tracking-tight">
             Get in touch
           </h1>
           <p className="text-[17px] text-muted-foreground mt-3 max-w-md mx-auto">
@@ -29,7 +29,7 @@ export default function ContactPage() {
           {/* Email */}
           <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-info-bg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-primary"
                   fill="none"
@@ -65,7 +65,7 @@ export default function ContactPage() {
           {/* Response time */}
           <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-success-bg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-success"
                   fill="none"
@@ -97,7 +97,7 @@ export default function ContactPage() {
           {/* What to include */}
           <div className="border border-border rounded-lg bg-card p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-warning"
                   fill="none"

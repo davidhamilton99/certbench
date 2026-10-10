@@ -101,13 +101,13 @@ export default function AcronymsQuizPage() {
             Acronyms are the easy part
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            The rest of the exam is scenarios and PBQs. Take the free 25-question
-            diagnostic to see how ready you actually are — and get a daily plan
-            for everything else.
+            The rest of the exam is scenarios and PBQs. Build your study plan
+            to see how ready you actually are — and get a daily plan for
+            everything else.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Take the free diagnostic
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

@@ -10,6 +10,35 @@ export interface Enrollment {
   enrolledAt: string;
 }
 
+/**
+ * Whether a user may open a certification's content. Access is scoped to the
+ * certs they're actively enrolled in (their purchased plan), so a Pro user who
+ * bought Security+ can't roam into Network+/A+ by URL. Admins always pass.
+ * Checks enrollment first (the common case) and only reads the role to let the
+ * owner through when not enrolled.
+ */
+export async function canAccessCert(
+  db: Db,
+  userId: string,
+  certificationId: string
+): Promise<boolean> {
+  const { data: enrollment } = await db
+    .from("user_enrollments")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("certification_id", certificationId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (enrollment) return true;
+
+  const { data: profile } = await db
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  return profile?.role === "admin";
+}
+
 export async function listEnrollments(db: Db, userId: string): Promise<Enrollment[]> {
   const { data, error } = await db
     .from("user_enrollments")

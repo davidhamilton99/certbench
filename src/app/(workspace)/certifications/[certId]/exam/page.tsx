@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/server/supabase/server";
 import { getCertificationBySlug } from "@/server/data/certifications";
+import { canAccessCert } from "@/server/data/enrollments";
 import { PracticeExamClient } from "@/components/quiz/PracticeExamClient";
 import { examType as examTypeSchema } from "@/contracts/practice-exam";
 
@@ -37,6 +38,9 @@ export default async function PracticeExamPage({
 
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
+  if (!(await canAccessCert(db, user.id, cert.id))) {
+    redirect(`/upgrade?reason=cert-locked&cert=${slug}`);
+  }
 
   const heading = HEADINGS[mode];
 

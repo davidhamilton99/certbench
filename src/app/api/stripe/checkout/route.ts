@@ -86,7 +86,10 @@ export const POST = defineEndpoint(createCheckout, {
         mode: "subscription",
         line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
         discounts,
-        success_url: `${origin}/dashboard?upgraded=true`,
+        // Land on /upgrade (paywall-exempt), not /dashboard: the paywall gate
+        // would bounce the just-paid user back here if the activation webhook
+        // hasn't landed yet. The success screen forwards to /dashboard once Pro.
+        success_url: `${origin}/upgrade?upgraded=true`,
         cancel_url: `${origin}/upgrade`,
         metadata: { supabase_user_id: user.id },
       });
@@ -98,7 +101,7 @@ export const POST = defineEndpoint(createCheckout, {
           customer: customerId,
           mode: "subscription",
           line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
-          success_url: `${origin}/dashboard?upgraded=true`,
+          success_url: `${origin}/upgrade?upgraded=true`,
           cancel_url: `${origin}/upgrade`,
           metadata: { supabase_user_id: user.id },
         });

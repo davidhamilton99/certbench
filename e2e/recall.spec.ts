@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_PASSWORD, confirmE2eEmail, e2eEmail } from "./helpers";
+import { registerOnboardPro } from "./helpers";
 import {
   broadcastOf,
   intToIp,
@@ -20,24 +20,7 @@ import {
 test("logged-in recall: nav entry, deck renders, subnetting solve streak", async ({
   page,
 }) => {
-  const email = e2eEmail("recall");
-
-  await page.goto("/register");
-  await page.fill("#displayName", "E2E Recall");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/verify");
-  await confirmE2eEmail(email);
-  await page.goto("/login");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-
-  await page.waitForURL("**/onboarding");
-  await page.getByRole("radio", { name: /Network\+/ }).click();
-  await page.getByRole("button", { name: "Start studying" }).click();
-  await page.waitForURL("**/dashboard");
+  await registerOnboardPro(page, { tag: "recall", cert: /Network\+/ });
 
   // Sidebar entry reaches Recall.
   await page.getByRole("link", { name: "Recall" }).first().click();
@@ -52,7 +35,7 @@ test("logged-in recall: nav entry, deck renders, subnetting solve streak", async
   expect(await options.count()).toBeGreaterThanOrEqual(2);
 
   // ---- Subnetting pill: answer 11 questions correctly via the real math ----
-  await page.getByRole("tab", { name: "Subnetting" }).click();
+  await page.getByRole("tab", { name: "Subnetting", exact: true }).click();
   const input = page.getByLabel("Your answer");
   await expect(input).toBeVisible({ timeout: 15_000 });
 

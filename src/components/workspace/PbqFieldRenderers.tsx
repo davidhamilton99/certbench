@@ -107,7 +107,7 @@ export function SelectManyFieldRenderer({
                 border transition-colors duration-150
                 ${
                   isSelected
-                    ? "bg-info-bg border-primary/40 text-primary font-medium"
+                    ? "bg-primary/10 border-primary/40 text-primary font-medium"
                     : "bg-muted/40 border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
                 }
               `}

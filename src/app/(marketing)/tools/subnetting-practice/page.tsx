@@ -127,13 +127,13 @@ export default function SubnettingPracticePage() {
             Subnetting is one objective of many
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            The N10-009 exam has five domains. Take the free 25-question
-            diagnostic to see where you actually stand — and get a daily plan
-            built from your weak spots.
+            The N10-009 exam has five domains. Build your study plan to see
+            where you actually stand — and get a daily plan built from your
+            weak spots.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Take the free diagnostic
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

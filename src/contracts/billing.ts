@@ -15,6 +15,20 @@ export const createCheckout = {
   output: z.object({ url: z.string() }),
 } as const satisfies EndpointContract;
 
+/**
+ * Start a one-time Stripe Checkout to add a certification to an active Pro
+ * plan. Access still requires active Pro (the paywall) + enrollment, so this
+ * is a one-time "unlock this cert on your account" fee, not a second plan.
+ */
+export const addCertCheckout = {
+  path: "/api/stripe/cert-checkout",
+  method: "POST",
+  input: z.object({
+    certId: z.uuid(),
+  }),
+  output: z.object({ url: z.string() }),
+} as const satisfies EndpointContract;
+
 /** Open the Stripe customer portal (manage/cancel subscription). */
 export const createPortal = {
   path: "/api/stripe/portal",

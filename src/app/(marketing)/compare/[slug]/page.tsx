@@ -119,12 +119,12 @@ export default async function VsPage({
             The fastest way to decide
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Take the free 25-question diagnostic — twenty minutes, no card —
-            and see the readiness score and daily plan on your own results.
+            Build your study plan and see the readiness score and daily plan
+            on your own results.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Take the free diagnostic
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

@@ -95,11 +95,11 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
           <p className="max-w-md text-sm text-muted-foreground">
             CertBench tracks your score on {data.code} and every other
             objective, then builds a daily plan that targets your weakest
-            spots. Start with the free diagnostic.
+            spots.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">
-              Take the free diagnostic
+              Build my study plan
               <ArrowRight />
             </Link>
           </Button>

@@ -1,47 +1,29 @@
 import { expect, test } from "@playwright/test";
-import { E2E_PASSWORD, confirmE2eEmail, e2eEmail } from "./helpers";
+import { registerOnboardPro } from "./helpers";
 
 /**
- * Reference drill: register -> Reference tab -> flip to Drill mode -> the
- * generated rapid-fire loop advances. Covers the Table/Drill toggle and the
- * generated-question player (the generator itself is unit-tested).
+ * Reference tables: register -> Reference tab -> the table viewer renders and
+ * search narrows it. (The old in-page "Drill mode" moved to the Recall hub via
+ * a "Drill this" hand-off link; the drill itself is covered by recall.spec.)
  */
-test("reference tab drill mode works", async ({ page }) => {
-  const email = e2eEmail("refdrill");
-  await page.goto("/register");
-  await page.fill("#displayName", "Ref Drill");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/verify");
-  await confirmE2eEmail(email);
-  await page.goto("/login");
-  await page.fill("#email", email);
-  await page.fill("#password", E2E_PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/onboarding");
-  await page.getByRole("radio", { name: /Security\+/ }).click();
-  await page.getByRole("button", { name: "Start studying" }).click();
-  await page.waitForURL("**/dashboard");
+test("reference tables render and search narrows them", async ({ page }) => {
+  await registerOnboardPro(page, { tag: "refdrill", cert: /Security\+/ });
 
   await page.getByRole("link", { name: "Reference" }).first().click();
   await page.waitForURL("**/reference");
-  await page.getByRole("heading", { name: /Reference tables/i }).waitFor();
+  await expect(
+    page.getByRole("heading", { name: /Reference tables/i })
+  ).toBeVisible();
 
-  // Flip to Drill mode; the generated question renders tappable options.
-  await page.getByRole("button", { name: "Drill", exact: true }).click();
-  const radios = page.locator('[role="radio"]');
-  await expect(radios.first()).toBeVisible({ timeout: 10_000 });
+  // The viewer renders a searchable table.
+  const search = page.getByPlaceholder("Search across all columns...");
+  await expect(search).toBeVisible();
+  const rows = page.locator("table tbody tr");
+  await expect(rows.first()).toBeVisible({ timeout: 10_000 });
+  const rowsBefore = await rows.count();
+  expect(rowsBefore).toBeGreaterThan(1);
 
-  // Answer a few — the rapid-fire loop must advance and score.
-  for (let i = 0; i < 4; i++) {
-    await radios.first().waitFor({ state: "visible", timeout: 8_000 });
-    await radios.first().click();
-    await page.getByRole("button", { name: "Next", exact: true }).click();
-  }
-  await expect(page.getByText(/\d+ \/ 4 correct/)).toBeVisible();
-
-  // Flipping back to Table mode restores the lookup + search.
-  await page.getByRole("button", { name: "Table", exact: true }).click();
-  await expect(page.getByPlaceholder("Search across all columns...")).toBeVisible();
+  // A query that can't match anything collapses the table to its empty state.
+  await search.fill("zzzz-no-such-entry");
+  await expect.poll(() => rows.count()).toBeLessThan(rowsBefore);
 });

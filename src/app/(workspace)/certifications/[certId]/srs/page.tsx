@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/server/supabase/server";
 import { getCertificationBySlug } from "@/server/data/certifications";
+import { canAccessCert } from "@/server/data/enrollments";
 import { SrsReviewClient } from "@/components/quiz/SrsReviewClient";
 
 export const metadata = {
@@ -21,6 +22,9 @@ export default async function SrsPage({
 
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
+  if (!(await canAccessCert(db, user.id, cert.id))) {
+    redirect(`/upgrade?reason=cert-locked&cert=${slug}`);
+  }
 
   return (
     <div className="grid gap-6">
