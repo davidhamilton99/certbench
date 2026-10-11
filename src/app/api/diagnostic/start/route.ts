@@ -22,7 +22,7 @@ function toExamQuestion(q: CertQuestion) {
 }
 
 export const POST = defineEndpoint(startDiagnostic, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");

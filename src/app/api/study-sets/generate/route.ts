@@ -60,18 +60,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Hard paywall: AI generation is Pro-only (admins pass for support/testing).
   const userPlan = await getUserPlan(supabase, user.id);
-  if (!userPlan.canGenerate) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "quota_exceeded",
-          message:
-            "You’ve used all your free AI generations this month. Upgrade to Pro for unlimited access.",
+  if (userPlan.plan !== "pro") {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        {
+          error: {
+            code: "forbidden",
+            message:
+              "AI question generation is a Pro feature. Upgrade to Pro for unlimited generation.",
+          },
         },
-      },
-      { status: 402 }
-    );
+        { status: 403 }
+      );
+    }
   }
 
   const parsed = generateSchema.safeParse(await req.json().catch(() => ({})));

@@ -35,6 +35,25 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return jsonError("unauthorized", "Unauthorized", 401);
 
+  // Hard paywall: text extraction feeds AI generation, a Pro-only feature.
+  const { data: sub } = await supabase
+    .from("user_subscriptions")
+    .select("plan, status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const isPro =
+    sub?.plan === "pro" && (sub.status === "active" || sub.status === "trialing");
+  if (!isPro) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.role !== "admin") {
+      return jsonError("forbidden", "Pro subscription required", 403);
+    }
+  }
+
   const allowed = await rateLimiter.check(
     `/api/study-sets/extract-text:${user.id}`,
     { limit: 20, windowSeconds: 3600 }

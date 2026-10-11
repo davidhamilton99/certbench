@@ -4,7 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { createSet } from "@/server/data/study-sets";
 
 export const POST = defineEndpoint(createStudySet, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");

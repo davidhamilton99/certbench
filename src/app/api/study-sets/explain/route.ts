@@ -55,7 +55,7 @@ function formatOptions(
  * Cache-first: generated once, stored on the question row.
  */
 export const POST = defineEndpoint(explainStudyQuestion, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 30, windowSeconds: 3600 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");

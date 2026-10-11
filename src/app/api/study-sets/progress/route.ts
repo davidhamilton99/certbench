@@ -4,7 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { saveSetProgressRow } from "@/server/data/study-sets";
 
 export const POST = defineEndpoint(saveSetProgress, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 60, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
