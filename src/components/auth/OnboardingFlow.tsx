@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase-browser";
+import { track } from "@/lib/analytics";
 import { completeOnboarding } from "@/contracts/user";
 import { ApiError } from "@/contracts/common";
 import { Button } from "@/components/ui/button";
@@ -197,6 +198,17 @@ export function OnboardingFlow({
   const cert = certifications.find((c) => c.id === certId);
   const certShort = cert?.name.replace("CompTIA ", "") ?? "your exam";
 
+  /** Funnel telemetry — see each step's drop-off in PostHog. No-op in preview. */
+  const logStep = (name: string, value?: string) => {
+    if (!preview) track("onboarding_step", { step: name, value });
+  };
+
+  // Flow entered — top of the goal-setting funnel.
+  useEffect(() => {
+    if (!preview) track("onboarding_started", {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (step !== BUILDING) return;
     let active = true;
@@ -229,12 +241,21 @@ export function OnboardingFlow({
         return;
       }
       const wait = Math.max(0, 1700 - (Date.now() - started));
-      setTimeout(() => active && setStep(PLAN), wait);
+      setTimeout(() => {
+        if (!active) return;
+        if (!preview) {
+          track("onboarding_plan_revealed", {
+            cert: certShort,
+            weeks: examDate ? weeksUntil(examDate) : null,
+          });
+        }
+        setStep(PLAN);
+      }, wait);
     })();
     return () => {
       active = false;
     };
-  }, [step, certId, examDate, why, level, hours, preview]);
+  }, [step, certId, certShort, examDate, why, level, hours, preview]);
 
   /* ---- Building beat ---- */
   if (step === BUILDING) {
@@ -332,7 +353,19 @@ export function OnboardingFlow({
           One system. Not five tabs.
         </p>
 
-        <Button size="lg" className="h-12 w-full text-base" onClick={() => setStep(PAYWALL)}>
+        <Button
+          size="lg"
+          className="h-12 w-full text-base"
+          onClick={() => {
+            if (!preview) {
+              track("onboarding_paywall_viewed", {
+                cert: certShort,
+                weeks: examDate ? weeksUntil(examDate) : null,
+              });
+            }
+            setStep(PAYWALL);
+          }}
+        >
           Start my plan
           <ArrowRight />
         </Button>
@@ -385,7 +418,10 @@ export function OnboardingFlow({
             <Button
               size="lg"
               className="h-12 w-full text-base"
-              onClick={() => router.push("/upgrade?reason=onboarding")}
+              onClick={() => {
+                if (!preview) track("onboarding_unlock_clicked", {});
+                router.push("/upgrade?reason=onboarding");
+              }}
             >
               Unlock my plan
               <ArrowRight />
@@ -432,6 +468,7 @@ export function OnboardingFlow({
                 sub={c.examCode}
                 selected={certId === c.id}
                 onClick={() => {
+                  logStep("cert", c.examCode);
                   setCertId(c.id);
                   setStep(WHY);
                 }}
@@ -452,6 +489,7 @@ export function OnboardingFlow({
                 icon={o.icon}
                 selected={why === o.value}
                 onClick={() => {
+                  logStep("why", o.value);
                   setWhy(o.value);
                   setStep(STAT);
                 }}
@@ -473,7 +511,14 @@ export function OnboardingFlow({
           <p className="text-sm text-muted-foreground">
             Most people underestimate them. Your plan won&apos;t.
           </p>
-          <Button size="lg" className="h-12 w-full" onClick={() => setStep(LEVEL)}>
+          <Button
+            size="lg"
+            className="h-12 w-full"
+            onClick={() => {
+              logStep("stat");
+              setStep(LEVEL);
+            }}
+          >
             Let&apos;s go
             <ArrowRight />
           </Button>
@@ -491,6 +536,7 @@ export function OnboardingFlow({
                 icon={o.icon}
                 selected={level === o.value}
                 onClick={() => {
+                  logStep("level", o.value);
                   setLevel(o.value);
                   setStep(DATE);
                 }}
@@ -514,6 +560,7 @@ export function OnboardingFlow({
             <button
               type="button"
               onClick={() => {
+                logStep("date", "skipped");
                 setExamDate("");
                 setStep(HOURS);
               }}
@@ -521,7 +568,14 @@ export function OnboardingFlow({
             >
               Not sure yet
             </button>
-            <Button size="lg" onClick={() => setStep(HOURS)} disabled={!examDate}>
+            <Button
+              size="lg"
+              onClick={() => {
+                logStep("date", "set");
+                setStep(HOURS);
+              }}
+              disabled={!examDate}
+            >
               Continue
               <ArrowRight />
             </Button>
@@ -540,6 +594,7 @@ export function OnboardingFlow({
                 sub={o.sub}
                 selected={hours === o.value}
                 onClick={() => {
+                  logStep("hours", o.value);
                   setHours(o.value);
                   setStep(COMMIT);
                 }}
@@ -561,7 +616,14 @@ export function OnboardingFlow({
               : `Ready to pass ${certShort}?`}
           </h1>
           <p className="text-sm text-muted-foreground">We build it. You show up.</p>
-          <Button size="lg" className="h-12 w-full text-base" onClick={() => setStep(BUILDING)}>
+          <Button
+            size="lg"
+            className="h-12 w-full text-base"
+            onClick={() => {
+              logStep("commit");
+              setStep(BUILDING);
+            }}
+          >
             I&apos;m in
             <ArrowRight />
           </Button>
