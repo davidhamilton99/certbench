@@ -6,7 +6,7 @@ import { getCardSchedule } from "@/server/data/srs";
 import { updateQuestionPerformanceForAnswers } from "@/server/services/submit-exam";
 
 export const POST = defineEndpoint(submitSrsAnswer, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 60, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");

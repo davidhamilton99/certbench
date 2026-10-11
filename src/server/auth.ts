@@ -47,7 +47,12 @@ export async function requireAdmin(): Promise<AuthContext> {
   return ctx;
 }
 
-/** Require an active/trialing Pro subscription. Throws ApiError("forbidden"). */
+/**
+ * Require Pro-level access. An active/trialing Pro subscription passes; so does
+ * an admin (the owner), matching the page-level paywall gate so the owner is
+ * never locked out of the study APIs they still need for support/testing.
+ * Throws ApiError("forbidden") otherwise.
+ */
 export async function requirePro(): Promise<AuthContext> {
   const ctx = await requireUser();
   const { data: sub } = await ctx.db
@@ -57,6 +62,12 @@ export async function requirePro(): Promise<AuthContext> {
     .maybeSingle();
   const isPro =
     sub?.plan === "pro" && (sub.status === "active" || sub.status === "trialing");
-  if (!isPro) throw new ApiError("forbidden", "Pro subscription required");
-  return ctx;
+  if (isPro) return ctx;
+  const { data: profile } = await ctx.db
+    .from("profiles")
+    .select("role")
+    .eq("id", ctx.user.id)
+    .maybeSingle();
+  if (profile?.role === "admin") return ctx;
+  throw new ApiError("forbidden", "Pro subscription required");
 }

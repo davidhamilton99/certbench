@@ -11,7 +11,7 @@ import {
 } from "@/server/services/submit-exam";
 
 export const POST = defineEndpoint(submitPracticeExam, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");

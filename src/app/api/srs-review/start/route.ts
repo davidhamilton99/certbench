@@ -8,7 +8,7 @@ import { SRS_MAX_CARDS_PER_SESSION } from "@/core/constants";
 const DAY_MS = 86_400_000;
 
 export const POST = defineEndpoint(startSrsReview, {
-  auth: "user",
+  auth: "pro",
   rateLimit: { limit: 20, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
