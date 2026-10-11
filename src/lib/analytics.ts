@@ -33,6 +33,12 @@ type EventMap = {
   upsell_clicked: { context: string; href: string };
   pricing_viewed: { surface: "upgrade" | "pricing" };
   checkout_started: { interval: string };
+  // Goal-setting onboarding funnel (signup -> flow -> paywall -> unlock).
+  onboarding_started: Record<string, never>;
+  onboarding_step: { step: string; value?: string };
+  onboarding_plan_revealed: { cert: string; weeks: number | null };
+  onboarding_paywall_viewed: { cert: string; weeks: number | null };
+  onboarding_unlock_clicked: Record<string, never>;
 };
 
 /** Capture a typed product event. */
