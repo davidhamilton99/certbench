@@ -151,6 +151,7 @@ export const securityPlusTerminals: TerminalScenario[] = [
           "crontab -l shows a root cron job running /tmp/.sysupdate every 5 minutes; syslog confirms it firing. cat /tmp/.sysupdate is the reverse shell back to the attacker on 4444 — that's the beacon the SOC saw.",
       },
     ],
+    solvedTitle: "Solved — you traced the whole intrusion.",
     explanation:
       "Kill chain: an SSH brute force from 198.51.100.74 cracked the admin password, the attacker escalated to root, dropped a reverse-shell script at /tmp/.sysupdate, and scheduled it in root's crontab to run every 5 minutes — the repeated outbound connections to 198.51.100.74:4444 that triggered the alert. Containment: kill PID 3344, remove the cron entry and /tmp/.sysupdate, block the IP, and reset admin's credentials.",
     estimatedMinutes: 6,
@@ -248,6 +249,7 @@ export const securityPlusTerminals: TerminalScenario[] = [
           "Both logs show UNION SELECT email, password_hash, NULL FROM customers — the attacker read email addresses and password hashes straight out of the customers table, and the 98 KB 200 is that data leaving.",
       },
     ],
+    solvedTitle: "Solved — you read the breach out of the logs.",
     explanation:
       "The breach came from 203.0.113.66. A single-quote probe (id=1') returned a SQL syntax error, proving /api/products concatenates user input into its query. A boolean test (id=1 OR 1=1) dumped every row, then a UNION SELECT pulled email and password_hash out of the customers table — the 98 KB 200 response is the exfiltration. The traversal attempt on /api/export hit the path allowlist (403) and the /login brute force from 198.51.100.23 stayed at 401, so neither of those is the breach. ss confirms MySQL only listens on 127.0.0.1, so the data left through the vulnerable API, not a direct DB connection. Fix: use parameterized queries / prepared statements on /api/products, rotate the leaked customer password hashes, and add input validation plus a WAF rule for UNION and quote payloads.",
     estimatedMinutes: 5,

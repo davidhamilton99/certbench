@@ -328,6 +328,12 @@ export interface TerminalScenario {
   commands: TerminalCommand[];
   /** The findings to report. */
   findings: TerminalFinding[];
+  /**
+   * Heading shown on the win card once every finding is correct. Lets each
+   * scenario speak to its own task (an intrusion traced vs. a fault found)
+   * instead of a generic line. Defaults to a neutral "Solved" if omitted.
+   */
+  solvedTitle?: string;
   /** The kill chain / overall explanation shown once solved. */
   explanation: string;
   estimatedMinutes: number;

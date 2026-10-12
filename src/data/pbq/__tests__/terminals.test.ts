@@ -1,21 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { securityPlusTerminals } from "@/data/pbq/security-plus-sy0-701/terminals";
+import { pbqRegistry } from "@/data/pbq";
+import type { TerminalScenario } from "@/data/pbq/types";
 import { runCommand } from "@/core/pbq/terminal-engine";
 import { gradeTerminal } from "@/core/pbq/grade-terminal";
 
 /**
- * Data-integrity guard for the terminal PBQ content engine. Scenarios are pure
- * data, so the thing that breaks is the data: an answer the grader won't accept,
- * a canned command a built-in shadows, a finding that references nothing. These
- * invariants hold every current scenario — and every future one — honest.
+ * Registry-wide data-integrity guard for the terminal PBQ content engine.
+ * Terminal scenarios are pure data, so the thing that breaks is the data: an
+ * answer the grader won't accept, a canned command a built-in shadows, a file
+ * that can't be opened. These invariants hold every terminal in every cert —
+ * current and future — honest, so new content can't ship subtly broken.
  */
-describe("securityPlusTerminals data integrity", () => {
-  it("has at least the two authored scenarios", () => {
-    expect(securityPlusTerminals.length).toBeGreaterThanOrEqual(2);
+const terminals: { cert: string; scenario: TerminalScenario }[] = Object.entries(
+  pbqRegistry
+).flatMap(([cert, scenarios]) =>
+  scenarios
+    .filter((s): s is TerminalScenario => s.type === "terminal")
+    .map((scenario) => ({ cert, scenario }))
+);
+
+describe("terminal PBQ registry integrity", () => {
+  it("registers at least one terminal scenario", () => {
+    expect(terminals.length).toBeGreaterThan(0);
   });
 
-  for (const s of securityPlusTerminals) {
-    describe(s.id, () => {
+  it("has globally unique scenario ids", () => {
+    const ids = terminals.map((t) => t.scenario.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  for (const { cert, scenario: s } of terminals) {
+    describe(`${cert} · ${s.id}`, () => {
       it("starts in a directory that exists", () => {
         expect(s.dirs[s.cwd]).toBeTruthy();
       });

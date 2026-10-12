@@ -324,7 +324,7 @@ export function TerminalPlayer({
             <div className="flex items-center gap-2">
               <Check className="size-4 text-success" />
               <h3 className="text-[15px] font-semibold text-foreground">
-                Solved — you traced the whole intrusion.
+                {scenario.solvedTitle ?? "Solved — every finding checks out."}
               </h3>
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
