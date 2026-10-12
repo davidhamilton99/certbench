@@ -17,6 +17,7 @@ function rank(type: PbqScenario["type"]): number {
     "threat-hunt": 2,
     matching: 2,
     categorization: 3,
+    terminal: 3,
     topology: 4,
     simulation: 5,
   }[type];
@@ -33,8 +34,8 @@ function pickFree(scenarios: PbqScenario[]): PbqScenario[] {
       chosen.push(s);
     }
   };
+  add(pool.find((s) => s.type === "terminal")); // flagship hands-on, featured first
   add(pool[0]); // easiest (warm-up)
-  add(pool.find((s) => rank(s.type) >= 2 && rank(s.type) <= 3)); // a core one
   add([...pool].reverse().find((s) => rank(s.type) >= 4)); // an exam-level one
   for (const s of pool) {
     if (chosen.length >= 3) break;

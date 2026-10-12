@@ -254,13 +254,120 @@ export interface ThreatHuntAnswer {
   attackChoice: number;
 }
 
+/* ================================================================ */
+/*  Terminal Scenario Types                                          */
+/* ================================================================ */
+
+/** Colour role for a line of terminal output. */
+export type TerminalTone =
+  | "default"
+  | "muted"
+  | "dim"
+  | "green"
+  | "amber"
+  | "red"
+  | "cyan";
+
+/**
+ * One line of terminal output. `prefix` renders dim before `text` — useful for
+ * log timestamps or hostnames where only the tail should carry colour.
+ */
+export interface TerminalLine {
+  text: string;
+  tone?: TerminalTone;
+  prefix?: string;
+}
+
+/** A scenario-specific canned command (ps aux, ss -tulpn, last, crontab -l…). */
+export interface TerminalCommand {
+  /** Command strings that trigger this output, normalised (lowercased, single-spaced). */
+  match: string[];
+  output: TerminalLine[];
+}
+
+/** A graded finding the candidate reports from what the shell revealed. */
+export interface TerminalFinding {
+  id: string;
+  label: string;
+  placeholder?: string;
+  /** Accepted answers, compared case- and whitespace-insensitively. */
+  accept: string[];
+  /** Also accept when the answer's basename (after the last "/") matches an accepted value. */
+  acceptBasename?: boolean;
+  /** Why this finding matters — shown in the reveal. */
+  explanation: string;
+}
+
+/**
+ * Interactive shell investigation: the candidate works a real command line
+ * (ls, cd, cat, ps, ss, last, crontab, grep) over a scripted host to uncover
+ * an incident, then reports their findings. The engine handles the universal
+ * filesystem commands from `dirs`/`files`; the scenario supplies the rest as
+ * `commands`, so every new case is data, not code.
+ */
+export interface TerminalScenario {
+  type: "terminal";
+  id: string;
+  title: string;
+  briefing: string;
+  domain_number: string;
+  domain_title: string;
+  /** Shell identity: user@host. */
+  user: string;
+  host: string;
+  /** Starting working directory (absolute). */
+  cwd: string;
+  /**
+   * Virtual filesystem. Key is an absolute directory path; value maps each
+   * entry name to its kind. Subdirectory entry names keep a trailing "/".
+   */
+  dirs: Record<string, Record<string, "file" | "dir">>;
+  /** File contents keyed by absolute path. */
+  files: Record<string, TerminalLine[]>;
+  /** Scenario-specific canned commands. */
+  commands: TerminalCommand[];
+  /** The findings to report. */
+  findings: TerminalFinding[];
+  /**
+   * Heading shown on the win card once every finding is correct. Lets each
+   * scenario speak to its own task (an intrusion traced vs. a fault found)
+   * instead of a generic line. Defaults to a neutral "Solved" if omitted.
+   */
+  solvedTitle?: string;
+  /** The kill chain / overall explanation shown once solved. */
+  explanation: string;
+  estimatedMinutes: number;
+}
+
+/** Answer shape for a terminal scenario: finding id → entered value. */
+export interface TerminalAnswer {
+  values: Record<string, string>;
+}
+
+/** Per-finding grading breakdown for terminal scenarios. */
+export interface TerminalFindingResult {
+  id: string;
+  label: string;
+  given: string;
+  correct: boolean;
+}
+
+/** Grading result for a terminal scenario. */
+export interface TerminalGradeResult {
+  score: number;
+  total: number;
+  correct: number;
+  findings: TerminalFindingResult[];
+}
+
 export type PbqScenario =
   | OrderingScenario
   | MatchingScenario
   | CategorizationScenario
   | SimulationScenario
   | TopologyScenario
-  | ThreatHuntScenario;
+  | ThreatHuntScenario
+  | TerminalScenario;
 
 /** Grading result for a PBQ scenario. */
 export interface PbqGradeResult {
