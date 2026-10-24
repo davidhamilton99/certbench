@@ -38,7 +38,7 @@ const FAQS = [
   {
     question: "Is this subnetting practice really free?",
     answer:
-      "Yes — every mode, unlimited questions, no account. A free CertBench account adds the full Network+ question bank with spaced repetition, a 25-question diagnostic, and a readiness score.",
+      "Yes — every mode, unlimited questions, no account. CertBench Pro adds the full Network+ question bank with spaced repetition, a 25-question diagnostic, and a readiness score.",
   },
 ];
 
