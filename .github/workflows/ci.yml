@@ -37,4 +37,12 @@ jobs:
         run: npm run db:types:check
 
       - name: Production build
+        # The SEO pages (objectives, readiness checks, practice tests) query
+        # Supabase at build time to prerender, so the build needs a reachable
+        # project. These are the public URL + publishable key already shipped
+        # to every browser and committed in scripts/seed-*.ts — anon/RLS read
+        # access only. Never put the service-role key here.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://mdvkidwkjjfgfwkogqvq.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_xofucBxlC1UmqoN8GBTglg_4Pco016c
         run: npm run build
