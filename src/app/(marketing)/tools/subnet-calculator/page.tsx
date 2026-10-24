@@ -43,7 +43,7 @@ const FAQS = [
   {
     question: "Is this subnet calculator free?",
     answer:
-      "Yes — unlimited, no account. If you're studying for Network+ or A+, a free CertBench account adds timed subnetting drills, the full question bank with spaced repetition, and a readiness score across every exam domain.",
+      "Yes — unlimited, no account. If you're studying for Network+ or A+, CertBench Pro adds the full question bank with spaced repetition and a readiness score across every exam domain.",
   },
 ];
 

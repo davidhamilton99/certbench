@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Check, Lock, Plus } from "lucide-react";
 import { createClient } from "@/server/supabase/server";
 import { regionPricing } from "@/lib/pricing/ppp";
+import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
 import { getUserPlan } from "@/server/services/subscription";
@@ -26,7 +27,7 @@ const PRO_FEATURES = [
   "Unlimited practice questions and full-length exams",
   "Every PBQ simulation and concept drill",
   "Unlimited AI question generation with file upload",
-  "Pass guarantee — study with Pro for 30+ days, and if you don't pass we refund your last payment",
+  `Pass guarantee: ${PASS_GUARANTEE_TERMS}`,
 ];
 
 const REASONS: Record<string, string> = {
@@ -173,7 +174,7 @@ export default async function UpgradePage({
           <CardHeader>
             <CardTitle>CertBench Pro</CardTitle>
             <CardDescription>
-              Everything, without limits — priced for one exam cycle
+              Everything for the certification you&apos;re studying, without limits
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5">

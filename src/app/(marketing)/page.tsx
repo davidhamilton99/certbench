@@ -19,6 +19,7 @@ import { createAnonClient } from "@/server/supabase/anon";
 import { listApprovedTestimonials } from "@/server/data/testimonials";
 import { getCertificationBySlug } from "@/server/data/certifications";
 import { listSampleQuestions } from "@/server/data/questions";
+import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
 
 // The root layout's self-referencing canonical ("./") resolves to
 // "/index" for the home route — pin the homepage's canonical to the site
@@ -255,8 +256,11 @@ export default async function LandingPage() {
               Stop guessing. Start passing.
             </h2>
             <p className="max-w-md text-balance text-muted-foreground">
-              Your plan in two minutes — then study with Pro, backed by a pass
-              guarantee.
+              Your plan in two minutes — then study with Pro, backed by a{" "}
+              <Link href={PASS_GUARANTEE_HREF} className="underline underline-offset-4">
+                pass guarantee
+              </Link>
+              .
             </p>
             <Button asChild size="lg" className="mt-1 h-12 px-6 text-base">
               <Link href="/register">

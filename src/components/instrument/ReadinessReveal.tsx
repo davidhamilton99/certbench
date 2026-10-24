@@ -249,10 +249,10 @@ export function ReadinessReveal({
         </div>
         <div className="grid content-center gap-2 text-[14px] leading-relaxed text-[var(--rv-muted)]">
           <p>
-            Most people at your level reach{" "}
-            <b className="text-[var(--rv-ink)]">exam-ready</b> in{" "}
-            <b className="text-[var(--rv-ink)]">{estimateWeeks(score)}</b> at ~15
-            minutes a day.
+            From here, we estimate{" "}
+            <b className="text-[var(--rv-ink)]">{estimateWeeks(score)}</b> to{" "}
+            <b className="text-[var(--rv-ink)]">exam-ready</b> at ~15 minutes a
+            day.
           </p>
           {weakest && !allStrong && (
             <p>

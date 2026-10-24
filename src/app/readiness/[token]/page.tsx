@@ -17,12 +17,12 @@ export async function generateMetadata({
   if (!payload) {
     return {
       title: "Exam readiness — CertBench",
-      description: "Get your free CompTIA exam readiness score on CertBench.",
+      description: "Measure your CompTIA exam readiness on CertBench.",
     };
   }
   const score = Math.round(payload.s);
   const title = `${payload.n} is ${score}% ready for ${payload.c}`;
-  const description = `Readiness measured on CertBench. Get your own free ${payload.c} readiness score in about 20 minutes.`;
+  const description = `Readiness measured on CertBench. Get your own ${payload.c} readiness score in about 20 minutes.`;
   // The colocated opengraph-image is injected automatically; twitter card set
   // so X uses the large image too.
   return {
@@ -60,8 +60,8 @@ export default async function ReadinessSharePage({
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">
             CertBench measures your CompTIA exam readiness with a 25-question
-            diagnostic, then builds a daily plan from your weak spots. Free — no
-            credit card.
+            diagnostic, then builds a daily plan from your weak spots — all
+            part of CertBench Pro.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/register">

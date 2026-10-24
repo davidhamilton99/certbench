@@ -202,11 +202,11 @@ const sections: Section[] = [
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: "Pro is $19/month, $39 for 3 months (one exam cycle — the most popular), or $99/year, in USD and adjusted for your region. It unlocks unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation — plus the pass guarantee: study 30+ days on Pro and don’t pass, and your last payment is refunded. Cancel anytime from the billing portal.",
+        a: "Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers the certification you set your plan up for: unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation — plus the pass guarantee: study 30+ days on Pro and don’t pass, and your last payment is refunded (full terms in our Terms of Service). Cancel anytime from the billing portal.",
       },
       {
         q: "Can I study for multiple certifications?",
-        a: "Yes. You can enroll in as many certifications as you want. Each certification has its own readiness score, study plan, and progress tracking. Use the sidebar to switch between certifications, or add a new one from the \u201cAdd certification\u201d link.",
+        a: "Yes. Pro covers the certification you picked when you set up your plan; you can add another from the Upgrade page for a one-time $39 (adjusted for your region), and it stays unlocked while you\u2019re on Pro. Each certification has its own readiness score, study plan, and progress tracking. Use the sidebar to switch between certifications.",
       },
       {
         q: "How do I change my exam date?",

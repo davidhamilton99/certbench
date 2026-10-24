@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 
 export const metadata = {
   title: "Create account",
@@ -33,8 +34,8 @@ const NEXT_STEPS: { icon: ComponentType<{ className?: string }>; title: string; 
   },
   {
     icon: ShieldCheck,
-    title: "Pass, guaranteed",
-    body: "Study with Pro, or your money back.",
+    title: "Pass guarantee",
+    body: PASS_GUARANTEE_TERMS,
   },
 ];
 
@@ -71,7 +72,7 @@ export default function RegisterPage() {
             Then build your plan — it takes two minutes.
           </CardDescription>
           <p className="text-xs text-muted-foreground">
-            No card to start · Pass guarantee
+            Building your plan is free · Studying it is Pro
           </p>
         </CardHeader>
         <CardContent>
