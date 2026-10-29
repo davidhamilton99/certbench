@@ -112,7 +112,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
             </div>
             <Button asChild size="lg" className="mt-5">
               <Link href="/register">
-                Unlock all {scenarios.length} labs — free
+                Unlock all {scenarios.length} labs with Pro
                 <ArrowRight />
               </Link>
             </Button>

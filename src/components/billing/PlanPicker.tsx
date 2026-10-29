@@ -24,13 +24,7 @@ const OPTIONS: {
   note?: string;
 }[] = [
   { interval: "monthly", key: "monthly", label: "Monthly", per: "/month" },
-  {
-    interval: "quarterly",
-    key: "quarterly",
-    label: "3 months",
-    per: "one exam cycle",
-    note: "Most popular",
-  },
+  { interval: "quarterly", key: "quarterly", label: "3 months", per: "every 3 months" },
   { interval: "annual", key: "annual", label: "Annual", per: "/year", note: "Best value" },
 ];
 

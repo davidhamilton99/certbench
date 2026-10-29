@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { regionPricing } from "@/lib/pricing/ppp";
+import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,7 +35,7 @@ const PRO_FEATURES = [
   "Every PBQ simulation and concept drill",
   "Spaced repetition + a readiness score you can trust",
   "Unlimited AI question generation from your notes",
-  "Pass guarantee — 30+ days of Pro study and you don't pass? Last payment refunded",
+  `Pass guarantee: ${PASS_GUARANTEE_TERMS}`,
 ];
 
 export default async function PricingPage() {
@@ -54,7 +55,7 @@ export default async function PricingPage() {
           </h1>
           <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
             Try the tools free — no account. Go Pro to get the plan that gets
-            you certified. Most people need one quarter.
+            you certified.
           </p>
         </div>
 
@@ -94,7 +95,7 @@ export default async function PricingPage() {
             <CardHeader>
               <CardTitle>Pro</CardTitle>
               <CardDescription>
-                Everything, without limits, until you pass
+                Everything for your exam, until you pass
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-5">
@@ -106,6 +107,13 @@ export default async function PricingPage() {
                   </li>
                 ))}
               </ul>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Pro covers one certification — add another anytime for a
+                one-time {pricing.prices.quarterly.discounted}.{" "}
+                <Link href={PASS_GUARANTEE_HREF} className="underline underline-offset-4">
+                  Guarantee terms
+                </Link>
+              </p>
               <PlanPicker ctaLabel="Get Pro" initialPricing={pricing} surface="pricing" />
             </CardContent>
           </Card>

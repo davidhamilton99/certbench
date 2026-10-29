@@ -24,6 +24,7 @@ import {
 import { api } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase-browser";
 import { track } from "@/lib/analytics";
+import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_SHORT } from "@/lib/pricing/guarantee";
 import { completeOnboarding } from "@/contracts/user";
 import { ApiError } from "@/contracts/common";
 import { Button } from "@/components/ui/button";
@@ -75,11 +76,18 @@ const HOURS_LABEL: Record<Hours, string> = {
   allin: "8+ hrs/week",
 };
 
+/** The weekly hours they picked, spread over 7 days — so the plan's daily ask matches their answer. */
+const DAILY_LABEL: Record<Hours, string> = {
+  casual: "~20 min a day",
+  steady: "30–60 min a day",
+  allin: "70+ min a day",
+};
+
 const PLAN_ITEMS: { icon: IconType; label: string; sub: string }[] = [
   { icon: CalendarCheck, label: "Full practice exams", sub: "Timed, exam-weighted" },
   { icon: Terminal, label: "Hands-on PBQs", sub: "The part that decides it" },
   { icon: Gauge, label: "Readiness score", sub: "Know when to book" },
-  { icon: ShieldCheck, label: "Pass guarantee", sub: "Pass, or your money back" },
+  { icon: ShieldCheck, label: "Pass guarantee", sub: PASS_GUARANTEE_SHORT },
 ];
 
 const DAY_ITEMS: { icon: IconType; label: string; sub: string }[] = [
@@ -311,7 +319,7 @@ export function OnboardingFlow({
               Your daily plan
             </span>
             <span className="text-[11px] font-medium text-muted-foreground">
-              ~20 min a day
+              {DAILY_LABEL[hours ?? "steady"]}
             </span>
           </div>
           <div className="grid gap-3.5">
@@ -413,7 +421,7 @@ export function OnboardingFlow({
               <span className="pb-1 text-sm text-muted-foreground">/ exam cycle</span>
             </div>
             <p className="text-center text-xs text-muted-foreground">
-              About $3 a week. Cancel anytime.
+              About $3 a week. Renews every 3 months — cancel anytime.
             </p>
             <Button
               size="lg"
@@ -429,6 +437,16 @@ export function OnboardingFlow({
             <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-success">
               <ShieldCheck className="size-4" />
               Pass guarantee
+              <span className="text-muted-foreground">·</span>
+              {/* New tab: leaving would drop the flow's in-memory answers. */}
+              <a
+                href={PASS_GUARANTEE_HREF}
+                target="_blank"
+                rel="noopener"
+                className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Terms
+              </a>
             </div>
           </div>
         </div>

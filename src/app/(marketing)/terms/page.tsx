@@ -15,7 +15,7 @@ export default function TermsPage() {
           Terms of Service
         </h1>
         <p className="text-[13px] text-muted-foreground mb-2">
-          Effective date: March 14, 2026
+          Effective date: March 14, 2026 · Last updated: October 24, 2026
         </p>
         <p className="text-[13px] text-muted-foreground mb-8">
           These Terms of Service (&ldquo;Terms&rdquo;) are a legally binding
@@ -108,11 +108,18 @@ export default function TermsPage() {
               .
             </p>
             <p>
-              <strong>Billing.</strong> Pro subscriptions are billed on a
-              recurring monthly basis through our payment processor, Stripe. By
-              subscribing, you authorize us to charge your payment method on
+              <strong>Billing.</strong> Pro subscriptions renew automatically
+              every month, every 3 months, or every year, depending on the plan
+              you choose, and are billed through our payment processor, Stripe.
+              By subscribing, you authorize us to charge your payment method on
               each billing date. All fees are stated in US dollars unless
               otherwise indicated.
+            </p>
+            <p>
+              <strong>Certifications.</strong> Pro covers the certification you
+              select when you set up your study plan. You can add another
+              certification for a one-time fee shown before you pay; it stays
+              unlocked while your Pro subscription is active.
             </p>
             <p>
               <strong>Cancellation.</strong> You may cancel your Pro
@@ -123,8 +130,9 @@ export default function TermsPage() {
               available).
             </p>
             <p>
-              <strong>Refunds.</strong> We do not provide refunds for partial
-              billing periods. If you believe you were charged in error, contact
+              <strong>Refunds.</strong> Except under the pass guarantee below,
+              we do not provide refunds for partial billing periods. If you
+              believe you were charged in error, contact
               us at{" "}
               <a
                 href="mailto:support@certbench.dev"
@@ -133,6 +141,19 @@ export default function TermsPage() {
                 support@certbench.dev
               </a>{" "}
               within 14 days of the charge.
+            </p>
+            <p id="pass-guarantee">
+              <strong>Pass guarantee.</strong> If you study with an active Pro
+              subscription for at least 30 days and don&apos;t pass the
+              certification exam your plan covers, we will refund your most
+              recent Pro payment. To claim it, email{" "}
+              <a
+                href="mailto:support@certbench.dev"
+                className="text-primary hover:underline"
+              >
+                support@certbench.dev
+              </a>{" "}
+              from the email address on your account.
             </p>
             <p>
               <strong>Price changes.</strong> We may change subscription pricing

@@ -112,7 +112,7 @@ export function ReadinessCheck({
             That&apos;s an estimate from {total} questions. Your real readiness
             score tracks all {objectiveCount} {shortCertName} objectives,
             updates as you practice, and tells you exactly what to study each
-            day — free.
+            day — that&apos;s what CertBench Pro unlocks.
           </p>
           <Button asChild size="lg">
             <Link href="/register">
