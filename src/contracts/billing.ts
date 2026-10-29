@@ -11,6 +11,8 @@ export const createCheckout = {
   method: "POST",
   input: z.object({
     interval: z.enum(BILLING_INTERVALS).default("monthly"),
+    /** Where Stripe's back link returns a buyer who doesn't finish checkout. */
+    returnTo: z.enum(["upgrade", "onboarding"]).default("upgrade"),
   }),
   output: z.object({ url: z.string() }),
 } as const satisfies EndpointContract;

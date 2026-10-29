@@ -79,6 +79,8 @@ export const POST = defineEndpoint(createCheckout, {
     }
 
     const origin = publicEnv.NEXT_PUBLIC_APP_URL;
+    // Backing out of the onboarding offer returns to that offer, not the app.
+    const cancelUrl = `${origin}/${input.returnTo}`;
     let session;
     try {
       session = await getStripe().checkout.sessions.create({
@@ -90,7 +92,7 @@ export const POST = defineEndpoint(createCheckout, {
         // would bounce the just-paid user back here if the activation webhook
         // hasn't landed yet. The success screen forwards to /dashboard once Pro.
         success_url: `${origin}/upgrade?upgraded=true`,
-        cancel_url: `${origin}/upgrade`,
+        cancel_url: cancelUrl,
         metadata: { supabase_user_id: user.id },
       });
     } catch (err) {
@@ -102,7 +104,7 @@ export const POST = defineEndpoint(createCheckout, {
           mode: "subscription",
           line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
           success_url: `${origin}/upgrade?upgraded=true`,
-          cancel_url: `${origin}/upgrade`,
+          cancel_url: cancelUrl,
           metadata: { supabase_user_id: user.id },
         });
       } else {

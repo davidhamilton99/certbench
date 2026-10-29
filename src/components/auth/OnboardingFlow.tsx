@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ComponentType } from "react";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Brain,
@@ -12,6 +11,7 @@ import {
   Gauge,
   GraduationCap,
   Hand,
+  Loader2,
   RefreshCw,
   RotateCcw,
   Rocket,
@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase-browser";
 import { track } from "@/lib/analytics";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_SHORT } from "@/lib/pricing/guarantee";
 import { completeOnboarding } from "@/contracts/user";
+import { createCheckout } from "@/contracts/billing";
 import { ApiError } from "@/contracts/common";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,15 @@ function weeksUntil(date: string): number {
   const now = new Date();
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   return Math.max(1, Math.ceil((exam - today) / (7 * 86_400_000)));
+}
+
+/** A bare ApiError carries its code as the message — never show that raw. */
+function checkoutErrorMessage(err: unknown): string {
+  if (err instanceof ApiError && err.code === "rate_limited") {
+    return "Too many checkout attempts — give it a few minutes and try again.";
+  }
+  if (err instanceof ApiError && err.message !== err.code) return err.message;
+  return "Couldn't open checkout — try again.";
 }
 
 function formatDate(date: string): string {
@@ -186,22 +196,27 @@ function OptionButton({
  * before the user can wander the app and cool off.
  *
  * `preview` skips the real onboarding write so the flow can be shown off-auth.
+ * `resume` reopens the flow at the offer for someone who already set their
+ * goal but hasn't paid (e.g. backed out of Stripe Checkout).
  */
 export function OnboardingFlow({
   certifications,
   preview = false,
+  resume,
 }: {
   certifications: CertOption[];
   preview?: boolean;
+  resume?: { certId: string | null; why: string | null; examDate: string | null };
 }) {
-  const router = useRouter();
-  const [step, setStep] = useState(CERT);
-  const [certId, setCertId] = useState<string | null>(null);
-  const [why, setWhy] = useState<Why | null>(null);
+  const resumeWhy = WHY_OPTIONS.find((o) => o.value === resume?.why)?.value ?? null;
+  const [step, setStep] = useState(resume ? PAYWALL : CERT);
+  const [certId, setCertId] = useState<string | null>(resume?.certId ?? null);
+  const [why, setWhy] = useState<Why | null>(resumeWhy);
   const [level, setLevel] = useState<Level | null>(null);
-  const [examDate, setExamDate] = useState("");
+  const [examDate, setExamDate] = useState(resume?.examDate ?? "");
   const [hours, setHours] = useState<Hours | null>(null);
   const [error, setError] = useState("");
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const cert = certifications.find((c) => c.id === certId);
   const certShort = cert?.name.replace("CompTIA ", "") ?? "your exam";
@@ -211,11 +226,45 @@ export function OnboardingFlow({
     if (!preview) track("onboarding_step", { step: name, value });
   };
 
-  // Flow entered — top of the goal-setting funnel.
+  // Flow entered — top of the goal-setting funnel. A resume isn't a new entry.
   useEffect(() => {
-    if (!preview) track("onboarding_started", {});
+    if (!preview && !resume) track("onboarding_started", {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Browser Back from Stripe can restore this page from the back/forward
+  // cache with the button still spinning; re-arm it.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setCheckingOut(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
+  /** The offer is the quarterly plan ($39 / exam cycle): go straight to Stripe. */
+  const checkout = async () => {
+    if (preview) return;
+    track("onboarding_unlock_clicked", {});
+    track("checkout_started", { interval: "quarterly" });
+    setCheckingOut(true);
+    setError("");
+    try {
+      const { url } = await api(createCheckout, {
+        interval: "quarterly",
+        returnTo: "onboarding",
+      });
+      window.location.href = url;
+    } catch (err) {
+      // Session expired mid-flow: sign back in, then land on this offer again.
+      if (err instanceof ApiError && err.code === "unauthorized") {
+        window.location.href = "/login?next=/onboarding";
+        return;
+      }
+      setError(checkoutErrorMessage(err));
+      setCheckingOut(false);
+    }
+  };
 
   useEffect(() => {
     if (step !== BUILDING) return;
@@ -426,14 +475,26 @@ export function OnboardingFlow({
             <Button
               size="lg"
               className="h-12 w-full text-base"
-              onClick={() => {
-                if (!preview) track("onboarding_unlock_clicked", {});
-                router.push("/upgrade?reason=onboarding");
-              }}
+              disabled={checkingOut}
+              onClick={checkout}
             >
-              Unlock my plan
-              <ArrowRight />
+              {checkingOut ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Opening secure checkout…
+                </>
+              ) : (
+                <>
+                  Unlock my plan
+                  <ArrowRight />
+                </>
+              )}
             </Button>
+            {error && (
+              <p role="alert" className="text-center text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-success">
               <ShieldCheck className="size-4" />
               Pass guarantee
