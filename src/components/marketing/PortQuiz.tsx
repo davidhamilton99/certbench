@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowRight, Check, Flame, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Flame, X } from "lucide-react";
 import type { PortEntry } from "@/lib/tools/port-quiz-data";
 import { makeQuestion, type QuizQuestion } from "@/lib/tools/port-quiz";
+import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useDrillRounds, type DrillRounds } from "./useDrillRounds";
+import { ExamContext, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
 
 /**
- * Endless port-numbers drill. Question generation is random, so the first
- * question is created after mount — SSR renders a stable placeholder and
- * hydration never mismatches. `showRegisterCta` is off in the logged-in
- * workspace, where the signup upsell would be noise.
+ * Port-numbers drill, played in rounds on the public tool page: round 1 is
+ * free, a free account keeps going with rounds built from the visitor's
+ * misses. `showRegisterCta` is off in the logged-in workspace, which runs the
+ * plain endless drill (no rounds, no signup).
  */
 export function PortQuiz({
   entries,
@@ -21,18 +23,12 @@ export function PortQuiz({
   entries: PortEntry[];
   showRegisterCta?: boolean;
 }) {
-  const [question, setQuestion] = useState<QuizQuestion | null>(null);
-  const [picked, setPicked] = useState<PortEntry | null>(null);
-  const [score, setScore] = useState({ correct: 0, answered: 0 });
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [ctaDismissed, setCtaDismissed] = useState(false);
+  const ids = useMemo(() => entries.map((e) => e.port), [entries]);
+  const rounds = useDrillRounds({ tool: "ports", ids, enabled: showRegisterCta });
+  const [streak, setStreak] = useState({ now: 0, best: 0 });
 
-  useEffect(() => {
-    setQuestion(makeQuestion(entries));
-  }, [entries]);
-
-  if (!question) {
+  // Questions are random, so nothing renders until after hydration.
+  if (!rounds.ready) {
     return (
       <div className="grid min-h-72 place-items-center rounded-xl border bg-card p-6 text-sm text-muted-foreground">
         Loading the drill…
@@ -40,47 +36,108 @@ export function PortQuiz({
     );
   }
 
+  if (rounds.complete) {
+    const tiles = entries.map((e) => ({
+      id: e.port,
+      label: e.port,
+      name: e.protocol,
+      status: itemStatus(rounds.progress.items[e.port]),
+    }));
+    return (
+      <RoundComplete
+        rounds={rounds}
+        noun={["port", "ports"]}
+        tiles={tiles}
+        variant="labels"
+        extra={
+          <ExamContext cert="security-plus-sy0-701">
+            Ports are only about <span className="font-medium text-foreground">5% of the exam</span>.
+            The other 95% — scenarios, PBQs, the domains that decide pass or fail — is
+            where most people fall short.
+          </ExamContext>
+        }
+      />
+    );
+  }
+
+  // Remounts with a fresh first question each time play (re)starts.
+  return (
+    <PortRound
+      entries={entries}
+      rounds={rounds}
+      streak={streak}
+      onAnswer={(correct) =>
+        setStreak((s) => {
+          const now = correct ? s.now + 1 : 0;
+          return { now, best: Math.max(s.best, now) };
+        })
+      }
+    />
+  );
+}
+
+function PortRound({
+  entries,
+  rounds,
+  streak,
+  onAnswer,
+}: {
+  entries: PortEntry[];
+  rounds: DrillRounds;
+  streak: { now: number; best: number };
+  onAnswer: (correct: boolean) => void;
+}) {
+  const byPort = useMemo(() => new Map(entries.map((e) => [e.port, e])), [entries]);
+  /** The planned port for the next question (random when there's no plan). */
+  const ask = () => {
+    const id = rounds.nextItem();
+    return makeQuestion(entries, id ? byPort.get(id) : undefined);
+  };
+  const [question, setQuestion] = useState<QuizQuestion>(ask);
+  const [picked, setPicked] = useState<PortEntry | null>(null);
+  const [score, setScore] = useState({ correct: 0, answered: 0 });
+
   const revealed = picked !== null;
   const wasCorrect = picked === question.answer;
+  const lastOfRound = rounds.enabled && rounds.answered >= rounds.size;
 
   function choose(option: PortEntry) {
     if (revealed) return;
     setPicked(option);
-    const correct = option === question!.answer;
+    const correct = option === question.answer;
+    rounds.record(question.answer.port, correct);
     setScore((s) => ({
       correct: s.correct + (correct ? 1 : 0),
       answered: s.answered + 1,
     }));
-    const nextStreak = correct ? streak + 1 : 0;
-    setStreak(nextStreak);
-    if (nextStreak > bestStreak) setBestStreak(nextStreak);
+    onAnswer(correct);
   }
 
   function next() {
+    // The last answer of a round hands over to the round reveal.
+    if (rounds.advance()) return;
     setPicked(null);
-    setQuestion(makeQuestion(entries));
+    setQuestion(ask());
   }
 
-  const accuracy =
-    score.answered > 0 ? Math.round((score.correct / score.answered) * 100) : 0;
-  // Surface the reframe only after a real session (not a drive-by), and only
-  // on the public tool — never in the logged-in workspace.
-  const showReframe =
-    showRegisterCta && !ctaDismissed && score.answered >= 15;
-
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 rounded-xl border bg-card p-6">
+    <div className="grid gap-4 rounded-xl border bg-card p-6">
+      {rounds.enabled && <RoundBar rounds={rounds} />}
+
       {/* Scoreboard */}
-      <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
-        <span>
-          {score.correct} / {score.answered} correct
-        </span>
+      <div className="flex items-center justify-between gap-2 font-mono text-xs text-muted-foreground">
+        {rounds.enabled ? (
+          <RoundStatus rounds={rounds} />
+        ) : (
+          <span>
+            {score.correct} / {score.answered} correct
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <Flame
-            className={cn("size-3.5", streak >= 3 ? "text-warning" : "text-muted-foreground/50")}
+            className={cn("size-3.5", streak.now >= 3 ? "text-warning" : "text-muted-foreground/50")}
           />
-          streak {streak} · best {bestStreak}
+          streak {streak.now} · best {streak.best}
         </span>
       </div>
 
@@ -144,57 +201,9 @@ export function PortQuiz({
         </div>
       )}
 
-        <Button onClick={next} disabled={!revealed} className="min-w-28">
-          Next
-        </Button>
-      </div>
-
-      {/* Reframe: a ports grinder is over-indexing on ~5% of the exam. Meeting
-          them with genuinely useful perspective converts better than a
-          "sign up for more" nudge — and routes to the no-account readiness
-          check, the funnel that actually converts the hesitant. */}
-      {showReframe && (
-        <div className="relative grid gap-3 rounded-xl border border-primary/30 bg-card p-6">
-          <button
-            type="button"
-            onClick={() => setCtaDismissed(true)}
-            aria-label="Dismiss"
-            className="absolute right-3 top-3 text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <X className="size-4" />
-          </button>
-          <div>
-            <h3 className="pr-6 font-semibold tracking-tight">
-              You&apos;ve got ports handled — {score.answered} drilled at {accuracy}%.
-            </h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              Here&apos;s the thing: ports are only about{" "}
-              <span className="font-medium text-foreground">5% of the exam</span>.
-              You&apos;ve nailed the easy part — the other 95% (scenarios, PBQs,
-              the domains that actually decide pass/fail) is where most people
-              fall short. See exactly where you stand:
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button asChild>
-              <Link href="/readiness-check/security-plus-sy0-701">
-                Take the free readiness check
-                <ArrowRight />
-              </Link>
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              3 minutes, no account · or{" "}
-              <Link
-                href="/register"
-                className="text-primary underline underline-offset-4"
-              >
-                build your plan
-              </Link>{" "}
-              for the full drill + 2,600 questions with spaced repetition.
-            </span>
-          </div>
-        </div>
-      )}
+      <Button onClick={next} disabled={!revealed} className="min-w-28">
+        {lastOfRound ? "See your round" : "Next"}
+      </Button>
     </div>
   );
 }

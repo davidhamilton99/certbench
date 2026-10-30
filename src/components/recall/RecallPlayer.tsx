@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Flame, X } from "lucide-react";
 import {
   generateRecallQuestion,
@@ -27,18 +27,34 @@ const ADVANCE_MS = 550;
  *
  * Question generation is random, so the first question is created after mount —
  * SSR renders a stable placeholder and hydration never mismatches.
+ *
+ * A host can run the drill as planned rounds (the public acronym tool): it
+ * supplies which item to ask next, can hold the player at the end of a round,
+ * and can replace the scoreboard's accuracy readout with its own status.
  */
 export function RecallPlayer({
   decks,
   deckKey,
   typed = false,
   onAnswer,
+  nextItem,
+  beforeAdvance,
+  status,
+  nextLabel,
 }: {
   decks: ResolvedDeck[];
   deckKey: string;
   /** Render a typed-answer input instead of multiple choice (active recall). */
   typed?: boolean;
   onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
+  /** The item to ask next; when set, it replaces the miss-resurfacing queue. */
+  nextItem?: () => string | null;
+  /** Called before moving on from an answer; return true to hold here. */
+  beforeAdvance?: () => boolean;
+  /** Replaces the accuracy readout at the left of the scoreboard. */
+  status?: ReactNode;
+  /** Label for the advance button (defaults to "Next"). */
+  nextLabel?: string;
 }) {
   const [question, setQuestion] = useState<RecallQuestion | null>(null);
   const [answerValue, setAnswerValue] = useState<string | null>(null);
@@ -64,10 +80,14 @@ export function RecallPlayer({
   // e.g. the port number), so a bidirectional deck never asks you to type a long
   // protocol name.
   function gen(): RecallQuestion {
-    return generateRecallQuestion(deckFor(), Math.random, { noSwap: typed });
+    return generateRecallQuestion(deckFor(), Math.random, {
+      noSwap: typed,
+      itemId: nextItem?.() ?? undefined,
+    });
   }
 
   function nextQuestion(): RecallQuestion {
+    if (nextItem) return gen();
     if (missQueue.current.length > 0 && Math.random() < RESURFACE_RATE) {
       return missQueue.current.shift()!;
     }
@@ -94,6 +114,7 @@ export function RecallPlayer({
 
   function advance() {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    if (beforeAdvance?.()) return;
     setAnswerValue(null);
     setEntry("");
     setQuestion(nextQuestion());
@@ -162,9 +183,11 @@ export function RecallPlayer({
     <div className="grid gap-4">
       {/* Scoreboard */}
       <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
-        <span>
-          {accuracy}% · {score.correct}/{score.answered}
-        </span>
+        {status ?? (
+          <span>
+            {accuracy}% · {score.correct}/{score.answered}
+          </span>
+        )}
         <span className="flex items-center gap-3">
           <span aria-label="questions per minute">{qpm} q/min</span>
           <span className="flex items-center gap-1">
@@ -270,7 +293,7 @@ export function RecallPlayer({
         )}
 
         <Button onClick={advance} disabled={!revealed} className="min-w-28">
-          Next
+          {nextLabel ?? "Next"}
         </Button>
       </div>
     </div>

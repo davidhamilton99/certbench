@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
+import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 export const metadata = {
   title: "Free CompTIA Port Numbers Quiz",
   description:
-    "Drill the port numbers every CompTIA exam tests — Security+, Network+, and A+. Free endless quiz with instant feedback, no signup needed.",
+    "Drill the port numbers every CompTIA exam tests — Security+, Network+, and A+. Start free with no signup; a free account saves your progress and targets your misses.",
 };
 
 const FAQS = [
@@ -23,7 +24,7 @@ const FAQS = [
   {
     question: "What's the best way to memorize port numbers?",
     answer:
-      "Short, frequent drills beat one long cram. Do 10–20 questions here daily, and pay attention to the pairs — secure vs insecure versions (HTTP 80 → HTTPS 443, LDAP 389 → LDAPS 636, Telnet 23 → SSH 22) are the most-tested pattern. Spaced repetition automates the schedule: miss a port and it comes back right before you'd forget it.",
+      "Short, frequent drills beat one long cram. Do a round here daily, and pay attention to the pairs — secure vs insecure versions (HTTP 80 → HTTPS 443, LDAP 389 → LDAPS 636, Telnet 23 → SSH 22) are the most-tested pattern. With a free account, every round opens with the ports you missed last time, so your reps go where they're needed.",
   },
   {
     question: "Do I need to know TCP vs UDP for each port?",
@@ -42,9 +43,11 @@ export default function PortQuizPage() {
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           Every CompTIA exam — A+, Network+, Security+ — expects you to know
-          your ports cold. This endless drill covers the {PORT_ENTRIES.length}{" "}
-          ports they actually test, in both directions: name the port, and
-          name the protocol. No signup, no limit.
+          your ports cold. This drill covers the {PORT_ENTRIES.length} ports
+          they actually test, in both directions: name the port, and name the
+          protocol. Your first round of {ROUND_SIZE} is free with no signup — a
+          free account saves your progress and builds every round after it
+          from the ports you miss.
         </p>
 
         <div className="mt-8">

@@ -25,7 +25,7 @@ const FREE_TOOLS = [
   "3-minute readiness check — no account",
   "Full-length practice-test previews",
   "PBQ examples for every cert",
-  "Subnetting, ports & acronym trainers",
+  "Subnetting, ports & acronym trainers — free account to keep going",
   "Exam-objective study guides",
 ];
 
@@ -54,8 +54,8 @@ export default async function PricingPage() {
             Priced for one exam cycle
           </h1>
           <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
-            Try the tools free — no account. Go Pro to get the plan that gets
-            you certified.
+            Try the tools free. Go Pro to get the plan that gets you
+            certified.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default async function PricingPage() {
             <CardHeader>
               <CardTitle>Free tools</CardTitle>
               <CardDescription>
-                Try CertBench before you commit — no account
+                Try CertBench before you commit
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-5">
@@ -72,7 +72,7 @@ export default async function PricingPage() {
                 <span className="font-mono text-4xl font-semibold">$0</span>
                 <span className="text-sm text-muted-foreground">
                   {" "}
-                  no sign-up
+                  no card
                 </span>
               </div>
               <ul className="grid flex-1 content-start gap-3 text-sm leading-relaxed">

@@ -38,7 +38,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: "You can try CertBench free with no account — the 3-minute readiness check, full-length practice-test previews, PBQ examples, and the subnetting, port-number, and acronym trainers. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation — all backed by a pass guarantee. It's priced for one exam cycle; see the pricing page for current plans.",
+        a: "You can try CertBench free. The 3-minute readiness check, full-length practice-test previews, and PBQ examples need no account; the subnetting, port-number, and acronym trainers give you a first round free, then keep going with a free account that saves your progress. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation — all backed by a pass guarantee. It's priced for one exam cycle; see the pricing page for current plans.",
       },
       {
         q: "Is this an exam dump?",

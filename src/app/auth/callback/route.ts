@@ -16,7 +16,12 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Un-onboarded users always land on onboarding, regardless of `next`.
+      // Un-onboarded users land on onboarding, regardless of `next` — except
+      // when they signed in from a free drill to keep going: the public tools
+      // need no onboarding, and pulling them away is the drop-off we avoid.
+      if (next.startsWith("/tools/")) {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
       const {
         data: { user },
       } = await supabase.auth.getUser();

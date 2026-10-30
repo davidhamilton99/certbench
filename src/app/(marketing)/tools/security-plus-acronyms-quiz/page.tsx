@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getRecallDecks } from "@/data/recall";
 import { acronyms } from "@/data/reference/security-plus-sy0-701/acronyms";
+import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
@@ -13,7 +14,7 @@ const COUNT = acronyms.entries.length;
 
 export const metadata = {
   title: "Free CompTIA Security+ Acronyms Quiz",
-  description: `Drill all ${COUNT} CompTIA Security+ SY0-701 acronyms — free, endless, instant feedback, no signup. Includes the full acronym list to memorize.`,
+  description: `Drill all ${COUNT} CompTIA Security+ SY0-701 acronyms with instant feedback. Start free with no signup; a free account saves your progress. Includes the full acronym list.`,
 };
 
 const FAQS = [
@@ -24,7 +25,7 @@ const FAQS = [
   {
     question: "What's the best way to memorize Security+ acronyms?",
     answer:
-      "Short, frequent drills beat one long cram. Do 15–20 here every day and let spaced repetition surface the ones you keep missing right before you'd forget them. Focus on the high-frequency families — access control (DAC/MAC/RBAC/ABAC), the AAA protocols (RADIUS/TACACS+), and the detection stack (IDS/IPS/EDR/XDR/SIEM/SOAR).",
+      "Short, frequent drills beat one long cram. Do a round here every day — with a free account, each one opens with the acronyms you missed last time. Focus on the high-frequency families — access control (DAC/MAC/RBAC/ABAC), the AAA protocols (RADIUS/TACACS+), and the detection stack (IDS/IPS/EDR/XDR/SIEM/SOAR).",
   },
   {
     question: "Do I need to know every acronym for the exam?",
@@ -46,10 +47,12 @@ export default function AcronymsQuizPage() {
           Security+ acronyms quiz
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
-          The Security+ SY0-701 exam leans hard on acronyms. This endless drill
-          covers all {COUNT} on CompTIA&apos;s list, both directions — expand the
-          acronym, or name it from its meaning. Answer with the number keys. No
-          signup, no limit.
+          The Security+ SY0-701 exam leans hard on acronyms. This drill covers
+          all {COUNT} on CompTIA&apos;s list, both directions — expand the
+          acronym, or name it from its meaning. Answer with the number keys.
+          Your first round of {ROUND_SIZE} is free with no signup — a free
+          account saves your progress and builds every round after it from the
+          ones you miss.
         </p>
 
         <div className="mt-8">
