@@ -250,12 +250,13 @@ export function canAutoDrill(table: ReferenceTable): boolean {
  * Generate one question. `rng` defaults to `Math.random` for the live drill.
  * Every question carries both multiple-choice `options` and the accepted typed
  * `acceptable` forms, so the UI can render it either way. Pass `noSwap` (used by
- * typed mode) to always ask in the deck's default direction.
+ * typed mode) to always ask in the deck's default direction, and `itemId` to
+ * ask about a specific item (a planned round) instead of a random one.
  */
 export function generateRecallQuestion(
   deck: ResolvedDeck,
   rng: Rng = Math.random,
-  opts?: { noSwap?: boolean }
+  opts?: { noSwap?: boolean; itemId?: string }
 ): RecallQuestion {
   const { config, rows } = deck;
 
@@ -265,7 +266,11 @@ export function generateRecallQuestion(
   const askField = swap ? config.answer : config.ask;
   const ansField = swap ? config.ask : config.answer;
 
-  const row = rows[Math.floor(rng() * rows.length)];
+  const candidates = opts?.itemId
+    ? rows.filter((r) => r[config.ask.key] === opts.itemId)
+    : [];
+  const pickFrom = candidates.length > 0 ? candidates : rows;
+  const row = pickFrom[Math.floor(rng() * pickFrom.length)];
   const answer = row[ansField.key];
   const promptValue = row[askField.key];
 

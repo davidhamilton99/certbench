@@ -186,7 +186,17 @@
     transform: scaleX(0);
   }
 }
+/* Free-drill progress map: tiles settle in, staggered by inline delay. */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
 @layer utilities {
+  .animate-tile {
+    animation: tile-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
   .animate-gauge {
     animation: gauge-sweep 1s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -196,7 +206,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .animate-gauge,
-    .animate-bar {
+    .animate-bar,
+    .animate-tile {
       animation: none;
     }
   }

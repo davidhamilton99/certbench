@@ -39,6 +39,19 @@ type EventMap = {
   onboarding_plan_revealed: { cert: string; weeks: number | null };
   onboarding_paywall_viewed: { cert: string; weeks: number | null };
   onboarding_unlock_clicked: Record<string, never>;
+  // Free drills played in rounds: round 1 is free, a free account keeps going.
+  drill_round_completed: {
+    tool: string;
+    round: number;
+    correct: number;
+    size: number;
+    signed_in: boolean;
+  };
+  drill_gate_viewed: { tool: string };
+  drill_account_linked: {
+    tool: string;
+    method: "email_signup" | "email_login" | "redirect";
+  };
 };
 
 /** Capture a typed product event. */

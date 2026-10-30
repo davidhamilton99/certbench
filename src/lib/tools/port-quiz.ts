@@ -25,9 +25,12 @@ function shuffle<T>(arr: readonly T[]): T[] {
  * the same displayed value produce the same React key, which breaks list
  * reconciliation so a stale option lingers on screen from one question to the
  * next. Keying the rendered options by the (unique) port closes that too.
+ *
+ * Pass `target` to ask about a specific entry (a planned round); otherwise
+ * one is picked at random.
  */
-export function makeQuestion(entries: PortEntry[]): QuizQuestion {
-  const answer = entries[Math.floor(Math.random() * entries.length)];
+export function makeQuestion(entries: PortEntry[], target?: PortEntry): QuizQuestion {
+  const answer = target ?? entries[Math.floor(Math.random() * entries.length)];
   const direction: "port" | "protocol" =
     Math.random() < 0.5 ? "port" : "protocol";
   const shown = (e: PortEntry) => (direction === "port" ? e.port : e.protocol);

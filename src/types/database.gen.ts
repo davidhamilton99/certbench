@@ -585,6 +585,27 @@ interface DatabaseGenerated {
           reviewed_at?: string | null;
         };
       };
+      drill_progress: {
+        Row: {
+          user_id: string;
+          tool: "ports" | "acronyms" | "subnetting";
+          items: Json;
+          rounds: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          tool: "ports" | "acronyms" | "subnetting";
+          items?: Json;
+          rounds?: number;
+          updated_at?: string;
+        };
+        Update: {
+          items?: Json;
+          rounds?: number;
+          updated_at?: string;
+        };
+      };
       study_set_progress: {
         Row: {
           user_id: string;

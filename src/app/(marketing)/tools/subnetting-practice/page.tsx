@@ -6,12 +6,13 @@ import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnettingDrillLazy } from "@/components/marketing/SubnettingDrillLazy";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { MODES } from "@/lib/tools/subnetting";
+import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Free Subnetting Practice — Rapid Drills",
   description:
-    "Get fast at subnetting with mode-based rapid drills: binary, CIDR ↔ mask, network IDs, broadcast addresses, and host math. Instant grading with worked solutions. Free, no signup.",
+    "Get fast at subnetting with mode-based rapid drills: binary, CIDR ↔ mask, network IDs, broadcast addresses, and host math. Instant grading with worked solutions. Start free with no signup.",
 };
 
 const FAQS = [
@@ -38,7 +39,7 @@ const FAQS = [
   {
     question: "Is this subnetting practice really free?",
     answer:
-      "Yes — every mode, unlimited questions, no account. CertBench Pro adds the full Network+ question bank with spaced repetition, a 25-question diagnostic, and a readiness score.",
+      `Yes. Your first round of ${ROUND_SIZE} runs with no account; a free account keeps every mode going with no limit, saves your progress, and opens each round on your weakest skill. CertBench Pro adds the full Network+ question bank with spaced repetition, a 25-question diagnostic, and a readiness score.`,
   },
 ];
 
@@ -54,7 +55,8 @@ export default function SubnettingPracticePage() {
           Speed comes from drilling one conversion until it&apos;s reflex — not
           from grinding mixed question sets. Pick a mode, answer as fast as you
           can, and misses pause on a worked solution that shows the block-size
-          shortcut. Free, endless, no signup.
+          shortcut. Your first round of {ROUND_SIZE} is free with no signup — a
+          free account keeps going and opens each round on your weakest skill.
         </p>
 
         <div className="mt-8">

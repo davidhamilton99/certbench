@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { Check, Flame, X } from "lucide-react";
 import {
   generateQuestion,
@@ -12,8 +11,11 @@ import {
   type DrillMode,
   type DrillQuestion,
 } from "@/lib/tools/subnetting";
+import { skillStatus, weakestSkill } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useDrillRounds, type DrillRounds } from "./useDrillRounds";
+import { ExamContext, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
 
 type PickerMode = DrillMode | "gauntlet";
 
@@ -22,32 +24,105 @@ const PICKER: { id: PickerMode; label: string }[] = [
   { id: "gauntlet", label: "Gauntlet" },
 ];
 
+const SKILL_IDS = MODES.map((m) => m.id);
+const labelOf = (id: string) => MODES.find((m) => m.id === id)?.label ?? id;
+
 function makeQuestion(mode: PickerMode, difficulty: Difficulty): DrillQuestion {
   const concrete = mode === "gauntlet" ? pickGauntletMode() : mode;
   return generateQuestion(concrete, difficulty);
 }
 
 /**
- * Rapid-fire subnetting drill. Correct answers advance instantly; misses
- * pause on a worked solution so the block-size method sinks in.
+ * Rapid-fire subnetting drill. On the public tool page it's played in rounds:
+ * round 1 is free, a free account keeps going, and each later round opens on
+ * the visitor's weakest skill.
  *
- * Rendered client-only (see SubnettingDrillLazy) so the random first
- * question can be created in the state initializer — every later question
- * is created inside event handlers, keeping all state changes out of
- * effects.
- *
- * `showRegisterCta` is off in the logged-in workspace, where the signup
- * upsell would be noise.
+ * Rendered client-only (see SubnettingDrillLazy). `showRegisterCta` is off in
+ * the logged-in workspace, which runs the plain endless drill.
  */
 export function SubnettingDrill({
   showRegisterCta = true,
 }: {
   showRegisterCta?: boolean;
 } = {}) {
-  const [mode, setMode] = useState<PickerMode>("network-id");
+  const rounds = useDrillRounds({ tool: "subnetting", ids: SKILL_IDS, enabled: showRegisterCta });
+
+  if (!rounds.ready) {
+    return (
+      <div className="grid min-h-72 place-items-center rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+        Loading the drill…
+      </div>
+    );
+  }
+
+  const items = rounds.progress.items;
+  const weakest = weakestSkill(SKILL_IDS, items);
+
+  if (rounds.complete) {
+    const tiles = MODES.map((m) => {
+      const r = items[m.id];
+      return {
+        id: m.id,
+        label: m.label,
+        status: skillStatus(r),
+        detail: r ? `${r.c} / ${r.a} right` : undefined,
+      };
+    });
+    const solid = tiles.filter((t) => t.status === "got").length;
+    const shaky = tiles.filter((t) => t.status === "missed").length;
+    const untried = tiles.length - solid - shaky;
+    const w = weakest ? items[weakest] : undefined;
+    return (
+      <RoundComplete
+        rounds={rounds}
+        noun={["skill", "skills"]}
+        tiles={tiles}
+        variant="skills"
+        headline={
+          shaky > 0
+            ? `${shaky} ${shaky === 1 ? "skill needs" : "skills need"} work.`
+            : untried > 0
+              ? `${solid} ${solid === 1 ? "skill" : "skills"} solid. ${untried} still to try.`
+              : `All ${tiles.length} skills solid.`
+        }
+        subline={
+          weakest
+            ? `Round ${rounds.roundNumber + 1} opens on ${labelOf(weakest)}${
+                w ? ` — ${w.c} of ${w.a} right so far.` : ", which you haven't tried yet."
+              }`
+            : undefined
+        }
+        extra={
+          <ExamContext cert="network-plus-n10-009">
+            Subnetting is a slice of Network+ you can drill to perfection. The
+            exam is decided by troubleshooting scenarios and PBQs across every
+            domain.
+          </ExamContext>
+        }
+      />
+    );
+  }
+
+  // Remounts each time play (re)starts; later rounds open on the weakest skill.
+  return (
+    <SubnettingRound
+      rounds={rounds}
+      initialMode={rounds.enabled && rounds.progress.rounds > 0 && weakest ? (weakest as DrillMode) : "network-id"}
+    />
+  );
+}
+
+function SubnettingRound({
+  rounds,
+  initialMode,
+}: {
+  rounds: DrillRounds;
+  initialMode: PickerMode;
+}) {
+  const [mode, setMode] = useState<PickerMode>(initialMode);
   const [difficulty, setDifficulty] = useState<Difficulty>("standard");
   const [question, setQuestion] = useState<DrillQuestion>(() =>
-    makeQuestion("network-id", "standard")
+    makeQuestion(initialMode, "standard")
   );
   const [value, setValue] = useState("");
   const [missed, setMissed] = useState(false);
@@ -72,8 +147,15 @@ export function SubnettingDrill({
     inputRef.current?.focus();
   }, []);
 
+  /** Next question — unless that answer ended the round (the reveal takes over). */
+  const proceed = useCallback(() => {
+    if (rounds.advance()) return;
+    fresh(mode, difficulty);
+  }, [rounds, fresh, mode, difficulty]);
+
   const settle = useCallback(
     (correct: boolean) => {
+      rounds.record(question.mode, correct);
       setTotalMs((t) => t + (Date.now() - startedAt.current));
       setScore((s) => ({
         correct: s.correct + (correct ? 1 : 0),
@@ -85,12 +167,12 @@ export function SubnettingDrill({
         return next;
       });
       if (correct) {
-        fresh(mode, difficulty);
+        proceed();
       } else {
         setMissed(true);
       }
     },
-    [difficulty, fresh, mode]
+    [rounds, question, proceed]
   );
 
   const submit = useCallback(
@@ -107,7 +189,7 @@ export function SubnettingDrill({
     function onKey(e: KeyboardEvent) {
       if (missed && e.key === "Enter") {
         e.preventDefault();
-        fresh(mode, difficulty);
+        proceed();
         return;
       }
       if (question.answerKind === "yes-no" && !missed) {
@@ -117,7 +199,7 @@ export function SubnettingDrill({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [difficulty, fresh, missed, mode, question, submit]);
+  }, [missed, proceed, question, submit]);
 
   function switchMode(m: PickerMode) {
     setMode(m);
@@ -136,6 +218,7 @@ export function SubnettingDrill({
   const avgSeconds =
     score.answered >= 3 ? (totalMs / score.answered / 1000).toFixed(1) : null;
   const modeLabel = MODES.find((m) => m.id === question.mode)?.label;
+  const lastOfRound = rounds.enabled && rounds.answered >= rounds.size;
 
   return (
     <div className="grid gap-4">
@@ -161,12 +244,18 @@ export function SubnettingDrill({
       </div>
 
       <div className="grid gap-4 rounded-xl border bg-card p-6">
+        {rounds.enabled && <RoundBar rounds={rounds} />}
+
         {/* Stats */}
         <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-muted-foreground">
-          <span>
-            {score.correct} / {score.answered} correct
-            {avgSeconds && <> · avg {avgSeconds}s</>}
-          </span>
+          {rounds.enabled ? (
+            <RoundStatus rounds={rounds} />
+          ) : (
+            <span>
+              {score.correct} / {score.answered} correct
+              {avgSeconds && <> · avg {avgSeconds}s</>}
+            </span>
+          )}
           <span className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Flame
@@ -235,7 +324,7 @@ export function SubnettingDrill({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (missed) fresh(mode, difficulty);
+              if (missed) proceed();
               else submit(value);
             }}
             className="flex gap-2"
@@ -263,7 +352,7 @@ export function SubnettingDrill({
               )}
             />
             <Button type="submit" className="min-w-24">
-              {missed ? "Next" : "Check"}
+              {missed ? (lastOfRound ? "See your round" : "Next") : "Check"}
             </Button>
           </form>
         )}
@@ -286,7 +375,9 @@ export function SubnettingDrill({
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Press Enter for the next one.
+              {lastOfRound
+                ? "Press Enter to see your round."
+                : "Press Enter for the next one."}
             </p>
           </div>
         )}
@@ -298,19 +389,6 @@ export function SubnettingDrill({
           </p>
         )}
       </div>
-
-      {showRegisterCta && score.answered >= 10 && (
-        <p className="text-center text-xs text-muted-foreground">
-          Want your misses to come back right before you&apos;d forget them?{" "}
-          <Link
-            href="/register"
-            className="text-primary underline underline-offset-4"
-          >
-            Your study plan
-          </Link>{" "}
-          adds spaced repetition on the full Network+ bank.
-        </p>
-      )}
     </div>
   );
 }

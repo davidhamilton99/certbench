@@ -53,7 +53,7 @@ export const VS_PAGES: VsPage[] = [
     chooseUs: [
       "You want a system that tells you what to study every day, not just how you did on a mock",
       "You want spaced repetition on your misses built in, instead of managing Anki separately",
-      "You want to try everything free first — no account — then pay only for the months you actually study",
+      "You want to try it free first — no card — then pay only for the months you actually study",
     ],
     rows: [
       { feature: "Full-length exam realism", certbench: "Weighted, timed practice exams", competitor: "Best in class — the closest sim to the real thing" },

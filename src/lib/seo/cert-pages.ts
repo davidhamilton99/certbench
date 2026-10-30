@@ -137,7 +137,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         href: "/tools/subnetting-practice",
         label: "Subnetting practice",
-        note: "Endless CIDR and subnet-mask drills",
+        note: "Rapid CIDR and subnet-mask drills",
       },
       {
         href: "/tools/port-numbers-quiz",
