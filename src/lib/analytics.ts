@@ -26,19 +26,12 @@ type Surface = "authed" | "public";
  * here first; `track()` won't accept a name or shape that isn't in this map.
  */
 type EventMap = {
-  hero_question_answered: { correct: boolean };
   signup_submitted: { method: "email" | "google" };
   pbq_started: { scenario_id: string; scenario_type: string; surface: Surface };
   upsell_viewed: { context: string };
   upsell_clicked: { context: string; href: string };
   pricing_viewed: { surface: "upgrade" | "pricing" };
   checkout_started: { interval: string };
-  // Goal-setting onboarding funnel (signup -> flow -> paywall -> unlock).
-  onboarding_started: Record<string, never>;
-  onboarding_step: { step: string; value?: string };
-  onboarding_plan_revealed: { cert: string; weeks: number | null };
-  onboarding_paywall_viewed: { cert: string; weeks: number | null };
-  onboarding_unlock_clicked: Record<string, never>;
   // Free drills played in rounds: round 1 is free, a free account keeps going.
   drill_round_completed: {
     tool: string;

@@ -33,7 +33,7 @@ const PRACTICE_HUB: Record<string, string> = {
 };
 
 export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
-  const hub = PRACTICE_HUB[data.certSlug] ?? "/register";
+  const hub = PRACTICE_HUB[data.certSlug] ?? "/start";
 
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
@@ -90,29 +90,19 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
         {/* CTA */}
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
           <h2 className="text-xl font-semibold tracking-tight">
-            Practice every objective, adaptively
+            Learn {data.code} and every other objective
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            CertBench tracks your score on {data.code} and every other
-            objective, then builds a daily plan that targets your weakest
-            spots.
+            Your {data.shortCertName} path walks the whole exam in short stops,
+            one objective at a time, and maps where you stand as you go.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href={`/path/${data.certSlug}`}>
+              Start my {data.shortCertName} path
               <ArrowRight />
             </Link>
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Not ready to sign up?{" "}
-            <Link
-              href={`/readiness-check/${data.certSlug}`}
-              className="text-primary underline underline-offset-4"
-            >
-              Try the 3-minute readiness check
-            </Link>{" "}
-            — no account needed.
-          </p>
+          <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
 
         {/* Sibling objectives — internal linking within the domain */}

@@ -50,11 +50,12 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const freeIds = new Set(free.map((s) => s.id));
   const rest = scenarios.filter((s) => !freeIds.has(s.id));
 
+  const path = `/path/${page.certSlug}`;
   const upsell: PbqUpsell = {
     heading: "That's a real exam-style PBQ — and you handled it.",
-    note: "Performance-based questions are the part most people underestimate — and the part that decides pass/fail. Build your study plan to unlock every hands-on lab and a readiness score across every domain.",
-    href: "/register",
-    label: "Build my plan →",
+    note: "Performance-based questions are the part most people underestimate. Your guided path walks every objective in short stops; Pro adds every hands-on lab.",
+    href: path,
+    label: "Start my path →",
     context: "public_pbq",
   };
 
@@ -97,7 +98,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
               {rest.map((s) => (
                 <Link
                   key={s.id}
-                  href="/register"
+                  href={path}
                   className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-primary/40"
                 >
                   <span className="flex items-center gap-2">
@@ -110,12 +111,10 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
                 </Link>
               ))}
             </div>
-            <Button asChild size="lg" className="mt-5">
-              <Link href="/register">
-                Unlock all {scenarios.length} labs with Pro
-                <ArrowRight />
-              </Link>
-            </Button>
+            <p className="mt-4 text-sm text-muted-foreground">
+              All {scenarios.length} labs come with Pro, offered after your
+              path&apos;s readiness checkpoint.
+            </p>
           </section>
         )}
 
@@ -124,16 +123,16 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
             PBQs are only part of it
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            CertBench pairs hands-on PBQ practice with adaptive exams, spaced
-            repetition, and a readiness score that tells you when you&apos;re
-            actually ready to book.
+            Your guided path walks every exam objective in short stops, and a
+            readiness checkpoint shows where you stand.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href={path}>
+              Start my path
               <ArrowRight />
             </Link>
           </Button>
+          <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
 
         <FaqSection faqs={page.faqs} />

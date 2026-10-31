@@ -44,10 +44,10 @@ export function RegisterForm() {
     }
 
     track("signup_submitted", { method: "email" });
-    // With email confirmation OFF, signUp returns a live session — drop them
-    // straight into the goal-setting flow, no inbox detour. If confirmation is
+    // With email confirmation OFF, signUp returns a live session — straight to
+    // picking their exam and its path, no inbox detour. If confirmation is
     // still on (no session yet), fall back to the verify screen.
-    router.push(data.session ? "/onboarding" : "/verify");
+    router.push(data.session ? "/start" : "/verify");
     router.refresh();
   }
 

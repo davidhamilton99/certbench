@@ -5,8 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
-import { getPathStop, recordPathAnswers } from "@/contracts/path";
-import { completeOnboarding, updateExamDate } from "@/contracts/user";
+import { enrollInPath, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { stopAt } from "@/core/path/plan";
 import {
@@ -260,14 +259,13 @@ export function PathApp({
   async function saveGoalExam(examDate: string | null, target: string | null) {
     p.setGoal({ examDate, target, minutes: null });
     track("path_goal_set", { cert, step: "exam", value: examDate ? "booked" : (target ?? "unknown") });
-    if (p.certId) {
-      // Enrol them in this exam (and set the date) so reminders and Pro line up.
-      try {
-        await api(completeOnboarding, { certId: p.certId, examDate });
-        if (examDate) await api(updateExamDate, { certId: p.certId, examDate });
-      } catch {
-        /* the path doesn't depend on it — the goal is saved with their progress */
-      }
+    // Make this their exam (with its date) so reminders and Pro line up.
+    try {
+      const { enrolled } = await api(enrollInPath, { cert, examDate });
+      // A Pro member who just claimed their first exam can now open all of it.
+      if (enrolled && p.proPlan && !pro) void p.refreshAccess();
+    } catch {
+      /* the path doesn't depend on it — the goal is saved with their progress */
     }
   }
 

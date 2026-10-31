@@ -91,13 +91,12 @@ export default function PortQuizPage() {
             Ports are the easy 5%
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            The rest of the exam is scenarios. Build your study plan to see
-            how ready you actually are — and get a daily plan for everything
-            else.
+            The rest of the exam is scenarios. Pick your exam and its path
+            walks every objective in short rounds like this one.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href="/start">
+              Start my exam path
               <ArrowRight />
             </Link>
           </Button>

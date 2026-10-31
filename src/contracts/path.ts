@@ -131,6 +131,23 @@ export const savePathProgress = {
 } as const satisfies EndpointContract;
 
 /**
+ * Make this exam the account's exam (and set the date when given). A free
+ * account studies one exam at a time, so its single enrollment moves to the
+ * path it's on — which is the exam Pro will unlock when they buy. A Pro
+ * account's enrollments only change by purchase; for an exam they haven't
+ * added, `enrolled` comes back false.
+ */
+export const enrollInPath = {
+  path: "/api/path/enroll",
+  method: "POST",
+  input: z.object({
+    cert: certSchema,
+    examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  }),
+  output: z.object({ enrolled: z.boolean() }),
+} as const satisfies EndpointContract;
+
+/**
  * Record answers to bank questions from a finished stop, so they count toward
  * the user's readiness score and spaced repetition like any practice answer.
  * The server grades them itself.

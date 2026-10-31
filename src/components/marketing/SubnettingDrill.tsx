@@ -98,8 +98,8 @@ export function SubnettingDrill({
             title="Subnetting is one skill in one domain."
             exams={[EXAMS.networkPlus, EXAMS.aPlusCore1]}
           >
-            The exam is decided by troubleshooting scenarios and PBQs across
-            every domain. See where you stand on them in about 3 minutes.
+            The exam is decided by scenarios across every domain. Your path
+            walks every objective in short rounds like this one.
           </ExamBridge>
         }
       />

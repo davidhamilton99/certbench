@@ -28,10 +28,10 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 /**
  * Protected routes an authenticated non-Pro user may still reach:
- *   - /upgrade    the paywall itself (redirecting it here would loop)
- *   - /onboarding the goal-setting flow that leads to the paywall
- * Everything else in the signed-in app is Pro-only. The free taste lives on
- * the public marketing pages, which are never protected.
+ *   - /upgrade    pricing and the post-checkout landing
+ *   - /onboarding forwards to the guided path (kept for old links)
+ * Everything else in the signed-in app is Pro-only. The free experience is the
+ * guided path (/path/*, /start) and the public pages, which are never protected.
  */
 const PRO_EXEMPT_PREFIXES = ["/upgrade", "/onboarding"];
 
@@ -40,7 +40,7 @@ const PRO_EXEMPT_PREFIXES = ["/upgrade", "/onboarding"];
  *   - refreshes the Supabase auth token (cookie rotation)
  *   - unauthenticated user on a protected route -> /login?next=<path>
  *   - authenticated user on an auth page         -> /dashboard
- *   - authenticated non-Pro user in the app      -> /upgrade (hard paywall)
+ *   - authenticated non-Pro user in the app      -> /start (their guided path)
  *
  * Onboarding completeness is checked in the (workspace) layout, not here —
  * it needs a profile row read on every protected route. The paywall gate does
@@ -105,9 +105,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Hard paywall: the signed-in app is Pro-only. Send authenticated non-Pro
-  // users to /upgrade for any protected route except the exempt ones (the
-  // paywall and the onboarding flow). Admins (the owner) always pass, Pro or
+  // The signed-in toolkit is Pro-only. Send authenticated non-Pro users to
+  // their guided path for any protected route except the exempt ones (pricing
+  // and the onboarding forward). Admins (the owner) always pass, Pro or
   // not — so a comp-free owner account is never locked out of its own app.
   // Checked here, not in the layout, because the redirect decision needs the
   // pathname. The subscription read only runs for signed-in users navigating
@@ -146,9 +146,10 @@ export async function updateSession(request: NextRequest) {
       if (profile?.role !== "admin") {
         const url = request.nextUrl.clone();
         url.search = "";
-        // Un-onboarded users must run the goal-setting flow first (that's where
-        // we sell); everyone else who isn't Pro lands on the paywall.
-        url.pathname = profile?.onboarding_completed ? "/upgrade" : "/onboarding";
+        // Without Pro, the place to be is the guided path: /start opens the
+        // exam they're enrolled in, or lets them pick one. The offer lives
+        // inside the path, after the readiness checkpoint.
+        url.pathname = "/start";
         return NextResponse.redirect(url);
       }
     }

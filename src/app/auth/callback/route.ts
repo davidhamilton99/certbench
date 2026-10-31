@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/server/supabase/server";
 
+/** Places that need no onboarding — pulling people away from them is the drop-off we avoid. */
+const GUIDED = ["/path/", "/start", "/tools/"];
+
 /**
  * OAuth code exchange. Path unchanged from the previous app — it is the
  * registered redirect URI in Google Console and Supabase Auth settings.
@@ -8,18 +11,17 @@ import { createClient } from "@/server/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const nextParam = searchParams.get("next") ?? "/onboarding";
-  const next = nextParam.startsWith("/") ? nextParam : "/onboarding";
+  const nextParam = searchParams.get("next") ?? "/start";
+  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/start";
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Un-onboarded users land on onboarding, regardless of `next` — except
-      // when they signed in from a free drill to keep going: the public tools
-      // need no onboarding, and pulling them away is the drop-off we avoid.
-      if (next.startsWith("/tools/")) {
+      // Signed in from the guided path, the exam picker or a free drill:
+      // straight back to where they were.
+      if (GUIDED.some((prefix) => next.startsWith(prefix))) {
         return NextResponse.redirect(`${origin}${next}`);
       }
       const {
@@ -33,8 +35,9 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single();
 
+        // No exam yet: pick one and start its path.
         if (!profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/onboarding`);
+          return NextResponse.redirect(`${origin}/start`);
         }
       }
 

@@ -30,10 +30,21 @@ export async function listReadinessCheckCerts(): Promise<{ cert: string }[]> {
   return certs.map((c) => ({ cert: c.slug }));
 }
 
+const words = (text: string) => text.trim().split(/\s+/).length;
+
+/**
+ * Quick to read: a question of 30 words or fewer with short options. Visitors
+ * leave at walls of text, so the check leads with these and only falls back
+ * to longer questions when a domain runs out.
+ */
+const readable = (q: { question_text: string; options: { text: string }[] }) =>
+  words(q.question_text) <= 30 && q.options.every((o) => words(o.text) <= 12);
+
 /**
  * A stable, domain-weight-balanced 10-question sample for the public
- * readiness check. Stable (id-ordered per domain) so the page content
- * doesn't churn between ISR revalidations.
+ * readiness check, shortest and most readable first. Stable (ordered by
+ * length, then id) so the page content doesn't churn between ISR
+ * revalidations.
  */
 export async function loadReadinessCheck(
   certSlug: string
@@ -57,7 +68,12 @@ export async function loadReadinessCheck(
   domains.forEach((domain, i) => {
     const domainPool = pool
       .filter((q) => q.domain_id === domain.id)
-      .sort((a, b) => (a.id < b.id ? -1 : 1));
+      .sort(
+        (a, b) =>
+          Number(readable(b)) - Number(readable(a)) ||
+          words(a.question_text) - words(b.question_text) ||
+          (a.id < b.id ? -1 : 1)
+      );
     for (const q of domainPool.slice(0, slots[i])) {
       questions.push({
         questionText: q.question_text,

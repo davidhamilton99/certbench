@@ -267,7 +267,7 @@ export function RoundComplete({
   );
 }
 
-/** Exams a drill can bridge to, by readiness-check slug. */
+/** Exams a drill can bridge to, by path slug. */
 export const EXAMS = {
   securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
   networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
@@ -279,8 +279,8 @@ export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];
 /**
  * The way on from a free drill, for signed-in visitors at the end of each
  * round: the drilled facts are a small slice of the exam, so lead with the
- * readiness check for the rest — one tap on their exam. The check's result
- * takes a signed-in visitor into the goal flow and the offer.
+ * guided path for the rest — one tap on their exam, and the path takes it
+ * from there.
  */
 export function ExamBridge({
   tool,
@@ -317,7 +317,7 @@ export function ExamBridge({
           )}
         >
           {exams.map((e) => {
-            const href = `/readiness-check/${e.cert}`;
+            const href = `/path/${e.cert}`;
             return (
               <Button key={e.cert} asChild size="lg" className="w-full px-2">
                 <Link href={href} onClick={() => track("upsell_clicked", { context, href })}>
@@ -325,7 +325,7 @@ export function ExamBridge({
                     e.label
                   ) : (
                     <>
-                      Check my {e.label} readiness
+                      Start my {e.label} path
                       <ArrowRight />
                     </>
                   )}

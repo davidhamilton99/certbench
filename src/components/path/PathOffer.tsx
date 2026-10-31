@@ -5,7 +5,7 @@ import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 import { addCertCheckout, createCheckout, getRegionPricing } from "@/contracts/billing";
-import { completeOnboarding } from "@/contracts/user";
+import { enrollInPath } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
 import { Button } from "@/components/ui/button";
@@ -82,8 +82,8 @@ export function PathOffer({
         window.location.href = url;
         return;
       }
-      // Pro access is per exam: make sure this one is theirs before paying.
-      await api(completeOnboarding, { certId, examDate });
+      // Pro access is per exam: make this the exam the purchase unlocks.
+      await api(enrollInPath, { cert, examDate });
       const { url } = await api(createCheckout, { interval: "quarterly", returnTo: `path/${cert}` });
       window.location.href = url;
     } catch (err) {

@@ -53,20 +53,20 @@ export function welcomeEmail(input: {
   const { displayName, certName } = input;
   const first = displayName.split(" ")[0] || displayName;
   return {
-    subject: `Your ${certName} study plan is ready`,
+    subject: `Your ${certName} path is saved`,
     html: layout(`
       <h1 style="font-size:20px;margin:0 0 12px;">Welcome, ${first} 👋</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
         You're set up for <strong>${certName}</strong>. Here's how CertBench works:
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Take the diagnostic</strong> — 25 questions, ~20 minutes, sets your baseline readiness score.</li>
-        <li><strong>Follow the daily plan</strong> — every day we order the highest-impact work for you: reviews first, then your weakest domain.</li>
-        <li><strong>Book the exam when the gauge turns green</strong> — the readiness score is deliberately conservative.</li>
+        <li><strong>Follow your path</strong> — every exam objective as a short stop, in order. You never have to decide what to study next.</li>
+        <li><strong>Let misses come back</strong> — anything you get wrong returns in a later stop until it sticks.</li>
+        <li><strong>Hit the readiness checkpoint</strong> — exam-style questions across every domain show where you stand.</li>
       </ol>
-      ${button(`${APP()}/dashboard`, "Open your study plan")}
+      ${button(`${APP()}/start`, "Continue my path")}
     `),
-    text: `Welcome, ${first}!\n\nYou're set up for ${certName}. Take the 25-question diagnostic to set your baseline, then follow your daily plan.\n\nOpen your study plan: ${APP()}/dashboard`,
+    text: `Welcome, ${first}!\n\nYou're set up for ${certName}. Follow your path one short stop at a time; anything you miss comes back until it sticks, and the readiness checkpoint shows where you stand.\n\nContinue your path: ${APP()}/start`,
   };
 }
 
@@ -171,23 +171,18 @@ export function studyPlanEmail(input: {
         to turn them into a pass:
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Take the 25-question diagnostic</strong> — ~20 minutes, and you get a readiness score across every exam domain, so you know exactly where you stand.</li>
-        <li><strong>Drill your weakest domains first</strong> — CertBench orders each day's work by impact instead of leaving you to guess.</li>
-        <li><strong>Let spaced repetition do the remembering</strong> — miss a question and it comes back right before you'd forget it.</li>
+        <li><strong>Pick your exam</strong> — CertBench lays out every objective as a path of short stops, so you never have to decide what to study next.</li>
+        <li><strong>Play a stop a day, or five</strong> — each one is about three minutes of quick questions on one objective. What you miss comes back until it sticks.</li>
+        <li><strong>Hit the readiness checkpoint</strong> — exam-style questions across every domain, scored the way the real exam weights them.</li>
       </ol>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        Build your study plan and turn these steps into your daily path to a pass:
+        Your first stop needs no account:
       </p>
-      ${button(`${app}/register`, "Build my study plan")}
-      <p style="font-size:13px;line-height:1.7;margin:14px 0 0;color:#71717a;">
-        Not ready for an account? The
-        <a href="${app}/readiness-check/security-plus-sy0-701" style="color:#2563eb;">3-minute readiness check</a>
-        needs no signup.
-      </p>
+      ${button(`${app}/start`, "Start my exam path")}
     `,
       input.unsubscribeUrl
     ),
-    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Take the 25-question diagnostic for a readiness score across every domain.\n2. Drill your weakest domains first.\n3. Let spaced repetition bring back what you miss.\n\nBuild your plan: ${app}/register\nNo account needed: ${app}/readiness-check/security-plus-sy0-701\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Pick your exam: every objective is laid out as a path of short stops.\n2. Play a stop at a time: about three minutes each, and misses come back until they stick.\n3. Hit the readiness checkpoint to see where you stand across every domain.\n\nStart your path (no account needed): ${app}/start\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 

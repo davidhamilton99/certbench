@@ -104,13 +104,13 @@ export default function AcronymsQuizPage() {
             Acronyms are the easy part
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            The rest of the exam is scenarios and PBQs. Build your study plan
-            to see how ready you actually are — and get a daily plan for
-            everything else.
+            The rest of the exam is scenarios. Your Security+ path walks every
+            objective in short rounds like this one, and shows where you stand
+            as you go.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href="/path/security-plus-sy0-701">
+              Start my Security+ path
               <ArrowRight />
             </Link>
           </Button>

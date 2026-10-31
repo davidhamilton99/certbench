@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const HEADLINE = {
   work: "Here's your starting point.",
-  close: "You're closer than you think.",
+  close: "You're on your way.",
   ready: "You're in good shape.",
 } as const;
 
@@ -41,7 +41,9 @@ export function PathReveal({
   const [now] = useState(() => Date.now());
   const minutes = goal?.minutes || 20;
   const finish = projectFinish(remainingStops, minutes, now);
-  const examDay = goal?.examDate ?? null;
+  // A booked date wins; otherwise the date they're aiming for.
+  const examDay = goal?.examDate ?? goal?.target ?? null;
+  const what = goal?.examDate ? "your exam" : "your target date";
   const daysToExam = examDay ? daysUntil(examDay, now) : null;
   const daysToFinish = Math.max(1, Math.round((finish.getTime() - now) / 86_400_000) + 1);
 
@@ -50,10 +52,10 @@ export function PathReveal({
     const spare = daysToExam - daysToFinish;
     pace =
       spare >= 3
-        ? `That leaves ${spare} days before your exam to review and take full practice exams.`
+        ? `That leaves ${spare} days before ${what} to review and take full practice exams.`
         : spare >= 0
-          ? "That's right up against your exam. More time a day buys you review days."
-          : `Your exam is in ${daysToExam} days. Plan on more time a day, or focus on your weakest domains first.`;
+          ? `That's right up against ${what}. More time a day buys you review days.`
+          : `${what === "your exam" ? "Your exam" : "Your target date"} is ${daysToExam} days away. Plan on more time a day, or start with your weakest domains.`;
   } else {
     pace = "Set your exam date when you book it, and the path keeps you on schedule.";
   }

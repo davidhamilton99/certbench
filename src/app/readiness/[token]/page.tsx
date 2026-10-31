@@ -59,13 +59,12 @@ export default async function ReadinessSharePage({
             How ready are you?
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">
-            CertBench measures your CompTIA exam readiness with a 25-question
-            diagnostic, then builds a daily plan from your weak spots — all
-            part of CertBench Pro.
+            CertBench walks you through every objective of your CompTIA exam in
+            short stops, then a readiness checkpoint shows where you stand.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Get your readiness score
+            <Link href="/start">
+              Start my exam path
               <ArrowRight />
             </Link>
           </Button>

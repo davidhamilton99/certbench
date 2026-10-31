@@ -61,10 +61,10 @@ function Card({ payload }: { payload: SharePayload | null }) {
         <Brandmark />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ color: CARD.text, fontSize: 56, fontWeight: 700 }}>
-            Know exactly what to study
+            One short step at a time
           </div>
           <div style={{ color: CARD.sub, fontSize: 28 }}>
-            A readiness score you can trust — for CompTIA Security+, Network+, and A+.
+            Every objective of CompTIA Security+, Network+, and A+, as a guided path.
           </div>
         </div>
         <div style={{ color: CARD.muted, fontSize: 22 }}>certbench.dev</div>

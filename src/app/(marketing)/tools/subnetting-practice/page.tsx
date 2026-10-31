@@ -129,26 +129,17 @@ export default function SubnettingPracticePage() {
             Subnetting is one objective of many
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            The N10-009 exam has five domains. Build your study plan to see
-            where you actually stand — and get a daily plan built from your
-            weak spots.
+            The N10-009 exam has five domains. Your Network+ path walks every
+            objective in short rounds like these, and shows where you stand as
+            you go.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href="/path/network-plus-n10-009">
+              Start my Network+ path
               <ArrowRight />
             </Link>
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Not ready to sign up?{" "}
-            <Link
-              href="/network-plus-practice-test"
-              className="text-primary underline underline-offset-4"
-            >
-              Try the free Network+ practice test
-            </Link>{" "}
-            — no account needed.
-          </p>
+          <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
 
         <section className="mt-10">
