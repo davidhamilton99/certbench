@@ -52,6 +52,27 @@ type EventMap = {
     tool: string;
     method: "email_signup" | "email_login" | "redirect";
   };
+  // Guided path: pick an exam, play short stops, checkpoint, then the offer.
+  path_exam_picked: { cert: string; surface: string };
+  path_started: { cert: string };
+  path_stop_completed: {
+    cert: string;
+    stop: string;
+    index: number;
+    kind: string;
+    correct: number;
+    total: number;
+    signed_in: boolean;
+  };
+  path_save_viewed: { cert: string };
+  path_account_linked: {
+    cert: string;
+    method: "email_signup" | "email_login" | "redirect";
+  };
+  path_goal_set: { cert: string; step: "exam" | "minutes"; value: string };
+  path_checkpoint_completed: { cert: string; score: number };
+  path_offer_viewed: { cert: string; context: "reveal" | "home" };
+  path_offer_clicked: { cert: string; context: "reveal" | "home"; offer: "pro" | "add_exam" };
 };
 
 /** Capture a typed product event. */

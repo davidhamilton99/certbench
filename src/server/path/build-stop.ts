@@ -86,9 +86,15 @@ const NUMERIC = /^[\d\s/,–-]+$/;
 function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng: Rng, typed: boolean): Rep {
   const q = generateRecallQuestion(deck, rng, { itemId, noSwap: typed });
   const id = recallRepId(objective, deck.config.id, q.itemId);
-  const takeaway = q.detail
-    ? `${q.promptValue} → ${q.answer} · ${q.detail}`
-    : `${q.promptValue} → ${q.answer}`;
+  // One line: the pairing and its first detail. A long cue (a description)
+  // isn't repeated back — the answer and its detail are what to remember.
+  const detail = q.detail.split(" · ")[0];
+  const takeaway =
+    q.promptValue.length > 24
+      ? detail
+        ? `${q.answer}: ${detail}`
+        : q.answer
+      : `${q.promptValue} → ${q.answer}${detail ? ` · ${detail}` : ""}`;
   if (typed) {
     return {
       id,
@@ -247,8 +253,13 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
       const objective = content.recallTables[tableId] ?? "";
       recall.push(...recallFor(tableId, objective, count, false));
     }
-    // The bank's snappiest questions, one per domain, then an exam-style closer.
-    const quick = byLength(bank.questions.filter((q) => q.words <= 20 && q.optionWords <= 5), rng);
+    // The bank's snappiest questions, one per domain, then an exam-style
+    // closer — skipping objectives the recall facts above already cover.
+    const covered = new Set((content.warmup.decks ?? []).map((d) => content.recallTables[d.tableId]));
+    const quick = byLength(
+      bank.questions.filter((q) => q.words <= 20 && q.optionWords <= 5 && !covered.has(q.objective)),
+      rng
+    );
     const perDomain = roundRobin([...groupBy(quick, (q) => q.domain).values()]).slice(0, content.warmup.bank ?? 0);
     const used = new Set(perDomain.map((q) => q.id));
     const closer = byLength(bank.questions.filter((q) => !used.has(q.id) && q.words > 20 && q.words <= 40), rng)[0];

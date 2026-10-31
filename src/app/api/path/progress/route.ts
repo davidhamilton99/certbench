@@ -6,6 +6,8 @@ import {
   savePathProgress as storeProgress,
 } from "@/server/data/path-progress";
 import { mergePathProgress, sanitizePathProgress } from "@/core/path/progress";
+import { loadPathBank } from "@/server/path/bank";
+import { getPathAccess } from "@/server/path/access";
 
 /**
  * Saved progress on a guided path. Any signed-in user — the free stretch of
@@ -17,7 +19,18 @@ export const GET = defineEndpoint(getPathProgress, {
   rateLimit: { limit: 240, windowSeconds: 3600 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
-    return loadProgress(db, user.id, input.cert);
+    const bank = await loadPathBank(input.cert);
+    if (!bank) throw new ApiError("not_found", "That exam isn't available.");
+    const [saved, access] = await Promise.all([
+      loadProgress(db, user.id, input.cert),
+      getPathAccess(db, user, bank.certId),
+    ]);
+    return {
+      ...saved,
+      access: access.level === "pro" ? ("pro" as const) : ("free" as const),
+      proPlan: access.proPlan,
+      certId: bank.certId,
+    };
   },
 });
 

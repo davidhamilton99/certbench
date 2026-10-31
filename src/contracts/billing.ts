@@ -11,8 +11,13 @@ export const createCheckout = {
   method: "POST",
   input: z.object({
     interval: z.enum(BILLING_INTERVALS).default("monthly"),
-    /** Where Stripe's back link returns a buyer who doesn't finish checkout. */
-    returnTo: z.enum(["upgrade", "onboarding"]).default("upgrade"),
+    /**
+     * Where Stripe's back link returns a buyer who doesn't finish checkout. A
+     * guided path ("path/<exam>") also gets the buyer back there after paying.
+     */
+    returnTo: z
+      .union([z.enum(["upgrade", "onboarding"]), z.string().regex(/^path\/[a-z0-9-]{3,48}$/)])
+      .default("upgrade"),
   }),
   output: z.object({ url: z.string() }),
 } as const satisfies EndpointContract;

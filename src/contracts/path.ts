@@ -100,12 +100,22 @@ export const getPathStop = {
   output: z.object({ stop: stopSchema, reps: z.array(repSchema) }),
 } as const satisfies EndpointContract;
 
-/** Load the signed-in user's saved path for one exam. */
+/**
+ * Load the signed-in user's saved path for one exam, plus how much of it they
+ * can open: `pro` (the whole path) or `free` (through the checkpoint).
+ * `proPlan` marks a Pro subscriber on an exam they haven't added yet.
+ */
 export const getPathProgress = {
   path: "/api/path/progress",
   method: "GET",
   input: z.object({ cert: certSchema }),
-  output: z.object({ progress: pathProgressSchema, stored: z.boolean() }),
+  output: z.object({
+    progress: pathProgressSchema,
+    stored: z.boolean(),
+    access: z.enum(["free", "pro"]),
+    proPlan: z.boolean(),
+    certId: z.string(),
+  }),
 } as const satisfies EndpointContract;
 
 /**

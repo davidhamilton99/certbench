@@ -41,9 +41,9 @@ const REASONS: Record<string, string> = {
 export default async function UpgradePage({
   searchParams,
 }: {
-  searchParams: Promise<{ reason?: string; upgraded?: string; added?: string }>;
+  searchParams: Promise<{ reason?: string; upgraded?: string; added?: string; next?: string }>;
 }) {
-  const { reason, upgraded, added } = await searchParams;
+  const { reason, upgraded, added, next } = await searchParams;
   const db = await createClient();
   const {
     data: { user },
@@ -55,7 +55,9 @@ export default async function UpgradePage({
   // Post-checkout landing (success_url). Show the payoff and forward into the
   // app once the activation webhook has flipped the account to Pro.
   if (upgraded === "true") {
-    return <UpgradeSuccess isPro={plan.plan === "pro"} />;
+    // Bought from a guided path: go back to it, never anywhere off-site.
+    const back = next && /^\/path\/[a-z0-9-]+$/.test(next) ? next : undefined;
+    return <UpgradeSuccess isPro={plan.plan === "pro"} next={back} />;
   }
   const reasonText = reason ? REASONS[reason] : undefined;
   const isPro = plan.plan === "pro";

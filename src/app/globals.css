@@ -381,3 +381,55 @@
     animation: none !important;
   }
 }
+
+/* ─── Guided path ───────────────────────────────────────────────────────────
+ * Motion for the path player: reps rise in, map tiles pop when a stop lights
+ * them, the auto-advance bar drains, and the next objective pulses. The stage
+ * stays invisible until the client knows whether to resume or start fresh, so
+ * a returning learner never sees the first rep flash past.
+ */
+@keyframes path-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.path-rise { animation: path-rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes path-pop {
+  0% { transform: scale(0.55); opacity: 0.25; }
+  60% { transform: scale(1.14); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.path-pop {
+  animation: path-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes path-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.path-drain {
+  transform-origin: left;
+  animation: path-drain var(--dur, 1.4s) linear both;
+}
+
+@keyframes path-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 45%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in oklch, var(--primary) 0%, transparent); }
+}
+.path-current { animation: path-pulse 2.2s ease-in-out infinite; }
+
+.path-stage { transition: opacity 0.25s ease; }
+/* Only a returning learner (flagged before first paint) waits for the client;
+   a first visit shows the warm-up straight from the server. */
+html[data-path-returning] .path-stage[data-ready="false"] { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .path-rise,
+  .path-pop,
+  .path-current {
+    animation: none !important;
+  }
+  .path-drain { animation-duration: 0.01ms !important; }
+  .path-stage { transition: none; }
+}

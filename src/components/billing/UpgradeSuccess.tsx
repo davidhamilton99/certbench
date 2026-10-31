@@ -14,13 +14,15 @@ import { Button } from "@/components/ui/button";
  *    few times with router.refresh() until the server re-renders as Pro, then
  *    the Pro branch takes over. Falls back to a manual button if it lags.
  */
-export function UpgradeSuccess({ isPro }: { isPro: boolean }) {
+export function UpgradeSuccess({ isPro, next }: { isPro: boolean; next?: string }) {
   const router = useRouter();
   const tries = useRef(0);
+  // Where to go once Pro is on: back to the path they bought from, or the app.
+  const destination = next ?? "/dashboard";
 
   useEffect(() => {
     if (isPro) {
-      const t = setTimeout(() => router.push("/dashboard"), 1600);
+      const t = setTimeout(() => router.push(destination), 1600);
       return () => clearTimeout(t);
     }
     // Webhook lag: re-pull the server render until Pro flips on (~16s cap).
@@ -30,7 +32,7 @@ export function UpgradeSuccess({ isPro }: { isPro: boolean }) {
       router.refresh();
     }, 2000);
     return () => clearTimeout(t);
-  }, [isPro, router]);
+  }, [isPro, router, destination]);
 
   if (isPro) {
     return (
@@ -45,10 +47,10 @@ export function UpgradeSuccess({ isPro }: { isPro: boolean }) {
           You&apos;re in.
         </h1>
         <p className="text-sm text-muted-foreground">
-          Your plan is unlocked. Taking you to it…
+          {next ? "Your whole path is unlocked. Taking you back to it…" : "Your plan is unlocked. Taking you to it…"}
         </p>
-        <Button size="lg" className="h-12 w-full text-base" onClick={() => router.push("/dashboard")}>
-          Go to my plan
+        <Button size="lg" className="h-12 w-full text-base" onClick={() => router.push(destination)}>
+          {next ? "Back to my path" : "Go to my plan"}
         </Button>
       </div>
     );
@@ -67,7 +69,7 @@ export function UpgradeSuccess({ isPro }: { isPro: boolean }) {
         size="lg"
         variant="outline"
         className="h-12 w-full text-base"
-        onClick={() => router.push("/dashboard")}
+        onClick={() => router.push(destination)}
       >
         Go to my plan
       </Button>
