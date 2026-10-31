@@ -15,7 +15,7 @@ import { skillStatus, weakestSkill } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDrillRounds, type DrillRounds } from "./useDrillRounds";
-import { ExamContext, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
+import { EXAMS, ExamBridge, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
 
 type PickerMode = DrillMode | "gauntlet";
 
@@ -93,11 +93,14 @@ export function SubnettingDrill({
             : undefined
         }
         extra={
-          <ExamContext cert="network-plus-n10-009">
-            Subnetting is a slice of Network+ you can drill to perfection. The
-            exam is decided by troubleshooting scenarios and PBQs across every
-            domain.
-          </ExamContext>
+          <ExamBridge
+            tool="subnetting"
+            title="Subnetting is one skill in one domain."
+            exams={[EXAMS.networkPlus, EXAMS.aPlusCore1]}
+          >
+            The exam is decided by troubleshooting scenarios and PBQs across
+            every domain. See where you stand on them in about 3 minutes.
+          </ExamBridge>
         }
       />
     );

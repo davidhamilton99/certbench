@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
+import { HeaderAccountLinks } from "./HeaderAccountLinks";
 
 export function MarketingHeader() {
   return (
@@ -23,12 +24,7 @@ export function MarketingHeader() {
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/pricing">Pricing</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">Sign in</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/register">Get started</Link>
-          </Button>
+          <HeaderAccountLinks />
         </nav>
       </div>
     </header>

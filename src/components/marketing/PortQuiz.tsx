@@ -8,7 +8,7 @@ import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDrillRounds, type DrillRounds } from "./useDrillRounds";
-import { ExamContext, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
+import { EXAMS, ExamBridge, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
 
 /**
  * Port-numbers drill, played in rounds on the public tool page: round 1 is
@@ -50,11 +50,14 @@ export function PortQuiz({
         tiles={tiles}
         variant="labels"
         extra={
-          <ExamContext cert="security-plus-sy0-701">
-            Ports are only about <span className="font-medium text-foreground">5% of the exam</span>.
-            The other 95% — scenarios, PBQs, the domains that decide pass or fail — is
-            where most people fall short.
-          </ExamContext>
+          <ExamBridge
+            tool="ports"
+            title="Ports are a small slice of the exam."
+            exams={[EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1]}
+          >
+            The rest — scenarios, PBQs, every domain — decides whether you pass.
+            See where you stand on it in about 3 minutes.
+          </ExamBridge>
         }
       />
     );

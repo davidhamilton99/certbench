@@ -11,7 +11,13 @@ export const metadata = {
   title: "Get started",
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  /** `cert`: a certification slug to open the flow on (e.g. from the readiness check). */
+  searchParams: Promise<{ cert?: string | string[] }>;
+}) {
+  const { cert } = await searchParams;
   const db = await createClient();
   const {
     data: { user },
@@ -53,6 +59,7 @@ export default async function OnboardingPage() {
           examCode: c.examCode,
         }))}
         resume={resume}
+        initialCertId={certifications.find((c) => c.slug === cert)?.id}
       />
     </>
   );

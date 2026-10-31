@@ -52,6 +52,7 @@ export default async function ReadinessCheckPage({
         </p>
         <div className="mt-8">
           <ReadinessCheck
+            cert={cert}
             questions={data.questions}
             shortCertName={data.shortCertName}
             objectiveCount={data.objectiveCount}

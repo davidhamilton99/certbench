@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
-import type { ItemStatus } from "@/core/drill-rounds/drill-rounds";
+import type { DrillTool, ItemStatus } from "@/core/drill-rounds/drill-rounds";
 import { track } from "@/lib/analytics";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,7 @@ export function RoundComplete({
   /** Override the generated headline / next-round line (skill drills). */
   headline?: string;
   subline?: string;
-  /** Shown to signed-in visitors under the next-round button. */
+  /** Shown to signed-in visitors as the lead action, above the next-round button. */
   extra?: ReactNode;
 }) {
   const pathname = usePathname();
@@ -249,11 +249,16 @@ export function RoundComplete({
                   kept on this device and will sync next time.
                 </p>
               )}
-              <Button size="lg" onClick={rounds.startNextRound} className="w-full sm:w-auto sm:justify-self-start">
+              {extra}
+              <Button
+                size="lg"
+                variant={extra ? "outline" : "default"}
+                onClick={rounds.startNextRound}
+                className="w-full sm:w-auto sm:justify-self-start"
+              >
                 Start round {n + 1}
                 <ArrowRight />
               </Button>
-              {extra}
             </>
           )}
         </div>
@@ -262,25 +267,73 @@ export function RoundComplete({
   );
 }
 
+/** Exams a drill can bridge to, by readiness-check slug. */
+export const EXAMS = {
+  securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
+  networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
+  aPlusCore1: { cert: "a-plus-core1-220-1101", label: "A+ Core 1" },
+} as const;
+
+export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];
+
 /**
- * Perspective at the end of a round, for signed-in visitors: the drilled facts
- * are a small slice of the exam, so point at the part that decides it.
+ * The way on from a free drill, for signed-in visitors at the end of each
+ * round: the drilled facts are a small slice of the exam, so lead with the
+ * readiness check for the rest — one tap on their exam. The check's result
+ * takes a signed-in visitor into the goal flow and the offer.
  */
-export function ExamContext({ cert, children }: { cert: string; children: ReactNode }) {
+export function ExamBridge({
+  tool,
+  title,
+  exams,
+  children,
+}: {
+  tool: DrillTool;
+  title: string;
+  exams: readonly BridgeExam[];
+  children: ReactNode;
+}) {
+  const context = `drill_bridge_${tool}`;
+
+  useEffect(() => {
+    track("upsell_viewed", { context });
+  }, [context]);
+
   return (
-    <div className="grid gap-2 rounded-lg border bg-foreground/[0.02] p-4 text-sm">
-      <p className="leading-relaxed text-muted-foreground">{children}</p>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <Link
-          href={`/readiness-check/${cert}`}
-          className="inline-flex items-center gap-1 font-medium text-primary"
+    <div className="grid gap-4 rounded-lg border border-primary/30 bg-primary/[0.06] p-4 sm:p-5">
+      <div>
+        <p className="font-semibold tracking-tight">{title}</p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{children}</p>
+      </div>
+      <div className="grid gap-2">
+        {exams.length > 1 && (
+          <p className="text-xs font-medium text-muted-foreground">Which exam are you taking?</p>
+        )}
+        <div
+          className={cn(
+            "grid gap-2",
+            exams.length === 2 && "grid-cols-2",
+            exams.length === 3 && "grid-cols-3"
+          )}
         >
-          See where you stand in 3 minutes
-          <ArrowRight className="size-3.5" />
-        </Link>
-        <Link href="/dashboard" className="text-muted-foreground underline underline-offset-4">
-          Build your study plan
-        </Link>
+          {exams.map((e) => {
+            const href = `/readiness-check/${e.cert}`;
+            return (
+              <Button key={e.cert} asChild size="lg" className="w-full px-2">
+                <Link href={href} onClick={() => track("upsell_clicked", { context, href })}>
+                  {exams.length > 1 ? (
+                    e.label
+                  ) : (
+                    <>
+                      Check my {e.label} readiness
+                      <ArrowRight />
+                    </>
+                  )}
+                </Link>
+              </Button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
