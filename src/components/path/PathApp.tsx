@@ -201,7 +201,10 @@ export function PathApp({
       results[cur.i] = answer.correct;
       const bank = new Map(cur.bank);
       const qid = questionIdOf(rep.id);
-      if (qid && answer.picked >= 0) bank.set(qid, answer.picked);
+      if (qid && answer.picked >= 0) {
+        // Record against the bank's own option order, not the shuffled display.
+        bank.set(qid, rep.type === "choice" && rep.order ? (rep.order[answer.picked] ?? answer.picked) : answer.picked);
+      }
       const checkpoint =
         cur.stop.kind === "checkpoint"
           ? [...cur.checkpoint, { domain: domainOf(rep.objective), correct: answer.correct }]

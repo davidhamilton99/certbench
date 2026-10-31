@@ -13,7 +13,7 @@ import {
 } from "@/core/path/plan";
 import { allocate, composeStop, seededRng, shuffle, shuffleOptions, type Rng } from "@/core/path/compose";
 import { authoredRepId, bankRepId, parseRepId, recallRepId, shortHash } from "@/core/path/rep-id";
-import { repairText, splitExplanation } from "@/core/path/text";
+import { mentionsOptionLetter, repairText, splitExplanation } from "@/core/path/text";
 import type { ChoiceRep, PathCert, PathPlan, PathStop, Rep } from "@/core/path/types";
 
 /**
@@ -64,8 +64,17 @@ export function authoredToRep(a: AuthoredRep, rng: Rng): Rep {
   );
 }
 
-export function bankToRep(q: BankQuestion, tier: "quick" | "exam"): ChoiceRep {
+/**
+ * A bank question as a rep. Options are shuffled (the stored order favours B)
+ * unless the explanation names options by letter; `order` maps each displayed
+ * option back to its stored position for recording the answer.
+ */
+export function bankToRep(q: BankQuestion, tier: "quick" | "exam", rng: Rng): ChoiceRep {
   const { takeaway, rest } = splitExplanation(q.explanation);
+  const stored = q.options.map(repairText);
+  const order = mentionsOptionLetter(rest)
+    ? stored.map((_, i) => i)
+    : shuffle(stored.map((_, i) => i), rng);
   return {
     id: bankRepId(q.objective, q.id),
     type: "choice",
@@ -73,11 +82,12 @@ export function bankToRep(q: BankQuestion, tier: "quick" | "exam"): ChoiceRep {
     tier,
     objective: q.objective,
     prompt: repairText(q.text),
-    options: q.options.map(repairText),
-    answer: q.answer,
+    options: order.map((i) => stored[i]),
+    answer: order.indexOf(q.answer),
     takeaway,
     explanation: rest || undefined,
     lettered: true,
+    order,
   };
 }
 
@@ -200,7 +210,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     }
     if (parsed.source === "q") {
       const q = bank.byId.get(parsed.key);
-      return q ? bankToRep(q, isShort(q) ? "quick" : "exam") : null;
+      return q ? bankToRep(q, isShort(q) ? "quick" : "exam", rng) : null;
     }
     const [deckId, hash] = parsed.key.split("|");
     const deck = deckById.get(deckId);
@@ -265,8 +275,8 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     const closer = byLength(bank.questions.filter((q) => !used.has(q.id) && q.words > 20 && q.words <= 40), rng)[0];
     return [
       ...recall,
-      ...perDomain.map((q) => bankToRep(q, "quick")),
-      ...(closer ? [bankToRep(closer, "exam")] : []),
+      ...perDomain.map((q) => bankToRep(q, "quick", rng)),
+      ...(closer ? [bankToRep(closer, "exam", rng)] : []),
     ];
   }
 
@@ -281,8 +291,8 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
         .filter(([, obj]) => obj === objective)
         .map(([tableId]) => tableId);
       const recall = tables.flatMap((t) => recallFor(t, objective, Math.ceil(3 / tables.length), true)).slice(0, 3);
-      const quick = byLength(pool.filter(isQuick), rng).map((q) => bankToRep(q, "quick"));
-      const short = byLength(pool.filter((q) => isShort(q) && !isQuick(q)), rng).map((q) => bankToRep(q, "quick"));
+      const quick = byLength(pool.filter(isQuick), rng).map((q) => bankToRep(q, "quick", rng));
+      const short = byLength(pool.filter((q) => isShort(q) && !isQuick(q)), rng).map((q) => bankToRep(q, "quick", rng));
       fresh = [...recall, ...quick, ...short];
       // A thin objective still fills its stop, shortest questions first —
       // leaving the rest for the closing exam-style rep.
@@ -290,13 +300,13 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
         fresh.push(
           ...byLength(pool.filter((q) => !isShort(q)), rng)
             .slice(0, LEARN_NEW_REPS - fresh.length)
-            .map((q) => bankToRep(q, "exam"))
+            .map((q) => bankToRep(q, "exam", rng))
         );
       }
     }
     const inFresh = new Set(fresh.map((r) => r.id));
     const closers = byLength(pool, rng)
-      .map((q) => bankToRep(q, "exam"))
+      .map((q) => bankToRep(q, "exam", rng))
       .filter((r) => !inFresh.has(r.id));
     return composeStop(
       { misses: misses(MAX_RESURFACED), fresh, closers },
@@ -315,7 +325,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
       ...g.filter((q) => !seenSet.has(bankRepId(q.objective, q.id))),
       ...g.filter((q) => seenSet.has(bankRepId(q.objective, q.id))),
     ]);
-    const fresh = roundRobin(ordered).map((q) => bankToRep(q, isShort(q) ? "quick" : "exam"));
+    const fresh = roundRobin(ordered).map((q) => bankToRep(q, isShort(q) ? "quick" : "exam", rng));
     return composeStop(
       { misses: misses(MAX_RESURFACED), fresh },
       { size: PRACTICE_SIZE, maxMisses: MAX_RESURFACED, seen: seenSet }
@@ -338,7 +348,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
       );
       picked.push(...ordered.slice(0, slots[i]));
     });
-    return shuffle(picked, rng).map((q) => bankToRep(q, "exam"));
+    return shuffle(picked, rng).map((q) => bankToRep(q, "exam", rng));
   }
 
   function reviewReps(): Rep[] {
@@ -356,7 +366,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     const source = unseen.length >= PRACTICE_SIZE ? unseen : bank.questions;
     const groups = groupBy(byLength(source, rng), (q) => q.domain);
     const fresh = roundRobin(domainOrder.map((d) => groups.get(d) ?? [])).map((q) =>
-      bankToRep(q, isShort(q) ? "quick" : "exam")
+      bankToRep(q, isShort(q) ? "quick" : "exam", rng)
     );
     return composeStop(
       { misses: back, fresh },

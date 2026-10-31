@@ -47,11 +47,13 @@ export interface ChoiceRep extends RepBase {
   answer: number;
   /** The rest of the explanation, folded behind "Why, in full". */
   explanation?: string;
-  /**
-   * Options keep their stored order and show A–D letters: bank explanations
-   * refer to options by letter, so they can't be shuffled.
-   */
+  /** Options show A–D letters, like the exam (bank questions). */
   lettered?: boolean;
+  /**
+   * For bank questions: the stored position of each displayed option, so an
+   * answer is recorded against the bank's order after shuffling.
+   */
+  order?: number[];
   /** Short codes (port numbers) — set large in mono. */
   mono?: boolean;
 }

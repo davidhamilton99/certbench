@@ -11,6 +11,8 @@ import {
   allocateSlots,
   type CheckQuestion,
 } from "@/lib/tools/readiness-estimate";
+import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
+import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 
 const CHECK_QUESTION_COUNT = 10;
 
@@ -75,10 +77,17 @@ export async function loadReadinessCheck(
           (a.id < b.id ? -1 : 1)
       );
     for (const q of domainPool.slice(0, slots[i])) {
+      // The stored order puts the answer at B far more often than chance, so
+      // shuffle — stably per question, keeping the page static — unless the
+      // explanation names options by letter.
+      const stored = q.options.map((o) => o.text);
+      const order = mentionsOptionLetter(splitExplanation(q.explanation).rest)
+        ? stored.map((_, k) => k)
+        : shuffle(stored.map((_, k) => k), seededRng(seedFrom(q.id)));
       questions.push({
         questionText: q.question_text,
-        options: q.options.map((o) => o.text),
-        correctIndex: q.correct_index,
+        options: order.map((k) => stored[k]),
+        correctIndex: order.indexOf(q.correct_index),
         explanation: q.explanation,
         domainTitle: domain.title,
         examWeight: domain.examWeight,

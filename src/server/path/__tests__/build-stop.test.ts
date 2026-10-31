@@ -92,6 +92,29 @@ describe("buildStop — Security+", () => {
     expectValid(reps);
   });
 
+  it("shuffles bank options, keeping a map back to the stored order", () => {
+    const { reps } = build(secPlus, secPlan, secPlan.freeThrough);
+    let moved = 0;
+    for (const r of reps) {
+      if (r.type !== "choice") continue;
+      const q = secPlus.byId.get(r.id.split("|")[2])!;
+      expect(r.order).toHaveLength(q.options.length);
+      r.options.forEach((o, i) => expect(o).toBe(q.options[r.order![i]]));
+      expect(r.order![r.answer]).toBe(q.answer);
+      if (r.order!.some((stored, i) => stored !== i)) moved++;
+    }
+    expect(moved).toBeGreaterThan(0);
+  });
+
+  it("keeps the stored order when the explanation names options by letter", () => {
+    const q = secPlus.questions.find((x) => x.objective === "1.1")!;
+    const lettered = { ...q, explanation: "Why B is correct: It is. Option A describes something else." };
+    const bank = { ...secPlus, questions: [lettered], byId: new Map([[q.id, lettered]]) };
+    const { reps } = build(bank, secPlan, 1);
+    const closer = reps.at(-1)!;
+    expect(closer.type === "choice" && closer.order).toEqual([0, 1, 2, 3]);
+  });
+
   it("brings earlier misses back first, from any source", () => {
     const missedBank = secPlus.questions.find((q) => q.objective === "2.4")!;
     const missed = [`a|4.5|w1`, `q|2.4|${missedBank.id}`, "a|1.1|1.1c"];

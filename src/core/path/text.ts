@@ -28,6 +28,19 @@ export function splitExplanation(explanation: string): { takeaway: string; rest:
   return { takeaway: first.trim(), rest: more.join(" ").trim() };
 }
 
+/**
+ * Whether an explanation (after its "Why B is correct:" lead is dropped) still
+ * names options by letter — "Option A describes…". Those questions keep their
+ * stored option order; every other bank question is shuffled, because the
+ * stored order puts the answer at B far more often than chance.
+ */
+const LETTER_REF =
+  /\b(?:[Oo]ption|[Aa]nswer|[Cc]hoice)\s+[A-D]\b|\(\s*[A-D]\s*\)|\b[Ww]hy\s+[A-D]\s+is\b|\b[A-D]\s+is\s+(?:wrong|incorrect)\b/;
+
+export function mentionsOptionLetter(text: string): boolean {
+  return LETTER_REF.test(text);
+}
+
 export function wordCount(text: string): number {
   const t = text.trim();
   return t ? t.split(/\s+/).length : 0;

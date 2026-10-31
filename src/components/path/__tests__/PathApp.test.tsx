@@ -28,7 +28,7 @@ vi.mock("@/components/instrument/ReadinessDial", () => ({
 
 /** The API, answered per endpoint path. Tests swap handlers as needed. */
 const server = vi.hoisted(() => ({
-  progress: null as null | Record<string, unknown>,
+  progress: null as null | object,
   access: "free" as "free" | "pro",
   stopHandler: null as null | ((input: { index: number }) => unknown),
   calls: [] as { path: string; input: unknown }[],
@@ -239,9 +239,10 @@ describe("a signed-in learner", () => {
 
   it("records bank answers against the account at the end of a stop", async () => {
     server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    // Displayed order is shuffled: shown option 1 is the bank's option 3.
     server.stopHandler = () => ({
       stop: plan.stops[1],
-      reps: [rep("q|1.1|22222222-2222-4222-8222-222222222222", "1.1", "exam")],
+      reps: [{ ...rep("q|1.1|22222222-2222-4222-8222-222222222222", "1.1", "exam"), order: [2, 3, 0, 1] }],
     });
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
@@ -251,7 +252,7 @@ describe("a signed-in learner", () => {
     const recorded = server.calls.find((c) => c.path === "/api/path/answers");
     expect(recorded?.input).toEqual({
       cert: "security-plus-sy0-701",
-      answers: [{ questionId: "22222222-2222-4222-8222-222222222222", selectedIndex: 1 }],
+      answers: [{ questionId: "22222222-2222-4222-8222-222222222222", selectedIndex: 3 }],
     });
   });
 

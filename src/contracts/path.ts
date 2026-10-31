@@ -30,6 +30,7 @@ export const repSchema = z.discriminatedUnion("type", [
     answer: count,
     explanation: z.string().optional(),
     lettered: z.boolean().optional(),
+    order: z.array(count).optional(),
     mono: z.boolean().optional(),
   }),
   z.object({
