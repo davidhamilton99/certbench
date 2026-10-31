@@ -145,6 +145,7 @@ describe("useDrillRounds — signing up from the gate", () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     await playRound(result);
+    const askedInRound1 = Object.keys(result.current.progress.items);
     const missedInRound1 = Object.entries(result.current.progress.items)
       .filter(([, r]) => r.s === 0)
       .map(([id]) => id);
@@ -157,9 +158,10 @@ describe("useDrillRounds — signing up from the gate", () => {
     expect(result.current.roundNumber).toBe(2);
     expect(result.current.linked).toBe(true);
     expect(result.current.account).toBe("saved");
-    // Saved = this device's round + what the account already had.
+    // Saved = this device's round + what the account already had. (The random
+    // round can include p34 itself, so compare the union, not a fixed count.)
     const saved = server.saves.at(-1) as { items: Record<string, unknown>; rounds: number };
-    expect(Object.keys(saved.items)).toHaveLength(SIZE + 1);
+    expect(Object.keys(saved.items).sort()).toEqual([...new Set([...askedInRound1, "p34"])].sort());
     expect(saved.rounds).toBe(1);
     // Round 2 opens with one of round 1's misses.
     expect(missedInRound1).toContain(result.current.nextItem());
