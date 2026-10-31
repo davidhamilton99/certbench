@@ -198,19 +198,24 @@ function OptionButton({
  * `preview` skips the real onboarding write so the flow can be shown off-auth.
  * `resume` reopens the flow at the offer for someone who already set their
  * goal but hasn't paid (e.g. backed out of Stripe Checkout).
+ * `initialCertId` answers "Which exam?" up front for someone who arrived from
+ * that exam's readiness check; the flow opens on the next question.
  */
 export function OnboardingFlow({
   certifications,
   preview = false,
   resume,
+  initialCertId,
 }: {
   certifications: CertOption[];
   preview?: boolean;
   resume?: { certId: string | null; why: string | null; examDate: string | null };
+  initialCertId?: string;
 }) {
   const resumeWhy = WHY_OPTIONS.find((o) => o.value === resume?.why)?.value ?? null;
-  const [step, setStep] = useState(resume ? PAYWALL : CERT);
-  const [certId, setCertId] = useState<string | null>(resume?.certId ?? null);
+  const preset = resume ? undefined : certifications.find((c) => c.id === initialCertId);
+  const [step, setStep] = useState(resume ? PAYWALL : preset ? WHY : CERT);
+  const [certId, setCertId] = useState<string | null>(resume?.certId ?? preset?.id ?? null);
   const [why, setWhy] = useState<Why | null>(resumeWhy);
   const [level, setLevel] = useState<Level | null>(null);
   const [examDate, setExamDate] = useState(resume?.examDate ?? "");
@@ -227,8 +232,11 @@ export function OnboardingFlow({
   };
 
   // Flow entered — top of the goal-setting funnel. A resume isn't a new entry.
+  // A preset exam counts as the "cert" step answered, so the funnel stays whole.
   useEffect(() => {
-    if (!preview && !resume) track("onboarding_started", {});
+    if (preview || resume) return;
+    track("onboarding_started", {});
+    if (preset) logStep("cert", preset.examCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

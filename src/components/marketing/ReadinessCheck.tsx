@@ -8,6 +8,8 @@ import {
   type CheckAnswer,
   type CheckQuestion,
 } from "@/lib/tools/readiness-estimate";
+import { track } from "@/lib/analytics";
+import { useSignedIn } from "@/components/auth/useSignedIn";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +26,13 @@ const BAND = {
  * score and keep it, never as a wall in front of the questions.
  */
 export function ReadinessCheck({
+  cert,
   questions,
   shortCertName,
   objectiveCount,
 }: {
+  /** Certification slug, carried into the goal flow for a signed-in visitor. */
+  cert: string;
   questions: CheckQuestion[];
   shortCertName: string;
   objectiveCount: number;
@@ -35,6 +40,10 @@ export function ReadinessCheck({
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [answers, setAnswers] = useState<CheckAnswer[]>([]);
+  // A free account (e.g. from a drill) goes straight into the goal flow with
+  // this exam already picked; everyone else signs up first.
+  const signedIn = useSignedIn();
+  const nextHref = signedIn ? `/onboarding?cert=${cert}` : "/register";
 
   const total = questions.length;
   const done = answers.length === total && picked === null;
@@ -115,7 +124,10 @@ export function ReadinessCheck({
             day — that&apos;s what CertBench Pro unlocks.
           </p>
           <Button asChild size="lg">
-            <Link href="/register">
+            <Link
+              href={nextHref}
+              onClick={() => track("upsell_clicked", { context: "readiness_check", href: nextHref })}
+            >
               Get my real readiness score
               <ArrowRight />
             </Link>

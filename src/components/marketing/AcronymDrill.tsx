@@ -5,7 +5,7 @@ import type { ResolvedDeck } from "@/lib/recall/recall-deck";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { RecallPlayer } from "@/components/recall/RecallPlayer";
 import { useDrillRounds } from "./useDrillRounds";
-import { ExamContext, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
+import { EXAMS, ExamBridge, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
 
 /**
  * Public acronym drill for the free tool page, played in rounds: round 1 is
@@ -47,10 +47,14 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
         tiles={tiles}
         variant="dots"
         extra={
-          <ExamContext cert="security-plus-sy0-701">
-            Acronyms are pure recall — the part anyone can max out. The exam is
-            decided by the scenarios and PBQs most people underestimate.
-          </ExamContext>
+          <ExamBridge
+            tool="acronyms"
+            title="Acronyms are the part anyone can max out."
+            exams={[EXAMS.securityPlus]}
+          >
+            The exam is decided by the scenarios and PBQs most people
+            underestimate. See where you stand on them in about 3 minutes.
+          </ExamBridge>
         }
       />
     );
