@@ -15,6 +15,14 @@ import { ReadinessPanel } from "@/components/workspace/ReadinessPanel";
 import { SessionBlockCard } from "@/components/workspace/SessionBlockCard";
 import type { ShareReadinessProps } from "@/components/workspace/ShareReadiness";
 import { DiagnosticGate } from "@/components/workspace/DiagnosticGate";
+import { PathResumeCard } from "@/components/path/PathResumeCard";
+import { loadPathBank } from "@/server/path/bank";
+import { getPathProgress } from "@/server/data/path-progress";
+import { buildPlan, stopAt } from "@/core/path/plan";
+import { hasStarted, nextStopIndex, stopsDone } from "@/core/path/progress";
+import { isPathCert } from "@/core/path/types";
+import { EXAM_NAMES } from "@/data/path/titles";
+import type { Db } from "@/server/supabase/server";
 
 /** Block types metered by the free daily quota (see practice-exam/start). */
 const METERED_TYPES = new Set([
@@ -25,8 +33,38 @@ const METERED_TYPES = new Set([
 ]);
 
 export const metadata = {
-  title: "Dashboard",
+  title: "Today",
 };
+
+/**
+ * The guided path card for the active exam: next stop and progress, from the
+ * account's saved path. Never breaks the dashboard — any failure falls back to
+ * a plain "open your path" card.
+ */
+async function loadPathCard(db: Db, userId: string, slug: string) {
+  if (!isPathCert(slug)) return null;
+  const href = `/path/${slug}`;
+  const name = EXAM_NAMES[slug] ?? "exam";
+  try {
+    const [bank, saved] = await Promise.all([loadPathBank(slug), getPathProgress(db, userId, slug)]);
+    if (!bank || !saved.stored || !hasStarted(saved.progress)) {
+      return <PathResumeCard href={href} examName={name} done={null} total={null} nextTitle={null} />;
+    }
+    const plan = buildPlan(bank.structure);
+    const next = stopAt(plan, bank.structure, nextStopIndex(plan, saved.progress));
+    return (
+      <PathResumeCard
+        href={href}
+        examName={name}
+        done={stopsDone(plan, saved.progress)}
+        total={plan.stops.length}
+        nextTitle={next?.kind === "review" ? "Keep practicing" : (next?.title ?? null)}
+      />
+    );
+  } catch {
+    return <PathResumeCard href={href} examName={name} done={null} total={null} nextTitle={null} />;
+  }
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -61,17 +99,22 @@ export default async function DashboardPage({
     getProfile(db, user.id),
   ]);
 
+  const pathCard = await loadPathCard(db, user.id, active.slug);
+
   // First-run: before the diagnostic, the plan is a single diagnostic block.
   // Show a focused "start here" gate instead of an empty readiness gauge.
   const needsDiagnostic =
     plan.blocks.length === 1 && plan.blocks[0].type === "diagnostic";
   if (needsDiagnostic) {
     return (
-      <DiagnosticGate
-        certName={active.name}
-        examCode={active.examCode}
-        href={`/certifications/${active.slug}/diagnostic`}
-      />
+      <div className="mx-auto grid w-full max-w-5xl gap-6">
+        {pathCard}
+        <DiagnosticGate
+          certName={active.name}
+          examCode={active.examCode}
+          href={`/certifications/${active.slug}/diagnostic`}
+        />
+      </div>
     );
   }
 
@@ -107,6 +150,7 @@ export default async function DashboardPage({
         aria-hidden
         className="pointer-events-none absolute -top-24 right-0 -z-10 h-72 w-[32rem] rounded-full bg-primary/5 blur-3xl dark:bg-primary/10"
       />
+      {pathCard}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
           <h1 className="font-display text-2xl font-semibold tracking-tight">

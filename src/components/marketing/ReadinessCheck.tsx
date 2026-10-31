@@ -9,9 +9,25 @@ import {
   type CheckQuestion,
 } from "@/lib/tools/readiness-estimate";
 import { track } from "@/lib/analytics";
-import { useSignedIn } from "@/components/auth/useSignedIn";
+import { splitExplanation } from "@/core/path/text";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+/** The takeaway first; the rest of the explanation only for whoever wants it. */
+function Explanation({ text }: { text: string }) {
+  const { takeaway, rest } = splitExplanation(text);
+  return (
+    <div className="grid gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm leading-relaxed">
+      <p>{takeaway}</p>
+      {rest && (
+        <details className="text-muted-foreground">
+          <summary className="cursor-pointer select-none font-medium text-foreground">Why, in full</summary>
+          <p className="mt-1.5">{rest}</p>
+        </details>
+      )}
+    </div>
+  );
+}
 
 const BAND = {
   ready: { label: "Looking exam ready", tone: "text-success", bar: "bg-success" },
@@ -40,10 +56,8 @@ export function ReadinessCheck({
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [answers, setAnswers] = useState<CheckAnswer[]>([]);
-  // A free account (e.g. from a drill) goes straight into the goal flow with
-  // this exam already picked; everyone else signs up first.
-  const signedIn = useSignedIn();
-  const nextHref = signedIn ? `/onboarding?cert=${cert}` : "/register";
+  // The way on is the same for everyone: this exam's guided path.
+  const nextHref = `/path/${cert}`;
 
   const total = questions.length;
   const done = answers.length === total && picked === null;
@@ -118,17 +132,16 @@ export function ReadinessCheck({
 
         <div className="grid justify-items-center gap-3 border-t pt-5 text-center">
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            That&apos;s an estimate from {total} questions. Your real readiness
-            score tracks all {objectiveCount} {shortCertName} objectives,
-            updates as you practice, and tells you exactly what to study each
-            day — that&apos;s what CertBench Pro unlocks.
+            That&apos;s an estimate from {total} questions. Your {shortCertName}{" "}
+            path covers all {objectiveCount} objectives, one short stop at a
+            time, and shows you where you stand as you go.
           </p>
           <Button asChild size="lg">
             <Link
               href={nextHref}
               onClick={() => track("upsell_clicked", { context: "readiness_check", href: nextHref })}
             >
-              Get my real readiness score
+              Start my {shortCertName} path
               <ArrowRight />
             </Link>
           </Button>
@@ -205,11 +218,7 @@ export function ReadinessCheck({
         })}
       </div>
 
-      {revealed && (
-        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm leading-relaxed">
-          {question.explanation}
-        </div>
-      )}
+      {revealed && <Explanation text={question.explanation} />}
 
       <div className="flex justify-end">
         <Button onClick={next} disabled={!revealed} className="min-w-32">

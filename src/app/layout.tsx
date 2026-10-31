@@ -18,7 +18,7 @@ const SITE_JSONLD = {
       url: "https://certbench.dev",
       logo: "https://certbench.dev/icon-512.png",
       description:
-        "Adaptive CompTIA exam prep — personalised study plans, adaptive practice exams, spaced repetition, and a conservative readiness score for Security+, Network+, and A+.",
+        "Guided CompTIA exam prep — every exam objective as a path of short, interactive stops, with a readiness checkpoint, for Security+, Network+, and A+.",
     },
     {
       "@type": "WebSite",
@@ -64,11 +64,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "CertBench — Know exactly what to study",
+    default: "CertBench — Pass your CompTIA exam one short step at a time",
     template: "%s — CertBench",
   },
   description:
-    "CertBench builds a personalised study plan from your actual performance data. Adaptive practice exams, spaced repetition, and a readiness score for CompTIA Security+, Network+, and A+ certifications.",
+    "Pick your CompTIA exam and CertBench guides you through every objective in short, interactive stops, with a readiness checkpoint that shows where you stand. Security+, Network+, and A+.",
   keywords: [
     "CompTIA Security+",
     "CompTIA Network+",
@@ -89,9 +89,9 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "CertBench — Know exactly what to study",
+    title: "CertBench — Pass your CompTIA exam one short step at a time",
     description:
-      "Personalised study plans, adaptive practice exams, and spaced repetition for CompTIA certifications.",
+      "Every exam objective as a path of short, interactive stops, with a readiness checkpoint that shows where you stand.",
     url: "https://certbench.dev",
     siteName: "CertBench",
     type: "website",
@@ -99,9 +99,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CertBench — Know exactly what to study",
+    title: "CertBench — Pass your CompTIA exam one short step at a time",
     description:
-      "Personalised study plans, adaptive practice exams, and spaced repetition for CompTIA certifications.",
+      "Every exam objective as a path of short, interactive stops, with a readiness checkpoint that shows where you stand.",
   },
   robots: {
     index: true,

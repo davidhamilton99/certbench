@@ -79,8 +79,12 @@ export const POST = defineEndpoint(createCheckout, {
     }
 
     const origin = publicEnv.NEXT_PUBLIC_APP_URL;
-    // Backing out of the onboarding offer returns to that offer, not the app.
+    // Backing out of an offer returns to that offer, not the app.
     const cancelUrl = `${origin}/${input.returnTo}`;
+    // Bought from a guided path: the success screen sends them back to it.
+    const successUrl = input.returnTo.startsWith("path/")
+      ? `${origin}/upgrade?upgraded=true&next=${encodeURIComponent(`/${input.returnTo}`)}`
+      : `${origin}/upgrade?upgraded=true`;
     let session;
     try {
       session = await getStripe().checkout.sessions.create({
@@ -91,7 +95,7 @@ export const POST = defineEndpoint(createCheckout, {
         // Land on /upgrade (paywall-exempt), not /dashboard: the paywall gate
         // would bounce the just-paid user back here if the activation webhook
         // hasn't landed yet. The success screen forwards to /dashboard once Pro.
-        success_url: `${origin}/upgrade?upgraded=true`,
+        success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: { supabase_user_id: user.id },
       });
@@ -103,7 +107,7 @@ export const POST = defineEndpoint(createCheckout, {
           customer: customerId,
           mode: "subscription",
           line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
-          success_url: `${origin}/upgrade?upgraded=true`,
+          success_url: successUrl,
           cancel_url: cancelUrl,
           metadata: { supabase_user_id: user.id },
         });

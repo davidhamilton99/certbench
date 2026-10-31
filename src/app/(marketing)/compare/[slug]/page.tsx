@@ -119,12 +119,12 @@ export default async function VsPage({
             The fastest way to decide
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Build your study plan and see the readiness score and daily plan
-            on your own results.
+            Start the guided path for your exam. The first stops are free, and
+            the readiness checkpoint shows where you stand.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href="/start">
+              Start my exam path
               <ArrowRight />
             </Link>
           </Button>

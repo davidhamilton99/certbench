@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { listObjectivePages } from "@/server/seo/objective-data";
 import { listReadinessCheckCerts } from "@/server/seo/readiness-check-data";
 import { VS_PAGES, ROUNDUPS } from "@/lib/seo/comparison-pages";
+import { PATH_CERTS } from "@/core/path/types";
 
 const BASE_URL = "https://certbench.dev";
 
@@ -29,7 +30,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     .catch(() => []);
 
+  const paths: MetadataRoute.Sitemap = PATH_CERTS.map((cert) => ({
+    url: `${BASE_URL}/path/${cert}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  }));
+
   return [
+    ...paths,
     ...readinessChecks,
     ...objectivePages,
     {

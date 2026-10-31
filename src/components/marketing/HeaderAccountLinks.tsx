@@ -7,8 +7,8 @@ import { useSignedIn } from "@/components/auth/useSignedIn";
 /**
  * The header's account links. Marketing pages are static, so they render the
  * signed-out pair first; once a session is found (including one just created
- * by an inline signup on the page) it becomes a single way into the app.
- * /dashboard routes a free account on to its goal flow and the offer.
+ * by an inline signup on the page) it becomes a single way back to their path.
+ * /start opens the exam they're enrolled in, or lets them pick one.
  */
 export function HeaderAccountLinks() {
   const signedIn = useSignedIn();
@@ -16,7 +16,7 @@ export function HeaderAccountLinks() {
   if (signedIn) {
     return (
       <Button asChild size="sm">
-        <Link href="/dashboard">Your plan</Link>
+        <Link href="/start">Your path</Link>
       </Button>
     );
   }
@@ -27,7 +27,7 @@ export function HeaderAccountLinks() {
         <Link href="/login">Sign in</Link>
       </Button>
       <Button asChild size="sm">
-        <Link href="/register">Get started</Link>
+        <Link href="/start">Get started</Link>
       </Button>
     </>
   );

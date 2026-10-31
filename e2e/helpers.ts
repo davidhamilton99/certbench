@@ -45,28 +45,23 @@ export async function grantPro(email: string): Promise<void> {
 }
 
 /**
- * Steps the goal-setting onboarding funnel once the page is on /onboarding.
- * The flow is a client-side state machine (CERT → WHY → STAT → LEVEL → DATE →
- * HOURS → COMMIT → BUILDING → PLAN → PAYWALL); the cert enrollment is written
- * during BUILDING, so reaching PLAN proves onboarding persisted.
+ * Picks the exam on /start (where a new account lands) and opens its guided
+ * path, then makes it the account's exam the way the path does at its first
+ * goal question — so the Pro workspace has an enrolled exam to open.
  */
-export async function stepOnboardingFlow(page: Page, cert: RegExp): Promise<void> {
-  await page.getByRole("button", { name: cert }).click(); // CERT
-  await page.getByRole("button", { name: "Break into IT" }).click(); // WHY
-  await page.getByRole("button", { name: /Let.?s go/i }).click(); // STAT
-  await page.getByRole("button", { name: "Total beginner" }).click(); // LEVEL
-  await page.getByRole("button", { name: /Not sure yet/i }).click(); // DATE (skip)
-  await page.getByRole("button", { name: /Steady/ }).click(); // HOURS
-  await page.getByRole("button", { name: /I.?m in/i }).click(); // COMMIT
-  // BUILDING auto-advances to PLAN after the onboarding write + a brief beat.
-  await page.getByRole("button", { name: /Start my plan/i }).click(); // PLAN → PAYWALL
-  await page.getByRole("button", { name: /Unlock my plan/i }).waitFor();
+export async function pickExam(page: Page, cert: RegExp): Promise<void> {
+  await page.waitForURL("**/start**");
+  await page.getByRole("link", { name: cert }).first().click();
+  await page.waitForURL("**/path/**");
+  const slug = new URL(page.url()).pathname.split("/").pop();
+  const res = await page.request.post("/api/path/enroll", { data: { cert: slug, examDate: null } });
+  if (!res.ok()) throw new Error(`enroll failed for ${slug}: ${res.status()}`);
 }
 
 /**
  * Full setup shared by every app-exercising spec: register, confirm, sign in,
- * run the onboarding flow, grant Pro, and land on the dashboard. Returns the
- * account email. Requires a service role (same as confirmE2eEmail).
+ * pick the exam, grant Pro, and land on the dashboard. Returns the account
+ * email. Requires a service role (same as confirmE2eEmail).
  */
 export async function registerOnboardPro(
   page: Page,
@@ -81,20 +76,20 @@ export async function registerOnboardPro(
   await page.click('button[type="submit"]');
 
   // With email confirmation ON, signup lands on /verify (confirm + sign in).
-  // With it OFF, signup returns a live session and drops straight into the
-  // flow. Handle both so the suite passes regardless of the Supabase setting.
-  await page.waitForURL((url) => /\/(verify|onboarding)/.test(url.pathname));
+  // With it OFF, signup returns a live session and lands on the exam picker.
+  // Handle both so the suite passes regardless of the Supabase setting.
+  await page.waitForURL((url) => /\/(verify|start)/.test(url.pathname));
   if (new URL(page.url()).pathname.startsWith("/verify")) {
     await confirmE2eEmail(email);
     await page.goto("/login");
     await page.fill("#email", email);
     await page.fill("#password", E2E_PASSWORD);
     await page.click('button[type="submit"]');
-    // The proxy routes an onboarded-less user to /onboarding after sign-in.
-    await page.waitForURL("**/onboarding");
+    // Without Pro, the proxy sends a signed-in account to the exam picker.
+    await page.waitForURL("**/start**");
   }
 
-  await stepOnboardingFlow(page, opts.cert);
+  await pickExam(page, opts.cert);
 
   await grantPro(email);
 

@@ -242,28 +242,20 @@ export function PracticeTestLanding({
         {/* CTA */}
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
           <h2 className="text-xl font-semibold tracking-tight">
-            Find out if you&apos;d pass today
+            Study it one short step at a time
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Build your study plan: a readiness score with a domain-by-domain
-            breakdown, then a daily plan built from your actual weak spots.
+            The guided path walks every exam objective in quick rounds like the
+            questions above, then a readiness checkpoint shows where you&apos;d
+            stand today.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/register">
-              Build my study plan
+            <Link href={page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start"}>
+              Start my path
               <ArrowRight />
             </Link>
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Not ready to sign up?{" "}
-            <Link
-              href={`/readiness-check/${page.certSlugs[0]}`}
-              className="text-primary underline underline-offset-4"
-            >
-              Try the 3-minute readiness check
-            </Link>{" "}
-            — no account needed.
-          </p>
+          <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
 
         <FaqSection faqs={page.faqs} />

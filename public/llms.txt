@@ -1,6 +1,15 @@
 # CertBench
 
-> Adaptive CompTIA exam prep. CertBench builds a personalised study plan from your actual performance — adaptive practice exams, spaced repetition, and a deliberately conservative readiness score — for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 220-1101 and Core 2 220-1102). Every question is original and written to the exam objectives with a full explanation. No braindumps or leaked exam content.
+> Guided CompTIA exam prep. Pick your exam and CertBench lays out every exam objective as a path of short, interactive stops — quick questions first, the real exam's wording as you go — with a readiness checkpoint that shows where you stand, for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 220-1101 and Core 2 220-1102). Every question is original and written to the exam objectives with a full explanation. No braindumps or leaked exam content.
+
+## Guided study paths
+
+Each path starts with a warm-up anyone can play with no account. A free account keeps your progress and opens the next stops through the readiness checkpoint; Pro opens the rest of the path.
+
+- [Security+ study path (SY0-701)](https://certbench.dev/path/security-plus-sy0-701): all 28 objectives, one short stop each, with domain practice and a readiness checkpoint.
+- [Network+ study path (N10-009)](https://certbench.dev/path/network-plus-n10-009): every N10-009 objective, from the OSI model to troubleshooting.
+- [A+ Core 1 study path (220-1101)](https://certbench.dev/path/a-plus-core1-220-1101): mobile devices, networking, hardware, virtualization and troubleshooting.
+- [A+ Core 2 study path (220-1102)](https://certbench.dev/path/a-plus-core2-220-1102): operating systems, security, software troubleshooting and operational procedures.
 
 ## Free tools
 
@@ -25,5 +34,5 @@ The port, subnetting, and acronym drills give a first round free with no account
 ## About
 
 - [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
-- [Pricing](https://certbench.dev/pricing): free tools, and a Pro tier for the full study experience — a personalised daily plan, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
+- [Pricing](https://certbench.dev/pricing): the start of every path is free; Pro opens the whole path, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
 - Certifications covered: CompTIA Security+ SY0-701, Network+ N10-009, A+ Core 1 220-1101, A+ Core 2 220-1102.

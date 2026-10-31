@@ -585,6 +585,24 @@ interface DatabaseGenerated {
           reviewed_at?: string | null;
         };
       };
+      path_progress: {
+        Row: {
+          user_id: string;
+          cert_slug: string;
+          progress: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          cert_slug: string;
+          progress?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          progress?: Json;
+          updated_at?: string;
+        };
+      };
       drill_progress: {
         Row: {
           user_id: string;

@@ -19,18 +19,18 @@ export const metadata = {
   title: "Pricing",
 };
 
-// The free offering is the public, no-account tools — the in-app study
-// experience is Pro. These are the real pages a visitor can use right now.
+// The free offering: the start of the guided path plus the public tools.
+// These are the real things a visitor can use right now.
 const FREE_TOOLS = [
-  "3-minute readiness check — no account",
-  "Full-length practice-test previews",
-  "PBQ examples for every cert",
-  "Subnetting, ports & acronym trainers — free account to keep going",
+  "The guided path's warm-up — no account",
+  "The next four stops and the readiness checkpoint — free account",
+  "Practice-test previews and PBQ examples",
+  "Subnetting, ports & acronym trainers",
   "Exam-objective study guides",
 ];
 
 const PRO_FEATURES = [
-  "A personalised daily plan, ordered by impact",
+  "The whole guided path, every objective to exam day",
   "Unlimited practice questions + full-length exams",
   "Every PBQ simulation and concept drill",
   "Spaced repetition + a readiness score you can trust",
@@ -54,17 +54,17 @@ export default async function PricingPage() {
             Priced for one exam cycle
           </h1>
           <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
-            Try the tools free. Go Pro to get the plan that gets you
-            certified.
+            Start your path free. Go Pro for the rest of it, through to exam
+            day.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Free tools</CardTitle>
+              <CardTitle>Free</CardTitle>
               <CardDescription>
-                Try CertBench before you commit
+                See where you stand before you commit
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-5">
@@ -84,9 +84,7 @@ export default async function PricingPage() {
                 ))}
               </ul>
               <Button asChild variant="outline" size="lg" className="w-full">
-                <Link href="/readiness-check/security-plus-sy0-701">
-                  Take the readiness check
-                </Link>
+                <Link href="/start">Start my path free</Link>
               </Button>
             </CardContent>
           </Card>
@@ -120,16 +118,6 @@ export default async function PricingPage() {
         </div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          Not sure where you stand?{" "}
-          <Link
-            href="/readiness-check/security-plus-sy0-701"
-            className="underline underline-offset-4"
-          >
-            Take the free 3-minute readiness check
-          </Link>{" "}
-          — no account needed.
-        </p>
-        <p className="mt-3 text-center text-sm text-muted-foreground">
           Questions?{" "}
           <Link href="/contact" className="underline underline-offset-4">
             Get in touch

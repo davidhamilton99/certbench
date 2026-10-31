@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Library,
   ListChecks,
+  Route,
   Table2,
   Users,
 } from "lucide-react";
@@ -23,16 +24,25 @@ export interface ShellCert {
   examCode: string;
 }
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/study-materials", label: "Study sets", icon: Library },
-  { href: "/community", label: "Community", icon: Users },
+/**
+ * The guided path comes first — it's how CertBench is meant to be studied.
+ * The rest of the workspace is the Pro toolkit around it; the least-used
+ * pages sit under More.
+ */
+const TOOLKIT = [
   { href: "/pbq", label: "PBQ lab", icon: FlaskConical },
   { href: "/recall", label: "Recall", icon: Brain },
+  { href: "/review", label: "Review", icon: ListChecks },
   { href: "/reference", label: "Reference", icon: Table2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/review", label: "Review", icon: ListChecks },
 ];
+
+const MORE = [
+  { href: "/study-materials", label: "Study sets", icon: Library },
+  { href: "/community", label: "Community", icon: Users },
+];
+
+const NAV_ITEMS = [{ href: "/dashboard", label: "Today", icon: LayoutDashboard }, ...TOOLKIT, ...MORE];
 
 /**
  * The active certification from `?cert=`, read on the client only. It's `null`
@@ -90,43 +100,82 @@ function withCert(href: string, cert: string | null): string {
   return cert ? `${href}?cert=${cert}` : href;
 }
 
-function DesktopNav() {
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+        active
+          ? "bg-accent font-medium"
+          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      )}
+    >
+      <Icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
+      {label}
+    </Link>
+  );
+}
+
+function DesktopNav({ pathHref }: { pathHref: string | null }) {
   const pathname = usePathname();
   const cert = useCertParam();
   return (
-    <nav className="flex flex-1 flex-col gap-0.5 p-3">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const active = pathname.startsWith(href);
-        return (
-          <Link
-            key={href}
-            href={withCert(href, cert)}
-            className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-              active
-                ? "bg-accent font-medium"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-            )}
-          >
-            <Icon
-              className={cn(
-                "size-4",
-                active ? "text-primary" : "text-muted-foreground"
-              )}
-            />
-            {label}
-          </Link>
-        );
-      })}
+    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
+      {pathHref && (
+        <Link
+          href={pathHref}
+          className="mb-1.5 flex items-center gap-2.5 rounded-md bg-primary px-2.5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-[filter] hover:brightness-110"
+        >
+          <Route className="size-4" />
+          Your path
+        </Link>
+      )}
+      <NavLink
+        href={withCert("/dashboard", cert)}
+        label="Today"
+        icon={LayoutDashboard}
+        active={pathname.startsWith("/dashboard")}
+      />
+      <p className="mt-4 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        Toolkit
+      </p>
+      {TOOLKIT.map((item) => (
+        <NavLink key={item.href} {...item} href={withCert(item.href, cert)} active={pathname.startsWith(item.href)} />
+      ))}
+      <p className="mt-4 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        More
+      </p>
+      {MORE.map((item) => (
+        <NavLink key={item.href} {...item} href={withCert(item.href, cert)} active={pathname.startsWith(item.href)} />
+      ))}
     </nav>
   );
 }
 
-function MobileNav() {
+function MobileNav({ pathHref }: { pathHref: string | null }) {
   const pathname = usePathname();
   const cert = useCertParam();
   return (
     <nav className="flex gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
+      {pathHref && (
+        <Link
+          href={pathHref}
+          className="whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
+        >
+          Your path
+        </Link>
+      )}
       {NAV_ITEMS.map(({ href, label }) => (
         <Link
           key={href}
@@ -154,6 +203,10 @@ export function WorkspaceShell({
   displayName: string;
   children: React.ReactNode;
 }) {
+  const certParam = useCertParam();
+  const activeSlug = certs.find((c) => c.slug === certParam)?.slug ?? certs[0]?.slug;
+  const pathHref = activeSlug ? `/path/${activeSlug}` : null;
+
   return (
     // Theme-aware workspace on the soft aurora field; the readiness instrument
     // panels stay dark islands within it (see ReadinessPanel).
@@ -172,7 +225,7 @@ export function WorkspaceShell({
           </Link>
         </div>
         <CertSwitcher certs={certs} />
-        <DesktopNav />
+        <DesktopNav pathHref={pathHref} />
         <div className="flex items-center justify-between gap-1 border-t px-3 py-2.5">
           <Link
             href="/profile"
@@ -201,7 +254,7 @@ export function WorkspaceShell({
             <SignOutButton />
           </div>
         </header>
-        <MobileNav />
+        <MobileNav pathHref={pathHref} />
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </div>
     </div>

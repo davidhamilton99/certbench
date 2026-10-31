@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { registerOnboardPro } from "./helpers";
 
 /**
- * The critical path: register -> goal-setting onboarding -> (Pro) diagnostic
+ * The critical path: register -> pick the exam -> (Pro) diagnostic
  * with a mid-exam reload to prove resume -> results -> dashboard readiness.
  * The signed-in app is Pro-only, so setup grants Pro before driving the app.
  */

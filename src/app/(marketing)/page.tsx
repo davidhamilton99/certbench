@@ -1,25 +1,13 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BrainCircuit,
-  CalendarClock,
-  FlaskConical,
-  Gauge,
-  ListChecks,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { Testimonials } from "@/components/marketing/Testimonials";
-import { HeroQuestion } from "@/components/marketing/HeroQuestion";
-import { HeroShowcase } from "@/components/marketing/HeroShowcase";
-import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
+import { PathShowcase } from "@/components/marketing/PathShowcase";
+import { ExamPicker } from "@/components/path/ExamPicker";
 import { createAnonClient } from "@/server/supabase/anon";
 import { listApprovedTestimonials } from "@/server/data/testimonials";
-import { getCertificationBySlug } from "@/server/data/certifications";
-import { listSampleQuestions } from "@/server/data/questions";
-import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
 
 // The root layout's self-referencing canonical ("./") resolves to
 // "/index" for the home route — pin the homepage's canonical to the site
@@ -28,76 +16,19 @@ export const metadata = {
   alternates: { canonical: "/" },
 };
 
-/**
- * A hero-sized Security+ question: fetched with the anon client (ISR-safe),
- * shortest of the sample set so the card stays compact on mobile. Fail-safe
- * null hides the card rather than ever breaking the homepage.
- */
-async function loadHeroQuestion(): Promise<SampleQuestionData | null> {
-  try {
-    const db = createAnonClient();
-    const cert = await getCertificationBySlug(db, "security-plus-sy0-701");
-    if (!cert) return null;
-    const samples = await listSampleQuestions(db, cert.id, 8);
-    const fits = samples
-      .filter(
-        (q) =>
-          q.question_text.length <= 220 &&
-          q.options.length === 4 &&
-          q.options.every((o) => o.text.length <= 90)
-      )
-      .sort((a, b) => a.question_text.length - b.question_text.length);
-    const best = fits[0] ?? null;
-    if (!best) return null;
-    return {
-      questionText: best.question_text,
-      options: best.options.map((o) => o.text),
-      correctIndex: best.correct_index,
-      explanation: best.explanation,
-    };
-  } catch {
-    return null;
-  }
-}
-
-const FEATURES = [
+const STEPS = [
   {
-    icon: Gauge,
-    title: "A readiness score you can trust",
-    body: "Domain-weighted and confidence-penalised — it only climbs when you've genuinely covered the exam objectives, not when you've memorised one topic.",
+    title: "Pick your exam",
+    body: "One tap. It's the only choice you make — from there, every step is laid out for you.",
   },
   {
-    icon: ListChecks,
-    title: "A daily plan, ordered by impact",
-    body: "Every day CertBench looks at your performance and tells you the single most valuable thing to do next: review, drill, or full exam.",
+    title: "Play short stops",
+    body: "Each stop teaches one exam objective in about three minutes of quick questions. What you miss comes back until it sticks.",
   },
   {
-    icon: CalendarClock,
-    title: "Spaced repetition built in",
-    body: "Questions you miss come back right before you'd forget them. Suspend cards you've truly mastered.",
+    title: "See where you stand",
+    body: "A readiness checkpoint scores you the way the real exam weights its domains, and your map shows exactly what's left.",
   },
-  {
-    icon: FlaskConical,
-    title: "Hands-on PBQ practice",
-    body: "Interactive simulations, network topologies, and drag-to-order drills that mirror the performance-based questions on the real exam.",
-  },
-  {
-    icon: BrainCircuit,
-    title: "Adaptive practice exams",
-    body: "Question selection targets what you haven't seen, what you've missed, and your current skill level — proportional to real domain weights.",
-  },
-  {
-    icon: Sparkles,
-    title: "Your notes, turned into questions",
-    body: "Paste any study material and the AI generates a quality-reviewed question set from it. Import from any chatbot too.",
-  },
-];
-
-const CERTS = [
-  "Security+ SY0-701",
-  "Network+ N10-009",
-  "A+ Core 1 220-1101",
-  "A+ Core 2 220-1102",
 ];
 
 export const revalidate = 3600; // refresh approved testimonials hourly
@@ -108,143 +39,72 @@ export default async function LandingPage() {
   const testimonials = await listApprovedTestimonials(createAnonClient(), 6).catch(
     () => []
   );
-  const heroQuestion = await loadHeroQuestion();
 
   return (
     <div className="relative flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
 
       <main className="flex-1">
-        {/* Hero */}
+        {/* Hero: the exam picker is the call to action. */}
         <section className="relative overflow-hidden">
-          {/* Atmosphere: primary glow + faint blueprint grid fading out */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute left-1/2 top-[-30%] h-[34rem] w-[54rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-            <div
-              className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_35%,black,transparent)]"
-            />
+            <div className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_35%,black,transparent)]" />
           </div>
 
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-24 pt-16 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-16">
-            <div className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
-              <h1 className="text-balance font-display text-5xl font-semibold tracking-tight sm:text-6xl">
-                Know{" "}
-                <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  exactly
-                </span>{" "}
-                what to study
-              </h1>
-              <p className="max-w-xl text-balance text-lg text-muted-foreground">
-                CertBench builds a personalised study plan from your actual
-                performance — adaptive practice exams, spaced repetition, and a
-                readiness score for CompTIA certifications.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2 lg:justify-start">
-                <Button asChild size="lg" className="h-12 px-6 text-base">
-                  <Link href="/register">
-                    Build my study plan
-                    <ArrowRight />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="h-12 px-6 text-base">
-                  <Link href="/pricing">See pricing</Link>
-                </Button>
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-6 pb-24 pt-14 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16">
+            <div className="grid gap-7">
+              <div className="grid gap-5 text-center lg:text-left">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  CompTIA Security+ · Network+ · A+
+                </p>
+                <h1 className="text-balance font-display text-5xl font-semibold tracking-tight sm:text-6xl">
+                  Pass your exam one{" "}
+                  <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    short step
+                  </span>{" "}
+                  at a time
+                </h1>
+                <p className="mx-auto max-w-xl text-balance text-lg text-muted-foreground lg:mx-0">
+                  CertBench lays out every exam objective as a path of quick,
+                  interactive stops and shows you where you stand as you go. No
+                  planning. No wondering what to study next.
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Want a taste first?{" "}
-                <Link
-                  href="/readiness-check/security-plus-sy0-701"
-                  className="font-medium text-foreground underline underline-offset-4"
-                >
-                  Take the 3-minute readiness check
-                </Link>{" "}
-                — no account needed.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 pt-2 lg:justify-start">
-                {CERTS.map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-full border bg-muted/40 px-3 py-1 font-mono text-xs text-muted-foreground"
-                  >
-                    {c}
-                  </span>
-                ))}
+
+              <div className="mx-auto grid w-full max-w-xl gap-3 lg:mx-0">
+                <p className="text-sm font-medium">Which exam are you taking?</p>
+                <ExamPicker surface="home" />
+                <p className="text-sm text-muted-foreground">
+                  Free to start. No account needed for your first stop.
+                </p>
               </div>
             </div>
 
             <div className="flex justify-center lg:justify-end">
-              <HeroShowcase />
+              <PathShowcase />
             </div>
           </div>
         </section>
 
-        {/* Features */}
+        {/* How it works — a real sequence, so it's numbered. */}
         <section className="border-t border-border/50">
-          <div className="mx-auto grid w-full max-w-5xl gap-4 px-6 py-20 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, body }) => (
-              <div
-                key={title}
-                className="glass grid content-start gap-3 rounded-2xl p-6 transition-colors hover:border-primary/40"
-              >
-                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
-                  <Icon className="size-5 text-primary" />
-                </span>
-                <h2 className="font-display font-semibold tracking-tight">{title}</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Try one — kept for the visitors who want proof in their hands */}
-        {heroQuestion && (
-          <section className="mx-auto w-full max-w-3xl px-6 py-16">
-            <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
-              Try a real exam question
+          <div className="mx-auto w-full max-w-5xl px-6 py-20">
+            <h2 className="text-center font-display text-3xl font-semibold tracking-tight">
+              How it works
             </h2>
-            <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
-              Original, written to the SY0-701 objectives, with the
-              explanation — the same experience as the full bank.
-            </p>
-            <div className="mt-6 flex justify-center">
-              <HeroQuestion question={heroQuestion} />
-            </div>
-          </section>
-        )}
-
-        {/* How it works */}
-        <section className="mx-auto w-full max-w-3xl px-6 py-16">
-          <h2 className="text-center font-display text-2xl font-semibold tracking-tight">
-            How it works
-          </h2>
-          <ol className="mt-8 grid gap-6">
-            {[
-              [
-                "Take a 25-question diagnostic",
-                "Establishes your baseline across every exam domain in about twenty minutes.",
-              ],
-              [
-                "Follow your daily plan",
-                "CertBench orders each day's work by impact: overdue reviews first, then your weakest domain, then new ground.",
-              ],
-              [
-                "Walk in when the score says you're ready",
-                "The readiness score is deliberately conservative — when it turns green, you've earned it.",
-              ],
-            ].map(([title, body], i) => (
-              <li key={title} className="flex gap-4">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-sm font-semibold text-primary">
-                  {i + 1}
-                </span>
-                <div>
-                  <h3 className="font-medium">{title}</h3>
-                  <p className="text-sm text-muted-foreground">{body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+            <ol className="mt-10 grid gap-4 md:grid-cols-3">
+              {STEPS.map(({ title, body }, i) => (
+                <li key={title} className="glass grid content-start gap-3 rounded-2xl p-6">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary ring-1 ring-primary/25">
+                    {i + 1}
+                  </span>
+                  <h3 className="font-display text-lg font-semibold tracking-tight">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
         {testimonials.length >= 3 && <Testimonials items={testimonials} />}
@@ -253,18 +113,15 @@ export default async function LandingPage() {
         <section className="border-t">
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-20 text-center">
             <h2 className="text-balance font-display text-4xl font-bold tracking-tight">
-              Stop guessing. Start passing.
+              Your first stop takes three minutes.
             </h2>
             <p className="max-w-md text-balance text-muted-foreground">
-              Your plan in two minutes — then study with Pro, backed by a{" "}
-              <Link href={PASS_GUARANTEE_HREF} className="underline underline-offset-4">
-                pass guarantee
-              </Link>
-              .
+              Start now, no account needed. Save your map when you want to keep
+              going.
             </p>
             <Button asChild size="lg" className="mt-1 h-12 px-6 text-base">
-              <Link href="/register">
-                Build my study plan
+              <Link href="/start">
+                Start my path
                 <ArrowRight />
               </Link>
             </Button>

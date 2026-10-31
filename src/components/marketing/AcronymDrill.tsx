@@ -52,8 +52,8 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
             title="Acronyms are the part anyone can max out."
             exams={[EXAMS.securityPlus]}
           >
-            The exam is decided by the scenarios and PBQs most people
-            underestimate. See where you stand on them in about 3 minutes.
+            The exam is decided by the scenarios most people underestimate.
+            Your path walks every objective in short rounds like this one.
           </ExamBridge>
         }
       />

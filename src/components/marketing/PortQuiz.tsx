@@ -55,8 +55,8 @@ export function PortQuiz({
             title="Ports are a small slice of the exam."
             exams={[EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1]}
           >
-            The rest — scenarios, PBQs, every domain — decides whether you pass.
-            See where you stand on it in about 3 minutes.
+            The rest decides whether you pass. Your path walks every exam
+            objective in short rounds like this one.
           </ExamBridge>
         }
       />

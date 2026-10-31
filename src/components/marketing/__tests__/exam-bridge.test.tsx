@@ -49,14 +49,14 @@ describe("HeaderAccountLinks", () => {
     render(<HeaderAccountLinks />);
     await act(async () => {});
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/register");
+    expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/start");
   });
 
   it("becomes a way into the app once signed in", async () => {
     auth.session = { user: { id: "u1" } };
     render(<HeaderAccountLinks />);
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "Your plan" })).toHaveAttribute("href", "/dashboard")
+      expect(screen.getByRole("link", { name: "Your path" })).toHaveAttribute("href", "/start")
     );
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   });
@@ -66,7 +66,7 @@ describe("HeaderAccountLinks", () => {
     await act(async () => {});
     expect(screen.getByRole("link", { name: "Get started" })).toBeInTheDocument();
     act(() => auth.listeners.forEach((l) => l("SIGNED_IN", { user: { id: "u1" } })));
-    expect(screen.getByRole("link", { name: "Your plan" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Your path" })).toBeInTheDocument();
   });
 });
 
@@ -94,27 +94,22 @@ describe("ReadinessCheck result", () => {
     await act(async () => {});
     fireEvent.click(screen.getByRole("radio", { name: /53/ }));
     fireEvent.click(screen.getByRole("button", { name: /See my estimate/ }));
-    return screen.getByRole("link", { name: /real readiness score/i });
+    return screen.getByRole("link", { name: /Network\+ path/i });
   }
 
-  it("sends a visitor to sign up", async () => {
-    expect(await finish()).toHaveAttribute("href", "/register");
-  });
-
-  it("takes a signed-in visitor into the goal flow with this exam picked", async () => {
-    auth.session = { user: { id: "u1" } };
+  it("sends everyone on to this exam's guided path", async () => {
     const cta = await finish();
-    await waitFor(() => expect(cta).toHaveAttribute("href", "/onboarding?cert=network-plus-n10-009"));
+    expect(cta).toHaveAttribute("href", "/path/network-plus-n10-009");
     fireEvent.click(cta);
     expect(track).toHaveBeenCalledWith("upsell_clicked", {
       context: "readiness_check",
-      href: "/onboarding?cert=network-plus-n10-009",
+      href: "/path/network-plus-n10-009",
     });
   });
 });
 
 describe("ExamBridge", () => {
-  it("offers a one-tap readiness check per exam and tracks it", () => {
+  it("offers a one-tap path per exam and tracks it", () => {
     render(
       <ExamBridge tool="ports" title="Ports are a small slice of the exam." exams={[EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1]}>
         See where you stand.
@@ -123,16 +118,16 @@ describe("ExamBridge", () => {
     expect(track).toHaveBeenCalledWith("upsell_viewed", { context: "drill_bridge_ports" });
     expect(screen.getByRole("link", { name: "Security+" })).toHaveAttribute(
       "href",
-      "/readiness-check/security-plus-sy0-701"
+      "/path/security-plus-sy0-701"
     );
     expect(screen.getByRole("link", { name: "A+ Core 1" })).toHaveAttribute(
       "href",
-      "/readiness-check/a-plus-core1-220-1101"
+      "/path/a-plus-core1-220-1101"
     );
     fireEvent.click(screen.getByRole("link", { name: "Network+" }));
     expect(track).toHaveBeenCalledWith("upsell_clicked", {
       context: "drill_bridge_ports",
-      href: "/readiness-check/network-plus-n10-009",
+      href: "/path/network-plus-n10-009",
     });
   });
 
@@ -142,7 +137,7 @@ describe("ExamBridge", () => {
         See where you stand.
       </ExamBridge>
     );
-    expect(screen.getByRole("link", { name: "Check my Security+ readiness" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start my Security+ path" })).toBeInTheDocument();
   });
 });
 
@@ -172,7 +167,7 @@ describe("RoundComplete for a signed-in visitor", () => {
         }
       />
     );
-    const bridge = screen.getByRole("link", { name: /Network\+ readiness/ });
+    const bridge = screen.getByRole("link", { name: /Network\+ path/ });
     const next = screen.getByRole("button", { name: /Start round 3/ });
     // The bridge comes first in reading order; the round button follows it.
     expect(bridge.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

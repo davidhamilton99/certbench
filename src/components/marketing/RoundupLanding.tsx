@@ -15,6 +15,13 @@ function certLabel(path: string): string {
   return "CompTIA";
 }
 
+/** The roundup's exam path; A+ has two exams, so its visitors pick one. */
+function pathFor(path: string): string {
+  if (path.includes("network-plus")) return "/path/network-plus-n10-009";
+  if (path.includes("security-plus")) return "/path/security-plus-sy0-701";
+  return "/start";
+}
+
 /** Presentational template for the "best {cert} practice tests" roundups. */
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
@@ -109,29 +116,19 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
         {/* CTA */}
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
           <h2 className="text-xl font-semibold tracking-tight">
-            Start with a measurement, not a purchase
+            Try it before you buy anything
           </h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Whatever stack you choose, choose it from data: the free 3-minute
-            readiness check gives you a readiness score and your weak domains —
-            no account, no card.
+            The guided path walks every exam objective in short stops, and its
+            readiness checkpoint shows where you stand. The first stops are
+            free, no card.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href="/readiness-check/security-plus-sy0-701">
-              Take the free readiness check
+            <Link href={pathFor(data.path)}>
+              Start the free stops
               <ArrowRight />
             </Link>
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Want questions first?{" "}
-            <Link
-              href={`/${data.practiceTestPath}`}
-              className="text-primary underline underline-offset-4"
-            >
-              Try the free practice test
-            </Link>{" "}
-            — no account needed.
-          </p>
         </section>
 
         {/* Cross-links to the other cert guides */}
