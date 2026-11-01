@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -30,24 +30,31 @@ const SITE_JSONLD = {
   ],
 };
 
-const inter = Inter({
-  subsets: ["latin"],
+// Fonts are self-hosted (src/app/fonts: the Latin subset of each family's
+// variable font, SIL Open Font License). Fetching them from Google at build
+// time made production builds fail whenever Google served its newer font URL
+// format, which Next's Turbopack font loader can't parse.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  weight: "100 900",
   variable: "--font-inter",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin.woff2",
+  weight: "400 600",
   variable: "--font-jetbrains-mono",
   display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+  adjustFontFallback: false,
 });
 
 // Display face for CertBench 2.0 — a characterful grotesque used for headline
 // and instrument moments, paired with Inter for body and JetBrains Mono for data.
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+const bricolage = localFont({
+  src: "./fonts/bricolage-grotesque-latin.woff2",
+  weight: "500 700",
   variable: "--font-bricolage",
   display: "swap",
 });
