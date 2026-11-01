@@ -94,6 +94,14 @@ export function bankToRep(q: BankQuestion, tier: "quick" | "exam", rng: Rng): Ch
 
 const NUMERIC = /^[\d\s/,–-]+$/;
 
+/** Column labels arrive lowercased ("cidr"); put acronyms back in capitals. */
+const ACRONYMS = new Set(["cidr", "ip", "ipv4", "ipv6", "osi", "dns", "mac", "tcp", "udp", "os", "url", "vlan", "ssid", "wpa", "raid", "ram", "cpu", "gpu", "pdu", "nic"]);
+const prettyLabel = (label: string) =>
+  label
+    .split(" ")
+    .map((w) => (ACRONYMS.has(w.toLowerCase()) ? w.toUpperCase() : w))
+    .join(" ");
+
 function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng: Rng, typed: boolean): Rep {
   const q = generateRecallQuestion(deck, rng, { itemId, noSwap: typed });
   const id = recallRepId(objective, deck.config.id, q.itemId);
@@ -114,7 +122,7 @@ function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng:
       tier: "recall",
       objective,
       prompt: q.promptValue,
-      cue: `Type the ${q.answerLabel}`,
+      cue: `Type the ${prettyLabel(q.answerLabel)}`,
       accept: q.acceptable,
       answerText: q.answer,
       takeaway,
@@ -128,7 +136,7 @@ function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng:
     tier: "recall",
     objective,
     prompt: q.promptValue,
-    cue: `Which ${q.answerLabel}?`,
+    cue: `Which ${prettyLabel(q.answerLabel)}?`,
     options: q.options,
     answer: q.options.indexOf(q.answer),
     takeaway,
@@ -357,14 +365,18 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
         );
       }
     }
-    const inFresh = new Set(fresh.map((r) => r.id));
-    const closers = byLength(pool, rng)
-      .map((q) => bankToRep(q, "exam", rng))
-      .filter((r) => !inFresh.has(r.id));
-    return composeStop(
-      { misses: misses(MAX_RESURFACED), fresh, closers },
+    const body = composeStop(
+      { misses: misses(MAX_RESURFACED), fresh },
       { size: LEARN_NEW_REPS, maxMisses: MAX_RESURFACED, seen: seenSet }
     );
+    // Close on the real exam's wording: the shortest bank question the stop
+    // didn't already use (unseen first). Picked after the body, so an
+    // objective whose questions are all short still gets one.
+    const used = new Set(body.map((r) => r.id));
+    const candidates = byLength(pool, rng).filter((q) => !used.has(bankRepId(q.objective, q.id)));
+    const closer =
+      candidates.find((q) => !seenSet.has(bankRepId(q.objective, q.id))) ?? candidates[0];
+    return closer ? [...body, bankToRep(closer, "exam", rng)] : body;
   }
 
   function practiceReps(objectives: string[]): Rep[] {

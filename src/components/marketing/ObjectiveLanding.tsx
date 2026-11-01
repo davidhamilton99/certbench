@@ -3,7 +3,9 @@ import { ArrowRight, ChevronRight } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuickRound } from "@/components/path/QuickRound";
 import { Button } from "@/components/ui/button";
+import type { QuickRoundData } from "@/core/path/types";
 
 export interface ObjectiveLandingData {
   certSlug: string;
@@ -32,7 +34,14 @@ const PRACTICE_HUB: Record<string, string> = {
   "a-plus-core2-220-1102": "/a-plus-practice-test",
 };
 
-export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
+export function ObjectiveLanding({
+  data,
+  round = null,
+}: {
+  data: ObjectiveLandingData;
+  /** This objective's stop of the guided path, played inline at the top. */
+  round?: QuickRoundData | null;
+}) {
   const hub = PRACTICE_HUB[data.certSlug] ?? "/start";
 
   return (
@@ -61,7 +70,25 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
           Objective {data.code}: {data.title}
         </h1>
 
-        <div className="mt-4 grid gap-3 text-muted-foreground">
+        {/* Lead with something to do: this objective's stop of the path. */}
+        {round && (
+          <section className="mt-6 grid gap-3">
+            <p className="text-sm text-muted-foreground">
+              Try it now: {round.reps.length} quick questions on this objective, no account needed.
+            </p>
+            <QuickRound
+              cert={round.cert}
+              stopId={data.code}
+              examName={round.examName}
+              reps={round.reps}
+              label={`Objective ${data.code} · ${round.title}`}
+              surface="objective_page"
+              pitch={`That's one of ${round.objectiveCount} ${round.examName} objectives. Your path walks every one like this, then shows where you stand.`}
+            />
+          </section>
+        )}
+
+        <div className={round ? "mt-10 grid gap-3 text-muted-foreground" : "mt-4 grid gap-3 text-muted-foreground"}>
           <p className="leading-relaxed">
             Practice questions for {data.shortCertName} objective {data.code},{" "}
             &ldquo;{data.title}.&rdquo; Every question is original, written to
@@ -82,6 +109,11 @@ export function ObjectiveLanding({ data }: { data: ObjectiveLandingData }) {
 
         {/* Interactive samples */}
         <section className="mt-8 grid gap-4">
+          {round && (
+            <h2 className="text-lg font-semibold tracking-tight">
+              More {data.code} practice questions
+            </h2>
+          )}
           {data.samples.map((q, i) => (
             <SampleQuestion key={i} number={i + 1} question={q} />
           ))}

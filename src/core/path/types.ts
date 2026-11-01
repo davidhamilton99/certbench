@@ -166,3 +166,16 @@ export const EMPTY_PATH_PROGRESS: PathProgress = {
 };
 
 export type ObjectiveStatus = "new" | "missed" | "got";
+
+/** One stop of a path, packaged for a public page to play inline. */
+export interface QuickRoundData {
+  cert: PathCert;
+  examName: string;
+  /** The stop's title ("Security controls", "Warm-up"). */
+  title: string;
+  reps: Rep[];
+  /** Where this stop sits on the path, for the pitch line. */
+  stopNumber: number;
+  totalStops: number;
+  objectiveCount: number;
+}
