@@ -199,6 +199,33 @@ describe("buildStop — Network+", () => {
     expect(reps[0].id).toBe(first.id);
   });
 
+  it("makes the subnetting stop hands-on: one fresh problem per skill", () => {
+    const index = netPlan.stops.findIndex((s) => s.id === "1.4");
+    const { reps } = build(netPlus, netPlan, index);
+    const subnet = reps.filter((r) => r.id.startsWith("r|1.4|subnet|"));
+    expect(subnet.map((r) => r.id.split("|")[3]).sort()).toEqual(
+      ["cidr-mask", "host-math", "network-id", "same-subnet"].sort()
+    );
+    for (const r of subnet) {
+      expect(r.label).toBe("Hands-on");
+      if (r.type === "typed") {
+        expect(r.answerKind).toBeDefined();
+        expect(r.accept).toHaveLength(1);
+      } else {
+        expect(r.options).toEqual(["Yes", "No"]);
+      }
+    }
+    expect(reps).toHaveLength(LEARN_NEW_REPS + 1);
+    expectValid(reps);
+  });
+
+  it("brings a missed subnetting skill back as a new problem of the same kind", () => {
+    const later = netPlan.stops.findIndex((s) => s.id === "1.6");
+    const { reps } = build(netPlus, netPlan, later, { missed: ["r|1.4|subnet|host-math"] });
+    expect(reps[0].id).toBe("r|1.4|subnet|host-math");
+    expect(reps[0].type === "typed" && reps[0].answerKind).toBe("count");
+  });
+
   it("uses the bank's quick questions for an objective with no table", () => {
     const index = netPlan.stops.findIndex((s) => s.id === "3.2");
     const { reps } = build(netPlus, netPlan, index);

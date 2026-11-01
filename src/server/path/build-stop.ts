@@ -4,6 +4,7 @@ import type { AuthoredRep } from "@/data/path/types";
 import { getRecallDecks } from "@/data/recall";
 import { generateRecallQuestion, type ResolvedDeck } from "@/lib/recall/recall-deck";
 import { acceptableAnswers } from "@/lib/recall/normalize";
+import { generateQuestion, MODES as SUBNET_MODES, type DrillMode } from "@/lib/tools/subnetting";
 import {
   CHECKPOINT_SIZE,
   LEARN_NEW_REPS,
@@ -135,6 +136,55 @@ function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng:
   };
 }
 
+/** Rep ids for subnetting problems: one per skill, `r|<objective>|subnet|<mode>`. */
+const SUBNET_DECK = "subnet";
+const isDrillMode = (v: string): v is DrillMode => SUBNET_MODES.some((m) => m.id === v);
+const subnetRepId = (objective: string, mode: DrillMode) => `r|${objective}|${SUBNET_DECK}|${mode}`;
+
+/**
+ * A fresh hands-on subnetting problem for one skill. "Same subnet?" is a
+ * yes/no choice; the rest are typed and graded by the subnetting engine. The
+ * first worked step is the takeaway, the rest folds away.
+ */
+export function subnetToRep(objective: string, mode: DrillMode, rng: Rng): Rep {
+  const q = generateQuestion(mode, "standard", rng);
+  const id = subnetRepId(objective, mode);
+  const [first = "", ...more] = q.solution;
+  const explanation = more.length ? more.join(" ") : undefined;
+  if (q.answerKind === "yes-no") {
+    return {
+      id,
+      type: "choice",
+      label: "Hands-on",
+      tier: "quick",
+      objective,
+      prompt: q.prompt,
+      cue: q.promptValue,
+      options: ["Yes", "No"],
+      answer: q.answer === "yes" ? 0 : 1,
+      takeaway: first,
+      explanation,
+    };
+  }
+  const text = `${q.prompt} ${q.promptValue}`;
+  return {
+    id,
+    type: "typed",
+    label: "Hands-on",
+    tier: "quick",
+    objective,
+    prompt: /^(What|How|Which|Are)\b/.test(q.prompt) ? `${text}?` : text,
+    cue: "Your answer",
+    accept: [q.answer],
+    answerText: q.answerKind === "cidr" ? `/${q.answer}` : q.answer,
+    answerKind: q.answerKind,
+    placeholder: q.placeholder,
+    numeric: q.answerKind === "count",
+    takeaway: first,
+    explanation,
+  };
+}
+
 /** Distinct facts in a deck, by its cue column. */
 function deckItems(deck: ResolvedDeck): string[] {
   const seen = new Set<string>();
@@ -213,6 +263,8 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
       return q ? bankToRep(q, isShort(q) ? "quick" : "exam", rng) : null;
     }
     const [deckId, hash] = parsed.key.split("|");
+    // A missed subnetting skill comes back as a fresh problem of the same kind.
+    if (deckId === SUBNET_DECK) return isDrillMode(hash) ? subnetToRep(parsed.objective, hash, rng) : null;
     const deck = deckById.get(deckId);
     const item = deck && deckItems(deck).find((v) => shortHash(v) === hash);
     return deck && item ? recallToRep(deck, item, parsed.objective, rng, false) : null;
@@ -291,9 +343,10 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
         .filter(([, obj]) => obj === objective)
         .map(([tableId]) => tableId);
       const recall = tables.flatMap((t) => recallFor(t, objective, Math.ceil(3 / tables.length), true)).slice(0, 3);
+      const handsOn = (content.subnetting?.[objective] ?? []).map((mode) => subnetToRep(objective, mode, rng));
       const quick = byLength(pool.filter(isQuick), rng).map((q) => bankToRep(q, "quick", rng));
       const short = byLength(pool.filter((q) => isShort(q) && !isQuick(q)), rng).map((q) => bankToRep(q, "quick", rng));
-      fresh = [...recall, ...quick, ...short];
+      fresh = [...recall, ...handsOn, ...quick, ...short];
       // A thin objective still fills its stop, shortest questions first —
       // leaving the rest for the closing exam-style rep.
       if (fresh.length < LEARN_NEW_REPS) {
