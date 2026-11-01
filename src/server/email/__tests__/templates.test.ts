@@ -4,8 +4,10 @@ vi.mock("@/env", () => ({
   publicEnv: { NEXT_PUBLIC_APP_URL: "https://certbench.dev" },
 }));
 
-import { pathCountdownEmail, pathEmailLink, pathNudgeEmail } from "../templates";
+import { checkpointResultEmail, pathCountdownEmail, pathEmailLink, pathNudgeEmail } from "../templates";
+import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge } from "@/core/path/nudge";
+import type { PathDomain } from "@/core/path/types";
 
 const base = {
   displayName: "Sam Lee",
@@ -135,5 +137,82 @@ describe("pathCountdownEmail", () => {
     const email = countdown(1, { done: 12, total: 35, freeLeft: 0 });
     expect(email.subject).toBe("Tomorrow's the day — Security+");
     expect(email.text).toContain("No cramming tonight.");
+  });
+});
+
+describe("checkpointResultEmail", () => {
+  const domains: PathDomain[] = [
+    { number: "1.0", title: "Networking Concepts", weight: 23, objectives: [] },
+    { number: "2.0", title: "Network Implementation", weight: 20, objectives: [] },
+    { number: "3.0", title: "Network Operations", weight: 19, objectives: [] },
+  ];
+  const followUp = (score: number, over: Partial<CheckpointFollowUp> = {}): CheckpointFollowUp => ({
+    result: {
+      score,
+      at: 0,
+      domains: [
+        { number: "1.0", correct: 3, total: 3 },
+        { number: "2.0", correct: 2, total: 3 },
+      ],
+    },
+    remaining: 28,
+    opportunity: domains[1],
+    ...over,
+  });
+  const email = (f: CheckpointFollowUp, displayName = "Sam Lee") =>
+    checkpointResultEmail({ ...base, displayName, examName: "Network+", domains, followUp: f, questionCount: 617 });
+
+  it("leads with the score and how each domain went", () => {
+    const e = email(followUp(74));
+    expect(e.subject).toBe("Your Network+ checkpoint: 74%");
+    expect(e.html).toContain("74%");
+    expect(e.html).toContain("Getting close");
+    expect(e.text).toContain(
+      "You scored 74% on your Network+ readiness checkpoint: 6 exam-style questions, weighted the way the real exam weights its domains. 75% is where we call it exam-ready."
+    );
+    expect(e.text).toContain("1 Networking Concepts: 3/3\n2 Network Implementation: 2/3\n3 Network Operations: not asked");
+    expect(e.text).toContain("Your biggest opportunity is Network Implementation, 20% of the exam.");
+  });
+
+  it("says what the rest of the path holds and what it costs, plainly", () => {
+    const e = email(followUp(74));
+    expect(e.text).toContain("- All 28 remaining stops of your Network+ path");
+    expect(e.text).toContain("- Practice across all 617 Network+ questions");
+    expect(e.text).toContain("$39 for 3 months. Renews every 3 months. Cancel anytime.");
+    expect(e.text).toContain("Pass guarantee: https://certbench.dev/terms#pass-guarantee");
+    expect(e.text).toContain(`Unlock your path: ${base.href}`);
+    expect(e.html).toContain(`href="${base.href}"`);
+    expect(e.html).toContain(base.unsubscribeUrl);
+  });
+
+  it("previews the email's point in the inbox, not the logo", () => {
+    expect(email(followUp(74)).html).toMatch(/<body[^>]*>\s*<div style="display:none;[^"]*">How each domain went/);
+  });
+
+  it("is honest that a passing checkpoint is only a first read", () => {
+    const e = email(followUp(82));
+    expect(e.html).toContain("Exam ready");
+    expect(e.text).toContain("past the 75% we call exam-ready. Still, that's a first read from 6 questions");
+  });
+
+  it("leaves out what doesn't apply", () => {
+    const e = email(followUp(100, { opportunity: null, remaining: 0 }));
+    expect(e.text).not.toContain("biggest opportunity");
+    expect(e.text).not.toContain("remaining stop");
+  });
+
+  it("escapes names and titles in the HTML", () => {
+    const tricky = { ...domains[1], title: "Implementation & <ops>" };
+    const e = checkpointResultEmail({
+      ...base,
+      displayName: "<b>Sam</b>",
+      examName: "Network+",
+      domains: [domains[0], tricky],
+      followUp: followUp(60, { opportunity: tricky }),
+      questionCount: 617,
+    });
+    expect(e.html).toContain("&lt;b&gt;Sam&lt;/b&gt;");
+    expect(e.html).toContain("Implementation &amp; &lt;ops&gt;");
+    expect(e.html).not.toContain("<ops>");
   });
 });

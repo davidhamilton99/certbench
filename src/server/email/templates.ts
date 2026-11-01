@@ -3,7 +3,11 @@ import "server-only";
 import { publicEnv } from "@/env";
 import type { ToolSource } from "@/contracts/tools";
 import { CHECKPOINT_SIZE, MINUTES_PER_STOP, PRACTICE_SIZE } from "@/core/path/plan";
+import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
+import type { PathDomain } from "@/core/path/types";
+import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
+import { BASE_PRICES_CENTS, formatUsd } from "@/lib/pricing/ppp";
 
 /**
  * Hand-rolled HTML email templates. Inline styles only (email clients strip
@@ -20,7 +24,11 @@ export interface EmailContent {
 
 const APP = () => publicEnv.NEXT_PUBLIC_APP_URL;
 
-function layout(bodyHtml: string, unsubscribeUrl?: string): string {
+/**
+ * `preheader` is the inbox preview line. Without one, clients preview the
+ * first text they find, which is the "CB CertBench" logo.
+ */
+function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): string {
   return `<!doctype html>
 <html>
 <head>
@@ -28,6 +36,7 @@ function layout(bodyHtml: string, unsubscribeUrl?: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;">
+  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>` : ""}
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
     <div style="margin-bottom:24px;">
       <span style="display:inline-block;background:#2563eb;color:#ffffff;border-radius:6px;padding:3px 7px;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;">CB</span>
@@ -417,5 +426,120 @@ export function pathNudgeEmail(input: {
       input.unsubscribeUrl
     ),
     text: `Pick up where you left off, ${first}.\n\n${where} Next up is ${nudge.next.title}: ${length}.\n${after}\n\nPlay your next stop: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+  };
+}
+
+/** A share out of 100 as a bar. Table cells, so every mail client draws it. */
+function bar(pct: number, color: string): string {
+  const filled = Math.max(0, Math.min(100, Math.round(pct)));
+  const td = (w: number, bg: string) =>
+    `<td width="${w}%" style="width:${w}%;height:6px;line-height:6px;font-size:0;background:${bg};">&nbsp;</td>`;
+  const cells = (filled > 0 ? td(filled, color) : "") + (filled < 100 ? td(100 - filled, "#e4e4e7") : "");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${cells}</tr></table>`;
+}
+
+const bandLabel = (score: number) =>
+  score >= 75 ? "Exam ready" : score >= 40 ? "Getting close" : "Your starting point";
+
+/**
+ * The one-time follow-up for someone who took their readiness checkpoint and
+ * didn't buy: the score, how each domain went, where the biggest gain is, and
+ * what the rest of the path holds, with the price stated plainly.
+ */
+export function checkpointResultEmail(input: {
+  displayName: string;
+  examName: string;
+  domains: PathDomain[];
+  followUp: CheckpointFollowUp;
+  questionCount: number;
+  href: string;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const { examName, domains, href } = input;
+  const { result, remaining, opportunity } = input.followUp;
+  const first = input.displayName.split(" ")[0] || input.displayName;
+  const score = result.score;
+  const asked = result.domains.reduce((s, d) => s + d.total, 0);
+  const price = formatUsd(BASE_PRICES_CENTS.quarterly);
+  const guarantee = `${APP()}${PASS_GUARANTEE_HREF}`;
+
+  const read =
+    score >= 75
+      ? `You scored ${score}% on your ${examName} readiness checkpoint, past the 75% we call exam-ready. Still, that's a first read from ${asked} questions: the rest of your path and full timed practice exams are how you make sure.`
+      : `You scored ${score}% on your ${examName} readiness checkpoint: ${asked} exam-style questions, weighted the way the real exam weights its domains. 75% is where we call it exam-ready.`;
+  const rows = domains.map((d) => {
+    const r = result.domains.find((x) => x.number === d.number);
+    return {
+      n: d.number.replace(/\.0$/, ""),
+      title: d.title,
+      tally: r ? `${r.correct}/${r.total}` : "not asked",
+      pct: r && r.total > 0 ? (r.correct / r.total) * 100 : 0,
+    };
+  });
+  const gain = opportunity ? `Your biggest opportunity is ${opportunity.title}, ${opportunity.weight}% of the exam.` : "";
+  const includes = [
+    ...(remaining > 0 ? [`All ${remaining} remaining ${remaining === 1 ? "stop" : "stops"} of your ${examName} path`] : []),
+    `Practice across all ${input.questionCount.toLocaleString("en-US")} ${examName} questions`,
+    "Timed practice exams, PBQ labs and spaced review",
+  ];
+  const terms = "Renews every 3 months. Cancel anytime.";
+
+  return {
+    subject: `Your ${examName} checkpoint: ${score}%`,
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 16px;">Here's where you stand, ${esc(first)}</h1>
+      <div style="text-align:center;padding:0 0 18px;">
+        <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#71717a;">Readiness checkpoint · ${examName}</div>
+        <div style="font-size:52px;line-height:1.15;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${scoreColor(score)};margin-top:6px;">${score}%</div>
+        <div style="font-size:13px;font-weight:600;color:${scoreColor(score)};">${bandLabel(score)}</div>
+      </div>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 6px;">${read}</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 14px;">
+        ${rows
+          .map(
+            (r) => `<tr>
+          <td style="padding:10px 0 5px;font-size:13px;"><span style="color:#a1a1aa;margin-right:6px;">${r.n}</span>${esc(r.title)}</td>
+          <td style="padding:10px 0 5px;font-size:12px;text-align:right;color:#71717a;font-variant-numeric:tabular-nums;white-space:nowrap;">${r.tally}</td>
+        </tr>
+        <tr><td colspan="2" style="padding:0;">${bar(r.pct, scoreColor(r.pct))}</td></tr>`
+          )
+          .join("")}
+      </table>
+      ${
+        opportunity
+          ? `<p style="font-size:14px;line-height:1.7;margin:0;">Your biggest opportunity is <strong>${esc(opportunity.title)}</strong>, ${opportunity.weight}% of the exam.</p>`
+          : ""
+      }
+      <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:10px;padding:18px;margin:18px 0 0;">
+        <div style="font-size:16px;font-weight:700;margin:0 0 10px;">The rest of your ${examName} path</div>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;line-height:1.6;">
+          ${includes
+            .map(
+              (line) =>
+                `<tr><td style="padding:2px 10px 2px 0;vertical-align:top;color:#2563eb;font-weight:700;">&#10003;</td><td style="padding:2px 0;">${esc(line)}</td></tr>`
+            )
+            .join("")}
+        </table>
+        <div style="margin:14px 0 0;"><span style="font-size:28px;font-weight:700;">${price}</span> <span style="font-size:13px;color:#71717a;">for 3 months</span></div>
+        <div style="font-size:12px;color:#71717a;margin:2px 0 6px;">${terms}</div>
+        ${button(href, "Unlock my path")}
+        <div style="font-size:12px;margin:12px 0 0;color:#15803d;font-weight:600;">&#10003; Pass guarantee <span style="color:#a1a1aa;font-weight:400;">·</span> <a href="${guarantee}" style="color:#71717a;font-weight:400;">Terms</a></div>
+      </div>
+    `,
+      input.unsubscribeUrl,
+      "How each domain went, and what the rest of your path covers."
+    ),
+    text: [
+      `Here's where you stand, ${first}.`,
+      read,
+      rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
+      gain,
+      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${price} for 3 months. ${terms}\nPass guarantee: ${guarantee}`,
+      `Unlock your path: ${href}`,
+      `Unsubscribe: ${input.unsubscribeUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   };
 }

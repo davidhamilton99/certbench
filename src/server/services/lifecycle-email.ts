@@ -11,6 +11,7 @@ import { getSessionPlan } from "@/server/services/session-plan";
 import { loadPathBank } from "@/server/path/bank";
 import { sendEmail } from "@/server/email/resend";
 import {
+  checkpointResultEmail,
   countdownEmail,
   dailyReminderEmail,
   digestEmail,
@@ -22,6 +23,7 @@ import {
   type EmailContent,
 } from "@/server/email/templates";
 import { buildPlan } from "@/core/path/plan";
+import { checkpointFollowUp, FOLLOW_UP_MAX_HOURS, FOLLOW_UP_MIN_HOURS } from "@/core/path/follow-up";
 import { NUDGE_MAX_HOURS, NUDGE_MIN_HOURS, pathNudge, pathStanding } from "@/core/path/nudge";
 import { sanitizePathProgress } from "@/core/path/progress";
 import { isPathCert, type PathCert, type PathProgress } from "@/core/path/types";
@@ -47,6 +49,9 @@ export function isTestAccount(email: string): boolean {
 
 /** email_log type for the one-time path nudge: one per exam, ever. */
 export const pathNudgeType = (cert: PathCert) => `path_nudge_${cert}`;
+
+/** email_log type for the one-time checkpoint follow-up: one per exam, ever. */
+export const pathOfferType = (cert: PathCert) => `path_offer_${cert}`;
 
 interface EmailPrefs {
   digestEnabled: boolean;
@@ -183,6 +188,7 @@ export interface LifecycleRunResult {
   postExam: number;
   dailyReminders: number;
   pathNudges: number;
+  pathOffers: number;
 }
 
 /** A path someone saved progress on, as of its last save. */
@@ -197,8 +203,8 @@ interface RunContext {
   isMonday: boolean;
   /** Accounts that get the toolkit's emails: active Pro, or admin. */
   pro: Set<string>;
-  /** Paths last saved two to seven days ago, by user. */
-  stalled: Map<string, SavedPath[]>;
+  /** Paths last saved inside the path emails' window (20 hours to 7 days ago), by user. */
+  recent: Map<string, SavedPath[]>;
 }
 
 /**
@@ -206,9 +212,10 @@ interface RunContext {
  *  - exam-countdown emails at T-14/7/3/1 for every enrollment with a date
  *  - Pro: weekly readiness digest on Mondays (UTC) for users with activity,
  *    and a daily study reminder on any day they have SRS cards due
- *  - without Pro: a one-time "pick up where you left off" when their path
- *    stalls before the readiness checkpoint (the digest and reminders are
- *    about the toolkit, which is Pro-only; for everyone else it's the path)
+ *  - without Pro: their path instead (the digest and reminders are about the
+ *    toolkit, which is Pro-only). A one-time "pick up where you left off" if
+ *    it stalls before the readiness checkpoint, and a one-time look at their
+ *    checkpoint result and the rest of the path if they took it and didn't buy
  * All sends respect digest_enabled and are deduped per day via email_log.
  * Apart from countdowns, which are tied to a date, a user gets at most one
  * "study" email a day (see sentStudyEmailToday).
@@ -224,6 +231,7 @@ export async function runLifecycleEmails(
     postExam: 0,
     dailyReminders: 0,
     pathNudges: 0,
+    pathOffers: 0,
   };
 
   const { data: userPage, error } = await admin.auth.admin.listUsers({
@@ -231,8 +239,8 @@ export async function runLifecycleEmails(
   });
   if (error) throw new Error(`listUsers failed: ${error.message}`);
 
-  const [pro, stalled] = await Promise.all([loadProUsers(admin), loadStalledPaths(admin, now)]);
-  const ctx: RunContext = { now, isMonday: now.getUTCDay() === 1, pro, stalled };
+  const [pro, recent] = await Promise.all([loadProUsers(admin), loadRecentPaths(admin, now)]);
+  const ctx: RunContext = { now, isMonday: now.getUTCDay() === 1, pro, recent };
 
   for (const user of userPage.users) {
     if (!user.email || !user.email_confirmed_at) continue;
@@ -273,16 +281,16 @@ async function loadProUsers(admin: Db): Promise<Set<string>> {
   ]);
 }
 
-/** Path progress last saved inside the nudge window, by user. */
-async function loadStalledPaths(admin: Db, now: Date): Promise<Map<string, SavedPath[]>> {
+/** Path progress last saved inside either path email's window, by user. */
+async function loadRecentPaths(admin: Db, now: Date): Promise<Map<string, SavedPath[]>> {
   const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
   const { data, error } = await admin
     .from("path_progress")
     .select("user_id, cert_slug, progress, updated_at")
-    .gte("updated_at", hoursAgo(NUDGE_MAX_HOURS))
-    .lte("updated_at", hoursAgo(NUDGE_MIN_HOURS));
+    .gte("updated_at", hoursAgo(Math.max(NUDGE_MAX_HOURS, FOLLOW_UP_MAX_HOURS)))
+    .lte("updated_at", hoursAgo(Math.min(NUDGE_MIN_HOURS, FOLLOW_UP_MIN_HOURS)));
   if (error) {
-    // Nudges are the optional part; the rest of the run goes ahead.
+    // The path emails are the optional part; the rest of the run goes ahead.
     console.error("path_progress read failed:", error.message);
     return new Map();
   }
@@ -309,8 +317,8 @@ async function processUser(
 ): Promise<void> {
   const pro = ctx.pro.has(userId);
   const enrollments = await listEnrollments(admin, userId);
-  const stalled = pro ? [] : (ctx.stalled.get(userId) ?? []);
-  if (enrollments.length === 0 && stalled.length === 0) return;
+  const recent = pro ? [] : (ctx.recent.get(userId) ?? []);
+  if (enrollments.length === 0 && recent.length === 0) return;
 
   const prefs = await getPrefs(admin, userId);
   if (!prefs.digestEnabled) return;
@@ -319,7 +327,7 @@ async function processUser(
   const displayName = profile?.displayName ?? "there";
 
   // One "study" email a day. Countdowns are tied to a date and always go; the
-  // digest, the daily reminder and the path nudge only go on a day nothing
+  // digest, the daily reminder and the path emails only go on a day nothing
   // else did.
   let sentStudyEmailToday = false;
 
@@ -377,13 +385,12 @@ async function processUser(
     }
   }
 
-  // ---- without Pro: the path, once, if it has stalled ----
+  // ---- without Pro: their path, at a stall or after the checkpoint ----
   if (!pro) {
-    if (
-      !sentStudyEmailToday &&
-      (await sendPathNudge(admin, userId, email, displayName, prefs.unsubscribeUrl, stalled, ctx.now))
-    ) {
-      result.pathNudges += 1;
+    if (!sentStudyEmailToday) {
+      const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now);
+      if (sent === "nudge") result.pathNudges += 1;
+      if (sent === "offer") result.pathOffers += 1;
     }
     return;
   }
@@ -472,38 +479,55 @@ async function pathCountdown(
 }
 
 /**
- * "Pick up where you left off" for the path they were on most recently, if it
- * has stalled short of the readiness checkpoint and they've never had one for
- * that exam. Returns whether an email went out.
+ * The one-time path emails, for the path they were on most recently. If it
+ * stalled short of the readiness checkpoint, "pick up where you left off". If
+ * they took the checkpoint and didn't buy, their result and what the rest of
+ * the path holds. Each goes once per exam, ever. Returns which one went out.
  */
-async function sendPathNudge(
+async function sendPathEmail(
   admin: Db,
   userId: string,
   email: string,
   displayName: string,
   unsubscribeUrl: string,
-  stalled: SavedPath[],
+  recent: SavedPath[],
   now: Date
-): Promise<boolean> {
-  for (const saved of [...stalled].sort((a, b) => b.updatedAt - a.updatedAt)) {
+): Promise<"nudge" | "offer" | null> {
+  for (const saved of [...recent].sort((a, b) => b.updatedAt - a.updatedAt)) {
     const bank = await loadPathBank(saved.cert);
     if (!bank) continue;
-    const nudge = pathNudge(buildPlan(bank.structure), saved.progress, saved.updatedAt, now.getTime());
-    if (!nudge) continue;
-    const type = pathNudgeType(saved.cert);
-    if (await sentBefore(admin, userId, type)) continue;
-    if (!(await claimSend(admin, userId, type))) continue;
-    return sendEmail({
-      to: email,
-      headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` },
-      ...pathNudgeEmail({
+    const plan = buildPlan(bank.structure);
+    const { examName, domains } = bank.structure;
+    const followUp = checkpointFollowUp(plan, domains, saved.progress, saved.updatedAt, now.getTime());
+    const nudge = followUp ? null : pathNudge(plan, saved.progress, saved.updatedAt, now.getTime());
+    let kind: "nudge" | "offer";
+    let content: EmailContent;
+    if (followUp) {
+      kind = "offer";
+      content = checkpointResultEmail({
         displayName,
-        examName: bank.structure.examName,
+        examName,
+        domains,
+        followUp,
+        questionCount: bank.questions.length,
+        href: pathEmailLink(saved.cert, "path_offer"),
+        unsubscribeUrl,
+      });
+    } else if (nudge) {
+      kind = "nudge";
+      content = pathNudgeEmail({
+        displayName,
+        examName,
         nudge,
         href: pathEmailLink(saved.cert, "path_nudge"),
         unsubscribeUrl,
-      }),
-    });
+      });
+    } else continue;
+    const type = kind === "offer" ? pathOfferType(saved.cert) : pathNudgeType(saved.cert);
+    if (await sentBefore(admin, userId, type)) continue;
+    if (!(await claimSend(admin, userId, type))) continue;
+    const sent = await sendEmail({ to: email, headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` }, ...content });
+    return sent ? kind : null;
   }
-  return false;
+  return null;
 }
