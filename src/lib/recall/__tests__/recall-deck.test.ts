@@ -64,6 +64,13 @@ describe("normalize", () => {
       expect.arrayContaining(["137-139", "137", "139"])
     );
   });
+
+  it("takes a CIDR prefix with or without its slash, like the subnetting grader", () => {
+    expect(acceptableAnswers("/30")).toEqual(["/30", "30"]);
+    expect(acceptableAnswers("/64")).toContain("64");
+    // Only a bare prefix: a port pair isn't one.
+    expect(acceptableAnswers("20/21")).toEqual(["20/21"]);
+  });
 });
 
 describe("buildDeck validation", () => {
@@ -112,6 +119,59 @@ describe("buildDeck validation", () => {
     };
     const deck = buildDeck(base, holey);
     expect(deck.rows).toHaveLength(synthetic.entries.length);
+  });
+
+  it("drops placeholders, which would only be giveaways or junk distractors", () => {
+    const placeholders: ReferenceTable = {
+      ...synthetic,
+      entries: [
+        ...synthetic.entries,
+        { columns: { term: "T568B", def: "N/A", note: "" } },
+        { columns: { term: "VGA", def: "N/A (analog signal)", note: "" } },
+        { columns: { term: "—", def: "Not a term", note: "" } },
+      ],
+    };
+    const deck = buildDeck(base, placeholders);
+    expect(deck.rows.map((r) => r.term)).toEqual(synthetic.entries.map((e) => e.columns.term));
+  });
+});
+
+describe("detail line", () => {
+  const subnets: ReferenceTable = {
+    id: "subnets",
+    title: "Subnets",
+    description: "",
+    columnHeaders: [
+      { key: "cidr", label: "CIDR" },
+      { key: "mask", label: "Subnet Mask" },
+      { key: "hosts", label: "Usable Hosts" },
+      { key: "ad", label: "Default AD" },
+      { key: "note", label: "Note" },
+    ],
+    entries: [
+      { columns: { cidr: "/30", mask: "255.255.255.252", hosts: "2", ad: "1", note: "Point-to-point links" } },
+      { columns: { cidr: "/29", mask: "255.255.255.248", hosts: "6", ad: "1", note: "Small sites" } },
+      { columns: { cidr: "/22", mask: "255.255.252.0", hosts: "1,022", ad: "1", note: "Four /24s" } },
+    ],
+  };
+  const deck = buildDeck(
+    {
+      id: "s",
+      label: "s",
+      tableId: "subnets",
+      mode: "choice",
+      ask: { key: "mask", label: "subnet mask" },
+      answer: { key: "cidr", label: "cidr" },
+      detailKeys: ["hosts", "ad", "note"],
+    },
+    subnets
+  );
+
+  it("names a bare number by its column, keeping acronyms", () => {
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).detail).toBe(
+      "2 usable hosts · 1 default AD · Point-to-point links"
+    );
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).detail).toMatch(/^1,022 usable hosts/);
   });
 });
 
@@ -375,6 +435,26 @@ describe("all recall decks (every cert)", () => {
     expect(tableIds).toEqual(
       expect.arrayContaining(["acronyms", "ports-protocols", "encryption-algorithms", "attack-types", "authentication-types"])
     );
+  });
+
+  it("no deck in any cert drills a placeholder like N/A", () => {
+    for (const slug of slugs) {
+      for (const deck of getRecallDecks(slug)) {
+        for (const row of deck.rows) {
+          for (const key of [deck.config.ask.key, deck.config.answer.key]) {
+            expect(row[key], `${slug}/${deck.config.id}`).not.toMatch(/^n\/a\b/i);
+          }
+        }
+      }
+    }
+  });
+
+  it("asks only for real data rates in the cable speed decks", () => {
+    for (const [slug, id] of [["network-plus-n10-009", "net-cables"], ["a-plus-core1-220-1101", "a1-cables"]]) {
+      const deck = getRecallDecks(slug).find((d) => d.config.id === id)!;
+      expect(deck.rows.length, id).toBeGreaterThanOrEqual(4);
+      for (const row of deck.rows) expect(row.maxSpeed, `${id}: ${row.cable}`).toMatch(/bps/i);
+    }
   });
 
   it("every deck across every cert generates self-consistent questions", () => {

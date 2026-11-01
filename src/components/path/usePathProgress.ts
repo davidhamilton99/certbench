@@ -11,6 +11,7 @@ import {
   hasStarted,
   mergePathProgress,
   recordRep,
+  retireReps,
   sanitizePathProgress,
 } from "@/core/path/progress";
 import {
@@ -198,6 +199,18 @@ export function usePathProgress(cert: PathCert) {
     [commit, saveToAccount]
   );
 
+  /** Clear misses the server can no longer bring back (their content was withdrawn). */
+  const retire = useCallback(
+    (repIds: readonly string[]) => {
+      const c = cur.current;
+      const p = retireReps(c.progress, repIds, Date.now());
+      if (p === c.progress) return;
+      commit({ ...c, progress: p });
+      if (c.userId) void saveToAccount(p);
+    },
+    [commit, saveToAccount]
+  );
+
   const setGoal = useCallback(
     (goal: Omit<PathGoal, "at">) => {
       const c = cur.current;
@@ -247,6 +260,7 @@ export function usePathProgress(cert: PathCert) {
     signedIn: view.userId !== null,
     record,
     finish,
+    retire,
     setGoal,
     linkAccount,
     refreshAccess,

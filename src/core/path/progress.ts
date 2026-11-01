@@ -32,6 +32,20 @@ export function recordRep(
   return { ...progress, items: recordAnswer(progress.items, repId, correct, now) };
 }
 
+/**
+ * Clear misses whose content was withdrawn: they can't come back, so they
+ * mustn't keep an objective marked as a miss. Recorded as a right answer, so
+ * the clear survives a merge with a copy saved on another device.
+ */
+export function retireReps(progress: PathProgress, repIds: readonly string[], now: number): PathProgress {
+  let items = progress.items;
+  for (const id of repIds) {
+    const r = items[id];
+    if (r && itemStatus(r) === "missed") items = recordAnswer(items, id, true, now);
+  }
+  return items === progress.items ? progress : { ...progress, items };
+}
+
 /** Mark a stop finished with its score. */
 export function finishStop(
   progress: PathProgress,

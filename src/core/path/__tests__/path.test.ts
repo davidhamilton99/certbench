@@ -7,6 +7,7 @@ import {
   nextStopIndex,
   objectiveStatuses,
   recordRep,
+  retireReps,
   sanitizePathProgress,
   seenIds,
   stopsDone,
@@ -127,6 +128,20 @@ describe("progress", () => {
     // Answering the miss correctly later clears it.
     p = recordRep(p, authoredRepId("1.2", "c"), true, 5);
     expect(objectiveStatuses(p.items).get("1.2")).toBe("got");
+  });
+
+  it("clears a withdrawn miss so it stops marking its objective, even across a merge", () => {
+    const gone = recallRepId("1.3", "net-cables", "T568B wiring");
+    const missed = recordRep(EMPTY_PATH_PROGRESS, gone, false, 1);
+    expect(objectiveStatuses(missed.items).get("1.3")).toBe("missed");
+    const cleared = retireReps(missed, [gone, "a|9.9|never-seen"], 2);
+    expect(objectiveStatuses(cleared.items).get("1.3")).toBe("got");
+    expect(missedIds(cleared.items)).toEqual([]);
+    expect(cleared.items["a|9.9|never-seen"]).toBeUndefined();
+    // Another device's copy, saved before the clear, doesn't bring it back.
+    expect(objectiveStatuses(mergePathProgress(missed, cleared).items).get("1.3")).toBe("got");
+    // Nothing left to clear: the same progress comes back.
+    expect(retireReps(cleared, [gone], 3)).toBe(cleared);
   });
 
   it("lists misses oldest first and seen reps newest first", () => {

@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { buildPlan } from "@/core/path/plan";
-import type { ChoiceRep, PathProgress, PathStop, PathStructure, Rep } from "@/core/path/types";
+import { recordRep } from "@/core/path/progress";
+import { EMPTY_PATH_PROGRESS, type ChoiceRep, type PathProgress, type PathStop, type PathStructure, type Rep } from "@/core/path/types";
 
 /** Who the mocked Supabase client says is signed in. */
 const auth = vi.hoisted(() => ({ session: null as null | { user: { id: string; email: string } } }));
@@ -52,7 +54,8 @@ vi.mock("@/lib/api-client", async () => {
         case "POST /api/path/stop": {
           const out = server.stopHandler?.(input as { index: number });
           if (out instanceof Error) throw out;
-          return out;
+          // As the contract's parse would: nothing retired unless the reply says so.
+          return { retired: [], ...(out as object) };
         }
         case "POST /api/path/answers":
         case "POST /api/path/enroll":
@@ -156,6 +159,8 @@ describe("a first visit", () => {
     await act(async () => {});
     expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
     expect(screen.getByText("Warm-up")).toBeInTheDocument();
+    // No map to go back to yet, so the exam name isn't a link.
+    expect(screen.queryByRole("link", { name: "Security+" })).toBeNull();
   });
 
   it("ends the warm-up on the map, with the save prompt as the way on", async () => {
@@ -295,6 +300,30 @@ describe("a signed-in learner", () => {
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
+  });
+
+  it("goes back to the map from the exam name in the header", async () => {
+    server.progress = done(["warmup"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    fireEvent.click(screen.getByRole("link", { name: "Security+" }));
+    expect(await screen.findByText("Your Security+ path")).toBeInTheDocument();
+    expect(screen.queryByText("Prompt a|1.1|s1-0")).toBeNull();
+    // Switching exams is still a click away, under the map.
+    expect(screen.getByRole("link", { name: "Studying for a different exam?" })).toHaveAttribute("href", "/start?pick=1");
+  });
+
+  it("clears a miss the server says can never come back", async () => {
+    const gone = "r|1.1|net-cables|0a1b2c3d";
+    server.progress = done(["warmup"], { items: recordRep(EMPTY_PATH_PROGRESS, gone, false, 1).items });
+    server.stopHandler = (input) => ({ ...stopReply(input.index), retired: [gone] });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    const saves = server.calls.filter((c) => c.path === "/api/path/progress" && (c.input as { progress?: unknown }).progress);
+    const saved = (saves.at(-1)?.input as { progress: PathProgress }).progress;
+    expect(itemStatus(saved.items[gone])).toBe("got");
   });
 
   it("lets a Pro member carry on past the checkpoint", async () => {

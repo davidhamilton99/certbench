@@ -52,8 +52,10 @@ export interface RecallDeckConfig {
 
 export interface ResolvedDeck {
   config: RecallDeckConfig;
-  /** Rows that have a non-empty value for every field the deck touches. */
+  /** Rows with a real value (not blank, not "N/A") in both drilled columns. */
   rows: Array<Record<string, string>>;
+  /** Column labels by key, for naming a bare number in the detail line. */
+  labels?: Record<string, string>;
   /** Distinct drillable items (by the cue column) — the deck's mastery total. */
   itemCount: number;
   /** Answers short enough to type — enables the active-recall "type it" mode. */
@@ -134,9 +136,11 @@ export function buildDeck(
     }
   }
 
+  // A placeholder isn't a fact to recall: a pin-out standard has no "max
+  // speed", and "N/A" would only ever be a giveaway or a junk distractor.
   const rows = table.entries
     .map((e) => e.columns)
-    .filter((c) => c[config.ask.key] && c[config.answer.key]);
+    .filter((c) => isValue(c[config.ask.key]) && isValue(c[config.answer.key]));
 
   if (rows.length < 3) {
     throw new Error(
@@ -163,10 +167,25 @@ export function buildDeck(
   return {
     config,
     rows,
+    labels: Object.fromEntries(table.columnHeaders.map((c) => [c.key, c.label])),
     itemCount: distinctValues(rows, config.ask.key).length,
     // Short answers (ports, etc.) can be typed; long ones (definitions) can't.
     typeable: avgLen(rows, config.answer.key) <= 8,
   };
+}
+
+/** A real cell value: not blank, not a placeholder like "N/A (analog signal)". */
+function isValue(v: string | undefined): boolean {
+  const t = v?.trim() ?? "";
+  return t !== "" && !/^(n\/a\b|[—–-]+$)/i.test(t);
+}
+
+/** "Usable Hosts" → "usable hosts", keeping acronyms ("Default AD" → "default AD"). */
+function noun(label: string): string {
+  return label
+    .split(" ")
+    .map((w) => (w.length > 1 && w === w.toUpperCase() ? w : w.toLowerCase()))
+    .join(" ");
 }
 
 /** Longer than this and a column makes poor (unreadable) answer options. */
@@ -302,8 +321,12 @@ export function generateRecallQuestion(
   }
   const options = shuffle([answer, ...distractors], rng);
 
+  // A bare number means nothing on its own, so it's named: "2 usable hosts".
   const detail = (config.detailKeys ?? [])
-    .map((k) => row[k])
+    .map((k) => {
+      const v = row[k];
+      return v && /^[\d,.]+$/.test(v) ? `${v} ${noun(deck.labels?.[k] ?? k)}` : v;
+    })
     .filter(Boolean)
     .join(" · ");
 

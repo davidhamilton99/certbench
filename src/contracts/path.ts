@@ -88,7 +88,8 @@ export const pathProgressSchema = z.object({
  * need an account, and stops past the free checkpoint need Pro on this exam
  * (401 / 402 otherwise). The client sends which reps it has seen and missed,
  * so the stop brings misses back and skips what's already done — without the
- * server needing stored progress.
+ * server needing stored progress. `retired` lists sent misses that can never
+ * come back (their content was withdrawn), for the client to clear.
  */
 export const getPathStop = {
   path: "/api/path/stop",
@@ -101,7 +102,11 @@ export const getPathStop = {
     /** Which run of this stop (replays reshuffle). */
     run: count.max(1_000_000).default(0),
   }),
-  output: z.object({ stop: stopSchema, reps: z.array(repSchema) }),
+  output: z.object({
+    stop: stopSchema,
+    reps: z.array(repSchema),
+    retired: z.array(repIdSchema).max(MAX_MISSED_SENT).default([]),
+  }),
 } as const satisfies EndpointContract;
 
 /**

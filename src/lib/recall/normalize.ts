@@ -25,12 +25,17 @@ export function normalizeAnswer(input: string): string {
  * - `numeric-parts` — for compound port answers ("20/21", "137-139", "161/162"),
  *   also accept each individual number, since "which port is FTP?" → "21" is a
  *   completely correct answer a candidate would type.
+ *
+ * A CIDR prefix is accepted with or without its slash ("/30" or "30"), the
+ * same as the hands-on subnetting grader.
  */
 export function acceptableAnswers(
   answer: string,
   accept: "exact" | "numeric-parts" = "exact"
 ): string[] {
   const forms = new Set<string>([normalizeAnswer(answer)]);
+  const prefix = /^\/(\d{1,3})$/.exec(normalizeAnswer(answer));
+  if (prefix) forms.add(prefix[1]);
   if (accept === "numeric-parts") {
     for (const part of answer.split(/[/,\-]/)) {
       const n = normalizeAnswer(part);

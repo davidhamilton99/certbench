@@ -241,6 +241,14 @@ export interface BuildStopInput {
 export interface BuiltStop {
   stop: PathStop;
   reps: Rep[];
+  /**
+   * Misses that can't come back because their content was taken out of the
+   * code (a recall fact dropped from its deck, an authored rep removed). The
+   * client clears them, so they don't hold an objective amber for good. Bank
+   * questions never land here: the bank comes from the database, and one that
+   * can't be found may only be missing for now.
+   */
+  retired: string[];
 }
 
 export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopInput): BuiltStop | null {
@@ -277,12 +285,17 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     const item = deck && deckItems(deck).find((v) => shortHash(v) === hash);
     return deck && item ? recallToRep(deck, item, parsed.objective, rng, false) : null;
   };
-  const misses = (limit: number) =>
-    missed
-      .slice(0, limit * 3)
-      .map(resolve)
-      .filter((r): r is Rep => r !== null)
-      .slice(0, limit);
+  const retired = new Set<string>();
+  const misses = (limit: number) => {
+    const back: Rep[] = [];
+    for (const id of missed.slice(0, limit * 3)) {
+      const rep = resolve(id);
+      const source = parseRepId(id)?.source;
+      if (rep) back.push(rep);
+      else if (source === "a" || source === "r") retired.add(id);
+    }
+    return back.slice(0, limit);
+  };
 
   /** Recall reps for an objective from its mapped tables, unseen facts first. */
   const recallFor = (tableId: string, objective: string, count: number, typedLast: boolean): Rep[] => {
@@ -311,7 +324,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     }
   })();
 
-  return { stop, reps };
+  return { stop, reps, retired: [...retired] };
 
   function warmupReps(): Rep[] {
     if (content.warmup.authored?.length) {
