@@ -14,6 +14,8 @@ import type { Db } from "./server";
  *   - Admin flag actions
  *   - Account deletion / e2e teardown
  *   - Lifecycle + tool-lead email (server/services/lifecycle-email, tool-leads)
+ *   - Enrollment writes (server/services/enrollment-writes.ts) — accounts can
+ *     only read enrollments, since they decide which exams Pro unlocks
  *
  * Never pass this client into repository functions that serve user requests.
  */

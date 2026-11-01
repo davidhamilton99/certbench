@@ -55,32 +55,5 @@ export async function listEnrollments(db: Db, userId: string): Promise<Enrollmen
   }));
 }
 
-export async function createEnrollment(
-  db: Db,
-  userId: string,
-  certificationId: string,
-  examDate: string | null
-): Promise<void> {
-  const { error } = await db.from("user_enrollments").insert({
-    user_id: userId,
-    certification_id: certificationId,
-    exam_date: examDate,
-  });
-  // 23505 = unique violation: already enrolled — treat as conflict.
-  if (error?.code === "23505") throw new ApiError("conflict", "Already enrolled");
-  if (error) throw new ApiError("internal", error.message);
-}
-
-export async function updateExamDate(
-  db: Db,
-  userId: string,
-  certificationId: string,
-  examDate: string | null
-): Promise<void> {
-  const { error } = await db
-    .from("user_enrollments")
-    .update({ exam_date: examDate })
-    .eq("user_id", userId)
-    .eq("certification_id", certificationId);
-  if (error) throw new ApiError("internal", error.message);
-}
+// Writes live in server/services/enrollment-writes.ts: accounts can only read
+// their enrollments (migration 027), so the server makes every change.
