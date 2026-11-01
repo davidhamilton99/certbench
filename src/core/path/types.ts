@@ -60,11 +60,22 @@ export interface ChoiceRep extends RepBase {
 
 export interface TypedRep extends RepBase {
   type: "typed";
-  /** Accepted answers, already normalized (see lib/recall/normalize.ts). */
+  /**
+   * Accepted answers, already normalized (see lib/recall/normalize.ts). For a
+   * subnetting rep, the single canonical answer its grader checks against.
+   */
   accept: string[];
   /** The canonical answer shown on reveal. */
   answerText: string;
   numeric?: boolean;
+  /**
+   * Subnetting reps are graded by the subnetting engine (dotted masks, CIDR,
+   * host counts), not by plain text matching, which would ignore the dots.
+   */
+  answerKind?: "binary" | "dotted" | "cidr" | "count";
+  placeholder?: string;
+  /** Worked steps, folded behind "Why, in full". */
+  explanation?: string;
 }
 
 export type Rep = ChoiceRep | TypedRep;

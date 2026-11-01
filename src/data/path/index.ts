@@ -1,4 +1,5 @@
 import type { PathCert } from "@/core/path/types";
+import type { DrillMode } from "@/lib/tools/subnetting";
 import type { AuthoredRep } from "./types";
 import { domain1, domain2, warmup as securityPlusWarmup } from "./security-plus-sy0-701/domains-1-2";
 import { domain3, domain4 } from "./security-plus-sy0-701/domains-3-4";
@@ -14,6 +15,8 @@ import { domain5 } from "./security-plus-sy0-701/domain-5";
  *   the bank's shortest questions.
  * - `recallTables`: reference tables whose facts feed a learn stop, keyed by
  *   table id, valued by the objective they teach.
+ * - `subnetting`: hands-on subnetting problems for an objective's learn stop —
+ *   fresh numbers every time, one per skill listed.
  */
 export interface PathContent {
   authored: AuthoredRep[];
@@ -24,6 +27,7 @@ export interface PathContent {
     bank?: number;
   };
   recallTables: Record<string, string>;
+  subnetting?: Record<string, DrillMode[]>;
 }
 
 export const PATH_CONTENT: Record<PathCert, PathContent> = {
@@ -50,6 +54,9 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
       "routing-protocols": "2.2",
       "wireless-standards": "2.4",
     },
+    subnetting: {
+      "1.4": ["cidr-mask", "host-math", "network-id", "same-subnet"],
+    },
   },
   "a-plus-core1-220-1101": {
     authored: [],
@@ -68,6 +75,9 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
       "motherboard-components": "3.4",
       "printer-types": "3.6",
       "troubleshooting-steps": "5.1",
+    },
+    subnetting: {
+      "2.6": ["cidr-mask", "host-math"],
     },
   },
   "a-plus-core2-220-1102": {

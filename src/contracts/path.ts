@@ -39,6 +39,9 @@ export const repSchema = z.discriminatedUnion("type", [
     accept: z.array(z.string()).min(1),
     answerText: z.string(),
     numeric: z.boolean().optional(),
+    answerKind: z.enum(["binary", "dotted", "cidr", "count"]).optional(),
+    placeholder: z.string().optional(),
+    explanation: z.string().optional(),
   }),
 ]);
 

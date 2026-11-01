@@ -5,6 +5,7 @@ import { ArrowRight, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { normalizeAnswer } from "@/lib/recall/normalize";
+import { grade as gradeSubnet, type DrillQuestion } from "@/lib/tools/subnetting";
 import type { Rep } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
@@ -65,10 +66,12 @@ export function RepCard({
 
   function submitTyped(e: FormEvent) {
     e.preventDefault();
-    if (answered || rep.type !== "typed") return;
-    const value = normalizeAnswer(typed);
-    if (!value) return;
-    const ok = rep.accept.includes(value);
+    if (answered || rep.type !== "typed" || !typed.trim()) return;
+    // Subnetting answers go to the subnetting grader: plain text matching
+    // drops the dots, so "192.168.10" would pass for "192.168.1.0".
+    const ok = rep.answerKind
+      ? gradeSubnet({ answerKind: rep.answerKind, answer: rep.accept[0] } as DrillQuestion, typed)
+      : rep.accept.includes(normalizeAnswer(typed));
     setCorrect(ok);
     onAnswer({ correct: ok, picked: -1 });
   }
@@ -207,12 +210,14 @@ export function RepCard({
               autoComplete="off"
               autoCapitalize="off"
               spellCheck={false}
-              inputMode={rep.numeric ? "numeric" : "text"}
+              inputMode={rep.answerKind === "dotted" ? "decimal" : rep.numeric ? "numeric" : "text"}
+              placeholder={rep.placeholder}
               value={typed}
               disabled={answered}
               onChange={(e) => setTyped(e.target.value)}
               className={cn(
-                "h-12 max-w-48 font-mono text-lg",
+                "h-12 font-mono text-lg",
+                rep.answerKind === "dotted" ? "max-w-64" : "max-w-48",
                 answered && correct && "border-success bg-success/10",
                 answered && !correct && "border-destructive bg-destructive/10"
               )}
@@ -259,7 +264,7 @@ export function RepCard({
               style={{ "--dur": `${AUTO_ADVANCE_MS}ms` } as CSSProperties}
             />
           )}
-          {rep.type === "choice" && rep.explanation && (
+          {rep.explanation && (
             <details
               className="group text-sm text-muted-foreground"
               onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
