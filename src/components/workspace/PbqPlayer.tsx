@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -317,6 +317,12 @@ function ResultView({
 /*  Ordering Player                                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Tap the items in order: each tap fills the next numbered row, and tapping a
+ * placed row sends it back. A placed item leaves its outline in the pool, so
+ * the remaining choices never shift under a finger. (Sorting seven items with
+ * up/down arrows took a dozen clicks, and replays showed people giving up.)
+ */
 function OrderingPlayer({
   scenario,
   onSubmit,
@@ -326,124 +332,118 @@ function OrderingPlayer({
   onSubmit: (answer: number[]) => void;
   onInteract: () => void;
 }) {
-  // Shuffle — deterministic per scenario so SSR and client agree; guaranteed to
-  // differ from the identity (correct) order.
-  const initialOrder = useMemo(
+  // The pool is shuffled — deterministic per scenario so SSR and client agree.
+  const pool = useMemo(
     () => shuffleSeeded(scenario.items.length, seedFromString(scenario.id + ":order")),
     [scenario.id, scenario.items.length]
   );
+  const [placed, setPlaced] = useState<number[]>([]);
+  const chips = useRef(new Map<number, HTMLButtonElement>());
+  const total = scenario.items.length;
+  const done = placed.length === total;
 
-  const [order, setOrder] = useState<number[]>(initialOrder);
-  const [hasMoved, setHasMoved] = useState(false);
-  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-
-  const moveUp = (pos: number) => {
-    if (pos === 0) return;
-    const next = [...order];
-    [next[pos - 1], next[pos]] = [next[pos], next[pos - 1]];
-    setOrder(next);
-    setHasMoved(true);
+  const place = (itemIdx: number) => {
+    if (placed.includes(itemIdx)) return;
+    const next = [...placed, itemIdx];
+    setPlaced(next);
     onInteract();
+    // Keep keyboard focus in the pool, on the next choice still to place.
+    const from = pool.indexOf(itemIdx);
+    const following = [...pool.slice(from + 1), ...pool.slice(0, from)].find((i) => !next.includes(i));
+    if (following !== undefined) requestAnimationFrame(() => chips.current.get(following)?.focus());
   };
 
-  const moveDown = (pos: number) => {
-    if (pos === order.length - 1) return;
-    const next = [...order];
-    [next[pos], next[pos + 1]] = [next[pos + 1], next[pos]];
-    setOrder(next);
-    setHasMoved(true);
-    onInteract();
-  };
+  const takeBack = (itemIdx: number) => setPlaced(placed.filter((i) => i !== itemIdx));
 
   return (
     <div className="flex flex-col gap-4">
-      <ConfirmDialog
-        open={showSubmitConfirm}
-        title="Submit answer?"
-        message="Once submitted, your answer will be graded and you cannot change it."
-        confirmLabel="Submit"
-        cancelLabel="Review"
-        onConfirm={() => {
-          setShowSubmitConfirm(false);
-          onSubmit(order);
-        }}
-        onCancel={() => setShowSubmitConfirm(false)}
-      />
-
       <p className="text-[13px] text-muted-foreground">
-        Use the arrows to arrange items in the correct order.
+        {done
+          ? "All placed. Tap a row to take it back out, or check your order."
+          : "Tap them in order, first to last."}
       </p>
 
-      <div className="flex flex-col gap-1.5">
-        {order.map((itemIdx, pos) => (
-          <div
-            key={itemIdx}
-            className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-3"
-          >
-            <span className="text-[13px] font-mono text-muted-foreground tabular-nums w-6">
-              {pos + 1}.
-            </span>
-            <span className="text-[14px] text-foreground flex-1">
+      <ol className="flex flex-col gap-1.5" aria-label="Your order">
+        {Array.from({ length: total }, (_, pos) => {
+          const itemIdx = placed[pos];
+          if (itemIdx === undefined) {
+            const isNext = pos === placed.length;
+            return (
+              <li
+                key={`slot-${pos}`}
+                className={`flex items-center gap-2 rounded-lg border border-dashed px-4 py-3 ${
+                  isNext ? "border-primary/60 bg-primary/5" : "border-border"
+                }`}
+              >
+                <span className="text-[13px] font-mono text-muted-foreground tabular-nums w-6">
+                  {pos + 1}.
+                </span>
+                {isNext && (
+                  <span className="text-[13px] text-muted-foreground">
+                    {pos === 0 ? "Tap the first one below" : "Tap the next one below"}
+                  </span>
+                )}
+              </li>
+            );
+          }
+          return (
+            <li key={`item-${itemIdx}`}>
+              <button
+                type="button"
+                onClick={() => takeBack(itemIdx)}
+                aria-label={`${pos + 1}. ${scenario.items[itemIdx]}. Tap to take it back out.`}
+                className="group flex w-full items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-left transition-colors hover:border-foreground/30"
+              >
+                <span className="text-[13px] font-mono text-muted-foreground tabular-nums w-6">
+                  {pos + 1}.
+                </span>
+                <span className="flex-1 text-[14px] text-foreground">{scenario.items[itemIdx]}</span>
+                <svg
+                  className="w-4 h-4 text-muted-foreground group-hover:text-foreground"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Choices to place">
+        {pool.map((itemIdx) =>
+          placed.includes(itemIdx) ? (
+            <span
+              key={itemIdx}
+              aria-hidden
+              className="select-none rounded-lg border border-dashed border-border px-3 py-2 text-[14px] text-transparent"
+            >
               {scenario.items[itemIdx]}
             </span>
-            <div className="flex flex-col gap-0.5">
-              <button
-                onClick={() => moveUp(pos)}
-                disabled={pos === 0}
-                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-default transition-colors"
-                aria-label="Move up"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 15.75l7.5-7.5 7.5 7.5"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => moveDown(pos)}
-                disabled={pos === order.length - 1}
-                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-default transition-colors"
-                aria-label="Move down"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ))}
+          ) : (
+            <button
+              key={itemIdx}
+              type="button"
+              ref={(el) => {
+                if (el) chips.current.set(itemIdx, el);
+                else chips.current.delete(itemIdx);
+              }}
+              onClick={() => place(itemIdx)}
+              className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-[14px] text-foreground transition-colors hover:border-primary hover:bg-primary/10"
+            >
+              {scenario.items[itemIdx]}
+            </button>
+          )
+        )}
       </div>
 
-      <Button
-       
-        onClick={() => setShowSubmitConfirm(true)}
-        disabled={!hasMoved}
-      >
-        Submit Answer
+      <Button onClick={() => onSubmit(placed)} disabled={!done}>
+        Check my order
       </Button>
-      {!hasMoved && (
-        <p className="text-[12px] text-muted-foreground text-center">
-          Rearrange at least one item before submitting.
-        </p>
-      )}
     </div>
   );
 }
