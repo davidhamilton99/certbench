@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
+import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 
 export const metadata = {
   title: "Help Centre",
@@ -38,7 +39,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: "You can try CertBench free. The 3-minute readiness check, full-length practice-test previews, and PBQ examples need no account; the subnetting, port-number, and acronym trainers give you a first round free, then keep going with a free account that saves your progress. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation — all backed by a pass guarantee. It's priced for one exam cycle; see the pricing page for current plans.",
+        a: `You can try CertBench free. The 3-minute readiness check, full-length practice-test previews, and PBQ examples need no account; the subnetting, port-number, and acronym trainers give you a first round free, then keep going with a free account that saves your progress. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation, with a pass guarantee. ${PASS_GUARANTEE_TERMS} It's priced for one exam cycle; see the pricing page for current plans.`,
       },
       {
         q: "Is this an exam dump?",
@@ -202,7 +203,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: "Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers the certification you set your plan up for: unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation — plus the pass guarantee: study 30+ days on Pro and don’t pass, and your last payment is refunded (full terms in our Terms of Service). Cancel anytime from the billing portal.",
+        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers the certification you set your plan up for: unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation, plus the pass guarantee. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel anytime from the billing portal.`,
       },
       {
         q: "Can I study for multiple certifications?",

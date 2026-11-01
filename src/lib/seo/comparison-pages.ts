@@ -1,4 +1,5 @@
 import type { CertPageFaq } from "@/lib/seo/cert-pages";
+import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 
 /**
  * Content for the decision-intent pages: the "best practice tests" roundup
@@ -78,8 +79,7 @@ export const VS_PAGES: VsPage[] = [
       },
       {
         question: "Why is CertBench so much cheaper than Boson?",
-        answer:
-          "Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench's tools are free to try with no account — the readiness check, practice-test previews, and PBQ examples — and Pro is $19/month or $39 for a three-month exam cycle for the full study system: unlimited everything. Prices in USD, adjusted regionally, and Pro carries a pass guarantee.",
+        answer: `Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench's tools are free to try with no account — the readiness check, practice-test previews, and PBQ examples — and Pro is $19/month or $39 for a three-month exam cycle for the full study system: unlimited everything. Prices in USD, adjusted regionally, and Pro carries a pass guarantee: ${PASS_GUARANTEE_TERMS}`,
       },
     ],
   },
