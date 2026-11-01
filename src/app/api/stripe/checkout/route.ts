@@ -1,7 +1,7 @@
 import { defineEndpoint } from "@/server/api/define-endpoint";
 import { createCheckout, type BillingInterval } from "@/contracts/billing";
 import { ApiError } from "@/contracts/common";
-import { getStripe } from "@/server/stripe";
+import { getStripe, hasLiveSubscription } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
 import { pppForCountry } from "@/lib/pricing/ppp";
 import { publicEnv, serverEnv } from "@/env";
@@ -57,6 +57,13 @@ export const POST = defineEndpoint(createCheckout, {
       .maybeSingle();
 
     let customerId = sub?.stripe_customer_id;
+    // One plan per customer: a second click must not start a second subscription.
+    if (customerId && (await hasLiveSubscription(getStripe(), customerId))) {
+      throw new ApiError(
+        "conflict",
+        "You already have Pro on this account. If you've just paid, it unlocks in a moment: refresh the page."
+      );
+    }
     if (!customerId) {
       const customer = await getStripe().customers.create(
         {
