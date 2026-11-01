@@ -248,6 +248,13 @@ describe("runLifecycleEmails", () => {
     expect(tuesday.emails[0].html).toContain("https://certbench.dev/dashboard");
   });
 
+  it("sends a Pro countdown on a Monday in place of the digest, not as well", async () => {
+    account("pro", { pro: true, examDate: "2026-11-09" });
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["pro: 7 days to your CompTIA Security+ exam"]);
+    expect(monday.result).toMatchObject({ countdowns: 1, digests: 0, dailyReminders: 0 });
+  });
+
   it("sends nothing to the unsubscribed, the checkpoint-reached, or the recently active", async () => {
     account("quiet", { unsubscribed: true, path: { progress: played("warmup"), savedDaysAgo: 3 } });
     account("reached", {

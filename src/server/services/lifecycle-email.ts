@@ -209,8 +209,9 @@ interface RunContext {
  *  - without Pro: a one-time "pick up where you left off" when their path
  *    stalls before the readiness checkpoint (the digest and reminders are
  *    about the toolkit, which is Pro-only; for everyone else it's the path)
- * All sends respect digest_enabled, are deduped per day via email_log, and
- * are capped at one "study" email per user per day (see sentStudyEmailToday).
+ * All sends respect digest_enabled and are deduped per day via email_log.
+ * Apart from countdowns, which are tied to a date, a user gets at most one
+ * "study" email a day (see sentStudyEmailToday).
  */
 export async function runLifecycleEmails(
   now: Date = new Date()
@@ -317,7 +318,9 @@ async function processUser(
   const profile = await getProfile(admin, userId);
   const displayName = profile?.displayName ?? "there";
 
-  // At most one "study" email (countdown / digest / reminder / nudge) per user per day.
+  // One "study" email a day. Countdowns are tied to a date and always go; the
+  // digest, the daily reminder and the path nudge only go on a day nothing
+  // else did.
   let sentStudyEmailToday = false;
 
   // ---- exam countdowns + post-exam story request (per enrollment) ----
@@ -394,8 +397,13 @@ async function processUser(
   const dueCards =
     plan.blocks.find((b) => b.type === "srs_review")?.questionCount ?? 0;
 
-  // ---- weekly digest (Mondays only, needs activity) ----
-  if (ctx.isMonday && hasActivity && (await claimSend(admin, userId, "digest"))) {
+  // ---- weekly digest (Mondays only, needs activity; a countdown that day replaces it) ----
+  if (
+    ctx.isMonday &&
+    hasActivity &&
+    !sentStudyEmailToday &&
+    (await claimSend(admin, userId, "digest"))
+  ) {
     const sent = await sendEmail({
       to: email,
       headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
