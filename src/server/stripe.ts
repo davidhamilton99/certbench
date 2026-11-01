@@ -13,3 +13,18 @@ export function getStripe(): Stripe {
   });
   return _stripe;
 }
+
+/**
+ * Whether a customer already pays for a plan. Stripe has the subscription the
+ * moment checkout completes, before our webhook records it, so this is what
+ * stops a second purchase from another tab, or from an offer seen while the
+ * webhook is still in flight.
+ */
+export async function hasLiveSubscription(
+  stripe: Pick<Stripe, "subscriptions">,
+  customerId: string
+): Promise<boolean> {
+  // Without a status filter, Stripe lists every subscription that isn't canceled.
+  const { data } = await stripe.subscriptions.list({ customer: customerId, limit: 10 });
+  return data.some((s) => s.status === "active" || s.status === "trialing");
+}
