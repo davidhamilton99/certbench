@@ -219,11 +219,32 @@ describe("buildStop — Network+", () => {
     expectValid(reps);
   });
 
+  it("still closes on an exam question when every question for the objective is short", () => {
+    const shortBank: PathBank = {
+      ...netPlus,
+      questions: netPlus.questions.map((q) => (q.objective === "1.4" ? { ...q, words: 12, optionWords: 2 } : q)),
+    };
+    shortBank.byId = new Map(shortBank.questions.map((q) => [q.id, q]));
+    const index = netPlan.stops.findIndex((s) => s.id === "1.4");
+    const { reps } = build(shortBank, netPlan, index);
+    expect(reps).toHaveLength(LEARN_NEW_REPS + 1);
+    const closer = reps.at(-1)!;
+    expect(closer.id.startsWith("q|1.4|")).toBe(true);
+    expect(closer.tier).toBe("exam");
+  });
+
+  it("writes acronyms in recall cues in capitals", () => {
+    const index = netPlan.stops.findIndex((s) => s.id === "1.4");
+    const cues = build(netPlus, netPlan, index).reps.map((r) => r.cue ?? "");
+    expect(cues.some((c) => /cidr/.test(c))).toBe(false);
+  });
+
   it("brings a missed subnetting skill back as a new problem of the same kind", () => {
     const later = netPlan.stops.findIndex((s) => s.id === "1.6");
     const { reps } = build(netPlus, netPlan, later, { missed: ["r|1.4|subnet|host-math"] });
     expect(reps[0].id).toBe("r|1.4|subnet|host-math");
-    expect(reps[0].type === "typed" && reps[0].answerKind).toBe("count");
+    // Host math asks either direction: hosts in a prefix, or prefix for hosts.
+    expect(reps[0].type === "typed" && ["count", "cidr"].includes(reps[0].answerKind ?? "")).toBe(true);
   });
 
   it("uses the bank's quick questions for an objective with no table", () => {

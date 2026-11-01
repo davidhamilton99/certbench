@@ -7,7 +7,7 @@ import { track } from "@/lib/analytics";
 import { hasStarted } from "@/core/path/progress";
 import { PATH_CERTS, type PathCert } from "@/core/path/types";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
-import { readLocalPath } from "./usePathProgress";
+import { readLocalPath } from "./local-path";
 import { cn } from "@/lib/utils";
 
 const EXAM_CODES: Record<PathCert, string> = {

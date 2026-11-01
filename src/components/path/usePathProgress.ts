@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api-client";
 import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/path";
-import { pathStorageKey } from "./storage-key";
+import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
 import {
   finishStop,
   hasStarted,
@@ -20,14 +20,6 @@ import {
   type PathGoal,
   type PathProgress,
 } from "@/core/path/types";
-
-/** What this device remembers, so a reload never loses a stop. */
-interface LocalState {
-  v: 1;
-  /** Account the progress belongs to; null = anonymous visitor. */
-  owner: string | null;
-  progress: PathProgress;
-}
 
 export type PathAccess = "anonymous" | "free" | "pro";
 export type LinkMethod = "email_signup" | "email_login";
@@ -62,29 +54,6 @@ const INITIAL: View = {
 /** Save to the account after this many unsaved answers (and at every stop end). */
 const SAVE_EVERY = 5;
 
-export function readLocalPath(cert: string): LocalState | null {
-  try {
-    const raw = window.localStorage.getItem(pathStorageKey(cert));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<LocalState>;
-    return {
-      v: 1,
-      owner: typeof parsed.owner === "string" ? parsed.owner : null,
-      progress: sanitizePathProgress(parsed.progress),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function writeLocal(cert: string, state: LocalState): void {
-  try {
-    window.localStorage.setItem(pathStorageKey(cert), JSON.stringify(state));
-  } catch {
-    /* storage blocked — progress still works for this tab */
-  }
-}
-
 /**
  * One exam's path progress: kept on this device for everyone, and merged into
  * and saved to the account once signed in (other devices' work included). The
@@ -100,7 +69,7 @@ export function usePathProgress(cert: PathCert) {
     (next: View) => {
       cur.current = next;
       setView(next);
-      writeLocal(cert, { v: 1, owner: next.owner, progress: next.progress });
+      writeLocalPath(cert, { v: 1, owner: next.owner, progress: next.progress });
     },
     [cert]
   );

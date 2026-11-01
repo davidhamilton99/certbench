@@ -65,6 +65,8 @@ type EventMap = {
   path_goal_set: { cert: string; step: "exam" | "minutes"; value: string };
   path_checkpoint_completed: { cert: string; score: number };
   path_offer_viewed: { cert: string; context: "reveal" | "home" };
+  /** A path stop played on a public page (objective or practice-test page). */
+  quick_round_completed: { cert: string; surface: string; correct: number; total: number };
   path_offer_clicked: { cert: string; context: "reveal" | "home"; offer: "pro" | "add_exam" };
 };
 

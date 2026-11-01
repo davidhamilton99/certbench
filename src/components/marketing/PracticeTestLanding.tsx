@@ -5,6 +5,8 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuickRound } from "@/components/path/QuickRound";
+import type { QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 
@@ -38,10 +40,13 @@ export function PracticeTestLanding({
   page,
   data,
   objectives = [],
+  round = null,
 }: {
   page: PracticeTestPage;
   data: PracticeTestLandingData;
   objectives?: ObjectiveLink[];
+  /** The exam's warm-up, played inline at the top (single-exam pages). */
+  round?: QuickRoundData | null;
 }) {
   const otherHubs = PRACTICE_TEST_PAGES.filter((p) => p.path !== page.path);
 
@@ -73,7 +78,26 @@ export function PracticeTestLanding({
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           {page.h1}
         </h1>
-        <div className="mt-4 grid gap-3 text-muted-foreground">
+        {/* Lead with something to do: the exam's warm-up, the same quick
+            round the guided path opens with. */}
+        {round && (
+          <section className="mt-6 grid gap-3">
+            <p className="text-sm text-muted-foreground">
+              Start with {round.reps.length} quick questions, no account needed.
+            </p>
+            <QuickRound
+              cert={round.cert}
+              stopId="warmup"
+              examName={round.examName}
+              reps={round.reps}
+              label={`${round.examName} warm-up`}
+              surface="practice_test_page"
+              pitch={`That's the warm-up. Your ${round.examName} path covers all ${round.objectiveCount} objectives in short stops like this, then shows where you stand.`}
+            />
+          </section>
+        )}
+
+        <div className={round ? "mt-10 grid gap-3 text-muted-foreground" : "mt-4 grid gap-3 text-muted-foreground"}>
           {page.intro.map((p) => (
             <p key={p.slice(0, 32)} className="leading-relaxed">
               {p}
@@ -81,13 +105,13 @@ export function PracticeTestLanding({
           ))}
         </div>
 
-        {/* Interactive samples FIRST — someone who searched "practice test"
-            should be answering a real question right away, not reading a pitch
+        {/* Interactive samples — someone who searched "practice test" should
+            be answering real exam questions right away, not reading a pitch
             and a table. Sorted shortest-first so the opener is approachable
             rather than the most daunting question. */}
         <section className="mt-8">
           <h2 className="text-xl font-semibold tracking-tight">
-            Sample questions
+            {round ? "Exam-style sample questions" : "Sample questions"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Pick an answer to see instant grading and the explanation — the
