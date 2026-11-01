@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { normalizeAnswer } from "@/lib/recall/normalize";
 import { grade as gradeSubnet, type DrillQuestion } from "@/lib/tools/subnetting";
+import { wordCount } from "@/core/path/text";
 import type { Rep } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +118,8 @@ export function RepCard({
   }, [answered, rep, choose, next]);
 
   const isExam = rep.tier === "exam";
+  // A longer quick prompt steps down a size so it doesn't wrap to four lines.
+  const longPrompt = !isExam && wordCount(rep.prompt) > 14;
   const compact =
     rep.type === "choice" && !isExam && rep.options.every((o) => o.length <= 16);
   const rightAnswer = rep.type === "choice" ? rep.options[rep.answer] : rep.answerText;
@@ -133,7 +136,9 @@ export function RepCard({
             "text-balance",
             isExam
               ? "text-[17px] font-medium leading-relaxed sm:text-lg"
-              : "font-display text-2xl font-semibold leading-snug tracking-tight sm:text-[1.75rem]"
+              : longPrompt
+                ? "font-display text-xl font-semibold leading-snug tracking-tight sm:text-[1.375rem]"
+                : "font-display text-2xl font-semibold leading-snug tracking-tight sm:text-[1.75rem]"
           )}
         >
           {rep.prompt}
