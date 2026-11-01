@@ -10,18 +10,23 @@ import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 
 /**
  * The path's only chrome: the brand, which exam this is, and the account.
- * Deliberately sparse — the next step lives on the page, not in a menu.
+ * Deliberately sparse — the next step lives on the page, not in a menu. The
+ * exam name leads back to its map, the way a breadcrumb reads; switching
+ * exams is a link under the map.
  */
 export function PathHeader({
   cert,
   examName,
   signedIn,
   pro,
+  onHome,
 }: {
   cert: string;
   examName: string;
   signedIn: boolean;
   pro: boolean;
+  /** Show this exam's map. The page is already this path, so it's a view change. */
+  onHome: () => void;
 }) {
   const router = useRouter();
 
@@ -48,13 +53,24 @@ export function PathHeader({
           <span className="text-muted-foreground/50" aria-hidden>
             /
           </span>
-          <Link
-            href="/start?pick=1"
-            className="truncate rounded-md px-1.5 py-1 text-sm font-medium hover:bg-accent"
-            title="Switch exam"
-          >
-            {examName}
-          </Link>
+          {signedIn ? (
+            <Link
+              href={`/path/${cert}`}
+              onClick={(e) => {
+                // A new-tab click keeps the browser's default.
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onHome();
+              }}
+              className="truncate rounded-md px-1.5 py-1 text-sm font-medium hover:bg-accent"
+              title={`Your ${examName} map`}
+            >
+              {examName}
+            </Link>
+          ) : (
+            // Without an account the warm-up is the whole visit: nothing to go back to.
+            <span className="truncate px-1.5 py-1 text-sm font-medium">{examName}</span>
+          )}
         </div>
         <nav className="flex items-center gap-1">
           <ThemeToggle />

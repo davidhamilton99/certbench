@@ -164,6 +164,7 @@ export function PathApp({
           missed: missedIds(p.progress.items),
           run: p.progress.stops[stop.id]?.n ?? 0,
         });
+        p.retire(built.retired);
         if (built.reps.length === 0) {
           p.finish(built.stop.id, 0, 0);
           setView({ kind: "home" });
@@ -438,7 +439,16 @@ export function PathApp({
 
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <PathHeader cert={cert} examName={structure.examName} signedIn={p.signedIn} pro={pro} />
+      <PathHeader
+        cert={cert}
+        examName={structure.examName}
+        signedIn={p.signedIn}
+        pro={pro}
+        onHome={() => {
+          setView({ kind: "home" });
+          window.scrollTo({ top: 0 });
+        }}
+      />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
         <div className="path-stage" data-ready={p.ready ? "true" : "false"}>
           {screen}
@@ -469,6 +479,7 @@ export function PathApp({
         missed: missedIds(p.progress.items),
         run: p.progress.stops[stopAt(plan, structure, index)?.id ?? ""]?.n ?? 0,
       });
+      p.retire(built.retired);
       setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
       setView({ kind: "play" });
     } catch {
@@ -525,6 +536,15 @@ export function PathApp({
           />
           <MapLegend />
         </div>
+
+        {/* The save card carries its own. */}
+        {!anonymousDone && (
+          <p className="text-center text-xs text-muted-foreground">
+            <Link href="/start?pick=1" className="underline underline-offset-4 hover:text-foreground">
+              Studying for a different exam?
+            </Link>
+          </p>
+        )}
       </div>
     );
   }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildStop } from "../build-stop";
 import type { BankQuestion, PathBank } from "../bank";
 import { buildPlan, CHECKPOINT_SIZE, LEARN_NEW_REPS, PRACTICE_SIZE } from "@/core/path/plan";
-import { parseRepId } from "@/core/path/rep-id";
+import { parseRepId, recallRepId } from "@/core/path/rep-id";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
 import type { PathStructure, Rep } from "@/core/path/types";
 
@@ -197,6 +197,41 @@ describe("buildStop — Network+", () => {
     const later = netPlan.stops.findIndex((s) => s.id === "1.6");
     const { reps } = build(netPlus, netPlan, later, { missed: [first.id] });
     expect(reps[0].id).toBe(first.id);
+  });
+
+  it("reports a missed recall fact that's been taken out of its deck, but not a missing bank question", () => {
+    // T568B is a pin-out standard: it has no "max speed", so the cable deck no longer asks.
+    const withdrawn = recallRepId("1.3", "net-cables", "T568B wiring");
+    const absentQuestion = "q|1.1|00000000-0000-4000-8000-999999999999";
+    const later = netPlan.stops.findIndex((s) => s.id === "1.6");
+    const { reps, retired } = build(netPlus, netPlan, later, { missed: [withdrawn, absentQuestion] });
+    expect(retired).toEqual([withdrawn]);
+    expect(reps.some((r) => r.id === withdrawn || r.id === absentQuestion)).toBe(false);
+    expect(build(netPlus, netPlan, later).retired).toEqual([]);
+  });
+
+  it("never asks a cable's max speed when it has none", () => {
+    const index = netPlan.stops.findIndex((s) => s.id === "1.3");
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const r of build(netPlus, netPlan, index, { seed }).reps) {
+        if (r.type !== "choice" || !r.id.startsWith("r|1.3|net-cables|")) continue;
+        expect(r.prompt).not.toMatch(/^T568/);
+        for (const option of r.options) expect(option, r.prompt).toMatch(/bps/);
+      }
+    }
+  });
+
+  it("names the number in a subnet fact's takeaway", () => {
+    const index = netPlan.stops.findIndex((s) => s.id === "1.4");
+    let checked = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      for (const r of build(netPlus, netPlan, index, { seed }).reps) {
+        if (!r.id.startsWith("r|1.4|auto-subnetting-chart|")) continue;
+        expect(r.takeaway).toMatch(/ · [\d,]+ usable hosts$/);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it("makes the subnetting stop hands-on: one fresh problem per skill", () => {
