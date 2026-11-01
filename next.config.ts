@@ -2,6 +2,18 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // PostHog through our own domain, so ad blockers that block posthog.com
+  // don't silently drop a visitor's events and session recording. Library,
+  // recorder and remote config come from the assets host; the rest is the API.
+  rewrites: async () => [
+    { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+    { source: "/ingest/array/:path*", destination: "https://us-assets.i.posthog.com/array/:path*" },
+    { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
+  ],
+  // PostHog's API paths end in "/" (/e/, /s/, /flags/); Next's own
+  // trailing-slash redirect would bounce them. src/proxy.ts redirects
+  // trailing slashes for every other URL instead, so pages keep one URL.
+  skipTrailingSlashRedirect: true,
   // Old-app URLs that no longer exist after the rebuild.
   redirects: async () => [
     { source: "/add-certification", destination: "/profile", permanent: true },
