@@ -92,7 +92,7 @@ vi.mock("@/server/services/session-plan", () => ({
 }));
 vi.mock("@/server/supabase/admin", () => ({ createAdminClient: () => fakeAdmin() }));
 
-import { pathNudgeType, runLifecycleEmails } from "../lifecycle-email";
+import { pathNudgeType, pathOfferType, runLifecycleEmails } from "../lifecycle-email";
 
 /** Just enough of the Supabase query builder for the run's reads and writes. */
 function fakeAdmin() {
@@ -155,6 +155,19 @@ const played = (...stops: string[]): PathProgress =>
     (p, id) => finishStop(recordRep(p, `a|x|${id}`, true, 0), id, 7, 8, 0),
     EMPTY_PATH_PROGRESS
   );
+
+/** Played through the readiness checkpoint, taken `hoursAgo` before Monday's run. */
+const tookCheckpoint = (hoursAgo: number): PathProgress => ({
+  ...played("warmup", "1.1", "1.2", "1.3", "1.4", "checkpoint"),
+  checkpoint: {
+    score: 64,
+    at: MONDAY.getTime() - hoursAgo * 3_600_000,
+    domains: [
+      { number: "1.0", correct: 2, total: 3 },
+      { number: "2.0", correct: 1, total: 2 },
+    ],
+  },
+});
 
 function account(
   id: string,
@@ -255,17 +268,45 @@ describe("runLifecycleEmails", () => {
     expect(monday.result).toMatchObject({ countdowns: 1, digests: 0, dailyReminders: 0 });
   });
 
-  it("sends nothing to the unsubscribed, the checkpoint-reached, or the recently active", async () => {
+  it("sends nothing to the unsubscribed, the recently active, or anyone gone a week", async () => {
     account("quiet", { unsubscribed: true, path: { progress: played("warmup"), savedDaysAgo: 3 } });
-    account("reached", {
-      path: { progress: played("warmup", "1.1", "1.2", "1.3", "1.4", "checkpoint"), savedDaysAgo: 3 },
-    });
     account("active", { path: { progress: played("warmup", "1.1"), savedDaysAgo: 1 } });
     account("gone", { path: { progress: played("warmup", "1.1"), savedDaysAgo: 9 } });
+    account("long-decided", { path: { progress: tookCheckpoint(8 * 24), savedDaysAgo: 8 } });
 
     const monday = await run(MONDAY);
     expect(monday.sent).toEqual([]);
-    expect(monday.result).toMatchObject({ users: 4, pathNudges: 0, digests: 0, dailyReminders: 0 });
+    expect(monday.result).toMatchObject({ users: 4, pathNudges: 0, pathOffers: 0, digests: 0, dailyReminders: 0 });
+  });
+
+  it("follows up once on a checkpoint taken without buying: the result and the rest of the path", async () => {
+    account("decided", { path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["decided: Your Security+ checkpoint: 64%"]);
+    expect(monday.result).toMatchObject({ pathOffers: 1, pathNudges: 0 });
+    const followUp = monday.emails[0];
+    expect(followUp.html).toContain(encodeURIComponent("utm_campaign=path_offer"));
+    // Warm-up, four learn stops and the checkpoint done; four of ten left.
+    expect(followUp.text).toContain("- All 4 remaining stops of your Security+ path");
+    expect(followUp.text).toContain("Your biggest opportunity is Threats, Vulnerabilities, and Mitigations, 22% of the exam.");
+
+    const tuesday = await run(TUESDAY);
+    expect(tuesday.sent).toEqual([]);
+    expect(h.tables.email_log.filter((r) => r.email_type === pathOfferType("security-plus-sy0-701"))).toHaveLength(1);
+  });
+
+  it("never sends the follow-up to Pro", async () => {
+    account("pro", { pro: true, path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+    const tuesday = await run(TUESDAY);
+    expect(tuesday.sent).toEqual(["pro: 5 reviews due today — CompTIA Security+"]);
+    expect(tuesday.result).toMatchObject({ pathOffers: 0 });
+  });
+
+  it("lets a countdown go first, and follows up the day after", async () => {
+    account("dated", { examDate: "2026-11-09", path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+    expect((await run(MONDAY)).sent).toEqual(["dated: 7 days to your Security+ exam"]);
+    expect((await run(TUESDAY)).sent).toEqual(["dated: Your Security+ checkpoint: 64%"]);
   });
 
   it("nudges toward the checkpoint itself when it's the next stop", async () => {
