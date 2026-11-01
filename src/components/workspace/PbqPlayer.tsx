@@ -20,6 +20,7 @@ import { gradeScenario } from "@/core/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
+import { TerminalPlayer } from "@/components/workspace/TerminalPlayer";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -125,6 +126,11 @@ export function PbqPlayer({
   /* Threat hunts use the log-console player */
   if (scenario.type === "threat-hunt") {
     return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
+  }
+
+  /* Terminal investigations use the interactive shell player */
+  if (scenario.type === "terminal") {
+    return <TerminalPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
   }
 
   return (
