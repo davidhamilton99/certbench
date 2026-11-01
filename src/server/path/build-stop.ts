@@ -67,13 +67,13 @@ export function authoredToRep(a: AuthoredRep, rng: Rng): Rep {
 
 /**
  * A bank question as a rep. Options are shuffled (the stored order favours B)
- * unless the explanation names options by letter; `order` maps each displayed
- * option back to its stored position for recording the answer.
+ * unless the explanation names options by letter, anywhere in it; `order` maps
+ * each displayed option back to its stored position for recording the answer.
  */
 export function bankToRep(q: BankQuestion, tier: "quick" | "exam", rng: Rng): ChoiceRep {
   const { takeaway, rest } = splitExplanation(q.explanation);
   const stored = q.options.map(repairText);
-  const order = mentionsOptionLetter(rest)
+  const order = mentionsOptionLetter(`${takeaway} ${rest}`)
     ? stored.map((_, i) => i)
     : shuffle(stored.map((_, i) => i), rng);
   return {

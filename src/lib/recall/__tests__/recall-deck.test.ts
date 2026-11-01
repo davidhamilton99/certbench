@@ -8,6 +8,7 @@ import {
   buildDeck,
   generateRecallQuestion,
   gradeRecall,
+  isDataRate,
   type RecallDeckConfig,
   type Rng,
 } from "../recall-deck";
@@ -121,6 +122,11 @@ describe("buildDeck validation", () => {
     expect(deck.rows).toHaveLength(synthetic.entries.length);
   });
 
+  it("drills only the rows a deck asks for, when it says", () => {
+    const deck = buildDeck({ ...base, only: (row) => row.note === "crypto" }, synthetic);
+    expect(deck.rows.map((r) => r.term)).toEqual(["AES", "RSA", "TLS"]);
+  });
+
   it("drops placeholders, which would only be giveaways or junk distractors", () => {
     const placeholders: ReferenceTable = {
       ...synthetic,
@@ -146,12 +152,13 @@ describe("detail line", () => {
       { key: "mask", label: "Subnet Mask" },
       { key: "hosts", label: "Usable Hosts" },
       { key: "ad", label: "Default AD" },
+      { key: "port", label: "Port" },
       { key: "note", label: "Note" },
     ],
     entries: [
-      { columns: { cidr: "/30", mask: "255.255.255.252", hosts: "2", ad: "1", note: "Point-to-point links" } },
-      { columns: { cidr: "/29", mask: "255.255.255.248", hosts: "6", ad: "1", note: "Small sites" } },
-      { columns: { cidr: "/22", mask: "255.255.252.0", hosts: "1,022", ad: "1", note: "Four /24s" } },
+      { columns: { cidr: "/30", mask: "255.255.255.252", hosts: "2", ad: "1", port: "49", note: "Point-to-point links" } },
+      { columns: { cidr: "/29", mask: "255.255.255.248", hosts: "6", ad: "1", port: "88", note: "Small sites" } },
+      { columns: { cidr: "/22", mask: "255.255.252.0", hosts: "1,022", ad: "1", port: "443", note: "Four /24s" } },
     ],
   };
   const deck = buildDeck(
@@ -162,14 +169,14 @@ describe("detail line", () => {
       mode: "choice",
       ask: { key: "mask", label: "subnet mask" },
       answer: { key: "cidr", label: "cidr" },
-      detailKeys: ["hosts", "ad", "note"],
+      detailKeys: ["hosts", "ad", "port", "note"],
     },
     subnets
   );
 
-  it("names a bare number by its column, keeping acronyms", () => {
+  it("names a bare number by its column: a count number-first, an identifier label-first", () => {
     expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).detail).toBe(
-      "2 usable hosts · 1 default AD · Point-to-point links"
+      "2 usable hosts · default AD 1 · port 49 · Point-to-point links"
     );
     expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).detail).toMatch(/^1,022 usable hosts/);
   });
@@ -449,12 +456,50 @@ describe("all recall decks (every cert)", () => {
     }
   });
 
-  it("asks only for real data rates in the cable speed decks", () => {
-    for (const [slug, id] of [["network-plus-n10-009", "net-cables"], ["a-plus-core1-220-1101", "a1-cables"]]) {
-      const deck = getRecallDecks(slug).find((d) => d.config.id === id)!;
-      expect(deck.rows.length, id).toBeGreaterThanOrEqual(4);
-      for (const row of deck.rows) expect(row.maxSpeed, `${id}: ${row.cable}`).toMatch(/bps/i);
+  it("asks only for real data rates in every speed deck", () => {
+    const speedDecks = slugs.flatMap((slug) => getRecallDecks(slug)).filter((d) => d.config.answer.label === "max speed");
+    expect(speedDecks.map((d) => d.config.id).sort()).toEqual(["a1-cables", "a1-storage", "a1-wireless", "net-cables"]);
+    for (const deck of speedDecks) {
+      expect(deck.rows.length, deck.config.id).toBeGreaterThanOrEqual(4);
+      for (const row of deck.rows) {
+        expect(isDataRate(row[deck.config.answer.key]), `${deck.config.id}: ${row[deck.config.ask.key]}`).toBe(true);
+      }
     }
+    // RAID levels describe a speed-up rather than having a speed.
+    const storage = speedDecks.find((d) => d.config.id === "a1-storage")!;
+    expect(storage.rows.some((r) => r.type.startsWith("RAID"))).toBe(false);
+  });
+
+  it("phrases both directions of a two-way deck as real questions", () => {
+    for (const slug of slugs) {
+      for (const deck of getRecallDecks(slug).filter((d) => d.config.bidirectional)) {
+        for (const label of [deck.config.ask.label, deck.config.answer.label]) {
+          // "Which name?", "Which name / gen?" and "Which how to open?" all happened.
+          expect(label, `${slug}/${deck.config.id}`).not.toMatch(/^(?:name|how\b)|\//);
+        }
+      }
+    }
+  });
+
+  it("asks which Windows tool does a job, and shows how to open it", () => {
+    const deck = getRecallDecks("a-plus-core2-220-1102").find((d) => d.config.tableId === "windows-tools")!;
+    expect(deck.config.id).toBe("a2-tools");
+    const q = generateRecallQuestion(deck, seeded(3), { itemId: "View system, application, and security event logs" });
+    expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", detail: "eventvwr.msc" });
+  });
+
+  it("drills OSI layers by name and number, both ways", () => {
+    for (const slug of ["network-plus-n10-009", "security-plus-sy0-701"]) {
+      const deck = getRecallDecks(slug).find((d) => d.config.tableId === "osi-model")!;
+      const labels = new Set(Array.from({ length: 30 }, (_, i) => generateRecallQuestion(deck, seeded(i)).answerLabel));
+      expect(labels, slug).toEqual(new Set(["layer", "layer number"]));
+    }
+  });
+
+  it("asks Network+ Wi-Fi bands for 802.11 standards only", () => {
+    const deck = getRecallDecks("network-plus-n10-009").find((d) => d.config.tableId === "wireless-standards")!;
+    expect(deck.rows.map((r) => r.standard)).toEqual(["802.11a", "802.11b", "802.11g", "802.11n", "802.11ac", "802.11ax"]);
+    expect(deck.config.answer.label).toBe("frequency band");
   });
 
   it("every deck across every cert generates self-consistent questions", () => {

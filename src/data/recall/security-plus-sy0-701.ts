@@ -63,4 +63,15 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
     distractorGroupKey: "category",
     detailKeys: ["category", "port"],
   },
+  {
+    id: "sec-osi",
+    label: "OSI model",
+    blurb: "Match each layer to its number, both ways.",
+    tableId: "osi-model",
+    mode: "choice",
+    ask: { key: "name", label: "layer" },
+    answer: { key: "layer", label: "layer number" },
+    bidirectional: true,
+    detailKeys: ["function", "attacks"],
+  },
 ];

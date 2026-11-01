@@ -1,4 +1,4 @@
-import type { RecallDeckConfig } from "@/lib/recall/recall-deck";
+import { isDataRate, type RecallDeckConfig } from "@/lib/recall/recall-deck";
 
 /** Curated Recall decks for A+ Core 1 (220-1101). Unique cues; the rest auto. */
 export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
@@ -24,6 +24,7 @@ export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
     answer: { key: "maxSpeed", label: "max speed" },
     distractorGroupKey: "category",
     detailKeys: ["maxDistance", "connector"],
+    only: (row) => isDataRate(row.maxSpeed),
   },
   {
     id: "a1-storage",
@@ -34,6 +35,8 @@ export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
     ask: { key: "type", label: "storage type" },
     answer: { key: "maxSpeed", label: "max speed" },
     detailKeys: ["interface", "formFactor"],
+    // RAID levels describe a speed-up ("Good read; moderate write"); they aren't one.
+    only: (row) => isDataRate(row.maxSpeed),
   },
   {
     id: "a1-wireless",
@@ -44,5 +47,6 @@ export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
     ask: { key: "standard", label: "standard" },
     answer: { key: "maxSpeed", label: "max speed" },
     detailKeys: ["frequency", "name"],
+    only: (row) => isDataRate(row.maxSpeed),
   },
 ];

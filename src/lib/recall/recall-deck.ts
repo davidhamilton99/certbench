@@ -48,6 +48,17 @@ export interface RecallDeckConfig {
   distractorGroupKey?: string;
   /** Extra columns surfaced on reveal, for the "oh right" context. */
   detailKeys?: string[];
+  /**
+   * Which rows to drill, when a table mixes kinds of row: a speed deck skips
+   * RAID levels, whose "max speed" is a description. The rest stay in the
+   * reference table, just not in the drill.
+   */
+  only?: (row: Record<string, string>) => boolean;
+}
+
+/** A data rate like "1 Gbps", "100+ Gbps" or "~550 MB/s", for decks that ask a speed. */
+export function isDataRate(value: string | undefined): boolean {
+  return !!value && /\d\+?\s*(?:[KMGT]bps|[KMGT]B\/s)/i.test(value);
 }
 
 export interface ResolvedDeck {
@@ -140,7 +151,8 @@ export function buildDeck(
   // speed", and "N/A" would only ever be a giveaway or a junk distractor.
   const rows = table.entries
     .map((e) => e.columns)
-    .filter((c) => isValue(c[config.ask.key]) && isValue(c[config.answer.key]));
+    .filter((c) => isValue(c[config.ask.key]) && isValue(c[config.answer.key]))
+    .filter((c) => config.only?.(c) ?? true);
 
   if (rows.length < 3) {
     throw new Error(
@@ -321,11 +333,14 @@ export function generateRecallQuestion(
   }
   const options = shuffle([answer, ...distractors], rng);
 
-  // A bare number means nothing on its own, so it's named: "2 usable hosts".
+  // A bare number means nothing on its own, so it's named. A count reads
+  // number first ("2 usable hosts"), an identifier label first ("port 49").
   const detail = (config.detailKeys ?? [])
     .map((k) => {
       const v = row[k];
-      return v && /^[\d,.]+$/.test(v) ? `${v} ${noun(deck.labels?.[k] ?? k)}` : v;
+      if (!v || !/^[\d,.]+$/.test(v)) return v;
+      const label = noun(deck.labels?.[k] ?? k);
+      return /[^sui]s$/i.test(label) ? `${v} ${label}` : `${label} ${v}`;
     })
     .filter(Boolean)
     .join(" · ");
