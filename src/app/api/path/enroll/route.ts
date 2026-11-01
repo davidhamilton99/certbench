@@ -4,6 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { loadPathBank } from "@/server/path/bank";
 import { getPathAccess } from "@/server/path/access";
 import { updateProfile } from "@/server/data/profiles";
+import { makeOnlyActiveEnrollment, setExamDate } from "@/server/services/enrollment-writes";
 import { sendWelcome } from "@/server/services/lifecycle-email";
 
 /**
@@ -11,6 +12,7 @@ import { sendWelcome } from "@/server/services/lifecycle-email";
  * enrolled exams, so a free account holds exactly one active enrollment — the
  * path it's on — and buying Pro unlocks that exam. Pro accounts add exams by
  * purchase only; here they can just set the date on an exam they already have.
+ * The writes go through the server (accounts can only read enrollments).
  */
 export const POST = defineEndpoint(enrollInPath, {
   auth: "user",
@@ -34,36 +36,12 @@ export const POST = defineEndpoint(enrollInPath, {
     // more exams are added by purchase.
     if (proPlan && anyActive) {
       if (!mine?.is_active) return { enrolled: false };
-      if (input.examDate) {
-        await db
-          .from("user_enrollments")
-          .update({ exam_date: input.examDate })
-          .eq("user_id", user.id)
-          .eq("certification_id", certId);
-      }
+      if (input.examDate) await setExamDate(user.id, certId, input.examDate);
       return { enrolled: true };
     }
 
     // Free (or Pro with no exam yet): this exam becomes the one active enrollment.
-    const others = (existing ?? []).filter((e) => e.is_active && e.certification_id !== certId);
-    if (others.length > 0) {
-      const { error } = await db
-        .from("user_enrollments")
-        .update({ is_active: false })
-        .eq("user_id", user.id)
-        .neq("certification_id", certId);
-      if (error) throw new ApiError("internal", error.message);
-    }
-    const { error: upsertErr } = await db.from("user_enrollments").upsert(
-      {
-        user_id: user.id,
-        certification_id: certId,
-        is_active: true,
-        exam_date: input.examDate ?? mine?.exam_date ?? null,
-      },
-      { onConflict: "user_id,certification_id" }
-    );
-    if (upsertErr) throw new ApiError("internal", upsertErr.message);
+    await makeOnlyActiveEnrollment(user.id, certId, input.examDate ?? undefined);
 
     await updateProfile(db, user.id, { onboardingCompleted: true });
     // Deduped internally and never throws.

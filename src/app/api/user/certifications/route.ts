@@ -1,6 +1,6 @@
 import { defineEndpoint } from "@/server/api/define-endpoint";
 import { addCertification } from "@/contracts/user";
-import { createEnrollment } from "@/server/data/enrollments";
+import { addEnrollment } from "@/server/services/enrollment-writes";
 import { ApiError } from "@/contracts/common";
 
 /**
@@ -12,7 +12,7 @@ import { ApiError } from "@/contracts/common";
 export const POST = defineEndpoint(addCertification, {
   auth: "user",
   rateLimit: { limit: 10, windowSeconds: 60 },
-  handler: async ({ input, user, db }) => {
+  handler: async ({ input, user }) => {
     if (!user) throw new ApiError("unauthorized");
     if (process.env.ADDON_CERTS !== "true") {
       throw new ApiError(
@@ -20,7 +20,7 @@ export const POST = defineEndpoint(addCertification, {
         "Adding a certification isn't available yet — it's coming soon."
       );
     }
-    await createEnrollment(db, user.id, input.certId, input.examDate);
+    await addEnrollment(user.id, input.certId, input.examDate);
     return { enrolled: true };
   },
 });
