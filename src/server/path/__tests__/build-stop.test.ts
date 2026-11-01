@@ -106,13 +106,33 @@ describe("buildStop — Security+", () => {
     expect(moved).toBeGreaterThan(0);
   });
 
-  it("keeps the stored order when the explanation names options by letter", () => {
+  it("keeps the stored order when the explanation names options by letter, anywhere in it", () => {
     const q = secPlus.questions.find((x) => x.objective === "1.1")!;
-    const lettered = { ...q, explanation: "Why B is correct: It is. Option A describes something else." };
-    const bank = { ...secPlus, questions: [lettered], byId: new Map([[q.id, lettered]]) };
-    const { reps } = build(bank, secPlan, 1);
-    const closer = reps.at(-1)!;
-    expect(closer.type === "choice" && closer.order).toEqual([0, 1, 2, 3]);
+    const explanations = [
+      "Why B is correct: It is. Option A describes something else.",
+      // In the first sentence, which becomes the takeaway.
+      "Why B is correct: Unlike option A, it does. More detail follows.",
+      // The wording two live Security+ explanations use.
+      "Why B is correct: It is. The tradeoffs are complexity in administration and monitoring, making A and D incorrect.",
+      "Why B is correct: It is. NEXT and FEXT (options A and C) are internal.",
+    ];
+    for (const explanation of explanations) {
+      const lettered = { ...q, explanation };
+      const bank = { ...secPlus, questions: [lettered], byId: new Map([[q.id, lettered]]) };
+      const closer = build(bank, secPlan, 1).reps.at(-1)!;
+      expect(closer.type === "choice" && closer.order, explanation).toEqual([0, 1, 2, 3]);
+    }
+  });
+
+  it("still shuffles when letters are only names, like USB-C or an A record", () => {
+    const q = secPlus.questions.find((x) => x.objective === "1.1")!;
+    const named = { ...q, explanation: "Why B is correct: A AAAA record maps a name to IPv6. USB-C is reversible." };
+    const bank = { ...secPlus, questions: [named], byId: new Map([[q.id, named]]) };
+    const orders = [1, 2, 3, 4, 5, 6].map((seed) => {
+      const closer = build(bank, secPlan, 1, { seed }).reps.at(-1)!;
+      return closer.type === "choice" ? closer.order!.join() : "";
+    });
+    expect(orders.some((o) => o !== "0,1,2,3")).toBe(true);
   });
 
   it("brings earlier misses back first, from any source", () => {

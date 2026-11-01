@@ -1,4 +1,4 @@
-import type { RecallDeckConfig } from "@/lib/recall/recall-deck";
+import { isDataRate, type RecallDeckConfig } from "@/lib/recall/recall-deck";
 
 /**
  * Curated Recall decks for Network+ N10-009. These pick a unique cue column so
@@ -50,5 +50,29 @@ export const networkPlusRecallConfigs: RecallDeckConfig[] = [
     answer: { key: "maxSpeed", label: "max speed" },
     distractorGroupKey: "category",
     detailKeys: ["maxDistance", "connector", "category"],
+    only: (row) => isDataRate(row.maxSpeed),
+  },
+  {
+    id: "net-osi",
+    label: "OSI model",
+    blurb: "Match each layer to its number, both ways.",
+    tableId: "osi-model",
+    mode: "choice",
+    ask: { key: "name", label: "layer" },
+    answer: { key: "layer", label: "layer number" },
+    bidirectional: true,
+    detailKeys: ["function", "protocols"],
+  },
+  {
+    id: "net-wireless",
+    label: "Wi-Fi standards",
+    blurb: "Recall each 802.11 standard's frequency band.",
+    tableId: "wireless-standards",
+    mode: "choice",
+    ask: { key: "standard", label: "standard" },
+    answer: { key: "frequency", label: "frequency band" },
+    detailKeys: ["name", "maxSpeed"],
+    // Bluetooth, NFC, Zigbee and Z-Wave share the table but not the question.
+    only: (row) => row.standard.startsWith("802.11"),
   },
 ];

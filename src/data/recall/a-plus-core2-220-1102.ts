@@ -23,6 +23,16 @@ export const aPlusCore2RecallConfigs: RecallDeckConfig[] = [
     detailKeys: ["syntax", "example"],
   },
   {
+    id: "a2-tools",
+    label: "Windows tools",
+    blurb: "Name the tool for the job.",
+    tableId: "windows-tools",
+    mode: "choice",
+    ask: { key: "purpose", label: "job" },
+    answer: { key: "tool", label: "tool" },
+    detailKeys: ["accessMethod"],
+  },
+  {
     id: "a2-security",
     label: "Security concepts",
     blurb: "Identify the concept from its description.",

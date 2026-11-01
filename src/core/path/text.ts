@@ -30,12 +30,20 @@ export function splitExplanation(explanation: string): { takeaway: string; rest:
 
 /**
  * Whether an explanation (after its "Why B is correct:" lead is dropped) still
- * names options by letter — "Option A describes…". Those questions keep their
- * stored option order; every other bank question is shuffled, because the
- * stored order puts the answer at B far more often than chance.
+ * names options by letter: "Option A describes…", "options A and B", "making
+ * A and D incorrect". Those questions keep their stored option order; every
+ * other bank question is shuffled, because the stored order puts the answer at
+ * B far more often than chance. Erring towards a match only costs a shuffle.
  */
-const LETTER_REF =
-  /\b(?:[Oo]ption|[Aa]nswer|[Cc]hoice)\s+[A-D]\b|\(\s*[A-D]\s*\)|\b[Ww]hy\s+[A-D]\s+is\b|\b[A-D]\s+is\s+(?:wrong|incorrect)\b/;
+const LETTER_REF = new RegExp(
+  [
+    String.raw`\b(?:[Oo]ptions?|[Aa]nswers?|[Cc]hoices?)\s+[A-D]\b`,
+    String.raw`\(\s*[A-D]\s*\)`,
+    String.raw`\b[Ww]hy\s+[A-D]\s+is\b`,
+    String.raw`\b[A-D]\s+(?:is|are)\s+(?:the\s+)?(?:wrong|incorrect|correct|right)\b`,
+    String.raw`\b(?:making|leaving|eliminating|ruling\s+out)\s+[A-D](?:\s*(?:,|and|or)\s*[A-D])*\b`,
+  ].join("|")
+);
 
 export function mentionsOptionLetter(text: string): boolean {
   return LETTER_REF.test(text);
