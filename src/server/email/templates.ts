@@ -2,6 +2,8 @@ import "server-only";
 
 import { publicEnv } from "@/env";
 import type { ToolSource } from "@/contracts/tools";
+import { CHECKPOINT_SIZE, MINUTES_PER_STOP, PRACTICE_SIZE } from "@/core/path/plan";
+import type { PathNudge, PathStanding } from "@/core/path/nudge";
 
 /**
  * Hand-rolled HTML email templates. Inline styles only (email clients strip
@@ -21,6 +23,10 @@ const APP = () => publicEnv.NEXT_PUBLIC_APP_URL;
 function layout(bodyHtml: string, unsubscribeUrl?: string): string {
   return `<!doctype html>
 <html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 <body style="margin:0;padding:0;background:#f4f4f5;">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
     <div style="margin-bottom:24px;">
@@ -45,6 +51,51 @@ function button(href: string, label: string): string {
 
 const scoreColor = (score: number) =>
   score >= 75 ? "#16a34a" : score >= 40 ? "#d97706" : "#dc2626";
+
+/** For names and titles going into email HTML. */
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const stopCount = (n: number) => `${n} stop${n === 1 ? "" : "s"}`;
+
+/**
+ * A link into someone's path from an email. It goes through sign-in so it
+ * works on any device: signed in, /login forwards straight to the path; signed
+ * out, they sign in and land on it with their saved progress.
+ */
+export function pathEmailLink(cert: string, campaign: string): string {
+  const next = `/path/${cert}?utm_source=email&utm_medium=lifecycle&utm_campaign=${campaign}`;
+  return `${APP()}/login?next=${encodeURIComponent(next)}`;
+}
+
+/**
+ * The free stretch of a path as a row of stops: played ones filled and
+ * checked, the next one ringed, the checkpoint flagged at the end. Tables and
+ * borders only, so it holds up in every mail client.
+ */
+function pathStrip(stretch: PathNudge["stretch"]): string {
+  const next = stretch.findIndex((s) => !s.done);
+  const dot = (s: PathNudge["stretch"][number], i: number) => {
+    const [bg, fg, ring, mark] = s.done
+      ? ["#2563eb", "#ffffff", "#2563eb", "&#10003;"]
+      : s.kind === "checkpoint"
+        ? ["#fffbeb", "#b45309", i === next ? "#2563eb" : "#f59e0b", "&#9873;"]
+        : i === next
+          ? ["#ffffff", "#2563eb", "#2563eb", String(i + 1)]
+          : ["#fafafa", "#a1a1aa", "#e4e4e7", String(i + 1)];
+    return `<td width="28" style="width:28px;padding:0;"><div style="width:24px;height:24px;line-height:24px;border:2px solid ${ring};border-radius:14px;background:${bg};color:${fg};font-size:12px;font-weight:700;text-align:center;">${mark}</div></td>`;
+  };
+  const line = (lit: boolean) =>
+    `<td style="padding:0 3px;"><div style="height:2px;line-height:2px;font-size:0;background:${lit ? "#2563eb" : "#e4e4e7"};">&nbsp;</div></td>`;
+  const cells = stretch
+    .map((s, i) => (i === 0 ? "" : line(stretch[i - 1].done && s.done)) + dot(s, i))
+    .join("");
+  return `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:4px 0 6px;"><tr>${cells}</tr></table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px;font-size:11px;color:#71717a;"><tr>
+        <td style="padding:0;">Warm-up</td><td style="padding:0;text-align:right;">Checkpoint</td>
+      </tr></table>`;
+}
 
 export function welcomeEmail(input: {
   displayName: string;
@@ -216,6 +267,12 @@ export function postExamEmail(input: {
   };
 }
 
+const countdownSubject = (days: number, name: string) =>
+  days <= 1 ? `Tomorrow's the day — ${name}` : `${days} days to your ${name} exam`;
+
+const countdownHeading = (days: number) =>
+  days <= 1 ? "Exam day is tomorrow" : `${days} days to go`;
+
 export function countdownEmail(input: {
   displayName: string;
   certName: string;
@@ -234,13 +291,10 @@ export function countdownEmail(input: {
           ? "This week: a full timed practice exam, then drill whatever domain scores lowest."
           : "Two weeks out is where consistent daily reviews pay off most — keep the streak alive.";
   return {
-    subject:
-      input.daysUntilExam <= 1
-        ? `Tomorrow's the day — ${input.certName}`
-        : `${input.daysUntilExam} days to your ${input.certName} exam`,
+    subject: countdownSubject(input.daysUntilExam, input.certName),
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">${input.daysUntilExam <= 1 ? "Exam day is tomorrow" : `${input.daysUntilExam} days to go`}, ${first}</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">${countdownHeading(input.daysUntilExam)}, ${first}</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
         Your ${input.certName} readiness is
         <strong style="color:${scoreColor(score)};">${score}%</strong>.
@@ -251,5 +305,117 @@ export function countdownEmail(input: {
       input.unsubscribeUrl
     ),
     text: `${input.daysUntilExam} days to your ${input.certName} exam.\nReadiness: ${score}%.\n${advice}\n\nOpen your plan: ${APP()}/dashboard\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+  };
+}
+
+/**
+ * The exam countdown for an account without Pro: where they are on their path
+ * and the way back to it, instead of the toolkit's plan and reviews.
+ */
+export function pathCountdownEmail(input: {
+  displayName: string;
+  examName: string;
+  daysUntilExam: number;
+  standing: PathStanding;
+  href: string;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const { examName, daysUntilExam: days, standing, href } = input;
+  const first = input.displayName.split(" ")[0] || input.displayName;
+  const left = standing.total - standing.done;
+  const where =
+    standing.done === 0
+      ? `Your ${examName} path is ready: ${stopCount(standing.total)}, about ${MINUTES_PER_STOP} minutes each.`
+      : standing.freeLeft === 0
+        ? `You've played every free stop of your ${examName} path, readiness checkpoint included. ${left === 1 ? "One more stop is" : `${left} more stops are`} waiting for you.`
+        : `You're ${standing.done} of ${standing.total} stops into your ${examName} path.`;
+  const advice =
+    days <= 1
+      ? "No cramming tonight. Get some sleep: you've done the work."
+      : days <= 3
+        ? "Final stretch: a few stops a day keeps it all fresh, and anything you miss comes back until it sticks."
+        : days <= 7
+          ? `This week, play a few stops every day. Each one takes about ${MINUTES_PER_STOP} minutes.`
+          : `Two weeks out, a few stops a day adds up fast. Each one takes about ${MINUTES_PER_STOP} minutes.`;
+  const label = standing.done === 0 ? "Start my path" : "Continue my path";
+  return {
+    subject: countdownSubject(days, examName),
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 12px;">${countdownHeading(days)}, ${esc(first)}</h1>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">${where}</p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">${advice}</p>
+      ${button(href, label)}
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `${countdownHeading(days)}, ${first}.\n\n${where}\n${advice}\n\n${label}: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+  };
+}
+
+/**
+ * The one-time "pick up where you left off", for someone who stopped a few
+ * days short of their readiness checkpoint: the next stop by name, how short
+ * it is, and how close the checkpoint is.
+ */
+export function pathNudgeEmail(input: {
+  displayName: string;
+  examName: string;
+  nudge: PathNudge;
+  href: string;
+  unsubscribeUrl: string;
+}): EmailContent {
+  const { examName, nudge, href } = input;
+  const first = input.displayName.split(" ")[0] || input.displayName;
+
+  if (nudge.next.kind === "checkpoint") {
+    const what = `Next is your readiness checkpoint: ${CHECKPOINT_SIZE} exam-style questions across every domain, weighted the way the real exam weights them.`;
+    const then =
+      "When you finish, you'll see your readiness score, how you did on each domain, and when you could be exam-ready.";
+    return {
+      subject: `Your ${examName} readiness checkpoint is next`,
+      html: layout(
+        `
+        <h1 style="font-size:18px;margin:0 0 12px;">Your checkpoint is next, ${esc(first)}</h1>
+        ${pathStrip(nudge.stretch)}
+        <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
+          You've played ${stopCount(nudge.done)} of your ${examName} path. ${what}
+        </p>
+        <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:#71717a;">${then}</p>
+        ${button(href, "Take my checkpoint")}
+      `,
+        input.unsubscribeUrl
+      ),
+      text: `Your checkpoint is next, ${first}.\n\nYou've played ${stopCount(nudge.done)} of your ${examName} path. ${what}\n${then}\n\nTake your checkpoint: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    };
+  }
+
+  const where =
+    nudge.done > 0
+      ? `You're ${stopCount(nudge.done)} into your ${examName} path.`
+      : `You've started your ${examName} path.`;
+  const length =
+    nudge.next.kind === "practice"
+      ? `${PRACTICE_SIZE} exam-style questions`
+      : `about ${MINUTES_PER_STOP} minutes of quick questions`;
+  const after =
+    nudge.toCheckpoint === 1
+      ? `Right after it comes your readiness checkpoint: ${CHECKPOINT_SIZE} exam-style questions that show where you stand on every domain.`
+      : `It's ${nudge.toCheckpoint} short stops from here to your readiness checkpoint, where ${CHECKPOINT_SIZE} exam-style questions show where you stand on every domain.`;
+  return {
+    subject: `Next on your ${examName} path: ${nudge.next.title}`,
+    html: layout(
+      `
+      <h1 style="font-size:18px;margin:0 0 12px;">Pick up where you left off, ${esc(first)}</h1>
+      ${pathStrip(nudge.stretch)}
+      <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
+        ${where} Next up is <strong>${esc(nudge.next.title)}</strong>: ${length}.
+      </p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:#71717a;">${after}</p>
+      ${button(href, "Play my next stop")}
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `Pick up where you left off, ${first}.\n\n${where} Next up is ${nudge.next.title}: ${length}.\n${after}\n\nPlay your next stop: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }

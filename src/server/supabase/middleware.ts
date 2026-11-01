@@ -36,10 +36,20 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 const PRO_EXEMPT_PREFIXES = ["/upgrade", "/onboarding"];
 
 /**
+ * Where a signed-in visitor on an auth page goes when the link was taking them
+ * back to the guided path (an email's path link, the path's own "Sign in"):
+ * straight there instead of the toolkit. Same-site path pages only.
+ */
+export function guidedNext(next: string | null): string | null {
+  return next && /^\/(?:path\/[a-z0-9-]+|start)(?:\?|$)/.test(next) ? next : null;
+}
+
+/**
  * Session refresh + redirect matrix. Runs on every matched request:
  *   - refreshes the Supabase auth token (cookie rotation)
  *   - unauthenticated user on a protected route -> /login?next=<path>
- *   - authenticated user on an auth page         -> /dashboard
+ *   - authenticated user on an auth page         -> /dashboard (or back to the
+ *                                                   guided path, see guidedNext)
  *   - authenticated non-Pro user in the app      -> /start (their guided path)
  *
  * Onboarding completeness is checked in the (workspace) layout, not here —
@@ -99,6 +109,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && AUTH_PAGES.includes(pathname)) {
+    const back = guidedNext(request.nextUrl.searchParams.get("next"));
+    if (back) return NextResponse.redirect(new URL(back, request.url));
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
