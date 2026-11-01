@@ -179,7 +179,11 @@ describe("checkpointResultEmail", () => {
     expect(e.text).toContain("- All 28 remaining stops of your Network+ path");
     expect(e.text).toContain("- Practice across all 617 Network+ questions");
     expect(e.text).toContain("$39 for 3 months. Renews every 3 months. Cancel anytime.");
-    expect(e.text).toContain("Pass guarantee: https://certbench.dev/terms#pass-guarantee");
+    // The guarantee always comes with its conditions, never as a bare promise.
+    expect(e.text).toContain(
+      "Pass guarantee: Study with Pro for 30+ days and don't pass? We refund your last payment. Terms: https://certbench.dev/terms#pass-guarantee"
+    );
+    expect(e.html).toContain("Study with Pro for 30+ days and don't pass? We refund your last payment.");
     expect(e.text).toContain(`Unlock your path: ${base.href}`);
     expect(e.html).toContain(`href="${base.href}"`);
     expect(e.html).toContain(base.unsubscribeUrl);

@@ -277,6 +277,8 @@ describe("a signed-in learner", () => {
     expect(await screen.findByTestId("dial")).toHaveTextContent("50%");
     expect(screen.getByText("Unlock the rest of your path")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Unlock my path/ })).toBeInTheDocument();
+    // The guarantee states its conditions right on the offer.
+    expect(screen.getByText(/Study with Pro for 30\+ days and don't pass\? We refund your last payment\./)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", { cert: "security-plus-sy0-701", score: 50 });
     expect(track).toHaveBeenCalledWith("path_offer_viewed", { cert: "security-plus-sy0-701", context: "reveal" });
   });

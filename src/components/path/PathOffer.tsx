@@ -7,7 +7,7 @@ import { track } from "@/lib/analytics";
 import { addCertCheckout, createCheckout, getRegionPricing } from "@/contracts/billing";
 import { enrollInPath } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
-import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
+import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { Button } from "@/components/ui/button";
 import type { PathCert } from "@/core/path/types";
 
@@ -168,15 +168,14 @@ export function PathOffer({
         </div>
 
         {!proPlan && (
-          <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-success">
-            <ShieldCheck className="size-4" />
-            Pass guarantee
-            <span className="text-muted-foreground">·</span>
+          <p className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
+            <ShieldCheck className="mr-1 inline size-4 -translate-y-px align-middle text-success" />
+            <span className="font-medium text-success">Pass guarantee:</span> {PASS_GUARANTEE_TERMS}{" "}
             <a
               href={PASS_GUARANTEE_HREF}
               target="_blank"
               rel="noopener"
-              className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              className="underline underline-offset-4 hover:text-foreground"
             >
               Terms
             </a>

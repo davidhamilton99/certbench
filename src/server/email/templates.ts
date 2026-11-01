@@ -6,7 +6,7 @@ import { CHECKPOINT_SIZE, MINUTES_PER_STOP, PRACTICE_SIZE } from "@/core/path/pl
 import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
 import type { PathDomain } from "@/core/path/types";
-import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
+import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { BASE_PRICES_CENTS, formatUsd } from "@/lib/pricing/ppp";
 
 /**
@@ -524,7 +524,7 @@ export function checkpointResultEmail(input: {
         <div style="margin:14px 0 0;"><span style="font-size:28px;font-weight:700;">${price}</span> <span style="font-size:13px;color:#71717a;">for 3 months</span></div>
         <div style="font-size:12px;color:#71717a;margin:2px 0 6px;">${terms}</div>
         ${button(href, "Unlock my path")}
-        <div style="font-size:12px;margin:12px 0 0;color:#15803d;font-weight:600;">&#10003; Pass guarantee <span style="color:#a1a1aa;font-weight:400;">·</span> <a href="${guarantee}" style="color:#71717a;font-weight:400;">Terms</a></div>
+        <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:#71717a;"><span style="color:#15803d;font-weight:600;">&#10003; Pass guarantee:</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${guarantee}" style="color:#71717a;">Terms</a></div>
       </div>
     `,
       input.unsubscribeUrl,
@@ -535,7 +535,7 @@ export function checkpointResultEmail(input: {
       read,
       rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
       gain,
-      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${price} for 3 months. ${terms}\nPass guarantee: ${guarantee}`,
+      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${price} for 3 months. ${terms}\nPass guarantee: ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
       `Unlock your path: ${href}`,
       `Unsubscribe: ${input.unsubscribeUrl}`,
     ]
