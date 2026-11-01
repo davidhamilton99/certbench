@@ -9,7 +9,7 @@ export const networkPlusScenarios: PbqScenario[] = [
     id: "osi-model-layers",
     title: "OSI Model Layers",
     description:
-      "Arrange the seven OSI model layers in the correct order from Layer 1 (bottom) to Layer 7 (top).",
+      "Put the seven OSI model layers in order, starting from Layer 1.",
     domain_number: "1.0",
     domain_title: "Networking Concepts",
     items: [
