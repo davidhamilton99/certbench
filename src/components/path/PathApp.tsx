@@ -7,7 +7,7 @@ import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 import { enrollInPath, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
-import { stopAt } from "@/core/path/plan";
+import { MINUTES_PER_STOP, stopAt } from "@/core/path/plan";
 import {
   hasStarted,
   missedIds,
@@ -407,6 +407,13 @@ export function PathApp({
           </p>
         </div>
 
+        {/* The way on comes before the map: the map fills a phone's screen. */}
+        {p.signedIn ? (
+          <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} locked={next > plan.freeThrough && !pro} />
+        ) : (
+          <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
+        )}
+
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="font-display font-semibold tracking-tight">Your {structure.examName} map</h3>
@@ -422,15 +429,6 @@ export function PathApp({
           />
           <MapLegend />
         </div>
-
-        {p.signedIn ? (
-          <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} locked={next > plan.freeThrough && !pro} />
-        ) : (
-          <SaveCard cert={cert} onSaved={async (uid, email, method) => {
-            await p.linkAccount(uid, email, method);
-            await startStopDirect(1);
-          }} />
-        )}
       </div>
     );
   } else {
@@ -487,6 +485,18 @@ export function PathApp({
     }
   }
 
+  /**
+   * They just signed up or logged in on the save card: play the stop it named.
+   * An account that's further along goes home, where the way on is current,
+   * and so does a checkpoint, which has its goal questions and intro first.
+   */
+  async function onSaved(uid: string, email: string | undefined, method: "email_signup" | "email_login") {
+    const merged = await p.linkAccount(uid, email, method);
+    const to = nextStopIndex(plan, merged);
+    if (to === next && to < plan.freeThrough) await startStopDirect(to);
+    else setView({ kind: "home" });
+  }
+
   function renderHome() {
     const result = p.progress.checkpoint;
     const anonymousDone = !p.signedIn && hasStarted(p.progress);
@@ -508,10 +518,7 @@ export function PathApp({
         </div>
 
         {anonymousDone ? (
-          <SaveCard cert={cert} onSaved={async (uid, email, method) => {
-            await p.linkAccount(uid, email, method);
-            await startStopDirect(1);
-          }} />
+          <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
         ) : lockedNext && result ? (
           <PathOffer
             cert={cert}
@@ -586,9 +593,12 @@ function ContinueCard({
 
 function SaveCard({
   cert,
+  next,
   onSaved,
 }: {
   cert: PathCert;
+  /** The stop an account opens: named, because it's the reason to make one. */
+  next: PathStop | null;
   onSaved: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => Promise<void>;
 }) {
   const viewed = useRef(false);
@@ -600,10 +610,12 @@ function SaveCard({
   return (
     <div className="glass grid gap-4 rounded-3xl p-5 sm:p-6">
       <div className="grid gap-1">
-        <h3 className="font-display text-xl font-semibold tracking-tight">Save your map to keep going</h3>
+        <h3 className="font-display text-xl font-semibold tracking-tight">
+          {next?.kind === "learn" ? `Next up: ${next.title}` : "Save your map to keep going"}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          A free account keeps your progress and opens the next stops, through to your readiness
-          checkpoint.
+          {next?.kind === "learn" && `About ${MINUTES_PER_STOP} minutes of quick questions. `}A free account saves
+          your map and opens every stop through to your readiness checkpoint.
         </p>
       </div>
       <InlineSignup nextPath={`/path/${cert}`} submitLabel="Save and continue" onSignedIn={onSaved} />

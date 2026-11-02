@@ -14,6 +14,14 @@ vi.mock("@/lib/supabase-browser", () => ({
       getSession: async () => ({ data: { session: auth.session } }),
       signOut: async () => ({}),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      signUp: async ({ email }: { email: string }) => {
+        const user = { id: "new-user", email };
+        return { data: { user, session: { user } }, error: null };
+      },
+      signInWithPassword: async ({ email }: { email: string }) => ({
+        data: { user: { id: "old-user", email } },
+        error: null,
+      }),
     },
   }),
 }));
@@ -135,6 +143,10 @@ async function answer(right = true) {
   fireEvent.click(await screen.findByRole("button", { name: right ? /^Next/ : /Got it/ }));
 }
 
+/** Whether one element is ahead of another on the page. */
+const comesBefore = (a: Element, b: Element) =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
 const done = (ids: string[], extra?: Partial<PathProgress>): PathProgress => ({
   items: {},
   stops: Object.fromEntries(ids.map((id) => [id, { n: 1, c: 3, t: 3, at: 1 }])),
@@ -163,7 +175,7 @@ describe("a first visit", () => {
     expect(screen.queryByRole("link", { name: "Security+" })).toBeNull();
   });
 
-  it("ends the warm-up on the map, with the save prompt as the way on", async () => {
+  it("ends the warm-up by naming the next stop, the save prompt ahead of the map", async () => {
     renderPath();
     await act(async () => {});
     await answer(true);
@@ -171,8 +183,10 @@ describe("a first visit", () => {
     await answer(true);
     expect(await screen.findByText(/Warm-up complete/i)).toBeInTheDocument();
     expect(screen.getByText(/1 to revisit/)).toBeInTheDocument();
-    expect(screen.getByText("Save your map to keep going")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
+    expect(screen.getByText(/About 4 minutes of quick questions\./)).toBeInTheDocument();
+    const save = screen.getByRole("button", { name: "Save and continue" });
+    expect(comesBefore(save, screen.getByText("Your Security+ map"))).toBe(true);
     // Nothing went to the server: the warm-up needs no account.
     expect(server.calls.filter((c) => c.path === "/api/path/stop")).toHaveLength(0);
     const saved = JSON.parse(localStorage.getItem("cb_path_security-plus-sy0-701")!);
@@ -209,8 +223,45 @@ describe("a returning visitor", () => {
     );
     renderPath();
     expect(await screen.findByText("Your Security+ path")).toBeInTheDocument();
-    expect(screen.getByText("Save your map to keep going")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|w1")).toBeNull();
+  });
+
+  /** A visitor whose device has these stops done, no account yet. */
+  function returning(...stops: string[]) {
+    localStorage.setItem(
+      "cb_path_security-plus-sy0-701",
+      JSON.stringify({ v: 1, owner: null, progress: done(stops) })
+    );
+  }
+
+  function fillIn(email = "sam@example.com") {
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: email } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
+  }
+
+  it("plays the stop the card named once they've signed up", async () => {
+    returning("warmup", "1.1");
+    renderPath();
+    expect(await screen.findByRole("heading", { name: "Next up: Objective 1.2" })).toBeInTheDocument();
+    fillIn();
+    fireEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    expect(await screen.findByText("Prompt a|1.2|s2-0")).toBeInTheDocument();
+    expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({ index: 2 });
+  });
+
+  it("goes to the map, not backwards, when they log in to an account that's further along", async () => {
+    returning("warmup");
+    server.progress = done(["warmup", "1.1", "1.2"]);
+    renderPath();
+    await screen.findByRole("heading", { name: "Next up: Objective 1.1" });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    fillIn();
+    fireEvent.click(screen.getByRole("button", { name: "Log in and keep going" }));
+    expect(await screen.findByRole("button", { name: "Continue" })).toBeInTheDocument();
+    expect(screen.getByText("Your Security+ path")).toBeInTheDocument();
+    expect(screen.getByText("Objective 1.3")).toBeInTheDocument();
+    expect(server.calls.filter((c) => c.path === "/api/path/stop")).toHaveLength(0);
   });
 });
 
@@ -226,6 +277,18 @@ describe("a signed-in learner", () => {
     expect(await screen.findByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
     const call = server.calls.find((c) => c.path === "/api/path/stop");
     expect(call?.input).toMatchObject({ cert: "security-plus-sy0-701", index: 1 });
+  });
+
+  it("ends a stop with the way on ahead of the map", async () => {
+    server.progress = done(["warmup"]);
+    server.stopHandler = (input) => stopReply(input.index, 1);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    await answer(true);
+    await screen.findByText(/Stop 2 complete/i);
+    const onward = screen.getByRole("button", { name: /Continue/ });
+    expect(comesBefore(onward, screen.getByText("Your Security+ map"))).toBe(true);
   });
 
   it("asks one goal question at a time between stops, then plays the stop", async () => {

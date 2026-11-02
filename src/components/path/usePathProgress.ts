@@ -243,6 +243,7 @@ export function usePathProgress(cert: PathCert) {
         stored: res.stored,
       });
       await saveToAccount(res.merged);
+      return res.merged;
     },
     [cert, adopt, commit, saveToAccount]
   );
