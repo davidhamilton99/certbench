@@ -50,5 +50,6 @@ describe("exam facts on the public pages", () => {
       (s) => s.id === "aplus-core1-troubleshooting-methodology"
     );
     expect(method?.type === "ordering" && method.items.length).toBe(6);
+    expect(method?.type === "ordering" && method.correct_order).toEqual([0, 1, 2, 3, 4, 5]);
   });
 });
