@@ -27,6 +27,9 @@ type Surface = "authed" | "public";
  */
 type EventMap = {
   signup_submitted: { method: "email" | "google" };
+  // Google sign-in leaves the site: these bracket the trip, so backing out shows.
+  google_signin_clicked: { page: string };
+  google_signin_cancelled: { page: string; via: "google" | "back" };
   pbq_started: { scenario_id: string; scenario_type: string; surface: Surface };
   upsell_viewed: { context: string };
   upsell_clicked: { context: string; href: string };

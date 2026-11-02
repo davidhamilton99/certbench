@@ -29,7 +29,8 @@ vi.mock("@/lib/supabase-browser", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const track = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/analytics", () => ({ track, identifyUser: vi.fn(), resetAnalytics: vi.fn() }));
+const identifyUser = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/analytics", () => ({ track, identifyUser, resetAnalytics: vi.fn() }));
 
 // The dial animates with rAF; its look isn't under test here.
 vi.mock("@/components/instrument/ReadinessDial", () => ({
@@ -162,6 +163,7 @@ beforeEach(() => {
   server.stopHandler = (input) => stopReply(input.index);
   server.calls = [];
   track.mockClear();
+  identifyUser.mockClear();
   localStorage.clear();
 });
 
@@ -240,6 +242,16 @@ describe("a returning visitor", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
   }
 
+  it("finds their map, the save card and a note after backing out of Google", async () => {
+    returning("warmup");
+    window.history.replaceState(null, "", "/path/security-plus-sy0-701?signin_cancelled=1");
+    renderPath();
+    expect(await screen.findByRole("status")).toHaveTextContent(/didn.t finish/);
+    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
   it("plays the stop the card named once they've signed up", async () => {
     returning("warmup", "1.1");
     renderPath();
@@ -268,6 +280,13 @@ describe("a returning visitor", () => {
 describe("a signed-in learner", () => {
   beforeEach(() => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
+  });
+
+  it("ties them to their account, however they arrived", async () => {
+    server.progress = done(["warmup"]);
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(identifyUser).toHaveBeenCalledWith("u1", { email: "u1@example.com" });
   });
 
   it("continues to the next stop with one tap", async () => {

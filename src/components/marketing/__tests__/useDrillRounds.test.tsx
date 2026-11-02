@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
-const session = vi.hoisted(() => ({ current: null as null | { user: { id: string } } }));
+const session = vi.hoisted(() => ({ current: null as null | { user: { id: string; email?: string } } }));
 const server = vi.hoisted(() => ({
   progress: { items: {}, rounds: 0 } as { items: Record<string, unknown>; rounds: number },
   saves: [] as unknown[],
@@ -26,6 +26,7 @@ vi.mock("@/lib/api-client", () => ({
 
 vi.mock("@/lib/analytics", () => ({ track: vi.fn(), identifyUser: vi.fn() }));
 
+import { identifyUser } from "@/lib/analytics";
 import { useDrillRounds } from "@/components/marketing/useDrillRounds";
 
 const IDS = Array.from({ length: 35 }, (_, i) => `p${i}`);
@@ -216,6 +217,21 @@ describe("useDrillRounds — signed in", () => {
     await waitFor(() => expect(result.current.ready).toBe(true));
     expect(result.current.progress).toEqual({ items: {}, rounds: 0 });
     expect(server.saves).toHaveLength(0);
+  });
+
+  it("ties a signed-in visitor to their account, however they arrived", async () => {
+    vi.mocked(identifyUser).mockClear();
+    session.current = { user: { id: "user-1", email: "learner@example.com" } };
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(identifyUser).toHaveBeenCalledWith("user-1", { email: "learner@example.com" });
+  });
+
+  it("leaves an anonymous visitor anonymous", async () => {
+    vi.mocked(identifyUser).mockClear();
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(identifyUser).not.toHaveBeenCalled();
   });
 
   it("plays unlimited rounds and saves each one", async () => {

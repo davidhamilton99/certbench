@@ -146,6 +146,10 @@ export function usePathProgress(cert: PathCert) {
         return;
       }
 
+      // However they got here: back from Google or on a new device, a signed-in
+      // learner stays anonymous without this (PostHog runs identified_only).
+      identifyUser(uid, email ? { email } : undefined);
+
       const res = await adopt(uid, local);
       if (cancelled) return;
       commit({

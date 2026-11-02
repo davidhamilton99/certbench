@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { MINUTES_PER_STOP } from "@/core/path/plan";
 import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 
 export const metadata = {
@@ -15,27 +16,27 @@ export const metadata = {
 };
 
 /**
- * The rail sets up the goal-setting flow the user is about to enter — in the
- * flow's own voice (desktop only, so the form stays first on mobile). Replays
- * showed visitors arriving convinced but stalling at the bare form; this
- * answers "what happens next?" and "what's this going to cost?" honestly, at
- * the moment those questions kill signups.
+ * The rail sets up the guided path the user is about to enter (desktop only,
+ * so the form stays first on mobile). Replays showed visitors arriving
+ * convinced but stalling at the bare form; this answers "what happens next?"
+ * and "what's this going to cost?" honestly, at the moment those questions
+ * kill signups.
  */
 const NEXT_STEPS: { icon: ComponentType<{ className?: string }>; title: string; body: string }[] = [
   {
     icon: Target,
-    title: "Set your goal",
-    body: "Your cert, your exam date, and how you study.",
+    title: "Pick your exam",
+    body: "Security+, Network+, or A+ Core 1 or 2.",
   },
   {
     icon: Sparkles,
-    title: "Get your plan",
-    body: "Built around your exam and your pace — in two minutes.",
+    title: "Play short stops",
+    body: `About ${MINUTES_PER_STOP} minutes of quick questions each, free through your readiness checkpoint.`,
   },
   {
     icon: ShieldCheck,
-    title: "Pass guarantee",
-    body: PASS_GUARANTEE_TERMS,
+    title: "Go further with Pro",
+    body: `The rest of the path, when you want it. ${PASS_GUARANTEE_TERMS}`,
   },
 ];
 
@@ -44,10 +45,10 @@ export default function RegisterPage() {
     <div className="mx-auto w-full max-w-sm lg:grid lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-16">
       <aside className="hidden lg:block">
         <h1 className="text-balance font-display text-3xl font-bold tracking-tight">
-          Build your study plan
+          Your guided path to the exam
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Two minutes to set up. Then just show up.
+          One short stop at a time. No card needed.
         </p>
         <ol className="mt-8 grid gap-5">
           {NEXT_STEPS.map(({ icon: Icon, title, body }) => (
@@ -69,11 +70,8 @@ export default function RegisterPage() {
             Create your account
           </CardTitle>
           <CardDescription>
-            Then build your plan — it takes two minutes.
+            Free, no card. Then pick your exam and start.
           </CardDescription>
-          <p className="text-xs text-muted-foreground">
-            Building your plan is free · Studying it is Pro
-          </p>
         </CardHeader>
         <CardContent>
           <RegisterForm />
