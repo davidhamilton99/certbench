@@ -188,9 +188,11 @@ export function useDrillRounds({
     (async () => {
       const local = readLocal(tool);
       let uid: string | null = null;
+      let email: string | undefined;
       try {
         const { data } = await createClient().auth.getSession();
         uid = data.session?.user.id ?? null;
+        email = data.session?.user.email;
       } catch {
         /* auth unreachable — treat as anonymous */
       }
@@ -208,6 +210,10 @@ export function useDrillRounds({
         setResolved(true);
         return;
       }
+
+      // However they got here: back from Google or on a new device, a signed-in
+      // visitor stays anonymous without this (PostHog runs identified_only).
+      identifyUser(uid, email ? { email } : undefined);
 
       const { merged, carried, unsynced, round: localRound } = await adopt(uid, local);
       if (cancelled) return;
