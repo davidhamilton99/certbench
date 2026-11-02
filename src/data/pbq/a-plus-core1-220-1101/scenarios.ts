@@ -9,21 +9,20 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     id: "aplus-core1-troubleshooting-methodology",
     title: "CompTIA Troubleshooting Methodology",
     description:
-      "Arrange the seven steps of the CompTIA troubleshooting methodology in the correct order.",
+      "Arrange the six steps of the CompTIA troubleshooting methodology in the correct order.",
     domain_number: "5.0",
     domain_title: "Hardware and Network Troubleshooting",
     items: [
       "Identify the problem",
       "Establish a theory of probable cause",
       "Test the theory to determine the cause",
-      "Establish a plan of action to resolve the problem",
-      "Implement the solution or escalate as necessary",
+      "Establish a plan of action to resolve the problem and implement the solution",
       "Verify full system functionality and implement preventive measures",
       "Document findings, actions, and outcomes",
     ],
-    correct_order: [0, 1, 2, 3, 4, 5, 6],
+    correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "The CompTIA 7-step troubleshooting methodology always begins with identifying the problem by gathering information and questioning the user. Theories are formed and tested before a plan is created and the solution implemented. Full functionality is verified and preventive measures applied before the final step of documenting all findings and outcomes.",
+      "The CompTIA A+ 6-step troubleshooting methodology always begins with identifying the problem by gathering information and questioning the user. Theories are formed and tested before a plan is created and the solution implemented. Full functionality is verified and preventive measures applied before the final step of documenting all findings and outcomes.",
   },
   {
     type: "ordering",
