@@ -212,7 +212,7 @@ export const ROUNDUP: RoundupData = {
   path: "best-security-plus-practice-tests",
   metaTitle: "Best Security+ Practice Tests & Exams in 2026",
   metaDescription:
-    "An honest guide to the best CompTIA Security+ (SY0-701) practice tests and practice exams in 2026 — Boson, CertMaster, Pocket Prep, Professor Messer, Dion, and CertBench — with real strengths, weaknesses, and prices.",
+    "An honest guide to the best CompTIA Security+ (SY0-701) practice tests and practice exams in 2026 — Boson, CertMaster, Professor Messer, Dion, ExamCompass, and CertBench — with real strengths, weaknesses, and prices.",
   h1: "The best Security+ practice tests and exams in 2026",
   intro: [
     "First, the disclosure: CertBench is our product, and it's on this list. We've kept every entry honest anyway — including the ways the others beat us — because you'll figure out the truth within a week of choosing, and a guide that lies to you isn't worth ranking.",
@@ -247,6 +247,7 @@ export const ROUNDUP: RoundupData = {
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
         "Newer question bank than the incumbents, and CompTIA-only coverage",
+        "Written to SY0-701; no SY0-801 questions yet",
       ],
     },
     {
@@ -330,11 +331,11 @@ export const A_PLUS_ROUNDUP: RoundupData = {
   path: "best-a-plus-practice-tests",
   metaTitle: "Best CompTIA A+ Practice Tests & Exams in 2026",
   metaDescription:
-    "An honest guide to the best CompTIA A+ (220-1101 & 220-1102) practice tests and practice exams in 2026 — Mike Meyers, Professor Messer, Jason Dion, Boson, CertMaster, and CertBench — with real strengths, weaknesses, and prices.",
+    "An honest guide to the best CompTIA A+ (220-1201 & 220-1202) practice tests and practice exams in 2026 — Mike Meyers, Professor Messer, Jason Dion, Boson, CertMaster, and CertBench — with real strengths, weaknesses, and prices.",
   h1: "The best CompTIA A+ practice tests and exams in 2026",
   intro: [
     "The disclosure first: CertBench is our product and it's on this list. Every entry is honest anyway — including where the others beat us — because A+ is most people's first cert, you'll spot a dishonest guide fast, and one that lies isn't worth ranking.",
-    "The thing to understand about A+: it's two separate exams — Core 1 (220-1101: hardware, networking, mobile, cloud) and Core 2 (220-1102: operating systems, security, troubleshooting) — and you pass them one at a time. So a good practice tool has to track two exams' readiness independently, and the best A+ prep pairs a daily practice system with one realistic simulator per core before you book.",
+    "The thing to understand about A+: it's two separate exams — Core 1 (220-1201: hardware, networking, mobile, cloud) and Core 2 (220-1202: operating systems, security, troubleshooting) — and you pass them one at a time. Those replaced 220-1101 and 220-1102, which retired on September 25, 2025, so check which version a product was written to before you buy it. So a good practice tool has to track two exams' readiness independently, and the best A+ prep pairs a daily practice system with one realistic simulator per core before you book.",
   ],
   tools: [
     {
@@ -363,6 +364,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
         "Newer question bank than the decades-old incumbents",
+        "Written to the retired 220-1101/1102 objectives: most topics carry over, but the new 220-1201/1202 topics aren't added yet",
       ],
     },
     {
@@ -409,7 +411,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       price: "Typically $150+ per core",
       bestFor: "When your employer or school pays",
       strengths: [
-        "Official vendor content aligned to the 220-1101/1102 objectives",
+        "Official vendor content aligned to the current exam objectives",
         "Integrates with CompTIA courseware and instructor programmes",
       ],
       weaknesses: [

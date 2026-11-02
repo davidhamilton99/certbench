@@ -5,10 +5,13 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { QuickRound } from "@/components/path/QuickRound";
 import type { QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
+import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 
 export interface PracticeTestLandingData {
   certs: {
@@ -32,6 +35,7 @@ export interface ObjectiveLink {
   certSlug: string;
   code: string;
   title: string;
+  topic: string;
   slug: string;
 }
 
@@ -49,6 +53,20 @@ export function PracticeTestLanding({
   round?: QuickRoundData | null;
 }) {
   const otherHubs = PRACTICE_TEST_PAGES.filter((p) => p.path !== page.path);
+  // Network+ objective numbers aren't CompTIA's yet, so that list goes by topic.
+  const official = page.certSlugs.every(usesOfficialObjectiveNumbers);
+  const retired = page.certSlugs.some((slug) => replacedBy(slug) !== null);
+  const examOutlines =
+    page.currentExams ??
+    data.certs.map(({ cert, domains }) => ({
+      name: cert.name,
+      examCode: cert.examCode,
+      domains: domains.map((d) => ({
+        number: d.domainNumber,
+        title: d.title,
+        weight: d.examWeight,
+      })),
+    }));
 
   // GEO/SEO: mark the page as a free educational practice resource so search
   // and generative engines can identify and cite it for "free CompTIA … test".
@@ -78,6 +96,8 @@ export function PracticeTestLanding({
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           {page.h1}
         </h1>
+        {/* A retired exam changes what this page is, so that's said first. */}
+        {retired && <ExamVersionNote certSlugs={page.certSlugs} className="mt-4" />}
         {/* Lead with something to do: the exam's warm-up, the same quick
             round the guided path opens with. */}
         {round && (
@@ -92,10 +112,12 @@ export function PracticeTestLanding({
               reps={round.reps}
               label={`${round.examName} warm-up`}
               surface="practice_test_page"
-              pitch={`That's the warm-up. Your ${round.examName} path covers all ${round.objectiveCount} objectives in short stops like this, then shows where you stand.`}
+              pitch={`That's the warm-up. Your ${round.examName} path covers all ${round.objectiveCount} ${official ? "objectives" : "topics"} in short stops like this, then shows where you stand.`}
             />
           </section>
         )}
+
+        {!retired && <ExamVersionNote certSlugs={page.certSlugs} className="mt-6" />}
 
         <div className={round ? "mt-10 grid gap-3 text-muted-foreground" : "mt-4 grid gap-3 text-muted-foreground"}>
           {page.intro.map((p) => (
@@ -154,30 +176,30 @@ export function PracticeTestLanding({
           <h2 className="text-xl font-semibold tracking-tight">
             What the exam covers
           </h2>
-          {data.certs.map(({ cert, domains }) => (
-            <div key={cert.id} className="mt-4">
-              {data.certs.length > 1 && (
+          {examOutlines.map((exam) => (
+            <div key={exam.examCode} className="mt-4">
+              {examOutlines.length > 1 && (
                 <h3 className="mb-2 text-sm font-medium">
-                  {cert.name}{" "}
+                  {exam.name}{" "}
                   <span className="font-mono text-xs text-muted-foreground">
-                    {cert.examCode}
+                    {exam.examCode}
                   </span>
                 </h3>
               )}
               <div className="grid gap-1.5">
-                {domains.map((d) => (
+                {exam.domains.map((d) => (
                   <div
-                    key={d.id}
+                    key={d.number}
                     className="flex items-baseline justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm"
                   >
                     <span>
                       <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                        {d.domainNumber}
+                        {d.number}
                       </span>
                       {d.title}
                     </span>
                     <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                      {d.examWeight}% of exam
+                      {d.weight}% of exam
                     </span>
                   </div>
                 ))}
@@ -190,11 +212,11 @@ export function PracticeTestLanding({
         {objectives.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-semibold tracking-tight">
-              Practice by exam objective
+              {official ? "Practice by exam objective" : "Practice by topic"}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Drill a specific objective — each page has its own set of
-              questions with explanations.
+              Drill a specific {official ? "objective" : "topic"} — each page
+              has its own set of questions with explanations.
             </p>
             <div className="mt-4 grid gap-1.5">
               {objectives.map((o) => (
@@ -203,12 +225,16 @@ export function PracticeTestLanding({
                   href={`/objectives/${o.certSlug}/${o.slug}`}
                   className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
                 >
-                  <span>
-                    <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                      {o.code}
+                  {official ? (
+                    <span>
+                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">
+                        {o.code}
+                      </span>
+                      {o.title}
                     </span>
-                    {o.title}
-                  </span>
+                  ) : (
+                    <span>{o.topic}</span>
+                  )}
                   <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
                 </Link>
               ))}
@@ -217,30 +243,7 @@ export function PracticeTestLanding({
         )}
 
         {/* Related free resources — internal links to tools, PBQ pages, roundup */}
-        {page.related && page.related.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Keep practising — free
-            </h2>
-            <div className="mt-4 grid gap-1.5">
-              {page.related.map((r) => (
-                <Link
-                  key={r.href}
-                  href={r.href}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  <span>
-                    <span className="font-medium">{r.label}</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {r.note}
-                    </span>
-                  </span>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        <RelatedLinks links={page.related ?? []} />
 
         {/* Other CompTIA practice tests — cross-link the sibling hubs */}
         {otherHubs.length > 0 && (

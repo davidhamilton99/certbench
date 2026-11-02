@@ -7,12 +7,14 @@ import { listActiveCertifications } from "@/server/data/certifications";
 import { isPathCert } from "@/core/path/types";
 import { ExamPicker } from "@/components/path/ExamPicker";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Pick your exam",
   description: "Choose your CompTIA exam and start studying it one short step at a time.",
-  robots: { index: false, follow: true },
-};
+  path: "/start",
+  noindex: true,
+});
 
 /**
  * Where "Get started" leads, and where a signed-in account without Pro lands.

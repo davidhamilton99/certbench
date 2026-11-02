@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Contact",
   description:
     "Get in touch with the CertBench team. Bug reports, feature requests, feedback — we read and respond to everything.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

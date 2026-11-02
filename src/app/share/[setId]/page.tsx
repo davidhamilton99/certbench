@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Shared study set",
+  // A link someone shared, not a page to find in search.
+  robots: { index: false, follow: true },
 };
 
 /** Public share link — no auth required (RLS allows public-set reads). */

@@ -7,6 +7,8 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PbqTryChooser } from "@/components/marketing/PbqTryChooser";
+import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import type { PbqUpsell } from "@/components/workspace/PbqPlayer";
 import { Button } from "@/components/ui/button";
 
@@ -73,6 +75,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
             </p>
           ))}
         </div>
+        <ExamVersionNote certSlugs={[page.certSlug]} className="mt-4 max-w-2xl" />
 
         {free.length > 0 && (
           <section className="mt-10">
@@ -89,10 +92,9 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
               {rest.length} more hands-on labs in your plan
             </h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Every style the real exam uses — firewall configs, log analysis,
-              topology, ordering, and matching — graded with partial credit,
-              across every domain. This is the practice that actually moves your
-              readiness.
+              Hands-on scenarios across every domain, from ordering and matching
+              to full simulations, graded with partial credit. This is the
+              practice that actually moves your readiness.
             </p>
             <div className="mt-4 grid gap-1.5">
               {rest.map((s) => (
@@ -134,6 +136,8 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
           </Button>
           <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
+
+        <RelatedLinks links={page.related ?? []} />
 
         <FaqSection faqs={page.faqs} />
       </main>

@@ -14,10 +14,14 @@ import {
 import { PlanPicker } from "@/components/billing/PlanPicker";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Pricing",
-};
+  description:
+    "Start your CompTIA exam path free. CertBench Pro opens the whole path, unlimited practice, full-length exams and every PBQ lab: $19 a month or $39 for a three-month exam cycle, adjusted regionally.",
+  path: "/pricing",
+});
 
 // The free offering: the start of the guided path plus the public tools.
 // These are the real things a visitor can use right now.

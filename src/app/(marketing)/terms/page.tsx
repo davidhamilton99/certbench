@@ -1,10 +1,12 @@
 import { Metadata } from "next";
 import { BackLink } from "@/components/marketing/BackLink";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
   description: "CertBench Terms of Service — the rules governing your use of our certification study platform.",
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

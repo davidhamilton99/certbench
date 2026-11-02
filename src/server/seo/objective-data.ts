@@ -12,6 +12,8 @@ import {
   listQuestionsBySubObjective,
 } from "@/server/data/questions";
 import { codeToSlug, slugToCode } from "@/lib/seo/objective-code";
+import { OBJECTIVE_HUB_CERTS } from "@/lib/seo/exam-versions";
+import { OBJECTIVE_TITLES } from "@/data/path/titles";
 
 /**
  * An objective page is generated only when its sub-objective has at least
@@ -51,7 +53,21 @@ export async function listObjectivePages(): Promise<ObjectiveParam[]> {
 export interface ObjectiveLink {
   code: string;
   title: string;
+  /** Short name, the words a learner would use ("Security controls"). */
+  topic: string;
   slug: string; // "1-2"
+}
+
+function objectiveLink(
+  certSlug: string,
+  sub: { code: string; title: string }
+): ObjectiveLink {
+  return {
+    code: sub.code,
+    title: sub.title,
+    topic: OBJECTIVE_TITLES[certSlug]?.[sub.code] ?? sub.title,
+    slug: codeToSlug(sub.code),
+  };
 }
 
 /** Objective pages for one cert — powers the hub list on the practice-test page. */
@@ -67,7 +83,7 @@ export async function listCertObjectivePages(
   ]);
   return subs
     .filter((s) => (counts.get(s.id) ?? 0) >= OBJECTIVE_MIN_QUESTIONS)
-    .map((s) => ({ code: s.code, title: s.title, slug: codeToSlug(s.code) }));
+    .map((s) => objectiveLink(certSlug, s));
 }
 
 /** Flat objective list across certs, tagged with certSlug — for the hub pages. */
@@ -89,6 +105,7 @@ export interface ObjectivePageData {
   examCode: string; // "SY0-701"
   code: string; // "1.2"
   title: string; // objective title
+  topic: string; // short name, "Core security concepts"
   domainNumber: string | null;
   domainTitle: string | null;
   domainWeight: number | null;
@@ -131,7 +148,7 @@ export async function loadObjectivePage(
         s.domain_id === sub.domain_id &&
         (counts.get(s.id) ?? 0) >= OBJECTIVE_MIN_QUESTIONS
     )
-    .map((s) => ({ code: s.code, title: s.title, slug: codeToSlug(s.code) }));
+    .map((s) => objectiveLink(cert.slug, s));
 
   return {
     certSlug: cert.slug,
@@ -140,6 +157,7 @@ export async function loadObjectivePage(
     examCode: cert.examCode,
     code: sub.code,
     title: sub.title,
+    topic: OBJECTIVE_TITLES[cert.slug]?.[sub.code] ?? sub.title,
     domainNumber: domain?.domainNumber ?? null,
     domainTitle: domain?.title ?? null,
     domainWeight: domain?.examWeight ?? null,
@@ -150,5 +168,52 @@ export async function loadObjectivePage(
       explanation: q.explanation,
     })),
     siblings,
+  };
+}
+
+export interface ObjectiveHubData {
+  certSlug: string;
+  certName: string;
+  shortCertName: string;
+  examCode: string;
+  objectiveCount: number;
+  domains: {
+    number: string;
+    title: string;
+    weight: number;
+    objectives: ObjectiveLink[];
+  }[];
+}
+
+/** One exam's objectives by domain, for its index page; null if it has none. */
+export async function loadObjectiveHub(
+  certSlug: string
+): Promise<ObjectiveHubData | null> {
+  if (!OBJECTIVE_HUB_CERTS.includes(certSlug)) return null;
+  const db = createAnonClient();
+  const cert = await getCertificationBySlug(db, certSlug);
+  if (!cert) return null;
+
+  const [subs, domains, counts] = await Promise.all([
+    listSubObjectives(db, cert.id),
+    listDomains(db, cert.id),
+    countQuestionsBySubObjective(db, cert.id),
+  ]);
+  const withPages = subs.filter((s) => (counts.get(s.id) ?? 0) >= OBJECTIVE_MIN_QUESTIONS);
+
+  return {
+    certSlug: cert.slug,
+    certName: cert.name,
+    shortCertName: cert.name.replace(/^CompTIA\s+/, ""),
+    examCode: cert.examCode,
+    objectiveCount: withPages.length,
+    domains: domains.map((d) => ({
+      number: d.domainNumber,
+      title: d.title,
+      weight: d.examWeight,
+      objectives: withPages
+        .filter((s) => s.domain_id === d.id)
+        .map((s) => objectiveLink(cert.slug, s)),
+    })),
   };
 }

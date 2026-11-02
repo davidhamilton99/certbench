@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const troubleshootingSteps: ReferenceTable = {
   id: "troubleshooting-steps",
   title: "CompTIA Troubleshooting Methodology",
-  description: "The official 7-step CompTIA troubleshooting process — tested on both A+ 220-1101 and 220-1102.",
+  description: "The official 6-step CompTIA A+ troubleshooting process.",
   columnHeaders: [
     { key: "step", label: "Step", mono: true },
     { key: "action", label: "Action" },
@@ -38,22 +38,14 @@ export const troubleshootingSteps: ReferenceTable = {
     {
       columns: {
         step: "4",
-        action: "Establish a plan of action",
-        description: "Plan how to resolve the problem. Consider potential effects on the system, and refer to vendor instructions or internal knowledgebase.",
-        example: "Plan: uninstall and reinstall the NIC driver. Schedule during off-hours to minimise disruption. Document steps.",
+        action: "Establish a plan of action and implement the solution",
+        description: "Plan how to resolve the problem, considering potential effects on the system and referring to vendor instructions or an internal knowledgebase, then carry it out. Escalate if you cannot resolve it. Make one change at a time to isolate the cause.",
+        example: "Plan: uninstall and reinstall the NIC driver during off-hours. Reinstall it from the manufacturer's website, reboot, and test connectivity after each change.",
       },
     },
     {
       columns: {
         step: "5",
-        action: "Implement the solution or escalate",
-        description: "Execute the plan. If you cannot resolve it, escalate to the appropriate person or team. Make one change at a time to isolate cause.",
-        example: "Reinstall NIC driver from manufacturer's website. Reboot system. Test connectivity after each change.",
-      },
-    },
-    {
-      columns: {
-        step: "6",
         action: "Verify full system functionality",
         description: "Confirm the problem is resolved and implement preventive measures. Test with the end user to ensure full functionality is restored.",
         example: "User confirms internet is working. Browse multiple sites. Ping external IP (8.8.8.8) and hostname. Enable Windows Update if it was disabled.",
@@ -61,7 +53,7 @@ export const troubleshootingSteps: ReferenceTable = {
     },
     {
       columns: {
-        step: "7",
+        step: "6",
         action: "Document findings, actions, and outcomes",
         description: "Record what the problem was, what caused it, what steps were taken, and the final resolution. Helps future troubleshooting and builds knowledgebase.",
         example: "Log ticket: 'NIC driver conflict after KB5023696. Resolved by rolling back to driver v22.60.0. No recurrence in 48h.'",

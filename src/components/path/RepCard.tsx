@@ -33,10 +33,13 @@ export function RepCard({
   rep,
   onAnswer,
   onNext,
+  promptAs: Prompt = "h2",
 }: {
   rep: Rep;
   onAnswer: (answer: RepAnswer) => void;
   onNext: () => void;
+  /** "p" where the rep sits inside a public page, so a prompt isn't one of its headings. */
+  promptAs?: "h2" | "p";
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [typed, setTyped] = useState("");
@@ -131,7 +134,7 @@ export function RepCard({
       </span>
 
       <div className="grid gap-2">
-        <h2
+        <Prompt
           className={cn(
             "text-balance",
             isExam
@@ -142,7 +145,7 @@ export function RepCard({
           )}
         >
           {rep.prompt}
-        </h2>
+        </Prompt>
         {rep.cue && rep.type === "choice" && (
           <p className="font-mono text-sm text-muted-foreground">{rep.cue}</p>
         )}

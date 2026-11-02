@@ -186,7 +186,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
           },
         ],
         explanation:
-          "When replacing a GPU, using DDU in Safe Mode ensures no remnants of the old driver conflict with the new hardware. The user's password must never be recorded in a service document — it is sensitive credential information. The final step of the CompTIA 7-step troubleshooting methodology is always documentation of findings, actions, and outcomes, which must occur after functionality has been verified.",
+          "When replacing a GPU, using DDU in Safe Mode ensures no remnants of the old driver conflict with the new hardware. The user's password must never be recorded in a service document — it is sensitive credential information. The final step of the CompTIA A+ 6-step troubleshooting methodology is always documentation of findings, actions, and outcomes, which must occur after functionality has been verified.",
       },
     ],
     explanation:

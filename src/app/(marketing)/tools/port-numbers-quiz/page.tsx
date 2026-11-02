@@ -7,13 +7,16 @@ import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PortQuiz } from "@/components/marketing/PortQuiz";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { Button } from "@/components/ui/button";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Free CompTIA Port Numbers Quiz",
   description:
     "Drill the port numbers every CompTIA exam tests — Security+, Network+, and A+. Start free with no signup; a free account saves your progress and targets your misses.",
-};
+  path: "/tools/port-numbers-quiz",
+});
 
 const FAQS = [
   {
@@ -39,7 +42,7 @@ export default function PortQuizPage() {
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          Port numbers quiz
+          CompTIA port numbers quiz
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           Every CompTIA exam — A+, Network+, Security+ — expects you to know
@@ -57,7 +60,7 @@ export default function PortQuizPage() {
         {/* Full reference */}
         <section className="mt-10">
           <h2 className="text-xl font-semibold tracking-tight">
-            The full list
+            The full CompTIA port numbers list
           </h2>
           <div className="mt-4 overflow-hidden rounded-xl border">
             <table className="w-full text-sm">
@@ -105,6 +108,31 @@ export default function PortQuizPage() {
         <section className="mt-10">
           <ToolEmailCapture source="port-numbers-quiz" />
         </section>
+
+        <RelatedLinks
+          links={[
+            {
+              href: "/security-plus-practice-test",
+              label: "Security+ practice test",
+              note: "Original SY0-701 questions with full explanations",
+            },
+            {
+              href: "/network-plus-practice-test",
+              label: "Network+ practice test",
+              note: "Original N10-009 questions with full explanations",
+            },
+            {
+              href: "/a-plus-practice-test",
+              label: "A+ practice test",
+              note: "Original Core 1 and Core 2 questions with full explanations",
+            },
+            {
+              href: "/tools/subnetting-practice",
+              label: "Subnetting practice",
+              note: "Rapid CIDR and subnet-mask drills",
+            },
+          ]}
+        />
 
         <FaqSection faqs={FAQS} />
       </main>

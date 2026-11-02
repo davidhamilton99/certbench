@@ -1,10 +1,12 @@
 import { Metadata } from "next";
 import { BackLink } from "@/components/marketing/BackLink";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
   description: "CertBench Privacy Policy — how we collect, use, and protect your personal data.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
