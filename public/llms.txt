@@ -1,15 +1,26 @@
 # CertBench
 
-> Guided CompTIA exam prep. Pick your exam and CertBench lays out every exam objective as a path of short, interactive stops — quick questions first, the real exam's wording as you go — with a readiness checkpoint that shows where you stand, for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 220-1101 and Core 2 220-1102). Every question is original and written to the exam objectives with a full explanation. No braindumps or leaked exam content.
+> Guided CompTIA exam prep. Pick your exam and CertBench lays out every exam objective as a path of short, interactive stops — quick questions first, the real exam's wording as you go — with a readiness checkpoint that shows where you stand, for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 and Core 2). Every question is original and comes with a full explanation. No braindumps or leaked exam content.
+
+## Which exam versions this covers
+
+- Security+: written to SY0-701, the current exam, open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026. CertBench has no SY0-801 questions yet.
+- Network+: written for N10-009, the current exam.
+- A+: written to 220-1101 and 220-1102, which CompTIA retired on September 25, 2025. The current exams are 220-1201 and 220-1202. Most topics carry over, but CertBench hasn't added the new topics yet.
 
 ## Guided study paths
 
 Each path starts with a warm-up anyone can play with no account. A free account keeps your progress and opens the next stops through the readiness checkpoint; Pro opens the rest of the path.
 
 - [Security+ study path (SY0-701)](https://certbench.dev/path/security-plus-sy0-701): all 28 objectives, one short stop each, with domain practice and a readiness checkpoint.
-- [Network+ study path (N10-009)](https://certbench.dev/path/network-plus-n10-009): every N10-009 objective, from the OSI model to troubleshooting.
-- [A+ Core 1 study path (220-1101)](https://certbench.dev/path/a-plus-core1-220-1101): mobile devices, networking, hardware, virtualization and troubleshooting.
-- [A+ Core 2 study path (220-1102)](https://certbench.dev/path/a-plus-core2-220-1102): operating systems, security, software troubleshooting and operational procedures.
+- [Network+ study path (N10-009)](https://certbench.dev/path/network-plus-n10-009): the N10-009 topics, from the OSI model to troubleshooting.
+- [A+ Core 1 study path](https://certbench.dev/path/a-plus-core1-220-1101): mobile devices, networking, hardware, virtualization and troubleshooting.
+- [A+ Core 2 study path](https://certbench.dev/path/a-plus-core2-220-1102): operating systems, security, software troubleshooting and operational procedures.
+
+## Guides
+
+- [Security+ SY0-801 vs SY0-701](https://certbench.dev/security-plus-sy0-801-vs-sy0-701): launch and retirement dates, domain weight changes, and how to choose by exam date, from CompTIA's own pages.
+- [SY0-701 exam objectives](https://certbench.dev/objectives/security-plus-sy0-701): every objective by domain and exam weight, with practice questions for each one.
 
 ## Free tools
 
@@ -18,21 +29,23 @@ The port, subnetting, and acronym drills give a first round free with no account
 - [Port numbers quiz](https://certbench.dev/tools/port-numbers-quiz): drill the ports and protocols CompTIA tests, in both directions (name the port, name the protocol), with instant feedback.
 - [Subnetting practice](https://certbench.dev/tools/subnetting-practice): rapid CIDR and subnet-mask drills for Network+ and A+.
 - [Subnet calculator](https://certbench.dev/tools/subnet-calculator): enter an IPv4 address and CIDR prefix to get the network, broadcast, usable host range, subnet mask, wildcard mask, and host count.
-- [Security+ acronyms quiz](https://certbench.dev/tools/security-plus-acronyms-quiz): drill the SY0-701 acronyms most tested on the exam.
+- [Security+ acronyms list and quiz](https://certbench.dev/tools/security-plus-acronyms-quiz): the full SY0-701 acronym list, and a drill on the ones most tested on the exam.
 
 ## Free practice tests
 
-- [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): free 220-1101 and 220-1102 practice questions with explanations.
-- [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions, weighted by the real exam domains.
+- [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): free practice questions with explanations, written to 220-1101 and 220-1102.
+- [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions with explanations.
 - [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): free SY0-701 practice questions with full explanations.
 
 ## Performance-based questions (interactive)
 
 - [Security+ PBQ examples](https://certbench.dev/security-plus-pbq-examples): interactive performance-based questions — firewall rules, log analysis, incident response — you can work through in the browser.
 - [Network+ PBQ examples](https://certbench.dev/network-plus-pbq-examples): interactive topology, configuration, and troubleshooting scenarios.
+- [A+ Core 1 PBQ examples](https://certbench.dev/a-plus-core-1-pbq-examples): ports, troubleshooting steps, and hardware scenarios.
+- [A+ Core 2 PBQ examples](https://certbench.dev/a-plus-core-2-pbq-examples): malware removal, Windows tools, and mobile security scenarios.
 
 ## About
 
 - [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
 - [Pricing](https://certbench.dev/pricing): the start of every path is free; Pro opens the whole path, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
-- Certifications covered: CompTIA Security+ SY0-701, Network+ N10-009, A+ Core 1 220-1101, A+ Core 2 220-1102.
+- Certifications covered: CompTIA Security+ SY0-701, Network+ N10-009, A+ Core 1 and Core 2 (written to 220-1101 and 220-1102).

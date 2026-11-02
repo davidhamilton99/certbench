@@ -2,158 +2,61 @@ import { MetadataRoute } from "next";
 import { listObjectivePages } from "@/server/seo/objective-data";
 import { listReadinessCheckCerts } from "@/server/seo/readiness-check-data";
 import { VS_PAGES, ROUNDUPS } from "@/lib/seo/comparison-pages";
-import { PATH_CERTS } from "@/core/path/types";
+import { OBJECTIVE_HUB_CERTS, SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
 
 const BASE_URL = "https://certbench.dev";
 
+/**
+ * The last real content change, never the request time: Google ignores lastmod
+ * once it stops matching what changed. Bump a date when that content changes.
+ */
+const CONTENT_UPDATED = new Date("2026-11-02");
+const TERMS_UPDATED = new Date("2026-10-24");
+const PRIVACY_UPDATED = new Date("2026-09-13");
+const CONTACT_UPDATED = new Date("2026-10-10");
+
+/** Pages worth finding in search. App screens (/path, /login, /register) stay out. */
+const STATIC_PATHS = [
+  "",
+  "/pricing",
+  "/security-plus-practice-test",
+  "/network-plus-practice-test",
+  "/a-plus-practice-test",
+  "/security-plus-pbq-examples",
+  "/network-plus-pbq-examples",
+  "/a-plus-core-1-pbq-examples",
+  "/a-plus-core-2-pbq-examples",
+  "/tools/port-numbers-quiz",
+  "/tools/subnetting-practice",
+  "/tools/subnet-calculator",
+  "/tools/security-plus-acronyms-quiz",
+  SECURITY_PLUS_VERSIONS_PATH,
+  ...OBJECTIVE_HUB_CERTS.map((cert) => `/objectives/${cert}`),
+  ...ROUNDUPS.map((r) => `/${r.path}`),
+  ...VS_PAGES.map((p) => `/compare/${p.slug}`),
+  "/help",
+];
+
+function entry(path: string, lastModified = CONTENT_UPDATED): MetadataRoute.Sitemap[number] {
+  return { url: `${BASE_URL}${path}`, lastModified };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Programmatic pages — fail-safe so a DB hiccup can't break the sitemap.
-  const objectivePages: MetadataRoute.Sitemap = await listObjectivePages()
-    .then((pages) =>
-      pages.map((p) => ({
-        url: `${BASE_URL}/objectives/${p.cert}/${p.code}`,
-        lastModified: new Date(),
-        changeFrequency: "monthly" as const,
-        priority: 0.7,
-      }))
-    )
+  const objectivePages = await listObjectivePages()
+    .then((pages) => pages.map((p) => entry(`/objectives/${p.cert}/${p.code}`)))
     .catch(() => []);
 
-  const readinessChecks: MetadataRoute.Sitemap = await listReadinessCheckCerts()
-    .then((certs) =>
-      certs.map((c) => ({
-        url: `${BASE_URL}/readiness-check/${c.cert}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.9,
-      }))
-    )
+  const readinessChecks = await listReadinessCheckCerts()
+    .then((certs) => certs.map((c) => entry(`/readiness-check/${c.cert}`)))
     .catch(() => []);
-
-  const paths: MetadataRoute.Sitemap = PATH_CERTS.map((cert) => ({
-    url: `${BASE_URL}/path/${cert}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.9,
-  }));
 
   return [
-    ...paths,
+    ...STATIC_PATHS.map((path) => entry(path)),
     ...readinessChecks,
     ...objectivePages,
-    {
-      url: BASE_URL,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${BASE_URL}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/security-plus-practice-test`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/network-plus-practice-test`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/a-plus-practice-test`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/security-plus-pbq-examples`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/network-plus-pbq-examples`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/tools/port-numbers-quiz`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/tools/subnetting-practice`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/tools/subnet-calculator`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/tools/security-plus-acronyms-quiz`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    ...ROUNDUPS.map((r) => ({
-      url: `${BASE_URL}/${r.path}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    })),
-    ...VS_PAGES.map((p) => ({
-      url: `${BASE_URL}/compare/${p.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
-    {
-      url: `${BASE_URL}/help`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/terms`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/login`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/register`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
+    entry("/contact", CONTACT_UPDATED),
+    entry("/privacy", PRIVACY_UPDATED),
+    entry("/terms", TERMS_UPDATED),
   ];
 }

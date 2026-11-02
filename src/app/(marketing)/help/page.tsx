@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/marketing/Footer";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Help Centre",
   description:
     "Everything you need to know about using CertBench to prepare for your CompTIA certification exam.",
-};
+  path: "/help",
+});
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -35,7 +37,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is a practice and study tool for CompTIA certification exams. It tracks your performance across every exam domain, builds a personalised study plan each day, and gives you a readiness score so you know when you\u2019re genuinely prepared to sit your exam. It currently covers Security+ SY0-701, Network+ N10-009, A+ Core 1 (220-1101), and A+ Core 2 (220-1102).",
+        a: "CertBench is a practice and study tool for CompTIA certification exams. It tracks your performance across every exam domain, builds a personalised study plan each day, and gives you a readiness score so you know when you\u2019re genuinely prepared to sit your exam. It currently covers Security+ SY0-701, Network+ N10-009, and A+ Core 1 and Core 2. Our A+ questions were written to 220-1101 and 220-1102, which CompTIA replaced with 220-1201 and 220-1202 in 2025; most topics carry over, but we haven\u2019t added the new ones yet.",
       },
       {
         q: "Is CertBench free?",

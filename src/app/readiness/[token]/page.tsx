@@ -14,10 +14,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const payload = verifyShare(token);
+  // One person's shared score: for the people they send it to, not for search.
+  const robots = { index: false, follow: true };
   if (!payload) {
     return {
       title: "Exam readiness — CertBench",
       description: "Measure your CompTIA exam readiness on CertBench.",
+      robots,
     };
   }
   const score = Math.round(payload.s);
@@ -30,6 +33,7 @@ export async function generateMetadata({
     description,
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary_large_image", title, description },
+    robots,
   };
 }
 

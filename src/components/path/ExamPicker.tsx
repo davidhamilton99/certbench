@@ -7,6 +7,7 @@ import { track } from "@/lib/analytics";
 import { hasStarted } from "@/core/path/progress";
 import { PATH_CERTS, type PathCert } from "@/core/path/types";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { readLocalPath } from "./local-path";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +74,8 @@ export function ExamPicker({ surface, className }: { surface: string; className?
               <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
             </span>
             <span className="font-mono text-xs text-muted-foreground">
-              {EXAM_CODES[cert]} · {Object.keys(OBJECTIVE_TITLES[cert]).length} objectives
+              {EXAM_CODES[cert]} · {Object.keys(OBJECTIVE_TITLES[cert]).length}{" "}
+              {usesOfficialObjectiveNumbers(cert) ? "objectives" : "topics"}
             </span>
           </Link>
         ))}

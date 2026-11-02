@@ -8,6 +8,7 @@ import { isPathCert, PATH_CERTS } from "@/core/path/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { PathApp } from "@/components/path/PathApp";
 import { pathStorageKey } from "@/components/path/storage-key";
+import { pageMetadata } from "@/lib/seo/metadata";
 
 // The warm-up is the same for every first-time visitor; rebuild hourly.
 export const revalidate = 3600;
@@ -23,11 +24,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { cert } = await params;
   const name = EXAM_NAMES[cert] ?? "CompTIA";
-  return {
+  // The app itself: a few words of server HTML and no heading, so it stays out
+  // of search. The practice-test and objective pages are what should rank.
+  return pageMetadata({
     title: `${name} study path`,
     description: `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a map of where you stand.`,
-    alternates: { canonical: `/path/${cert}` },
-  };
+    path: `/path/${cert}`,
+    noindex: true,
+  });
 }
 
 export default async function PathPage({ params }: { params: Promise<{ cert: string }> }) {

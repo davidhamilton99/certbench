@@ -4,15 +4,18 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnetCalculator } from "@/components/marketing/SubnetCalculator";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { calculateSubnet } from "@/lib/tools/subnet-calculator";
 import { Button } from "@/components/ui/button";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Free Subnet Calculator (IPv4 / CIDR)",
   description:
     "Free IPv4 subnet calculator — enter an IP and CIDR prefix to get the network address, broadcast, usable host range, subnet mask, wildcard mask, and host count instantly. No signup.",
-};
+  path: "/tools/subnet-calculator",
+});
 
 /** Static CIDR cheat sheet, computed once from the same engine as the tool. */
 const CHEAT = [16, 18, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32].map(
@@ -183,6 +186,26 @@ export default function SubnetCalculatorPage() {
           </Button>
           <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
+
+        <RelatedLinks
+          links={[
+            {
+              href: "/tools/subnetting-practice",
+              label: "Subnetting practice",
+              note: "Rapid CIDR and subnet-mask drills",
+            },
+            {
+              href: "/network-plus-practice-test",
+              label: "Network+ practice test",
+              note: "Original N10-009 questions with full explanations",
+            },
+            {
+              href: "/tools/port-numbers-quiz",
+              label: "Port numbers quiz",
+              note: "The ports and protocols N10-009 tests hardest",
+            },
+          ]}
+        />
 
         <FaqSection faqs={FAQS} />
       </main>

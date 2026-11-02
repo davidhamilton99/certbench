@@ -8,14 +8,18 @@ import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { AcronymDrill } from "@/components/marketing/AcronymDrill";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { Button } from "@/components/ui/button";
 
 const COUNT = acronyms.entries.length;
 
-export const metadata = {
-  title: "Free CompTIA Security+ Acronyms Quiz",
-  description: `Drill all ${COUNT} CompTIA Security+ SY0-701 acronyms with instant feedback. Start free with no signup; a free account saves your progress. Includes the full acronym list.`,
-};
+export const metadata = pageMetadata({
+  title: "Free Security+ Acronyms List & Quiz (SY0-701)",
+  description: `The full list of ${COUNT} CompTIA Security+ SY0-701 acronyms, with a drill that gives instant feedback. Start free with no signup; a free account saves your progress.`,
+  path: "/tools/security-plus-acronyms-quiz",
+});
 
 const FAQS = [
   {
@@ -44,7 +48,7 @@ export default function AcronymsQuizPage() {
       <MarketingHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
         <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          Security+ acronyms quiz
+          Security+ acronyms list and quiz
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           The Security+ SY0-701 exam leans hard on acronyms. This drill covers
@@ -119,6 +123,31 @@ export default function AcronymsQuizPage() {
         <section className="mt-10">
           <ToolEmailCapture source="security-plus-acronyms-quiz" />
         </section>
+
+        <RelatedLinks
+          links={[
+            {
+              href: "/security-plus-practice-test",
+              label: "Security+ practice test",
+              note: "Original SY0-701 questions with full explanations",
+            },
+            {
+              href: "/security-plus-pbq-examples",
+              label: "Security+ PBQ examples",
+              note: "Work through interactive performance-based questions",
+            },
+            {
+              href: SECURITY_PLUS_VERSIONS_PATH,
+              label: "SY0-801 vs SY0-701",
+              note: "What changes, and which one to take",
+            },
+            {
+              href: "/tools/port-numbers-quiz",
+              label: "Port numbers quiz",
+              note: "Drill the ports Security+ loves to test",
+            },
+          ]}
+        />
 
         <FaqSection faqs={FAQS} />
       </main>

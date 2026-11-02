@@ -68,7 +68,7 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="text-lg font-semibold tracking-tight">
-                  {tool.name}
+                  {tool.name}{" "}
                   {tool.isSelf && (
                     <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 align-middle text-[11px] font-medium text-primary">
                       our product — bias disclosed

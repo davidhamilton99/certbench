@@ -5,15 +5,18 @@ import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnettingDrillLazy } from "@/components/marketing/SubnettingDrillLazy";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { MODES } from "@/lib/tools/subnetting";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
 import { Button } from "@/components/ui/button";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Free Subnetting Practice — Rapid Drills",
   description:
     "Get fast at subnetting with mode-based rapid drills: binary, CIDR ↔ mask, network IDs, broadcast addresses, and host math. Instant grading with worked solutions. Start free with no signup.",
-};
+  path: "/tools/subnetting-practice",
+});
 
 const FAQS = [
   {
@@ -145,6 +148,31 @@ export default function SubnettingPracticePage() {
         <section className="mt-10">
           <ToolEmailCapture source="subnetting-practice" />
         </section>
+
+        <RelatedLinks
+          links={[
+            {
+              href: "/tools/subnet-calculator",
+              label: "Subnet calculator",
+              note: "Check your answers: network, broadcast and host range for any IPv4 address",
+            },
+            {
+              href: "/network-plus-practice-test",
+              label: "Network+ practice test",
+              note: "Original N10-009 questions with full explanations",
+            },
+            {
+              href: "/network-plus-pbq-examples",
+              label: "Network+ PBQ examples",
+              note: "Try interactive topology and troubleshooting scenarios",
+            },
+            {
+              href: "/tools/port-numbers-quiz",
+              label: "Port numbers quiz",
+              note: "The ports and protocols N10-009 tests hardest",
+            },
+          ]}
+        />
 
         <FaqSection faqs={FAQS} />
       </main>

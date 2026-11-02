@@ -131,7 +131,9 @@ export function QuickRound({
         </div>
         <StopProgress results={results} current={i} />
       </div>
-      {rep && <RepCard key={`${run}-${i}-${rep.id}`} rep={rep} onAnswer={onAnswer} onNext={onNext} />}
+      {rep && (
+        <RepCard key={`${run}-${i}-${rep.id}`} rep={rep} onAnswer={onAnswer} onNext={onNext} promptAs="p" />
+      )}
     </div>
   );
 }

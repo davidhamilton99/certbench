@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export interface SampleQuestionData {
@@ -14,7 +15,9 @@ export interface SampleQuestionData {
 /**
  * Interactive sample question for the public practice-test pages: pick an
  * answer, get instant grading + the explanation. Pure client state — no
- * account, no persistence.
+ * account, no persistence. The answer and explanation are in the page from
+ * the start, behind "Show the answer", so anyone who came to read and every
+ * search engine gets them without having to click an option.
  */
 export function SampleQuestion({
   number,
@@ -25,6 +28,11 @@ export function SampleQuestion({
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const revealed = picked !== null;
+
+  function choose(i: number) {
+    setPicked(i);
+    track("sample_question_answered", { correct: i === question.correctIndex });
+  }
 
   return (
     <div className="grid gap-4 rounded-xl border bg-card p-6">
@@ -46,7 +54,7 @@ export function SampleQuestion({
               role="radio"
               aria-checked={picked === i}
               disabled={revealed}
-              onClick={() => setPicked(i)}
+              onClick={() => choose(i)}
               className={cn(
                 "flex items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors",
                 !revealed && "hover:border-muted-foreground/40 hover:bg-accent",
@@ -75,7 +83,7 @@ export function SampleQuestion({
           );
         })}
       </div>
-      {revealed && (
+      {revealed ? (
         <div
           className={cn(
             "rounded-lg border px-4 py-3 text-sm leading-relaxed",
@@ -89,6 +97,19 @@ export function SampleQuestion({
           </span>
           {question.explanation}
         </div>
+      ) : (
+        <details className="text-sm">
+          <summary className="w-fit cursor-pointer text-muted-foreground hover:text-foreground">
+            Show the answer
+          </summary>
+          <p className="mt-2 leading-relaxed">
+            <span className="font-medium">
+              Answer: {String.fromCharCode(65 + question.correctIndex)}.{" "}
+              {question.options[question.correctIndex].replace(/\.$/, "")}.
+            </span>{" "}
+            {question.explanation}
+          </p>
+        </details>
       )}
     </div>
   );

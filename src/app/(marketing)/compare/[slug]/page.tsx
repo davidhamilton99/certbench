@@ -5,6 +5,8 @@ import { VS_PAGES } from "@/lib/seo/comparison-pages";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { Button } from "@/components/ui/button";
 
 export const dynamicParams = false;
@@ -21,7 +23,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const page = VS_PAGES.find((p) => p.slug === slug);
   if (!page) return {};
-  return { title: page.metaTitle, description: page.metaDescription };
+  return pageMetadata({
+    title: page.metaTitle,
+    description: page.metaDescription,
+    path: `/compare/${page.slug}`,
+  });
 }
 
 export default async function VsPage({
@@ -139,6 +145,15 @@ export default async function VsPage({
             .
           </p>
         </section>
+
+        <RelatedLinks
+          title="Other comparisons"
+          links={VS_PAGES.filter((p) => p.slug !== page.slug).map((p) => ({
+            href: `/compare/${p.slug}`,
+            label: `CertBench vs ${p.competitorName}`,
+            note: p.metaDescription,
+          }))}
+        />
 
         <FaqSection faqs={page.faqs} />
       </main>
