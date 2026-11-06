@@ -176,37 +176,57 @@ export default function PrivacyPage() {
             </ul>
           </Section>
 
-          <Section title="5. Data from Google Sign-In">
+          <Section title="5. Google User Data">
             <p>
-              You can create or sign in to your CertBench account with Google.
-              When you do, we ask Google only for the basic sign-in permissions,
-              and Google shares your name, email address, profile picture, and
-              Google account ID with us. We never access your Gmail, Google
-              Drive, contacts, calendar, or any other Google data.
+              You can create or sign in to your CertBench account with Google
+              (&ldquo;Sign in with Google&rdquo;). This section explains how
+              CertBench accesses, uses, stores, shares, protects, retains, and
+              deletes the Google user data it receives.
             </p>
             <ul>
               <li>
-                <strong>How we use it</strong> — to create your account,
-                recognise you when you sign in, and send account and study
-                emails to your email address. We do not use it for advertising,
-                we do not sell it, and we do not use it to train AI models.
+                <strong>What Google user data we access</strong> — when you sign
+                in with Google, we ask only for Google&apos;s basic sign-in
+                permissions (your name, email address, and profile). Google
+                shares your name, email address, profile picture, and Google
+                account ID with CertBench. We never access your Gmail, Google
+                Drive, contacts, calendar, or any other Google data.
               </li>
               <li>
-                <strong>How we store and protect it</strong> — it is stored with
-                your account by our authentication provider, Supabase, encrypted
-                in transit and at rest.
+                <strong>How we use Google user data</strong> — only to create
+                your CertBench account, recognise you when you sign in, and send
+                account and study emails to your email address. We do not use
+                Google user data for advertising, we do not sell it, and we do
+                not use it to develop, improve, or train AI or machine-learning
+                models.
               </li>
               <li>
-                <strong>Who we share it with</strong> — only the service
-                providers listed in section 6 that need it to run the Service,
-                or when the law requires it.
+                <strong>How we share Google user data</strong> — we do not share,
+                transfer, or disclose it to anyone except the service providers
+                listed in section 6 that need it to run CertBench (our
+                authentication provider, Supabase, which stores it), or when the
+                law requires it.
               </li>
               <li>
-                <strong>Keeping and deleting it</strong> — we keep it for as long
-                as your account exists and delete it when your account is
-                deleted. You can stop CertBench using your Google account at any
-                time from your Google Account settings, under Security, then
-                Third-party apps and services.
+                <strong>How we store and protect Google user data</strong> — it
+                is stored with your account by Supabase, encrypted in transit
+                (TLS) and at rest, and protected by access controls so that only
+                your account and CertBench&apos;s servers can read it.
+              </li>
+              <li>
+                <strong>How long we keep Google user data, and how to delete
+                it</strong> — we keep it for as long as your account exists and
+                delete it when your account is deleted. To have your account and
+                its Google user data deleted, email{" "}
+                <a
+                  href="mailto:privacy@certbench.dev"
+                  className="text-primary hover:underline"
+                >
+                  privacy@certbench.dev
+                </a>
+                . You can also stop CertBench&apos;s access at any time from your
+                Google Account settings, under Security, then Third-party apps
+                and services.
               </li>
             </ul>
             <p>
