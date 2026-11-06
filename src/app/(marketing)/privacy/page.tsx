@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-[13px] text-muted-foreground mb-2">
-          Effective date: March 14, 2026
+          Effective date: March 14, 2026 · Last updated: November 6, 2026
         </p>
         <p className="text-[13px] text-muted-foreground mb-8">
           This Privacy Policy describes how CertBench (&ldquo;we,&rdquo;
@@ -35,7 +35,10 @@ export default function PrivacyPage() {
               <strong>1.1 Account information.</strong> When you create an
               account, we collect your email address, display name, and
               password. Passwords are stored as secure cryptographic hashes — we
-              never store or have access to your plaintext password.
+              never store or have access to your plaintext password. If you sign
+              in with Google instead, Google shares your name, email address,
+              profile picture, and Google account ID with us, and no password is
+              created. Section 5 explains how we handle data from Google.
             </p>
             <p>
               <strong>1.2 Study and usage data.</strong> We collect data
@@ -58,16 +61,25 @@ export default function PrivacyPage() {
               four digits of your card.
             </p>
             <p>
-              <strong>1.5 Device and usage analytics.</strong> We collect
-              anonymized analytics data including page views, feature usage,
-              session duration, browser type, operating system, and device type.
-              This data is used in aggregate to improve the product and cannot
-              be used to identify individual users.
+              <strong>1.5 Usage analytics and session recordings.</strong> We
+              use PostHog to understand how the Service is used. It records the
+              pages you view, what you click, the features you use, your browser,
+              operating system, and device type, and your approximate location
+              (derived from your IP address). It also makes session recordings:
+              a replay of what happens on our pages during your visit, in which
+              anything you type into a form field is masked. When you are signed
+              in, this data is linked to your account and email address.
             </p>
             <p>
               <strong>1.6 Communications.</strong> If you contact us for
               support, we retain your messages and any information you provide
               to resolve your inquiry.
+            </p>
+            <p>
+              <strong>1.7 Emails we send.</strong> We send account emails (such
+              as password resets) and emails about your study, such as progress
+              reminders and exam countdowns. Every study email includes an
+              unsubscribe link.
             </p>
           </Section>
 
@@ -89,13 +101,15 @@ export default function PrivacyPage() {
                 billing through Stripe
               </li>
               <li>
-                <strong>Communicate with you</strong> — send transactional
-                emails (account verification, password resets, billing
-                receipts) and, with your consent, product updates
+                <strong>Communicate with you</strong> — send account emails
+                (account verification, password resets, billing receipts) and
+                emails about your study, which you can unsubscribe from at any
+                time
               </li>
               <li>
-                <strong>Improve the Service</strong> — analyze aggregated,
-                anonymized usage patterns to inform product development
+                <strong>Improve the Service</strong> — study how the Service is
+                used, including session recordings, to find and fix problems and
+                decide what to build next
               </li>
               <li>
                 <strong>Ensure security</strong> — detect and prevent fraud,
@@ -162,7 +176,53 @@ export default function PrivacyPage() {
             </ul>
           </Section>
 
-          <Section title="5. How We Share Your Information">
+          <Section title="5. Data from Google Sign-In">
+            <p>
+              You can create or sign in to your CertBench account with Google.
+              When you do, we ask Google only for the basic sign-in permissions,
+              and Google shares your name, email address, profile picture, and
+              Google account ID with us. We never access your Gmail, Google
+              Drive, contacts, calendar, or any other Google data.
+            </p>
+            <ul>
+              <li>
+                <strong>How we use it</strong> — to create your account,
+                recognise you when you sign in, and send account and study
+                emails to your email address. We do not use it for advertising,
+                we do not sell it, and we do not use it to train AI models.
+              </li>
+              <li>
+                <strong>How we store and protect it</strong> — it is stored with
+                your account by our authentication provider, Supabase, encrypted
+                in transit and at rest.
+              </li>
+              <li>
+                <strong>Who we share it with</strong> — only the service
+                providers listed in section 6 that need it to run the Service,
+                or when the law requires it.
+              </li>
+              <li>
+                <strong>Keeping and deleting it</strong> — we keep it for as long
+                as your account exists and delete it when your account is
+                deleted. You can stop CertBench using your Google account at any
+                time from your Google Account settings, under Security, then
+                Third-party apps and services.
+              </li>
+            </ul>
+            <p>
+              CertBench&apos;s use and transfer of information received from
+              Google APIs adheres to the{" "}
+              <a
+                href="https://developers.google.com/terms/api-services-user-data-policy"
+                className="text-primary hover:underline"
+              >
+                Google API Services User Data Policy
+              </a>
+              , including the Limited Use requirements.
+            </p>
+          </Section>
+
+          <Section title="6. How We Share Your Information">
             <p>
               We do not sell, rent, or trade your personal information. We share
               data only with the following service providers, who process it on
@@ -184,6 +244,17 @@ export default function PrivacyPage() {
               <li>
                 <strong>Anthropic</strong> — AI-powered question generation
               </li>
+              <li>
+                <strong>PostHog</strong> — usage analytics and session
+                recordings (US-based infrastructure)
+              </li>
+              <li>
+                <strong>Resend</strong> — sending our emails
+              </li>
+              <li>
+                <strong>Google</strong> — sign-in, if you choose to sign in with
+                Google
+              </li>
             </ul>
             <p>
               <strong>Public study sets.</strong> If you choose to make a study
@@ -199,7 +270,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="6. International Data Transfers">
+          <Section title="7. International Data Transfers">
             <p>
               Your data may be processed in the United States and other
               countries where our service providers operate. If you are located
@@ -211,7 +282,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="7. Data Retention">
+          <Section title="8. Data Retention">
             <p>We retain your information as follows:</p>
             <ul>
               <li>
@@ -229,8 +300,9 @@ export default function PrivacyPage() {
                 requirements
               </li>
               <li>
-                <strong>Analytics data</strong> — aggregated and anonymized data
-                may be retained indefinitely for product improvement
+                <strong>Analytics data</strong> — session recordings are deleted
+                automatically after 30 days; other usage analytics are kept for
+                as long as they help us improve the Service
               </li>
               <li>
                 <strong>Support communications</strong> — retained for 2 years
@@ -239,7 +311,7 @@ export default function PrivacyPage() {
             </ul>
           </Section>
 
-          <Section title="8. Security">
+          <Section title="9. Security">
             <p>
               We implement industry-standard security measures to protect your
               data, including:
@@ -273,7 +345,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="9. Your Rights">
+          <Section title="10. Your Rights">
             <p>
               Depending on your location, you may have the following rights
               regarding your personal data:
@@ -289,8 +361,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Deletion</strong> — request that we delete your personal
-                data (you can also delete your account directly from your
-                profile settings)
+                data (Pro members can also delete their account directly from
+                their profile settings)
               </li>
               <li>
                 <strong>Data portability</strong> — request your data in a
@@ -323,7 +395,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="10. California Privacy Rights (CCPA)">
+          <Section title="11. California Privacy Rights (CCPA)">
             <p>
               If you are a California resident, you have additional rights under
               the California Consumer Privacy Act (CCPA):
@@ -360,7 +432,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="11. Children's Privacy">
+          <Section title="12. Children's Privacy">
             <p>
               The Service is not directed to children under 16. We do not
               knowingly collect personal information from children under 16. If
@@ -378,16 +450,18 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="12. Cookies and Tracking Technologies">
+          <Section title="13. Cookies and Tracking Technologies">
             <p>
               <strong>Essential cookies.</strong> We use essential cookies for
               authentication and session management. These are strictly
               necessary for the Service to function and cannot be disabled.
             </p>
             <p>
-              <strong>Analytics.</strong> We use privacy-focused, cookie-free
-              analytics to collect aggregated usage data. This does not involve
-              tracking cookies or cross-site tracking.
+              <strong>Analytics.</strong> PostHog stores an identifier in a
+              first-party cookie and in your browser&apos;s local storage, so it
+              can recognise your visits to CertBench and connect them for the
+              analytics and session recordings described in section 1.5. It
+              does not track you on other websites.
             </p>
             <p>
               <strong>No advertising cookies.</strong> We do not use advertising
@@ -396,7 +470,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="13. Third-Party Links">
+          <Section title="14. Third-Party Links">
             <p>
               The Service may contain links to third-party websites or services.
               We are not responsible for the privacy practices of those third
@@ -405,7 +479,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="14. Changes to This Policy">
+          <Section title="15. Changes to This Policy">
             <p>
               We may update this Privacy Policy from time to time to reflect
               changes in our practices, technology, or legal requirements. If we
@@ -416,7 +490,7 @@ export default function PrivacyPage() {
             </p>
           </Section>
 
-          <Section title="15. Contact Us">
+          <Section title="16. Contact Us">
             <p>
               If you have questions about this Privacy Policy or how we handle
               your data, please contact us:
