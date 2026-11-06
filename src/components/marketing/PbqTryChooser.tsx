@@ -8,6 +8,7 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const TIER_LABEL: Record<PbqScenario["type"], string> = {
+  terminal: "Hands-on",
   ordering: "Warm-up",
   "threat-hunt": "Core",
   matching: "Core",
@@ -54,14 +55,14 @@ export function PbqTryChooser({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <p className="text-sm text-muted-foreground">
         Pick one and work it right here — graded instantly, with the
         explanation. Start with the warm-up; the last one is a real exam-style
         simulation.
       </p>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {scenarios.map((s, i) => {
           const isActive = i === selected;
           return (
@@ -89,7 +90,7 @@ export function PbqTryChooser({
         })}
       </div>
 
-      <div className="rounded-xl border bg-card p-4 sm:p-6">
+      <div className="min-w-0 rounded-xl border bg-card p-4 sm:p-6">
         <PbqPlayer
           key={`${active.id}-${attempt}`}
           scenario={active}

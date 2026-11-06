@@ -12,6 +12,7 @@ import type {
   SimulationScenario,
   TopologyScenario,
   ThreatHuntScenario,
+  TerminalScenario,
 } from "@/data/pbq/types";
 import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
 import { track } from "@/lib/analytics";
@@ -21,7 +22,12 @@ import { track } from "@/lib/analytics";
 /* ------------------------------------------------------------------ */
 
 /** Types shown under the hands-on "Exam Simulations" tab (vs concept drills). */
-const HANDS_ON_TYPES = new Set(["simulation", "topology", "threat-hunt"]);
+const HANDS_ON_TYPES = new Set([
+  "terminal",
+  "simulation",
+  "topology",
+  "threat-hunt",
+]);
 
 function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
@@ -132,6 +138,8 @@ function ScenarioList({
                         ? truncate((scenario as TopologyScenario).briefing, 120)
                         : scenario.type === "threat-hunt"
                         ? truncate((scenario as ThreatHuntScenario).briefing, 120)
+                        : scenario.type === "terminal"
+                        ? truncate((scenario as TerminalScenario).briefing, 120)
                         : "description" in scenario
                         ? (scenario as { description: string }).description
                         : ""}
@@ -140,12 +148,15 @@ function ScenarioList({
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {(scenario.type === "simulation" ||
                       scenario.type === "topology" ||
-                      scenario.type === "threat-hunt") && (
+                      scenario.type === "threat-hunt" ||
+                      scenario.type === "terminal") && (
                       <span className="text-[12px] text-muted-foreground font-mono">
                         ~{scenario.type === "simulation"
                           ? (scenario as SimulationScenario).estimatedMinutes
                           : scenario.type === "topology"
                           ? (scenario as TopologyScenario).estimatedMinutes
+                          : scenario.type === "terminal"
+                          ? (scenario as TerminalScenario).estimatedMinutes
                           : (scenario as ThreatHuntScenario).estimatedMinutes} min
                       </span>
                     )}
@@ -155,7 +166,8 @@ function ScenarioList({
                       <Badge
                         variant={
                           scenario.type === "simulation" ||
-                          scenario.type === "topology"
+                          scenario.type === "topology" ||
+                          scenario.type === "terminal"
                             ? "neutral"
                             : scenario.type === "threat-hunt"
                             ? "warning"
@@ -168,6 +180,8 @@ function ScenarioList({
                           ? "Topology Lab"
                           : scenario.type === "threat-hunt"
                           ? "Threat Hunt"
+                          : scenario.type === "terminal"
+                          ? "Terminal"
                           : drillTypeLabel(scenario.type)}
                       </Badge>
                     )}

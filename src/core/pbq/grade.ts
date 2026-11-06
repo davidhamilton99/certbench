@@ -31,6 +31,9 @@ export function gradeScenario(
     case "threat-hunt":
       // Threat hunts use gradeThreatHunt from grade-threat-hunt.ts
       return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeThreatHunt for threat-hunt scenarios."] };
+    case "terminal":
+      // Terminal investigations use gradeTerminal from grade-terminal.ts
+      return { score: 0, totalItems: 0, correctItems: 0, feedback: ["Use gradeTerminal for terminal scenarios."] };
   }
 }
 
