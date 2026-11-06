@@ -41,6 +41,9 @@ vi.mock("@/components/instrument/ReadinessDial", () => ({
 const server = vi.hoisted(() => ({
   progress: null as null | object,
   access: "free" as "free" | "pro",
+  proPlan: false,
+  /** What enrolling answers: false when a Pro member already has another exam. */
+  enrolls: true,
   stopHandler: null as null | ((input: { index: number }) => unknown),
   calls: [] as { path: string; input: unknown }[],
 }));
@@ -55,7 +58,7 @@ vi.mock("@/lib/api-client", async () => {
             progress: server.progress ?? { items: {}, stops: {}, checkpoint: null, goal: null },
             stored: true,
             access: server.access,
-            proPlan: false,
+            proPlan: server.proPlan,
             certId: "11111111-1111-4111-8111-111111111111",
           };
         case "POST /api/path/progress":
@@ -67,8 +70,11 @@ vi.mock("@/lib/api-client", async () => {
           return { retired: [], ...(out as object) };
         }
         case "POST /api/path/answers":
+          return { ok: true };
         case "POST /api/path/enroll":
-          return { ok: true, enrolled: true };
+          // A Pro plan with this exam claimed opens the whole path.
+          if (server.enrolls && server.proPlan) server.access = "pro";
+          return { enrolled: server.enrolls };
         case "GET /api/pricing/region":
           return {
             discountPercent: null,
@@ -160,6 +166,8 @@ beforeEach(() => {
   auth.session = null;
   server.progress = null;
   server.access = "free";
+  server.proPlan = false;
+  server.enrolls = true;
   server.stopHandler = (input) => stopReply(input.index);
   server.calls = [];
   track.mockClear();
@@ -280,6 +288,40 @@ describe("a returning visitor", () => {
 describe("a signed-in learner", () => {
   beforeEach(() => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
+  });
+
+  /** How many times the page asked for this account's progress and access. */
+  const accessReads = () =>
+    server.calls.filter((c) => c.path === "/api/path/progress" && !("progress" in (c.input as object))).length;
+
+  it("claims this exam for a Pro member who bought before picking one, and opens it", async () => {
+    server.proPlan = true;
+    server.progress = done(["warmup"]);
+    renderPath();
+    await waitFor(() => expect(server.access).toBe("pro"));
+    const claims = server.calls.filter((c) => c.path === "/api/path/enroll");
+    expect(claims).toHaveLength(1);
+    expect(claims[0].input).toEqual({ cert: "security-plus-sy0-701", examDate: null });
+    // Then it reads access again, so the whole path opens without a reload.
+    await waitFor(() => expect(accessReads()).toBe(2));
+  });
+
+  it("leaves a Pro member's other exam alone", async () => {
+    server.proPlan = true;
+    server.enrolls = false;
+    server.progress = done(["warmup"]);
+    renderPath();
+    await waitFor(() => expect(server.calls.some((c) => c.path === "/api/path/enroll")).toBe(true));
+    await act(async () => {});
+    expect(server.access).toBe("free");
+    expect(accessReads()).toBe(1);
+  });
+
+  it("claims nothing for a free account", async () => {
+    server.progress = done(["warmup"]);
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(server.calls.some((c) => c.path === "/api/path/enroll")).toBe(false);
   });
 
   it("ties them to their account, however they arrived", async () => {

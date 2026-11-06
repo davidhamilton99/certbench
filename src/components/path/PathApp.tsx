@@ -129,6 +129,25 @@ export function PathApp({
   const remaining = total - stopsDone(plan, p.progress);
   const pro = p.access === "pro";
 
+  // Pro bought before the path asked for their exam (from /pricing, say) leaves
+  // the account with no exam: Pro opens nothing, and the dashboard sends them
+  // back to the picker. Claim this one. The server only lets an account with no
+  // exam yet take it, so a member who has one still gets the offer to add it.
+  const claimed = useRef(false);
+  const { ready, signedIn, proPlan, refreshAccess } = p;
+  useEffect(() => {
+    if (!ready || !signedIn || !proPlan || pro || claimed.current) return;
+    claimed.current = true;
+    void (async () => {
+      try {
+        const { enrolled } = await api(enrollInPath, { cert, examDate: null });
+        if (enrolled) await refreshAccess();
+      } catch {
+        /* nothing changes; the goal question claims it too */
+      }
+    })();
+  }, [ready, signedIn, proPlan, pro, cert, refreshAccess]);
+
   const startStop = useCallback(
     async (index: number, opts?: { skipIntro?: boolean }) => {
       const stop = stopAt(plan, structure, index);
