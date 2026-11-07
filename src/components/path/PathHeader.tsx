@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 import { resetAnalytics } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
@@ -12,19 +12,18 @@ import { ThemeToggle } from "@/components/workspace/ThemeToggle";
  * The path's only chrome: the brand, which exam this is, and the account.
  * Deliberately sparse — the next step lives on the page, not in a menu. The
  * exam name leads back to its map, the way a breadcrumb reads; switching
- * exams is a link under the map.
+ * exams is a link under the map. Nothing here leads off the path: a member
+ * sent somewhere unfamiliar mid-study tends to leave.
  */
 export function PathHeader({
   cert,
   examName,
   signedIn,
-  pro,
   onHome,
 }: {
   cert: string;
   examName: string;
   signedIn: boolean;
-  pro: boolean;
   /** Show this exam's map. The page is already this path, so it's a view change. */
   onHome: () => void;
 }) {
@@ -74,14 +73,6 @@ export function PathHeader({
         </div>
         <nav className="flex items-center gap-1">
           <ThemeToggle />
-          {pro && (
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard">
-                <LayoutGrid />
-                <span className="hidden sm:inline">Toolkit</span>
-              </Link>
-            </Button>
-          )}
           {signedIn ? (
             <Button variant="ghost" size="icon" aria-label="Sign out" onClick={signOut}>
               <LogOut />

@@ -4,6 +4,8 @@ import type { BankQuestion, PathBank } from "../bank";
 import { buildPlan, CHECKPOINT_SIZE, LEARN_NEW_REPS, PRACTICE_SIZE } from "@/core/path/plan";
 import { parseRepId, recallRepId } from "@/core/path/rep-id";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
+import { pbqRegistry } from "@/data/pbq";
+import { domainLab } from "@/core/path/labs";
 import type { PathStructure, Rep } from "@/core/path/types";
 
 /** A bank shaped like the real one: every objective has questions of many lengths. */
@@ -180,6 +182,24 @@ describe("buildStop — Security+", () => {
     expect(reps).toHaveLength(PRACTICE_SIZE);
     expect(reps.slice(0, 3).map((r) => r.id)).toEqual(missed);
     expectValid(reps);
+  });
+
+  it("serves a lab stop's scenario in place of reps", () => {
+    const withLabs = {
+      ...secPlus,
+      structure: {
+        ...secPlus.structure,
+        domains: secPlus.structure.domains.map((d) => ({ ...d, lab: domainLab(pbqRegistry["security-plus-sy0-701"], d.number) })),
+      },
+    };
+    const plan = buildPlan(withLabs.structure);
+    const index = plan.stops.findIndex((s) => s.id === "lab3");
+    const { stop, reps, lab } = build(withLabs, plan, index);
+    expect(stop.kind).toBe("lab");
+    expect(reps).toEqual([]);
+    expect(lab?.type).toBe("simulation");
+    expect(lab?.domain_number).toBe("3.0");
+    expect(lab?.id).toBe(withLabs.structure.domains[2].lab?.id);
   });
 
   it("builds the same stop from the same seed, and a different shuffle from another", () => {

@@ -21,6 +21,7 @@ import {
   SelectManyFieldRenderer,
 } from "@/components/workspace/PbqFieldRenderers";
 import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
+import type { PbqHostProps } from "@/components/workspace/pbq-host";
 
 /* ------------------------------------------------------------------ */
 /*  Simulation-Only Field Renderers                                    */
@@ -201,6 +202,7 @@ function SimulationResults({
   onRetry,
   onBack,
   upsell,
+  backLabel,
 }: {
   scenario: SimulationScenario;
   result: PbqGradeResult;
@@ -208,6 +210,7 @@ function SimulationResults({
   onRetry: () => void;
   onBack: () => void;
   upsell?: PbqUpsell;
+  backLabel?: string;
 }) {
   const scoreColor =
     result.score >= 75
@@ -310,7 +313,7 @@ function SimulationResults({
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
-          Back to Scenarios
+          {backLabel ?? "Back to Scenarios"}
         </Button>
       </div>
     </div>
@@ -325,11 +328,13 @@ export function SimulationPlayer({
   scenario,
   onBack,
   upsell,
+  onGraded,
+  backLabel,
 }: {
   scenario: SimulationScenario;
   onBack: () => void;
   upsell?: PbqUpsell;
-}) {
+} & PbqHostProps) {
   const [answers, setAnswers] = useState<Record<string, SimFieldAnswer>>({});
   const [activeTaskIdx, setActiveTaskIdx] = useState(0);
   const [gradeResult, setGradeResult] = useState<{
@@ -369,7 +374,8 @@ export function SimulationPlayer({
   const handleSubmit = useCallback(() => {
     const graded = gradeSimulationScenario(scenario, answers);
     setGradeResult(graded);
-  }, [scenario, answers]);
+    onGraded?.(graded.result);
+  }, [scenario, answers, onGraded]);
 
   const handleRetry = useCallback(() => {
     setAnswers({});
@@ -419,7 +425,7 @@ export function SimulationPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          aria-label="Back to scenarios"
+          aria-label={backLabel ?? "Back to scenarios"}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
@@ -458,6 +464,7 @@ export function SimulationPlayer({
           onRetry={handleRetry}
           onBack={onBack}
           upsell={upsell}
+          backLabel={backLabel}
         />
       ) : (
         <>
