@@ -37,18 +37,23 @@ const TICKS = Array.from({ length: 41 }, (_, i) => {
   return { ix, iy, ox, oy, major, ready };
 });
 
+const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
 /**
  * The readiness instrument dial — a 300° arc whose glowing sweep and centre
  * number count up together on mount, with a comet head at the leading edge and
- * an "exam-ready" tick at 75. Self-contained and size-fluid (container-query
- * units), so it drops onto any dark surface — the reveal, the dashboard — at any
- * `size`. The band drives every accent through the injected --rv-accent* props.
+ * an "exam-ready" tick at 75. Given `from` (an earlier score), it starts there
+ * and climbs (or falls) to the new one, leaving a marker where it was.
+ * Self-contained and size-fluid (container-query units), so it drops onto any
+ * dark surface — the reveal, the dashboard — at any `size`. The band drives
+ * every accent through the injected --rv-accent* props.
  */
 export function ReadinessDial({
   score,
   band,
   caption = "Readiness",
   size = 360,
+  from,
   className,
 }: {
   score: number;
@@ -56,13 +61,16 @@ export function ReadinessDial({
   caption?: string;
   /** Target diameter in px (capped to 82vw); everything scales with it. */
   size?: number;
+  /** An earlier score to sweep from. */
+  from?: number;
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
   const sweepRef = useRef<SVGPathElement>(null);
   const cometRef = useRef<SVGCircleElement>(null);
-  const target = Math.max(0, Math.min(100, Math.round(score)));
+  const target = clamp(score);
+  const start = from === undefined ? 0 : clamp(from);
 
   useEffect(() => {
     const num = numRef.current;
@@ -81,9 +89,9 @@ export function ReadinessDial({
     const delay = reduce ? 0 : 520;
 
     const paint = (p: number) => {
-      const e = ease(p);
-      num.textContent = String(Math.round(e * target));
-      const frac = (e * target) / 100;
+      const value = start + ease(p) * (target - start);
+      num.textContent = String(Math.round(value));
+      const frac = value / 100;
       sweep.setAttribute("stroke-dasharray", `${frac * 1000} 1000`);
       const [cx, cy] = arcPoint(frac, R);
       comet.setAttribute("cx", String(cx));
@@ -107,10 +115,11 @@ export function ReadinessDial({
       window.clearTimeout(timer);
       cancelAnimationFrame(raf);
     };
-  }, [target]);
+  }, [start, target]);
 
-  const [cx0, cy0] = arcPoint(0, R);
+  const [cx0, cy0] = arcPoint(start / 100, R);
   const [lx, ly] = arcPoint(0.75, R + 12);
+  const [gx, gy] = arcPoint(start / 100, R);
 
   return (
     <div
@@ -156,9 +165,19 @@ export function ReadinessDial({
           strokeWidth={13}
           strokeLinecap="round"
           pathLength={1000}
-          strokeDasharray="0 1000"
+          strokeDasharray={`${start * 10} 1000`}
         />
-        <circle ref={cometRef} className="rv-comet" r={6.5} cx={cx0} cy={cy0} style={{ opacity: 0 }} />
+        {from !== undefined && start !== target && (
+          <circle className="rv-ghost" r={3.5} cx={gx} cy={gy} />
+        )}
+        <circle
+          ref={cometRef}
+          className="rv-comet"
+          r={6.5}
+          cx={cx0}
+          cy={cy0}
+          style={{ opacity: start > 1 ? 1 : 0 }}
+        />
       </svg>
       <div className="absolute inset-0 grid content-center justify-items-center gap-[1cqw] text-center">
         <div
@@ -168,7 +187,7 @@ export function ReadinessDial({
           {caption}
         </div>
         <div className="rv-score leading-[0.9]" style={{ fontSize: "20cqw" }}>
-          <span ref={numRef}>0</span>
+          <span ref={numRef}>{start}</span>
           <span className="text-[0.42em] text-[var(--rv-muted,#8b93ab)]">%</span>
         </div>
         <div className="rv-band font-semibold" style={{ fontSize: "4.7cqw" }}>

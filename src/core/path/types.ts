@@ -80,10 +80,10 @@ export interface TypedRep extends RepBase {
 
 export type Rep = ChoiceRep | TypedRep;
 
-export type StopKind = "warmup" | "learn" | "checkpoint" | "practice" | "lab" | "review";
+export type StopKind = "warmup" | "learn" | "checkpoint" | "practice" | "lab" | "rehearsal" | "review";
 
 export interface PathStop {
-  /** "warmup", an objective code ("1.1"), "checkpoint", "d1"… or "review". */
+  /** "warmup", an objective code ("1.1"), "checkpoint", "d1", "lab1", "rehearsal"… or "review". */
   id: string;
   index: number;
   kind: StopKind;
@@ -151,6 +151,19 @@ export type CheckpointResult = {
   domains: { number: string; correct: number; total: number }[];
 };
 
+/** An exam rehearsal's length: the real exam's, or half of it. */
+export type RehearsalSize = "full" | "half";
+
+/** One finished exam rehearsal, scored like the checkpoint. */
+export type RehearsalResult = CheckpointResult & {
+  size: RehearsalSize;
+  /** Questions answered, out of those asked. Unanswered ones count as wrong. */
+  answered: number;
+  total: number;
+  /** Clock time used, in seconds. */
+  seconds: number;
+};
+
 export type PathGoal = {
   /** ISO date when the exam is booked. */
   examDate: string | null;
@@ -166,6 +179,8 @@ export interface PathProgress {
   items: ItemMap;
   stops: Record<string, StopRecord>;
   checkpoint: CheckpointResult | null;
+  /** Finished exam rehearsals, oldest first. */
+  rehearsals: RehearsalResult[];
   goal: PathGoal | null;
 }
 
@@ -173,6 +188,7 @@ export const EMPTY_PATH_PROGRESS: PathProgress = {
   items: {},
   stops: {},
   checkpoint: null,
+  rehearsals: [],
   goal: null,
 };
 

@@ -317,6 +317,12 @@
   transition: stroke 0.4s ease;
 }
 .rv-comet { fill: var(--rv-accent-2); filter: drop-shadow(0 0 6px var(--rv-accent)); }
+/* Where an earlier score sat, when the dial sweeps from it. */
+.rv-ghost {
+  fill: var(--background);
+  stroke: color-mix(in srgb, var(--foreground) 55%, transparent);
+  stroke-width: 1.6;
+}
 .rv-ready-label {
   fill: var(--rv-accent);
   font-family: var(--font-mono);

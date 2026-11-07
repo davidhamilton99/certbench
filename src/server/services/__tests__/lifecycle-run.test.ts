@@ -246,7 +246,7 @@ describe("runLifecycleEmails", () => {
     const monday = await run(MONDAY);
     expect(monday.sent).toEqual(["dated: 7 days to your Security+ exam"]);
     const countdown = monday.emails[0];
-    expect(countdown.text).toContain("You're 2 of 10 stops into your Security+ path.");
+    expect(countdown.text).toContain("You're 2 of 11 stops into your Security+ path.");
     expect(countdown.html).toContain(encodeURIComponent("utm_campaign=countdown"));
     expect(countdown.html).not.toContain("/dashboard");
 
@@ -287,8 +287,8 @@ describe("runLifecycleEmails", () => {
     expect(monday.result).toMatchObject({ pathOffers: 1, pathNudges: 0 });
     const followUp = monday.emails[0];
     expect(followUp.html).toContain(encodeURIComponent("utm_campaign=path_offer"));
-    // Warm-up, four learn stops and the checkpoint done; four of ten left.
-    expect(followUp.text).toContain("- All 4 remaining stops of your Security+ path");
+    // Warm-up, four learn stops and the checkpoint done; five of eleven left.
+    expect(followUp.text).toContain("- All 5 remaining stops of your Security+ path");
     expect(followUp.text).toContain("Your biggest opportunity is Threats, Vulnerabilities, and Mitigations, 22% of the exam.");
 
     const tuesday = await run(TUESDAY);

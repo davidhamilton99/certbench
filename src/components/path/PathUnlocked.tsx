@@ -5,7 +5,7 @@ import { ArrowRight, FlaskConical } from "lucide-react";
 import { projectFinish } from "@/core/path/checkpoint";
 import { isStopDone } from "@/core/path/progress";
 import type { ObjectiveStatus, PathPlan, PathProgress, PathStructure } from "@/core/path/types";
-import { ExamMap, MapLegend, type LabState } from "./ExamMap";
+import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
 
 const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 
@@ -22,6 +22,7 @@ export function PathUnlocked({
   progress,
   statuses,
   labs,
+  rehearsal,
   firstLab,
   children,
 }: {
@@ -30,6 +31,7 @@ export function PathUnlocked({
   progress: PathProgress;
   statuses: Map<string, ObjectiveStatus>;
   labs: ReadonlyMap<string, LabState>;
+  rehearsal?: MapRehearsal;
   /** The earliest lab not played yet, when it isn't already the next stop. */
   firstLab: { title: string; minutes: number | null; onOpen: () => void } | null;
   children: ReactNode;
@@ -38,7 +40,7 @@ export function PathUnlocked({
   const [now] = useState(() => Date.now());
   const left = plan.stops.filter((s) => !isStopDone(progress, s.id));
   const count = {
-    stops: left.filter((s) => s.kind !== "practice" && s.kind !== "lab").length,
+    stops: left.filter((s) => s.kind !== "practice" && s.kind !== "lab" && s.kind !== "rehearsal").length,
     practice: left.filter((s) => s.kind === "practice").length,
     labs: left.filter((s) => s.kind === "lab").length,
   };
@@ -61,7 +63,7 @@ export function PathUnlocked({
           </h2>
           <p className="max-w-md text-balance text-muted-foreground">
             Everything from here to exam day, in the same short stops, with a hands-on lab
-            closing every domain.
+            closing every domain and a timed rehearsal of the whole exam whenever you want one.
           </p>
         </div>
 
@@ -113,7 +115,7 @@ export function PathUnlocked({
 
       <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
         <h3 className="font-display font-semibold tracking-tight">Your map</h3>
-        <ExamMap structure={structure} statuses={statuses} labs={labs} labsFresh />
+        <ExamMap structure={structure} statuses={statuses} labs={labs} rehearsal={rehearsal} labsFresh />
         <MapLegend labs="open" />
       </div>
     </div>

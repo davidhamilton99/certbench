@@ -5,6 +5,7 @@ import {
   type ItemMap,
 } from "@/core/drill-rounds/drill-rounds";
 import { parseRepId } from "./rep-id";
+import { keepRehearsals, MAX_REHEARSALS } from "./rehearsal";
 import {
   EMPTY_PATH_PROGRESS,
   type CheckpointResult,
@@ -12,6 +13,7 @@ import {
   type PathGoal,
   type PathPlan,
   type PathProgress,
+  type RehearsalResult,
   type StopRecord,
 } from "./types";
 
@@ -127,7 +129,7 @@ export function missedIds(items: ItemMap, limit = MAX_MISSED_SENT): string[] {
  * Combine two snapshots of one person's path (this device + their account, or
  * two devices). Items: the record with more attempts wins, then the later one.
  * Stops: more completions wins, then the later run. Checkpoint and goal: the
- * later one.
+ * later one. Rehearsals: every run from either.
  */
 export function mergePathProgress(a: PathProgress, b: PathProgress): PathProgress {
   const items: ItemMap = { ...a.items };
@@ -146,6 +148,7 @@ export function mergePathProgress(a: PathProgress, b: PathProgress): PathProgres
     items,
     stops,
     checkpoint: later(a.checkpoint, b.checkpoint),
+    rehearsals: keepRehearsals([...a.rehearsals, ...b.rehearsals]),
     goal: later(a.goal, b.goal),
   };
 }
@@ -178,22 +181,19 @@ export function sanitizePathProgress(raw: unknown): PathProgress {
     }
   }
 
-  let checkpoint: CheckpointResult | null = null;
-  if (r.checkpoint && typeof r.checkpoint === "object") {
-    const cp = r.checkpoint as Record<string, unknown>;
-    const domains = Array.isArray(cp.domains)
-      ? cp.domains.flatMap((d) => {
-          if (!d || typeof d !== "object") return [];
-          const { number, correct, total } = d as Record<string, unknown>;
-          if (typeof number !== "string" || number.length > 8) return [];
-          if (!isCount(correct) || !isCount(total) || correct > total) return [];
-          return [{ number, correct, total }];
-        })
-      : [];
-    if (isCount(cp.score) && (cp.score as number) <= 100 && isCount(cp.at)) {
-      checkpoint = { score: cp.score as number, at: cp.at as number, domains: domains.slice(0, 12) };
-    }
-  }
+  const checkpoint = sanitizeScore(r.checkpoint);
+
+  const rehearsals: RehearsalResult[] = Array.isArray(r.rehearsals)
+    ? r.rehearsals.slice(-MAX_REHEARSALS * 2).flatMap((raw) => {
+        const scored = sanitizeScore(raw);
+        if (!scored) return [];
+        const { size, answered, total, seconds } = raw as Record<string, unknown>;
+        if (size !== "full" && size !== "half") return [];
+        if (!isCount(answered) || !isCount(total) || !isCount(seconds)) return [];
+        if (answered > total || total > 200 || seconds > 86_400) return [];
+        return [{ ...scored, size, answered, total, seconds }];
+      })
+    : [];
 
   let goal: PathGoal | null = null;
   if (r.goal && typeof r.goal === "object") {
@@ -208,7 +208,24 @@ export function sanitizePathProgress(raw: unknown): PathProgress {
     }
   }
 
-  return { items, stops, checkpoint, goal };
+  return { items, stops, checkpoint, rehearsals: keepRehearsals(rehearsals), goal };
+}
+
+/** A checkpoint's or rehearsal's score and per-domain tally, or null if malformed. */
+function sanitizeScore(raw: unknown): CheckpointResult | null {
+  if (!raw || typeof raw !== "object") return null;
+  const cp = raw as Record<string, unknown>;
+  if (!isCount(cp.score) || (cp.score as number) > 100 || !isCount(cp.at)) return null;
+  const domains = Array.isArray(cp.domains)
+    ? cp.domains.flatMap((d) => {
+        if (!d || typeof d !== "object") return [];
+        const { number, correct, total } = d as Record<string, unknown>;
+        if (typeof number !== "string" || number.length > 8) return [];
+        if (!isCount(correct) || !isCount(total) || correct > total) return [];
+        return [{ number, correct, total }];
+      })
+    : [];
+  return { score: cp.score as number, at: cp.at as number, domains: domains.slice(0, 12) };
 }
 
 /**

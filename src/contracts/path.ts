@@ -8,6 +8,7 @@ import {
   MAX_PATH_STOPS,
   MAX_SEEN_SENT,
 } from "@/core/path/progress";
+import { MAX_REHEARSALS } from "@/core/path/rehearsal";
 
 const certSchema = z.enum(PATH_CERTS);
 const repIdSchema = z.string().min(1).max(64);
@@ -46,10 +47,19 @@ export const repSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+const rehearsalSizeSchema = z.enum(["full", "half"]);
+
+/** A checkpoint's or rehearsal's score, with how each domain went. */
+const scoreSchema = z.object({
+  score: count.max(100),
+  at: count,
+  domains: z.array(z.object({ number: z.string().max(8), correct: count, total: count })).max(12),
+});
+
 export const stopSchema = z.object({
   id: z.string(),
   index: count,
-  kind: z.enum(["warmup", "learn", "checkpoint", "practice", "lab", "review"]),
+  kind: z.enum(["warmup", "learn", "checkpoint", "practice", "lab", "rehearsal", "review"]),
   title: z.string(),
   domain: z.string().nullable(),
   objectives: z.array(z.string()),
@@ -67,13 +77,19 @@ export const pathProgressSchema = z.object({
     .refine((stops) => Object.keys(stops).length <= MAX_PATH_STOPS, {
       message: `At most ${MAX_PATH_STOPS} stops`,
     }),
-  checkpoint: z
-    .object({
-      score: count.max(100),
-      at: count,
-      domains: z.array(z.object({ number: z.string().max(8), correct: count, total: count })).max(12),
-    })
-    .nullable(),
+  checkpoint: scoreSchema.nullable(),
+  /** Absent from progress saved before rehearsals existed. */
+  rehearsals: z
+    .array(
+      scoreSchema.extend({
+        size: rehearsalSizeSchema,
+        answered: count,
+        total: count.max(200),
+        seconds: count.max(86_400),
+      })
+    )
+    .max(MAX_REHEARSALS)
+    .default([]),
   goal: z
     .object({
       examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
@@ -112,6 +128,27 @@ export const getPathStop = {
      * data, typed by src/data/pbq, and too varied to restate here.
      */
     lab: z.custom<PbqScenario>((v) => typeof v === "object" && v !== null && "type" in v).optional(),
+  }),
+} as const satisfies EndpointContract;
+
+/**
+ * Draw an exam rehearsal: questions from every domain in the exam's weights,
+ * ones not seen yet first, mixed like the real thing. Pro on this exam only
+ * (401 / 402 otherwise). The browser keeps the run and grades it at the end.
+ */
+export const getPathRehearsal = {
+  path: "/api/path/rehearsal",
+  method: "POST",
+  input: z.object({
+    cert: certSchema,
+    size: rehearsalSizeSchema,
+    seen: z.array(repIdSchema).max(MAX_SEEN_SENT).default([]),
+    /** Which rehearsal this is: each one draws afresh. */
+    run: count.max(1_000_000).default(0),
+  }),
+  output: z.object({
+    reps: z.array(repSchema).max(120),
+    minutes: count,
   }),
 } as const satisfies EndpointContract;
 
@@ -163,9 +200,9 @@ export const enrollInPath = {
 } as const satisfies EndpointContract;
 
 /**
- * Record answers to bank questions from a finished stop, so they count toward
- * the user's readiness score and spaced repetition like any practice answer.
- * The server grades them itself.
+ * Record answers to bank questions from a finished stop or rehearsal, so they
+ * count toward the user's readiness score and spaced repetition like any
+ * practice answer. The server grades them itself.
  */
 export const recordPathAnswers = {
   path: "/api/path/answers",
@@ -175,7 +212,8 @@ export const recordPathAnswers = {
     answers: z
       .array(z.object({ questionId: z.uuid(), selectedIndex: z.number().int().min(0).max(9) }))
       .min(1)
-      .max(40),
+      // A full rehearsal's answers, in one go.
+      .max(120),
   }),
   output: z.object({ ok: z.literal(true) }),
 } as const satisfies EndpointContract;

@@ -1,7 +1,16 @@
 import type { CSSProperties } from "react";
-import { FlaskConical, Lock } from "lucide-react";
+import { FlaskConical, Lock, Timer } from "lucide-react";
 import type { ObjectiveStatus, PathStructure } from "@/core/path/types";
 import { cn } from "@/lib/utils";
+
+/** The exam rehearsal at the end of the map: its state, format and latest score. */
+export interface MapRehearsal {
+  state: LabState;
+  questions: number;
+  minutes: number;
+  /** The latest rehearsal's score, once one is done. */
+  score?: number;
+}
 
 /** Where a domain's lab stands: played, open to play, or part of Pro. */
 export type LabState = "done" | "open" | "locked";
@@ -40,9 +49,9 @@ const STATUS_LABEL: Record<ObjectiveStatus, string> = {
 /**
  * The whole exam at a glance: one row per domain, one tile per objective,
  * coloured by where the learner stands, and the hands-on lab that closes the
- * domain. The objective in play pulses; tiles a stop just changed pop in, one
- * after another. Informative only — the path, not the map, decides what comes
- * next.
+ * domain; then the exam rehearsal the path ends on. The objective in play
+ * pulses; tiles a stop just changed pop in, one after another. Informative
+ * only — the path, not the map, decides what comes next.
  */
 export function ExamMap({
   structure,
@@ -51,6 +60,7 @@ export function ExamMap({
   fresh,
   labs,
   labsFresh,
+  rehearsal,
   className,
 }: {
   structure: PathStructure;
@@ -63,6 +73,8 @@ export function ExamMap({
   labs?: ReadonlyMap<string, LabState>;
   /** Pop the lab tiles in, one domain after another (they just opened). */
   labsFresh?: boolean;
+  /** The exam rehearsal that ends the path. */
+  rehearsal?: MapRehearsal;
   className?: string;
 }) {
   let order = 0;
@@ -117,7 +129,54 @@ export function ExamMap({
           </ul>
         </div>
       ))}
+      {rehearsal && (
+        <div className="grid gap-2 border-t border-border/70 pt-4">
+          <div className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="font-medium">Exam rehearsal</span>
+            <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+              {rehearsal.questions} questions · {rehearsal.minutes} min
+            </span>
+          </div>
+          <ul className="flex flex-wrap gap-1.5" aria-label="The path's last stop">
+            <RehearsalTile
+              rehearsal={rehearsal}
+              style={
+                labsFresh ? ({ "--d": `${300 + structure.domains.length * 160}ms` } as CSSProperties) : undefined
+              }
+              fresh={labsFresh}
+            />
+          </ul>
+        </div>
+      )}
     </div>
+  );
+}
+
+function RehearsalTile({
+  rehearsal,
+  style,
+  fresh,
+}: {
+  rehearsal: MapRehearsal;
+  style?: CSSProperties;
+  fresh?: boolean;
+}) {
+  const { state, score } = rehearsal;
+  const Icon = state === "locked" ? Lock : Timer;
+  const scored = score !== undefined && state !== "locked";
+  return (
+    <li
+      aria-label={`Exam rehearsal: ${LAB_LABEL[state]}${scored ? `, latest score ${score}%` : ""}`}
+      style={style}
+      className={cn(
+        "flex h-7 items-center gap-1 rounded-md px-2 font-mono text-[11px] font-semibold",
+        LAB_TILE[state],
+        fresh && "path-pop"
+      )}
+    >
+      <Icon className="size-3" aria-hidden />
+      {state === "locked" ? "Rehearsal · with Pro" : scored ? `Rehearsal · last ${score}%` : "Rehearsal"}
+    </li>
   );
 }
 

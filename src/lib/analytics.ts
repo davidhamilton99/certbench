@@ -73,6 +73,18 @@ type EventMap = {
   path_unlock_viewed: { cert: string };
   /** A lab stop opened (it completes as path_stop_completed, kind "lab"). */
   path_lab_started: { cert: string; stop: string; scenario: string };
+  /** An exam rehearsal drawn: from the home, or as the path's last stop. */
+  path_rehearsal_started: { cert: string; size: "full" | "half"; from: "home" | "stop" };
+  /** An exam rehearsal scored (as the last stop it also completes as path_stop_completed). */
+  path_rehearsal_completed: {
+    cert: string;
+    size: "full" | "half";
+    score: number;
+    answered: number;
+    total: number;
+    minutes: number;
+    timed_out: boolean;
+  };
   /** A path stop played on a public page (objective or practice-test page). */
   quick_round_completed: { cert: string; surface: string; correct: number; total: number };
   /** A sample question answered on a public page (the page is in $current_url). */

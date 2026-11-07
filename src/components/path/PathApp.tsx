@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
-import { enrollInPath, getPathStop, recordPathAnswers } from "@/contracts/path";
+import { enrollInPath, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { MINUTES_PER_STOP, stopAt } from "@/core/path/plan";
 import {
@@ -20,16 +20,30 @@ import {
 } from "@/core/path/progress";
 import { questionIdOf } from "@/core/path/rep-id";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
-import type { ObjectiveStatus, PathCert, PathPlan, PathStop, PathStructure, Rep } from "@/core/path/types";
+import { latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
+import type {
+  ChoiceRep,
+  ObjectiveStatus,
+  PathCert,
+  PathPlan,
+  PathStop,
+  PathStructure,
+  RehearsalSize,
+  Rep,
+} from "@/core/path/types";
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
 import { InlineSignup } from "@/components/auth/InlineSignup";
-import { ExamMap, MapLegend, type LabState } from "./ExamMap";
+import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
 import { PathUnlocked } from "./PathUnlocked";
+import { RehearsalIntro, RehearsalResumeCard, RehearsalStartCard } from "./RehearsalIntro";
+import { RehearsalPlayer } from "./RehearsalPlayer";
+import { RehearsalResult } from "./RehearsalResult";
+import { clearRun, readRun, writeRun, type RehearsalRun } from "./rehearsal-run";
 import { GoalStep } from "./GoalStep";
 import { usePathProgress } from "./usePathProgress";
 import { pathUnlockedKey } from "./storage-key";
@@ -60,14 +74,17 @@ interface Play {
 type View =
   | { kind: "play" }
   | { kind: "home" }
-  | { kind: "loading" }
+  | { kind: "loading"; label?: string }
   | { kind: "end"; stop: PathStop; correct: number; total: number; fresh: Set<string> }
   | { kind: "goal"; step: "exam" | "minutes"; then: number }
   | { kind: "intro"; index: number }
   | { kind: "reveal" }
   | { kind: "lab"; stop: PathStop; scenario: PbqScenario; graded: boolean }
   | { kind: "unlocked" }
-  | { kind: "error"; message: string; retry: number };
+  | { kind: "rehearsal-intro"; asStop: boolean }
+  | { kind: "rehearsal" }
+  | { kind: "rehearsal-result" }
+  | { kind: "error"; message: string; retry: () => void };
 
 const domainOf = (objective: string) =>
   objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
@@ -84,6 +101,8 @@ function stopLabel(stop: PathStop, total: number): string {
       return "Keep practicing";
     case "lab":
       return "Hands-on lab";
+    case "rehearsal":
+      return "Exam rehearsal";
     default:
       return `Stop ${stop.index + 1} of ${total}`;
   }
@@ -174,6 +193,33 @@ export function PathApp({
     stop?.kind === "lab" ? (structure.domains.find((d) => d.number === stop.domain)?.lab?.minutes ?? null) : null;
   const labLegend = labs.size === 0 ? undefined : pro ? "open" : "locked";
 
+  // The exam rehearsal: the path's last stop, and for Pro, there any time.
+  const rehearsalStop = useMemo(() => plan.stops.find((s) => s.kind === "rehearsal") ?? null, [plan.stops]);
+  const reading = latestReading(p.progress);
+  const lastRehearsal = p.progress.rehearsals.at(-1) ?? null;
+  const mapRehearsal: MapRehearsal | undefined = rehearsalStop
+    ? {
+        state: isStopDone(p.progress, rehearsalStop.id) ? "done" : pro ? "open" : "locked",
+        questions: REHEARSAL_FORMATS.full.questions,
+        minutes: REHEARSAL_FORMATS.full.minutes,
+        score: lastRehearsal?.score,
+      }
+    : undefined;
+
+  // This device's rehearsal for this account: one in progress, or the last one scored.
+  const [run, setRunState] = useState<RehearsalRun | null>(null);
+  useEffect(() => {
+    setRunState(p.ready && p.userId ? readRun(cert, p.userId) : null);
+  }, [p.ready, p.userId, cert]);
+  const saveRun = useCallback(
+    (next: RehearsalRun) => {
+      setRunState(next);
+      writeRun(cert, next);
+    },
+    [cert]
+  );
+  const runInProgress = run && !run.done ? run : null;
+
   // The first time Pro covers this exam on this device, open with what it
   // opened: in place of their map, or of a stop not yet answered (the first
   // paint's warm-up, which a started path is about to leave for the map).
@@ -242,6 +288,11 @@ export function PathApp({
         setView({ kind: "intro", index });
         return;
       }
+      if (stop.kind === "rehearsal") {
+        setView(runInProgress ? { kind: "rehearsal" } : { kind: "rehearsal-intro", asStop: true });
+        window.scrollTo({ top: 0 });
+        return;
+      }
 
       setView({ kind: "loading" });
       try {
@@ -275,12 +326,12 @@ export function PathApp({
           setView({
             kind: "error",
             message: err instanceof ApiError ? err.message : "Couldn't load your next stop.",
-            retry: index,
+            retry: () => startStop(index, { skipIntro: true }),
           });
         }
       }
     },
-    [cert, plan, structure, p, pro, freshPlay, setPlay, openLab]
+    [cert, plan, structure, p, pro, freshPlay, setPlay, openLab, runInProgress]
   );
 
   /**
@@ -419,7 +470,7 @@ export function PathApp({
       <div className="glass grid min-h-80 place-items-center rounded-3xl p-8 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" />
-          Building your next stop…
+          {view.label ?? "Building your next stop…"}
         </span>
       </div>
     );
@@ -427,11 +478,44 @@ export function PathApp({
     screen = (
       <div className="glass grid min-h-80 place-items-center gap-4 rounded-3xl p-8 text-center">
         <p className="text-sm text-muted-foreground">{view.message}</p>
-        <Button onClick={() => startStop(view.retry, { skipIntro: true })}>
+        <Button onClick={view.retry}>
           <RotateCcw />
           Try again
         </Button>
       </div>
+    );
+  } else if (view.kind === "rehearsal-intro") {
+    screen = (
+      <RehearsalIntro
+        structure={structure}
+        stopNumber={view.asStop && rehearsalStop ? rehearsalStop.index + 1 : null}
+        reading={reading}
+        onStart={(size) => void startRehearsal(size, view.asStop)}
+        onBack={() => {
+          setView({ kind: "home" });
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
+  } else if (view.kind === "rehearsal" && runInProgress) {
+    screen = (
+      <RehearsalPlayer
+        key={runInProgress.startedAt}
+        run={runInProgress}
+        examCode={structure.examCode}
+        onChange={saveRun}
+        onFinish={finishRehearsal}
+        onLeave={() => {
+          setView({ kind: "home" });
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
+  } else if (view.kind === "rehearsal-result" && run?.done) {
+    screen = (
+      <RehearsalResult run={{ ...run, done: run.done }} structure={structure}>
+        <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
+      </RehearsalResult>
     );
   } else if (view.kind === "lab") {
     const { stop, scenario, graded } = view;
@@ -468,6 +552,7 @@ export function PathApp({
         progress={p.progress}
         statuses={statuses}
         labs={labs}
+        rehearsal={mapRehearsal}
         firstLab={
           lab && lab.index !== next
             ? { title: lab.title, minutes: labMinutes(lab), onOpen: () => startStop(lab.index) }
@@ -594,6 +679,7 @@ export function PathApp({
             fresh={endFresh}
             current={nextStop ? new Set(nextStop.objectives.length > 3 ? [] : nextStop.objectives) : undefined}
             labs={labs}
+            rehearsal={mapRehearsal}
           />
           <MapLegend labs={labLegend} />
         </div>
@@ -632,7 +718,114 @@ export function PathApp({
     // Goal answers just landed in state; start the stop they were waiting on.
     const stop = stopAt(plan, structure, index);
     if (stop?.kind === "checkpoint") setView({ kind: "intro", index });
+    else if (stop?.kind === "rehearsal") setView({ kind: "rehearsal-intro", asStop: true });
     else await startStopDirect(index);
+  }
+
+  /** Draw a rehearsal and start it, the clock with it. */
+  async function startRehearsal(size: RehearsalSize, asStop: boolean) {
+    const owner = p.userId;
+    if (!owner) return;
+    setView({ kind: "loading", label: "Drawing your rehearsal…" });
+    try {
+      const drawn = await api(getPathRehearsal, {
+        cert,
+        size,
+        seen: seenIds(p.progress.items),
+        run: p.progress.rehearsals.length,
+      });
+      const reps = drawn.reps.filter((r): r is ChoiceRep => r.type === "choice");
+      saveRun({
+        v: 1,
+        owner,
+        size,
+        asStop,
+        reps,
+        picks: reps.map(() => null),
+        flagged: [],
+        i: 0,
+        spentMs: 0,
+        limitMs: drawn.minutes * 60_000,
+        startedAt: Date.now(),
+        done: null,
+      });
+      track("path_rehearsal_started", { cert, size, from: asStop ? "stop" : "home" });
+      setView({ kind: "rehearsal" });
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "unauthorized") {
+        setView({ kind: "home" });
+      } else if (err instanceof ApiError && err.code === "quota_exceeded") {
+        await p.refreshAccess();
+        setView({ kind: "reveal" });
+      } else {
+        setView({
+          kind: "error",
+          message: err instanceof ApiError ? err.message : "Couldn't draw your rehearsal.",
+          retry: () => void startRehearsal(size, asStop),
+        });
+      }
+    }
+  }
+
+  /**
+   * Score a rehearsal and keep it: every answer counts toward the map and the
+   * account like a stop's, misses come back later, and the result stays on the
+   * device to look back over. Finished once every other stop is done, it's the
+   * path's last stop done too.
+   */
+  function finishRehearsal(cur: RehearsalRun, timedOut: boolean) {
+    const at = Date.now();
+    const before = latestReading(p.progress);
+    const answers = cur.reps.map((rep, i) => ({ domain: domainOf(rep.objective), correct: cur.picks[i] === rep.answer }));
+    const answered = cur.picks.filter((pick) => pick !== null).length;
+    const correct = answers.filter((a) => a.correct).length;
+    const seconds = Math.round(cur.spentMs / 1000);
+    const result = scoreRehearsal(answers, structure.domains, { size: cur.size, answered, seconds, at });
+    const lastStop = rehearsalStop && nextStopIndex(plan, p.progress) === rehearsalStop.index ? rehearsalStop : null;
+
+    p.finishRehearsal(
+      cur.reps.flatMap((rep, i) => (cur.picks[i] === null ? [] : [{ repId: rep.id, correct: cur.picks[i] === rep.answer }])),
+      result,
+      lastStop ? { id: lastStop.id, correct, total: cur.reps.length } : null
+    );
+    // Record against the bank's own option order, not the shuffled display.
+    const bank = cur.reps.flatMap((rep, i) => {
+      const picked = cur.picks[i];
+      const questionId = questionIdOf(rep.id);
+      return picked === null || !questionId ? [] : [{ questionId, selectedIndex: rep.order?.[picked] ?? picked }];
+    });
+    if (bank.length > 0) void api(recordPathAnswers, { cert, answers: bank.slice(0, 120) }).catch(() => {});
+
+    saveRun({ ...cur, done: { result, before, timedOut } });
+    track("path_rehearsal_completed", {
+      cert,
+      size: cur.size,
+      score: result.score,
+      answered,
+      total: cur.reps.length,
+      minutes: Math.round(seconds / 60),
+      timed_out: timedOut,
+    });
+    if (lastStop) {
+      track("path_stop_completed", {
+        cert,
+        stop: lastStop.id,
+        index: lastStop.index,
+        kind: lastStop.kind,
+        correct,
+        total: cur.reps.length,
+        signed_in: true,
+      });
+    }
+    setView({ kind: "rehearsal-result" });
+    window.scrollTo({ top: 0 });
+  }
+
+  /** Throw away a rehearsal in progress. */
+  function discardRehearsal() {
+    clearRun(cert);
+    setRunState(null);
   }
 
   /**
@@ -658,7 +851,11 @@ export function PathApp({
       setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
       setView({ kind: "play" });
     } catch {
-      setView({ kind: "error", message: "Couldn't load your next stop.", retry: index });
+      setView({
+        kind: "error",
+        message: "Couldn't load your next stop.",
+        retry: () => startStop(index, { skipIntro: true }),
+      });
     }
   }
 
@@ -690,9 +887,26 @@ export function PathApp({
           <p className="text-muted-foreground">
             {Math.min(next, total)} of {total} stops done · {statuses.size} of{" "}
             {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
-            {result && <> · last checkpoint {result.score}%</>}
+            {reading && (
+              <>
+                {" "}
+                · last {reading.source} {reading.score}%
+              </>
+            )}
           </p>
         </div>
+
+        {/* A rehearsal left mid-way comes first: its clock is waiting. */}
+        {pro && runInProgress && (
+          <RehearsalResumeCard
+            run={runInProgress}
+            onResume={() => {
+              setView({ kind: "rehearsal" });
+              window.scrollTo({ top: 0 });
+            }}
+            onDiscard={discardRehearsal}
+          />
+        )}
 
         {anonymousDone ? (
           <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
@@ -711,6 +925,25 @@ export function PathApp({
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         )}
 
+        {/* Pro can sit the whole exam whenever they like, not only at the end. */}
+        {pro && !runInProgress && nextStop?.kind !== "rehearsal" && (
+          <RehearsalStartCard
+            last={lastRehearsal}
+            onStart={() => {
+              setView({ kind: "rehearsal-intro", asStop: false });
+              window.scrollTo({ top: 0 });
+            }}
+            onReview={
+              run?.done
+                ? () => {
+                    setView({ kind: "rehearsal-result" });
+                    window.scrollTo({ top: 0 });
+                  }
+                : undefined
+            }
+          />
+        )}
+
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
           <h2 className="font-display font-semibold tracking-tight">Your map</h2>
           <ExamMap
@@ -718,6 +951,7 @@ export function PathApp({
             statuses={statuses}
             current={nextStop && nextStop.objectives.length <= 3 ? new Set(nextStop.objectives) : undefined}
             labs={labs}
+            rehearsal={mapRehearsal}
           />
           <MapLegend labs={labLegend} />
         </div>
@@ -733,7 +967,7 @@ export function PathApp({
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
           <p className="-mt-3 text-center text-xs text-muted-foreground">
-            Timed practice exams and spaced review are in your{" "}
+            Spaced review and every PBQ scenario are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
             </Link>
@@ -771,7 +1005,9 @@ function ContinueCard({
       ? "Path complete · review round"
       : stop.kind === "lab"
         ? `Next · hands-on lab${minutes ? ` · about ${minutes} min` : ""}`
-        : `Next · stop ${stop.index + 1} of ${total}`;
+        : stop.kind === "rehearsal"
+          ? `Last stop · the whole exam, timed`
+          : `Next · stop ${stop.index + 1} of ${total}`;
   return (
     <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
       <div className="min-w-0">

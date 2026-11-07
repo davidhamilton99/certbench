@@ -9,6 +9,7 @@ import { enrollInPath } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { Button } from "@/components/ui/button";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { PathCert } from "@/core/path/types";
 
 /**
@@ -96,16 +97,19 @@ export function PathOffer({
     }
   }
 
+  const rehearsals = `Timed exam rehearsals: ${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, any time`;
   const includes = proPlan
     ? [
         `All ${remainingStops} remaining stops of your ${examName} path`,
         "A hands-on PBQ lab closing every domain",
+        rehearsals,
         "Uses your current Pro plan",
       ]
     : [
         `All ${remainingStops} remaining stops of your ${examName} path`,
         "A hands-on PBQ lab closing every domain",
-        `All ${questionCount.toLocaleString()} ${examName} questions, timed practice exams and spaced review`,
+        rehearsals,
+        `All ${questionCount.toLocaleString()} ${examName} questions, with spaced review`,
       ];
 
   return (
