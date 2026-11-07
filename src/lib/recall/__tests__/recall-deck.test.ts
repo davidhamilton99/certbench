@@ -470,6 +470,24 @@ describe("all recall decks (every cert)", () => {
     expect(storage.rows.some((r) => r.type.startsWith("RAID"))).toBe(false);
   });
 
+  it("builds every deck as plain data, so a server page can hand it to the browser", () => {
+    // A curated deck's `only` filter once rode along in its config, and the
+    // Recall page failed to render for all of Network+ and A+ Core 1.
+    const plain = (value: unknown, at: string): void => {
+      if (value === null || ["string", "number", "boolean", "undefined"].includes(typeof value)) return;
+      expect(typeof value, at).toBe("object");
+      if (Array.isArray(value)) {
+        value.forEach((v, i) => plain(v, `${at}[${i}]`));
+        return;
+      }
+      expect(Object.getPrototypeOf(value), at).toBe(Object.prototype);
+      for (const [key, v] of Object.entries(value as object)) plain(v, `${at}.${key}`);
+    };
+    for (const slug of slugs) {
+      for (const deck of getRecallDecks(slug)) plain(deck, `${slug}/${deck.config.id}`);
+    }
+  });
+
   it("phrases both directions of a two-way deck as real questions", () => {
     for (const slug of slugs) {
       for (const deck of getRecallDecks(slug).filter((d) => d.config.bidirectional)) {
