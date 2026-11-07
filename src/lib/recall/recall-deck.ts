@@ -61,8 +61,16 @@ export function isDataRate(value: string | undefined): boolean {
   return !!value && /\d\+?\s*(?:[KMGT]bps|[KMGT]B\/s)/i.test(value);
 }
 
+/**
+ * A built deck's config: plain data, with no `only`. Recall and the acronym
+ * quiz hand decks from a server page to a client component, and a function
+ * can't cross that line (the page fails to render), so `only` is applied in
+ * {@link buildDeck} and left behind. `never` makes passing it on a type error.
+ */
+export type ResolvedDeckConfig = Omit<RecallDeckConfig, "only"> & { only?: never };
+
 export interface ResolvedDeck {
-  config: RecallDeckConfig;
+  config: ResolvedDeckConfig;
   /** Rows with a real value (not blank, not "N/A") in both drilled columns. */
   rows: Array<Record<string, string>>;
   /** Column labels by key, for naming a bare number in the detail line. */
@@ -149,10 +157,11 @@ export function buildDeck(
 
   // A placeholder isn't a fact to recall: a pin-out standard has no "max
   // speed", and "N/A" would only ever be a giveaway or a junk distractor.
+  const { only, ...settings } = config;
   const rows = table.entries
     .map((e) => e.columns)
     .filter((c) => isValue(c[config.ask.key]) && isValue(c[config.answer.key]))
-    .filter((c) => config.only?.(c) ?? true);
+    .filter((c) => only?.(c) ?? true);
 
   if (rows.length < 3) {
     throw new Error(
@@ -177,7 +186,7 @@ export function buildDeck(
   }
 
   return {
-    config,
+    config: settings,
     rows,
     labels: Object.fromEntries(table.columnHeaders.map((c) => [c.key, c.label])),
     itemCount: distinctValues(rows, config.ask.key).length,
