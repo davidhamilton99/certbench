@@ -20,6 +20,7 @@ import {
 /** Caps that keep a stored path blob small and well-formed. */
 export const MAX_PATH_ITEMS = 2000;
 export const MAX_PATH_STOPS = 400;
+export const MAX_PATH_LABS = 200;
 /** Ids sent with a stop request, newest first. */
 export const MAX_SEEN_SENT = 1200;
 export const MAX_MISSED_SENT = 40;
@@ -63,6 +64,21 @@ export function finishStop(
       ...progress.stops,
       [stopId]: { n: (prev?.n ?? 0) + 1, c: correct, t: total, at: now },
     },
+  };
+}
+
+/** Record a lab played, by its scenario id, with the latest score. */
+export function finishLab(
+  progress: PathProgress,
+  labId: string,
+  correct: number,
+  total: number,
+  now: number
+): PathProgress {
+  const prev = progress.labs[labId];
+  return {
+    ...progress,
+    labs: { ...progress.labs, [labId]: { n: (prev?.n ?? 0) + 1, c: correct, t: total, at: now } },
   };
 }
 
@@ -128,8 +144,8 @@ export function missedIds(items: ItemMap, limit = MAX_MISSED_SENT): string[] {
 /**
  * Combine two snapshots of one person's path (this device + their account, or
  * two devices). Items: the record with more attempts wins, then the later one.
- * Stops: more completions wins, then the later run. Checkpoint and goal: the
- * later one. Rehearsals: every run from either.
+ * Stops and labs: more completions wins, then the later run. Checkpoint and
+ * goal: the later one. Rehearsals: every run from either.
  */
 export function mergePathProgress(a: PathProgress, b: PathProgress): PathProgress {
   const items: ItemMap = { ...a.items };
@@ -137,20 +153,26 @@ export function mergePathProgress(a: PathProgress, b: PathProgress): PathProgres
     const ra = items[id];
     if (!ra || rb.a > ra.a || (rb.a === ra.a && rb.t > ra.t)) items[id] = rb;
   }
-  const stops: Record<string, StopRecord> = { ...a.stops };
-  for (const [id, sb] of Object.entries(b.stops)) {
-    const sa = stops[id];
-    if (!sa || sb.n > sa.n || (sb.n === sa.n && sb.at > sa.at)) stops[id] = sb;
-  }
   const later = <T extends { at: number }>(x: T | null, y: T | null): T | null =>
     !x ? y : !y ? x : y.at > x.at ? y : x;
   return {
     items,
-    stops,
+    stops: mergeRuns(a.stops, b.stops),
     checkpoint: later(a.checkpoint, b.checkpoint),
     rehearsals: keepRehearsals([...a.rehearsals, ...b.rehearsals]),
+    labs: mergeRuns(a.labs, b.labs),
     goal: later(a.goal, b.goal),
   };
+}
+
+/** Per id, the record with more completions, then the later run. */
+function mergeRuns(a: Record<string, StopRecord>, b: Record<string, StopRecord>): Record<string, StopRecord> {
+  const out = { ...a };
+  for (const [id, rb] of Object.entries(b)) {
+    const ra = out[id];
+    if (!ra || rb.n > ra.n || (rb.n === ra.n && rb.at > ra.at)) out[id] = rb;
+  }
+  return out;
 }
 
 const isCount = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0;
@@ -168,18 +190,8 @@ export function sanitizePathProgress(raw: unknown): PathProgress {
   // Items share the drills' record shape and validation; lift the cap.
   const items = capItems(sanitizeItems({ items: r.items, rounds: 0 }).items, r.items);
 
-  const stops: Record<string, StopRecord> = {};
-  if (r.stops && typeof r.stops === "object") {
-    let n = 0;
-    for (const [id, s] of Object.entries(r.stops as Record<string, unknown>)) {
-      if (n >= MAX_PATH_STOPS || id.length === 0 || id.length > 32) continue;
-      if (!s || typeof s !== "object") continue;
-      const { n: done, c, t, at } = s as Record<string, unknown>;
-      if (![done, c, t, at].every(isCount) || (c as number) > (t as number)) continue;
-      stops[id] = { n: done as number, c: c as number, t: t as number, at: at as number };
-      n++;
-    }
-  }
+  const stops = sanitizeRuns(r.stops, MAX_PATH_STOPS, 32);
+  const labs = sanitizeRuns(r.labs, MAX_PATH_LABS, 64);
 
   const checkpoint = sanitizeScore(r.checkpoint);
 
@@ -208,7 +220,23 @@ export function sanitizePathProgress(raw: unknown): PathProgress {
     }
   }
 
-  return { items, stops, checkpoint, rehearsals: keepRehearsals(rehearsals), goal };
+  return { items, stops, checkpoint, rehearsals: keepRehearsals(rehearsals), labs, goal };
+}
+
+/** Finished runs by id (stops, labs), each well-formed, at most `max` of them. */
+function sanitizeRuns(raw: unknown, max: number, maxIdLength: number): Record<string, StopRecord> {
+  const out: Record<string, StopRecord> = {};
+  if (!raw || typeof raw !== "object") return out;
+  let n = 0;
+  for (const [id, s] of Object.entries(raw as Record<string, unknown>)) {
+    if (n >= max || id.length === 0 || id.length > maxIdLength) continue;
+    if (!s || typeof s !== "object") continue;
+    const { n: done, c, t, at } = s as Record<string, unknown>;
+    if (![done, c, t, at].every(isCount) || (c as number) > (t as number)) continue;
+    out[id] = { n: done as number, c: c as number, t: t as number, at: at as number };
+    n++;
+  }
+  return out;
 }
 
 /** A checkpoint's or rehearsal's score and per-domain tally, or null if malformed. */

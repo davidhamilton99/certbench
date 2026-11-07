@@ -108,6 +108,16 @@ export interface PathLab {
   minutes: number;
 }
 
+/** The kinds of PBQ scenario (src/data/pbq/types.ts). */
+export type LabType = "simulation" | "topology" | "threat-hunt" | "ordering" | "matching" | "categorization";
+
+/** One lab in an exam's library: what a list shows before the scenario is loaded. */
+export interface PathLabInfo extends PathLab {
+  type: LabType;
+  /** Domain number, e.g. "3.0". */
+  domain: string;
+}
+
 export interface PathDomain {
   number: string;
   title: string;
@@ -125,6 +135,8 @@ export interface PathStructure {
   examName: string;
   examCode: string;
   domains: PathDomain[];
+  /** Every lab the exam has, domain by domain: the path's own and the rest. */
+  library?: PathLabInfo[];
 }
 
 export interface PathPlan {
@@ -181,6 +193,8 @@ export interface PathProgress {
   checkpoint: CheckpointResult | null;
   /** Finished exam rehearsals, oldest first. */
   rehearsals: RehearsalResult[];
+  /** Labs played, by scenario id: wherever they were opened, the path or its library. */
+  labs: Record<string, StopRecord>;
   goal: PathGoal | null;
 }
 
@@ -189,6 +203,7 @@ export const EMPTY_PATH_PROGRESS: PathProgress = {
   stops: {},
   checkpoint: null,
   rehearsals: [],
+  labs: {},
   goal: null,
 };
 

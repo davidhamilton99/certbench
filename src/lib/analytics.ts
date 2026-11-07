@@ -71,8 +71,15 @@ type EventMap = {
   path_offer_viewed: { cert: string; context: "reveal" | "home" };
   /** Pro opened this exam's path: the once-per-device unlock moment. */
   path_unlock_viewed: { cert: string };
-  /** A lab stop opened (it completes as path_stop_completed, kind "lab"). */
-  path_lab_started: { cert: string; stop: string; scenario: string };
+  /**
+   * A lab opened: as a stop on the path, or from the lab library (`stop` is
+   * "library" for one that closes no domain).
+   */
+  path_lab_started: { cert: string; stop: string; scenario: string; from: "path" | "library" };
+  /** A lab graded for the first time this visit (a domain's lab also completes its stop). */
+  path_lab_completed: { cert: string; scenario: string; from: "path" | "library"; correct: number; total: number };
+  /** The lab library opened from a Pro home. */
+  path_labs_viewed: { cert: string };
   /** An exam rehearsal drawn: from the home, or as the path's last stop. */
   path_rehearsal_started: { cert: string; size: "full" | "half"; from: "home" | "stop" };
   /** An exam rehearsal scored (as the last stop it also completes as path_stop_completed). */
