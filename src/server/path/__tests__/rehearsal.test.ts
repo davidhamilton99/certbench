@@ -104,3 +104,20 @@ describe("buildRehearsal", () => {
     expect(buildStop({ bank, plan, index, seen: [], missed: [], seed: 1 })).toBeNull();
   });
 });
+
+describe("a review of misses", () => {
+  const plan = buildPlan(bank.structure);
+  const ids = bank.questions.slice(0, 14).map((q) => bankRepId(q.objective, q.id));
+
+  it("brings back the misses sent, in order, a round at a time, and nothing else", () => {
+    const built = buildStop({ bank, plan, index: plan.stops.length, seen: [], missed: ids, seed: 3, focus: "misses" })!;
+    expect(built.stop.kind).toBe("review");
+    expect(built.reps.map((r) => r.id)).toEqual(ids.slice(0, 10));
+  });
+
+  it("keeps a plain review round's mix of misses and weak spots", () => {
+    const built = buildStop({ bank, plan, index: plan.stops.length, seen: [], missed: ids, seed: 3 })!;
+    const sent = built.reps.filter((r) => ids.includes(r.id));
+    expect(sent.length).toBeLessThan(built.reps.length);
+  });
+});

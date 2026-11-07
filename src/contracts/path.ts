@@ -129,6 +129,8 @@ export const getPathStop = {
     missed: z.array(repIdSchema).max(MAX_MISSED_SENT).default([]),
     /** Which run of this stop (replays reshuffle). */
     run: count.max(1_000_000).default(0),
+    /** "misses": a review round of the sent misses alone (see buildStop). */
+    focus: z.literal("misses").optional(),
   }),
   output: z.object({
     stop: stopSchema,

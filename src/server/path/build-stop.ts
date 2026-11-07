@@ -238,6 +238,12 @@ export interface BuildStopInput {
   /** Rep ids whose latest answer was wrong, oldest first. */
   missed: readonly string[];
   seed: number;
+  /**
+   * "misses": a review round of the sent misses alone, in the order sent, up to
+   * a practice round's worth. Otherwise a review round tops them up with
+   * questions from the weakest domains.
+   */
+  focus?: "misses";
 }
 
 export interface BuiltStop {
@@ -255,7 +261,7 @@ export interface BuiltStop {
   lab?: PbqScenario;
 }
 
-export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopInput): BuiltStop | null {
+export function buildStop({ bank, plan, index, seen, missed, seed, focus }: BuildStopInput): BuiltStop | null {
   const slug = bank.structure.certSlug as PathCert;
   const content = PATH_CONTENT[slug];
   if (!content) return null;
@@ -333,7 +339,7 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
       case "checkpoint":
         return checkpointReps();
       case "review":
-        return reviewReps();
+        return focus === "misses" ? misses(PRACTICE_SIZE) : reviewReps();
     }
   })();
 
