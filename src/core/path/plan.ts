@@ -1,4 +1,4 @@
-import type { PathPlan, PathStop, PathStructure } from "./types";
+import type { PathDomain, PathPlan, PathStop, PathStructure } from "./types";
 
 /**
  * Learn stops before the readiness checkpoint. With the warm-up first, the
@@ -24,22 +24,46 @@ const domainLabel = (number: string) => number.replace(/\.0$/, "");
  * The stops of an exam's path, in order:
  *
  *   warm-up → a learn stop per objective, domain by domain, with a practice
- *   stop closing each domain, and the readiness checkpoint after the fourth
- *   learn stop.
+ *   stop and then a hands-on lab closing each domain, and the readiness
+ *   checkpoint after the fourth learn stop.
  *
  * Every learn stop teaches one objective. Practice stops and the checkpoint are
- * the real exam's wording. After the last stop the path keeps going with review
+ * the real exam's wording; a lab is one of the exam's PBQ scenarios. Labs are
+ * Pro, so none comes before the checkpoint: a domain that ends sooner has its
+ * lab right after it. After the last stop the path keeps going with review
  * rounds (see `reviewStop`), so it never dead-ends.
  */
 export function buildPlan(structure: PathStructure): PathPlan {
   const stops: PathStop[] = [];
   const push = (stop: Omit<PathStop, "index">) => stops.push({ ...stop, index: stops.length });
+  const pushLab = (domain: PathDomain) => {
+    if (!domain.lab) return;
+    push({
+      id: `lab${domainLabel(domain.number)}`,
+      kind: "lab",
+      title: domain.lab.title,
+      domain: domain.number,
+      objectives: [],
+    });
+  };
 
   push({ id: "warmup", kind: "warmup", title: "Warm-up", domain: null, objectives: [] });
 
   let learned = 0;
   let freeThrough = -1;
+  const waitingLabs: PathDomain[] = [];
   const allObjectives = structure.domains.flatMap((d) => d.objectives.map((o) => o.code));
+  const pushCheckpoint = () => {
+    push({
+      id: "checkpoint",
+      kind: "checkpoint",
+      title: "Readiness checkpoint",
+      domain: null,
+      objectives: allObjectives,
+    });
+    freeThrough = stops.length - 1;
+    waitingLabs.splice(0).forEach(pushLab);
+  };
 
   for (const domain of structure.domains) {
     domain.objectives.forEach((objective, i) => {
@@ -51,16 +75,7 @@ export function buildPlan(structure: PathStructure): PathPlan {
         objectives: [objective.code],
       });
       learned++;
-      if (learned === LEARN_BEFORE_CHECKPOINT) {
-        push({
-          id: "checkpoint",
-          kind: "checkpoint",
-          title: "Readiness checkpoint",
-          domain: null,
-          objectives: allObjectives,
-        });
-        freeThrough = stops.length - 1;
-      }
+      if (learned === LEARN_BEFORE_CHECKPOINT) pushCheckpoint();
       if (i === domain.objectives.length - 1) {
         push({
           id: `d${domainLabel(domain.number)}`,
@@ -69,21 +84,14 @@ export function buildPlan(structure: PathStructure): PathPlan {
           domain: domain.number,
           objectives: domain.objectives.map((o) => o.code),
         });
+        if (freeThrough < 0) waitingLabs.push(domain);
+        else pushLab(domain);
       }
     });
   }
 
   // An exam with fewer objectives than the checkpoint threshold still gets one.
-  if (freeThrough < 0) {
-    push({
-      id: "checkpoint",
-      kind: "checkpoint",
-      title: "Readiness checkpoint",
-      domain: null,
-      objectives: allObjectives,
-    });
-    freeThrough = stops.length - 1;
-  }
+  if (freeThrough < 0) pushCheckpoint();
 
   return { stops, freeThrough };
 }

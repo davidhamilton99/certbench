@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { EndpointContract } from "@/contracts/common";
 import { PATH_CERTS } from "@/core/path/types";
+import type { PbqScenario } from "@/data/pbq/types";
 import {
   MAX_MISSED_SENT,
   MAX_PATH_ITEMS,
@@ -48,7 +49,7 @@ export const repSchema = z.discriminatedUnion("type", [
 export const stopSchema = z.object({
   id: z.string(),
   index: count,
-  kind: z.enum(["warmup", "learn", "checkpoint", "practice", "review"]),
+  kind: z.enum(["warmup", "learn", "checkpoint", "practice", "lab", "review"]),
   title: z.string(),
   domain: z.string().nullable(),
   objectives: z.array(z.string()),
@@ -106,6 +107,11 @@ export const getPathStop = {
     stop: stopSchema,
     reps: z.array(repSchema),
     retired: z.array(repIdSchema).max(MAX_MISSED_SENT).default([]),
+    /**
+     * A lab stop's PBQ scenario. Passed through as built: it's our own static
+     * data, typed by src/data/pbq, and too varied to restate here.
+     */
+    lab: z.custom<PbqScenario>((v) => typeof v === "object" && v !== null && "type" in v).optional(),
   }),
 } as const satisfies EndpointContract;
 

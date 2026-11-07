@@ -20,6 +20,7 @@ import { gradeScenario } from "@/core/pbq/grade";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
+import type { PbqHostProps } from "@/components/workspace/pbq-host";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -79,12 +80,14 @@ export function PbqPlayer({
   scenario,
   onBack,
   upsell,
+  onGraded,
+  backLabel,
 }: {
   scenario: PbqScenario;
   onBack: () => void;
   /** Optional CTA rendered after grading (ordering/matching/categorization). */
   upsell?: PbqUpsell;
-}) {
+} & PbqHostProps) {
   const [result, setResult] = useState<PbqGradeResult | null>(null);
   const [, setUserAnswer] = useState<number[] | null>(null);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
@@ -92,10 +95,12 @@ export function PbqPlayer({
 
   const handleSubmit = useCallback(
     (answer: number[]) => {
+      const graded = gradeScenario(scenario, answer);
       setUserAnswer(answer);
-      setResult(gradeScenario(scenario, answer));
+      setResult(graded);
+      onGraded?.(graded);
     },
-    [scenario]
+    [scenario, onGraded]
   );
 
   const handleRetry = useCallback(() => {
@@ -113,18 +118,19 @@ export function PbqPlayer({
   }, [hasInteracted, result, onBack]);
 
   /* Simulation scenarios use their own self-contained player */
+  const host = { onGraded, backLabel };
   if (scenario.type === "simulation") {
-    return <SimulationPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
+    return <SimulationPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
 
   /* Topology scenarios use the topology player */
   if (scenario.type === "topology") {
-    return <TopologyPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
+    return <TopologyPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
 
   /* Threat hunts use the log-console player */
   if (scenario.type === "threat-hunt") {
-    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} />;
+    return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
 
   return (
@@ -144,7 +150,7 @@ export function PbqPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          aria-label="Back to scenarios"
+          aria-label={backLabel ?? "Back to scenarios"}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
@@ -184,6 +190,7 @@ export function PbqPlayer({
           onRetry={handleRetry}
           onBack={onBack}
           upsell={upsell}
+          backLabel={backLabel}
         />
       ) : (
         <>
@@ -224,12 +231,14 @@ function ResultView({
   onRetry,
   onBack,
   upsell,
+  backLabel,
 }: {
   scenario: PbqScenario;
   result: PbqGradeResult;
   onRetry: () => void;
   onBack: () => void;
   upsell?: PbqUpsell;
+  backLabel?: string;
 }) {
   const scoreColor =
     result.score >= 75
@@ -306,7 +315,7 @@ function ResultView({
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
-          Back to Scenarios
+          {backLabel ?? "Back to Scenarios"}
         </Button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api-client";
@@ -10,6 +11,7 @@ import { ApiError } from "@/contracts/common";
 import { MINUTES_PER_STOP, stopAt } from "@/core/path/plan";
 import {
   hasStarted,
+  isStopDone,
   missedIds,
   nextStopIndex,
   objectiveStatuses,
@@ -19,16 +21,29 @@ import {
 import { questionIdOf } from "@/core/path/rep-id";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
 import type { ObjectiveStatus, PathCert, PathPlan, PathStop, PathStructure, Rep } from "@/core/path/types";
+import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
 import { InlineSignup } from "@/components/auth/InlineSignup";
-import { ExamMap, MapLegend } from "./ExamMap";
+import { ExamMap, MapLegend, type LabState } from "./ExamMap";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
+import { PathUnlocked } from "./PathUnlocked";
 import { GoalStep } from "./GoalStep";
 import { usePathProgress } from "./usePathProgress";
+import { pathUnlockedKey } from "./storage-key";
 import { cn } from "@/lib/utils";
+
+// The lab players are big and only Pro reaches a lab: load them when one opens.
+const PbqPlayer = dynamic(() => import("@/components/workspace/PbqPlayer").then((m) => m.PbqPlayer), {
+  ssr: false,
+  loading: () => (
+    <div className="grid min-h-60 place-items-center text-sm text-muted-foreground">
+      <Loader2 className="size-4 animate-spin" />
+    </div>
+  ),
+});
 
 interface Play {
   stop: PathStop;
@@ -50,10 +65,14 @@ type View =
   | { kind: "goal"; step: "exam" | "minutes"; then: number }
   | { kind: "intro"; index: number }
   | { kind: "reveal" }
+  | { kind: "lab"; stop: PathStop; scenario: PbqScenario; graded: boolean }
+  | { kind: "unlocked" }
   | { kind: "error"; message: string; retry: number };
 
 const domainOf = (objective: string) =>
   objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
+
+const domainLabel = (number: string | null) => (number ?? "").replace(/\.0$/, "");
 
 function stopLabel(stop: PathStop, total: number): string {
   switch (stop.kind) {
@@ -63,8 +82,21 @@ function stopLabel(stop: PathStop, total: number): string {
       return "Readiness checkpoint";
     case "review":
       return "Keep practicing";
+    case "lab":
+      return "Hands-on lab";
     default:
       return `Stop ${stop.index + 1} of ${total}`;
+  }
+}
+
+/** True the first time this device shows Pro opening this exam's path. */
+function firstUnlock(cert: string): boolean {
+  try {
+    if (localStorage.getItem(pathUnlockedKey(cert))) return false;
+    localStorage.setItem(pathUnlockedKey(cert), String(Date.now()));
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -129,6 +161,34 @@ export function PathApp({
   const remaining = total - stopsDone(plan, p.progress);
   const pro = p.access === "pro";
 
+  // Each domain's lab on the map: played, open (Pro), or a glimpse of Pro.
+  const labs = useMemo(() => {
+    const out = new Map<string, LabState>();
+    for (const s of plan.stops) {
+      if (s.kind !== "lab" || !s.domain) continue;
+      out.set(s.domain, isStopDone(p.progress, s.id) ? "done" : pro ? "open" : "locked");
+    }
+    return out;
+  }, [plan.stops, p.progress, pro]);
+  const labMinutes = (stop: PathStop | null) =>
+    stop?.kind === "lab" ? (structure.domains.find((d) => d.number === stop.domain)?.lab?.minutes ?? null) : null;
+  const labLegend = labs.size === 0 ? undefined : pro ? "open" : "locked";
+
+  // The first time Pro covers this exam on this device, open with what it
+  // opened: in place of their map, or of a stop not yet answered (the first
+  // paint's warm-up, which a started path is about to leave for the map).
+  // Mid-stop it waits until they're back on the map.
+  const unlockChecked = useRef(false);
+  useEffect(() => {
+    if (!p.ready || !p.signedIn || !pro || unlockChecked.current) return;
+    const untouched = view.kind === "play" && playRef.current.results.every((r) => r === null);
+    if (view.kind !== "home" && !untouched) return;
+    unlockChecked.current = true;
+    if (!firstUnlock(cert)) return;
+    track("path_unlock_viewed", { cert });
+    setView({ kind: "unlocked" });
+  }, [p.ready, p.signedIn, pro, cert, view.kind]);
+
   // Pro bought before the path asked for their exam (from /pricing, say) leaves
   // the account with no exam: Pro opens nothing, and the dashboard sends them
   // back to the picker. Claim this one. The server only lets an account with no
@@ -147,6 +207,15 @@ export function PathApp({
       }
     })();
   }, [ready, signedIn, proPlan, pro, cert, refreshAccess]);
+
+  const openLab = useCallback(
+    (stop: PathStop, scenario: PbqScenario) => {
+      track("path_lab_started", { cert, stop: stop.id, scenario: scenario.id });
+      setView({ kind: "lab", stop, scenario, graded: false });
+      window.scrollTo({ top: 0 });
+    },
+    [cert]
+  );
 
   const startStop = useCallback(
     async (index: number, opts?: { skipIntro?: boolean }) => {
@@ -184,6 +253,10 @@ export function PathApp({
           run: p.progress.stops[stop.id]?.n ?? 0,
         });
         p.retire(built.retired);
+        if (built.lab) {
+          openLab(built.stop, built.lab);
+          return;
+        }
         if (built.reps.length === 0) {
           p.finish(built.stop.id, 0, 0);
           setView({ kind: "home" });
@@ -207,7 +280,32 @@ export function PathApp({
         }
       }
     },
-    [cert, plan, structure, p, pro, freshPlay, setPlay]
+    [cert, plan, structure, p, pro, freshPlay, setPlay, openLab]
+  );
+
+  /**
+   * A lab counts when it's graded, so it's done even if they leave from the
+   * result. Grading it again (a retry) records the new score.
+   */
+  const onLabGraded = useCallback(
+    (stop: PathStop, result: PbqGradeResult, first: boolean) => {
+      const total = Math.max(0, Math.round(result.totalItems));
+      const correct = Math.min(total, Math.max(0, Math.round(result.correctItems)));
+      p.finish(stop.id, correct, total);
+      if (first) {
+        track("path_stop_completed", {
+          cert,
+          stop: stop.id,
+          index: stop.index,
+          kind: stop.kind,
+          correct,
+          total,
+          signed_in: p.signedIn,
+        });
+      }
+      setView((v) => (v.kind === "lab" && v.stop.id === stop.id ? { ...v, graded: true } : v));
+    },
+    [cert, p]
   );
 
   const onAnswer = useCallback(
@@ -335,6 +433,50 @@ export function PathApp({
         </Button>
       </div>
     );
+  } else if (view.kind === "lab") {
+    const { stop, scenario, graded } = view;
+    const minutes = labMinutes(stop);
+    screen = (
+      <div className="path-rise grid gap-5">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          Hands-on lab · Domain {domainLabel(stop.domain)}
+          {minutes ? <> · about {minutes} min</> : null}
+        </p>
+        {/* min-w-0: a lab's tab row doesn't wrap, and would widen a phone's page. */}
+        <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
+          <PbqPlayer
+            scenario={scenario}
+            backLabel="Back to my map"
+            onGraded={(result) => onLabGraded(stop, result, !graded)}
+            onBack={() => {
+              setView({ kind: "home" });
+              window.scrollTo({ top: 0 });
+            }}
+          />
+        </div>
+        {graded && (
+          <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
+        )}
+      </div>
+    );
+  } else if (view.kind === "unlocked") {
+    const lab = plan.stops.find((s) => s.kind === "lab" && !isStopDone(p.progress, s.id));
+    screen = (
+      <PathUnlocked
+        structure={structure}
+        plan={plan}
+        progress={p.progress}
+        statuses={statuses}
+        labs={labs}
+        firstLab={
+          lab && lab.index !== next
+            ? { title: lab.title, minutes: labMinutes(lab), onOpen: () => startStop(lab.index) }
+            : null
+        }
+      >
+        <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
+      </PathUnlocked>
+    );
   } else if (view.kind === "goal") {
     screen = (
       <div className="glass rounded-3xl p-6 sm:p-8">
@@ -382,7 +524,7 @@ export function PathApp({
     screen = result ? (
       <PathReveal result={result} structure={structure} goal={p.progress.goal} remainingStops={remaining}>
         {pro ? (
-          <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} />
+          <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         ) : (
           <>
             <PathOffer
@@ -428,7 +570,13 @@ export function PathApp({
 
         {/* The way on comes before the map: the map fills a phone's screen. */}
         {p.signedIn ? (
-          <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} locked={next > plan.freeThrough && !pro} />
+          <ContinueCard
+            stop={nextStop}
+            total={total}
+            minutes={labMinutes(nextStop)}
+            onContinue={() => startStop(next)}
+            locked={next > plan.freeThrough && !pro}
+          />
         ) : (
           <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
         )}
@@ -445,8 +593,9 @@ export function PathApp({
             statuses={statuses}
             fresh={endFresh}
             current={nextStop ? new Set(nextStop.objectives.length > 3 ? [] : nextStop.objectives) : undefined}
+            labs={labs}
           />
-          <MapLegend />
+          <MapLegend labs={labLegend} />
         </div>
       </div>
     );
@@ -460,13 +609,18 @@ export function PathApp({
         cert={cert}
         examName={structure.examName}
         signedIn={p.signedIn}
-        pro={pro}
         onHome={() => {
           setView({ kind: "home" });
           window.scrollTo({ top: 0 });
         }}
       />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
+      {/* A lab's console and diagrams want more room than a question does. */}
+      <main
+        className={cn(
+          "mx-auto w-full flex-1 px-4 pb-20 pt-6 sm:px-6 sm:pt-10",
+          view.kind === "lab" ? "max-w-3xl" : "max-w-2xl"
+        )}
+      >
         <div className="path-stage" data-ready={p.ready ? "true" : "false"}>
           {screen}
         </div>
@@ -497,6 +651,10 @@ export function PathApp({
         run: p.progress.stops[stopAt(plan, structure, index)?.id ?? ""]?.n ?? 0,
       });
       p.retire(built.retired);
+      if (built.lab) {
+        openLab(built.stop, built.lab);
+        return;
+      }
       setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
       setView({ kind: "play" });
     } catch {
@@ -550,10 +708,8 @@ export function PathApp({
             context="home"
           />
         ) : (
-          <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} />
+          <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         )}
-
-        {pro && <ProToolkit cert={cert} />}
 
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
           <h2 className="font-display font-semibold tracking-tight">Your map</h2>
@@ -561,8 +717,9 @@ export function PathApp({
             structure={structure}
             statuses={statuses}
             current={nextStop && nextStop.objectives.length <= 3 ? new Set(nextStop.objectives) : undefined}
+            labs={labs}
           />
-          <MapLegend />
+          <MapLegend labs={labLegend} />
         </div>
 
         {/* The save card carries its own. */}
@@ -573,57 +730,19 @@ export function PathApp({
             </Link>
           </p>
         )}
+        {/* What the path doesn't hold yet stays reachable, not advertised. */}
+        {pro && (
+          <p className="-mt-3 text-center text-xs text-muted-foreground">
+            Timed practice exams and spaced review are in your{" "}
+            <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
+              study tools
+            </Link>
+            .
+          </p>
+        )}
       </div>
     );
   }
-}
-
-/**
- * What Pro adds beside the path, on the path's own home. A buyer used to land
- * in the toolkit, a sidebar of pages that are empty on day one, and leave; the
- * path is home now, and the toolkit's best parts are one tap from it.
- */
-function ProToolkit({ cert }: { cert: PathCert }) {
-  const tools = [
-    {
-      href: `/pbq?cert=${cert}`,
-      title: "PBQ lab",
-      body: "Hands-on simulations, like the exam's performance-based questions.",
-    },
-    {
-      href: `/certifications/${cert}/exam`,
-      title: "Practice exam",
-      body: "Exam-style questions across every domain, in one sitting.",
-    },
-    {
-      href: `/review?cert=${cert}`,
-      title: "Review",
-      body: "Every question you've missed, worst first.",
-    },
-  ];
-  return (
-    <div className="glass grid gap-4 rounded-3xl p-5 sm:p-6">
-      <div>
-        <h2 className="font-display font-semibold tracking-tight">Your Pro toolkit</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Every stop on your path is open. Beside it:</p>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {tools.map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="group grid content-start gap-1 rounded-2xl border border-border p-4 transition-colors hover:border-primary/40 hover:bg-foreground/[0.03]"
-          >
-            <span className="flex items-center justify-between gap-2 font-medium">
-              {t.title}
-              <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </span>
-            <span className="text-sm leading-snug text-muted-foreground">{t.body}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 function ContinueCard({
@@ -631,11 +750,14 @@ function ContinueCard({
   total,
   onContinue,
   locked,
+  minutes,
 }: {
   stop: PathStop | null;
   total: number;
   onContinue: () => void;
   locked?: boolean;
+  /** A lab's rough length, shown with it. */
+  minutes?: number | null;
 }) {
   if (!stop) return null;
   const label =
@@ -644,12 +766,16 @@ function ContinueCard({
       : stop.kind === "checkpoint"
         ? "Readiness checkpoint"
         : stop.title;
+  const kicker =
+    stop.kind === "review"
+      ? "Path complete · review round"
+      : stop.kind === "lab"
+        ? `Next · hands-on lab${minutes ? ` · about ${minutes} min` : ""}`
+        : `Next · stop ${stop.index + 1} of ${total}`;
   return (
     <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
       <div className="min-w-0">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-          {stop.kind === "review" ? "Path complete · review round" : `Next · stop ${stop.index + 1} of ${total}`}
-        </p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{kicker}</p>
         <p className="mt-1 truncate font-display text-xl font-semibold tracking-tight">{label}</p>
       </div>
       <Button size="lg" className={cn("h-12 w-full px-6 text-base sm:w-auto")} onClick={onContinue}>

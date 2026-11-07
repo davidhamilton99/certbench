@@ -37,6 +37,27 @@ vi.mock("@/components/instrument/ReadinessDial", () => ({
   ReadinessDial: ({ score }: { score: number }) => <div data-testid="dial">{score}%</div>,
 }));
 
+// The lab players have their own tests; here a lab only has to report a grade.
+vi.mock("@/components/workspace/PbqPlayer", () => ({
+  PbqPlayer: ({
+    scenario,
+    onGraded,
+    onBack,
+    backLabel,
+  }: {
+    scenario: { title: string };
+    onGraded?: (r: { score: number; totalItems: number; correctItems: number; feedback: string[] }) => void;
+    onBack: () => void;
+    backLabel?: string;
+  }) => (
+    <div>
+      <h2>{scenario.title}</h2>
+      <button onClick={() => onGraded?.({ score: 80, totalItems: 5, correctItems: 4, feedback: [] })}>Submit lab</button>
+      <button onClick={onBack}>{backLabel}</button>
+    </div>
+  ),
+}));
+
 /** The API, answered per endpoint path. Tests swap handlers as needed. */
 const server = vi.hoisted(() => ({
   progress: null as null | object,
@@ -317,25 +338,38 @@ describe("a signed-in learner", () => {
     expect(accessReads()).toBe(1);
   });
 
-  it("shows a Pro member their toolkit on the path's home", async () => {
+  it("opens Pro with what it opened, once on a device", async () => {
     server.access = "pro";
     server.proPlan = true;
     server.progress = done(["warmup"]);
+    const { unmount } = renderPath();
+    expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue/ })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
+    unmount();
+
     renderPath();
-    expect(await screen.findByRole("heading", { name: "Your Pro toolkit" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /PBQ lab/ })).toHaveAttribute("href", "/pbq?cert=security-plus-sy0-701");
-    expect(screen.getByRole("link", { name: /Practice exam/ })).toHaveAttribute(
-      "href",
-      "/certifications/security-plus-sy0-701/exam"
-    );
-    expect(screen.getByRole("link", { name: /Review/ })).toHaveAttribute("href", "/review?cert=security-plus-sy0-701");
+    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your whole path is open." })).toBeNull();
   });
 
-  it("doesn't show the toolkit to a free account", async () => {
+  it("doesn't open with the unlock moment for a free account", async () => {
     server.progress = done(["warmup"]);
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.queryByRole("heading", { name: "Your Pro toolkit" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Your whole path is open." })).toBeNull();
+  });
+
+  it("keeps a Pro member on the path: the header leads nowhere else", async () => {
+    server.access = "pro";
+    server.progress = done(["warmup"]);
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    renderPath();
+    await screen.findByRole("heading", { name: "Your Security+ path" });
+    const header = screen.getByRole("banner");
+    expect([...header.querySelectorAll("a")].map((a) => a.getAttribute("href"))).not.toContain("/dashboard");
+    // What the path doesn't hold yet is still one quiet link away.
+    expect(screen.getByRole("link", { name: "study tools" })).toHaveAttribute("href", "/dashboard");
   });
 
   it("claims nothing for a free account", async () => {
@@ -486,5 +520,99 @@ describe("a signed-in learner", () => {
       expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({ index: plan.freeThrough + 1 })
     );
     expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+  });
+});
+
+describe("labs on the path", () => {
+  const labStructure: PathStructure = {
+    ...structure,
+    domains: structure.domains.map((d) => ({
+      ...d,
+      lab: { id: `lab-${d.number}`, title: `Lab for domain ${d.number}`, minutes: 6 },
+    })),
+  };
+  // warm-up, 1.1–1.3, d1, 2.1, checkpoint, lab1, 2.2, 2.3, d2, lab2
+  const labPlan = buildPlan(labStructure);
+  const lab1 = labPlan.stops.findIndex((s) => s.id === "lab1");
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+
+  const renderLabs = () =>
+    render(
+      <PathApp cert="security-plus-sy0-701" structure={labStructure} plan={labPlan} warmup={warmup} questionCount={842} />
+    );
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.stopHandler = (input) => {
+      const stop = labPlan.stops[input.index];
+      if (stop?.kind === "lab") {
+        return {
+          stop,
+          reps: [],
+          lab: { type: "ordering", id: `lab-${stop.domain}`, title: stop.title, domain_number: stop.domain },
+        };
+      }
+      const objective = stop?.objectives[0] ?? "1.1";
+      return { stop, reps: [rep(`a|${objective}|x${input.index}`, objective)] };
+    };
+  });
+
+  it("shows each domain's lab on the map, as part of Pro for a free account", async () => {
+    server.progress = done(["warmup"]);
+    renderLabs();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.getAllByLabelText(/hands-on lab, Lab for domain .*: part of Pro/)).toHaveLength(2);
+    expect(screen.getByText("Hands-on lab, with Pro")).toBeInTheDocument();
+  });
+
+  it("plays a lab in place and counts it once it's graded", async () => {
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(labPlan.stops.slice(0, lab1).map((s) => s.id), { goal });
+    renderLabs();
+    expect(await screen.findByText(/Next · hands-on lab · about 6 min/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+
+    expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
+    expect(screen.getByText(/Hands-on lab · Domain 1/)).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_lab_started", {
+      cert: "security-plus-sy0-701",
+      stop: "lab1",
+      scenario: "lab-1.0",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit lab" }));
+    expect(track).toHaveBeenCalledWith(
+      "path_stop_completed",
+      expect.objectContaining({ stop: "lab1", kind: "lab", correct: 4, total: 5 })
+    );
+    // It's done, so the way on is the stop after it.
+    expect(await screen.findByText("Objective 2.2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    await waitFor(() =>
+      expect(server.calls.filter((c) => c.path === "/api/path/stop").at(-1)?.input).toMatchObject({ index: lab1 + 1 })
+    );
+  });
+
+  it("goes back to the map from a lab without counting it", async () => {
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(labPlan.stops.slice(0, lab1).map((s) => s.id), { goal });
+    renderLabs();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Back to my map" }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+    expect(screen.getByText(/Next · hands-on lab/)).toBeInTheDocument();
+  });
+
+  it("offers the first lab from the unlock moment", async () => {
+    server.access = "pro";
+    server.progress = done(["warmup"], { goal });
+    renderLabs();
+    await screen.findByRole("heading", { name: "Your whole path is open." });
+    // Both domain labs are still ahead.
+    expect(screen.getByText("hands-on labs").nextSibling).toHaveTextContent("2");
+    fireEvent.click(screen.getByRole("button", { name: /Or try a lab now.*Lab for domain 1.0/ }));
+    expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
   });
 });

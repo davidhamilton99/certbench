@@ -8,6 +8,8 @@ import {
   listSubObjectives,
 } from "@/server/data/certifications";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
+import { pbqRegistry } from "@/data/pbq";
+import { domainLab } from "@/core/path/labs";
 import { wordCount } from "@/core/path/text";
 import type { PathCert, PathStructure } from "@/core/path/types";
 
@@ -86,6 +88,7 @@ async function fetchBank(slug: PathCert): Promise<PathBank | null> {
       objectives: subs
         .filter((s) => s.domain_id === d.id)
         .map((s) => ({ code: s.code, title: titles[s.code] ?? s.title })),
+      lab: domainLab(pbqRegistry[slug] ?? [], d.domainNumber),
     })),
   };
 

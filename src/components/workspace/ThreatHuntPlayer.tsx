@@ -11,6 +11,7 @@ import type {
 } from "@/data/pbq/types";
 import { gradeThreatHunt } from "@/core/pbq/grade-threat-hunt";
 import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
+import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,11 +24,13 @@ export function ThreatHuntPlayer({
   scenario,
   onBack,
   upsell,
+  onGraded,
+  backLabel,
 }: {
   scenario: ThreatHuntScenario;
   onBack: () => void;
   upsell?: PbqUpsell;
-}) {
+} & PbqHostProps) {
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [attackChoice, setAttackChoice] = useState<number>(-1);
   const [result, setResult] = useState<PbqGradeResult | null>(null);
@@ -45,12 +48,12 @@ export function ThreatHuntPlayer({
   }
 
   function analyze() {
-    setResult(
-      gradeThreatHunt(scenario, {
-        flagged: [...flagged],
-        attackChoice,
-      })
-    );
+    const graded = gradeThreatHunt(scenario, {
+      flagged: [...flagged],
+      attackChoice,
+    });
+    setResult(graded);
+    onGraded?.(graded);
   }
 
   function reset() {
@@ -72,7 +75,7 @@ export function ThreatHuntPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          aria-label="Back to scenarios"
+          aria-label={backLabel ?? "Back to scenarios"}
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
           <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -252,7 +255,7 @@ export function ThreatHuntPlayer({
         <div className="flex gap-3">
           <Button onClick={reset}>Hunt again</Button>
           <Button variant="secondary" onClick={onBack}>
-            Back to scenarios
+            {backLabel ?? "Back to scenarios"}
           </Button>
         </div>
       ) : (

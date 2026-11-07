@@ -97,11 +97,15 @@ export function PathOffer({
   }
 
   const includes = proPlan
-    ? [`All ${remainingStops} remaining stops of your ${examName} path`, "Domain practice and checkpoints", "Uses your current Pro plan"]
+    ? [
+        `All ${remainingStops} remaining stops of your ${examName} path`,
+        "A hands-on PBQ lab closing every domain",
+        "Uses your current Pro plan",
+      ]
     : [
         `All ${remainingStops} remaining stops of your ${examName} path`,
-        `Practice across all ${questionCount.toLocaleString()} ${examName} questions`,
-        "Timed practice exams, PBQ labs and spaced review",
+        "A hands-on PBQ lab closing every domain",
+        `All ${questionCount.toLocaleString()} ${examName} questions, timed practice exams and spaced review`,
       ];
 
   return (

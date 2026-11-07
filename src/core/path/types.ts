@@ -80,7 +80,7 @@ export interface TypedRep extends RepBase {
 
 export type Rep = ChoiceRep | TypedRep;
 
-export type StopKind = "warmup" | "learn" | "checkpoint" | "practice" | "review";
+export type StopKind = "warmup" | "learn" | "checkpoint" | "practice" | "lab" | "review";
 
 export interface PathStop {
   /** "warmup", an objective code ("1.1"), "checkpoint", "d1"… or "review". */
@@ -99,12 +99,23 @@ export interface PathObjective {
   title: string;
 }
 
+/** A hands-on lab: one of the exam's PBQ scenarios (src/data/pbq), played as a stop. */
+export interface PathLab {
+  /** The scenario's id. */
+  id: string;
+  title: string;
+  /** Rough minutes it takes. */
+  minutes: number;
+}
+
 export interface PathDomain {
   number: string;
   title: string;
   /** Share of the exam, in percent. */
   weight: number;
   objectives: PathObjective[];
+  /** The lab that closes this domain on the path, when the exam has one for it. */
+  lab?: PathLab;
 }
 
 /** What an exam's path is built from: its domains and objectives, in order. */

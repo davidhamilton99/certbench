@@ -15,6 +15,7 @@ import { gradeTopologyScenario } from "@/core/pbq/grade-topology";
 import { TopologyDiagram } from "@/components/workspace/TopologyDiagram";
 import { DeviceConfigPanel } from "@/components/workspace/DeviceConfigPanel";
 import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
+import type { PbqHostProps } from "@/components/workspace/pbq-host";
 
 /* ------------------------------------------------------------------ */
 /*  Results View                                                       */
@@ -27,6 +28,7 @@ function TopologyResults({
   onRetry,
   onBack,
   upsell,
+  backLabel,
 }: {
   scenario: TopologyScenario;
   result: PbqGradeResult;
@@ -34,6 +36,7 @@ function TopologyResults({
   onRetry: () => void;
   onBack: () => void;
   upsell?: PbqUpsell;
+  backLabel?: string;
 }) {
   const scoreColor =
     result.score >= 75
@@ -139,7 +142,7 @@ function TopologyResults({
           Try Again
         </Button>
         <Button variant="secondary" onClick={onBack}>
-          Back to Scenarios
+          {backLabel ?? "Back to Scenarios"}
         </Button>
       </div>
     </div>
@@ -154,11 +157,13 @@ export function TopologyPlayer({
   scenario,
   onBack,
   upsell,
+  onGraded,
+  backLabel,
 }: {
   scenario: TopologyScenario;
   onBack: () => void;
   upsell?: PbqUpsell;
-}) {
+} & PbqHostProps) {
   const [answers, setAnswers] = useState<Record<string, TopoFieldAnswer>>({});
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [gradeResult, setGradeResult] = useState<{
@@ -213,7 +218,8 @@ export function TopologyPlayer({
     const graded = gradeTopologyScenario(scenario, answers);
     setGradeResult(graded);
     setSelectedDeviceId(null);
-  }, [scenario, answers]);
+    onGraded?.(graded.result);
+  }, [scenario, answers, onGraded]);
 
   const handleRetry = useCallback(() => {
     setAnswers({});
@@ -264,7 +270,7 @@ export function TopologyPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          aria-label="Back to scenarios"
+          aria-label={backLabel ?? "Back to scenarios"}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg
@@ -303,6 +309,7 @@ export function TopologyPlayer({
           onRetry={handleRetry}
           onBack={onBack}
           upsell={upsell}
+          backLabel={backLabel}
         />
       ) : (
         <>

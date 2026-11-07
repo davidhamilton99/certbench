@@ -69,6 +69,10 @@ type EventMap = {
   path_goal_set: { cert: string; step: "exam" | "minutes"; value: string };
   path_checkpoint_completed: { cert: string; score: number };
   path_offer_viewed: { cert: string; context: "reveal" | "home" };
+  /** Pro opened this exam's path: the once-per-device unlock moment. */
+  path_unlock_viewed: { cert: string };
+  /** A lab stop opened (it completes as path_stop_completed, kind "lab"). */
+  path_lab_started: { cert: string; stop: string; scenario: string };
   /** A path stop played on a public page (objective or practice-test page). */
   quick_round_completed: { cert: string; surface: string; correct: number; total: number };
   /** A sample question answered on a public page (the page is in $current_url). */

@@ -2,6 +2,8 @@ import type { BankQuestion, PathBank } from "./bank";
 import { PATH_CONTENT } from "@/data/path";
 import type { AuthoredRep } from "@/data/path/types";
 import { getRecallDecks } from "@/data/recall";
+import { pbqRegistry } from "@/data/pbq";
+import type { PbqScenario } from "@/data/pbq/types";
 import { generateRecallQuestion, type ResolvedDeck } from "@/lib/recall/recall-deck";
 import { acceptableAnswers } from "@/lib/recall/normalize";
 import { generateQuestion, MODES as SUBNET_MODES, type DrillMode } from "@/lib/tools/subnetting";
@@ -249,6 +251,8 @@ export interface BuiltStop {
    * can't be found may only be missing for now.
    */
   retired: string[];
+  /** A lab stop's scenario, played in place of reps. */
+  lab?: PbqScenario;
 }
 
 export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopInput): BuiltStop | null {
@@ -257,6 +261,12 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
   if (!content) return null;
   const stop = stopAt(plan, bank.structure, index);
   if (!stop) return null;
+
+  if (stop.kind === "lab") {
+    const id = bank.structure.domains.find((d) => d.number === stop.domain)?.lab?.id;
+    const lab = pbqRegistry[slug]?.find((s) => s.id === id);
+    return lab ? { stop, reps: [], retired: [], lab } : null;
+  }
 
   const rng = seededRng(seed);
   const seenSet = new Set(seen);

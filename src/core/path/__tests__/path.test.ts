@@ -88,6 +88,60 @@ describe("buildPlan", () => {
   });
 });
 
+describe("labs on the path", () => {
+  const withLabs = (sizes: number[]): PathStructure => {
+    const s = structure(sizes);
+    return {
+      ...s,
+      domains: s.domains.map((d) => ({ ...d, lab: { id: `lab-${d.number}`, title: `Lab for ${d.number}`, minutes: 6 } })),
+    };
+  };
+
+  it("closes each domain with its lab, right after the domain's practice", () => {
+    const plan = buildPlan(withLabs([4, 5, 4, 9, 6]));
+    const ids = plan.stops.map((s) => s.id);
+    for (const n of [1, 2, 3, 4, 5]) expect(ids.indexOf(`lab${n}`)).toBe(ids.indexOf(`d${n}`) + 1);
+    const lab = plan.stops.find((s) => s.id === "lab3")!;
+    expect(lab).toMatchObject({ kind: "lab", title: "Lab for 3.0", domain: "3.0", objectives: [] });
+    // 35 stops as before, plus five labs.
+    expect(plan.stops).toHaveLength(40);
+  });
+
+  it("leaves the free stretch as it was: no lab before the checkpoint", () => {
+    const plan = buildPlan(withLabs([4, 5, 4, 9, 6]));
+    expect(plan.freeThrough).toBe(1 + LEARN_BEFORE_CHECKPOINT);
+    expect(plan.stops.slice(0, plan.freeThrough + 1).some((s) => s.kind === "lab")).toBe(false);
+  });
+
+  it("holds a short first domain's lab until just after the checkpoint", () => {
+    // An A+-like first domain of three objectives ends before the checkpoint.
+    const plan = buildPlan(withLabs([3, 5]));
+    expect(plan.stops.map((s) => s.id).slice(0, 8)).toEqual([
+      "warmup", "1.1", "1.2", "1.3", "d1", "2.1", "checkpoint", "lab1",
+    ]);
+    expect(isFreeStop(plan, plan.stops.findIndex((s) => s.id === "lab1"))).toBe(false);
+  });
+
+  it("gives labs ids that progress can store", () => {
+    const plan = buildPlan(withLabs([4, 5, 4, 9, 6]));
+    expect(new Set(plan.stops.map((s) => s.id)).size).toBe(plan.stops.length);
+    for (const s of plan.stops) expect(s.id.length).toBeLessThanOrEqual(32);
+  });
+
+  it("adds no stop for a domain without a lab", () => {
+    expect(buildPlan(structure([4, 5])).stops.some((s) => s.kind === "lab")).toBe(false);
+  });
+
+  it("sends a learner who reached the lab to it next", () => {
+    const plan = buildPlan(withLabs([4, 5]));
+    let progress = EMPTY_PATH_PROGRESS;
+    for (const s of plan.stops.slice(0, plan.stops.findIndex((x) => x.id === "lab1"))) {
+      progress = finishStop(progress, s.id, 3, 3, 1);
+    }
+    expect(plan.stops[nextStopIndex(plan, progress)].id).toBe("lab1");
+  });
+});
+
 describe("rep ids", () => {
   it("round-trips every source and stays within the stored id limit", () => {
     const uuid = "123e4567-e89b-12d3-a456-426614174000";
