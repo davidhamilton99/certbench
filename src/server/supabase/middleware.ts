@@ -48,8 +48,8 @@ export function guidedNext(next: string | null): string | null {
  * Session refresh + redirect matrix. Runs on every matched request:
  *   - refreshes the Supabase auth token (cookie rotation)
  *   - unauthenticated user on a protected route -> /login?next=<path>
- *   - authenticated user on an auth page         -> /dashboard (or back to the
- *                                                   guided path, see guidedNext)
+ *   - authenticated user on an auth page         -> /start, their guided path
+ *                                                   (or where guidedNext says)
  *   - authenticated non-Pro user in the app      -> /start (their guided path)
  *
  * Onboarding completeness is checked in the (workspace) layout, not here —
@@ -111,8 +111,9 @@ export async function updateSession(request: NextRequest) {
   if (user && AUTH_PAGES.includes(pathname)) {
     const back = guidedNext(request.nextUrl.searchParams.get("next"));
     if (back) return NextResponse.redirect(new URL(back, request.url));
+    // Home is the guided path, Pro or not: /start opens their exam's path.
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/start";
     url.search = "";
     return NextResponse.redirect(url);
   }

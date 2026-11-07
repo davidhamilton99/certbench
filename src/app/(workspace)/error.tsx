@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { captureError } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 
 export default function WorkspaceError({
@@ -12,6 +13,7 @@ export default function WorkspaceError({
 }) {
   useEffect(() => {
     console.error(error);
+    captureError(error, { digest: error.digest, page: window.location.pathname });
   }, [error]);
 
   return (
