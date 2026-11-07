@@ -691,8 +691,8 @@ describe("exam rehearsals", () => {
   it("lets a Pro member sit the whole exam from their map, and scores it on the dial", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     renderPath();
-    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start: Exam rehearsal" }));
 
     expect(await screen.findByRole("heading", { name: "Sit the whole exam, start to finish." })).toBeInTheDocument();
     expect(screen.getByText(/set against your checkpoint's 58%/)).toBeInTheDocument();
@@ -738,7 +738,7 @@ describe("exam rehearsals", () => {
     // Home again, the latest reading is the rehearsal's, and its answers are a tap away.
     fireEvent.click(screen.getByRole("link", { name: "Security+" }));
     expect(await screen.findByText(/last rehearsal 75%/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "See its answers" }));
+    fireEvent.click(screen.getByRole("button", { name: "see its answers" }));
     expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();
   });
 
@@ -748,7 +748,7 @@ describe("exam rehearsals", () => {
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
     expect(screen.getByLabelText("Exam rehearsal: part of Pro")).toBeInTheDocument();
-    expect(screen.queryByText("Sit the whole exam, any time")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start: Exam rehearsal" })).toBeNull();
   });
 
   it("brings back a rehearsal left mid-way, where it was and with its clock", async () => {
@@ -771,7 +771,7 @@ describe("exam rehearsals", () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     localStorage.setItem(runKey, storedRun({ owner: "someone-else", picks: [0, null, null] }));
     renderPath();
-    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
     expect(screen.queryByText("Exam rehearsal · in progress")).toBeNull();
   });
 
@@ -782,7 +782,7 @@ describe("exam rehearsals", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Discard this rehearsal" }));
     expect(localStorage.getItem(runKey)).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Discard it" }));
-    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
     expect(localStorage.getItem(runKey)).toBeNull();
   });
 
@@ -792,7 +792,7 @@ describe("exam rehearsals", () => {
     renderPath();
     expect(await screen.findByText("Last stop · the whole exam, timed")).toBeInTheDocument();
     // The Continue card already leads there: no second card for it.
-    expect(screen.queryByText("Sit the whole exam, any time")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start: Exam rehearsal" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
     expect(await screen.findByText(`Stop ${last.index + 1} · Exam rehearsal`)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Half: 45 questions/ }));
@@ -813,10 +813,103 @@ describe("exam rehearsals", () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     server.rehearsalHandler = () => new ApiError("quota_exceeded", "Exam rehearsals are part of Pro.");
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start: Exam rehearsal" }));
     server.access = "free";
     fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
     expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
+  });
+
+  it("goes over a rehearsal's misses from its result, those first", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint, items: recordRep(EMPTY_PATH_PROGRESS, "a|2.2|old", false, 1).items });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Start: Exam rehearsal" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
+    await sitIt();
+    fireEvent.click(await screen.findByRole("button", { name: /Review 1/ }));
+    await waitFor(() =>
+      expect(server.calls.filter((c) => c.path === "/api/path/stop").at(-1)?.input).toMatchObject({
+        index: plan.stops.length,
+        focus: "misses",
+        missed: [`q|1.2|${uuid(3)}`, "a|2.2|old"],
+      })
+    );
+    expect(track).toHaveBeenCalledWith("path_review_started", expect.objectContaining({ from: "rehearsal" }));
+    expect(await screen.findByText("Review · your misses")).toBeInTheDocument();
+  });
+});
+
+describe("reviewing misses", () => {
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+  const objectiveOf = (id: string) => id.split("|")[1];
+  const misses = ["a|1.1|m1", "a|2.1|m2", "a|1.2|m3"];
+  const withMisses = () =>
+    done(["warmup"], { goal, items: misses.reduce((p, id) => recordRep(p, id, false, 5), EMPTY_PATH_PROGRESS).items });
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.stopHandler = (input) => {
+      const { index, missed, focus } = input as { index: number; missed: string[]; focus?: string };
+      if (focus !== "misses") return stopReply(index);
+      return {
+        stop: { ...plan.stops[0], id: "review", kind: "review", title: "Keep practicing", index },
+        reps: missed.map((id) => rep(id, objectiveOf(id))),
+      };
+    };
+  });
+
+  it("goes over them from a Pro home, and says when the right ones come back", async () => {
+    server.progress = withMisses();
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Review: Your misses" }));
+    await waitFor(() =>
+      expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({
+        index: plan.stops.length,
+        focus: "misses",
+        missed: misses,
+      })
+    );
+    expect(track).toHaveBeenCalledWith("path_review_started", { cert: "security-plus-sy0-701", from: "home", reps: 3 });
+    expect(await screen.findByText("Review · your misses")).toBeInTheDocument();
+
+    await answer(true);
+    await answer(true);
+    await answer(false);
+    expect(await screen.findByText("Review complete")).toBeInTheDocument();
+    expect(screen.getByText(/^1 more to review\. The ones you got right come back once more in a few days/)).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith(
+      "path_stop_completed",
+      expect.objectContaining({ stop: "review", kind: "review", focus: "misses", correct: 2, total: 3 })
+    );
+    // Got right, the objective is covered again on the map.
+    expect(screen.getByLabelText(/^1\.1 Objective 1\.1: covered/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Review 1 more/ }));
+    await waitFor(() =>
+      expect(server.calls.filter((c) => c.path === "/api/path/stop").at(-1)?.input).toMatchObject({ missed: ["a|1.2|m3"] })
+    );
+  });
+
+  it("shows how many there are on the home", async () => {
+    server.progress = withMisses();
+    renderPath();
+    expect(await screen.findByText("3 misses to go over, 3 at a time")).toBeInTheDocument();
+  });
+
+  it("has nothing to offer with nothing missed", async () => {
+    server.progress = done(["warmup"], { goal });
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.queryByRole("button", { name: "Review: Your misses" })).toBeNull();
+  });
+
+  it("leaves a free account's misses to its next stops", async () => {
+    server.access = "free";
+    server.progress = withMisses();
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.queryByRole("button", { name: "Review: Your misses" })).toBeNull();
   });
 });
 
@@ -847,7 +940,7 @@ describe("the lab library", () => {
     );
   /** From the home, into the library. */
   async function openLibrary() {
-    fireEvent.click(await screen.findByRole("button", { name: "Open" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open: Hands-on labs" }));
     expect(await screen.findByRole("heading", { name: "Every lab for Security+" })).toBeInTheDocument();
   }
 
@@ -864,7 +957,7 @@ describe("the lab library", () => {
   it("opens every lab the exam has from a Pro home, domain by domain", async () => {
     server.progress = done(["warmup"], { goal });
     renderLibrary();
-    expect(await screen.findByText("Every lab, any time")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Open: Hands-on labs" })).toBeInTheDocument();
     await openLibrary();
     expect(track).toHaveBeenCalledWith("path_labs_viewed", { cert: "security-plus-sy0-701" });
     expect(screen.getByRole("heading", { name: "Domain 1: Domain 1" })).toBeInTheDocument();
@@ -926,7 +1019,7 @@ describe("the lab library", () => {
   it("shows a domain's lab played on the path as done in the library", async () => {
     server.progress = done(["warmup", "lab1"], { goal });
     renderLibrary();
-    expect(await screen.findByText(/1 of 4 done\./)).toBeInTheDocument();
+    expect(await screen.findByText("4 labs · 1 done")).toBeInTheDocument();
     await openLibrary();
     expect(screen.getByText("3/3")).toBeInTheDocument();
   });
@@ -939,7 +1032,7 @@ describe("the lab library", () => {
     server.access = "free";
     fireEvent.click(screen.getByRole("button", { name: /Port matching/ }));
     expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
-    expect(screen.queryByText("Every lab, any time")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
 
   it("keeps the library for Pro, and names every lab in a free account's offer", async () => {
@@ -950,6 +1043,6 @@ describe("the lab library", () => {
     );
     renderLibrary();
     expect(await screen.findByText("All 4 hands-on PBQ labs, one closing every domain")).toBeInTheDocument();
-    expect(screen.queryByText("Every lab, any time")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
 });

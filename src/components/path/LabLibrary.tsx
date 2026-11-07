@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Check,
   Columns3,
-  FlaskConical,
   ListOrdered,
   Network,
   Radar,
@@ -186,41 +185,6 @@ export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => v
         </div>
       </div>
       <Button size="lg" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onOpen}>
-        Open
-        <ArrowRight />
-      </Button>
-    </div>
-  );
-}
-
-/** On a Pro home: the way into the lab library, with how far through it they are. */
-export function LabsCard({
-  count,
-  done,
-  onOpen,
-}: {
-  count: number;
-  done: number;
-  onOpen: () => void;
-}) {
-  return (
-    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
-      <div className="flex min-w-0 flex-1 basis-64 items-start gap-3.5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <FlaskConical className="size-5" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Hands-on labs · {count}
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold tracking-tight">Every lab, any time</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {done > 0 ? `${done} of ${count} done. ` : ""}Simulations and quick drills, like the exam&apos;s
-            performance-based questions.
-          </p>
-        </div>
-      </div>
-      <Button size="lg" variant="outline" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onOpen}>
         Open
         <ArrowRight />
       </Button>

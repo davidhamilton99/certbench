@@ -3,6 +3,7 @@ import {
   recordAnswer,
   sanitizeProgress as sanitizeItems,
   type ItemMap,
+  type ItemRecord,
 } from "@/core/drill-rounds/drill-rounds";
 import { parseRepId } from "./rep-id";
 import { keepRehearsals, MAX_REHEARSALS } from "./rehearsal";
@@ -139,6 +140,26 @@ export function missedIds(items: ItemMap, limit = MAX_MISSED_SENT): string[] {
     .sort((a, b) => a[1].t - b[1].t)
     .slice(0, limit)
     .map(([id]) => id);
+}
+
+/** Days before a miss got right once comes back for a second check. */
+export const REVIEW_AGAIN_DAYS = 3;
+const DAY_MS = 86_400_000;
+
+/**
+ * What a review brings back, each oldest first: misses (their latest answer
+ * was wrong), then misses got right once since, when that was a few days ago.
+ * So a miss leaves review after two right answers, days apart: spaced, the
+ * way things stick.
+ */
+export function reviewIds(items: ItemMap, now: number, limit = MAX_MISSED_SENT): string[] {
+  const entries = Object.entries(items);
+  const oldestFirst = (a: [string, ItemRecord], b: [string, ItemRecord]) => a[1].t - b[1].t;
+  const misses = entries.filter(([, r]) => itemStatus(r) === "missed").sort(oldestFirst);
+  const again = entries
+    .filter(([, r]) => r.s === 1 && r.a > r.c && now - r.t >= REVIEW_AGAIN_DAYS * DAY_MS)
+    .sort(oldestFirst);
+  return [...misses, ...again].slice(0, limit).map(([id]) => id);
 }
 
 /**

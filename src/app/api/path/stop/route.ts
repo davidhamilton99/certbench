@@ -35,6 +35,7 @@ export const POST = defineEndpoint(getPathStop, {
       seen: input.seen,
       missed: input.missed,
       seed: seedFrom(user?.id ?? "visitor", input.cert, input.index, input.run),
+      focus: input.focus,
     });
     if (!built) throw new ApiError("not_found", "That stop doesn't exist.");
     return built;

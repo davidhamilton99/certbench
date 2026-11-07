@@ -60,7 +60,11 @@ type EventMap = {
     correct: number;
     total: number;
     signed_in: boolean;
+    /** "misses" for a review round of misses alone. */
+    focus?: "misses";
   };
+  /** A review round of misses began: from the home, a rehearsal's result, or the last review. */
+  path_review_started: { cert: string; from: "home" | "rehearsal" | "end"; reps: number };
   path_save_viewed: { cert: string };
   path_account_linked: {
     cert: string;

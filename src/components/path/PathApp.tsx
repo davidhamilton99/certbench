@@ -3,18 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { ArrowRight, FlaskConical, Loader2, RotateCcw, Timer } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
-import { MINUTES_PER_STOP, stopAt } from "@/core/path/plan";
+import { MINUTES_PER_STOP, PRACTICE_SIZE, stopAt } from "@/core/path/plan";
 import {
   hasStarted,
   isStopDone,
+  MAX_MISSED_SENT,
   missedIds,
   nextStopIndex,
   objectiveStatuses,
+  reviewIds,
   seenIds,
   stopsDone,
 } from "@/core/path/progress";
@@ -37,13 +39,14 @@ import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
-import { LabLibrary, LabsCard, NextLabCard } from "./LabLibrary";
+import { LabLibrary, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
 import { PathUnlocked } from "./PathUnlocked";
-import { RehearsalIntro, RehearsalResumeCard, RehearsalStartCard } from "./RehearsalIntro";
+import { PracticeCard, ReviewMissesCard } from "./PracticeCard";
+import { RehearsalIntro, RehearsalResumeCard } from "./RehearsalIntro";
 import { RehearsalPlayer } from "./RehearsalPlayer";
 import { RehearsalResult } from "./RehearsalResult";
 import { clearRun, readRun, writeRun, type RehearsalRun } from "./rehearsal-run";
@@ -72,13 +75,22 @@ interface Play {
   checkpoint: CheckpointAnswer[];
   /** Objective statuses before the stop, to animate what it changed. */
   before: Map<string, ObjectiveStatus>;
+  /** "misses": a review round of their misses alone. */
+  focus?: "misses";
 }
 
 type View =
   | { kind: "play" }
   | { kind: "home" }
   | { kind: "loading"; label?: string }
-  | { kind: "end"; stop: PathStop; correct: number; total: number; fresh: Set<string> }
+  | {
+      kind: "end";
+      stop: PathStop;
+      correct: number;
+      total: number;
+      fresh: Set<string>;
+      focus?: "misses";
+    }
   | { kind: "goal"; step: "exam" | "minutes"; then: number }
   | { kind: "intro"; index: number }
   | { kind: "reveal" }
@@ -120,6 +132,8 @@ function stopLabel(stop: PathStop, total: number): string {
   }
 }
 
+const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
 /** True the first time this device shows Pro opening this exam's path. */
 function firstUnlock(cert: string): boolean {
   try {
@@ -155,7 +169,7 @@ export function PathApp({
   const total = plan.stops.length;
 
   const freshPlay = useCallback(
-    (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>): Play => ({
+    (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play => ({
       stop,
       reps,
       i: 0,
@@ -163,11 +177,14 @@ export function PathApp({
       bank: new Map(),
       checkpoint: [],
       before,
+      focus,
     }),
     []
   );
 
   const [view, setView] = useState<View>({ kind: "play" });
+  // "Now" for what's due for review, fixed for the visit: due-ness moves in days.
+  const [visitAt] = useState(() => Date.now());
   const [play, setPlayState] = useState<Play>(() => freshPlay(warmup.stop, warmup.reps, new Map()));
   // Handlers read the play through a ref, so a timer-driven "next" or an
   // answer-then-advance in one tick always sees the current rep.
@@ -224,6 +241,12 @@ export function PathApp({
     }
     return out;
   }, [library, labStopOf, p.progress.labs, p.progress.stops]);
+  // What a review round would bring back: misses, and misses got right once a few days ago.
+  const toReview = useMemo(
+    () => reviewIds(p.progress.items, visitAt, Number.POSITIVE_INFINITY).length,
+    [p.progress.items, visitAt]
+  );
+
   /** The next lab in the library not played yet, after this one (or from the start). */
   const nextLabAfter = (labId: string) => {
     const at = library.findIndex((l) => l.id === labId);
@@ -467,6 +490,7 @@ export function PathApp({
       correct,
       total: totalReps,
       signed_in: p.signedIn,
+      ...(cur.focus ? { focus: cur.focus } : {}),
     });
     if (p.signedIn && cur.bank.size > 0) {
       const answers = [...cur.bank].map(([questionId, selectedIndex]) => ({ questionId, selectedIndex }));
@@ -480,7 +504,7 @@ export function PathApp({
     } else {
       p.finish(cur.stop.id, correct, totalReps);
       // Diff against the statuses as they are once this stop's answers count.
-      setView({ kind: "end", stop: cur.stop, correct, total: totalReps, fresh: new Set() });
+      setView({ kind: "end", stop: cur.stop, correct, total: totalReps, fresh: new Set(), focus: cur.focus });
     }
     window.scrollTo({ top: 0 });
   }, [cert, p, structure.domains]);
@@ -524,7 +548,7 @@ export function PathApp({
         <div className="mb-6 grid gap-3">
           <div className="flex items-baseline justify-between gap-3">
             <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {stopLabel(play.stop, total)}
+              {play.focus === "misses" ? "Review · your misses" : stopLabel(play.stop, total)}
               {play.stop.kind === "learn" && <span className="text-foreground"> · {play.stop.title}</span>}
               {play.stop.kind === "practice" && <span className="text-foreground"> · {play.stop.title}</span>}
             </p>
@@ -584,8 +608,13 @@ export function PathApp({
       />
     );
   } else if (view.kind === "rehearsal-result" && run?.done) {
+    // Wrong and blank alike: both counted against the score.
+    const missedHere = run.reps.filter((rep, i) => run.picks[i] !== rep.answer).map((rep) => rep.id);
     screen = (
       <RehearsalResult run={{ ...run, done: run.done }} structure={structure}>
+        {missedHere.length > 0 && (
+          <ReviewMissesCard count={missedHere.length} onReview={() => void startReview("rehearsal", missedHere)} />
+        )}
         <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
       </RehearsalResult>
     );
@@ -730,19 +759,27 @@ export function PathApp({
     );
   } else if (view.kind === "end") {
     const missed = view.total - view.correct;
+    const reviewed = view.focus === "misses";
     screen = (
       <div className="path-rise grid gap-6">
         <div className="grid gap-2">
           <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            {view.stop.kind === "warmup" ? "Warm-up" : `Stop ${view.stop.index + 1}`} complete
+            {view.stop.kind === "review"
+              ? "Review"
+              : view.stop.kind === "warmup"
+                ? "Warm-up"
+                : `Stop ${view.stop.index + 1}`}{" "}
+            complete
           </span>
           <h2 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
             {view.correct} <span className="text-muted-foreground">of {view.total}</span>
           </h2>
           <p className="text-muted-foreground">
-            {missed === 0
-              ? "Every one right."
-              : `${missed} to revisit. ${missed === 1 ? "It comes" : "They come"} back in your next stop.`}
+            {reviewed
+              ? `${toReview > 0 ? `${toReview} more to review.` : "Nothing left to review today."} The ones you got right come back once more in a few days, to make sure they stick.`
+              : missed === 0
+                ? "Every one right."
+                : `${missed} to revisit. ${missed === 1 ? "It comes" : "They come"} back in your next stop.`}
           </p>
         </div>
 
@@ -757,6 +794,12 @@ export function PathApp({
           />
         ) : (
           <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
+        )}
+        {reviewed && toReview > 0 && (
+          <Button variant="outline" size="lg" className="h-12 justify-self-center px-6" onClick={() => void startReview("end")}>
+            <RotateCcw />
+            Review {Math.min(toReview, PRACTICE_SIZE)} more
+          </Button>
         )}
 
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
@@ -915,6 +958,50 @@ export function PathApp({
     window.scrollTo({ top: 0 });
   }
 
+  /**
+   * A review round: their misses alone, a practice round's worth, oldest first
+   * (`first` ahead of the rest: a rehearsal's own misses, say). It plays like a
+   * stop, and a right answer turns its objective back to covered on the map.
+   */
+  async function startReview(from: "home" | "rehearsal" | "end", first: readonly string[] = []) {
+    const due = reviewIds(p.progress.items, Date.now());
+    const missed = [...new Set([...first, ...due])].slice(0, MAX_MISSED_SENT);
+    if (missed.length === 0) return;
+    setView({ kind: "loading", label: "Gathering your misses…" });
+    try {
+      const built = await api(getPathStop, {
+        cert,
+        index: total,
+        seen: seenIds(p.progress.items),
+        missed,
+        run: p.progress.stops.review?.n ?? 0,
+        focus: "misses",
+      });
+      p.retire(built.retired);
+      if (built.reps.length === 0) {
+        setView({ kind: "home" });
+        return;
+      }
+      track("path_review_started", { cert, from, reps: built.reps.length });
+      setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items), "misses"));
+      setView({ kind: "play" });
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "unauthorized") {
+        setView({ kind: "home" });
+      } else if (err instanceof ApiError && err.code === "quota_exceeded") {
+        await p.refreshAccess();
+        setView({ kind: "reveal" });
+      } else {
+        setView({
+          kind: "error",
+          message: err instanceof ApiError ? err.message : "Couldn't gather your misses.",
+          retry: () => void startReview(from, first),
+        });
+      }
+    }
+  }
+
   /** Throw away a rehearsal in progress. */
   function discardRehearsal() {
     clearRun(cert);
@@ -1019,35 +1106,76 @@ export function PathApp({
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         )}
 
-        {/* Pro can sit the whole exam whenever they like, not only at the end. */}
-        {pro && !runInProgress && nextStop?.kind !== "rehearsal" && (
-          <RehearsalStartCard
-            last={lastRehearsal}
-            onStart={() => {
-              setView({ kind: "rehearsal-intro", asStop: false });
-              window.scrollTo({ top: 0 });
-            }}
-            onReview={
-              run?.done
-                ? () => {
-                    setView({ kind: "rehearsal-result" });
-                    window.scrollTo({ top: 0 });
-                  }
-                : undefined
-            }
-          />
-        )}
-
-        {/* And every lab the exam has, not only the one closing each domain. */}
-        {pro && library.length > 0 && (
-          <LabsCard
-            count={library.length}
-            done={labResults.size}
-            onOpen={() => {
-              track("path_labs_viewed", { cert });
-              setView({ kind: "labs" });
-              window.scrollTo({ top: 0 });
-            }}
+        {/* What Pro can practise whenever they like, under the way on: the whole
+            exam (unless it's already next), every lab, and their misses. */}
+        {pro && (
+          <PracticeCard
+            rows={[
+              ...(!runInProgress && nextStop?.kind !== "rehearsal"
+                ? [
+                    {
+                      key: "rehearsal",
+                      Icon: Timer,
+                      title: "Exam rehearsal",
+                      detail: lastRehearsal ? (
+                        <>
+                          Last one {lastRehearsal.score}% on {fmtDay(lastRehearsal.at)}
+                          {run?.done && (
+                            <>
+                              {" · "}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setView({ kind: "rehearsal-result" });
+                                  window.scrollTo({ top: 0 });
+                                }}
+                                className="underline underline-offset-4 hover:text-foreground"
+                              >
+                                see its answers
+                              </button>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        `${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, scored on your dial`
+                      ),
+                      action: "Start",
+                      onAction: () => {
+                        setView({ kind: "rehearsal-intro", asStop: false });
+                        window.scrollTo({ top: 0 });
+                      },
+                    },
+                  ]
+                : []),
+              ...(library.length > 0
+                ? [
+                    {
+                      key: "labs",
+                      Icon: FlaskConical,
+                      title: "Hands-on labs",
+                      detail: `${library.length} labs${labResults.size > 0 ? ` · ${labResults.size} done` : ", like the exam's PBQs"}`,
+                      action: "Open",
+                      onAction: () => {
+                        track("path_labs_viewed", { cert });
+                        setView({ kind: "labs" });
+                        window.scrollTo({ top: 0 });
+                      },
+                    },
+                  ]
+                : []),
+              ...(toReview > 0
+                ? [
+                    {
+                      key: "review",
+                      Icon: RotateCcw,
+                      title: "Your misses",
+                      detail: `${toReview} ${toReview === 1 ? "miss" : "misses"} to go over, ${Math.min(toReview, PRACTICE_SIZE)} at a time`,
+                      action: "Review",
+                      onAction: () => void startReview("home"),
+                    },
+                  ]
+                : []),
+            ]}
           />
         )}
 
@@ -1074,7 +1202,7 @@ export function PathApp({
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
           <p className="-mt-3 text-center text-xs text-muted-foreground">
-            Spaced review and your own question sets are in your{" "}
+            Study sets from your notes and full spaced repetition are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
             </Link>
