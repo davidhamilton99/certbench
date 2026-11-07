@@ -17,8 +17,10 @@ import { Button } from "@/components/ui/button";
 export function UpgradeSuccess({ isPro, next }: { isPro: boolean; next?: string }) {
   const router = useRouter();
   const tries = useRef(0);
-  // Where to go once Pro is on: back to the path they bought from, or the app.
-  const destination = next ?? "/dashboard";
+  // Where to go once Pro is on: back to the path they bought from, or their
+  // exam's path (/start opens it). Never the toolkit: it's empty on day one,
+  // and a buyer dropped there wanders it and leaves.
+  const destination = next ?? "/start";
 
   useEffect(() => {
     if (isPro) {
@@ -47,10 +49,10 @@ export function UpgradeSuccess({ isPro, next }: { isPro: boolean; next?: string 
           You&apos;re in.
         </h1>
         <p className="text-sm text-muted-foreground">
-          {next ? "Your whole path is unlocked. Taking you back to it…" : "Your plan is unlocked. Taking you to it…"}
+          {next ? "Your whole path is unlocked. Taking you back to it…" : "Your whole path is unlocked. Taking you to it…"}
         </p>
         <Button size="lg" className="h-12 w-full text-base" onClick={() => router.push(destination)}>
-          {next ? "Back to my path" : "Go to my plan"}
+          {next ? "Back to my path" : "Go to my path"}
         </Button>
       </div>
     );
@@ -64,14 +66,14 @@ export function UpgradeSuccess({ isPro, next }: { isPro: boolean; next?: string 
       <h1 className="text-balance font-display text-2xl font-bold leading-tight tracking-tight">
         Payment received.
       </h1>
-      <p className="text-sm text-muted-foreground">Unlocking your plan…</p>
+      <p className="text-sm text-muted-foreground">Unlocking your path…</p>
       <Button
         size="lg"
         variant="outline"
         className="h-12 w-full text-base"
         onClick={() => router.push(destination)}
       >
-        Go to my plan
+        Go to my path
       </Button>
     </div>
   );

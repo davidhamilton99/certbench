@@ -44,7 +44,7 @@ export function GoogleSignInButton({ next }: { next?: string }) {
     track("google_signin_clicked", { page: window.location.pathname });
     const supabase = createClient();
 
-    const redirect = next && next.startsWith("/") ? next : "/dashboard";
+    const redirect = next && next.startsWith("/") ? next : "/start";
     const back = window.location.pathname + window.location.search;
     await supabase.auth.signInWithOAuth({
       provider: "google",

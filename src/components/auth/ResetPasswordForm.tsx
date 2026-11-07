@@ -49,7 +49,7 @@ export function ResetPasswordForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/start");
     router.refresh();
   }
 

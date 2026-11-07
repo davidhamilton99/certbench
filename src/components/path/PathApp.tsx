@@ -553,6 +553,8 @@ export function PathApp({
           <ContinueCard stop={nextStop} total={total} onContinue={() => startStop(next)} />
         )}
 
+        {pro && <ProToolkit cert={cert} />}
+
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
           <h2 className="font-display font-semibold tracking-tight">Your map</h2>
           <ExamMap
@@ -574,6 +576,54 @@ export function PathApp({
       </div>
     );
   }
+}
+
+/**
+ * What Pro adds beside the path, on the path's own home. A buyer used to land
+ * in the toolkit, a sidebar of pages that are empty on day one, and leave; the
+ * path is home now, and the toolkit's best parts are one tap from it.
+ */
+function ProToolkit({ cert }: { cert: PathCert }) {
+  const tools = [
+    {
+      href: `/pbq?cert=${cert}`,
+      title: "PBQ lab",
+      body: "Hands-on simulations, like the exam's performance-based questions.",
+    },
+    {
+      href: `/certifications/${cert}/exam`,
+      title: "Practice exam",
+      body: "Exam-style questions across every domain, in one sitting.",
+    },
+    {
+      href: `/review?cert=${cert}`,
+      title: "Review",
+      body: "Every question you've missed, worst first.",
+    },
+  ];
+  return (
+    <div className="glass grid gap-4 rounded-3xl p-5 sm:p-6">
+      <div>
+        <h2 className="font-display font-semibold tracking-tight">Your Pro toolkit</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Every stop on your path is open. Beside it:</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {tools.map((t) => (
+          <Link
+            key={t.href}
+            href={t.href}
+            className="group grid content-start gap-1 rounded-2xl border border-border p-4 transition-colors hover:border-primary/40 hover:bg-foreground/[0.03]"
+          >
+            <span className="flex items-center justify-between gap-2 font-medium">
+              {t.title}
+              <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </span>
+            <span className="text-sm leading-snug text-muted-foreground">{t.body}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ContinueCard({

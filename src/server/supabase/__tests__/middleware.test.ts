@@ -52,13 +52,13 @@ describe("updateSession on /login", () => {
     );
   });
 
-  it("still sends them to the dashboard otherwise", async () => {
+  it("sends them to their path otherwise, not the toolkit", async () => {
     for (const url of [
       "https://certbench.dev/login",
       `https://certbench.dev/login?next=${encodeURIComponent("//evil.example")}`,
     ]) {
       const res = await visit(url);
-      expect(res.headers.get("location")).toBe("https://certbench.dev/dashboard");
+      expect(res.headers.get("location")).toBe("https://certbench.dev/start");
     }
   });
 });

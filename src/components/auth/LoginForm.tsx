@@ -13,7 +13,8 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  // Home is the guided path: /start opens their exam's.
+  const next = searchParams.get("next") || "/start";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +38,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push(next.startsWith("/") ? next : "/dashboard");
+    router.push(next.startsWith("/") && !next.startsWith("//") ? next : "/start");
     router.refresh();
   }
 

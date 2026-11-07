@@ -317,6 +317,27 @@ describe("a signed-in learner", () => {
     expect(accessReads()).toBe(1);
   });
 
+  it("shows a Pro member their toolkit on the path's home", async () => {
+    server.access = "pro";
+    server.proPlan = true;
+    server.progress = done(["warmup"]);
+    renderPath();
+    expect(await screen.findByRole("heading", { name: "Your Pro toolkit" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /PBQ lab/ })).toHaveAttribute("href", "/pbq?cert=security-plus-sy0-701");
+    expect(screen.getByRole("link", { name: /Practice exam/ })).toHaveAttribute(
+      "href",
+      "/certifications/security-plus-sy0-701/exam"
+    );
+    expect(screen.getByRole("link", { name: /Review/ })).toHaveAttribute("href", "/review?cert=security-plus-sy0-701");
+  });
+
+  it("doesn't show the toolkit to a free account", async () => {
+    server.progress = done(["warmup"]);
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.queryByRole("heading", { name: "Your Pro toolkit" })).toBeNull();
+  });
+
   it("claims nothing for a free account", async () => {
     server.progress = done(["warmup"]);
     renderPath();

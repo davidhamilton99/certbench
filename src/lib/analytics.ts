@@ -15,6 +15,7 @@ declare global {
       capture: (event: string, props?: Record<string, unknown>) => void;
       identify: (id: string, props?: Record<string, unknown>) => void;
       reset: () => void;
+      captureException?: (error: unknown, props?: Record<string, unknown>) => void;
     };
   }
 }
@@ -94,6 +95,19 @@ export function identifyUser(id: string, props?: { email?: string }): void {
   if (typeof window === "undefined") return;
   try {
     window.posthog?.identify(id, props);
+  } catch {
+    /* no-op */
+  }
+}
+
+/**
+ * Report a crash that reached an error page. Without it, "Something went
+ * wrong" left nothing to read but a replay of someone staring at it.
+ */
+export function captureError(error: unknown, props?: Record<string, unknown>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.posthog?.captureException?.(error, props);
   } catch {
     /* no-op */
   }
