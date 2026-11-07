@@ -25,13 +25,14 @@ const domainLabel = (number: string) => number.replace(/\.0$/, "");
  *
  *   warm-up → a learn stop per objective, domain by domain, with a practice
  *   stop and then a hands-on lab closing each domain, and the readiness
- *   checkpoint after the fourth learn stop.
+ *   checkpoint after the fourth learn stop → the exam rehearsal.
  *
  * Every learn stop teaches one objective. Practice stops and the checkpoint are
  * the real exam's wording; a lab is one of the exam's PBQ scenarios. Labs are
  * Pro, so none comes before the checkpoint: a domain that ends sooner has its
- * lab right after it. After the last stop the path keeps going with review
- * rounds (see `reviewStop`), so it never dead-ends.
+ * lab right after it. The path ends on a timed rehearsal of the whole exam
+ * (see rehearsal.ts). After that it keeps going with review rounds (see
+ * `reviewStop`), so it never dead-ends.
  */
 export function buildPlan(structure: PathStructure): PathPlan {
   const stops: PathStop[] = [];
@@ -92,6 +93,14 @@ export function buildPlan(structure: PathStructure): PathPlan {
 
   // An exam with fewer objectives than the checkpoint threshold still gets one.
   if (freeThrough < 0) pushCheckpoint();
+
+  push({
+    id: "rehearsal",
+    kind: "rehearsal",
+    title: "Exam rehearsal",
+    domain: null,
+    objectives: allObjectives,
+  });
 
   return { stops, freeThrough };
 }

@@ -66,6 +66,7 @@ const server = vi.hoisted(() => ({
   /** What enrolling answers: false when a Pro member already has another exam. */
   enrolls: true,
   stopHandler: null as null | ((input: { index: number }) => unknown),
+  rehearsalHandler: null as null | ((input: { size: string }) => unknown),
   calls: [] as { path: string; input: unknown }[],
 }));
 vi.mock("@/lib/api-client", async () => {
@@ -89,6 +90,11 @@ vi.mock("@/lib/api-client", async () => {
           if (out instanceof Error) throw out;
           // As the contract's parse would: nothing retired unless the reply says so.
           return { retired: [], ...(out as object) };
+        }
+        case "POST /api/path/rehearsal": {
+          const out = server.rehearsalHandler?.(input as { size: string });
+          if (out instanceof Error) throw out;
+          return out;
         }
         case "POST /api/path/answers":
           return { ok: true };
@@ -179,6 +185,7 @@ const done = (ids: string[], extra?: Partial<PathProgress>): PathProgress => ({
   items: {},
   stops: Object.fromEntries(ids.map((id) => [id, { n: 1, c: 3, t: 3, at: 1 }])),
   checkpoint: null,
+  rehearsals: [],
   goal: null,
   ...extra,
 });
@@ -190,6 +197,7 @@ beforeEach(() => {
   server.proPlan = false;
   server.enrolls = true;
   server.stopHandler = (input) => stopReply(input.index);
+  server.rehearsalHandler = null;
   server.calls = [];
   track.mockClear();
   identifyUser.mockClear();
@@ -614,5 +622,191 @@ describe("labs on the path", () => {
     expect(screen.getByText("hands-on labs").nextSibling).toHaveTextContent("2");
     fireEvent.click(screen.getByRole("button", { name: /Or try a lab now.*Lab for domain 1.0/ }));
     expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
+  });
+});
+
+describe("exam rehearsals", () => {
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+  const checkpoint = { score: 58, at: 1, domains: [] };
+  const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+  // Shown shuffled: the first option on screen is the bank's second.
+  const bankRep = (n: number, objective: string): ChoiceRep => ({
+    ...rep(`q|${objective}|${uuid(n)}`, objective, "exam"),
+    lettered: true,
+    order: [1, 0, 2, 3],
+  });
+  const drawn = [bankRep(1, "1.1"), bankRep(2, "2.1"), bankRep(3, "1.2")];
+  const runKey = "cb_path_rehearsal_security-plus-sy0-701";
+  const lastSave = () =>
+    (
+      server.calls.filter((c) => c.path === "/api/path/progress" && (c.input as { progress?: unknown }).progress).at(-1)
+        ?.input as { progress: PathProgress }
+    ).progress;
+  const storedRun = (extra: object) =>
+    JSON.stringify({
+      v: 1,
+      owner: "u1",
+      size: "full",
+      asStop: false,
+      reps: drawn,
+      picks: [null, null, null],
+      flagged: [],
+      i: 0,
+      spentMs: 0,
+      limitMs: 90 * 60_000,
+      startedAt: 5,
+      done: null,
+      ...extra,
+    });
+
+  /** Answer the three drawn questions (right, right, wrong) and score them. */
+  async function sitIt() {
+    expect(await screen.findByRole("heading", { name: `Prompt q|1.1|${uuid(1)}` })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /Right answer/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Right answer/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Wrong one/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
+    expect(screen.getByRole("heading", { name: "Every question answered" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /See my score/ }));
+  }
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.rehearsalHandler = () => ({ reps: drawn, minutes: 90 });
+  });
+
+  it("lets a Pro member sit the whole exam from their map, and scores it on the dial", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint });
+    renderPath();
+    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+
+    expect(await screen.findByRole("heading", { name: "Sit the whole exam, start to finish." })).toBeInTheDocument();
+    expect(screen.getByText(/set against your checkpoint's 58%/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Start the full rehearsal/ }));
+    await sitIt();
+
+    expect(server.calls.find((c) => c.path === "/api/path/rehearsal")?.input).toMatchObject({
+      cert: "security-plus-sy0-701",
+      size: "full",
+    });
+    expect(track).toHaveBeenCalledWith("path_rehearsal_started", {
+      cert: "security-plus-sy0-701",
+      size: "full",
+      from: "home",
+    });
+
+    // Domain 1 half right, domain 2 all right, weighted evenly: 75.
+    expect(await screen.findByText("Exam rehearsal · Security+")).toBeInTheDocument();
+    expect(screen.getByTestId("dial")).toHaveTextContent("75%");
+    expect(screen.getByRole("heading", { name: "Up 17, and exam-ready on this run." })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Missed (1)" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText(`Prompt q|1.2|${uuid(3)}`)).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith(
+      "path_rehearsal_completed",
+      expect.objectContaining({ score: 75, answered: 3, total: 3, timed_out: false })
+    );
+
+    // The answers count on the account, against the bank's own option order.
+    expect(server.calls.find((c) => c.path === "/api/path/answers")?.input).toEqual({
+      cert: "security-plus-sy0-701",
+      answers: [
+        { questionId: uuid(1), selectedIndex: 1 },
+        { questionId: uuid(2), selectedIndex: 1 },
+        { questionId: uuid(3), selectedIndex: 0 },
+      ],
+    });
+    const saved = lastSave();
+    expect(saved.rehearsals.map((r) => r.score)).toEqual([75]);
+    expect(itemStatus(saved.items[`q|1.2|${uuid(3)}`])).toBe("missed");
+    // Taken early, it doesn't stand in for the path's last stop.
+    expect(saved.stops.rehearsal).toBeUndefined();
+
+    // Home again, the latest reading is the rehearsal's, and its answers are a tap away.
+    fireEvent.click(screen.getByRole("link", { name: "Security+" }));
+    expect(await screen.findByText(/last rehearsal 75%/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "See its answers" }));
+    expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();
+  });
+
+  it("shows a free account the rehearsal at the end of the map, as part of Pro", async () => {
+    server.access = "free";
+    server.progress = done(["warmup"]);
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.getByLabelText("Exam rehearsal: part of Pro")).toBeInTheDocument();
+    expect(screen.queryByText("Sit the whole exam, any time")).toBeNull();
+  });
+
+  it("brings back a rehearsal left mid-way, where it was and with its clock", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint });
+    localStorage.setItem(runKey, storedRun({ picks: [0, null, null], i: 1, spentMs: 10 * 60_000 }));
+    renderPath();
+    expect(await screen.findByText("Exam rehearsal · in progress")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 answered")).toBeInTheDocument();
+    expect(screen.getByText("1:20:00 left")).toBeInTheDocument();
+    // It waits ahead of the next stop: its clock is waiting.
+    expect(comesBefore(screen.getByRole("button", { name: /Resume/ }), screen.getByRole("button", { name: /Continue/ }))).toBe(
+      true
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Resume/ }));
+    expect(await screen.findByRole("heading", { name: `Prompt q|2.1|${uuid(2)}` })).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 answered")).toBeInTheDocument();
+  });
+
+  it("never shows one account's rehearsal to another on the same device", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint });
+    localStorage.setItem(runKey, storedRun({ owner: "someone-else", picks: [0, null, null] }));
+    renderPath();
+    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
+    expect(screen.queryByText("Exam rehearsal · in progress")).toBeNull();
+  });
+
+  it("throws a rehearsal away only once that's confirmed", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint });
+    localStorage.setItem(runKey, storedRun({ size: "half", limitMs: 45 * 60_000 }));
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Discard this rehearsal" }));
+    expect(localStorage.getItem(runKey)).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Discard it" }));
+    expect(await screen.findByText("Sit the whole exam, any time")).toBeInTheDocument();
+    expect(localStorage.getItem(runKey)).toBeNull();
+  });
+
+  it("ends the path on the rehearsal, and counts it as the last stop", async () => {
+    const last = plan.stops.at(-1)!;
+    server.progress = done(plan.stops.slice(0, -1).map((s) => s.id), { goal, checkpoint });
+    renderPath();
+    expect(await screen.findByText("Last stop · the whole exam, timed")).toBeInTheDocument();
+    // The Continue card already leads there: no second card for it.
+    expect(screen.queryByText("Sit the whole exam, any time")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(await screen.findByText(`Stop ${last.index + 1} · Exam rehearsal`)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Half: 45 questions/ }));
+    await sitIt();
+
+    expect(server.calls.find((c) => c.path === "/api/path/rehearsal")?.input).toMatchObject({ size: "half" });
+    expect(track).toHaveBeenCalledWith("path_rehearsal_started", expect.objectContaining({ from: "stop" }));
+    expect(track).toHaveBeenCalledWith(
+      "path_stop_completed",
+      expect.objectContaining({ stop: "rehearsal", kind: "rehearsal", correct: 2, total: 3 })
+    );
+    expect(lastSave().stops.rehearsal).toMatchObject({ n: 1, c: 2, t: 3 });
+    // The path goes on to review rounds.
+    expect(await screen.findByText("Path complete · review round")).toBeInTheDocument();
+  });
+
+  it("offers Pro when the server says rehearsals are part of it", async () => {
+    server.progress = done(["warmup"], { goal, checkpoint });
+    server.rehearsalHandler = () => new ApiError("quota_exceeded", "Exam rehearsals are part of Pro.");
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
+    server.access = "free";
+    fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
+    expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
   });
 });

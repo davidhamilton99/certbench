@@ -3,3 +3,6 @@ export const pathStorageKey = (cert: string) => `cb_path_${cert}`;
 
 /** Set once this device has shown Pro opening one exam's path. */
 export const pathUnlockedKey = (cert: string) => `cb_path_unlocked_${cert}`;
+
+/** This device's exam rehearsal for one exam: one in progress, or the last one finished. */
+export const pathRehearsalKey = (cert: string) => `cb_path_rehearsal_${cert}`;

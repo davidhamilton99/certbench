@@ -14,12 +14,14 @@ import {
   retireReps,
   sanitizePathProgress,
 } from "@/core/path/progress";
+import { addRehearsal } from "@/core/path/rehearsal";
 import {
   EMPTY_PATH_PROGRESS,
   type CheckpointResult,
   type PathCert,
   type PathGoal,
   type PathProgress,
+  type RehearsalResult,
 } from "@/core/path/types";
 
 export type PathAccess = "anonymous" | "free" | "pro";
@@ -203,6 +205,27 @@ export function usePathProgress(cert: PathCert) {
     [commit, saveToAccount]
   );
 
+  /**
+   * Keep a finished exam rehearsal in one save: each answer given (misses come
+   * back in later stops), its score, and the path's last stop when it counts.
+   */
+  const finishRehearsal = useCallback(
+    (
+      answers: readonly { repId: string; correct: boolean }[],
+      result: RehearsalResult,
+      stop: { id: string; correct: number; total: number } | null
+    ) => {
+      const c = cur.current;
+      let p = c.progress;
+      for (const a of answers) p = recordRep(p, a.repId, a.correct, result.at);
+      p = addRehearsal(p, result);
+      if (stop) p = finishStop(p, stop.id, stop.correct, stop.total, result.at);
+      commit({ ...c, progress: p });
+      if (c.userId) void saveToAccount(p);
+    },
+    [commit, saveToAccount]
+  );
+
   /** Clear misses the server can no longer bring back (their content was withdrawn). */
   const retire = useCallback(
     (repIds: readonly string[]) => {
@@ -265,6 +288,7 @@ export function usePathProgress(cert: PathCert) {
     signedIn: view.userId !== null,
     record,
     finish,
+    finishRehearsal,
     retire,
     setGoal,
     linkAccount,

@@ -60,20 +60,21 @@ describe("buildPlan", () => {
     expect(ids.indexOf("checkpoint")).toBe(5);
     expect(ids.indexOf("1.5")).toBe(6);
     expect(ids.indexOf("d1")).toBe(ids.indexOf("1.8") + 1);
-    expect(ids.at(-1)).toBe("d2");
+    expect(ids.at(-2)).toBe("d2");
+    expect(ids.at(-1)).toBe("rehearsal");
   });
 
   it("gives every stop a unique id and its own index", () => {
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(new Set(plan.stops.map((s) => s.id)).size).toBe(plan.stops.length);
     plan.stops.forEach((s, i) => expect(s.index).toBe(i));
-    // 1 warm-up + 28 learn + 5 practice + 1 checkpoint.
-    expect(plan.stops).toHaveLength(35);
+    // 1 warm-up + 28 learn + 5 practice + 1 checkpoint + the rehearsal.
+    expect(plan.stops).toHaveLength(36);
   });
 
   it("still has a checkpoint when the exam has very few objectives", () => {
     const plan = buildPlan(structure([2]));
-    expect(plan.stops.map((s) => s.id)).toEqual(["warmup", "1.1", "1.2", "d1", "checkpoint"]);
+    expect(plan.stops.map((s) => s.id)).toEqual(["warmup", "1.1", "1.2", "d1", "checkpoint", "rehearsal"]);
     expect(plan.freeThrough).toBe(4);
   });
 
@@ -103,8 +104,8 @@ describe("labs on the path", () => {
     for (const n of [1, 2, 3, 4, 5]) expect(ids.indexOf(`lab${n}`)).toBe(ids.indexOf(`d${n}`) + 1);
     const lab = plan.stops.find((s) => s.id === "lab3")!;
     expect(lab).toMatchObject({ kind: "lab", title: "Lab for 3.0", domain: "3.0", objectives: [] });
-    // 35 stops as before, plus five labs.
-    expect(plan.stops).toHaveLength(40);
+    // 36 stops as before, plus five labs.
+    expect(plan.stops).toHaveLength(41);
   });
 
   it("leaves the free stretch as it was: no lab before the checkpoint", () => {

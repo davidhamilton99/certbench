@@ -213,14 +213,14 @@ function byLength(questions: BankQuestion[], rng: Rng): BankQuestion[] {
 }
 
 /** Interleave groups so a run of picks covers many objectives, not one. */
-function roundRobin<T>(groups: T[][]): T[] {
+export function roundRobin<T>(groups: T[][]): T[] {
   const out: T[] = [];
   const max = Math.max(0, ...groups.map((g) => g.length));
   for (let i = 0; i < max; i++) for (const g of groups) if (i < g.length) out.push(g[i]);
   return out;
 }
 
-function groupBy<T>(items: T[], key: (t: T) => string): Map<string, T[]> {
+export function groupBy<T>(items: T[], key: (t: T) => string): Map<string, T[]> {
   const out = new Map<string, T[]>();
   for (const item of items) {
     const k = key(item);
@@ -267,6 +267,9 @@ export function buildStop({ bank, plan, index, seen, missed, seed }: BuildStopIn
     const lab = pbqRegistry[slug]?.find((s) => s.id === id);
     return lab ? { stop, reps: [], retired: [], lab } : null;
   }
+  // The rehearsal is drawn by its own endpoint (see rehearsal.ts), at the size
+  // the learner picks; as a stop it has nothing to build.
+  if (stop.kind === "rehearsal") return null;
 
   const rng = seededRng(seed);
   const seenSet = new Set(seen);
