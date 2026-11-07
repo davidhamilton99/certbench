@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
-import { enrollInPath, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
+import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { MINUTES_PER_STOP, stopAt } from "@/core/path/plan";
 import {
@@ -25,16 +25,19 @@ import type {
   ChoiceRep,
   ObjectiveStatus,
   PathCert,
+  PathLabInfo,
   PathPlan,
   PathStop,
   PathStructure,
   RehearsalSize,
   Rep,
+  StopRecord,
 } from "@/core/path/types";
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
+import { LabLibrary, LabsCard, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { PathOffer } from "./PathOffer";
@@ -79,7 +82,16 @@ type View =
   | { kind: "goal"; step: "exam" | "minutes"; then: number }
   | { kind: "intro"; index: number }
   | { kind: "reveal" }
-  | { kind: "lab"; stop: PathStop; scenario: PbqScenario; graded: boolean }
+  | {
+      kind: "lab";
+      scenario: PbqScenario;
+      /** The stop it closes, when it's a domain's lab; null for the rest of the library. */
+      stop: PathStop | null;
+      /** Opened as the next stop on the path, or from the lab library. */
+      from: "path" | "library";
+      graded: boolean;
+    }
+  | { kind: "labs" }
   | { kind: "unlocked" }
   | { kind: "rehearsal-intro"; asStop: boolean }
   | { kind: "rehearsal" }
@@ -193,6 +205,32 @@ export function PathApp({
     stop?.kind === "lab" ? (structure.domains.find((d) => d.number === stop.domain)?.lab?.minutes ?? null) : null;
   const labLegend = labs.size === 0 ? undefined : pro ? "open" : "locked";
 
+  // The exam's whole lab library. A lab's latest result is its own record, or
+  // for a domain's lab played before the library existed, its stop's.
+  const library = useMemo(() => structure.library ?? [], [structure.library]);
+  const labStopOf = useCallback(
+    (labId: string) => {
+      const domain = structure.domains.find((d) => d.lab?.id === labId);
+      return domain ? (plan.stops.find((s) => s.kind === "lab" && s.domain === domain.number) ?? null) : null;
+    },
+    [structure.domains, plan.stops]
+  );
+  const labResults = useMemo(() => {
+    const out = new Map<string, StopRecord>();
+    for (const lab of library) {
+      const stop = labStopOf(lab.id);
+      const record = p.progress.labs[lab.id] ?? (stop ? p.progress.stops[stop.id] : undefined);
+      if (record && record.n > 0) out.set(lab.id, record);
+    }
+    return out;
+  }, [library, labStopOf, p.progress.labs, p.progress.stops]);
+  /** The next lab in the library not played yet, after this one (or from the start). */
+  const nextLabAfter = (labId: string) => {
+    const at = library.findIndex((l) => l.id === labId);
+    const after = [...library.slice(at + 1), ...library.slice(0, Math.max(0, at))];
+    return after.find((l) => !labResults.has(l.id)) ?? null;
+  };
+
   // The exam rehearsal: the path's last stop, and for Pro, there any time.
   const rehearsalStop = useMemo(() => plan.stops.find((s) => s.kind === "rehearsal") ?? null, [plan.stops]);
   const reading = latestReading(p.progress);
@@ -256,8 +294,8 @@ export function PathApp({
 
   const openLab = useCallback(
     (stop: PathStop, scenario: PbqScenario) => {
-      track("path_lab_started", { cert, stop: stop.id, scenario: scenario.id });
-      setView({ kind: "lab", stop, scenario, graded: false });
+      track("path_lab_started", { cert, stop: stop.id, scenario: scenario.id, from: "path" });
+      setView({ kind: "lab", stop, scenario, from: "path", graded: false });
       window.scrollTo({ top: 0 });
     },
     [cert]
@@ -336,28 +374,62 @@ export function PathApp({
 
   /**
    * A lab counts when it's graded, so it's done even if they leave from the
-   * result. Grading it again (a retry) records the new score.
+   * result. Grading it again (a retry) records the new score. A domain's lab
+   * finishes its stop wherever it was opened: from the library, it needn't be
+   * played again on the path.
    */
   const onLabGraded = useCallback(
-    (stop: PathStop, result: PbqGradeResult, first: boolean) => {
+    (
+      lab: { scenario: PbqScenario; stop: PathStop | null; from: "path" | "library" },
+      result: PbqGradeResult,
+      first: boolean
+    ) => {
       const total = Math.max(0, Math.round(result.totalItems));
       const correct = Math.min(total, Math.max(0, Math.round(result.correctItems)));
-      p.finish(stop.id, correct, total);
+      const { scenario, stop, from } = lab;
+      const stopWasDone = stop ? isStopDone(p.progress, stop.id) : true;
+      p.finishLab(scenario.id, correct, total, stop?.id ?? null);
       if (first) {
-        track("path_stop_completed", {
-          cert,
-          stop: stop.id,
-          index: stop.index,
-          kind: stop.kind,
-          correct,
-          total,
-          signed_in: p.signedIn,
-        });
+        track("path_lab_completed", { cert, scenario: scenario.id, from, correct, total });
+        if (stop && (from === "path" || !stopWasDone)) {
+          track("path_stop_completed", {
+            cert,
+            stop: stop.id,
+            index: stop.index,
+            kind: stop.kind,
+            correct,
+            total,
+            signed_in: p.signedIn,
+          });
+        }
       }
-      setView((v) => (v.kind === "lab" && v.stop.id === stop.id ? { ...v, graded: true } : v));
+      setView((v) => (v.kind === "lab" && v.scenario.id === scenario.id ? { ...v, graded: true } : v));
     },
     [cert, p]
   );
+
+  /** Open any lab from the library, in the path's own lab stage. */
+  async function openLibraryLab(info: PathLabInfo) {
+    setView({ kind: "loading", label: "Opening the lab…" });
+    try {
+      const { lab } = await api(getPathLab, { cert, id: info.id });
+      const stop = labStopOf(info.id);
+      track("path_lab_started", { cert, stop: stop?.id ?? "library", scenario: info.id, from: "library" });
+      setView({ kind: "lab", stop, scenario: lab, from: "library", graded: false });
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      if (err instanceof ApiError && (err.code === "unauthorized" || err.code === "quota_exceeded")) {
+        await p.refreshAccess();
+        setView({ kind: "home" });
+      } else {
+        setView({
+          kind: "error",
+          message: err instanceof ApiError ? err.message : "Couldn't open that lab.",
+          retry: () => void openLibraryLab(info),
+        });
+      }
+    }
+  }
 
   const onAnswer = useCallback(
     (answer: RepAnswer) => {
@@ -518,30 +590,49 @@ export function PathApp({
       </RehearsalResult>
     );
   } else if (view.kind === "lab") {
-    const { stop, scenario, graded } = view;
-    const minutes = labMinutes(stop);
+    const { stop, scenario, graded, from } = view;
+    const minutes = library.find((l) => l.id === scenario.id)?.minutes ?? labMinutes(stop);
+    const fromLibrary = from === "library";
+    const nextLab = fromLibrary && graded ? nextLabAfter(scenario.id) : null;
+    const leave = () => {
+      setView(fromLibrary ? { kind: "labs" } : { kind: "home" });
+      window.scrollTo({ top: 0 });
+    };
     screen = (
       <div className="path-rise grid gap-5">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-          Hands-on lab · Domain {domainLabel(stop.domain)}
+          Hands-on lab · Domain {domainLabel(scenario.domain_number)}
           {minutes ? <> · about {minutes} min</> : null}
         </p>
         {/* min-w-0: a lab's tab row doesn't wrap, and would widen a phone's page. */}
         <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
           <PbqPlayer
+            key={scenario.id}
             scenario={scenario}
-            backLabel="Back to my map"
-            onGraded={(result) => onLabGraded(stop, result, !graded)}
-            onBack={() => {
-              setView({ kind: "home" });
-              window.scrollTo({ top: 0 });
-            }}
+            backLabel={fromLibrary ? "Back to the labs" : "Back to my map"}
+            onGraded={(result) => onLabGraded(view, result, !graded)}
+            onBack={leave}
           />
         </div>
-        {graded && (
-          <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
-        )}
+        {graded &&
+          (fromLibrary ? (
+            nextLab && <NextLabCard lab={nextLab} onOpen={() => void openLibraryLab(nextLab)} />
+          ) : (
+            <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
+          ))}
       </div>
+    );
+  } else if (view.kind === "labs") {
+    screen = (
+      <LabLibrary
+        structure={structure}
+        results={labResults}
+        onOpen={(lab) => void openLibraryLab(lab)}
+        onBack={() => {
+          setView({ kind: "home" });
+          window.scrollTo({ top: 0 });
+        }}
+      />
     );
   } else if (view.kind === "unlocked") {
     const lab = plan.stops.find((s) => s.kind === "lab" && !isStopDone(p.progress, s.id));
@@ -553,6 +644,7 @@ export function PathApp({
         statuses={statuses}
         labs={labs}
         rehearsal={mapRehearsal}
+        labsLeft={library.length > 0 ? library.length - labResults.size : undefined}
         firstLab={
           lab && lab.index !== next
             ? { title: lab.title, minutes: labMinutes(lab), onOpen: () => startStop(lab.index) }
@@ -621,6 +713,7 @@ export function PathApp({
               proPlan={p.proPlan}
               examDate={p.progress.goal?.examDate ?? null}
               context="reveal"
+            labCount={library.length}
             />
             <button
               type="button"
@@ -920,6 +1013,7 @@ export function PathApp({
             proPlan={p.proPlan}
             examDate={p.progress.goal?.examDate ?? null}
             context="home"
+            labCount={library.length}
           />
         ) : (
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
@@ -941,6 +1035,19 @@ export function PathApp({
                   }
                 : undefined
             }
+          />
+        )}
+
+        {/* And every lab the exam has, not only the one closing each domain. */}
+        {pro && library.length > 0 && (
+          <LabsCard
+            count={library.length}
+            done={labResults.size}
+            onOpen={() => {
+              track("path_labs_viewed", { cert });
+              setView({ kind: "labs" });
+              window.scrollTo({ top: 0 });
+            }}
           />
         )}
 
@@ -967,7 +1074,7 @@ export function PathApp({
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
           <p className="-mt-3 text-center text-xs text-muted-foreground">
-            Spaced review and every PBQ scenario are in your{" "}
+            Spaced review and your own question sets are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
             </Link>

@@ -67,6 +67,7 @@ const server = vi.hoisted(() => ({
   enrolls: true,
   stopHandler: null as null | ((input: { index: number }) => unknown),
   rehearsalHandler: null as null | ((input: { size: string }) => unknown),
+  labHandler: null as null | ((input: { id: string }) => unknown),
   calls: [] as { path: string; input: unknown }[],
 }));
 vi.mock("@/lib/api-client", async () => {
@@ -93,6 +94,11 @@ vi.mock("@/lib/api-client", async () => {
         }
         case "POST /api/path/rehearsal": {
           const out = server.rehearsalHandler?.(input as { size: string });
+          if (out instanceof Error) throw out;
+          return out;
+        }
+        case "POST /api/path/lab": {
+          const out = server.labHandler?.(input as { id: string });
           if (out instanceof Error) throw out;
           return out;
         }
@@ -186,6 +192,7 @@ const done = (ids: string[], extra?: Partial<PathProgress>): PathProgress => ({
   stops: Object.fromEntries(ids.map((id) => [id, { n: 1, c: 3, t: 3, at: 1 }])),
   checkpoint: null,
   rehearsals: [],
+  labs: {},
   goal: null,
   ...extra,
 });
@@ -198,6 +205,7 @@ beforeEach(() => {
   server.enrolls = true;
   server.stopHandler = (input) => stopReply(input.index);
   server.rehearsalHandler = null;
+  server.labHandler = null;
   server.calls = [];
   track.mockClear();
   identifyUser.mockClear();
@@ -587,6 +595,7 @@ describe("labs on the path", () => {
       cert: "security-plus-sy0-701",
       stop: "lab1",
       scenario: "lab-1.0",
+      from: "path",
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Submit lab" }));
@@ -808,5 +817,139 @@ describe("exam rehearsals", () => {
     server.access = "free";
     fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
     expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
+  });
+});
+
+describe("the lab library", () => {
+  const libStructure: PathStructure = {
+    ...structure,
+    domains: structure.domains.map((d) => ({
+      ...d,
+      lab: { id: `lab-${d.number}`, title: `Lab for domain ${d.number}`, minutes: 6 },
+    })),
+    library: [
+      { id: "lab-1.0", title: "Lab for domain 1.0", minutes: 6, type: "simulation", domain: "1.0" },
+      { id: "drill-1", title: "Port matching", minutes: 3, type: "matching", domain: "1.0" },
+      { id: "lab-2.0", title: "Lab for domain 2.0", minutes: 6, type: "topology", domain: "2.0" },
+      { id: "drill-2", title: "Attack ordering", minutes: 3, type: "ordering", domain: "2.0" },
+    ],
+  };
+  const libPlan = buildPlan(libStructure);
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+  const lastSave = () =>
+    (
+      server.calls.filter((c) => c.path === "/api/path/progress" && (c.input as { progress?: unknown }).progress).at(-1)
+        ?.input as { progress: PathProgress }
+    ).progress;
+  const renderLibrary = () =>
+    render(
+      <PathApp cert="security-plus-sy0-701" structure={libStructure} plan={libPlan} warmup={warmup} questionCount={842} />
+    );
+  /** From the home, into the library. */
+  async function openLibrary() {
+    fireEvent.click(await screen.findByRole("button", { name: "Open" }));
+    expect(await screen.findByRole("heading", { name: "Every lab for Security+" })).toBeInTheDocument();
+  }
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.labHandler = (input) => {
+      const lab = libStructure.library!.find((l) => l.id === input.id)!;
+      return { lab: { type: "ordering", id: lab.id, title: lab.title, domain_number: lab.domain } };
+    };
+  });
+
+  it("opens every lab the exam has from a Pro home, domain by domain", async () => {
+    server.progress = done(["warmup"], { goal });
+    renderLibrary();
+    expect(await screen.findByText("Every lab, any time")).toBeInTheDocument();
+    await openLibrary();
+    expect(track).toHaveBeenCalledWith("path_labs_viewed", { cert: "security-plus-sy0-701" });
+    expect(screen.getByRole("heading", { name: "Domain 1: Domain 1" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Domain 2: Domain 2" })).toBeInTheDocument();
+    expect(screen.getAllByText(/· closes the domain$/)).toHaveLength(2);
+    expect(screen.getByText("Matching drill · 3 min")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back to my map" }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+  });
+
+  it("plays any lab in the path's stage, keeps its score, and offers the next one", async () => {
+    server.progress = done(["warmup"], { goal });
+    renderLibrary();
+    await openLibrary();
+    fireEvent.click(screen.getByRole("button", { name: /Port matching/ }));
+    expect(await screen.findByRole("heading", { name: "Port matching" })).toBeInTheDocument();
+    expect(server.calls.find((c) => c.path === "/api/path/lab")?.input).toEqual({
+      cert: "security-plus-sy0-701",
+      id: "drill-1",
+    });
+    expect(track).toHaveBeenCalledWith("path_lab_started", {
+      cert: "security-plus-sy0-701",
+      stop: "library",
+      scenario: "drill-1",
+      from: "library",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit lab" }));
+    expect(track).toHaveBeenCalledWith("path_lab_completed", {
+      cert: "security-plus-sy0-701",
+      scenario: "drill-1",
+      from: "library",
+      correct: 4,
+      total: 5,
+    });
+    await waitFor(() => expect(lastSave().labs["drill-1"]).toMatchObject({ n: 1, c: 4, t: 5 }));
+    // A lab that closes no domain finishes no stop.
+    expect(Object.keys(lastSave().stops)).toEqual(["warmup"]);
+
+    // Next is the next one not played yet.
+    expect(await screen.findByText("Next lab · Topology · 6 min")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back to the labs" }));
+    expect(await screen.findByText("4/5")).toBeInTheDocument();
+  });
+
+  it("counts a domain's lab played from the library as its stop on the path", async () => {
+    server.progress = done(["warmup"], { goal });
+    renderLibrary();
+    await openLibrary();
+    fireEvent.click(screen.getByRole("button", { name: /Lab for domain 1\.0/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Submit lab" }));
+    await waitFor(() => expect(lastSave().stops.lab1).toMatchObject({ n: 1, c: 4, t: 5 }));
+    expect(track).toHaveBeenCalledWith(
+      "path_stop_completed",
+      expect.objectContaining({ stop: "lab1", kind: "lab", correct: 4, total: 5 })
+    );
+  });
+
+  it("shows a domain's lab played on the path as done in the library", async () => {
+    server.progress = done(["warmup", "lab1"], { goal });
+    renderLibrary();
+    expect(await screen.findByText(/1 of 4 done\./)).toBeInTheDocument();
+    await openLibrary();
+    expect(screen.getByText("3/3")).toBeInTheDocument();
+  });
+
+  it("goes home when the server says the labs are part of Pro", async () => {
+    server.progress = done(["warmup"], { goal });
+    server.labHandler = () => new ApiError("quota_exceeded", "Hands-on labs are part of Pro.");
+    renderLibrary();
+    await openLibrary();
+    server.access = "free";
+    fireEvent.click(screen.getByRole("button", { name: /Port matching/ }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+    expect(screen.queryByText("Every lab, any time")).toBeNull();
+  });
+
+  it("keeps the library for Pro, and names every lab in a free account's offer", async () => {
+    server.access = "free";
+    server.progress = done(
+      libPlan.stops.slice(0, libPlan.freeThrough + 1).map((s) => s.id),
+      { goal, checkpoint: { score: 60, at: 1, domains: [] } }
+    );
+    renderLibrary();
+    expect(await screen.findByText("All 4 hands-on PBQ labs, one closing every domain")).toBeInTheDocument();
+    expect(screen.queryByText("Every lab, any time")).toBeNull();
   });
 });

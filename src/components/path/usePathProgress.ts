@@ -7,6 +7,7 @@ import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/path";
 import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
 import {
+  finishLab as finishLabRun,
   finishStop,
   hasStarted,
   mergePathProgress,
@@ -226,6 +227,23 @@ export function usePathProgress(cert: PathCert) {
     [commit, saveToAccount]
   );
 
+  /**
+   * Keep a graded lab, wherever it was opened. A lab that closes a domain
+   * finishes that stop too: played from the library, it needn't be played again.
+   * Grading it again (a retry) records the new score.
+   */
+  const finishLab = useCallback(
+    (labId: string, correct: number, total: number, stopId: string | null) => {
+      const c = cur.current;
+      const now = Date.now();
+      let p = finishLabRun(c.progress, labId, correct, total, now);
+      if (stopId) p = finishStop(p, stopId, correct, total, now);
+      commit({ ...c, progress: p });
+      if (c.userId) void saveToAccount(p);
+    },
+    [commit, saveToAccount]
+  );
+
   /** Clear misses the server can no longer bring back (their content was withdrawn). */
   const retire = useCallback(
     (repIds: readonly string[]) => {
@@ -289,6 +307,7 @@ export function usePathProgress(cert: PathCert) {
     record,
     finish,
     finishRehearsal,
+    finishLab,
     retire,
     setGoal,
     linkAccount,

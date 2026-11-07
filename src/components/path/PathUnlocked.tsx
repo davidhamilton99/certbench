@@ -23,6 +23,7 @@ export function PathUnlocked({
   statuses,
   labs,
   rehearsal,
+  labsLeft,
   firstLab,
   children,
 }: {
@@ -32,6 +33,8 @@ export function PathUnlocked({
   statuses: Map<string, ObjectiveStatus>;
   labs: ReadonlyMap<string, LabState>;
   rehearsal?: MapRehearsal;
+  /** Labs in the exam's library not played yet, when it has one. */
+  labsLeft?: number;
   /** The earliest lab not played yet, when it isn't already the next stop. */
   firstLab: { title: string; minutes: number | null; onOpen: () => void } | null;
   children: ReactNode;
@@ -42,8 +45,9 @@ export function PathUnlocked({
   const count = {
     stops: left.filter((s) => s.kind !== "practice" && s.kind !== "lab" && s.kind !== "rehearsal").length,
     practice: left.filter((s) => s.kind === "practice").length,
-    labs: left.filter((s) => s.kind === "lab").length,
+    labs: labsLeft ?? left.filter((s) => s.kind === "lab").length,
   };
+  const library = structure.library?.length ?? 0;
   const minutes = progress.goal?.minutes || 20;
   const finish = left.length > 0 ? projectFinish(left.length, minutes, now) : null;
 
@@ -62,8 +66,9 @@ export function PathUnlocked({
             Your whole path is open.
           </h2>
           <p className="max-w-md text-balance text-muted-foreground">
-            Everything from here to exam day, in the same short stops, with a hands-on lab
-            closing every domain and a timed rehearsal of the whole exam whenever you want one.
+            Everything from here to exam day, in the same short stops, with{" "}
+            {library > 0 ? `${library} hands-on labs` : "a hands-on lab closing every domain"} and a timed
+            rehearsal of the whole exam whenever you want one.
           </p>
         </div>
 

@@ -26,6 +26,7 @@ export function PathOffer({
   proPlan,
   examDate,
   context,
+  labCount,
 }: {
   cert: PathCert;
   certId: string | null;
@@ -35,6 +36,8 @@ export function PathOffer({
   proPlan: boolean;
   examDate: string | null;
   context: "reveal" | "home";
+  /** Labs in the exam's library, when it has one. */
+  labCount?: number;
 }) {
   const [price, setPrice] = useState<{ now: string; was: string | null }>({ now: "$39", was: null });
   const [busy, setBusy] = useState(false);
@@ -97,17 +100,20 @@ export function PathOffer({
     }
   }
 
+  const labs = labCount
+    ? `All ${labCount} hands-on PBQ labs, one closing every domain`
+    : "A hands-on PBQ lab closing every domain";
   const rehearsals = `Timed exam rehearsals: ${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, any time`;
   const includes = proPlan
     ? [
         `All ${remainingStops} remaining stops of your ${examName} path`,
-        "A hands-on PBQ lab closing every domain",
+        labs,
         rehearsals,
         "Uses your current Pro plan",
       ]
     : [
         `All ${remainingStops} remaining stops of your ${examName} path`,
-        "A hands-on PBQ lab closing every domain",
+        labs,
         rehearsals,
         `All ${questionCount.toLocaleString()} ${examName} questions, with spaced review`,
       ];

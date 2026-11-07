@@ -5,6 +5,7 @@ import type { PbqScenario } from "@/data/pbq/types";
 import {
   MAX_MISSED_SENT,
   MAX_PATH_ITEMS,
+  MAX_PATH_LABS,
   MAX_PATH_STOPS,
   MAX_SEEN_SENT,
 } from "@/core/path/progress";
@@ -49,6 +50,9 @@ export const repSchema = z.discriminatedUnion("type", [
 
 const rehearsalSizeSchema = z.enum(["full", "half"]);
 
+/** How often a stop or lab was finished, and its latest score. */
+const runSchema = z.object({ n: count, c: count, t: count, at: count });
+
 /** A checkpoint's or rehearsal's score, with how each domain went. */
 const scoreSchema = z.object({
   score: count.max(100),
@@ -73,7 +77,7 @@ export const pathProgressSchema = z.object({
       message: `At most ${MAX_PATH_ITEMS} items`,
     }),
   stops: z
-    .record(z.string().min(1).max(32), z.object({ n: count, c: count, t: count, at: count }))
+    .record(z.string().min(1).max(32), runSchema)
     .refine((stops) => Object.keys(stops).length <= MAX_PATH_STOPS, {
       message: `At most ${MAX_PATH_STOPS} stops`,
     }),
@@ -90,6 +94,13 @@ export const pathProgressSchema = z.object({
     )
     .max(MAX_REHEARSALS)
     .default([]),
+  /** Labs played, by scenario id. Absent from progress saved before the library. */
+  labs: z
+    .record(z.string().min(1).max(64), runSchema)
+    .refine((labs) => Object.keys(labs).length <= MAX_PATH_LABS, {
+      message: `At most ${MAX_PATH_LABS} labs`,
+    })
+    .default({}),
   goal: z
     .object({
       examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
@@ -128,6 +139,24 @@ export const getPathStop = {
      * data, typed by src/data/pbq, and too varied to restate here.
      */
     lab: z.custom<PbqScenario>((v) => typeof v === "object" && v !== null && "type" in v).optional(),
+  }),
+} as const satisfies EndpointContract;
+
+/**
+ * One lab from the exam's library, to play on the path: any of its PBQ
+ * scenarios, not only the one closing a domain. Pro on this exam only (401 /
+ * 402 otherwise), like every lab.
+ */
+export const getPathLab = {
+  path: "/api/path/lab",
+  method: "POST",
+  input: z.object({
+    cert: certSchema,
+    id: z.string().min(1).max(64),
+  }),
+  output: z.object({
+    /** Our own static data, typed by src/data/pbq; passed through as built. */
+    lab: z.custom<PbqScenario>((v) => typeof v === "object" && v !== null && "type" in v),
   }),
 } as const satisfies EndpointContract;
 
