@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
+import { SECURITY_PLUS_VERSIONS_PATH, SY0_801_AI_PATH, SY0_801_PATH } from "@/lib/seo/exam-versions";
 
 const LINKS = [
   { href: "/pricing", label: "Pricing" },
@@ -25,6 +25,8 @@ const FREE_RESOURCES = [
   { href: "/tools/subnet-calculator", label: "Subnet calculator" },
   { href: "/tools/security-plus-acronyms-quiz", label: "Security+ acronyms" },
   { href: "/objectives/security-plus-sy0-701", label: "SY0-701 objectives" },
+  { href: SY0_801_PATH, label: "SY0-801 objectives" },
+  { href: SY0_801_AI_PATH, label: "SY0-801 AI questions" },
   { href: SECURITY_PLUS_VERSIONS_PATH, label: "SY0-801 vs SY0-701" },
 ];
 

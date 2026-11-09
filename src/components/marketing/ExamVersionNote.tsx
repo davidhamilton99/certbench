@@ -6,6 +6,7 @@ import {
   MESSER_COMPARISON_URLS,
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_PATH,
 } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
@@ -40,8 +41,11 @@ export function ExamVersionNote({
         <strong className="font-medium text-foreground">
           Written to SY0-701, the current Security+ exam.
         </strong>{" "}
-        It stays open until June 11, 2027 in English. CompTIA lists its replacement,
-        SY0-801, as launching on or around November 17, 2026.{" "}
+        It stays open until June 11, 2027 in English. CompTIA lists its replacement,{" "}
+        <Link href={SY0_801_PATH} className={LINK}>
+          SY0-801
+        </Link>
+        , as launching on or around November 17, 2026.{" "}
         <Link href={SECURITY_PLUS_VERSIONS_PATH} className={LINK}>
           Which one should you take?
         </Link>
