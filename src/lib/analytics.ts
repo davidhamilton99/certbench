@@ -76,6 +76,11 @@ type EventMap = {
   /** Pro opened this exam's path: the once-per-device unlock moment. */
   path_unlock_viewed: { cert: string };
   /**
+   * Back on the path from paying, once Pro is confirmed: `waited_ms` is how long
+   * "Payment received" showed while the activation webhook landed (0: it already had).
+   */
+  path_upgrade_landed: { cert: string; waited_ms: number };
+  /**
    * A lab opened: as a stop on the path, or from the lab library (`stop` is
    * "library" for one that closes no domain).
    */

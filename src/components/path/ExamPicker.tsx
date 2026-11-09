@@ -21,9 +21,19 @@ const EXAM_CODES: Record<PathCert, string> = {
 /**
  * The only choice on CertBench: which exam. Four tiles, each straight into
  * that exam's path. A path already started on this device is offered first.
+ * `upgraded`: just paid, so the path opens with the unlock moment.
  */
-export function ExamPicker({ surface, className }: { surface: string; className?: string }) {
+export function ExamPicker({
+  surface,
+  upgraded = false,
+  className,
+}: {
+  surface: string;
+  upgraded?: boolean;
+  className?: string;
+}) {
   const [resume, setResume] = useState<{ cert: PathCert; stops: number } | null>(null);
+  const flag = upgraded ? "?upgraded=1" : "";
 
   useEffect(() => {
     let best: { cert: PathCert; stops: number; at: number } | null = null;
@@ -43,7 +53,7 @@ export function ExamPicker({ surface, className }: { surface: string; className?
     <div className={cn("grid gap-3", className)}>
       {resume && (
         <Link
-          href={`/path/${resume.cert}`}
+          href={`/path/${resume.cert}${flag}`}
           onClick={() => track("path_exam_picked", { cert: resume.cert, surface: `${surface}_resume` })}
           className="group flex items-center justify-between gap-4 rounded-2xl border border-primary/50 bg-primary/[0.07] px-5 py-4 transition-colors hover:bg-primary/[0.11]"
         >
@@ -65,7 +75,7 @@ export function ExamPicker({ surface, className }: { surface: string; className?
         {PATH_CERTS.map((cert) => (
           <Link
             key={cert}
-            href={`/path/${cert}`}
+            href={`/path/${cert}${flag}`}
             onClick={() => track("path_exam_picked", { cert, surface })}
             className="glass group grid gap-1 rounded-2xl px-4 py-4 text-left transition-[border-color,transform] hover:border-primary/60 active:scale-[0.99] sm:px-5 sm:py-5"
           >

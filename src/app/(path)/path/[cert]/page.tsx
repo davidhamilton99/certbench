@@ -7,7 +7,7 @@ import { seedFrom } from "@/core/path/compose";
 import { isPathCert, PATH_CERTS } from "@/core/path/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { PathApp } from "@/components/path/PathApp";
-import { pathStorageKey } from "@/components/path/storage-key";
+import { holdScript } from "@/components/path/path-hold";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 // The warm-up is the same for every first-time visitor; rebuild hourly.
@@ -53,14 +53,11 @@ export default async function PathPage({ params }: { params: Promise<{ cert: str
 
   return (
     <>
-      {/* Before first paint: has this device started this path? Then hold the
-          stage until the client picks up where they left off, instead of
-          flashing the warm-up. A first visit paints the warm-up immediately. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(pathStorageKey(cert))})||"null"),p=s&&s.progress;if(p&&(Object.keys(p.items||{}).length||Object.keys(p.stops||{}).length))document.documentElement.setAttribute("data-path-returning","")}catch(e){}`,
-        }}
-      />
+      {/* Before first paint: has this device started this path, or are they
+          back from paying? Then hold the stage until the client picks up where
+          they are, instead of flashing the warm-up. A first visit paints the
+          warm-up immediately. */}
+      <script dangerouslySetInnerHTML={{ __html: holdScript(cert) }} />
       <PathApp
         cert={cert}
         structure={bank.structure}

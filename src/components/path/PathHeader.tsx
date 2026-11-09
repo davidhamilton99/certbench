@@ -19,11 +19,14 @@ export function PathHeader({
   cert,
   examName,
   signedIn,
+  ready = true,
   onHome,
 }: {
   cert: string;
   examName: string;
   signedIn: boolean;
+  /** False until the account is known: a member mustn't see "Sign in" meanwhile. */
+  ready?: boolean;
   /** Show this exam's map. The page is already this path, so it's a view change. */
   onHome: () => void;
 }) {
@@ -73,7 +76,9 @@ export function PathHeader({
         </div>
         <nav className="flex items-center gap-1">
           <ThemeToggle />
-          {signedIn ? (
+          {!ready ? (
+            <span className="size-9" aria-hidden />
+          ) : signedIn ? (
             <Button variant="ghost" size="icon" aria-label="Sign out" onClick={signOut}>
               <LogOut />
             </Button>

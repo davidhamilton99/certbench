@@ -19,14 +19,16 @@ export const metadata: Metadata = pageMetadata({
 /**
  * Where "Get started" leads, and where a signed-in account without Pro lands.
  * Someone already enrolled in an exam goes straight to that path, unless they
- * came here to switch (`?pick=1`).
+ * came here to switch (`?pick=1`). Paying from anywhere but a path lands here
+ * too (`?upgraded=1`), and goes on to their path, which opens with the unlock.
  */
 export default async function StartPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pick?: string }>;
+  searchParams: Promise<{ pick?: string; upgraded?: string }>;
 }) {
-  const { pick } = await searchParams;
+  const { pick, upgraded } = await searchParams;
+  const paid = upgraded === "1";
   if (!pick) {
     const { db, user } = await getOptionalUser();
     if (user) {
@@ -35,7 +37,7 @@ export default async function StartPage({
         listActiveCertifications(db).catch(() => []),
       ]);
       const slug = certs.find((c) => c.id === enrollments[0]?.certificationId)?.slug;
-      if (slug && isPathCert(slug)) redirect(`/path/${slug}`);
+      if (slug && isPathCert(slug)) redirect(`/path/${slug}${paid ? "?upgraded=1" : ""}`);
     }
   }
 
@@ -54,14 +56,19 @@ export default async function StartPage({
       </header>
       <main className="mx-auto grid w-full max-w-xl flex-1 content-start gap-8 px-4 pb-20 pt-12 sm:px-6 sm:pt-20">
         <div className="grid gap-3 text-center">
+          {paid && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">Payment received</span>
+          )}
           <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Which exam are you taking?
+            {paid ? "Which exam is Pro for?" : "Which exam are you taking?"}
           </h1>
           <p className="text-balance text-muted-foreground">
-            That&apos;s the only choice you make. From here, every step is laid out for you.
+            {paid
+              ? "Pick it and its whole path opens: every stop, every lab and the timed rehearsal."
+              : "That's the only choice you make. From here, every step is laid out for you."}
           </p>
         </div>
-        <ExamPicker surface="start" />
+        <ExamPicker surface="start" upgraded={paid} />
       </main>
     </div>
   );

@@ -25,6 +25,27 @@ describe("proxy", () => {
     expect(updateSession).toHaveBeenCalledTimes(2);
   });
 
+  it("sends an old post-checkout link to the path, never the workspace", async () => {
+    const back = await proxy(
+      new NextRequest("https://certbench.dev/upgrade?upgraded=true&next=%2Fpath%2Fnetwork-plus-n10-009")
+    );
+    expect(back.status).toBe(307);
+    expect(back.headers.get("location")).toBe("https://certbench.dev/path/network-plus-n10-009?upgraded=1");
+
+    const bare = await proxy(new NextRequest("https://certbench.dev/upgrade?upgraded=true"));
+    expect(bare.headers.get("location")).toBe("https://certbench.dev/start?upgraded=1");
+
+    const offsite = await proxy(new NextRequest("https://certbench.dev/upgrade?upgraded=true&next=https://evil.example"));
+    expect(offsite.headers.get("location")).toBe("https://certbench.dev/start?upgraded=1");
+    expect(updateSession).not.toHaveBeenCalled();
+  });
+
+  it("leaves the plan page itself to the session refresh", async () => {
+    await proxy(new NextRequest("https://certbench.dev/upgrade"));
+    await proxy(new NextRequest("https://certbench.dev/upgrade?reason=pbq"));
+    expect(updateSession).toHaveBeenCalledTimes(2);
+  });
+
   it("never runs on the PostHog proxy, whose API paths end in a slash", () => {
     expect(runsOn("/ingest/e/")).toBe(false);
     expect(runsOn("/ingest/s/")).toBe(false);

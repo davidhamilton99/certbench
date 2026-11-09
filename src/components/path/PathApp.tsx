@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, FlaskConical, Loader2, RotateCcw, Timer } from "lucide-react";
@@ -44,7 +44,8 @@ import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
-import { PathUnlocked } from "./PathUnlocked";
+import { PathActivating, PathUnlocked } from "./PathUnlocked";
+import { holdsStage, UPGRADED_FLAG } from "./path-hold";
 import { PracticeCard, ReviewMissesCard } from "./PracticeCard";
 import { RehearsalIntro, RehearsalResumeCard } from "./RehearsalIntro";
 import { RehearsalPlayer } from "./RehearsalPlayer";
@@ -134,6 +135,11 @@ function stopLabel(stop: PathStop, total: number): string {
 
 const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
+/** Back from paying, how long "Payment received" waits before saying it's slow. */
+const SLOW_AFTER_MS = 20_000;
+/** And how long it keeps asking the account on its own. */
+const STOP_ASKING_AFTER_MS = 120_000;
+
 /** True the first time this device shows Pro opening this exam's path. */
 function firstUnlock(cert: string): boolean {
   try {
@@ -167,6 +173,26 @@ export function PathApp({
 }) {
   const p = usePathProgress(cert);
   const total = plan.stops.length;
+
+  // Before first paint, as the page's inline script does on a full load: a
+  // learner who's been here, or is back from paying, waits for their own
+  // screen instead of the first visit's warm-up. Arriving from inside the app
+  // never runs that script, so the path checks again here.
+  useLayoutEffect(() => {
+    document.documentElement.toggleAttribute("data-path-returning", holdsStage(cert, window.location.search));
+  }, [cert]);
+
+  // Back from paying: Stripe's success link adds ?upgraded=1. The flag comes
+  // straight off the URL, so a reload is an ordinary visit.
+  const [landing, setLanding] = useState<{ done: boolean } | null>(null);
+  useLayoutEffect(() => {
+    if (!UPGRADED_FLAG.test(window.location.search)) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("upgraded");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    // The URL is only readable once mounted; before paint, so no flash of the warm-up.
+    setLanding({ done: false });
+  }, []);
 
   const freshPlay = useCallback(
     (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play => ({
@@ -208,6 +234,9 @@ export function PathApp({
   const nextStop = stopAt(plan, structure, next);
   const remaining = total - stopsDone(plan, p.progress);
   const pro = p.access === "pro";
+  // Back from paying and Pro not confirmed yet: "Payment received" holds the
+  // screen, never the offer they just paid for.
+  const awaitingPro = landing !== null && !landing.done;
 
   // Each domain's lab on the map: played, open (Pro), or a glimpse of Pro.
   const labs = useMemo(() => {
@@ -287,14 +316,14 @@ export function PathApp({
   // Mid-stop it waits until they're back on the map.
   const unlockChecked = useRef(false);
   useEffect(() => {
-    if (!p.ready || !p.signedIn || !pro || unlockChecked.current) return;
+    if (!p.ready || !p.signedIn || !pro || unlockChecked.current || awaitingPro) return;
     const untouched = view.kind === "play" && playRef.current.results.every((r) => r === null);
     if (view.kind !== "home" && !untouched) return;
     unlockChecked.current = true;
     if (!firstUnlock(cert)) return;
     track("path_unlock_viewed", { cert });
     setView({ kind: "unlocked" });
-  }, [p.ready, p.signedIn, pro, cert, view.kind]);
+  }, [p.ready, p.signedIn, pro, cert, view.kind, awaitingPro]);
 
   // Pro bought before the path asked for their exam (from /pricing, say) leaves
   // the account with no exam: Pro opens nothing, and the dashboard sends them
@@ -314,6 +343,49 @@ export function PathApp({
       }
     })();
   }, [ready, signedIn, proPlan, pro, cert, refreshAccess]);
+
+  // Back from paying: the moment Pro is confirmed, open with the unlock,
+  // straight from "Payment received" before any other screen paints. Signed
+  // out (the flag on its own), it's an ordinary visit.
+  const waitedSince = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (!awaitingPro || !ready || (signedIn && !pro)) return;
+    setLanding({ done: true });
+    if (!signedIn) return;
+    // This decides what opens: the first-visit boot and the unlock check stand down.
+    booted.current = true;
+    unlockChecked.current = true;
+    track("path_upgrade_landed", {
+      cert,
+      waited_ms: waitedSince.current === null ? 0 : Date.now() - waitedSince.current,
+    });
+    const first = firstUnlock(cert);
+    if (first) track("path_unlock_viewed", { cert });
+    setView(first ? { kind: "unlocked" } : { kind: "home" });
+  }, [awaitingPro, ready, signedIn, pro, cert]);
+
+  // Until then, ask the account again while the activation webhook lands:
+  // every 2 seconds, every 5 once it's slow, on its own for 2 minutes.
+  const [slow, setSlow] = useState(false);
+  const askingForPro = awaitingPro && ready && signedIn && !pro;
+  useEffect(() => {
+    if (!askingForPro) return;
+    const since = (waitedSince.current ??= Date.now());
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+    const ask = async () => {
+      await refreshAccess().catch(() => {});
+      if (stopped) return;
+      const waited = Date.now() - since;
+      if (waited >= SLOW_AFTER_MS) setSlow(true);
+      if (waited < STOP_ASKING_AFTER_MS) timer = setTimeout(ask, waited < SLOW_AFTER_MS ? 2000 : 5000);
+    };
+    timer = setTimeout(ask, 2000);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [askingForPro, refreshAccess]);
 
   const openLab = useCallback(
     (stop: PathStop, scenario: PbqScenario) => {
@@ -541,7 +613,9 @@ export function PathApp({
 
   let screen: React.ReactNode;
 
-  if (view.kind === "play") {
+  if (awaitingPro) {
+    screen = <PathActivating examName={structure.examName} slow={slow} onCheck={() => void refreshAccess()} />;
+  } else if (view.kind === "play") {
     const rep = play.reps[play.i];
     screen = (
       <div className="glass rounded-3xl p-5 sm:p-8">
@@ -831,6 +905,7 @@ export function PathApp({
         cert={cert}
         examName={structure.examName}
         signedIn={p.signedIn}
+        ready={p.ready}
         onHome={() => {
           setView({ kind: "home" });
           window.scrollTo({ top: 0 });
