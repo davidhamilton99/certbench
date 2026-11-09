@@ -2,7 +2,13 @@ import { MetadataRoute } from "next";
 import { listObjectivePages } from "@/server/seo/objective-data";
 import { listReadinessCheckCerts } from "@/server/seo/readiness-check-data";
 import { VS_PAGES, ROUNDUPS } from "@/lib/seo/comparison-pages";
-import { OBJECTIVE_HUB_CERTS, SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
+import {
+  OBJECTIVE_HUB_CERTS,
+  SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_AI_PATH,
+  SY0_801_PATH,
+  SY0_801_UPDATED_ISO,
+} from "@/lib/seo/exam-versions";
 
 const BASE_URL = "https://certbench.dev";
 
@@ -14,6 +20,8 @@ const CONTENT_UPDATED = new Date("2026-11-02");
 const TERMS_UPDATED = new Date("2026-10-24");
 const PRIVACY_UPDATED = new Date("2026-09-13");
 const CONTACT_UPDATED = new Date("2026-10-10");
+/** The SY0-801 pages, and the version comparison that links them. */
+const SY0_801_UPDATED = new Date(SY0_801_UPDATED_ISO);
 
 /** Pages worth finding in search. App screens (/path, /login, /register) stay out. */
 const STATIC_PATHS = [
@@ -30,7 +38,6 @@ const STATIC_PATHS = [
   "/tools/subnetting-practice",
   "/tools/subnet-calculator",
   "/tools/security-plus-acronyms-quiz",
-  SECURITY_PLUS_VERSIONS_PATH,
   ...OBJECTIVE_HUB_CERTS.map((cert) => `/objectives/${cert}`),
   ...ROUNDUPS.map((r) => `/${r.path}`),
   ...VS_PAGES.map((p) => `/compare/${p.slug}`),
@@ -53,6 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...STATIC_PATHS.map((path) => entry(path)),
+    ...[SY0_801_PATH, SY0_801_AI_PATH, SECURITY_PLUS_VERSIONS_PATH].map((path) => entry(path, SY0_801_UPDATED)),
     ...readinessChecks,
     ...objectivePages,
     entry("/contact", CONTACT_UPDATED),

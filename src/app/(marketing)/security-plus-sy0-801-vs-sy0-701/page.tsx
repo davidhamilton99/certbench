@@ -13,6 +13,8 @@ import {
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_DOMAIN_CHANGES,
   SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_AI_PATH,
+  SY0_801_PATH,
 } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { articleData } from "@/lib/seo/structured-data";
@@ -90,7 +92,7 @@ const FAQS = [
   {
     question: "What's new on SY0-801?",
     answer:
-      "The biggest additions on CompTIA's page are AI-related: a dedicated objective on the security risks of artificial intelligence, plus AI-assisted automation. It also mentions operational technology environments. Domain weights shift too: general security concepts rises from 12% to 16%, and security program management falls from 20% to 14%.",
+      "The biggest addition is AI: a new objective, 2.6, on the threats and vulnerabilities of AI usage, from prompt injection and poisoning to jailbreaking and hallucinations, plus AI in automation. CompTIA's page also mentions operational technology environments. Domain weights shift too: general security concepts rises from 12% to 16%, and security program management falls from 20% to 14%.",
   },
   {
     question: "Is SY0-801 harder than SY0-701?",
@@ -100,7 +102,7 @@ const FAQS = [
   {
     question: "Does CertBench have SY0-801 questions?",
     answer:
-      "Not yet. Everything on CertBench today is written to SY0-701, which is still a live exam.",
+      "A free set on SY0-801's new AI objective, 2.6. Everything else on CertBench is written to SY0-701, which is still a live exam.",
   },
 ];
 
@@ -117,7 +119,7 @@ export default function SecurityPlusVersionsPage() {
           headline: TITLE,
           description: DESCRIPTION,
           path: SECURITY_PLUS_VERSIONS_PATH,
-          published: EXAM_FACTS_CHECKED_ISO,
+          published: "2026-11-02",
           modified: EXAM_FACTS_CHECKED_ISO,
         })}
       />
@@ -148,8 +150,8 @@ export default function SecurityPlusVersionsPage() {
           </p>
           <p>
             A disclosure: CertBench&apos;s Security+ questions are written to
-            SY0-701, and we don&apos;t have SY0-801 questions yet, so we have a
-            stake in this answer. Every date and weight below comes from
+            SY0-701, apart from a free set on SY0-801&apos;s new AI objective, so
+            we have a stake in this answer. Every date and weight below comes from
             CompTIA&apos;s own{" "}
             <a
               href={COMPTIA_URLS.securityV7}
@@ -236,10 +238,18 @@ export default function SecurityPlusVersionsPage() {
           <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
             <p>
               The largest move is security program management, down six points,
-              with general security concepts up four. CompTIA&apos;s SY0-801 page
-              also adds a dedicated objective on the security risks of artificial
-              intelligence, and mentions AI-assisted automation and operational
-              technology environments.
+              with general security concepts up four. SY0-801 also adds a new
+              objective, 2.6, on the threats and vulnerabilities of AI usage, and
+              CompTIA&apos;s page mentions AI-assisted automation and operational
+              technology environments.{" "}
+              <Link href={SY0_801_PATH} className="text-primary underline underline-offset-4">
+                See all 27 SY0-801 objectives
+              </Link>
+              , or{" "}
+              <Link href={SY0_801_AI_PATH} className="text-primary underline underline-offset-4">
+                practise the new AI objective
+              </Link>
+              .
             </p>
             <p>
               The recommended experience changes as well. SY0-701 recommends
@@ -285,6 +295,16 @@ export default function SecurityPlusVersionsPage() {
 
         <RelatedLinks
           links={[
+            {
+              href: SY0_801_PATH,
+              label: "SY0-801 exam objectives",
+              note: "The exam, its five domains and all 27 objectives",
+            },
+            {
+              href: SY0_801_AI_PATH,
+              label: "SY0-801 AI practice questions",
+              note: "Free questions on the new AI objective, 2.6",
+            },
             {
               href: "/security-plus-practice-test",
               label: "Security+ practice test",

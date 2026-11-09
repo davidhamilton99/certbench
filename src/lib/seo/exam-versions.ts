@@ -4,8 +4,8 @@
  * pages ("lists its launch as on or around") is chosen to stay true after a
  * date passes, but re-check these when one does.
  */
-export const EXAM_FACTS_CHECKED = "November 2, 2026";
-export const EXAM_FACTS_CHECKED_ISO = "2026-11-02";
+export const EXAM_FACTS_CHECKED = "November 8, 2026";
+export const EXAM_FACTS_CHECKED_ISO = "2026-11-08";
 
 export const COMPTIA_URLS = {
   securityV7: "https://www.comptia.org/en-us/certifications/security/v7/",
@@ -24,6 +24,12 @@ export const MESSER_COMPARISON_URLS = {
 };
 
 export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";
+/** SY0-801 itself: the exam, its domains and every objective. */
+export const SY0_801_PATH = "/security-plus-sy0-801";
+/** Free practice on SY0-801's new AI objective, 2.6. */
+export const SY0_801_AI_PATH = "/security-plus-sy0-801-ai-practice-questions";
+/** When the SY0-801 pages last changed, for the sitemap. */
+export const SY0_801_UPDATED_ISO = "2026-11-08";
 
 export const SECURITY_PLUS_CERT = "security-plus-sy0-701";
 export const NETWORK_PLUS_CERT = "network-plus-n10-009";
