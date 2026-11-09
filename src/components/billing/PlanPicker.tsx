@@ -88,7 +88,8 @@ export function PlanPicker({
     setError("");
     track("checkout_started", { interval });
     try {
-      const { url } = await api(createCheckout, { interval });
+      // Backing out of checkout returns to the page they chose a plan on.
+      const { url } = await api(createCheckout, { interval, returnTo: surface });
       window.location.href = url;
     } catch (err) {
       if (err instanceof ApiError && err.code === "unauthorized") {

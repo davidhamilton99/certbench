@@ -4,6 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { getStripe, hasLiveSubscription } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
 import { pppForCountry } from "@/lib/pricing/ppp";
+import { afterCheckoutPath } from "@/lib/billing/after-checkout";
 import { publicEnv, serverEnv } from "@/env";
 
 /** Stripe lookup keys, created by scripts/setup-stripe-prices.mjs. */
@@ -88,10 +89,9 @@ export const POST = defineEndpoint(createCheckout, {
     const origin = publicEnv.NEXT_PUBLIC_APP_URL;
     // Backing out of an offer returns to that offer, not the app.
     const cancelUrl = `${origin}/${input.returnTo}`;
-    // Bought from a guided path: the success screen sends them back to it.
-    const successUrl = input.returnTo.startsWith("path/")
-      ? `${origin}/upgrade?upgraded=true&next=${encodeURIComponent(`/${input.returnTo}`)}`
-      : `${origin}/upgrade?upgraded=true`;
+    // Paying lands on the path itself, which waits for the activation webhook
+    // and opens with the unlock moment. Never the workspace.
+    const successUrl = `${origin}${afterCheckoutPath(input.returnTo)}`;
     let session;
     try {
       session = await getStripe().checkout.sessions.create({
@@ -99,9 +99,6 @@ export const POST = defineEndpoint(createCheckout, {
         mode: "subscription",
         line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
         discounts,
-        // Land on /upgrade (paywall-exempt), not /dashboard: the paywall gate
-        // would bounce the just-paid user back here if the activation webhook
-        // hasn't landed yet. The success screen forwards to /dashboard once Pro.
         success_url: successUrl,
         cancel_url: cancelUrl,
         metadata: { supabase_user_id: user.id },

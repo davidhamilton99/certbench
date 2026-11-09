@@ -210,6 +210,7 @@ beforeEach(() => {
   track.mockClear();
   identifyUser.mockClear();
   localStorage.clear();
+  window.history.replaceState(null, "", "/path/security-plus-sy0-701");
 });
 
 describe("a first visit", () => {
@@ -536,6 +537,86 @@ describe("a signed-in learner", () => {
       expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({ index: plan.freeThrough + 1 })
     );
     expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+  });
+
+  it("doesn't offer to sign in before it knows who's there", async () => {
+    auth.session = null;
+    renderPath();
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(await screen.findByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/login?next=/path/security-plus-sy0-701"
+    );
+  });
+});
+
+describe("back from paying", () => {
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    // Stripe's success link.
+    window.history.replaceState(null, "", "/path/security-plus-sy0-701?upgraded=1");
+  });
+
+  const landed = () =>
+    track.mock.calls.filter(([name]) => name === "path_upgrade_landed").map(([, props]) => props as { waited_ms: number });
+
+  it("opens straight onto the unlock moment when Pro is already on", async () => {
+    server.access = "pro";
+    renderPath();
+    expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+    expect(landed()).toEqual([{ cert: "security-plus-sy0-701", waited_ms: 0 }]);
+    expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
+    expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+  });
+
+  it("says the payment went through while Stripe confirms it, never the offer, then opens", async () => {
+    renderPath();
+    await screen.findByRole("button", { name: "Sign out" });
+    expect(screen.getByRole("heading", { name: "Opening your whole path…" })).toBeInTheDocument();
+    expect(screen.getByText(/Payment received/)).toBeInTheDocument();
+    expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Continue/ })).toBeNull();
+    expect(window.location.search).toBe("");
+
+    // The activation webhook lands: the path's next look at the account opens it.
+    server.access = "pro";
+    expect(
+      await screen.findByRole("heading", { name: "Your whole path is open." }, { timeout: 4000 })
+    ).toBeInTheDocument();
+    expect(landed()).toHaveLength(1);
+    expect(landed()[0].waited_ms).toBeGreaterThan(0);
+  }, 10_000);
+
+  it("says when confirming is slow, and looks again on request", async () => {
+    renderPath();
+    await screen.findByRole("button", { name: "Sign out" });
+    await act(async () => {});
+    // Its own clock says 25 seconds have gone by.
+    const realNow = Date.now.bind(Date);
+    const later = vi.spyOn(Date, "now").mockImplementation(() => realNow() + 25_000);
+    try {
+      const again = await screen.findByRole("button", { name: "Check again" }, { timeout: 4000 });
+      expect(screen.getByRole("link", { name: "support@certbench.dev" })).toHaveAttribute(
+        "href",
+        "mailto:support@certbench.dev"
+      );
+      server.access = "pro";
+      fireEvent.click(again);
+      expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+    } finally {
+      later.mockRestore();
+    }
+  }, 10_000);
+
+  it("is an ordinary visit when they aren't signed in", async () => {
+    auth.session = null;
+    server.progress = null;
+    renderPath();
+    expect(await screen.findByRole("radio", { name: /Right answer/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Opening your whole path…" })).toBeNull();
+    expect(window.location.search).toBe("");
   });
 });
 

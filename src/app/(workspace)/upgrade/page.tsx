@@ -9,7 +9,6 @@ import { listActiveCertifications } from "@/server/data/certifications";
 import { getUserPlan } from "@/server/services/subscription";
 import { ManageBillingButton } from "@/components/workspace/UpgradePanel";
 import { PlanPicker } from "@/components/billing/PlanPicker";
-import { UpgradeSuccess } from "@/components/billing/UpgradeSuccess";
 import { AddCertButton } from "@/components/billing/AddCertButton";
 import {
   Card,
@@ -41,9 +40,10 @@ const REASONS: Record<string, string> = {
 export default async function UpgradePage({
   searchParams,
 }: {
-  searchParams: Promise<{ reason?: string; upgraded?: string; added?: string; next?: string }>;
+  searchParams: Promise<{ reason?: string; added?: string }>;
 }) {
-  const { reason, upgraded, added, next } = await searchParams;
+  // Paying lands on the path, not here (an old success link is sent on by the proxy).
+  const { reason, added } = await searchParams;
   const db = await createClient();
   const {
     data: { user },
@@ -51,14 +51,6 @@ export default async function UpgradePage({
   if (!user) redirect("/login");
 
   const plan = await getUserPlan(db, user.id);
-
-  // Post-checkout landing (success_url). Show the payoff and forward into the
-  // app once the activation webhook has flipped the account to Pro.
-  if (upgraded === "true") {
-    // Bought from a guided path: go back to it, never anywhere off-site.
-    const back = next && /^\/path\/[a-z0-9-]+$/.test(next) ? next : undefined;
-    return <UpgradeSuccess isPro={plan.plan === "pro"} next={back} />;
-  }
   const reasonText = reason ? REASONS[reason] : undefined;
   const isPro = plan.plan === "pro";
 

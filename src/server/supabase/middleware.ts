@@ -28,7 +28,7 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 /**
  * Protected routes an authenticated non-Pro user may still reach:
- *   - /upgrade    pricing and the post-checkout landing
+ *   - /upgrade    pricing and the plan page (paying itself lands on the path)
  *   - /onboarding forwards to the guided path (kept for old links)
  * Everything else in the signed-in app is Pro-only. The free experience is the
  * guided path (/path/*, /start) and the public pages, which are never protected.
