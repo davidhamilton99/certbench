@@ -44,6 +44,14 @@ const nextConfig: NextConfig = {
       ],
     },
     {
+      // Fonts aren't pages, but Google fetches them while rendering and lists
+      // them as "Crawled - currently not indexed", where they fail every
+      // validation of that issue. noindex takes them out of it; Google still
+      // uses them to render.
+      source: "/_next/static/media/:font([^/]+\\.woff2)",
+      headers: [{ key: "X-Robots-Tag", value: "noindex" }],
+    },
+    {
       // Defense-in-depth headers on every response. Deliberately does NOT
       // set a script/style CSP: the app relies on inline scripts (PostHog
       // init, theme bootstrap, JSON-LD) and third-party origins (Stripe,
