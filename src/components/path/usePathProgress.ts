@@ -6,6 +6,7 @@ import { api } from "@/lib/api-client";
 import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/path";
 import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
+import { carryOverPreV15Path } from "./carry-over";
 import {
   finishLab as finishLabRun,
   finishStop,
@@ -126,6 +127,7 @@ export function usePathProgress(cert: PathCert) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await carryOverPreV15Path(cert);
       const local = readLocalPath(cert);
       let uid: string | null = null;
       let email: string | null = null;

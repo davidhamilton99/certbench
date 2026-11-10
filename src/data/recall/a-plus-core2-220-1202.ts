@@ -1,6 +1,6 @@
 import type { RecallDeckConfig } from "@/lib/recall/recall-deck";
 
-/** Curated Recall decks for A+ Core 2 (220-1102). Unique cues; the rest auto. */
+/** Curated Recall decks for A+ Core 2 (220-1202). Unique cues; the rest auto. */
 export const aPlusCore2RecallConfigs: RecallDeckConfig[] = [
   {
     id: "a2-windows",

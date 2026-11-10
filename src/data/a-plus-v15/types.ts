@@ -41,6 +41,12 @@ export interface V15Exam {
   objectiveMap: Record<string, string | null>;
   /** Recall decks the path teaches from, deck id → V15 objective; null when dropped. */
   recallDecks: Record<string, string | null>;
+  /**
+   * Lab stops that close their domain with a different scenario on V15 (a
+   * scenario moved domain or left): stop id ("lab2") → the scenario closing it
+   * now. A learner's record for the stop is rebuilt from that scenario's own.
+   */
+  changedLabs: Record<string, string>;
   /** Questions that don't follow their objective's map: id → V15 code, and why. */
   overrides: Record<string, { to: string; why: string }>;
   /** Questions on topics V15 doesn't test: set inactive (never deleted), and why. */

@@ -19,12 +19,12 @@ const network = {
   topic: "IP addressing and subnets",
 };
 const aPlus = {
-  certSlug: "a-plus-core1-220-1101",
+  certSlug: "a-plus-core1-220-1201",
   shortCertName: "A+ Core 1",
-  examCode: "220-1101",
-  code: "1.1",
-  title: "Install and configure laptop hardware and components",
-  topic: "Laptop hardware",
+  examCode: "220-1201",
+  code: "3.1",
+  title: "Display components and attributes",
+  topic: "Displays",
 };
 
 describe("titleCase", () => {
@@ -60,10 +60,10 @@ describe("objective page titles", () => {
     expect(objectivePageDescription(network)).not.toMatch(/objective|1\.4|Given a scenario/);
   });
 
-  it("don't pin A+ to its retired exam code, and the description says what it was written to", () => {
-    expect(objectivePageTitle(aPlus)).toBe("Laptop Hardware Practice Questions (A+ Core 1)");
-    const description = objectivePageDescription(aPlus);
-    expect(description).toContain("Written to 220-1101 objective 1.1");
-    expect(description).toContain("220-1201");
+  it("cite A+ objective numbers now that they're 220-1201's", () => {
+    expect(objectivePageTitle(aPlus)).toBe("Displays Practice Questions (220-1201 3.1)");
+    expect(objectivePageDescription(aPlus)).toBe(
+      "Free A+ Core 1 (220-1201) practice questions for objective 3.1: Display components and attributes. Original, exam-style, with full explanations."
+    );
   });
 });

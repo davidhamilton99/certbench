@@ -1,6 +1,6 @@
 import { isDataRate, type RecallDeckConfig } from "@/lib/recall/recall-deck";
 
-/** Curated Recall decks for A+ Core 1 (220-1101). Unique cues; the rest auto. */
+/** Curated Recall decks for A+ Core 1 (220-1201). Unique cues; the rest auto. */
 export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
   {
     id: "a1-ports",

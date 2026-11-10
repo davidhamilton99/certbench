@@ -4,9 +4,13 @@
 --
 -- The certification and domain rows stay (enrollments, Pro and attempts keep
 -- pointing at them). Questions are re-tagged to V15's objectives; ones on
--- topics V15 doesn't test become inactive, and none is deleted.
+-- topics V15 doesn't test become inactive, and none is deleted. Saved paths
+-- move to the V15 slugs with their answers re-keyed.
 
 begin;
+
+-- Saved paths move to the V15 slugs below; the check returns at the end.
+alter table path_progress drop constraint if exists path_progress_cert_slug_check;
 
 -- 220-1101 to 220-1201 --------------------------------------------------------
 
@@ -297,6 +301,96 @@ begin
   end if;
 end $$;
 
+-- Saved paths move to 220-1201: answers follow their question (or recall deck) to
+-- its V15 objective, finished learn stops follow their objective, and what left
+-- the exam is dropped. migrateAPlusV14Progress does the same to a device's copy.
+with objective_map(old_code, new_code) as (values
+  ('1.1', '1.1'),
+  ('1.2', '3.1'),
+  ('1.3', '1.2'),
+  ('1.4', '1.3'),
+  ('2.1', '2.1'),
+  ('2.2', '2.5'),
+  ('2.3', '2.2'),
+  ('2.4', '2.3'),
+  ('2.5', '2.6'),
+  ('2.6', '2.4'),
+  ('2.7', '2.7'),
+  ('2.8', '2.8'),
+  ('3.1', '3.2'),
+  ('3.2', '3.3'),
+  ('3.3', '3.4'),
+  ('3.4', '3.5'),
+  ('3.5', '3.6'),
+  ('3.6', '3.7'),
+  ('3.7', '4.2'),
+  ('4.1', '4.2'),
+  ('4.2', '4.1'),
+  ('5.1', null),
+  ('5.2', '5.1'),
+  ('5.3', '5.2'),
+  ('5.4', '5.3'),
+  ('5.5', '5.4'),
+  ('5.6', '5.6'),
+  ('5.7', '5.5')
+),
+deck_map(deck, new_code) as (values
+  ('ports-protocols', '2.1'),
+  ('wireless-standards', '2.2'),
+  ('cable-types', '3.2'),
+  ('storage-types', '3.4'),
+  ('motherboard-components', '3.5'),
+  ('printer-types', '3.8'),
+  ('troubleshooting-steps', null),
+  ('subnet', '2.6')
+)
+update path_progress p
+set cert_slug = 'a-plus-core1-220-1201',
+  progress = p.progress || jsonb_build_object(
+  'items', coalesce((
+    select jsonb_object_agg(k.new_key, k.record)
+    from (
+      select distinct on (n.new_key) n.new_key, n.record
+      from (
+        select e.value as record, case
+          when e.key !~ '^[aqr]\|[^|]+\|.+$' then e.key
+          when e.key like 'q|%' then (
+            select 'q|' || s.code || '|' || q.id
+            from cert_questions q
+            join cert_sub_objectives s on s.id = q.sub_objective_id
+            where q.certification_id = (select id from certifications where slug = 'a-plus-core1-220-1101') and q.is_active
+              and q.id::text = substring(e.key from '^q\|[^|]+\|(.+)$'))
+          when e.key like 'r|%' and exists (select 1 from deck_map d where d.deck = split_part(e.key, '|', 3)) then (
+            select 'r|' || d.new_code || '|' || substring(e.key from '^r\|[^|]+\|(.+)$')
+            from deck_map d where d.deck = split_part(e.key, '|', 3))
+          else (
+            select left(e.key, 2) || m.new_code || '|' || substring(e.key from '^[aqr]\|[^|]+\|(.+)$')
+            from objective_map m where m.old_code = split_part(e.key, '|', 2))
+        end as new_key
+        from jsonb_each(coalesce(p.progress -> 'items', '{}'::jsonb)) as e
+      ) as n
+      where n.new_key is not null
+      order by n.new_key, (n.record ->> 't')::numeric desc nulls last
+    ) as k
+  ), '{}'::jsonb),
+  'stops', coalesce((
+    select jsonb_object_agg(k.new_key, k.record)
+    from (
+      select distinct on (n.new_key) n.new_key, n.record
+      from (
+        select e.value as record, case
+          when e.key ~ '^\d+\.\d+$' then (select m.new_code from objective_map m where m.old_code = e.key)
+          else e.key
+        end as new_key
+        from jsonb_each(coalesce(p.progress -> 'stops', '{}'::jsonb)) as e
+      ) as n
+      where n.new_key is not null
+      order by n.new_key, (n.record ->> 'at')::numeric desc nulls last
+    ) as k
+  ), '{}'::jsonb)
+)
+where p.cert_slug = 'a-plus-core1-220-1101';
+
 -- The exam itself: enrollments, Pro and history stay on the same row.
 update certifications
 set slug = 'a-plus-core1-220-1201', exam_code = '220-1201', passing_score = 675
@@ -537,17 +631,117 @@ begin
   end if;
 end $$;
 
+-- Saved paths move to 220-1202: answers follow their question (or recall deck) to
+-- its V15 objective, finished learn stops follow their objective, and what left
+-- the exam is dropped. migrateAPlusV14Progress does the same to a device's copy.
+with objective_map(old_code, new_code) as (values
+  ('1.1', '1.3'),
+  ('1.2', '1.5'),
+  ('1.3', '1.4'),
+  ('1.4', '1.6'),
+  ('1.5', '1.6'),
+  ('1.6', '1.7'),
+  ('1.7', '1.10'),
+  ('1.8', '1.1'),
+  ('1.9', '1.2'),
+  ('1.10', '1.8'),
+  ('1.11', '1.9'),
+  ('2.1', '2.1'),
+  ('2.2', '2.3'),
+  ('2.3', '2.4'),
+  ('2.4', '2.5'),
+  ('2.5', '2.2'),
+  ('2.6', '2.7'),
+  ('2.7', '2.8'),
+  ('2.8', '2.9'),
+  ('2.9', '2.10'),
+  ('2.10', '2.11'),
+  ('3.1', '3.1'),
+  ('3.2', '3.4'),
+  ('3.3', '2.6'),
+  ('3.4', '3.2'),
+  ('3.5', '3.3'),
+  ('4.1', '4.1'),
+  ('4.2', '4.2'),
+  ('4.3', '4.3'),
+  ('4.4', '4.4'),
+  ('4.5', '4.5'),
+  ('4.6', '4.6'),
+  ('4.7', '4.7'),
+  ('4.8', '4.8'),
+  ('4.9', '4.9')
+),
+deck_map(deck, new_code) as (values
+  ('windows-commands', '1.5'),
+  ('windows-tools', '1.4'),
+  ('linux-commands', '1.9'),
+  ('security-concepts', '2.1'),
+  ('malware-removal', '2.6')
+),
+changed_labs(lab_stop, scenario) as (values
+  ('lab2', 'aplus-core2-sim-malware-removal'),
+  ('lab3', 'aplus-core2-app-install-troubleshooting'),
+  ('lab4', 'aplus-core2-incident-response')
+)
+update path_progress p
+set cert_slug = 'a-plus-core2-220-1202',
+  progress = p.progress || jsonb_build_object(
+  'items', coalesce((
+    select jsonb_object_agg(k.new_key, k.record)
+    from (
+      select distinct on (n.new_key) n.new_key, n.record
+      from (
+        select e.value as record, case
+          when e.key !~ '^[aqr]\|[^|]+\|.+$' then e.key
+          when e.key like 'q|%' then (
+            select 'q|' || s.code || '|' || q.id
+            from cert_questions q
+            join cert_sub_objectives s on s.id = q.sub_objective_id
+            where q.certification_id = (select id from certifications where slug = 'a-plus-core2-220-1102') and q.is_active
+              and q.id::text = substring(e.key from '^q\|[^|]+\|(.+)$'))
+          when e.key like 'r|%' and exists (select 1 from deck_map d where d.deck = split_part(e.key, '|', 3)) then (
+            select 'r|' || d.new_code || '|' || substring(e.key from '^r\|[^|]+\|(.+)$')
+            from deck_map d where d.deck = split_part(e.key, '|', 3))
+          else (
+            select left(e.key, 2) || m.new_code || '|' || substring(e.key from '^[aqr]\|[^|]+\|(.+)$')
+            from objective_map m where m.old_code = split_part(e.key, '|', 2))
+        end as new_key
+        from jsonb_each(coalesce(p.progress -> 'items', '{}'::jsonb)) as e
+      ) as n
+      where n.new_key is not null
+      order by n.new_key, (n.record ->> 't')::numeric desc nulls last
+    ) as k
+  ), '{}'::jsonb),
+  'stops', coalesce((
+    select jsonb_object_agg(k.new_key, k.record)
+    from (
+      select distinct on (n.new_key) n.new_key, n.record
+      from (
+        select e.value as record, case
+          when e.key ~ '^\d+\.\d+$' then (select m.new_code from objective_map m where m.old_code = e.key)
+          else e.key
+        end as new_key
+        from jsonb_each(coalesce(p.progress -> 'stops', '{}'::jsonb)) as e
+      ) as n
+      where n.new_key is not null
+        and n.new_key not in (select lab_stop from changed_labs)
+      order by n.new_key, (n.record ->> 'at')::numeric desc nulls last
+    ) as k
+  ), '{}'::jsonb) || coalesce((
+    select jsonb_object_agg(c.lab_stop, p.progress -> 'labs' -> c.scenario)
+    from changed_labs c
+    where p.progress -> 'labs' -> c.scenario is not null
+  ), '{}'::jsonb)
+)
+where p.cert_slug = 'a-plus-core2-220-1102';
+
 -- The exam itself: enrollments, Pro and history stay on the same row.
 update certifications
 set slug = 'a-plus-core2-220-1202', exam_code = '220-1202', passing_score = 700
 where slug = 'a-plus-core2-220-1102';
 
--- Saved paths may use the V15 slugs. Rows still on the old ones are moved,
--- answers re-keyed, by scripts/a-plus-v15/migrate-path-progress.ts.
-alter table path_progress drop constraint if exists path_progress_cert_slug_check;
 alter table path_progress add constraint path_progress_cert_slug_check check (cert_slug in (
   'security-plus-sy0-701', 'network-plus-n10-009',
-  'a-plus-core1-220-1101', 'a-plus-core2-220-1102',
   'a-plus-core1-220-1201', 'a-plus-core2-220-1202'
 ));
 

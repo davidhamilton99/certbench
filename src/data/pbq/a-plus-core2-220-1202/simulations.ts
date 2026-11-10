@@ -248,8 +248,8 @@ export const aPlusCore2Simulations: SimulationScenario[] = [
     title: "Malware Removal Procedure",
     briefing:
       "A receptionist reports that their Windows 10 PC has been behaving strangely for two days. The browser is redirecting to unfamiliar websites, unwanted popup advertisements appear even when no browser is open, and a new toolbar appeared in the browser without being installed intentionally. Task Manager shows several unfamiliar processes consuming CPU resources. You must identify the malware type, follow the CompTIA malware removal process, and implement prevention measures.",
-    domain_number: "4.0",
-    domain_title: "Operational Procedures",
+    domain_number: "2.0",
+    domain_title: "Security",
     estimatedMinutes: 10,
     tasks: [
       /* ── Task 1 ── */

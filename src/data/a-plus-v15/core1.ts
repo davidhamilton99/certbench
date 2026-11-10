@@ -114,7 +114,12 @@ export const CORE1_V15: V15Exam = {
     "motherboard-components": "3.5",
     "printer-types": "3.8",
     "troubleshooting-steps": null,
+    // Subnetting reps share the recall id form (r|<objective>|subnet|<skill>);
+    // 220-1201 tests subnet masks under 2.6, with IP addressing.
+    subnet: "2.6",
   },
+  // The methodology drill left, but a simulation always closed domain 5.
+  changedLabs: {},
   overrides: {
     "0fc888cd-db0a-4980-b39f-2c5dde875f02": { to: "1.1", why: "Webcam placement is a mobile hardware topic (1.1)." },
     "35608f31-aafc-4e0e-a34b-2e9daf1b83a3": { to: "5.4", why: "Diagnosing a broken laptop screen is a mobile device issue (5.4)." },

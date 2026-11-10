@@ -5,7 +5,7 @@
  *   npx tsx scripts/seed-cert-questions.ts <cert-slug> <data-file>
  *
  * Example:
- *   npx tsx scripts/seed-cert-questions.ts a-plus-core1-220-1101 data/aplus-core1.txt
+ *   npx tsx scripts/seed-cert-questions.ts a-plus-core1-220-1201 data/aplus-core1.txt
  *   npx tsx scripts/seed-cert-questions.ts network-plus-n10-009 data/network-plus-n10-009.txt
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY in .env.local
@@ -31,7 +31,7 @@ const dataFile = process.argv[3];
 
 if (!certSlug || !dataFile) {
   console.error("Usage: npx tsx scripts/seed-cert-questions.ts <cert-slug> <data-file>");
-  console.error("Example: npx tsx scripts/seed-cert-questions.ts a-plus-core1-220-1101 data/aplus-core1.txt");
+  console.error("Example: npx tsx scripts/seed-cert-questions.ts a-plus-core1-220-1201 data/aplus-core1.txt");
   process.exit(1);
 }
 

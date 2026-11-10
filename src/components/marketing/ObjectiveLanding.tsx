@@ -40,8 +40,8 @@ export interface ObjectiveLandingData {
 const PRACTICE_HUB: Record<string, string> = {
   "security-plus-sy0-701": "/security-plus-practice-test",
   "network-plus-n10-009": "/network-plus-practice-test",
-  "a-plus-core1-220-1101": "/a-plus-practice-test",
-  "a-plus-core2-220-1102": "/a-plus-practice-test",
+  "a-plus-core1-220-1201": "/a-plus-practice-test",
+  "a-plus-core2-220-1202": "/a-plus-practice-test",
 };
 
 export function ObjectiveLanding({

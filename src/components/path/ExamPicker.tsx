@@ -9,13 +9,14 @@ import { PATH_CERTS, type PathCert } from "@/core/path/types";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { readLocalPath } from "./local-path";
+import { carryOverPreV15Path } from "./carry-over";
 import { cn } from "@/lib/utils";
 
 const EXAM_CODES: Record<PathCert, string> = {
   "security-plus-sy0-701": "SY0-701",
   "network-plus-n10-009": "N10-009",
-  "a-plus-core1-220-1101": "220-1101",
-  "a-plus-core2-220-1102": "220-1102",
+  "a-plus-core1-220-1201": "220-1201",
+  "a-plus-core2-220-1202": "220-1202",
 };
 
 /**
@@ -35,18 +36,25 @@ export function ExamPicker({
   const [resume, setResume] = useState<{ cert: PathCert; stops: number } | null>(null);
   const flag = upgraded ? "?upgraded=1" : "";
 
+  // Reading this device's storage can only happen after mount.
   useEffect(() => {
-    let best: { cert: PathCert; stops: number; at: number } | null = null;
-    for (const cert of PATH_CERTS) {
-      const local = readLocalPath(cert);
-      if (!local || !hasStarted(local.progress)) continue;
-      const stops = Object.values(local.progress.stops);
-      const at = Math.max(0, ...stops.map((s) => s.at), ...Object.values(local.progress.items).map((i) => i.t));
-      if (!best || at > best.at) best = { cert, stops: stops.length, at };
-    }
-    // Reading this device's storage can only happen after mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (best) setResume({ cert: best.cert, stops: best.stops });
+    let cancelled = false;
+    (async () => {
+      // An A+ path begun before 220-1201/1202 is offered under its exam today.
+      await Promise.all(PATH_CERTS.map(carryOverPreV15Path));
+      let best: { cert: PathCert; stops: number; at: number } | null = null;
+      for (const cert of PATH_CERTS) {
+        const local = readLocalPath(cert);
+        if (!local || !hasStarted(local.progress)) continue;
+        const stops = Object.values(local.progress.stops);
+        const at = Math.max(0, ...stops.map((s) => s.at), ...Object.values(local.progress.items).map((i) => i.t));
+        if (!best || at > best.at) best = { cert, stops: stops.length, at };
+      }
+      if (best && !cancelled) setResume({ cert: best.cert, stops: best.stops });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

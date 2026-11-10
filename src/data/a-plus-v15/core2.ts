@@ -122,6 +122,13 @@ export const CORE2_V15: V15Exam = {
     "security-concepts": "2.1",
     "malware-removal": "2.6",
   },
+  // Malware removal moved from Software Troubleshooting (and a mis-tagged
+  // Operational Procedures) into Security, so three domains close differently.
+  changedLabs: {
+    lab2: "aplus-core2-sim-malware-removal",
+    lab3: "aplus-core2-app-install-troubleshooting",
+    lab4: "aplus-core2-incident-response",
+  },
   overrides: {
     "325c5013-6267-4fa2-a0a7-b127f905b9bb": { to: "4.8", why: "Running PowerShell scripts is a scripting topic (4.8)." },
     "47b61f05-ca06-4444-b9ed-bfdaa9092c4d": { to: "2.2", why: "User Account Control is listed under Windows security settings (2.2)." },

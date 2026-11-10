@@ -4,26 +4,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
   /* ================================================================ */
   /*  ORDERING SCENARIOS                                               */
   /* ================================================================ */
-  {
-    type: "ordering",
-    id: "aplus-core1-troubleshooting-methodology",
-    title: "CompTIA Troubleshooting Methodology",
-    description:
-      "Arrange the six steps of the CompTIA troubleshooting methodology in the correct order.",
-    domain_number: "5.0",
-    domain_title: "Hardware and Network Troubleshooting",
-    items: [
-      "Identify the problem",
-      "Establish a theory of probable cause",
-      "Test the theory to determine the cause",
-      "Establish a plan of action to resolve the problem and implement the solution",
-      "Verify full system functionality and implement preventive measures",
-      "Document findings, actions, and outcomes",
-    ],
-    correct_order: [0, 1, 2, 3, 4, 5],
-    explanation:
-      "The CompTIA A+ 6-step troubleshooting methodology always begins with identifying the problem by gathering information and questioning the user. Theories are formed and tested before a plan is created and the solution implemented. Full functionality is verified and preventive measures applied before the final step of documenting all findings and outcomes.",
-  },
+  // No troubleshooting-methodology drill: 220-1201 doesn't test the method.
   {
     type: "ordering",
     id: "aplus-core1-laser-printer-process",

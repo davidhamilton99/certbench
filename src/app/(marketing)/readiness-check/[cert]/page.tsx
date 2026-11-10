@@ -23,11 +23,11 @@ const READINESS_RELATED: Record<string, RelatedLink[]> = {
     { href: "/network-plus-practice-test", label: "Network+ practice test", note: "Original N10-009 questions with full explanations" },
     { href: "/network-plus-pbq-examples", label: "Network+ PBQ examples", note: "Try interactive topology and troubleshooting scenarios" },
   ],
-  "a-plus-core1-220-1101": [
+  "a-plus-core1-220-1201": [
     { href: "/a-plus-practice-test", label: "A+ practice test", note: "Original Core 1 and Core 2 questions with full explanations" },
     { href: "/a-plus-core-1-pbq-examples", label: "A+ Core 1 PBQ examples", note: "Hardware, networking and troubleshooting scenarios to work through" },
   ],
-  "a-plus-core2-220-1102": [
+  "a-plus-core2-220-1202": [
     { href: "/a-plus-practice-test", label: "A+ practice test", note: "Original Core 1 and Core 2 questions with full explanations" },
     { href: "/a-plus-core-2-pbq-examples", label: "A+ Core 2 PBQ examples", note: "Windows, security and malware removal scenarios to work through" },
   ],

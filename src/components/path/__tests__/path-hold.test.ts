@@ -44,6 +44,17 @@ describe("holding the path's stage", () => {
     expect(scriptHolds("?upgraded=10")).toBe(false);
   });
 
+  it("holds for an A+ learner whose path is still under the 220-1101 slug", () => {
+    const core1 = "a-plus-core1-220-1201";
+    store.set(pathStorageKey("a-plus-core1-220-1101"), JSON.stringify({ v: 1, owner: null, progress: { items: {}, stops: { warmup: {} } } }));
+    expect(holdsStage(core1, "")).toBe(true);
+    document.documentElement.removeAttribute("data-path-returning");
+    new Function(holdScript(core1))();
+    expect(document.documentElement.hasAttribute("data-path-returning")).toBe(true);
+    // Only A+ had an old slug.
+    expect(holdsStage(cert, "")).toBe(false);
+  });
+
   it("ignores another exam's progress and a broken save", () => {
     store.set(pathStorageKey("security-plus-sy0-701"), JSON.stringify({ progress: { items: { a: {} }, stops: {} } }));
     expect(holdsStage(cert, "")).toBe(false);

@@ -122,7 +122,7 @@ describe("ExamBridge", () => {
     );
     expect(screen.getByRole("link", { name: "A+ Core 1" })).toHaveAttribute(
       "href",
-      "/path/a-plus-core1-220-1101"
+      "/path/a-plus-core1-220-1201"
     );
     fireEvent.click(screen.getByRole("link", { name: "Network+" }));
     expect(track).toHaveBeenCalledWith("upsell_clicked", {

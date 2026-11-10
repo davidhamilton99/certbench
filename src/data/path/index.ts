@@ -58,7 +58,7 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
       "1.4": ["cidr-mask", "host-math", "network-id", "same-subnet"],
     },
   },
-  "a-plus-core1-220-1101": {
+  "a-plus-core1-220-1201": {
     authored: [],
     warmup: {
       decks: [
@@ -67,20 +67,21 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
       ],
       bank: 3,
     },
+    // On 220-1201's objectives (src/data/a-plus-v15/core1.ts, recallDecks).
     recallTables: {
       "ports-protocols": "2.1",
-      "wireless-standards": "2.3",
-      "cable-types": "3.1",
-      "storage-types": "3.3",
-      "motherboard-components": "3.4",
-      "printer-types": "3.6",
-      "troubleshooting-steps": "5.1",
+      "wireless-standards": "2.2",
+      "cable-types": "3.2",
+      "storage-types": "3.4",
+      "motherboard-components": "3.5",
+      "printer-types": "3.8",
     },
+    // 2.6 is IP addressing on 220-1201, subnet masks included.
     subnetting: {
       "2.6": ["cidr-mask", "host-math"],
     },
   },
-  "a-plus-core2-220-1102": {
+  "a-plus-core2-220-1202": {
     authored: [],
     warmup: {
       decks: [
@@ -89,12 +90,13 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
       ],
       bank: 3,
     },
+    // On 220-1202's objectives (src/data/a-plus-v15/core2.ts, recallDecks).
     recallTables: {
-      "windows-commands": "1.2",
-      "windows-tools": "1.3",
-      "linux-commands": "1.11",
+      "windows-commands": "1.5",
+      "windows-tools": "1.4",
+      "linux-commands": "1.9",
       "security-concepts": "2.1",
-      "malware-removal": "3.3",
+      "malware-removal": "2.6",
     },
   },
 };

@@ -433,8 +433,8 @@ describe("all recall decks (every cert)", () => {
   const slugs = [
     "security-plus-sy0-701",
     "network-plus-n10-009",
-    "a-plus-core1-220-1101",
-    "a-plus-core2-220-1102",
+    "a-plus-core1-220-1201",
+    "a-plus-core2-220-1202",
   ];
 
   it("Security+ covers its curated tables plus auto-derived ones", () => {
@@ -500,7 +500,7 @@ describe("all recall decks (every cert)", () => {
   });
 
   it("asks which Windows tool does a job, and shows how to open it", () => {
-    const deck = getRecallDecks("a-plus-core2-220-1102").find((d) => d.config.tableId === "windows-tools")!;
+    const deck = getRecallDecks("a-plus-core2-220-1202").find((d) => d.config.tableId === "windows-tools")!;
     expect(deck.config.id).toBe("a2-tools");
     const q = generateRecallQuestion(deck, seeded(3), { itemId: "View system, application, and security event logs" });
     expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", detail: "eventvwr.msc" });
