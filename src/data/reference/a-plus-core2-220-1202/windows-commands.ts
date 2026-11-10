@@ -39,7 +39,7 @@ export const windowsCommands: ReferenceTable = {
     { columns: { command: "net user", type: "CMD", purpose: "Manage local user accounts — create, modify, delete, view", example: "net user — list users; net user admin * — change admin password; net user bob /add" } },
     { columns: { command: "winver", type: "CMD", purpose: "Show the Windows version and build number", example: "winver — opens the About Windows box: edition, version (e.g. 23H2) and OS build" } },
     { columns: { command: "whoami", type: "CMD", purpose: "Show which user account you're signed in as", example: "whoami — domain\\user; whoami /groups — group memberships; whoami /priv — privileges" } },
-    { columns: { command: "[command] /?", type: "CMD", purpose: "Show a command's help: its syntax and switches", example: "ipconfig /? — every ipconfig switch; robocopy /? — robocopy's options" } },
+    { columns: { command: "/?", type: "CMD", purpose: "Show a command's help (syntax and switches), typed after the command's name", example: "ipconfig /? — every ipconfig switch; robocopy /? — robocopy's options" } },
 
     // OS management
     { columns: { command: "gpupdate", type: "CMD", purpose: "Refresh Group Policy settings immediately", example: "gpupdate /force — re-applies all policies even if unchanged" } },
