@@ -11,9 +11,10 @@ export type { CoverageItem, NewQuestion } from "./types";
  * New A+ Core 1 questions for the topics 220-1201 (V15) added, which our
  * 220-1101 bank doesn't cover, plus printer questions for the two objectives
  * the re-tagged bank leaves short. Sources: CompTIA's 220-1201 exam
- * objectives (draft version 1.2) compared with its 220-1101 objectives
- * (version 1.0), and Professor Messer's list of the differences between the
- * two exams. The migration builder (scripts/a-plus-v15) reads this export.
+ * objectives (version 4.0, the final document) compared with its 220-1101
+ * objectives (version 1.0), and Professor Messer's list of the differences
+ * between the two exams. The migration builder (scripts/a-plus-v15) reads
+ * this export.
  */
 export const CORE1_NEW_QUESTIONS: NewQuestion[] = [...domain1, ...domain2, ...domain3, ...domain4, ...domain5];
 
