@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { domainLab } from "@/core/path/labs";
 import { EMPTY_PATH_PROGRESS, PATH_CERTS, type PathCert, type PathProgress } from "@/core/path/types";
@@ -7,6 +9,8 @@ import { OBJECTIVE_TITLES } from "@/data/path/titles";
 import { pbqRegistry } from "@/data/pbq";
 import { A_PLUS_V15, CORE1_V15, CORE2_V15, migrateAPlusV14Progress, v15Codes, v15ObjectiveOf } from "..";
 import { activeAfterMigration, buildAPlusV15Migration } from "../migration-sql";
+import { CORE1_NEW_QUESTIONS } from "../new-questions/core1";
+import { CORE2_NEW_QUESTIONS } from "../new-questions/core2";
 import { A_PLUS_PRACTICE_PAGE, aPlusV14Redirects } from "../redirects";
 import type { V15Exam } from "../types";
 import bankJson from "../v14-bank.json";
@@ -279,6 +283,17 @@ describe("the migration SQL", () => {
   it("checks the active count it expects after the move", () => {
     expect(sql).toContain(`<> ${activeAfterMigration(CORE1_V15, questionsOf(CORE1_V15))} then`);
     expect(sql).toContain(`<> ${activeAfterMigration(CORE2_V15, questionsOf(CORE2_V15))} then`);
+  });
+
+  it("is committed as 029 exactly as the builder makes it, new questions included", () => {
+    const release = buildAPlusV15Migration([
+      { exam: CORE1_V15, bank: questionsOf(CORE1_V15), newQuestions: CORE1_NEW_QUESTIONS },
+      { exam: CORE2_V15, bank: questionsOf(CORE2_V15), newQuestions: CORE2_NEW_QUESTIONS },
+    ]);
+    const file = readFileSync(join(process.cwd(), "supabase/migrations/029_a_plus_v15.sql"), "utf8");
+    expect(file.replace(/\r\n/g, "\n")).toBe(release);
+    expect(release).toContain(`<> ${activeAfterMigration(CORE1_V15, questionsOf(CORE1_V15)) + CORE1_NEW_QUESTIONS.length} then`);
+    expect(release).toContain(`<> ${activeAfterMigration(CORE2_V15, questionsOf(CORE2_V15)) + CORE2_NEW_QUESTIONS.length} then`);
   });
 
   it("moves both exams, and their saved paths, to the V15 slugs", () => {
