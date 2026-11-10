@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const wirelessStandards: ReferenceTable = {
   id: "wireless-standards",
   title: "Wireless Standards",
-  description: "Wi-Fi, Bluetooth, NFC, RFID, and cellular wireless standards for the CompTIA A+ 220-1101 exam.",
+  description: "Wi-Fi, Bluetooth, NFC, RFID, and cellular wireless standards for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "standard", label: "Standard", mono: true },
     { key: "name", label: "Name / Brand" },
@@ -17,7 +17,7 @@ export const wirelessStandards: ReferenceTable = {
     { columns: { standard: "802.11b", name: "Wi-Fi (legacy)", frequency: "2.4 GHz", maxSpeed: "11 Mbps", features: "First widely adopted standard; prone to interference from microwaves, Bluetooth" } },
     { columns: { standard: "802.11g", name: "Wi-Fi (legacy)", frequency: "2.4 GHz", maxSpeed: "54 Mbps", features: "Backward compatible with 802.11b; still found in older devices" } },
     { columns: { standard: "802.11n", name: "Wi-Fi 4", frequency: "2.4 GHz / 5 GHz", maxSpeed: "600 Mbps", features: "First dual-band standard; introduced MIMO (multiple antennas); 40 MHz channels" } },
-    { columns: { standard: "802.11ac", name: "Wi-Fi 5", frequency: "5 GHz only", maxSpeed: "3.5 Gbps", features: "MU-MIMO; beamforming; 80/160 MHz channels; Wave 2 = 4×4 MU-MIMO" } },
+    { columns: { standard: "802.11ac", name: "Wi-Fi 5", frequency: "5 GHz only", maxSpeed: "6.9 Gbps", features: "MU-MIMO (downstream); beamforming; 80/160 MHz channels; up to 8 spatial streams" } },
     { columns: { standard: "802.11ax", name: "Wi-Fi 6 / 6E", frequency: "2.4 / 5 GHz (6E adds 6 GHz)", maxSpeed: "9.6 Gbps", features: "OFDMA; BSS Coloring; target wake time (TWT); better in dense environments" } },
     // Bluetooth
     { columns: { standard: "Bluetooth 4.0", name: "Bluetooth Low Energy (BLE)", frequency: "2.4 GHz ISM", maxSpeed: "1 Mbps", features: "Introduced BLE for IoT, wearables; ~10 m range" } },
@@ -32,7 +32,7 @@ export const wirelessStandards: ReferenceTable = {
     { columns: { standard: "RFID (UHF)", name: "Ultra High Frequency RFID", frequency: "860–960 MHz", maxSpeed: "~140 Kbps", features: "Range up to 12 m; retail inventory, supply chain, asset tracking" } },
     // Cellular
     { columns: { standard: "3G (HSPA+)", name: "3rd Generation", frequency: "700 MHz – 2.1 GHz", maxSpeed: "~42 Mbps", features: "Legacy mobile broadband; being sunset by most carriers" } },
-    { columns: { standard: "4G LTE", name: "4th Generation (LTE)", frequency: "700 MHz – 2.6 GHz", maxSpeed: "~150 Mbps (cat 6)", features: "Current baseline mobile standard; LTE-A reaches ~1 Gbps" } },
+    { columns: { standard: "4G LTE", name: "4th Generation (LTE)", frequency: "700 MHz – 2.6 GHz", maxSpeed: "~150 Mbps", features: "Current baseline mobile standard; LTE-Advanced (LTE-A) is faster still" } },
     { columns: { standard: "5G", name: "5th Generation", frequency: "Sub-6 GHz / mmWave (24–100 GHz)", maxSpeed: "Up to 20 Gbps (mmWave)", features: "Low latency (<1 ms); mmWave = high speed, short range; sub-6 = broader coverage" } },
   ],
 };

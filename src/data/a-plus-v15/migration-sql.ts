@@ -160,12 +160,98 @@ begin
   end if;
 end $$;`);
 
+  out.push(progressSql(exam, cert));
+
   out.push(`-- The exam itself: enrollments, Pro and history stay on the same row.
 update certifications
 set slug = ${str(exam.slug)}, exam_code = ${str(exam.examCode)}, passing_score = ${exam.passingScore}
 where slug = ${str(exam.oldSlug)};`);
 
   return out.join("\n\n");
+}
+
+/** A rep id's parts (see src/core/path/rep-id.ts): source|objective|key. */
+const REP_ID = "^[aqr]\\|[^|]+\\|.+$";
+const REP_KEY = (source: string) => `^${source}\\|[^|]+\\|(.+)$`;
+
+/**
+ * Saved paths move to the V15 slug, re-keyed the way migrateAPlusV14Progress
+ * (index.ts) re-keys a device's copy. It runs after the re-tag, so an answer
+ * to a bank question follows the question to wherever it's filed now.
+ */
+function progressSql(exam: V15Exam, cert: string): string {
+  const pairs = (map: Record<string, string | null>) =>
+    Object.entries(map)
+      .map(([from, to]) => `  (${str(from)}, ${to === null ? "null" : str(to)})`)
+      .join(",\n");
+  const labs = Object.entries(exam.changedLabs);
+  const ctes = [
+    `objective_map(old_code, new_code) as (values\n${pairs(exam.objectiveMap)}\n)`,
+    `deck_map(deck, new_code) as (values\n${pairs(exam.recallDecks)}\n)`,
+    ...(labs.length ? [`changed_labs(lab_stop, scenario) as (values\n${pairs(exam.changedLabs)}\n)`] : []),
+  ];
+  // One record per key; where two old keys land on one, the later run wins.
+  const rekeyed = (field: string, newKey: string, time: string, keep = "") => `coalesce((
+    select jsonb_object_agg(k.new_key, k.record)
+    from (
+      select distinct on (n.new_key) n.new_key, n.record
+      from (
+        select e.value as record, ${newKey} as new_key
+        from jsonb_each(coalesce(p.progress -> '${field}', '{}'::jsonb)) as e
+      ) as n
+      where n.new_key is not null${keep}
+      order by n.new_key, (n.record ->> '${time}')::numeric desc nulls last
+    ) as k
+  ), '{}'::jsonb)`;
+
+  const items = rekeyed(
+    "items",
+    `case
+          when e.key !~ '${REP_ID}' then e.key
+          when e.key like 'q|%' then (
+            select 'q|' || s.code || '|' || q.id
+            from cert_questions q
+            join cert_sub_objectives s on s.id = q.sub_objective_id
+            where q.certification_id = ${cert} and q.is_active
+              and q.id::text = substring(e.key from '${REP_KEY("q")}'))
+          when e.key like 'r|%' and exists (select 1 from deck_map d where d.deck = split_part(e.key, '|', 3)) then (
+            select 'r|' || d.new_code || '|' || substring(e.key from '${REP_KEY("r")}')
+            from deck_map d where d.deck = split_part(e.key, '|', 3))
+          else (
+            select left(e.key, 2) || m.new_code || '|' || substring(e.key from '${REP_KEY("[aqr]")}')
+            from objective_map m where m.old_code = split_part(e.key, '|', 2))
+        end`,
+    "t"
+  );
+  const learnStops = rekeyed(
+    "stops",
+    `case
+          when e.key ~ '^\\d+\\.\\d+$' then (select m.new_code from objective_map m where m.old_code = e.key)
+          else e.key
+        end`,
+    "at",
+    labs.length ? `\n        and n.new_key not in (select lab_stop from changed_labs)` : ""
+  );
+  // A lab stop closed by another scenario now counts only if they've played that one.
+  const stops = labs.length
+    ? `${learnStops} || coalesce((
+    select jsonb_object_agg(c.lab_stop, p.progress -> 'labs' -> c.scenario)
+    from changed_labs c
+    where p.progress -> 'labs' -> c.scenario is not null
+  ), '{}'::jsonb)`
+    : learnStops;
+
+  return `-- Saved paths move to ${exam.examCode}: answers follow their question (or recall deck) to
+-- its V15 objective, finished learn stops follow their objective, and what left
+-- the exam is dropped. migrateAPlusV14Progress does the same to a device's copy.
+with ${ctes.join(",\n")}
+update path_progress p
+set cert_slug = ${str(exam.slug)},
+  progress = p.progress || jsonb_build_object(
+  'items', ${items},
+  'stops', ${stops}
+)
+where p.cert_slug = ${str(exam.oldSlug)};`;
 }
 
 /**
@@ -181,15 +267,14 @@ export function buildAPlusV15Migration(inputs: readonly V15MigrationInput[]): st
 --
 -- The certification and domain rows stay (enrollments, Pro and attempts keep
 -- pointing at them). Questions are re-tagged to V15's objectives; ones on
--- topics V15 doesn't test become inactive, and none is deleted.`,
+-- topics V15 doesn't test become inactive, and none is deleted. Saved paths
+-- move to the V15 slugs with their answers re-keyed.`,
     `begin;`,
+    `-- Saved paths move to the V15 slugs below; the check returns at the end.
+alter table path_progress drop constraint if exists path_progress_cert_slug_check;`,
     ...inputs.map(examSql),
-    `-- Saved paths may use the V15 slugs. Rows still on the old ones are moved,
--- answers re-keyed, by scripts/a-plus-v15/migrate-path-progress.ts.
-alter table path_progress drop constraint if exists path_progress_cert_slug_check;
-alter table path_progress add constraint path_progress_cert_slug_check check (cert_slug in (
+    `alter table path_progress add constraint path_progress_cert_slug_check check (cert_slug in (
   'security-plus-sy0-701', 'network-plus-n10-009',
-  ${slugs((e) => e.oldSlug)},
   ${slugs((e) => e.slug)}
 ));`,
     `commit;`,

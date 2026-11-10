@@ -359,12 +359,11 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       strengths: [
         "Tracks Core 1 and Core 2 readiness separately, each with its own daily plan and conservative readiness score",
         "Spaced repetition on every miss, plus playable PBQ simulations in the browser",
-        "1,100+ A+ questions across the two cores, plus free tools to try before you sign up — no account",
+        "1,100+ A+ questions across the two cores, written to 220-1201/1202, plus free tools to try before you sign up — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
         "Newer question bank than the decades-old incumbents",
-        "Written to the retired 220-1101/1102 objectives: most topics carry over, but the new 220-1201/1202 topics aren't added yet",
       ],
     },
     {

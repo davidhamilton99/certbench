@@ -10,8 +10,8 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     title: "Malware Removal Process",
     description:
       "Arrange the seven steps of the CompTIA malware removal procedure in the correct order.",
-    domain_number: "3.0",
-    domain_title: "Software Troubleshooting",
+    domain_number: "2.0",
+    domain_title: "Security",
     items: [
       "Investigate and verify malware symptoms",
       "Quarantine the infected system",
@@ -141,7 +141,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       "Match each Linux command to its primary function or purpose.",
     domain_number: "1.0",
     domain_title: "Operating Systems",
-    left: ["ls", "grep", "chmod", "sudo", "apt-get", "ps", "cat", "ifconfig"],
+    left: ["ls", "grep", "chmod", "sudo", "apt", "ps", "cat", "ip"],
     right: [
       "List files and directories in the current directory",
       "Search for a pattern within files or command output",
@@ -154,7 +154,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5, 6, 7],
     explanation:
-      "ls lists directory contents; grep filters output or searches files for matching patterns. chmod modifies access permissions using numeric or symbolic notation. sudo elevates privileges for a single command without switching to the root account. apt-get is the Debian/Ubuntu package manager. ps shows active processes (ps aux for all users). cat concatenates and prints file contents. ifconfig displays and configures network interfaces — though ip addr is its modern replacement on most distributions.",
+      "ls lists directory contents; grep filters output or searches files for matching patterns. chmod modifies access permissions using numeric or symbolic notation. sudo elevates privileges for a single command without switching to the root account. apt is the Debian/Ubuntu package manager (apt-get is its older front end; Red Hat and Fedora use dnf). ps shows active processes (ps aux for all users). cat concatenates and prints file contents. ip shows and configures network interfaces (ip addr, ip route), replacing the older ifconfig.",
   },
   {
     type: "matching",
@@ -269,7 +269,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       { text: "Compatible with nearly all operating systems and devices", category: 1 },
       { text: "Optimised for flash drives and memory cards larger than 32 GB", category: 2 },
       { text: "No practical file size limit; lacks journaling", category: 2 },
-      { text: "Default file system for Linux distributions", category: 3 },
+      { text: "Default file system on Debian and Ubuntu Linux", category: 3 },
       { text: "Supports journaling, large volumes, and extended attributes on Linux", category: 3 },
     ],
     explanation:

@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const securityConcepts: ReferenceTable = {
   id: "security-concepts",
   title: "Security Concepts",
-  description: "Core security topics for the CompTIA A+ 220-1102 exam: MFA, encryption, malware, social engineering, and endpoint defences.",
+  description: "Core security topics for the CompTIA A+ 220-1202 exam: MFA, encryption, malware, social engineering, and endpoint defences.",
   columnHeaders: [
     { key: "concept", label: "Concept" },
     { key: "type", label: "Category" },

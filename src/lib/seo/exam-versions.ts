@@ -16,13 +16,6 @@ export const COMPTIA_URLS = {
   aPlusCore2: "https://www.comptia.org/en-us/certifications/a/core-2-v15/",
 };
 
-export const MESSER_COMPARISON_URLS = {
-  core1:
-    "https://www.professormesser.com/free-a-plus-training/a-plus-articles/differences-between-220-1101-and-220-1201/",
-  core2:
-    "https://www.professormesser.com/free-a-plus-training/a-plus-articles/differences-between-220-1102-and-220-1202/",
-};
-
 export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";
 /** SY0-801 itself: the exam, its domains and every objective. */
 export const SY0_801_PATH = "/security-plus-sy0-801";
@@ -33,14 +26,15 @@ export const SY0_801_UPDATED_ISO = "2026-11-08";
 
 export const SECURITY_PLUS_CERT = "security-plus-sy0-701";
 export const NETWORK_PLUS_CERT = "network-plus-n10-009";
-export const A_PLUS_CORE1_CERT = "a-plus-core1-220-1101";
-export const A_PLUS_CORE2_CERT = "a-plus-core2-220-1102";
+export const A_PLUS_CORE1_CERT = "a-plus-core1-220-1201";
+export const A_PLUS_CORE2_CERT = "a-plus-core2-220-1202";
 
-/** Exam code that replaced a retired one, by the cert slug our content is written to. */
-const REPLACED_BY: Record<string, string> = {
-  [A_PLUS_CORE1_CERT]: "220-1201",
-  [A_PLUS_CORE2_CERT]: "220-1202",
-};
+/**
+ * Exam code that replaced a retired one, by the cert slug our content is
+ * written to. Empty while every exam we cover is current: A+ left it when its
+ * bank moved to 220-1201/1202.
+ */
+const REPLACED_BY: Record<string, string> = {};
 
 /** The exam that replaced this cert's, or null while its exam is still open. */
 export function replacedBy(certSlug: string): string | null {

@@ -38,8 +38,8 @@ describe("domainLab", () => {
     const domains: Record<string, number> = {
       "security-plus-sy0-701": 5,
       "network-plus-n10-009": 5,
-      "a-plus-core1-220-1101": 5,
-      "a-plus-core2-220-1102": 4,
+      "a-plus-core1-220-1201": 5,
+      "a-plus-core2-220-1202": 4,
     };
     for (const cert of PATH_CERTS) {
       for (let d = 1; d <= domains[cert]; d++) {

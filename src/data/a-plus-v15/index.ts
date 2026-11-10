@@ -36,9 +36,10 @@ const laterStop = (a: StopRecord | undefined, b: StopRecord) => (a && a.at > b.a
  * Carry a learner's 220-1101/1102 path over to V15. Answers keep their records
  * under their question's (or recall deck's) V15 objective, and a finished learn
  * stop counts as its objective's V15 stop. Answers on retired questions and
- * topics that left the exam are dropped; everything else (practice and lab
- * stops, checkpoint, rehearsals, labs, goal) is unchanged, because domains keep
- * their numbers.
+ * topics that left the exam are dropped. A lab stop whose domain now closes
+ * with another scenario counts only if they've played that one. Everything
+ * else (practice stops, checkpoint, rehearsals, labs, goal) is unchanged,
+ * because domains keep their numbers.
  */
 export function migrateAPlusV14Progress(progress: PathProgress, exam: V15Exam): PathProgress {
   const items: Record<string, ItemRecord> = {};
@@ -65,6 +66,11 @@ export function migrateAPlusV14Progress(progress: PathProgress, exam: V15Exam): 
     const to = LEARN_STOP.test(id) ? (exam.objectiveMap[id] ?? null) : id;
     if (to === null) continue;
     stops[to] = laterStop(stops[to], record);
+  }
+  for (const [stop, scenario] of Object.entries(exam.changedLabs)) {
+    delete stops[stop];
+    const played = progress.labs[scenario];
+    if (played) stops[stop] = played;
   }
 
   return { ...progress, items, stops };

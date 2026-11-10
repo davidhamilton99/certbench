@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const cableTypes: ReferenceTable = {
   id: "cable-types",
   title: "Cables & Connectors",
-  description: "Cable categories, speeds, distances, and connector types for the CompTIA A+ 220-1101 exam.",
+  description: "Cable categories, speeds, distances, and connector types for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "cable", label: "Cable / Standard" },
     { key: "category", label: "Category" },

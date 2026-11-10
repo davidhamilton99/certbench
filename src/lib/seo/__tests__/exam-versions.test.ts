@@ -3,6 +3,8 @@ import { pbqRegistry } from "@/data/pbq";
 import { PBQ_EXAMPLE_PAGES, PRACTICE_TEST_PAGES } from "../cert-pages";
 import { A_PLUS_ROUNDUP } from "../comparison-pages";
 import {
+  A_PLUS_CORE1_CERT,
+  A_PLUS_CORE2_CERT,
   replacedBy,
   SECURITY_PLUS_DOMAIN_CHANGES,
   usesOfficialObjectiveNumbers,
@@ -24,16 +26,19 @@ describe("exam facts on the public pages", () => {
     }
   });
 
-  it("names today's A+ exams, and never calls the retired codes current", () => {
+  it("says A+ is written to today's exams, 220-1201 and 220-1202", () => {
     const page = PRACTICE_TEST_PAGES.find((p) => p.path === "a-plus-practice-test")!;
     expect(page.metaDescription).toContain("220-1201/1202");
     expect(page.currentExams?.map((e) => e.examCode)).toEqual(["220-1201", "220-1202"]);
     expect(page.faqs.map((f) => f.answer).join(" ")).toContain("retired on September 25, 2025");
-
     expect(A_PLUS_ROUNDUP.metaDescription).toContain("220-1201 & 220-1202");
-    expect(A_PLUS_ROUNDUP.metaDescription).not.toContain("220-1101");
-    expect(replacedBy("a-plus-core1-220-1101")).toBe("220-1201");
-    expect(replacedBy("a-plus-core2-220-1102")).toBe("220-1202");
+
+    // Nothing says our A+ content is on the retired exams any more.
+    const pbqPages = PBQ_EXAMPLE_PAGES.filter((p) => p.certSlug.startsWith("a-plus"));
+    const copy = JSON.stringify([page, A_PLUS_ROUNDUP, pbqPages]);
+    expect(copy).not.toMatch(/[Ww]ritten to (the retired )?220-110[12]|haven't added the new/);
+    expect(replacedBy(A_PLUS_CORE1_CERT)).toBeNull();
+    expect(replacedBy(A_PLUS_CORE2_CERT)).toBeNull();
     expect(replacedBy("security-plus-sy0-701")).toBeNull();
   });
 
@@ -42,14 +47,9 @@ describe("exam facts on the public pages", () => {
     expect(usesOfficialObjectiveNumbers("security-plus-sy0-701")).toBe(true);
   });
 
-  it("has playable scenarios behind every PBQ page, with A+ on its own six-step method", () => {
+  it("has playable scenarios behind every PBQ page", () => {
     for (const page of PBQ_EXAMPLE_PAGES) {
       expect(pbqRegistry[page.certSlug]?.length ?? 0, page.path).toBeGreaterThanOrEqual(3);
     }
-    const method = pbqRegistry["a-plus-core1-220-1101"].find(
-      (s) => s.id === "aplus-core1-troubleshooting-methodology"
-    );
-    expect(method?.type === "ordering" && method.items.length).toBe(6);
-    expect(method?.type === "ordering" && method.correct_order).toEqual([0, 1, 2, 3, 4, 5]);
   });
 });

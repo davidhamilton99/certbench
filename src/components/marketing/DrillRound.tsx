@@ -271,7 +271,7 @@ export function RoundComplete({
 export const EXAMS = {
   securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
   networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
-  aPlusCore1: { cert: "a-plus-core1-220-1101", label: "A+ Core 1" },
+  aPlusCore1: { cert: "a-plus-core1-220-1201", label: "A+ Core 1" },
 } as const;
 
 export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];

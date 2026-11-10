@@ -1,6 +1,6 @@
 import type { RecallDeckConfig } from "@/lib/recall/recall-deck";
 
-/** Curated Recall decks for A+ Core 2 (220-1102). Unique cues; the rest auto. */
+/** Curated Recall decks for A+ Core 2 (220-1202). Unique cues; the rest auto. */
 export const aPlusCore2RecallConfigs: RecallDeckConfig[] = [
   {
     id: "a2-windows",
@@ -42,5 +42,16 @@ export const aPlusCore2RecallConfigs: RecallDeckConfig[] = [
     answer: { key: "concept", label: "concept" },
     distractorGroupKey: "type",
     detailKeys: ["type", "example"],
+  },
+  {
+    // The auto deck showed a bare step number ("4") as the cue; the action reads.
+    id: "a2-malware",
+    label: "Malware removal",
+    blurb: "Place each action in the seven-step procedure.",
+    tableId: "malware-removal",
+    mode: "choice",
+    ask: { key: "action", label: "action" },
+    answer: { key: "step", label: "step" },
+    detailKeys: ["description"],
   },
 ];

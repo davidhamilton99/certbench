@@ -202,11 +202,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
   },
   {
     path: "a-plus-practice-test",
-    certSlugs: ["a-plus-core1-220-1101", "a-plus-core2-220-1102"],
+    certSlugs: ["a-plus-core1-220-1201", "a-plus-core2-220-1202"],
     title: "A+ practice test",
     metaTitle: "Free CompTIA A+ Practice Test (Core 1 & 2)",
     metaDescription:
-      "Free CompTIA A+ Core 1 and Core 2 practice questions with full explanations. Written to 220-1101/1102; most topics carry over to today's 220-1201/1202 exams.",
+      "Free CompTIA A+ Core 1 and Core 2 practice questions with full explanations, written to today's 220-1201/1202 exams. No account needed.",
     h1: "Free CompTIA A+ practice test (Core 1 & Core 2)",
     intro: [
       "A+ is two exams: Core 1 (hardware, networking, mobile devices, cloud) and Core 2 (operating systems, security, software troubleshooting). The samples below come from both, each with a full explanation. CertBench holds 1,100+ A+ questions across the two cores.",
@@ -226,7 +226,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Which A+ exam version is current?",
         answer:
-          "220-1201 and 220-1202, which CompTIA calls V15, launched on March 25, 2025. The older 220-1101 and 220-1102 retired on September 25, 2025. Our A+ questions were written to the older objectives. Professor Messer's comparisons count about 87% of Core 1 and 80% of Core 2 as unchanged, so they still cover most of what you'll be asked, but we haven't added the new topics yet.",
+          "220-1201 and 220-1202, which CompTIA calls V15, launched on March 25, 2025. The older 220-1101 and 220-1102 retired on September 25, 2025. Our A+ questions are written to 220-1201 and 220-1202: each sits under its V15 objective, the topics V15 added have their own questions, and the ones it dropped are gone.",
       },
       {
         question: "Which core should I take first?",
@@ -236,7 +236,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Are these real A+ exam questions?",
         answer:
-          "No. They're original questions written to the 220-1101/1102 objectives at exam-level difficulty, with explanations. Braindumps violate CompTIA policy and can void your certification.",
+          "No. They're original questions written to the 220-1201/1202 objectives at exam-level difficulty, with explanations. Braindumps violate CompTIA policy and can void your certification.",
       },
       {
         question: "Is this a free A+ exam practice test?",
@@ -279,12 +279,12 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
         note: "Windows, security and malware removal scenarios to work through",
       },
       {
-        href: "/readiness-check/a-plus-core1-220-1101",
+        href: "/readiness-check/a-plus-core1-220-1201",
         label: "A+ Core 1 readiness check",
         note: "10 questions, no account: an estimate by domain",
       },
       {
-        href: "/readiness-check/a-plus-core2-220-1102",
+        href: "/readiness-check/a-plus-core2-220-1202",
         label: "A+ Core 2 readiness check",
         note: "10 questions, no account: an estimate by domain",
       },
@@ -416,11 +416,11 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
   },
   {
     path: "a-plus-core-1-pbq-examples",
-    certSlug: "a-plus-core1-220-1101",
+    certSlug: "a-plus-core1-220-1201",
     title: "A+ Core 1 PBQ examples",
     metaTitle: "Free Interactive A+ Core 1 PBQ Examples",
     metaDescription:
-      "Interactive CompTIA A+ Core 1 performance-based question examples you can work through in your browser: ports, troubleshooting steps, and hardware scenarios. Free, no signup.",
+      "Interactive CompTIA A+ Core 1 (220-1201) performance-based question examples you can work through in your browser: ports, hardware faults, and SOHO network setup. Free, no signup.",
     h1: "A+ Core 1 PBQ examples you can actually try",
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put a process in order, match ports to services, or work through a hardware fault step by step. They take longer than multiple-choice questions, so they're worth practising before exam day.",
@@ -440,7 +440,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         question: "Are these written for 220-1201 or 220-1101?",
         answer:
-          "220-1101, which CompTIA retired on September 25, 2025. Today's Core 1 exam is 220-1201. Most topics carry over, and the hands-on skills in these scenarios still apply, but we haven't added the new topics yet.",
+          "220-1201, today's Core 1 exam, which replaced 220-1101 when it retired on September 25, 2025. Every scenario sits under a 220-1201 domain, and the troubleshooting-methodology drill is gone because 220-1201 no longer tests the method itself.",
       },
     ],
     related: [
@@ -455,7 +455,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
         note: "Original Core 1 and Core 2 questions with full explanations",
       },
       {
-        href: "/readiness-check/a-plus-core1-220-1101",
+        href: "/readiness-check/a-plus-core1-220-1201",
         label: "A+ Core 1 readiness check",
         note: "10 questions, no account: an estimate by domain",
       },
@@ -468,11 +468,11 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
   },
   {
     path: "a-plus-core-2-pbq-examples",
-    certSlug: "a-plus-core2-220-1102",
+    certSlug: "a-plus-core2-220-1202",
     title: "A+ Core 2 PBQ examples",
     metaTitle: "Free Interactive A+ Core 2 PBQ Examples",
     metaDescription:
-      "Interactive CompTIA A+ Core 2 performance-based question examples you can work through in your browser: malware removal, Windows tools, and mobile security. Free, no signup.",
+      "Interactive CompTIA A+ Core 2 (220-1202) performance-based question examples you can work through in your browser: malware removal, Windows tools, and mobile security. Free, no signup.",
     h1: "A+ Core 2 PBQ examples you can actually try",
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put the malware removal steps in order, match Windows tools to their purpose, or set up a security policy from a brief. They take longer than multiple-choice questions, so they're worth practising before exam day.",
@@ -492,7 +492,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         question: "Are these written for 220-1202 or 220-1102?",
         answer:
-          "220-1102, which CompTIA retired on September 25, 2025. Today's Core 2 exam is 220-1202. Most topics carry over, and the hands-on skills in these scenarios still apply, but we haven't added the new topics yet.",
+          "220-1202, today's Core 2 exam, which replaced 220-1102 when it retired on September 25, 2025. Every scenario sits under a 220-1202 domain: malware removal, for one, is a Security topic on 220-1202.",
       },
     ],
     related: [
@@ -507,7 +507,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
         note: "Original Core 1 and Core 2 questions with full explanations",
       },
       {
-        href: "/readiness-check/a-plus-core2-220-1102",
+        href: "/readiness-check/a-plus-core2-220-1202",
         label: "A+ Core 2 readiness check",
         note: "10 questions, no account: an estimate by domain",
       },

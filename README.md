@@ -7,7 +7,7 @@ confidence-penalised readiness score, adaptive practice exams, SM-2 spaced
 repetition, hands-on PBQ simulations, and AI-generated study sets from your own
 notes.
 
-**Certifications:** Security+ SY0-701 · Network+ N10-009 · A+ Core 1 220-1101 · A+ Core 2 220-1102
+**Certifications:** Security+ SY0-701 · Network+ N10-009 · A+ Core 1 220-1201 · A+ Core 2 220-1202
 
 ## Stack
 

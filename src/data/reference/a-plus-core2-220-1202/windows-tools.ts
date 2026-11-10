@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const windowsTools: ReferenceTable = {
   id: "windows-tools",
   title: "Windows Management Tools",
-  description: "Built-in Windows administrative tools, access methods, and key features for the CompTIA A+ 220-1102 exam.",
+  description: "Built-in Windows administrative tools, access methods, and key features for the CompTIA A+ 220-1202 exam.",
   columnHeaders: [
     { key: "tool", label: "Tool" },
     { key: "accessMethod", label: "How to Open", mono: true },
@@ -25,6 +25,9 @@ export const windowsTools: ReferenceTable = {
     { columns: { tool: "Resource Monitor", accessMethod: "resmon / Task Manager > Performance > Open Resource Monitor", purpose: "Detailed real-time view of CPU, memory, disk, and network usage per process", keyFeatures: "See exactly which process is using which file or network connection; more granular than Task Manager" } },
     { columns: { tool: "System Information", accessMethod: "msinfo32", purpose: "Display detailed hardware and software inventory for the system", keyFeatures: "Hardware Resources; Components; Software Environment; export to text/NFO file; useful when diagnosing unknown hardware" } },
     { columns: { tool: "Group Policy Editor", accessMethod: "gpedit.msc (Pro/Enterprise only)", purpose: "Configure local Group Policy settings for security and system behaviour", keyFeatures: "Computer and User Configuration; password policies; software restriction; AppLocker; not available on Windows Home edition" } },
+    { columns: { tool: "Local Users and Groups", accessMethod: "lusrmgr.msc (Pro/Enterprise only)", purpose: "Create and manage local user accounts and group memberships", keyFeatures: "Add users to Administrators or Remote Desktop Users; reset local passwords; disable accounts; not on Windows Home (use Settings or net user)" } },
+    { columns: { tool: "Disk Cleanup", accessMethod: "cleanmgr.exe", purpose: "Free space by deleting temporary and unneeded files", keyFeatures: "Temporary files, Recycle Bin, Windows Update leftovers ('Clean up system files'); safe first step on a full drive" } },
+    { columns: { tool: "Disk Defragment", accessMethod: "dfrgui.exe", purpose: "Optimize drives: defragment hard drives, TRIM solid-state drives", keyFeatures: "'Optimize Drives' in Windows; schedules weekly by default; never needs a manual defrag on an SSD" } },
     { columns: { tool: "Certificate Manager", accessMethod: "certmgr.msc (user) / certlm.msc (local machine)", purpose: "View and manage digital certificates for the user or computer", keyFeatures: "Trusted Root CAs; personal certificates; expired cert troubleshooting; used with EFS, smart cards, VPNs, Wi-Fi 802.1X" } },
   ],
 };

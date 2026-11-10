@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import {
   A_PLUS_CORE1_CERT,
   A_PLUS_CORE2_CERT,
-  MESSER_COMPARISON_URLS,
+  COMPTIA_URLS,
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_PATH,
@@ -55,35 +55,33 @@ export function ExamVersionNote({
     note = (
       <>
         <strong className="font-medium text-foreground">
-          Written to 220-1101 and 220-1102, which CompTIA retired on September 25, 2025.
+          Written to 220-1201 and 220-1202, today&apos;s A+ exams.
         </strong>{" "}
-        Today&apos;s exams are 220-1201 and 220-1202. Most topics carry over: Professor
-        Messer counts about 87% of{" "}
-        <Source href={MESSER_COMPARISON_URLS.core1}>Core 1</Source> and 80% of{" "}
-        <Source href={MESSER_COMPARISON_URLS.core2}>Core 2</Source> as unchanged. We
-        haven&apos;t added the new topics yet.
+        CompTIA launched them on March 25, 2025 and retired 220-1101 and 220-1102 on
+        September 25, 2025. See its <Source href={COMPTIA_URLS.aPlusCore1}>Core 1</Source>{" "}
+        and <Source href={COMPTIA_URLS.aPlusCore2}>Core 2</Source> exam pages.
       </>
     );
   } else if (core1) {
     note = (
       <>
         <strong className="font-medium text-foreground">
-          Written to 220-1101, which CompTIA retired on September 25, 2025.
+          Written to 220-1201, today&apos;s A+ Core 1 exam.
         </strong>{" "}
-        Today&apos;s Core 1 exam is 220-1201. Most topics carry over:{" "}
-        <Source href={MESSER_COMPARISON_URLS.core1}>Professor Messer counts about 87%</Source>{" "}
-        as unchanged. We haven&apos;t added the new topics yet.
+        It replaced 220-1101, which{" "}
+        <Source href={COMPTIA_URLS.aPlusCore1}>CompTIA</Source> retired on September 25,
+        2025.
       </>
     );
   } else if (core2) {
     note = (
       <>
         <strong className="font-medium text-foreground">
-          Written to 220-1102, which CompTIA retired on September 25, 2025.
+          Written to 220-1202, today&apos;s A+ Core 2 exam.
         </strong>{" "}
-        Today&apos;s Core 2 exam is 220-1202. Most topics carry over:{" "}
-        <Source href={MESSER_COMPARISON_URLS.core2}>Professor Messer counts about 80%</Source>{" "}
-        as unchanged. We haven&apos;t added the new topics yet.
+        It replaced 220-1102, which{" "}
+        <Source href={COMPTIA_URLS.aPlusCore2}>CompTIA</Source> retired on September 25,
+        2025.
       </>
     );
   }

@@ -11,8 +11,8 @@ import type { ItemMap } from "@/core/drill-rounds/drill-rounds";
 export const PATH_CERTS = [
   "security-plus-sy0-701",
   "network-plus-n10-009",
-  "a-plus-core1-220-1101",
-  "a-plus-core2-220-1102",
+  "a-plus-core1-220-1201",
+  "a-plus-core2-220-1202",
 ] as const;
 export type PathCert = (typeof PATH_CERTS)[number];
 

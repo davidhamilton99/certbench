@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { aPlusV14Redirects } from "./src/data/a-plus-v15/redirects";
 
 const nextConfig: NextConfig = {
   // PostHog through our own domain, so ad blockers that block posthog.com
@@ -28,6 +29,8 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     { source: "/offline", destination: "/", permanent: true },
+    // A+ moved to 220-1201/1202: its old pages go to their V15 successors.
+    ...aPlusV14Redirects(),
   ],
   headers: async () => [
     {

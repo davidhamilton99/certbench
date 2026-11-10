@@ -29,8 +29,8 @@ export interface ObjectiveMetaInput {
 
 /**
  * Leads with the topic: nobody searches "Security+ objective 1.2", they search
- * the thing it covers. Only Security+ cites its objective number: A+ numbers
- * belong to a retired exam, and our Network+ ones aren't CompTIA's.
+ * the thing it covers. Security+ and A+ cite their objective numbers, which are
+ * CompTIA's; our Network+ ones aren't.
  */
 export function objectivePageTitle(o: ObjectiveMetaInput): string {
   const suffix =
