@@ -40,11 +40,11 @@ export const VS_PAGES: VsPage[] = [
     competitorName: "Boson ExSim",
     metaTitle: "CertBench vs Boson ExSim for Security+",
     metaDescription:
-      "An honest comparison of CertBench and Boson ExSim-Max for CompTIA Security+: exam realism, explanations, adaptive study planning, spaced repetition, and price.",
+      "An honest comparison of CertBench and Boson ExSim-Max for CompTIA Security+: exam realism, explanations, guided study, spaced repetition, and price.",
     h1: "CertBench vs Boson ExSim, honestly",
     intro: [
       "Boson's ExSim-Max is the practice exam most often recommended on r/CompTIA, and that reputation is earned — if you want the closest thing to sitting the real Security+ exam a week before you sit it, Boson is excellent. We're not going to pretend otherwise.",
-      "The comparison that actually matters is what each tool is for. Boson is a final-weeks exam simulator you run two or three times. CertBench is the daily system for the two months before that: an adaptive plan that decides what to study each day, spaced repetition on everything you miss, and a readiness score that tells you when you're prepared. Different jobs; here's the honest breakdown.",
+      "The comparison that actually matters is what each tool is for. Boson is a final-weeks exam simulator you run two or three times. CertBench is for the weeks before that: a guided path through every SY0-701 objective in short stops, your misses brought back until they stick, and a readiness score from a checkpoint and timed exam rehearsals. Different jobs; here's the honest breakdown.",
     ],
     chooseThem: [
       "You want the most exam-realistic full-length simulation available and don't mind paying ~$99 per exam for it",
@@ -52,34 +52,34 @@ export const VS_PAGES: VsPage[] = [
       "You prefer owning software outright over a subscription",
     ],
     chooseUs: [
-      "You want a system that tells you what to study every day, not just how you did on a mock",
+      "You want a path that always has your next step ready, not just a score on a mock",
       "You want spaced repetition on your misses built in, instead of managing Anki separately",
       "You want to try it free first — no card — then pay only for the months you actually study",
     ],
     rows: [
-      { feature: "Full-length exam realism", certbench: "Weighted, timed practice exams", competitor: "Best in class — the closest sim to the real thing" },
+      { feature: "Full-length exam realism", certbench: "Timed 90-question rehearsals, weighted like the real exam", competitor: "Best in class — the closest sim to the real thing" },
       { feature: "Explanations", certbench: "Every question, teaching why the wrong answers are wrong", competitor: "Excellent, famously detailed" },
-      { feature: "Adaptive daily study plan", certbench: "Yes — rebuilt daily from your performance", competitor: "No" },
+      { feature: "Guided study path", certbench: "Yes — a short stop for every objective, in order", competitor: "No" },
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "No" },
-      { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Per-exam score reports" },
+      { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed rehearsals", competitor: "Per-exam score reports" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "Limited" },
-      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "Demo only" },
+      { feature: "Free to try", certbench: "A warm-up, readiness check and PBQ examples with no account; a free account opens the path to its checkpoint", competitor: "Demo only" },
       { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "About $99 per exam" },
     ],
     faqs: [
       {
         question: "Is Boson ExSim worth it for Security+?",
         answer:
-          "If you want maximum exam-day realism and can afford it, yes — ExSim-Max has a deserved reputation for matching the real exam's difficulty and style, with excellent explanations. Many people pair a daily study system with one or two Boson runs in the final fortnight. The two approaches complement each other more than they compete.",
+          "If you want maximum exam-day realism and can afford it, yes — ExSim-Max has a deserved reputation for matching the real exam's difficulty and style, with excellent explanations. Many people pair a structured study system with one or two Boson runs in the final fortnight. The two approaches complement each other more than they compete.",
       },
       {
         question: "Can I use CertBench and Boson together?",
         answer:
-          "That's arguably the strongest stack: CertBench for the daily adaptive plan, spaced repetition, and readiness tracking across your whole prep, then a Boson simulation in the last week or two as a dress rehearsal. If your CertBench readiness score and a Boson mock agree you're ready, you almost certainly are.",
+          "That's arguably the strongest stack: CertBench's guided path, spaced repetition, and readiness tracking across your whole prep, then a Boson simulation in the last week or two as a dress rehearsal. If your CertBench readiness score and a Boson mock agree you're ready, you almost certainly are.",
       },
       {
         question: "Why is CertBench so much cheaper than Boson?",
-        answer: `Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench's tools are free to try with no account — the readiness check, practice-test previews, and PBQ examples — and Pro is $19/month or $39 for a three-month exam cycle for the full study system: unlimited everything. Prices in USD, adjusted regionally, and Pro carries a pass guarantee: ${PASS_GUARANTEE_TERMS}`,
+        answer: `Different models. Boson sells per-exam licences (~$99 per certification exam). CertBench's path starts free — a warm-up with no account, then a free account through the readiness checkpoint — and Pro is $19/month or $39 for a three-month exam cycle for the rest of it: every stop, every PBQ lab and timed exam rehearsals. Prices in USD, adjusted regionally, and Pro carries a pass guarantee: ${PASS_GUARANTEE_TERMS}`,
       },
     ],
   },
@@ -88,11 +88,11 @@ export const VS_PAGES: VsPage[] = [
     competitorName: "CompTIA CertMaster",
     metaTitle: "CertBench vs CompTIA CertMaster Practice",
     metaDescription:
-      "An honest comparison of CertBench and CompTIA's official CertMaster Practice for Security+: content alignment, adaptive study, spaced repetition, readiness tracking, and price.",
+      "An honest comparison of CertBench and CompTIA's official CertMaster Practice for Security+: content alignment, guided study, spaced repetition, readiness tracking, and price.",
     h1: "CertBench vs CertMaster, honestly",
     intro: [
       "CertMaster is CompTIA's own product, and that comes with real advantages: guaranteed objective alignment, integration with official courseware, and the credibility of the exam vendor itself. If your employer or school provides it, use it — it's solid.",
-      "Paying out of pocket is a different calculation. CertMaster Practice typically runs well north of $150 per exam, and its study experience is closer to a question bank with progress tracking than an adaptive system. Here's where each one actually earns its price.",
+      "Paying out of pocket is a different calculation. CertMaster Practice typically runs well north of $150 per exam, and it's built around practice tests and objective assessments with mastery scores, where CertBench is a guided path through every objective. Here's where each one actually earns its price.",
     ],
     chooseThem: [
       "Your employer, school, or bootcamp already provides CertMaster — free official content is free official content",
@@ -101,16 +101,16 @@ export const VS_PAGES: VsPage[] = [
     ],
     chooseUs: [
       "You're paying out of your own pocket and the price difference matters",
-      "You want an adaptive daily plan and spaced repetition, not just a question bank with a progress bar",
-      "You want a readiness score that's deliberately conservative rather than a completion percentage",
+      "You want a guided path through every objective, with your misses brought back until they stick",
+      "You want a readiness score from exam-style questions, weighted the way the real exam weights its domains",
     ],
     rows: [
       { feature: "Official CompTIA alignment", certbench: "Written independently to the exam objectives", competitor: "The exam vendor's own content" },
-      { feature: "Adaptive daily study plan", certbench: "Yes — rebuilt daily from your performance", competitor: "Limited adaptivity within modules" },
+      { feature: "Guided study path", certbench: "Yes — a short stop for every objective, in order", competitor: "Practice tests and objective assessments that find gaps by domain" },
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "No true SRS scheduling" },
-      { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Progress and topic mastery indicators" },
+      { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed rehearsals", competitor: "Progress and topic mastery indicators" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "In CertMaster Labs (sold separately)" },
-      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "No" },
+      { feature: "Free to try", certbench: "A warm-up, readiness check and PBQ examples with no account; a free account opens the path to its checkpoint", competitor: "No" },
       { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "Typically $150+ per exam" },
     ],
     faqs: [
@@ -136,11 +136,11 @@ export const VS_PAGES: VsPage[] = [
     competitorName: "Pocket Prep",
     metaTitle: "CertBench vs Pocket Prep for CompTIA",
     metaDescription:
-      "An honest comparison of CertBench and Pocket Prep for CompTIA Security+, Network+, and A+: mobile experience, question depth, adaptive planning, spaced repetition, and price.",
+      "An honest comparison of CertBench and Pocket Prep for CompTIA Security+, Network+, and A+: mobile experience, question depth, guided study, spaced repetition, and price.",
     h1: "CertBench vs Pocket Prep, honestly",
     intro: [
       "Pocket Prep's apps are genuinely good at what they're for: studying in the gaps of your day. The mobile experience is polished, offline mode works, and ten questions in a waiting room is a real study pattern that deserves a tool built around it.",
-      "The trade-off is depth. Quick-quiz apps are strongest at maintaining knowledge and weakest at building it systematically — there's no full-length weighted exam simulation, no adaptive plan deciding what you should do today, and no hands-on PBQ practice. Here's the honest split.",
+      "The trade-off is depth. Quick-quiz apps are strongest at maintaining knowledge and weakest at building it systematically, and Pocket Prep has no hands-on PBQ practice. Here's the honest split.",
     ],
     chooseThem: [
       "Your study time is genuinely mobile-first — commutes, breaks, queues — and you want a native app experience",
@@ -148,18 +148,18 @@ export const VS_PAGES: VsPage[] = [
       "You mainly want maintenance-mode quizzing rather than a structured path to an exam date",
     ],
     chooseUs: [
-      "You're working toward a specific exam date and want a system that plans each day and tells you when you're ready",
-      "You want full-length weighted practice exams and playable PBQs, not only quick quizzes",
+      "You're working toward an exam date and want a path that shows when you'll finish at your pace, and tells you when you're ready",
+      "You want playable PBQ labs alongside timed full-length exams, not only quick quizzes",
       "You want spaced repetition that schedules your misses automatically",
     ],
     rows: [
       { feature: "Mobile experience", certbench: "Responsive web app — works well, no native app yet", competitor: "Polished native apps with offline mode" },
-      { feature: "Full-length weighted exams", certbench: "Yes, mirroring the real blueprint", competitor: "Quiz-builder format" },
-      { feature: "Adaptive daily study plan", certbench: "Yes — rebuilt daily from your performance", competitor: "No" },
+      { feature: "Full-length weighted exams", certbench: "Yes, mirroring the real blueprint", competitor: "Mock Exam mode (premium), at the real exam's length and time limit" },
+      { feature: "Guided study path", certbench: "Yes — a short stop for every objective, in order", competitor: "Level Up mode (premium): each subject in levels that get harder" },
       { feature: "Spaced repetition", certbench: "Built in on every miss", competitor: "Missed-question review, not scheduled SRS" },
       { feature: "Interactive PBQ practice", certbench: "Playable simulations in the browser", competitor: "No" },
-      { feature: "Readiness score", certbench: "Domain-weighted, confidence-penalised", competitor: "Average-score tracking" },
-      { feature: "Free to try", certbench: "Readiness check, practice-test previews, PBQ examples — no account", competitor: "Limited free question sample" },
+      { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed rehearsals", competitor: "Average-score tracking" },
+      { feature: "Free to try", certbench: "A warm-up, readiness check and PBQ examples with no account; a free account opens the path to its checkpoint", competitor: "Limited free question sample" },
       { feature: "Price", certbench: "Pro $19/mo or $39 per exam cycle", competitor: "Subscription, roughly comparable monthly" },
     ],
     faqs: [
@@ -176,7 +176,7 @@ export const VS_PAGES: VsPage[] = [
       {
         question: "Can I switch from Pocket Prep to CertBench mid-study?",
         answer:
-          "Yes, and the transition is fast: the 25-question diagnostic rebuilds your picture from scratch — your readiness score and weak domains are measured directly rather than imported, so a switch costs one 20-minute session.",
+          "Yes, and there's nothing to import: your CertBench path's readiness checkpoint, about twenty minutes in, measures where you stand by domain directly. With Pro you can also sit a timed rehearsal of the whole exam whenever you like, for a fuller reading.",
       },
     ],
   },
@@ -237,11 +237,11 @@ export const ROUNDUP: RoundupData = {
     {
       name: "CertBench",
       price: "Pro $19/mo or $39 per exam cycle",
-      bestFor: "The daily adaptive study system",
+      bestFor: "A guided path through every SY0-701 objective",
       isSelf: true,
       strengths: [
-        "Adaptive daily plan rebuilt from your actual performance, with spaced repetition on every miss",
-        "A domain-weighted, deliberately conservative readiness score that tells you when to book",
+        "A guided path written to SY0-701: every objective in short stops, a readiness checkpoint, then timed full-length exams",
+        "Spaced repetition on every miss, and a readiness score weighted the way the real exam weights its domains",
         "Playable PBQ simulations in the browser, and free tools to try before you commit — no account",
       ],
       weaknesses: [
@@ -260,7 +260,7 @@ export const ROUNDUP: RoundupData = {
       ],
       weaknesses: [
         "The most expensive option for self-funders by a wide margin",
-        "Study mechanics are closer to a tracked question bank than an adaptive system",
+        "Built around practice tests and assessments rather than a guided path through the objectives",
       ],
       compareSlug: "certbench-vs-certmaster",
     },
@@ -306,7 +306,7 @@ export const ROUNDUP: RoundupData = {
     {
       question: "What's the best overall Security+ practice test?",
       answer:
-        "For a single final-weeks simulation, Boson ExSim-Max — its realism is the industry benchmark. For the weeks of daily study before that, an adaptive system with spaced repetition (that's the job CertBench was built for) outperforms re-running static exams. The strongest budget stack most people land on: a free video course, a daily practice system, and one simulator run before booking.",
+        "For a single final-weeks simulation, Boson ExSim-Max — its realism is the industry benchmark. For the weeks of study before that, a guided system with spaced repetition (that's the job CertBench was built for) outperforms re-running static exams. The strongest budget stack most people land on: a free video course, a daily practice system, and one simulator run before booking.",
     },
     {
       question: "How many practice questions do I need before the real exam?",
@@ -415,7 +415,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       ],
       weaknesses: [
         "By far the most expensive option for self-funders — and it's per core",
-        "Closer to a tracked question bank than an adaptive system",
+        "Built around practice tests and assessments rather than a guided path through the objectives",
       ],
       compareSlug: "certbench-vs-certmaster",
     },
@@ -424,7 +424,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
     {
       question: "What's the best A+ practice test?",
       answer:
-        "For most people the honest answer is a pairing, not a single product: a daily adaptive system that tracks Core 1 and Core 2 separately (the job CertBench was built for), plus one realistic simulator run per core in the final week. Mike Meyers' TotalTester is the traditional bank most A+ students already own; Boson is the closest to exam-day realism. If your budget is zero, a free video course plus free practice questions genuinely gets you a long way on A+.",
+        "For most people the honest answer is a pairing, not a single product: a guided path for each core, with Core 1 and Core 2 tracked separately (the job CertBench was built for), plus one realistic simulator run per core in the final week. Mike Meyers' TotalTester is the traditional bank most A+ students already own; Boson is the closest to exam-day realism. If your budget is zero, a free video course plus free practice questions genuinely gets you a long way on A+.",
     },
     {
       question: "How many practice questions do I need to pass A+?",
@@ -459,10 +459,10 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
     {
       name: "CertBench",
       price: "Pro $19/mo or $39 per exam cycle",
-      bestFor: "Adaptive practice plus subnetting drills",
+      bestFor: "A guided path plus subnetting drills",
       isSelf: true,
       strengths: [
-        "Adaptive daily plan and a conservative readiness score across all N10-009 domains, with spaced repetition on every miss",
+        "A guided path written for N10-009: every topic in short stops, a readiness checkpoint, then timed full-length exams, with spaced repetition on every miss",
         "Free subnetting and port-number drills for the timed math Network+ leans on, plus playable network-topology PBQs",
         "600+ Network+ questions, plus free tools to try before you sign up — no account",
       ],
@@ -520,7 +520,7 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
       ],
       weaknesses: [
         "The most expensive option for self-funders by a wide margin",
-        "Closer to a tracked question bank than an adaptive system",
+        "Built around practice tests and assessments rather than a guided path through the objectives",
       ],
       compareSlug: "certbench-vs-certmaster",
     },
@@ -541,7 +541,7 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
     {
       question: "What's the best Network+ practice test?",
       answer:
-        "For most people it's a pairing: a daily adaptive system with spaced repetition and dedicated subnetting drills (the job CertBench was built for), plus one realistic simulator — Boson is the benchmark for exam-day realism — in the final week. Because Network+ times you on subnetting and ports, make sure whatever you choose lets you drill that math to reflex, not just answer it once.",
+        "For most people it's a pairing: a guided study system with spaced repetition and dedicated subnetting drills (the job CertBench was built for), plus one realistic simulator — Boson is the benchmark for exam-day realism — in the final week. Because Network+ times you on subnetting and ports, make sure whatever you choose lets you drill that math to reflex, not just answer it once.",
     },
     {
       question: "How important is subnetting on the Network+ exam?",

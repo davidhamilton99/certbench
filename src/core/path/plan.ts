@@ -2,8 +2,9 @@ import type { PathDomain, PathPlan, PathStop, PathStructure } from "./types";
 
 /**
  * Learn stops before the readiness checkpoint. With the warm-up first, the
- * checkpoint lands at stop 6 (index 5) on every exam — about twenty minutes in,
- * and the end of what a free account can open.
+ * checkpoint lands at stop 6 (index 5) — about twenty minutes in, and the end
+ * of what a free account can open. A first domain shorter than this puts its
+ * practice stop first: A+ Core 1's three-objective domain moves it to stop 7.
  */
 export const LEARN_BEFORE_CHECKPOINT = 4;
 

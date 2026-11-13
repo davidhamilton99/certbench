@@ -239,7 +239,7 @@ function Card({ payload }: { payload: SharePayload | null }) {
           certbench.dev
         </div>
         <div style={{ color: CARD.muted, fontSize: 18 }}>
-          Adaptive CompTIA exam prep · readiness score
+          Guided CompTIA exam prep · readiness score
         </div>
       </div>
     </div>

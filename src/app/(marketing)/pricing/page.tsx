@@ -27,7 +27,7 @@ export const metadata = pageMetadata({
 // These are the real things a visitor can use right now.
 const FREE_TOOLS = [
   "The guided path's warm-up — no account",
-  "The next four stops and the readiness checkpoint — free account",
+  "The stops through the readiness checkpoint — free account",
   "Practice-test previews and PBQ examples",
   "Subnetting, ports & acronym trainers",
   "Exam-objective study guides",

@@ -18,7 +18,7 @@ export function ToolEmailCapture({
   source,
   context,
   heading = "Get a free study plan by email",
-  blurb = "We'll send a personalised plan to take you from here to a pass — no account needed.",
+  blurb = "Three steps from drills like this to a pass, with a link to start your exam's path. No account needed.",
 }: {
   source: ToolSource;
   context?: Record<string, string | number>;
