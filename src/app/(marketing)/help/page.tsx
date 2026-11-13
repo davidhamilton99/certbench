@@ -19,6 +19,8 @@ export const metadata = pageMetadata({
 interface FaqItem {
   q: string;
   a: string;
+  /** Where to go next, when the answer is a place on the site. */
+  link?: { href: string; label: string };
 }
 
 interface Section {
@@ -28,32 +30,60 @@ interface Section {
   items: FaqItem[];
 }
 
+// Every answer describes the guided path as it is (src/core/path,
+// src/components/path). A guard test keeps the old workspace's claims off
+// this page: src/lib/seo/__tests__/public-copy.test.ts.
 const sections: Section[] = [
   {
     id: "getting-started",
     title: "Getting Started",
     description:
-      "New here? Start with these — they cover everything from your first sign-up to your first study session.",
+      "New here? These cover what CertBench is, what’s free, and where to begin.",
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is a practice and study tool for CompTIA certification exams. It tracks your performance across every exam domain, builds a personalised study plan each day, and gives you a readiness score so you know when you\u2019re genuinely prepared to sit your exam. It currently covers Security+ SY0-701, Network+ N10-009, and A+ Core 1 and Core 2. Our A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
+        a: "CertBench is CompTIA exam prep laid out as a guided path. Pick your exam and each objective becomes a short stop: quick questions first, then questions in the real exam’s wording. A readiness checkpoint shows where you stand, and a timed exam rehearsal finishes the path. It covers Security+ SY0-701, Network+ N10-009, and A+ Core 1 and Core 2. Our A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
       },
       {
         q: "Is CertBench free?",
-        a: `You can try CertBench free. The 3-minute readiness check, full-length practice-test previews, and PBQ examples need no account; the subnetting, port-number, and acronym trainers give you a first round free, then keep going with a free account that saves your progress. The full study experience is Pro: a personalised daily plan, unlimited practice questions and full-length exams, every PBQ simulation, spaced repetition, a readiness score, and AI question generation, with a pass guarantee. ${PASS_GUARANTEE_TERMS} It's priced for one exam cycle; see the pricing page for current plans.`,
+        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, try the practice-test pages and PBQ examples, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
+        link: { href: "/pricing", label: "See plans and prices" },
+      },
+      {
+        q: "Where do I start?",
+        a: "Pick your exam. Its first stop is a warm-up that needs no account. Save your map with a free account to keep going: your first few objectives, then the readiness checkpoint, about twenty minutes in, which shows where you stand in each domain.",
+        link: { href: "/start", label: "Pick your exam" },
       },
       {
         q: "Is this an exam dump?",
-        a: "No. Every question in CertBench is independently written. None of our questions are sourced from actual certification exams. Each question includes a detailed explanation that teaches you why the correct answer is correct and why the most plausible wrong answer is wrong. We built CertBench to help you understand the material, not memorise leaked answers.",
-      },
-      {
-        q: "What should I do first after signing up?",
-        a: "Take the diagnostic exam. It\u2019s 25 questions, takes about 15\u201320 minutes, and there\u2019s no time limit. Your results determine your starting readiness score and unlock your personalised study plan. Everything else in CertBench builds on your diagnostic results, so it\u2019s the best place to start.",
+        a: "No. Every question in CertBench is independently written, and none comes from a real certification exam. Exam-style questions come with a full explanation of why the right answer is right. We built CertBench to help you understand the material, not memorise leaked answers.",
       },
       {
         q: "Can I use CertBench as my only study resource?",
-        a: "CertBench is a practice and reinforcement tool — it\u2019s designed to work alongside a video course (like Professor Messer or Jason Dion) or a textbook. It doesn\u2019t teach concepts from scratch, but it\u2019s excellent at testing your understanding, identifying your weak spots, and telling you when you\u2019re ready. Think of it as the practice side of your study stack.",
+        a: "CertBench teaches through questions: most stops work through one objective, every answer shows you the one thing to remember, and exam-style questions explain their reasoning in full. There are no video lessons or textbook chapters, so it works best alongside a video course (like Professor Messer or Jason Dion) or a book. Use CertBench to practise, find your weak spots, and see when you’re ready.",
+      },
+    ],
+  },
+  {
+    id: "path",
+    title: "Your Path",
+    description: "How the stops are laid out, and what comes after them.",
+    items: [
+      {
+        q: "How does the path work?",
+        a: "Your path goes through the exam’s objectives in order, domain by domain. Most stops cover one objective: quick questions first, then one in the real exam’s wording. When a domain ends, a practice stop asks 10 exam-style questions from it, and with Pro a hands-on lab closes it. The readiness checkpoint comes after your first four objectives, and a timed exam rehearsal ends the path. Your map shows each objective as covered, a miss that comes back later, or not started.",
+      },
+      {
+        q: "Do I have to go in order?",
+        a: "Yes. There’s always one next stop, so you never have to decide what to study. With Pro, “Practice any time” on your map also lets you start an exam rehearsal, open any lab in your exam’s lab library, or review your misses whenever you like.",
+      },
+      {
+        q: "Why does the path ask about my exam date?",
+        a: "Early on, your path asks when your exam is (or roughly when you’re aiming for) and how much time you can give it on most days. At the readiness checkpoint it uses your answers to show when you’ll finish the path at that pace, and how that fits with your exam date.",
+      },
+      {
+        q: "What happens after the last stop?",
+        a: "Your path keeps going with “Keep practicing” rounds: your misses first, then questions from your weakest domains. You can also sit another exam rehearsal whenever you like.",
       },
     ],
   },
@@ -61,139 +91,84 @@ const sections: Section[] = [
     id: "readiness-score",
     title: "Readiness Score",
     description:
-      "The number at the centre of your dashboard. Here\u2019s what it actually means.",
+      "Where the number on your readiness dial comes from, and what it means.",
     items: [
       {
-        q: "How is my readiness score calculated?",
-        a: "Your readiness score is a weighted average of your performance across all exam domains. Each domain is weighted by how much it counts on the real exam (for example, Security Operations is 28% of the Security+ exam). Within each domain, a confidence factor scales your score based on how many questions you\u2019ve answered — so getting 5 out of 5 correct on only 5 questions won\u2019t give you a perfect domain score.",
+        q: "What is the readiness checkpoint?",
+        a: "Twelve exam-style questions across every domain of your exam, after your first four objectives. It’s free with an account. You get a score weighted the way the real exam weights its domains, how each domain went, the domain with the most to gain, and when you’ll finish the path at your pace.",
       },
       {
-        q: "What does \u201cPreliminary\u201d mean?",
-        a: "Your score is marked as \u201cPreliminary\u201d (with a ~ symbol) when you haven\u2019t yet answered at least 15 questions in every domain. The confidence factor is penalising your score to avoid false confidence from a small sample. Keep practising and the Preliminary label will disappear as the system gathers enough data to give you a reliable score.",
+        q: "How is my readiness score worked out?",
+        a: "From exam-style questions only, weighted the way the real exam weights its domains. The checkpoint gives your first reading. With Pro, each timed exam rehearsal is scored the same way, on the same dial, so you can watch it move. Your map shows your latest reading, from the checkpoint or your last rehearsal.",
       },
       {
-        q: "What score means I\u2019m ready to take the exam?",
-        a: "There\u2019s no universal threshold — it depends on the exam and your comfort level. As a general guide, consistently scoring 80+ with no domain below 70 suggests strong preparation. But always check the official CompTIA passing score for your exam and remember that the real exam includes performance-based questions that test hands-on skills beyond multiple choice.",
+        q: "What score means I’m ready to book my exam?",
+        a: "CertBench calls 75% exam-ready. Treat it as a guide, not a promise: check CompTIA’s passing score for your exam, and remember the real exam includes performance-based questions, so practise the hands-on labs too.",
       },
       {
-        q: "Why did my score go down after a practice exam?",
-        a: "Your readiness score updates after every session to reflect your actual current performance. If a practice exam revealed weak areas or if you answered questions from domains you hadn\u2019t practised yet, the score adjusts accordingly. This is working as intended — it\u2019s better to discover gaps here than on exam day.",
-      },
-    ],
-  },
-  {
-    id: "study-plan",
-    title: "Study Plan & Daily Sessions",
-    description:
-      "How CertBench decides what you should study each day.",
-    items: [
-      {
-        q: "How does the daily study plan work?",
-        a: "Every time you open your dashboard, CertBench generates a fresh study plan using a five-tier priority system. First, it schedules spaced repetition reviews (questions you need to revisit). Then it targets your weakest domain with a focused drill. Next, it checks whether your exam date is approaching and adds urgency-based sessions. Then it schedules regular practice exams. Finally, it surfaces questions you haven\u2019t seen yet. The result is a plan that adapts every day based on how you\u2019re actually performing.",
+        q: "Why did my score go down?",
+        a: "Your score is your latest reading, not an average. A full rehearsal asks 90 questions across every domain, against the checkpoint’s 12, so it can read lower, and unanswered questions count as wrong, as on the exam. Each rehearsal result shows the change since your last reading and lets you go through every answer, so you know what to work on. Better to find a gap here than on exam day.",
       },
       {
-        q: "Do I have to follow the study plan exactly?",
-        a: "No. The study plan is a recommendation based on your performance data. You can skip sessions, do them in a different order, or start a practice exam or domain drill directly from the certification page whenever you want. The plan is there to guide you if you\u2019re not sure what to do next.",
-      },
-      {
-        q: "What are the different session types?",
-        a: "There are five types: (1) SRS Review \u2014 flashcard-style review of questions due for spaced repetition. (2) Domain Drill \u2014 10 focused questions from a single domain, targeting your weakest area. (3) Full Practice Exam \u2014 90 questions across all domains, weighted like the real exam. (4) Weak Points Review \u2014 10 questions targeting the specific questions you\u2019ve answered incorrectly. (5) New Content \u2014 questions you haven\u2019t seen yet.",
-      },
-    ],
-  },
-  {
-    id: "diagnostic",
-    title: "Diagnostic Exam",
-    description:
-      "Your baseline assessment. One shot, but it matters.",
-    items: [
-      {
-        q: "Can I retake the diagnostic exam?",
-        a: "No. The diagnostic is a one-time baseline assessment. It\u2019s designed to measure where you\u2019re starting from without any prior exposure to the questions. This gives the study plan engine an honest starting point. After the diagnostic, all subsequent practice exams and reviews will update your readiness score \u2014 so your score will keep evolving as you study.",
-      },
-      {
-        q: "Should I study before taking the diagnostic?",
-        a: "That\u2019s up to you, but it\u2019s designed to be taken as-is. The point is to see where you genuinely stand right now. If you study first, the diagnostic won\u2019t reflect your actual gaps accurately, which means your initial study plan might not target the right areas. Treat it like an honest self-assessment.",
-      },
-      {
-        q: "How many questions are on the diagnostic?",
-        a: "25 questions, distributed proportionally across all exam domains based on how much each domain counts on the real exam. There is no time limit.",
+        q: "How is the free readiness check different?",
+        a: "The readiness check is a quick public estimate: 10 exam-weighted questions in about three minutes, with no account. The checkpoint is part of your path. It’s saved with your progress, and it’s the first reading on your readiness dial.",
       },
     ],
   },
   {
     id: "spaced-repetition",
-    title: "Spaced Repetition",
-    description:
-      "The science behind why missed questions keep coming back.",
+    title: "Spaced Review",
+    description: "Why the questions you miss keep coming back.",
     items: [
       {
-        q: "What is spaced repetition and how does CertBench use it?",
-        a: "Spaced repetition is a learning technique where you review material at increasing intervals. CertBench uses a modified version of the SM-2 algorithm: when you answer a question correctly, it\u2019s scheduled for review further in the future. When you answer incorrectly, it comes back sooner. Over time, questions you\u2019ve mastered fade into the background while difficult questions stay in active rotation.",
+        q: "What happens to questions I get wrong?",
+        a: "They come back. Most stops start with up to two of your earlier misses, and your map marks an objective with a miss until you get it right. With Pro, “Your misses” under “Practice any time” goes over them ten at a time. A miss you then get right comes back once more three days later, and leaves review after two right answers, days apart. That spacing is what makes it stick.",
       },
       {
-        q: "How often should I do SRS reviews?",
-        a: "Ideally, every day or at least every time you study. The whole point of spaced repetition is timing \u2014 reviewing a question on the day it\u2019s due is more effective than reviewing it a week late. Your dashboard will show SRS reviews as the first priority in your study plan whenever cards are due.",
-      },
-      {
-        q: "What happens if I skip SRS reviews for a few days?",
-        a: "They accumulate. When you come back, you\u2019ll have more cards due. CertBench caps SRS sessions at 20 cards to keep them manageable, and it prioritises the most overdue cards first. Missing a few days isn\u2019t the end of the world \u2014 just get back to it.",
+        q: "Will I see the same question twice?",
+        a: "Yes, on purpose: misses come back until they stick. Otherwise, new stops and rehearsals pick questions you haven’t seen first, and after the last stop, “Keep practicing” rounds bring back your misses, then questions from your weakest domains.",
       },
     ],
   },
   {
-    id: "practice-exams",
-    title: "Practice Exams & Drills",
-    description:
-      "Full exams, domain drills, and weak point sessions.",
+    id: "labs-and-rehearsals",
+    title: "Labs & Exam Rehearsals",
+    description: "Hands-on PBQs, and the whole exam against the clock.",
     items: [
       {
-        q: "How are practice exam questions selected?",
-        a: "CertBench uses a three-bucket priority system. First, it selects questions you\u2019ve never seen. Then questions you\u2019ve seen but answered incorrectly (sorted by worst error rate). Finally, questions you\u2019ve seen and answered correctly (sorted by stalest first). Questions are distributed proportionally across domains based on the real exam blueprint.",
+        q: "What are PBQs, and how do the labs work?",
+        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. The PBQ example pages let you try some free.",
       },
       {
-        q: "Can I flag questions during a practice exam?",
-        a: "Yes. There\u2019s a flag button on each question during practice exams (not available during the diagnostic). Flagged questions are highlighted so you can review them after the exam alongside your incorrect answers.",
+        q: "How are labs scored?",
+        a: "With partial credit. Each field, step, or match you get right counts toward your score, so one slip doesn’t cost you the whole lab.",
       },
       {
-        q: "Will I ever see the same question twice?",
-        a: "Yes, intentionally. Spaced repetition means questions you\u2019ve answered incorrectly will come back in future sessions. Questions you\u2019ve mastered will eventually cycle back too, but at longer intervals. This repetition is part of the learning process.",
+        q: "What is the exam rehearsal?",
+        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time.",
+      },
+      {
+        q: "Can I flag questions?",
+        a: "Yes, in an exam rehearsal. Flag anything to come back to and jump to any question from the grid, as on the real exam. If you leave mid-way, the clock pauses until you’re back.",
       },
     ],
   },
   {
     id: "ai-study-materials",
-    title: "AI Study Materials",
-    description:
-      "Generate practice questions from your own notes.",
+    title: "AI Study Sets",
+    description: "Practice questions written from your own notes, with Pro.",
     items: [
       {
         q: "How does AI question generation work?",
-        a: "Paste your notes, textbook excerpts, or upload a file (PDF, DOCX, TXT, or even an image). CertBench uses AI to generate practice questions from your content. You choose how many questions (10, 25, or 50), the question types (multiple choice, true/false, multi-select, ordering, matching), and the difficulty level. The AI also runs a quality check on the generated questions before saving them.",
+        a: "Paste your notes or upload a file (PDF, Word, plain text, or a photo of a page) and choose how many questions you want, up to 50. CertBench writes them from your material: a mix of multiple choice, true/false, multi-select, ordering, and matching. A second pass reviews each question for quality before you save the set. Pro members find it under “Study sets”, in the study tools linked under their map.",
       },
       {
         q: "What are the limits on AI generation?",
-        a: "AI question generation is a Pro feature: unlimited generations, each producing up to 50 questions, with an input limit of 200,000 characters.",
+        a: "It comes with Pro, with no cap on how many sets you make. Each run writes up to 50 questions, from the first 100,000 characters of your material.",
       },
       {
-        q: "Can I share my AI-generated study sets?",
-        a: "Yes. When creating or editing a study set, you can make it public. Public sets appear in the Community section where other users can discover and bookmark them.",
-      },
-    ],
-  },
-  {
-    id: "pbq",
-    title: "Performance-Based Questions",
-    description:
-      "Hands-on practice beyond multiple choice.",
-    items: [
-      {
-        q: "What are PBQs?",
-        a: "Performance-Based Questions (PBQs) are hands-on simulation questions that appear on real CompTIA exams. They test practical skills rather than just knowledge. CertBench includes four PBQ types: ordering (arrange items in the correct sequence), matching (pair terms with definitions), categorisation (sort items into categories), and full simulations with multi-step scenarios.",
-      },
-      {
-        q: "How are PBQ simulations scored?",
-        a: "PBQs use partial credit scoring. If a simulation has 10 fields and you get 8 correct, you score 80%. This matches how CompTIA scores PBQs on the real exam. Each field in a simulation is independently scored, so getting one wrong doesn\u2019t cost you the entire question.",
+        q: "Can I share my study sets?",
+        a: "Yes. Make a set public and other Pro members can find and bookmark it in Community, and its share link opens for anyone, no account needed.",
       },
     ],
   },
@@ -201,27 +176,24 @@ const sections: Section[] = [
     id: "account",
     title: "Account & Billing",
     description:
-      "Managing your account, certifications, and subscription.",
+      "Plans, studying for more than one exam, cancelling, and deleting your account.",
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers the certification you set your plan up for: unlimited practice questions, unlimited full-length practice exams, every PBQ simulation and concept drill, and unlimited AI generation, plus the pass guarantee. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel anytime from the billing portal.`,
+        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers one exam: the rest of its path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, spaced review of your misses, and a readiness score, plus unlimited AI study sets from your notes. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel any time.`,
       },
       {
-        q: "Can I study for multiple certifications?",
-        a: "Yes. Pro covers the certification you picked when you set up your plan; you can add another from the Upgrade page for a one-time $39 (adjusted for your region), and it stays unlocked while you\u2019re on Pro. Each certification has its own readiness score, study plan, and progress tracking. Use the sidebar to switch between certifications.",
+        q: "Can I study for more than one exam?",
+        a: "Yes. Each exam has its own path, map, and readiness score; switch with “Studying for a different exam?” under your map. Pro covers one exam. To add another, open its path: after that exam’s readiness checkpoint you’re offered it for a one-time payment ($39, adjusted for your region), and it stays unlocked while you’re on Pro.",
       },
       {
-        q: "How do I change my exam date?",
-        a: "Go to your Profile page and update the target exam date for each certification. The study plan engine uses this date to adjust urgency \u2014 when your exam is within 7 days, it prioritises full practice exams. When it\u2019s within 30 days, it adds extra targeted drills.",
+        q: "How do I cancel Pro?",
+        a: "From the billing portal. Signed in, go to certbench.dev/upgrade and choose “Manage billing”: it opens Stripe’s customer portal, where you can cancel. You keep Pro until the end of the period you’ve paid for.",
+        link: { href: "/upgrade", label: "Go to billing" },
       },
       {
         q: "Can I delete my account?",
-        a: "Yes. Go to Profile and scroll to the bottom. There\u2019s a \u201cDelete account\u201d option in the danger zone. You\u2019ll need to type \u201cdelete my account\u201d to confirm. This permanently deletes your account, all study data, and all progress. It cannot be undone.",
-      },
-      {
-        q: "How do I cancel my Pro subscription?",
-        a: "Go to Profile and click the subscription management link. This takes you to the Stripe customer portal where you can cancel, update your payment method, or view your billing history. When you cancel, you keep Pro access until the end of your current billing period.",
+        a: "Yes. Pro members can do it themselves: signed in, go to certbench.dev/profile and type DELETE in the danger zone. That permanently deletes your account, progress, and history, and can’t be undone. On any account, free or Pro, you can also ask us to delete it at privacy@certbench.dev, as our Privacy Policy describes.",
       },
     ],
   },
@@ -252,6 +224,14 @@ function SectionBlock({ section }: { section: Section }) {
             <p className="text-[14px] text-muted-foreground mt-2 leading-relaxed">
               {item.a}
             </p>
+            {item.link && (
+              <Link
+                href={item.link.href}
+                className="mt-3 inline-block text-[14px] font-medium text-primary hover:underline"
+              >
+                {item.link.label} &rarr;
+              </Link>
+            )}
           </div>
         ))}
       </div>

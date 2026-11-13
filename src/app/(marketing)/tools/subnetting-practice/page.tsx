@@ -42,7 +42,7 @@ const FAQS = [
   {
     question: "Is this subnetting practice really free?",
     answer:
-      `Yes. Your first round of ${ROUND_SIZE} runs with no account; a free account keeps every mode going with no limit, saves your progress, and opens each round on your weakest skill. CertBench Pro adds the full Network+ question bank with spaced repetition, a 25-question diagnostic, and a readiness score.`,
+      `Yes. Your first round of ${ROUND_SIZE} runs with no account; a free account keeps every mode going with no limit, saves your progress, and opens each round on your weakest skill. CertBench Pro opens your whole Network+ path: every question in the bank, spaced review of your misses, hands-on PBQ labs, timed exam rehearsals and a readiness score.`,
   },
 ];
 

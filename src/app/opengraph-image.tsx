@@ -69,7 +69,7 @@ export default function OpengraphImage() {
             study.
           </div>
           <div style={{ fontSize: 34, color: muted, maxWidth: 920, lineHeight: 1.3 }}>
-            Adaptive CompTIA exam prep with a readiness score you can trust — so
+            Guided CompTIA exam prep with a readiness score you can trust — so
             you walk in ready.
           </div>
         </div>

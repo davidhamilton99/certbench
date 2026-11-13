@@ -71,7 +71,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "How should I use practice tests to prepare?",
         answer:
-          "Take a diagnostic first to find your weak domains, drill those domains until they turn green, and use spaced repetition on every question you miss. Save full-length timed exams for the final two weeks. CertBench automates that sequence into a daily plan.",
+          "Find your weak domains early, work through every objective, and bring back every question you miss until it sticks. Save full-length timed exams for the final two weeks. CertBench's Security+ path runs in that order: a readiness checkpoint about twenty minutes in shows where you stand by domain, a short stop covers each objective with your misses brought back, and timed exam rehearsals come last.",
       },
       {
         question: "Is this for SY0-701 or SY0-801?",
