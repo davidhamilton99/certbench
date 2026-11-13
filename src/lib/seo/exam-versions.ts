@@ -52,7 +52,14 @@ export function usesOfficialObjectiveNumbers(certSlug: string): boolean {
 }
 
 /** Certs with an exam-objectives index page: live exam, objectives match CompTIA's list. */
-export const OBJECTIVE_HUB_CERTS: string[] = [SECURITY_PLUS_CERT];
+export const OBJECTIVE_HUB_CERTS: string[] = [SECURITY_PLUS_CERT, A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT];
+
+/** CompTIA's page for each exam with a hub, where it publishes the objectives. */
+export const COMPTIA_EXAM_PAGES: Record<string, string> = {
+  [SECURITY_PLUS_CERT]: COMPTIA_URLS.securityV7,
+  [A_PLUS_CORE1_CERT]: COMPTIA_URLS.aPlusCore1,
+  [A_PLUS_CORE2_CERT]: COMPTIA_URLS.aPlusCore2,
+};
 
 export interface SecurityDomainChange {
   name: string;

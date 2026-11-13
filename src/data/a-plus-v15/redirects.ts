@@ -12,19 +12,26 @@ export interface Redirect {
   permanent: true;
 }
 
-/** Where a page about a topic V15 dropped sends its visitors instead. */
-export const A_PLUS_PRACTICE_PAGE = "/a-plus-practice-test";
+/**
+ * Each core's practice test, where a page about a topic V15 dropped sends its
+ * visitors. (src/lib/seo/cert-pages.ts lists the pages; a test keeps these equal.)
+ */
+export const A_PLUS_PRACTICE_PAGES: Readonly<Record<string, string>> = {
+  [CORE1_V15.slug]: "/a-plus-core-1-practice-test",
+  [CORE2_V15.slug]: "/a-plus-core-2-practice-test",
+};
 
 function examRedirects(exam: V15Exam): Redirect[] {
   const to = (source: string, destination: string): Redirect => ({ source, destination, permanent: true });
+  const practice = A_PLUS_PRACTICE_PAGES[exam.slug];
   return [
     to(`/path/${exam.oldSlug}`, `/path/${exam.slug}`),
     to(`/readiness-check/${exam.oldSlug}`, `/readiness-check/${exam.slug}`),
-    to(`/objectives/${exam.oldSlug}`, A_PLUS_PRACTICE_PAGE),
+    to(`/objectives/${exam.oldSlug}`, `/objectives/${exam.slug}`),
     ...Object.entries(exam.objectiveMap).map(([from, code]) =>
       to(
         `/objectives/${exam.oldSlug}/${codeToSlug(from)}`,
-        code === null ? A_PLUS_PRACTICE_PAGE : `/objectives/${exam.slug}/${codeToSlug(code)}`
+        code === null ? practice : `/objectives/${exam.slug}/${codeToSlug(code)}`
       )
     ),
   ];

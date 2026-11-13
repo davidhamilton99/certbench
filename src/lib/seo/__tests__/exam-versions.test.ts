@@ -1,10 +1,14 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { pbqRegistry } from "@/data/pbq";
-import { PBQ_EXAMPLE_PAGES, PRACTICE_TEST_PAGES } from "../cert-pages";
+import { PBQ_EXAMPLE_PAGES, practicePageFor, PRACTICE_TEST_PAGES } from "../cert-pages";
 import { A_PLUS_ROUNDUP } from "../comparison-pages";
 import {
   A_PLUS_CORE1_CERT,
   A_PLUS_CORE2_CERT,
+  COMPTIA_EXAM_PAGES,
+  OBJECTIVE_HUB_CERTS,
   replacedBy,
   SECURITY_PLUS_DOMAIN_CHANGES,
   usesOfficialObjectiveNumbers,
@@ -45,6 +49,25 @@ describe("exam facts on the public pages", () => {
   it("keeps Network+ off official objective numbers until they're re-mapped", () => {
     expect(usesOfficialObjectiveNumbers("network-plus-n10-009")).toBe(false);
     expect(usesOfficialObjectiveNumbers("security-plus-sy0-701")).toBe(true);
+  });
+
+  it("gives every practice page a route, and each core of a split exam its own page", () => {
+    for (const page of PRACTICE_TEST_PAGES) {
+      expect(existsSync(join(process.cwd(), "src/app/(marketing)", page.path, "page.tsx")), page.path).toBe(true);
+      for (const core of page.cores ?? []) {
+        expect(PRACTICE_TEST_PAGES.some((p) => `/${p.path}` === core.href), core.href).toBe(true);
+      }
+    }
+    expect(practicePageFor(A_PLUS_CORE1_CERT)).toBe("/a-plus-core-1-practice-test");
+    expect(practicePageFor(A_PLUS_CORE2_CERT)).toBe("/a-plus-core-2-practice-test");
+  });
+
+  it("links every objectives index to its exam's CompTIA page and practice test", () => {
+    expect(OBJECTIVE_HUB_CERTS).toEqual(expect.arrayContaining([A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT]));
+    for (const cert of OBJECTIVE_HUB_CERTS) {
+      expect(COMPTIA_EXAM_PAGES[cert], cert).toMatch(/^https:\/\/www\.comptia\.org\//);
+      expect(practicePageFor(cert), cert).not.toBe("/start");
+    }
   });
 
   it("has playable scenarios behind every PBQ page", () => {

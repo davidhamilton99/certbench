@@ -347,19 +347,19 @@ export const A_PLUS_ROUNDUP: RoundupData = {
         "Pairs naturally with the Mike Meyers All-in-One book and video course most A+ students already use",
       ],
       weaknesses: [
-        "A traditional test-bank experience — no adaptive daily plan or spaced repetition",
+        "A traditional test-bank experience — no guided study path or spaced repetition",
         "Interface and reporting feel dated next to modern web apps",
       ],
     },
     {
       name: "CertBench",
       price: "Pro $19/mo or $39 per exam cycle",
-      bestFor: "The daily adaptive system across both cores",
+      bestFor: "A guided path through each core's objectives",
       isSelf: true,
       strengths: [
-        "Tracks Core 1 and Core 2 readiness separately, each with its own daily plan and conservative readiness score",
+        "A guided path per core, written to 220-1201 and 220-1202: every objective in short stops, a readiness checkpoint, then timed full-length exams",
         "Spaced repetition on every miss, plus playable PBQ simulations in the browser",
-        "1,100+ A+ questions across the two cores, written to 220-1201/1202, plus free tools to try before you sign up — no account",
+        "1,300+ A+ questions across the two cores, plus a free practice test per core and tools to try before you sign up — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",

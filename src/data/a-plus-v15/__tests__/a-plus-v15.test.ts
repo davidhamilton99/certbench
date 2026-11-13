@@ -11,7 +11,9 @@ import { A_PLUS_V15, CORE1_V15, CORE2_V15, migrateAPlusV14Progress, v15Codes, v1
 import { activeAfterMigration, buildAPlusV15Migration } from "../migration-sql";
 import { CORE1_NEW_QUESTIONS } from "../new-questions/core1";
 import { CORE2_NEW_QUESTIONS } from "../new-questions/core2";
-import { A_PLUS_PRACTICE_PAGE, aPlusV14Redirects } from "../redirects";
+import { practicePageFor } from "@/lib/seo/cert-pages";
+import { OBJECTIVE_HUB_CERTS } from "@/lib/seo/exam-versions";
+import { A_PLUS_PRACTICE_PAGES, aPlusV14Redirects } from "../redirects";
 import type { V15Exam } from "../types";
 import bankJson from "../v14-bank.json";
 
@@ -139,8 +141,8 @@ describe("redirects from the 220-1101/1102 pages", () => {
     expect(to("/objectives/a-plus-core1-220-1101/3-7")).toBe("/objectives/a-plus-core1-220-1201/4-2");
     expect(to("/objectives/a-plus-core2-220-1102/3-3")).toBe("/objectives/a-plus-core2-220-1202/2-6");
     expect(to("/objectives/a-plus-core2-220-1102/1-11")).toBe("/objectives/a-plus-core2-220-1202/1-9");
-    // The methodology left the exam: its page sends people to the A+ practice test.
-    expect(to("/objectives/a-plus-core1-220-1101/5-1")).toBe(A_PLUS_PRACTICE_PAGE);
+    // The methodology left the exam: its page sends people to the Core 1 practice test.
+    expect(to("/objectives/a-plus-core1-220-1101/5-1")).toBe("/a-plus-core-1-practice-test");
     for (const exam of A_PLUS_V15) {
       for (const r of redirects.filter((r) => r.destination.startsWith(`/objectives/${exam.slug}/`))) {
         expect(v15Codes(exam)).toContain(r.destination.split("/").pop()!.replace("-", "."));
@@ -148,11 +150,20 @@ describe("redirects from the 220-1101/1102 pages", () => {
     }
   });
 
-  it("moves each exam's path and readiness check to its V15 slug", () => {
+  it("moves each exam's path, readiness check and objectives index to its V15 slug", () => {
     expect(to("/path/a-plus-core1-220-1101")).toBe("/path/a-plus-core1-220-1201");
     expect(to("/path/a-plus-core2-220-1102")).toBe("/path/a-plus-core2-220-1202");
     expect(to("/readiness-check/a-plus-core1-220-1101")).toBe("/readiness-check/a-plus-core1-220-1201");
     expect(to("/readiness-check/a-plus-core2-220-1102")).toBe("/readiness-check/a-plus-core2-220-1202");
+    expect(to("/objectives/a-plus-core1-220-1101")).toBe("/objectives/a-plus-core1-220-1201");
+    expect(to("/objectives/a-plus-core2-220-1102")).toBe("/objectives/a-plus-core2-220-1202");
+  });
+
+  it("lands on pages that exist: each core's practice test and objectives index", () => {
+    for (const exam of A_PLUS_V15) {
+      expect(A_PLUS_PRACTICE_PAGES[exam.slug]).toBe(practicePageFor(exam.slug));
+      expect(OBJECTIVE_HUB_CERTS).toContain(exam.slug);
+    }
   });
 });
 

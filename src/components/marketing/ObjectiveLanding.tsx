@@ -7,6 +7,7 @@ import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { QuickRound } from "@/components/path/QuickRound";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
+import { practicePageFor } from "@/lib/seo/cert-pages";
 import {
   OBJECTIVE_HUB_CERTS,
   replacedBy,
@@ -36,14 +37,6 @@ export interface ObjectiveLandingData {
   siblings: { code: string; title: string; topic: string; slug: string }[];
 }
 
-/** Maps a cert slug to its public practice-test hub page. */
-const PRACTICE_HUB: Record<string, string> = {
-  "security-plus-sy0-701": "/security-plus-practice-test",
-  "network-plus-n10-009": "/network-plus-practice-test",
-  "a-plus-core1-220-1201": "/a-plus-practice-test",
-  "a-plus-core2-220-1202": "/a-plus-practice-test",
-};
-
 export function ObjectiveLanding({
   data,
   round = null,
@@ -52,7 +45,7 @@ export function ObjectiveLanding({
   /** This objective's stop of the guided path, played inline at the top. */
   round?: QuickRoundData | null;
 }) {
-  const hub = PRACTICE_HUB[data.certSlug] ?? "/start";
+  const hub = practicePageFor(data.certSlug);
   const objectiveHub = OBJECTIVE_HUB_CERTS.includes(data.certSlug)
     ? `/objectives/${data.certSlug}`
     : null;
