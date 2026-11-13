@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isoInDays } from "@/core/path/checkpoint";
+import { EXAM_DATE_HORIZON_DAYS, isPlannableExamDate, isoInDays } from "@/core/path/checkpoint";
 import { cn } from "@/lib/utils";
 
 const chip =
@@ -27,7 +27,8 @@ export function GoalStep({
 }) {
   const [mode, setMode] = useState<"ask" | "date" | "target">("ask");
   const [date, setDate] = useState("");
-  const today = new Date().toISOString().slice(0, 10);
+  const [now] = useState(() => Date.now());
+  const today = isoInDays(0, now);
 
   if (step === "minutes") {
     return (
@@ -57,32 +58,46 @@ export function GoalStep({
   }
 
   if (mode === "date") {
+    const latest = isoInDays(EXAM_DATE_HORIZON_DAYS, now);
+    const plannable = isPlannableExamDate(date, now);
+    // The input reports nothing until a whole date is typed: only a whole one gets the hint.
+    const wrong = date !== "" && !plannable;
     return (
       <div className="path-rise grid gap-6">
         <Header eyebrow="Your exam" title={`When is your ${examName} exam?`} />
         <form
-          className="flex flex-wrap gap-2.5"
+          className="grid gap-2.5"
           onSubmit={(e) => {
             e.preventDefault();
-            if (date) onExam(date, null);
+            if (plannable) onExam(date, null);
           }}
         >
-          <label htmlFor="exam-date" className="sr-only">
-            Exam date
-          </label>
-          <Input
-            id="exam-date"
-            type="date"
-            min={today}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-12 w-auto min-w-48 text-base dark:[color-scheme:dark]"
-            autoFocus
-          />
-          <Button type="submit" size="lg" className="h-12" disabled={!date}>
-            Set my date
-            <ArrowRight />
-          </Button>
+          <div className="flex flex-wrap gap-2.5">
+            <label htmlFor="exam-date" className="sr-only">
+              Exam date
+            </label>
+            <Input
+              id="exam-date"
+              type="date"
+              min={today}
+              max={latest}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              aria-invalid={wrong}
+              aria-describedby={wrong ? "exam-date-hint" : undefined}
+              className="h-12 w-auto min-w-48 text-base dark:[color-scheme:dark]"
+              autoFocus
+            />
+            <Button type="submit" size="lg" className="h-12" disabled={!plannable}>
+              Set my date
+              <ArrowRight />
+            </Button>
+          </div>
+          {wrong && (
+            <p id="exam-date-hint" role="alert" className="text-sm text-destructive">
+              That date doesn&apos;t look right. Pick one from today to {longDate(latest)}.
+            </p>
+          )}
         </form>
         <BackLink onClick={() => setMode("ask")} />
       </div>
@@ -131,6 +146,16 @@ export function GoalStep({
       </div>
     </div>
   );
+}
+
+/** "November 13, 2028" for an ISO date, the same in every time zone. */
+function longDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {

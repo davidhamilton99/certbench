@@ -90,3 +90,19 @@ export function daysUntil(isoDate: string, from: number): number {
 export function isoInDays(days: number, now: number): string {
   return new Date(now + days * DAY).toISOString().slice(0, 10);
 }
+
+/** How far ahead an exam can be booked: CompTIA's vouchers last a year, so two is ample. */
+export const EXAM_DATE_HORIZON_DAYS = 730;
+
+/**
+ * Whether a date input's value is an exam day to plan toward: a real calendar
+ * date from today to the horizon. Browsers hand back years of five or six
+ * digits ("120920-02-06") and call them valid: one of those once made every
+ * save of a learner's path fail.
+ */
+export function isPlannableExamDate(value: string, now: number): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const day = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== value) return false;
+  return value >= isoInDays(0, now) && value <= isoInDays(EXAM_DATE_HORIZON_DAYS, now);
+}

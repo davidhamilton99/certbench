@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { buildPlan } from "@/core/path/plan";
+import { isoInDays } from "@/core/path/checkpoint";
 import { recordRep } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type ChoiceRep, type PathProgress, type PathStop, type PathStructure, type Rep } from "@/core/path/types";
 
@@ -68,6 +69,8 @@ const server = vi.hoisted(() => ({
   stopHandler: null as null | ((input: { index: number }) => unknown),
   rehearsalHandler: null as null | ((input: { size: string }) => unknown),
   labHandler: null as null | ((input: { id: string }) => unknown),
+  /** What saving answers with, when it fails. */
+  saveError: null as null | Error,
   calls: [] as { path: string; input: unknown }[],
 }));
 vi.mock("@/lib/api-client", async () => {
@@ -85,6 +88,7 @@ vi.mock("@/lib/api-client", async () => {
             certId: "11111111-1111-4111-8111-111111111111",
           };
         case "POST /api/path/progress":
+          if (server.saveError) throw server.saveError;
           return { ok: true, stored: true };
         case "POST /api/path/stop": {
           const out = server.stopHandler?.(input as { index: number });
@@ -206,6 +210,7 @@ beforeEach(() => {
   server.stopHandler = (input) => stopReply(input.index);
   server.rehearsalHandler = null;
   server.labHandler = null;
+  server.saveError = null;
   server.calls = [];
   track.mockClear();
   identifyUser.mockClear();
@@ -617,6 +622,83 @@ describe("back from paying", () => {
     expect(await screen.findByRole("radio", { name: /Right answer/ })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Opening your whole path…" })).toBeNull();
     expect(window.location.search).toBe("");
+  });
+});
+
+describe("keeping a learner's work", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  /** Every save the page sent to the account, oldest first. */
+  const saves = () =>
+    server.calls.flatMap((c) =>
+      c.path === "/api/path/progress" && "progress" in (c.input as object)
+        ? [(c.input as { progress: PathProgress }).progress]
+        : []
+    );
+  /** A device holding stops its account never stored: its saves had been failing. */
+  const unsavedOnDevice = (owner: string) =>
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner, progress: done(["warmup", "1.1", "1.2", "1.3"]) }));
+
+  it("leaves an account's device copy alone through a signed-out visit, and saves it on signing back in", async () => {
+    unsavedOnDevice("u1");
+    const signedOut = renderPath();
+    expect(await screen.findByRole("radio", { name: /Right answer/ })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(key)!).progress.stops).toHaveProperty("1.3");
+    signedOut.unmount();
+
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"]);
+    renderPath();
+    await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+  });
+
+  it("keeps it when they log back in on the page, after a warm-up signed out", async () => {
+    unsavedOnDevice("old-user");
+    server.progress = done(["warmup", "1.1"]);
+    renderPath();
+    await screen.findByText("Prompt a|1.1|w1");
+    for (let i = 0; i < 3; i++) await answer();
+    await screen.findByText(/Warm-up complete/i);
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "sam@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in and keep going" }));
+    await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+  });
+
+  it("won't take an exam date that can't be right, and saves a real one", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Yes, I have a date" }));
+    const input = screen.getByLabelText("Exam date");
+    // What a browser's date input reports when 12092026 is typed into the year first.
+    fireEvent.change(input, { target: { value: "120920-02-06" } });
+    expect(screen.getByRole("button", { name: /Set my date/ })).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("That date doesn't look right");
+
+    const date = isoInDays(30, Date.now());
+    fireEvent.change(input, { target: { value: date } });
+    fireEvent.click(screen.getByRole("button", { name: /Set my date/ }));
+    expect(await screen.findByText("How much time can you give it on most days?")).toBeInTheDocument();
+    await waitFor(() => expect(saves().at(-1)?.goal?.examDate).toBe(date));
+  });
+
+  it("reports a save the account refuses, once a visit", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    server.saveError = new ApiError("validation_failed");
+    renderPath();
+    for (const stop of [2, 3]) {
+      fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+      await screen.findByText(`Prompt a|1.${stop - 1}|s${stop - 1}-0`);
+      for (let i = 0; i < 3; i++) await answer();
+      await screen.findByText(new RegExp(`Stop ${stop} complete`, "i"));
+    }
+    expect(saves().length).toBeGreaterThanOrEqual(2);
+    expect(track.mock.calls.filter(([event]) => event === "path_save_failed")).toEqual([
+      ["path_save_failed", { cert: "security-plus-sy0-701", code: "validation_failed" }],
+    ]);
   });
 });
 
