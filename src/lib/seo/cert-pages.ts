@@ -33,6 +33,8 @@ export interface PracticeTestPage {
   related?: { href: string; label: string; note: string }[];
   /** CompTIA's current domains, when they differ from the bank's. */
   currentExams?: ExamOutline[];
+  /** For an exam taken in parts (A+): each part's own practice page, offered first. */
+  cores?: { href: string; name: string; examCode: string; blurb: string }[];
 }
 
 export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
@@ -151,7 +153,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Is there a free N10-009 practice test here?",
         answer:
-          "Yes — the questions on this page are free with no account, and the free 3-minute readiness check gives you a readiness score. Pro adds the full 25-question N10-009 diagnostic, a personalised daily plan, and unlimited practice. N10-009 is the current Network+ exam version, so everything here targets it.",
+          "Yes. The warm-up, the sample questions and the 3-minute readiness check are free with no account. A free account saves your progress and opens your Network+ path through its readiness checkpoint; Pro opens the rest, with full-length timed exams and every PBQ lab. N10-009 is the current Network+ exam version, so everything here targets it.",
       },
     ],
     currentExams: [
@@ -209,8 +211,22 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       "Free CompTIA A+ Core 1 and Core 2 practice questions with full explanations, written to today's 220-1201/1202 exams. No account needed.",
     h1: "Free CompTIA A+ practice test (Core 1 & Core 2)",
     intro: [
-      "A+ is two exams: Core 1 (hardware, networking, mobile devices, cloud) and Core 2 (operating systems, security, software troubleshooting). The samples below come from both, each with a full explanation. CertBench holds 1,100+ A+ questions across the two cores.",
+      "A+ is two exams: Core 1 (hardware, networking, mobile devices, cloud) and Core 2 (operating systems, security, software troubleshooting). Each has its own practice test above; the samples below come from both, each with a full explanation. CertBench holds 1,300+ A+ questions across the two cores, all written to 220-1201 and 220-1202.",
       "Try them, then take the free readiness check for whichever core you're sitting first.",
+    ],
+    cores: [
+      {
+        href: "/a-plus-core-1-practice-test",
+        name: "A+ Core 1",
+        examCode: "220-1201",
+        blurb: "Mobile devices, networking, hardware, cloud and troubleshooting",
+      },
+      {
+        href: "/a-plus-core-2-practice-test",
+        name: "A+ Core 2",
+        examCode: "220-1202",
+        blurb: "Operating systems, security, software troubleshooting and procedures",
+      },
     ],
     faqs: [
       {
@@ -241,7 +257,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Is this a free A+ exam practice test?",
         answer:
-          "Yes. The sample questions on this page are free with no account, split between Core 1 and Core 2. The free readiness check gives you a score, and Pro adds the full 25-question diagnostic per core, a personalised daily plan, and unlimited practice.",
+          "Yes. The sample questions on this page, each core's warm-up and both readiness checks are free with no account. A free account saves your progress and opens each core's path through its readiness checkpoint; Pro opens the rest of your core's path, with full-length timed exams and every PBQ lab.",
       },
     ],
     currentExams: [
@@ -305,7 +321,159 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       },
     ],
   },
+  {
+    path: "a-plus-core-1-practice-test",
+    certSlugs: ["a-plus-core1-220-1201"],
+    title: "A+ Core 1 practice test",
+    metaTitle: "Free CompTIA A+ Core 1 Practice Test (220-1201)",
+    metaDescription:
+      "Free A+ Core 1 (220-1201) practice questions with full explanations, across all five domains: mobile devices, networking, hardware, cloud and troubleshooting. No account needed.",
+    h1: "Free CompTIA A+ Core 1 (220-1201) practice test",
+    intro: [
+      "Core 1 is the hardware and networking half of A+: mobile devices, networking, hardware, virtualization and cloud computing, and hardware and network troubleshooting. Every question here is original, written to the 220-1201 objectives, with a full explanation. CertBench holds 650+ Core 1 questions across all 27 objectives.",
+      "Try the warm-up above and the samples below, then take the free readiness check for an estimate by domain, no account needed.",
+    ],
+    faqs: [
+      {
+        question: "How many questions are on A+ Core 1?",
+        answer:
+          "220-1201 has a maximum of 90 questions in 90 minutes, a mix of multiple-choice and performance-based questions. The passing score is 675 on a scale of 100 to 900.",
+      },
+      {
+        question: "What does 220-1201 cover?",
+        answer:
+          "Five domains: mobile devices (13%), networking (23%), hardware (25%), virtualization and cloud computing (11%), and hardware and network troubleshooting (28%), the largest. That runs from laptop parts and Wi-Fi standards to RAID, printers and cloud models.",
+      },
+      {
+        question: "What changed from 220-1101?",
+        answer:
+          "220-1201 replaced 220-1101, which CompTIA retired on September 25, 2025. Most topics carried over and the objectives were renumbered; the troubleshooting methodology is no longer tested on its own. Every question here sits under its 220-1201 objective.",
+      },
+      {
+        question: "Should I take Core 1 or Core 2 first?",
+        answer:
+          "Most people take Core 1 first: its hardware and networking foundation comes up again in Core 2's troubleshooting. There's no rule, but you need both cores, from the same series, to earn A+.",
+      },
+      {
+        question: "Are these real A+ exam questions?",
+        answer:
+          "No. They're original questions written to the 220-1201 objectives at exam-level difficulty, with explanations. Braindumps violate CompTIA policy and can void your certification.",
+      },
+      {
+        question: "Is this Core 1 practice test free?",
+        answer:
+          "Yes. The warm-up, the sample questions and the readiness check are free with no account. A free account saves your progress and opens your Core 1 path through its readiness checkpoint; Pro opens the rest, with full-length timed exams and every PBQ lab.",
+      },
+    ],
+    related: [
+      {
+        href: "/readiness-check/a-plus-core1-220-1201",
+        label: "A+ Core 1 readiness check",
+        note: "10 questions, no account: an estimate by domain",
+      },
+      {
+        href: "/objectives/a-plus-core1-220-1201",
+        label: "220-1201 exam objectives",
+        note: "All 27 objectives, each with its own practice questions",
+      },
+      {
+        href: "/a-plus-core-1-pbq-examples",
+        label: "A+ Core 1 PBQ examples",
+        note: "Hardware, networking and troubleshooting scenarios to work through",
+      },
+      {
+        href: "/a-plus-core-2-practice-test",
+        label: "A+ Core 2 practice test",
+        note: "Operating systems, security and operational procedures",
+      },
+      {
+        href: "/tools/port-numbers-quiz",
+        label: "Port numbers quiz",
+        note: "Core 1 networking — the ports you need cold",
+      },
+      {
+        href: "/tools/subnetting-practice",
+        label: "Subnetting practice",
+        note: "Core 1 IP addressing, drilled",
+      },
+    ],
+  },
+  {
+    path: "a-plus-core-2-practice-test",
+    certSlugs: ["a-plus-core2-220-1202"],
+    title: "A+ Core 2 practice test",
+    metaTitle: "Free CompTIA A+ Core 2 Practice Test (220-1202)",
+    metaDescription:
+      "Free A+ Core 2 (220-1202) practice questions with full explanations: operating systems, security, software troubleshooting and operational procedures, AI included. No account needed.",
+    h1: "Free CompTIA A+ Core 2 (220-1202) practice test",
+    intro: [
+      "Core 2 is the software half of A+: operating systems, security, software troubleshooting and operational procedures. Every question here is original, written to the 220-1202 objectives, with a full explanation. CertBench holds 700+ Core 2 questions across all 36 objectives, including the two 220-1202 added: cloud productivity tools and artificial intelligence.",
+      "Try the warm-up above and the samples below, then take the free readiness check for an estimate by domain, no account needed.",
+    ],
+    faqs: [
+      {
+        question: "How many questions are on A+ Core 2?",
+        answer:
+          "220-1202 has a maximum of 90 questions in 90 minutes, a mix of multiple-choice and performance-based questions. The passing score is 700 on a scale of 100 to 900.",
+      },
+      {
+        question: "What does 220-1202 cover?",
+        answer:
+          "Four domains: operating systems (28%), security (28%), software troubleshooting (23%) and operational procedures (21%). That runs from Windows, macOS and Linux tools to malware removal, backups, scripting and remote access.",
+      },
+      {
+        question: "What's new in 220-1202?",
+        answer:
+          "Two new objectives: installing and configuring cloud-based productivity tools (1.11), and basic concepts of artificial intelligence (4.10). Windows 11 joins Windows 10, the Linux tools add commands such as dnf, fsck and curl, and malware removal is now part of the Security domain. 220-1202 replaced 220-1102, which CompTIA retired on September 25, 2025.",
+      },
+      {
+        question: "Do I need to take Core 1 first?",
+        answer:
+          "No. The cores are separate exams you can take in either order, though most people start with Core 1. You need both, from the same series, to earn A+.",
+      },
+      {
+        question: "Are these real A+ exam questions?",
+        answer:
+          "No. They're original questions written to the 220-1202 objectives at exam-level difficulty, with explanations. Braindumps violate CompTIA policy and can void your certification.",
+      },
+      {
+        question: "Is this Core 2 practice test free?",
+        answer:
+          "Yes. The warm-up, the sample questions and the readiness check are free with no account. A free account saves your progress and opens your Core 2 path through its readiness checkpoint; Pro opens the rest, with full-length timed exams and every PBQ lab.",
+      },
+    ],
+    related: [
+      {
+        href: "/readiness-check/a-plus-core2-220-1202",
+        label: "A+ Core 2 readiness check",
+        note: "10 questions, no account: an estimate by domain",
+      },
+      {
+        href: "/objectives/a-plus-core2-220-1202",
+        label: "220-1202 exam objectives",
+        note: "All 36 objectives, each with its own practice questions",
+      },
+      {
+        href: "/a-plus-core-2-pbq-examples",
+        label: "A+ Core 2 PBQ examples",
+        note: "Windows, security and malware removal scenarios to work through",
+      },
+      {
+        href: "/a-plus-core-1-practice-test",
+        label: "A+ Core 1 practice test",
+        note: "Mobile devices, networking, hardware and troubleshooting",
+      },
+    ],
+  },
 ];
+
+/** The practice-test page for one exam: its own page, else the page that includes it. */
+export function practicePageFor(certSlug: string): string {
+  const page =
+    PRACTICE_TEST_PAGES.find((p) => p.certSlugs.length === 1 && p.certSlugs[0] === certSlug) ??
+    PRACTICE_TEST_PAGES.find((p) => p.certSlugs.includes(certSlug));
+  return page ? `/${page.path}` : "/start";
+}
 
 export interface PbqExamplePage {
   path: string;
@@ -450,9 +618,9 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
         note: "Windows, security and malware removal scenarios to work through",
       },
       {
-        href: "/a-plus-practice-test",
-        label: "A+ practice test",
-        note: "Original Core 1 and Core 2 questions with full explanations",
+        href: "/a-plus-core-1-practice-test",
+        label: "A+ Core 1 practice test",
+        note: "Original 220-1201 questions with full explanations",
       },
       {
         href: "/readiness-check/a-plus-core1-220-1201",
@@ -502,9 +670,9 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
         note: "Hardware, networking and troubleshooting scenarios to work through",
       },
       {
-        href: "/a-plus-practice-test",
-        label: "A+ practice test",
-        note: "Original Core 1 and Core 2 questions with full explanations",
+        href: "/a-plus-core-2-practice-test",
+        label: "A+ Core 2 practice test",
+        note: "Original 220-1202 questions with full explanations",
       },
       {
         href: "/readiness-check/a-plus-core2-220-1202",

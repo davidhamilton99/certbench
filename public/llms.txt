@@ -21,6 +21,8 @@ Each path starts with a warm-up anyone can play with no account. A free account 
 
 - [Security+ SY0-801 vs SY0-701](https://certbench.dev/security-plus-sy0-801-vs-sy0-701): launch and retirement dates, domain weight changes, and how to choose by exam date, from CompTIA's own pages.
 - [SY0-701 exam objectives](https://certbench.dev/objectives/security-plus-sy0-701): every objective by domain and exam weight, with practice questions for each one.
+- [220-1201 exam objectives (A+ Core 1)](https://certbench.dev/objectives/a-plus-core1-220-1201): all 27 objectives by domain and exam weight, with practice questions for each one.
+- [220-1202 exam objectives (A+ Core 2)](https://certbench.dev/objectives/a-plus-core2-220-1202): all 36 objectives by domain and exam weight, including the new cloud productivity and AI objectives.
 
 ## Free tools
 
@@ -34,6 +36,8 @@ The port, subnetting, and acronym drills give a first round free with no account
 ## Free practice tests
 
 - [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): free practice questions with explanations, written to 220-1201 and 220-1202.
+- [CompTIA A+ Core 1 practice test (220-1201)](https://certbench.dev/a-plus-core-1-practice-test): a free warm-up and practice questions with explanations, across all five Core 1 domains.
+- [CompTIA A+ Core 2 practice test (220-1202)](https://certbench.dev/a-plus-core-2-practice-test): a free warm-up and practice questions with explanations, across all four Core 2 domains.
 - [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions with explanations.
 - [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): free SY0-701 practice questions with full explanations.
 

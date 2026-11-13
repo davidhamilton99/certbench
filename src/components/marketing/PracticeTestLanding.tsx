@@ -52,7 +52,10 @@ export function PracticeTestLanding({
   /** The exam's warm-up, played inline at the top (single-exam pages). */
   round?: QuickRoundData | null;
 }) {
-  const otherHubs = PRACTICE_TEST_PAGES.filter((p) => p.path !== page.path);
+  // The cores' own pages are offered at the top, so they aren't repeated here.
+  const otherHubs = PRACTICE_TEST_PAGES.filter(
+    (p) => p.path !== page.path && !page.cores?.some((c) => c.href === `/${p.path}`)
+  );
   // Network+ objective numbers aren't CompTIA's yet, so that list goes by topic.
   const official = page.certSlugs.every(usesOfficialObjectiveNumbers);
   const retired = page.certSlugs.some((slug) => replacedBy(slug) !== null);
@@ -96,6 +99,31 @@ export function PracticeTestLanding({
         <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           {page.h1}
         </h1>
+        {/* An exam taken in parts: each part's own practice test comes first. */}
+        {page.cores && (
+          <section className="mt-6">
+            <h2 className="text-sm font-medium text-muted-foreground">Practice one core at a time</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {page.cores.map((core) => (
+                <Link
+                  key={core.href}
+                  href={core.href}
+                  className="group grid gap-1 rounded-xl border bg-card px-5 py-4 transition-colors hover:border-primary/50"
+                >
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-lg font-semibold tracking-tight">{core.name}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{core.examCode}</span>
+                  </span>
+                  <span className="text-sm leading-relaxed text-muted-foreground">{core.blurb}</span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    {core.name} practice test
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
         {/* A retired exam changes what this page is, so that's said first. */}
         {retired && <ExamVersionNote certSlugs={page.certSlugs} className="mt-4" />}
         {/* Lead with something to do: the exam's warm-up, the same quick
