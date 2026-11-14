@@ -109,10 +109,11 @@ export function ObjectiveLanding({
               cert={round.cert}
               stopId={data.code}
               examName={round.examName}
+              structure={round.structure}
               reps={round.reps}
               label={official ? `Objective ${data.code} · ${round.title}` : round.title}
               surface="objective_page"
-              pitch={`That's one of ${round.objectiveCount} ${round.examName} ${official ? "objectives" : "topics"}. Your path walks every one like this, then shows where you stand.`}
+              unit={official ? "objectives" : "topics"}
             />
           </section>
         )}

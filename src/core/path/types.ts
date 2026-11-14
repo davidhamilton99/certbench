@@ -216,8 +216,9 @@ export interface QuickRoundData {
   /** The stop's title ("Security controls", "Warm-up"). */
   title: string;
   reps: Rep[];
-  /** Where this stop sits on the path, for the pitch line. */
-  stopNumber: number;
-  totalStops: number;
-  objectiveCount: number;
+  /**
+   * The exam's domains and objectives, so the round can end the way a stop
+   * does on the path: on the visitor's map, and what comes next on it.
+   */
+  structure: PathStructure;
 }

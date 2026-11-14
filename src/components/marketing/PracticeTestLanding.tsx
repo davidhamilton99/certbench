@@ -137,10 +137,11 @@ export function PracticeTestLanding({
               cert={round.cert}
               stopId="warmup"
               examName={round.examName}
+              structure={round.structure}
               reps={round.reps}
               label={`${round.examName} warm-up`}
               surface="practice_test_page"
-              pitch={`That's the warm-up. Your ${round.examName} path covers all ${round.objectiveCount} ${official ? "objectives" : "topics"} in short stops like this, then shows where you stand.`}
+              unit={official ? "objectives" : "topics"}
             />
           </section>
         )}

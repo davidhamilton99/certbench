@@ -240,6 +240,10 @@ describe("a first visit", () => {
     expect(screen.getByText(/About 4 minutes of quick questions\./)).toBeInTheDocument();
     const save = screen.getByRole("button", { name: "Save and continue" });
     expect(comesBefore(save, screen.getByText("Your Security+ map"))).toBe(true);
+    // Signing up here plays the next stop in place, and the form says so.
+    expect(screen.getByText(/You stay right here\./)).toBeInTheDocument();
+    // Counted apart from the same ask on a public page.
+    expect(track).toHaveBeenCalledWith("path_save_viewed", { cert: "security-plus-sy0-701", surface: "path" });
     // Nothing went to the server: the warm-up needs no account.
     expect(server.calls.filter((c) => c.path === "/api/path/stop")).toHaveLength(0);
     const saved = JSON.parse(localStorage.getItem("cb_path_security-plus-sy0-701")!);
@@ -649,6 +653,25 @@ describe("keeping a learner's work", () => {
     server.progress = done(["warmup", "1.1"]);
     renderPath();
     await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+  });
+
+  it("saves rounds a public page handed to a new account, and opens on the way on", async () => {
+    // Signed up under an objective page's round: that page handed the device's
+    // rounds to the account and opened the path. The account has nothing yet.
+    localStorage.setItem(
+      key,
+      JSON.stringify({ v: 1, owner: "new-user", progress: recordRep(done(["1.1"]), "a|1.1|x", true, 1) })
+    );
+    auth.session = { user: { id: "new-user", email: "new@example.com" } };
+    renderPath();
+
+    await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.1"));
+    expect(saves().at(-1)?.items).toHaveProperty(["a|1.1|x"]);
+    // Home, with the path's next stop to play: no save card, no warm-up replay.
+    expect(await screen.findByRole("button", { name: /Continue/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save and continue" })).toBeNull();
+    // The page that took the signup counted the account; the path doesn't again.
+    expect(track).not.toHaveBeenCalledWith("path_account_linked", expect.anything());
   });
 
   it("keeps it when they log back in on the page, after a warm-up signed out", async () => {

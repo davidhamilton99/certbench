@@ -65,7 +65,11 @@ type EventMap = {
   };
   /** A review round of misses began: from the home, a rehearsal's result, or the last review. */
   path_review_started: { cert: string; from: "home" | "rehearsal" | "end"; reps: number };
-  path_save_viewed: { cert: string };
+  /**
+   * The account ask at the end of a first stop: on the path ("path"), or where
+   * a public page played the stop inline ("objective_page", "practice_test_page").
+   */
+  path_save_viewed: { cert: string; surface: string };
   path_account_linked: {
     cert: string;
     method: "email_signup" | "email_login" | "redirect";
