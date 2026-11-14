@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
-const domainOf = (objective: string) =>
+/** The domain an objective sits in: "4.2" is in "4.0". */
+export const domainOf = (objective: string) =>
   objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
 
 /** The headline: how the dial moved since the reading before. */
@@ -28,15 +29,22 @@ function headline(score: number, before: NonNullable<RehearsalRun["done"]>["befo
 /**
  * A finished exam rehearsal: the score on the readiness dial, swept from the
  * reading before; how each domain went; the time it took; the way on
- * (`children`); and every answer to look back over, misses first.
+ * (`children`); and every answer to look back over, misses first. A public
+ * practice test reports on it under its own name (`label`, `caption`).
  */
 export function RehearsalResult({
   run,
   structure,
+  label = "Exam rehearsal",
+  caption = "Rehearsal",
   children,
 }: {
   run: RehearsalRun & { done: NonNullable<RehearsalRun["done"]> };
   structure: PathStructure;
+  /** What this sitting is called above the score. */
+  label?: string;
+  /** The word under the dial's number. */
+  caption?: string;
   children: ReactNode;
 }) {
   const { result, before, timedOut } = run.done;
@@ -51,9 +59,9 @@ export function RehearsalResult({
       <ReadingCard
         result={result}
         structure={structure}
-        kicker={`Exam rehearsal · ${structure.examName}`}
+        kicker={`${label} · ${structure.examName}`}
         headline={headline(result.score, before)}
-        caption="Rehearsal"
+        caption={caption}
         from={before?.score}
         summary={
           <>
