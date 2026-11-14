@@ -183,6 +183,8 @@ export async function sendWelcome(
 
 export interface LifecycleRunResult {
   users: number;
+  /** Users whose pass threw: each is logged, and counted here for the run's log line. */
+  failed: number;
   digests: number;
   countdowns: number;
   postExam: number;
@@ -226,6 +228,7 @@ export async function runLifecycleEmails(
   const admin = createAdminClient();
   const result: LifecycleRunResult = {
     users: 0,
+    failed: 0,
     digests: 0,
     countdowns: 0,
     postExam: 0,
@@ -252,6 +255,7 @@ export async function runLifecycleEmails(
     try {
       await processUser(admin, user.id, user.email, ctx, result);
     } catch (err) {
+      result.failed += 1;
       console.error(`lifecycle emails failed for user ${user.id}:`, err);
     }
   }

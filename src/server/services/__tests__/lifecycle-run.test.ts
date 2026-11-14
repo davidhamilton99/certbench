@@ -14,6 +14,8 @@ const h = vi.hoisted(() => ({
   users: [] as { id: string; email: string }[],
   today: "",
   enrollments: {} as Record<string, { certificationId: string; examDate: string | null }[]>,
+  /** Accounts whose enrollments can't be read. */
+  failing: new Set<string>(),
   sendEmail: vi.fn<(email: { to: string; subject: string; html: string; text: string }) => Promise<boolean>>(
     async () => true
   ),
@@ -53,8 +55,10 @@ vi.mock("@/env", () => ({
 }));
 vi.mock("@/server/email/resend", () => ({ sendEmail: h.sendEmail }));
 vi.mock("@/server/data/enrollments", () => ({
-  listEnrollments: async (_db: unknown, userId: string) =>
-    (h.enrollments[userId] ?? []).map((e, i) => ({ id: `${userId}-${i}`, enrolledAt: "", ...e })),
+  listEnrollments: async (_db: unknown, userId: string) => {
+    if (h.failing.has(userId)) throw new Error("enrollments read failed");
+    return (h.enrollments[userId] ?? []).map((e, i) => ({ id: `${userId}-${i}`, enrolledAt: "", ...e }));
+  },
 }));
 vi.mock("@/server/data/profiles", () => ({
   getProfile: async () => ({ displayName: "Sam Lee" }),
@@ -211,6 +215,7 @@ beforeEach(() => {
   h.tables = { user_subscriptions: [], profiles: [], path_progress: [], email_preferences: [], email_log: [] };
   h.users = [];
   h.enrollments = {};
+  h.failing = new Set();
 });
 
 describe("runLifecycleEmails", () => {
@@ -307,6 +312,19 @@ describe("runLifecycleEmails", () => {
     account("dated", { examDate: "2026-11-09", path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
     expect((await run(MONDAY)).sent).toEqual(["dated: 7 days to your Security+ exam"]);
     expect((await run(TUESDAY)).sent).toEqual(["dated: Your Security+ checkpoint: 64%"]);
+  });
+
+  it("counts an account whose pass fails, and still reaches everyone after it", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    account("broken", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
+    account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
+    h.failing.add("broken");
+
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["free: Next on your Security+ path: Change management"]);
+    expect(monday.result).toMatchObject({ users: 2, failed: 1, pathNudges: 1 });
+    expect(consoleError).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
   });
 
   it("nudges toward the checkpoint itself when it's the next stop", async () => {
