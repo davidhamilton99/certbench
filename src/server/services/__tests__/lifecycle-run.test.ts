@@ -84,16 +84,6 @@ vi.mock("@/server/data/path-progress", () => ({
 vi.mock("@/server/path/bank", () => ({
   loadPathBank: async () => ({ certId: "sec", structure: h.structure, questions: [], byId: new Map() }),
 }));
-// Every account has practiced and has reviews due, so the toolkit emails would fire.
-vi.mock("@/server/services/session-plan", () => ({
-  getSessionPlan: async () => ({
-    readinessScore: 48,
-    readinessTrend: null,
-    daysUntilExam: null,
-    totalQuestionsSeen: 40,
-    blocks: [{ type: "srs_review", questionCount: 5 }],
-  }),
-}));
 vi.mock("@/server/supabase/admin", () => ({ createAdminClient: () => fakeAdmin() }));
 
 import { pathNudgeType, pathOfferType, runLifecycleEmails } from "../lifecycle-email";
@@ -207,8 +197,11 @@ async function run(date: Date) {
   h.today = date.toISOString().slice(0, 10);
   h.sendEmail.mockClear();
   const result = await runLifecycleEmails(date);
-  const sent = h.sendEmail.mock.calls.map(([e]) => `${e.to.split("@")[0]}: ${e.subject}`);
-  return { result, sent: sent.sort(), emails: h.sendEmail.mock.calls.map(([e]) => e) };
+  const emails = h.sendEmail.mock.calls.map(([e]) => e);
+  // No lifecycle email ever sends anyone into the old workspace.
+  for (const e of emails) expect(e.html + e.text).not.toContain("/dashboard");
+  const sent = emails.map((e) => `${e.to.split("@")[0]}: ${e.subject}`);
+  return { result, sent: sent.sort(), emails };
 }
 
 beforeEach(() => {
@@ -219,26 +212,23 @@ beforeEach(() => {
 });
 
 describe("runLifecycleEmails", () => {
-  it("gives an account without Pro its path, not the toolkit's digest and reminders", async () => {
+  it("nudges an account without Pro back to its path, and sends Pro no nudge", async () => {
     account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
     account("pro", { pro: true, path: { progress: played("warmup", "1.1"), savedDaysAgo: 3 } });
 
     const monday = await run(MONDAY);
-    expect(monday.sent).toEqual([
-      "free: Next on your Security+ path: Change management",
-      "pro: CompTIA Security+ readiness: 48%",
-    ]);
-    expect(monday.result).toMatchObject({ digests: 1, pathNudges: 1, dailyReminders: 0 });
+    expect(monday.sent).toEqual(["free: Next on your Security+ path: Change management"]);
+    expect(monday.result).toMatchObject({ users: 2, failed: 0, pathNudges: 1 });
 
-    const nudge = monday.emails.find((e) => e.to === "free@example.com")!;
+    const nudge = monday.emails[0];
     expect(nudge.html).toContain(
       `https://certbench.dev/login?next=${encodeURIComponent("/path/security-plus-sy0-701?utm_source=email&utm_medium=lifecycle&utm_campaign=path_nudge")}`
     );
     expect(nudge.text).toContain("It's 2 short stops from here to your readiness checkpoint");
 
-    // Next day: Pro gets its daily review reminder; the nudge never repeats.
+    // Next day: the nudge never repeats.
     const tuesday = await run(TUESDAY);
-    expect(tuesday.sent).toEqual(["pro: 5 reviews due today — CompTIA Security+"]);
+    expect(tuesday.sent).toEqual([]);
     expect(h.tables.email_log.filter((r) => r.email_type === pathNudgeType("security-plus-sy0-701"))).toHaveLength(1);
   });
 
@@ -253,24 +243,32 @@ describe("runLifecycleEmails", () => {
     const countdown = monday.emails[0];
     expect(countdown.text).toContain("You're 2 of 11 stops into your Security+ path.");
     expect(countdown.html).toContain(encodeURIComponent("utm_campaign=countdown"));
-    expect(countdown.html).not.toContain("/dashboard");
 
     const tuesday = await run(TUESDAY);
     expect(tuesday.sent).toEqual(["dated: Next on your Security+ path: Security concepts"]);
   });
 
-  it("keeps the toolkit countdown for Pro", async () => {
-    account("pro", { pro: true, examDate: "2026-11-10" });
+  it("gives Pro its countdown on the path too, counting the whole path", async () => {
+    account("free", { examDate: "2026-11-10", path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+    account("pro", { pro: true, examDate: "2026-11-10", path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+
     const tuesday = await run(TUESDAY);
-    expect(tuesday.sent).toEqual(["pro: 7 days to your CompTIA Security+ exam"]);
-    expect(tuesday.emails[0].html).toContain("https://certbench.dev/dashboard");
+    expect(tuesday.sent).toEqual(["free: 7 days to your Security+ exam", "pro: 7 days to your Security+ exam"]);
+    expect(tuesday.result).toMatchObject({ countdowns: 2, pathOffers: 0 });
+    const text = (who: string) => tuesday.emails.find((e) => e.to === `${who}@example.com`)!.text;
+    expect(text("free")).toContain(
+      "You've played every free stop of your Security+ path, readiness checkpoint included. 5 more stops are waiting for you."
+    );
+    expect(text("pro")).toContain("You're 6 of 11 stops into your Security+ path.");
+    expect(text("pro")).toContain("utm_campaign%3Dcountdown");
   });
 
-  it("sends a Pro countdown on a Monday in place of the digest, not as well", async () => {
-    account("pro", { pro: true, examDate: "2026-11-09" });
-    const monday = await run(MONDAY);
-    expect(monday.sent).toEqual(["pro: 7 days to your CompTIA Security+ exam"]);
-    expect(monday.result).toMatchObject({ countdowns: 1, digests: 0, dailyReminders: 0 });
+  it("starts Pro's path in its countdown when it hasn't begun", async () => {
+    account("pro", { pro: true, examDate: "2026-11-10" });
+    const tuesday = await run(TUESDAY);
+    expect(tuesday.sent).toEqual(["pro: 7 days to your Security+ exam"]);
+    expect(tuesday.emails[0].text).toContain("Your Security+ path is ready: 11 stops");
+    expect(tuesday.emails[0].text).toContain("Start my path: https://certbench.dev/login?next=");
   });
 
   it("sends nothing to the unsubscribed, the recently active, or anyone gone a week", async () => {
@@ -281,7 +279,7 @@ describe("runLifecycleEmails", () => {
 
     const monday = await run(MONDAY);
     expect(monday.sent).toEqual([]);
-    expect(monday.result).toMatchObject({ users: 4, pathNudges: 0, pathOffers: 0, digests: 0, dailyReminders: 0 });
+    expect(monday.result).toMatchObject({ users: 4, pathNudges: 0, pathOffers: 0, countdowns: 0 });
   });
 
   it("follows up once on a checkpoint taken without buying: the result and the rest of the path", async () => {
@@ -304,7 +302,7 @@ describe("runLifecycleEmails", () => {
   it("never sends the follow-up to Pro", async () => {
     account("pro", { pro: true, path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
     const tuesday = await run(TUESDAY);
-    expect(tuesday.sent).toEqual(["pro: 5 reviews due today — CompTIA Security+"]);
+    expect(tuesday.sent).toEqual([]);
     expect(tuesday.result).toMatchObject({ pathOffers: 0 });
   });
 

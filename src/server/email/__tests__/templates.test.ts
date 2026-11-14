@@ -108,8 +108,8 @@ describe("pathNudgeEmail", () => {
 });
 
 describe("pathCountdownEmail", () => {
-  const countdown = (days: number, standing: { done: number; total: number; freeLeft: number }) =>
-    pathCountdownEmail({ ...base, daysUntilExam: days, standing });
+  const countdown = (days: number, standing: { done: number; total: number; freeLeft: number }, pro = false) =>
+    pathCountdownEmail({ ...base, daysUntilExam: days, standing, pro });
 
   it("shows where they are on the path and links back to it", () => {
     const email = countdown(7, { done: 3, total: 35, freeLeft: 3 });
@@ -131,6 +131,18 @@ describe("pathCountdownEmail", () => {
     expect(email.text).toContain(
       "You've played every free stop of your Security+ path, readiness checkpoint included. 29 more stops are waiting for you."
     );
+  });
+
+  it("counts the whole path for Pro, with no talk of free stops", () => {
+    const email = countdown(3, { done: 6, total: 35, freeLeft: 0 }, true);
+    expect(email.text).toContain("You're 6 of 35 stops into your Security+ path.");
+    expect(email.text).not.toContain("free stop");
+    expect(email.text).toContain(`Continue my path: ${base.href}`);
+  });
+
+  it("says so when every stop is played", () => {
+    const email = countdown(7, { done: 35, total: 35, freeLeft: 0 }, true);
+    expect(email.text).toContain("You've played every stop of your Security+ path.");
   });
 
   it("keeps the night before calm", () => {

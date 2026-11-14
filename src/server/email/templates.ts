@@ -130,79 +130,6 @@ export function welcomeEmail(input: {
   };
 }
 
-export function digestEmail(input: {
-  displayName: string;
-  certName: string;
-  readinessScore: number;
-  trendDelta: number | null;
-  dueCards: number;
-  daysUntilExam: number | null;
-  unsubscribeUrl: string;
-}): EmailContent {
-  const score = Math.round(input.readinessScore);
-  const first = input.displayName.split(" ")[0] || input.displayName;
-  const trendLine =
-    input.trendDelta !== null && input.trendDelta !== 0
-      ? `<span style="color:${input.trendDelta > 0 ? "#16a34a" : "#dc2626"};font-weight:600;">${input.trendDelta > 0 ? "▲" : "▼"} ${Math.abs(input.trendDelta)}% this week</span>`
-      : `<span style="color:#71717a;">no change this week</span>`;
-  const examLine =
-    input.daysUntilExam !== null
-      ? `<p style="font-size:14px;margin:0 0 4px;color:#71717a;">${input.daysUntilExam} days until your exam.</p>`
-      : "";
-  return {
-    subject: `${input.certName} readiness: ${score}%${input.trendDelta ? ` (${input.trendDelta > 0 ? "+" : ""}${input.trendDelta}%)` : ""}`,
-    html: layout(
-      `
-      <h1 style="font-size:18px;margin:0 0 16px;">Your week, ${first}</h1>
-      <div style="text-align:center;padding:12px 0 20px;">
-        <div style="font-size:44px;font-weight:700;font-family:ui-monospace,monospace;color:${scoreColor(score)};">${score}%</div>
-        <div style="font-size:13px;margin-top:4px;">${trendLine}</div>
-      </div>
-      ${examLine}
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        You have <strong>${input.dueCards} card${input.dueCards === 1 ? "" : "s"} due for review</strong> — clearing them is today's highest-impact work.
-      </p>
-      ${button(`${APP()}/dashboard`, "See today's plan")}
-    `,
-      input.unsubscribeUrl
-    ),
-    text: `${input.certName} readiness: ${score}%\n${input.daysUntilExam !== null ? `${input.daysUntilExam} days until your exam.\n` : ""}${input.dueCards} cards due for review.\n\nSee today's plan: ${APP()}/dashboard\n\nUnsubscribe: ${input.unsubscribeUrl}`,
-  };
-}
-
-export function dailyReminderEmail(input: {
-  displayName: string;
-  certName: string;
-  dueCards: number;
-  readinessScore: number;
-  unsubscribeUrl: string;
-}): EmailContent {
-  const first = input.displayName.split(" ")[0] || input.displayName;
-  const score = Math.round(input.readinessScore);
-  const n = input.dueCards;
-  const cards = `${n} card${n === 1 ? "" : "s"}`;
-  return {
-    subject: `${n} review${n === 1 ? "" : "s"} due today — ${input.certName}`,
-    html: layout(
-      `
-      <h1 style="font-size:18px;margin:0 0 12px;">${cards} due, ${first}</h1>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        Spaced repetition only works when you clear reviews the day they come
-        due — that's how ${input.certName} facts settle into long-term memory
-        before exam day. A few minutes is all it takes.
-      </p>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 16px;color:#71717a;">
-        Current readiness:
-        <strong style="color:${scoreColor(score)};">${score}%</strong>
-      </p>
-      ${button(`${APP()}/dashboard`, `Review ${cards}`)}
-    `,
-      input.unsubscribeUrl
-    ),
-    text: `${cards} due for review today.\nReadiness: ${score}%.\nClear them before you forget: ${APP()}/dashboard\n\nStop daily reminders: ${input.unsubscribeUrl}`,
-  };
-}
-
 const TOOL_INTRO: Record<ToolSource, string> = {
   "port-numbers-quiz": "You've been drilling port numbers on CertBench",
   "subnetting-practice": "You've been drilling subnetting on CertBench",
@@ -282,50 +209,16 @@ const countdownSubject = (days: number, name: string) =>
 const countdownHeading = (days: number) =>
   days <= 1 ? "Exam day is tomorrow" : `${days} days to go`;
 
-export function countdownEmail(input: {
-  displayName: string;
-  certName: string;
-  daysUntilExam: number;
-  readinessScore: number;
-  unsubscribeUrl: string;
-}): EmailContent {
-  const score = Math.round(input.readinessScore);
-  const first = input.displayName.split(" ")[0] || input.displayName;
-  const advice =
-    input.daysUntilExam <= 1
-      ? "No cramming tonight — clear your due reviews, skim your weakest domain's notes, and sleep. You've done the work."
-      : input.daysUntilExam <= 3
-        ? "Final stretch: due reviews every day, plus one timed practice exam to calibrate pacing."
-        : input.daysUntilExam <= 7
-          ? "This week: a full timed practice exam, then drill whatever domain scores lowest."
-          : "Two weeks out is where consistent daily reviews pay off most — keep the streak alive.";
-  return {
-    subject: countdownSubject(input.daysUntilExam, input.certName),
-    html: layout(
-      `
-      <h1 style="font-size:18px;margin:0 0 12px;">${countdownHeading(input.daysUntilExam)}, ${first}</h1>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
-        Your ${input.certName} readiness is
-        <strong style="color:${scoreColor(score)};">${score}%</strong>.
-      </p>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">${advice}</p>
-      ${button(`${APP()}/dashboard`, "Open your plan")}
-    `,
-      input.unsubscribeUrl
-    ),
-    text: `${input.daysUntilExam} days to your ${input.certName} exam.\nReadiness: ${score}%.\n${advice}\n\nOpen your plan: ${APP()}/dashboard\n\nUnsubscribe: ${input.unsubscribeUrl}`,
-  };
-}
-
 /**
- * The exam countdown for an account without Pro: where they are on their path
- * and the way back to it, instead of the toolkit's plan and reviews.
+ * The exam countdown: where they are on their path and the way back to it.
+ * Pro gets the whole path counted, with no talk of free stops.
  */
 export function pathCountdownEmail(input: {
   displayName: string;
   examName: string;
   daysUntilExam: number;
   standing: PathStanding;
+  pro: boolean;
   href: string;
   unsubscribeUrl: string;
 }): EmailContent {
@@ -335,9 +228,11 @@ export function pathCountdownEmail(input: {
   const where =
     standing.done === 0
       ? `Your ${examName} path is ready: ${stopCount(standing.total)}, about ${MINUTES_PER_STOP} minutes each.`
-      : standing.freeLeft === 0
-        ? `You've played every free stop of your ${examName} path, readiness checkpoint included. ${left === 1 ? "One more stop is" : `${left} more stops are`} waiting for you.`
-        : `You're ${standing.done} of ${standing.total} stops into your ${examName} path.`;
+      : left === 0
+        ? `You've played every stop of your ${examName} path.`
+        : standing.freeLeft === 0 && !input.pro
+          ? `You've played every free stop of your ${examName} path, readiness checkpoint included. ${left === 1 ? "One more stop is" : `${left} more stops are`} waiting for you.`
+          : `You're ${standing.done} of ${standing.total} stops into your ${examName} path.`;
   const advice =
     days <= 1
       ? "No cramming tonight. Get some sleep: you've done the work."

@@ -7,14 +7,10 @@ import { getProfile } from "@/server/data/profiles";
 import { listEnrollments } from "@/server/data/enrollments";
 import { getCertification } from "@/server/data/certifications";
 import { getPathProgress } from "@/server/data/path-progress";
-import { getSessionPlan } from "@/server/services/session-plan";
 import { loadPathBank } from "@/server/path/bank";
 import { sendEmail } from "@/server/email/resend";
 import {
   checkpointResultEmail,
-  countdownEmail,
-  dailyReminderEmail,
-  digestEmail,
   pathCountdownEmail,
   pathEmailLink,
   pathNudgeEmail,
@@ -55,16 +51,13 @@ export const pathOfferType = (cert: PathCert) => `path_offer_${cert}`;
 
 interface EmailPrefs {
   digestEnabled: boolean;
-  dailyReminderEnabled: boolean;
   /** Turns off all lifecycle mail. */
   unsubscribeUrl: string;
-  /** Turns off just the daily reminder (keeps exam countdowns + digest). */
-  dailyUnsubscribeUrl: string;
 }
 
 /** Fetch-or-create the user's email preferences row. */
 async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
-  const cols = "digest_enabled, daily_reminder_enabled, unsubscribe_token";
+  const cols = "digest_enabled, unsubscribe_token";
   const { data } = await admin
     .from("email_preferences")
     .select(cols)
@@ -81,33 +74,10 @@ async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
     if (error) throw new Error(`email prefs upsert failed: ${error.message}`);
     row = inserted;
   }
-  const base = `${publicEnv.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${row.unsubscribe_token}`;
   return {
     digestEnabled: row.digest_enabled,
-    dailyReminderEnabled: row.daily_reminder_enabled,
-    unsubscribeUrl: base,
-    dailyUnsubscribeUrl: `${base}&scope=daily`,
+    unsubscribeUrl: `${publicEnv.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${row.unsubscribe_token}`,
   };
-}
-
-/**
- * Gate for the daily study reminder — pure so the cron's trickiest decision
- * is unit-testable. Only nudge learners who have real reviews waiting, have
- * the channel on, and haven't already gotten a study email today (so a
- * countdown or the Monday digest never doubles up with a reminder).
- */
-export function shouldSendDailyReminder(input: {
-  dailyReminderEnabled: boolean;
-  hasActivity: boolean;
-  dueCards: number;
-  sentStudyEmailToday: boolean;
-}): boolean {
-  return (
-    input.dailyReminderEnabled &&
-    input.hasActivity &&
-    input.dueCards > 0 &&
-    !input.sentStudyEmailToday
-  );
 }
 
 /**
@@ -185,10 +155,8 @@ export interface LifecycleRunResult {
   users: number;
   /** Users whose pass threw: each is logged, and counted here for the run's log line. */
   failed: number;
-  digests: number;
   countdowns: number;
   postExam: number;
-  dailyReminders: number;
   pathNudges: number;
   pathOffers: number;
 }
@@ -202,21 +170,20 @@ interface SavedPath {
 
 interface RunContext {
   now: Date;
-  isMonday: boolean;
-  /** Accounts that get the toolkit's emails: active Pro, or admin. */
+  /** Accounts with Pro, or admin: no path nudge or follow-up, which sell Pro. */
   pro: Set<string>;
   /** Paths last saved inside the path emails' window (20 hours to 7 days ago), by user. */
   recent: Map<string, SavedPath[]>;
 }
 
 /**
- * Daily lifecycle pass, driven by the Vercel cron:
- *  - exam-countdown emails at T-14/7/3/1 for every enrollment with a date
- *  - Pro: weekly readiness digest on Mondays (UTC) for users with activity,
- *    and a daily study reminder on any day they have SRS cards due
- *  - without Pro: their path instead (the digest and reminders are about the
- *    toolkit, which is Pro-only). A one-time "pick up where you left off" if
- *    it stalls before the readiness checkpoint, and a one-time look at their
+ * Daily lifecycle pass, driven by the Vercel cron. Every email is about their
+ * path and links back to it; a member is never sent into the old workspace.
+ *  - exam-countdown emails at T-14/7/3/1 for every enrollment with a date:
+ *    where they are on their path, Pro or not
+ *  - a "how did it go?" two days after the exam date
+ *  - without Pro: a one-time "pick up where you left off" if their path
+ *    stalls before the readiness checkpoint, and a one-time look at their
  *    checkpoint result and the rest of the path if they took it and didn't buy
  * All sends respect digest_enabled and are deduped per day via email_log.
  * Apart from countdowns, which are tied to a date, a user gets at most one
@@ -229,10 +196,8 @@ export async function runLifecycleEmails(
   const result: LifecycleRunResult = {
     users: 0,
     failed: 0,
-    digests: 0,
     countdowns: 0,
     postExam: 0,
-    dailyReminders: 0,
     pathNudges: 0,
     pathOffers: 0,
   };
@@ -243,7 +208,7 @@ export async function runLifecycleEmails(
   if (error) throw new Error(`listUsers failed: ${error.message}`);
 
   const [pro, recent] = await Promise.all([loadProUsers(admin), loadRecentPaths(admin, now)]);
-  const ctx: RunContext = { now, isMonday: now.getUTCDay() === 1, pro, recent };
+  const ctx: RunContext = { now, pro, recent };
 
   for (const user of userPage.users) {
     if (!user.email || !user.email_confirmed_at) continue;
@@ -264,9 +229,9 @@ export async function runLifecycleEmails(
 }
 
 /**
- * Who gets the toolkit's emails: active Pro, or the owner's admin role — the
- * same test as the app's paywall. If this can't be read, the run stops: better
- * no email today than Pro emails to free accounts or the reverse.
+ * Who has Pro: an active subscription, or the owner's admin role — the same
+ * test as the app's paywall. If this can't be read, the run stops: better no
+ * email today than an offer to someone who already bought.
  */
 async function loadProUsers(admin: Db): Promise<Set<string>> {
   const [subs, admins] = await Promise.all([
@@ -331,8 +296,7 @@ async function processUser(
   const displayName = profile?.displayName ?? "there";
 
   // One "study" email a day. Countdowns are tied to a date and always go; the
-  // digest, the daily reminder and the path emails only go on a day nothing
-  // else did.
+  // path emails only go on a day nothing else did.
   let sentStudyEmailToday = false;
 
   // ---- exam countdowns + post-exam story request (per enrollment) ----
@@ -365,17 +329,7 @@ async function processUser(
     }
     const cert = await getCertification(admin, enrollment.certificationId);
     if (!cert) continue;
-    // Pro: readiness and the toolkit's plan. Otherwise: where they are on their path.
-    const content = pro
-      ? countdownEmail({
-          displayName,
-          certName: cert.name,
-          daysUntilExam: days,
-          readinessScore: (await getSessionPlan(admin, userId, cert.id, enrollment.examDate))
-            .readinessScore,
-          unsubscribeUrl: prefs.unsubscribeUrl,
-        })
-      : await pathCountdown(admin, userId, cert.slug, days, displayName, prefs.unsubscribeUrl);
+    const content = await pathCountdown(admin, userId, cert.slug, days, displayName, pro, prefs.unsubscribeUrl);
     if (!content) continue;
     if (!(await claimSend(admin, userId, `countdown_${days}`))) continue;
     const sent = await sendEmail({
@@ -390,82 +344,21 @@ async function processUser(
   }
 
   // ---- without Pro: their path, at a stall or after the checkpoint ----
-  if (!pro) {
-    if (!sentStudyEmailToday) {
-      const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now);
-      if (sent === "nudge") result.pathNudges += 1;
-      if (sent === "offer") result.pathOffers += 1;
-    }
-    return;
-  }
-
-  // ---- primary-enrollment plan (drives the digest + the daily reminder) ----
-  const primary = enrollments[0];
-  const cert = await getCertification(admin, primary.certificationId);
-  if (!cert) return;
-  const plan = await getSessionPlan(admin, userId, cert.id, primary.examDate);
-  const hasActivity = plan.totalQuestionsSeen > 0;
-  const dueCards =
-    plan.blocks.find((b) => b.type === "srs_review")?.questionCount ?? 0;
-
-  // ---- weekly digest (Mondays only, needs activity; a countdown that day replaces it) ----
-  if (
-    ctx.isMonday &&
-    hasActivity &&
-    !sentStudyEmailToday &&
-    (await claimSend(admin, userId, "digest"))
-  ) {
-    const sent = await sendEmail({
-      to: email,
-      headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
-      ...digestEmail({
-        displayName,
-        certName: cert.name,
-        readinessScore: plan.readinessScore,
-        trendDelta: plan.readinessTrend?.delta ?? null,
-        dueCards,
-        daysUntilExam: plan.daysUntilExam,
-        unsubscribeUrl: prefs.unsubscribeUrl,
-      }),
-    });
-    if (sent) {
-      result.digests += 1;
-      sentStudyEmailToday = true;
-    }
-  }
-
-  // ---- daily study reminder (any day the learner has reviews waiting) ----
-  if (
-    shouldSendDailyReminder({
-      dailyReminderEnabled: prefs.dailyReminderEnabled,
-      hasActivity,
-      dueCards,
-      sentStudyEmailToday,
-    }) &&
-    (await claimSend(admin, userId, "daily_reminder"))
-  ) {
-    const sent = await sendEmail({
-      to: email,
-      headers: { "List-Unsubscribe": `<${prefs.dailyUnsubscribeUrl}>` },
-      ...dailyReminderEmail({
-        displayName,
-        certName: cert.name,
-        dueCards,
-        readinessScore: plan.readinessScore,
-        unsubscribeUrl: prefs.dailyUnsubscribeUrl,
-      }),
-    });
-    if (sent) result.dailyReminders += 1;
+  if (!pro && !sentStudyEmailToday) {
+    const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now);
+    if (sent === "nudge") result.pathNudges += 1;
+    if (sent === "offer") result.pathOffers += 1;
   }
 }
 
-/** The countdown for an account without Pro: where they are on their path. */
+/** The exam countdown: where they are on their path. */
 async function pathCountdown(
   admin: Db,
   userId: string,
   slug: string,
   days: number,
   displayName: string,
+  pro: boolean,
   unsubscribeUrl: string
 ): Promise<EmailContent | null> {
   if (!isPathCert(slug)) return null;
@@ -477,6 +370,7 @@ async function pathCountdown(
     examName: bank.structure.examName,
     daysUntilExam: days,
     standing: pathStanding(buildPlan(bank.structure), progress),
+    pro,
     href: pathEmailLink(slug, "countdown"),
     unsubscribeUrl,
   });
