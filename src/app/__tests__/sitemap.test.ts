@@ -30,6 +30,7 @@ describe("sitemap", () => {
         "/a-plus-core-2-pbq-examples",
         "/security-plus-sy0-801-vs-sy0-701",
         "/security-plus-sy0-801",
+        "/security-plus-sy0-801-practice-test",
         "/security-plus-sy0-801-ai-practice-questions",
         "/objectives/security-plus-sy0-701",
         "/objectives/security-plus-sy0-701/1-2",

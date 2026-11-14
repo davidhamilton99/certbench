@@ -7,6 +7,7 @@ import {
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
 } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +49,12 @@ export function ExamVersionNote({
         , as launching on or around November 17, 2026.{" "}
         <Link href={SECURITY_PLUS_VERSIONS_PATH} className={LINK}>
           Which one should you take?
+        </Link>{" "}
+        Studying for SY0-801?{" "}
+        <Link href={SY0_801_PRACTICE_PATH} className={LINK}>
+          Take the free SY0-801 practice test
         </Link>
+        .
       </>
     );
   } else if (core1 && core2) {

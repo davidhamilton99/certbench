@@ -247,7 +247,7 @@ export const ROUNDUP: RoundupData = {
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
         "Newer question bank than the incumbents, and CompTIA-only coverage",
-        "Written to SY0-701; no SY0-801 questions yet",
+        "The guided path is written to SY0-701; for SY0-801 there's a free practice test, not yet a path",
       ],
     },
     {

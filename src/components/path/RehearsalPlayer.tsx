@@ -26,16 +26,25 @@ type Panel = "question" | "grid" | "finish";
  * (`onChange`) to be kept on the device.
  *
  * Keyboard: 1–4 or A–D to answer, ← → to move, F to flag.
+ *
+ * The free practice tests on public pages run on it too, under their own name
+ * (`label`, `noun`).
  */
 export function RehearsalPlayer({
   run,
   examCode,
+  label = "Exam rehearsal",
+  noun = "rehearsal",
   onChange,
   onFinish,
   onLeave,
 }: {
   run: RehearsalRun;
   examCode: string;
+  /** What this sitting is called above the question. */
+  label?: string;
+  /** The same in a word, for "Finish the …". */
+  noun?: string;
   onChange: (run: RehearsalRun) => void;
   onFinish: (run: RehearsalRun, timedOut: boolean) => void;
   /** Back to the map, the clock paused. */
@@ -124,16 +133,27 @@ export function RehearsalPlayer({
   const firstUnanswered = state.picks.findIndex((p) => p === null);
   const flaggedCount = state.flagged.length;
 
+  /**
+   * Change what the card shows, keeping its top (the clock) in view: after a
+   * long question or the grid it can sit above the fold, or under the page's
+   * sticky header, which the root's scroll margin clears.
+   */
+  const show = useCallback((next: Panel) => {
+    setPanel(next);
+    const root = rootRef.current;
+    if (!root) return;
+    const margin = Number.parseFloat(window.getComputedStyle(root).scrollMarginTop) || 0;
+    if (root.getBoundingClientRect().top < margin) root.scrollIntoView({ block: "start" });
+  }, []);
+
   const go = useCallback(
     (i: number) => {
       const cur = ref.current;
       if (i < 0 || i >= cur.reps.length) return;
       commit({ ...cur, i });
-      setPanel("question");
-      const top = rootRef.current?.getBoundingClientRect().top ?? 0;
-      if (top < 0) rootRef.current?.scrollIntoView({ block: "start" });
+      show("question");
     },
-    [commit]
+    [commit, show]
   );
 
   const pick = useCallback(
@@ -175,7 +195,7 @@ export function RehearsalPlayer({
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         if (cur.i < cur.reps.length - 1) go(cur.i + 1);
-        else setPanel("finish");
+        else show("finish");
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         go(cur.i - 1);
@@ -186,14 +206,14 @@ export function RehearsalPlayer({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [panel, pick, go, toggleFlag]);
+  }, [panel, pick, go, show, toggleFlag]);
 
   return (
-    <div ref={rootRef} className="glass grid scroll-mt-4 gap-6 rounded-3xl p-5 sm:p-8">
+    <div ref={rootRef} className="glass grid scroll-mt-20 gap-6 rounded-3xl p-5 sm:p-8">
       <div className="grid gap-3">
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Exam rehearsal · {examCode}
+            {label} · {examCode}
           </p>
           <span
             role="timer"
@@ -288,7 +308,7 @@ export function RehearsalPlayer({
               <ArrowLeft />
               Back
             </Button>
-            <Button variant="outline" onClick={() => setPanel("grid")} aria-label="All questions">
+            <Button variant="outline" onClick={() => show("grid")} aria-label="All questions">
               <LayoutGrid />
               <span className="font-mono tabular-nums">
                 {state.i + 1} / {total}
@@ -300,7 +320,7 @@ export function RehearsalPlayer({
                 <ArrowRight />
               </Button>
             ) : (
-              <Button onClick={() => setPanel("finish")}>
+              <Button onClick={() => show("finish")}>
                 Finish
                 <ArrowRight />
               </Button>
@@ -354,12 +374,12 @@ export function RehearsalPlayer({
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button variant="outline" onClick={() => setPanel("question")}>
+            <Button variant="outline" onClick={() => show("question")}>
               <ArrowLeft />
               Question {state.i + 1}
             </Button>
-            <Button onClick={() => setPanel("finish")}>
-              Finish the rehearsal
+            <Button onClick={() => show("finish")}>
+              Finish the {noun}
               <ArrowRight />
             </Button>
           </div>
@@ -391,7 +411,7 @@ export function RehearsalPlayer({
               variant="outline"
               className="h-12 px-6 text-base"
               onClick={() =>
-                unanswered > 0 ? go(firstUnanswered) : flaggedCount > 0 ? go(state.flagged[0]) : setPanel("question")
+                unanswered > 0 ? go(firstUnanswered) : flaggedCount > 0 ? go(state.flagged[0]) : show("question")
               }
             >
               {unanswered > 0 ? "Answer them" : flaggedCount > 0 ? "Check the flagged" : "Keep checking"}

@@ -13,9 +13,12 @@ import {
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
   SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
+  SY0_801_PUBLISHED_ISO,
   SY0_801_UPDATED_ISO,
 } from "@/lib/seo/exam-versions";
 import { SY0_801_AI_QUESTIONS, SY0_801_AI_TOPICS } from "@/data/security-plus-v8";
+import { SY0_801_PRACTICE_TEST } from "@/data/security-plus-v8-practice-test";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { articleData } from "@/lib/seo/structured-data";
 
@@ -59,7 +62,7 @@ export default function Sy0801AiQuestionsPage() {
           headline: TITLE,
           description: DESCRIPTION,
           path: SY0_801_AI_PATH,
-          published: SY0_801_UPDATED_ISO,
+          published: SY0_801_PUBLISHED_ISO,
           modified: SY0_801_UPDATED_ISO,
         })}
       />
@@ -107,16 +110,23 @@ export default function Sy0801AiQuestionsPage() {
         </section>
 
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">See the whole exam</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Now try the whole exam</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            SY0-801&apos;s five domains, their weights and all 27 objectives, with what changed from SY0-701.
+            A free {SY0_801_PRACTICE_TEST.length}-question SY0-801 practice test across all 27 objectives, timed,
+            with a score by domain.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href={SY0_801_PATH}>
-              SY0-801 exam objectives
+            <Link href={SY0_801_PRACTICE_PATH}>
+              SY0-801 practice test
               <ArrowRight />
             </Link>
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Want the outline first?{" "}
+            <Link href={SY0_801_PATH} className="underline underline-offset-4 hover:text-foreground">
+              SY0-801 exam objectives
+            </Link>
+          </p>
           <p className="text-xs text-muted-foreground">
             Taking SY0-701 instead?{" "}
             <Link href={`/path/${SECURITY_PLUS_CERT}`} className="underline underline-offset-4 hover:text-foreground">
@@ -127,6 +137,11 @@ export default function Sy0801AiQuestionsPage() {
 
         <RelatedLinks
           links={[
+            {
+              href: SY0_801_PRACTICE_PATH,
+              label: "SY0-801 practice test",
+              note: "A free timed test across every objective",
+            },
             {
               href: SY0_801_PATH,
               label: "SY0-801 exam objectives",

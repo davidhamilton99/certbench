@@ -15,6 +15,7 @@ import {
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
   SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
 } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { articleData } from "@/lib/seo/structured-data";
@@ -102,7 +103,7 @@ const FAQS = [
   {
     question: "Does CertBench have SY0-801 questions?",
     answer:
-      "A free set on SY0-801's new AI objective, 2.6. Everything else on CertBench is written to SY0-701, which is still a live exam.",
+      "Yes, two free sets: a timed SY0-801 practice test across all 27 objectives, and questions on its new AI objective, 2.6. CertBench's guided path and question bank are written to SY0-701, which is still a live exam.",
   },
 ];
 
@@ -149,9 +150,12 @@ export default function SecurityPlusVersionsPage() {
             from the start.
           </p>
           <p>
-            A disclosure: CertBench&apos;s Security+ questions are written to
-            SY0-701, apart from a free set on SY0-801&apos;s new AI objective, so
-            we have a stake in this answer. Every date and weight below comes from
+            A disclosure: CertBench&apos;s Security+ path and question bank are
+            written to SY0-701, apart from a free{" "}
+            <Link href={SY0_801_PRACTICE_PATH} className="text-primary underline underline-offset-4">
+              SY0-801 practice test
+            </Link>
+            , so we have a stake in this answer. Every date and weight below comes from
             CompTIA&apos;s own{" "}
             <a
               href={COMPTIA_URLS.securityV7}
@@ -295,6 +299,11 @@ export default function SecurityPlusVersionsPage() {
 
         <RelatedLinks
           links={[
+            {
+              href: SY0_801_PRACTICE_PATH,
+              label: "SY0-801 practice test",
+              note: "A free timed test across every SY0-801 objective",
+            },
             {
               href: SY0_801_PATH,
               label: "SY0-801 exam objectives",

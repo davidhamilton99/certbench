@@ -148,4 +148,44 @@ describe("RehearsalPlayer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Leave for now" }));
     expect(onLeave).toHaveBeenCalled();
   });
+
+  it("brings its top back into view when the question or the panel changes while it's scrolled away", () => {
+    setup();
+    const card = screen.getByRole("timer").closest(".glass") as HTMLElement;
+    const scrollIntoView = vi.fn();
+    card.scrollIntoView = scrollIntoView;
+    let top = 120;
+    card.getBoundingClientRect = () => ({ top }) as DOMRect;
+
+    // In view: nothing moves.
+    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // Scrolled past its top (a long question, or the grid): each change brings it back.
+    top = -300;
+    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "All questions" }));
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole("button", { name: /Finish the rehearsal/ }));
+    expect(scrollIntoView).toHaveBeenCalledTimes(3);
+  });
+
+  it("goes by another name on a public practice test", () => {
+    const onChange = vi.fn();
+    render(
+      <RehearsalPlayer
+        run={makeRun()}
+        examCode="SY0-801"
+        label="Practice test"
+        noun="test"
+        onChange={onChange}
+        onFinish={vi.fn()}
+        onLeave={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Practice test · SY0-801")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "All questions" }));
+    expect(screen.getByRole("button", { name: /Finish the test/ })).toBeInTheDocument();
+  });
 });
