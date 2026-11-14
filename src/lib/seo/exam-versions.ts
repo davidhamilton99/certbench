@@ -21,8 +21,15 @@ export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";
 export const SY0_801_PATH = "/security-plus-sy0-801";
 /** Free practice on SY0-801's new AI objective, 2.6. */
 export const SY0_801_AI_PATH = "/security-plus-sy0-801-ai-practice-questions";
+/** The free SY0-801 practice test: 45 questions across all 27 objectives. */
+export const SY0_801_PRACTICE_PATH = "/security-plus-sy0-801-practice-test";
+/** When the first SY0-801 pages went up. */
+export const SY0_801_PUBLISHED_ISO = "2026-11-08";
 /** When the SY0-801 pages last changed, for the sitemap. */
-export const SY0_801_UPDATED_ISO = "2026-11-08";
+export const SY0_801_UPDATED_ISO = "2026-11-14";
+/** When the practice test went up, and when its questions were checked against CompTIA's SY0-801 objectives. */
+export const SY0_801_PRACTICE_PUBLISHED_ISO = "2026-11-14";
+export const SY0_801_PRACTICE_CHECKED = "November 14, 2026";
 
 export const SECURITY_PLUS_CERT = "security-plus-sy0-701";
 export const NETWORK_PLUS_CERT = "network-plus-n10-009";

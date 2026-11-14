@@ -110,6 +110,17 @@ type EventMap = {
   quick_round_completed: { cert: string; surface: string; correct: number; total: number };
   /** A sample question answered on a public page (the page is in $current_url). */
   sample_question_answered: { correct: boolean };
+  /** A free timed practice test on a public page: started, or picked back up after leaving. */
+  practice_test_started: { test: string; questions: number; resumed: boolean };
+  /** That test scored: `score` is the percent weighted by exam domain. */
+  practice_test_completed: {
+    test: string;
+    score: number;
+    answered: number;
+    total: number;
+    minutes: number;
+    timed_out: boolean;
+  };
   path_offer_clicked: { cert: string; context: "reveal" | "home"; offer: "pro" | "add_exam" };
 };
 

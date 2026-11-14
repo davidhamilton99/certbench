@@ -13,9 +13,12 @@ import {
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
   SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
+  SY0_801_PUBLISHED_ISO,
   SY0_801_UPDATED_ISO,
 } from "@/lib/seo/exam-versions";
 import { SY0_701_OBJECTIVES_PER_DOMAIN, SY0_801_AI_TOPICS, SY0_801_DOMAINS } from "@/data/security-plus-v8";
+import { SY0_801_PRACTICE_TEST } from "@/data/security-plus-v8-practice-test";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { articleData } from "@/lib/seo/structured-data";
 
@@ -82,7 +85,7 @@ export default function SecurityPlusV8Page() {
           headline: TITLE,
           description: DESCRIPTION,
           path: SY0_801_PATH,
-          published: SY0_801_UPDATED_ISO,
+          published: SY0_801_PUBLISHED_ISO,
           modified: SY0_801_UPDATED_ISO,
         })}
       />
@@ -227,17 +230,23 @@ export default function SecurityPlusV8Page() {
         </section>
 
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Practise the new AI objective</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Take the free SY0-801 practice test</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Free exam-style questions on every topic in 2.6, each with the answer and why. No account
-            needed.
+            {SY0_801_PRACTICE_TEST.length} questions across all {OBJECTIVE_COUNT} objectives in the exam&apos;s
+            weights, timed, with a score by domain and every answer explained. No account needed.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href={SY0_801_AI_PATH}>
-              Try the AI questions
+            <Link href={SY0_801_PRACTICE_PATH}>
+              Take the practice test
               <ArrowRight />
             </Link>
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Only after the new AI objective?{" "}
+            <Link href={SY0_801_AI_PATH} className="underline underline-offset-4 hover:text-foreground">
+              Try the AI questions
+            </Link>
+          </p>
           <p className="text-xs text-muted-foreground">
             Taking SY0-701 instead?{" "}
             <Link href={`/path/${SECURITY_PLUS_CERT}`} className="underline underline-offset-4 hover:text-foreground">
@@ -248,6 +257,11 @@ export default function SecurityPlusV8Page() {
 
         <RelatedLinks
           links={[
+            {
+              href: SY0_801_PRACTICE_PATH,
+              label: "SY0-801 practice test",
+              note: "A free timed test across every objective",
+            },
             {
               href: SECURITY_PLUS_VERSIONS_PATH,
               label: "SY0-801 vs SY0-701",

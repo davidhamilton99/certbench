@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { SECURITY_PLUS_VERSIONS_PATH, SY0_801_AI_PATH, SY0_801_PATH } from "@/lib/seo/exam-versions";
+import {
+  SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_AI_PATH,
+  SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
+} from "@/lib/seo/exam-versions";
 
 const LINKS = [
   { href: "/pricing", label: "Pricing" },
@@ -11,6 +16,7 @@ const LINKS = [
 
 const FREE_RESOURCES = [
   { href: "/security-plus-practice-test", label: "Security+ practice test" },
+  { href: SY0_801_PRACTICE_PATH, label: "SY0-801 practice test" },
   { href: "/network-plus-practice-test", label: "Network+ practice test" },
   { href: "/a-plus-practice-test", label: "A+ practice test" },
   { href: "/best-security-plus-practice-tests", label: "Best Security+ practice tests" },

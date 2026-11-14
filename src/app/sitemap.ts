@@ -7,6 +7,7 @@ import {
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
   SY0_801_PATH,
+  SY0_801_PRACTICE_PATH,
   SY0_801_UPDATED_ISO,
 } from "@/lib/seo/exam-versions";
 
@@ -65,7 +66,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...STATIC_PATHS.map((path) => entry(path)),
-    ...[SY0_801_PATH, SY0_801_AI_PATH, SECURITY_PLUS_VERSIONS_PATH].map((path) => entry(path, SY0_801_UPDATED)),
+    ...[SY0_801_PRACTICE_PATH, SY0_801_PATH, SY0_801_AI_PATH, SECURITY_PLUS_VERSIONS_PATH].map((path) =>
+      entry(path, SY0_801_UPDATED)
+    ),
     ...readinessChecks,
     ...objectivePages,
     entry("/contact", CONTACT_UPDATED),
