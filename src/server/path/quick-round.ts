@@ -29,14 +29,14 @@ export async function loadQuickRound(certSlug: string, stopId: string): Promise<
       seed: seedFrom("page", certSlug, stopId),
     });
     if (!built || built.reps.length === 0) return null;
+    // The page's map needs the domains and objectives, not the lab library.
+    const { certSlug: slug, examName, examCode, domains } = bank.structure;
     return {
       cert: certSlug,
-      examName: bank.structure.examName,
+      examName,
       title: built.stop.title,
       reps: built.reps,
-      stopNumber: index + 1,
-      totalStops: plan.stops.length,
-      objectiveCount: bank.structure.domains.reduce((n, d) => n + d.objectives.length, 0),
+      structure: { certSlug: slug, examName, examCode, domains },
     };
   } catch {
     return null;

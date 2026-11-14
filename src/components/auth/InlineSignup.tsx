@@ -20,6 +20,7 @@ export function InlineSignup({
   nextPath,
   submitLabel,
   onSignedIn,
+  staysOnPage = true,
 }: {
   /** Where Google sign-in returns to. */
   nextPath: string;
@@ -29,6 +30,8 @@ export function InlineSignup({
     email: string | undefined,
     method: "email_signup" | "email_login"
   ) => Promise<void> | void;
+  /** false where signing up moves on to another page, so the form doesn't say they stay. */
+  staysOnPage?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -147,7 +150,7 @@ export function InlineSignup({
       <p className="text-center text-xs text-muted-foreground">
         {mode === "signup" ? (
           <>
-            Free account, no card. You stay right here. Already have one?{" "}
+            Free account, no card.{staysOnPage && " You stay right here."} Already have one?{" "}
             <button
               type="button"
               onClick={() => switchMode("login")}

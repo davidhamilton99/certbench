@@ -8,7 +8,7 @@ import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
-import { MINUTES_PER_STOP, PRACTICE_SIZE, stopAt } from "@/core/path/plan";
+import { PRACTICE_SIZE, stopAt } from "@/core/path/plan";
 import {
   hasStarted,
   isStopDone,
@@ -37,7 +37,6 @@ import type {
 } from "@/core/path/types";
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
-import { InlineSignup } from "@/components/auth/InlineSignup";
 import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
 import { LabLibrary, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
@@ -52,6 +51,7 @@ import { RehearsalPlayer } from "./RehearsalPlayer";
 import { RehearsalResult } from "./RehearsalResult";
 import { clearRun, readRun, writeRun, type RehearsalRun } from "./rehearsal-run";
 import { GoalStep } from "./GoalStep";
+import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { usePathProgress } from "./usePathProgress";
 import { pathUnlockedKey } from "./storage-key";
 import { cn } from "@/lib/utils";
@@ -1342,24 +1342,11 @@ function SaveCard({
   next: PathStop | null;
   onSaved: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => Promise<void>;
 }) {
-  const viewed = useRef(false);
-  useEffect(() => {
-    if (viewed.current) return;
-    viewed.current = true;
-    track("path_save_viewed", { cert });
-  }, [cert]);
   return (
     <div className="glass grid gap-4 rounded-3xl p-5 sm:p-6">
-      <div className="grid gap-1">
-        <h3 className="font-display text-xl font-semibold tracking-tight">
-          {next?.kind === "learn" ? `Next up: ${next.title}` : "Save your map to keep going"}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {next?.kind === "learn" && `About ${MINUTES_PER_STOP} minutes of quick questions. `}A free account saves
-          your map and opens every stop through to your readiness checkpoint.
-        </p>
-      </div>
-      <InlineSignup nextPath={`/path/${cert}`} submitLabel="Save and continue" onSignedIn={onSaved} />
+      <SaveAsk cert={cert} surface="path" title={nextUpTitle(next) ?? "Save your map to keep going"} onSaved={onSaved}>
+        {nextUpLead(next)}A free account saves your map and opens every stop through to your readiness checkpoint.
+      </SaveAsk>
       <p className="text-center text-xs text-muted-foreground">
         <Link href="/start?pick=1" className="underline underline-offset-4 hover:text-foreground">
           Studying for a different exam?

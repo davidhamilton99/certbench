@@ -38,6 +38,16 @@ export function writeLocalPath(cert: string, state: LocalPath): void {
 }
 
 /**
+ * Hand this device's anonymous path for an exam to an account that just
+ * signed in on a public page. The path then saves it to that account when it
+ * opens. Never takes another account's copy from a shared device.
+ */
+export function claimLocalPath(cert: string, owner: string): void {
+  const local = readLocalPath(cert);
+  if (local && local.owner === null) writeLocalPath(cert, { ...local, owner });
+}
+
+/**
  * Apply a change to this device's saved path for an exam, keeping whose it
  * is. For public pages that play a stop inline: the path picks the work up
  * (and saves it to the account) the next time it opens.

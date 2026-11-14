@@ -34,12 +34,15 @@ export function RepCard({
   onAnswer,
   onNext,
   promptAs: Prompt = "h2",
+  nextLabel,
 }: {
   rep: Rep;
   onAnswer: (answer: RepAnswer) => void;
   onNext: () => void;
   /** "p" where the rep sits inside a public page, so a prompt isn't one of its headings. */
   promptAs?: "h2" | "p";
+  /** What the button says once answered, where "Next" wouldn't say what follows. */
+  nextLabel?: string;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [typed, setTyped] = useState("");
@@ -261,7 +264,7 @@ export function RepCard({
               onClick={next}
               className="shrink-0"
             >
-              {correct ? "Next" : "Got it"}
+              {nextLabel ?? (correct ? "Next" : "Got it")}
               <ArrowRight />
             </Button>
           </div>
