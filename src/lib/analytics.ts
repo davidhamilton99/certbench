@@ -71,6 +71,11 @@ type EventMap = {
     method: "email_signup" | "email_login" | "redirect";
   };
   path_goal_set: { cert: string; step: "exam" | "minutes"; value: string };
+  /**
+   * The account didn't store a save of this exam's path, so it's on the device
+   * only: once per visit and API error code ("internal" includes offline).
+   */
+  path_save_failed: { cert: string; code: string };
   path_checkpoint_completed: { cert: string; score: number };
   path_offer_viewed: { cert: string; context: "reveal" | "home" };
   /** Pro opened this exam's path: the once-per-device unlock moment. */

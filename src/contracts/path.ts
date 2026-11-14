@@ -101,11 +101,13 @@ export const pathProgressSchema = z.object({
       message: `At most ${MAX_PATH_LABS} labs`,
     })
     .default({}),
+  // A goal field the client got wrong is dropped, never the whole save: one bad
+  // exam date once stopped a learner's progress reaching their account.
   goal: z
     .object({
-      examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-      target: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-      minutes: count.max(600).nullable(),
+      examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().catch(null),
+      target: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().catch(null),
+      minutes: count.max(600).nullable().catch(null),
       at: count,
     })
     .nullable(),

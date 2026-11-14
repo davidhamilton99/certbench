@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api-client";
 import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/path";
+import { ApiError } from "@/contracts/common";
 import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
 import {
@@ -74,22 +75,36 @@ export function usePathProgress(cert: PathCert) {
     (next: View) => {
       cur.current = next;
       setView(next);
+      // Signed out on a device that holds an account's path: the page starts
+      // fresh, but the account's copy stays as it is. It can hold work the
+      // account hasn't stored yet, and signing back in carries it up.
+      if (!next.userId && next.owner) return;
       writeLocalPath(cert, { v: 1, owner: next.owner, progress: next.progress });
     },
     [cert]
   );
 
+  /** Failure codes already reported this visit, so one failing save is one event. */
+  const reportedFailures = useRef(new Set<string>());
+
   const saveToAccount = useCallback(
     async (p: PathProgress) => {
       unsaved.current = 0;
       try {
-        const { stored } = await api(savePathProgress, { cert, progress: p });
+        // Sent as it would be read back, so nothing malformed in memory can
+        // get the whole save refused.
+        const { stored } = await api(savePathProgress, { cert, progress: sanitizePathProgress(p) });
         if (cur.current.stored !== stored) {
           cur.current = { ...cur.current, stored };
           setView(cur.current);
         }
-      } catch {
-        /* offline or signed out — it's on the device and goes up next time */
+      } catch (err) {
+        // It's on the device and goes up next time. Offline shows as "internal".
+        const code = err instanceof ApiError ? err.code : "internal";
+        if (!reportedFailures.current.has(code)) {
+          reportedFailures.current.add(code);
+          track("path_save_failed", { cert, code });
+        }
       }
     },
     [cert]
@@ -277,7 +292,11 @@ export function usePathProgress(cert: PathCert) {
       identifyUser(uid, { email });
       track("path_account_linked", { cert, method });
       const c = cur.current;
-      const res = await adopt(uid, { v: 1, owner: c.owner, progress: c.progress });
+      // Signed out, the page left the account's device copy alone (see commit):
+      // it joins this page's work, so logging back in here loses nothing either.
+      const kept = c.owner ? readLocalPath(cert) : null;
+      const progress = kept?.owner === c.owner ? mergePathProgress(kept.progress, c.progress) : c.progress;
+      const res = await adopt(uid, { v: 1, owner: c.owner, progress });
       commit({
         ready: true,
         userId: uid,
