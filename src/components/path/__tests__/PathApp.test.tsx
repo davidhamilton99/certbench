@@ -115,7 +115,11 @@ vi.mock("@/lib/api-client", async () => {
         case "GET /api/pricing/region":
           return {
             discountPercent: null,
-            prices: { quarterly: { original: "$39", discounted: "$39" } },
+            prices: {
+              monthly: { original: "$19", discounted: "$19" },
+              quarterly: { original: "$39", discounted: "$39" },
+              annual: { original: "$149", discounted: "$149" },
+            },
           };
         default:
           throw new ApiError("not_found", `unmocked ${contract.path}`);
