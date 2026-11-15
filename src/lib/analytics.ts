@@ -127,7 +127,13 @@ type EventMap = {
     minutes: number;
     timed_out: boolean;
   };
-  path_offer_clicked: { cert: string; context: "reveal" | "home"; offer: "pro" | "add_exam" };
+  path_offer_clicked: {
+    cert: string;
+    context: "reveal" | "home";
+    offer: "pro" | "add_exam";
+    /** The plan picked on a Pro offer. */
+    interval?: "monthly" | "quarterly";
+  };
 };
 
 /** Capture a typed product event. */

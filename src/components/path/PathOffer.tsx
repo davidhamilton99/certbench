@@ -11,11 +11,33 @@ import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarant
 import { Button } from "@/components/ui/button";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { PathCert } from "@/core/path/types";
+import { cn } from "@/lib/utils";
+
+/** The plans the offer sells. Monthly comes first: it's the smaller first payment. */
+const PLANS = ["monthly", "quarterly"] as const;
+type Plan = (typeof PLANS)[number];
+
+const PLAN_COPY: Record<Plan, { name: string; per: string; renews: string }> = {
+  monthly: { name: "Monthly", per: "a month", renews: "Renews monthly. Cancel anytime." },
+  quarterly: { name: "3 months", per: "every 3 months", renews: "Renews every 3 months. Cancel anytime." },
+};
+
+interface Price {
+  now: string;
+  /** The price before the regional discount, when there is one. */
+  was: string | null;
+}
+
+/** "$39" → 39, or null when the string isn't a plain amount. */
+function amount(price: string): number | null {
+  const n = Number.parseFloat(price.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 /**
  * The one ask on the path, made after the readiness checkpoint: the rest of
- * the path for one exam cycle. A Pro member who hasn't added this exam yet is
- * offered the exam instead of a second plan.
+ * the path, monthly or for a three-month exam cycle. A Pro member who hasn't
+ * added this exam yet is offered the exam instead of a second plan.
  */
 export function PathOffer({
   cert,
@@ -39,7 +61,11 @@ export function PathOffer({
   /** Labs in the exam's library, when it has one. */
   labCount?: number;
 }) {
-  const [price, setPrice] = useState<{ now: string; was: string | null }>({ now: "$39", was: null });
+  const [prices, setPrices] = useState<Record<Plan, Price>>({
+    monthly: { now: "$19", was: null },
+    quarterly: { now: "$39", was: null },
+  });
+  const [plan, setPlan] = useState<Plan>("monthly");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const viewed = useRef(false);
@@ -56,8 +82,12 @@ export function PathOffer({
     api(getRegionPricing, {})
       .then((r) => {
         if (!live) return;
-        const q = r.prices.quarterly;
-        setPrice({ now: q.discounted, was: r.discountPercent ? q.original : null });
+        const read = (p: { original: string; discounted: string } | undefined, fallback: Price): Price =>
+          p ? { now: p.discounted, was: r.discountPercent ? p.original : null } : fallback;
+        setPrices((prev) => ({
+          monthly: read(r.prices.monthly, prev.monthly),
+          quarterly: read(r.prices.quarterly, prev.quarterly),
+        }));
       })
       .catch(() => {});
     return () => {
@@ -78,8 +108,8 @@ export function PathOffer({
     if (!certId) return;
     setBusy(true);
     setError("");
-    track("path_offer_clicked", { cert, context, offer: proPlan ? "add_exam" : "pro" });
-    track("checkout_started", { interval: proPlan ? "cert_addon" : "quarterly" });
+    track("path_offer_clicked", proPlan ? { cert, context, offer: "add_exam" } : { cert, context, offer: "pro", interval: plan });
+    track("checkout_started", { interval: proPlan ? "cert_addon" : plan });
     try {
       if (proPlan) {
         const { url } = await api(addCertCheckout, { certId });
@@ -88,7 +118,7 @@ export function PathOffer({
       }
       // Pro access is per exam: make this the exam the purchase unlocks.
       await api(enrollInPath, { cert, examDate });
-      const { url } = await api(createCheckout, { interval: "quarterly", returnTo: `path/${cert}` });
+      const { url } = await api(createCheckout, { interval: plan, returnTo: `path/${cert}` });
       window.location.href = url;
     } catch (err) {
       if (err instanceof ApiError && err.code === "unauthorized") {
@@ -118,6 +148,11 @@ export function PathOffer({
         `All ${questionCount.toLocaleString()} ${examName} questions, with spaced review`,
       ];
 
+  // What three months cost against three monthly payments, from the prices shown.
+  const monthly = amount(prices.monthly.now);
+  const quarterly = amount(prices.quarterly.now);
+  const saving = monthly && quarterly && quarterly < 3 * monthly ? Math.round((1 - quarterly / (3 * monthly)) * 100) : null;
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-b from-primary/[0.09] to-card p-6 shadow-sm sm:p-7">
       <div
@@ -145,15 +180,65 @@ export function PathOffer({
           ))}
         </ul>
 
-        <div className="flex items-end gap-2">
-          {price.was && (
-            <span className="pb-1 text-lg text-muted-foreground line-through">{price.was}</span>
-          )}
-          <span className="font-display text-4xl font-bold tracking-tight">{price.now}</span>
-          <span className="pb-1.5 text-sm text-muted-foreground">
-            {proPlan ? "one time" : "for 3 months"}
-          </span>
-        </div>
+        {proPlan ? (
+          <div className="flex items-end gap-2">
+            {prices.quarterly.was && (
+              <span className="pb-1 text-lg text-muted-foreground line-through">{prices.quarterly.was}</span>
+            )}
+            <span className="font-display text-4xl font-bold tracking-tight">{prices.quarterly.now}</span>
+            <span className="pb-1.5 text-sm text-muted-foreground">one time</span>
+          </div>
+        ) : (
+          <fieldset className="grid gap-2.5 sm:grid-cols-2">
+            <legend className="sr-only">Plan</legend>
+            {PLANS.map((p) => {
+              const selected = plan === p;
+              return (
+                <label
+                  key={p}
+                  className={cn(
+                    "relative grid cursor-pointer gap-1 rounded-2xl border bg-card/70 px-4 py-3.5 transition-[border-color,background-color,box-shadow] duration-150",
+                    "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                    selected ? "border-primary bg-primary/[0.08] ring-1 ring-primary/40" : "hover:border-primary/50"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name={`plan-${cert}-${context}`}
+                    value={p}
+                    checked={selected}
+                    onChange={() => setPlan(p)}
+                    className="sr-only"
+                  />
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "size-4 shrink-0 rounded-full border transition-[border-width,border-color] duration-150",
+                          selected ? "border-[5px] border-primary" : "border-muted-foreground/50"
+                        )}
+                      />
+                      {PLAN_COPY[p].name}
+                    </span>
+                    {p === "quarterly" && saving !== null && (
+                      <span className="rounded-full bg-success/15 px-2 py-0.5 font-mono text-[11px] font-medium text-success">
+                        Save {saving}%
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex flex-wrap items-baseline gap-x-1.5">
+                    {prices[p].was && (
+                      <span className="text-sm text-muted-foreground line-through">{prices[p].was}</span>
+                    )}
+                    <span className="font-display text-2xl font-bold tracking-tight">{prices[p].now}</span>
+                    <span className="text-sm text-muted-foreground">{PLAN_COPY[p].per}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+        )}
 
         <div className="grid gap-2">
           <Button size="lg" className="h-12 w-full text-base" disabled={busy || !certId} onClick={unlock}>
@@ -174,11 +259,7 @@ export function PathOffer({
               {error}
             </p>
           )}
-          {!proPlan && (
-            <p className="text-center text-xs text-muted-foreground">
-              Renews every 3 months. Cancel anytime.
-            </p>
-          )}
+          {!proPlan && <p className="text-center text-xs text-muted-foreground">{PLAN_COPY[plan].renews}</p>}
         </div>
 
         {!proPlan && (
