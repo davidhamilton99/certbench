@@ -38,6 +38,7 @@ export function RehearsalPlayer({
   onChange,
   onFinish,
   onLeave,
+  keyboard = true,
 }: {
   run: RehearsalRun;
   examCode: string;
@@ -49,6 +50,8 @@ export function RehearsalPlayer({
   onFinish: (run: RehearsalRun, timedOut: boolean) => void;
   /** Back to the map, the clock paused. */
   onLeave: () => void;
+  /** Whether keys drive the player: false while another player on the page has the turn. */
+  keyboard?: boolean;
 }) {
   const [state, setState] = useState(run);
   const ref = useRef(state);
@@ -177,7 +180,7 @@ export function RehearsalPlayer({
   }, [commit]);
 
   useEffect(() => {
-    if (panel !== "question") return;
+    if (panel !== "question" || !keyboard) return;
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
@@ -206,7 +209,7 @@ export function RehearsalPlayer({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [panel, pick, go, show, toggleFlag]);
+  }, [panel, keyboard, pick, go, show, toggleFlag]);
 
   return (
     <div ref={rootRef} className="glass grid scroll-mt-20 gap-6 rounded-3xl p-5 sm:p-8">

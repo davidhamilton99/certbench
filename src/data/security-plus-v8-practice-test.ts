@@ -1,4 +1,4 @@
-import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
+import type { SampleQuestionData } from "@/components/marketing/QuestionDeck";
 
 /**
  * The free Security+ SY0-801 practice test: 45 original questions, half the

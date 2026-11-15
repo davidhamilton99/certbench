@@ -1,4 +1,4 @@
-import type { SampleQuestionData } from "@/components/marketing/SampleQuestion";
+import type { SampleQuestionData } from "@/components/marketing/QuestionDeck";
 
 /**
  * Security+ SY0-801 (V8), from CompTIA's exam objectives document (version 2.0)

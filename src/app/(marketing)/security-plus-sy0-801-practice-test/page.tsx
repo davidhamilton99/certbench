@@ -5,7 +5,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PracticeExam, type PracticeExamNext } from "@/components/marketing/PracticeExam";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import { SY0_801_DOMAINS } from "@/data/security-plus-v8";
@@ -64,6 +64,19 @@ const SECTIONS = (() => {
     count: section.objectives.reduce((n, group) => n + group.questions.length, 0),
   }));
 })();
+
+/** The same questions in objective order, each tagged with its objective, for the untimed deck. */
+const DECK: DeckQuestion[] = SECTIONS.flatMap(({ objectives }) =>
+  objectives.flatMap(({ objective, questions }) =>
+    questions.map(({ question }) => ({
+      questionText: question.questionText,
+      options: question.options,
+      correctIndex: question.correctIndex,
+      explanation: question.explanation,
+      tag: `${objective.code} · ${objective.label}`,
+    }))
+  )
+);
 
 const NEXT: PracticeExamNext = {
   heading: "Keep going on the Security+ path",
@@ -188,38 +201,22 @@ export default function Sy0801PracticeTestPage() {
           </p>
         </section>
 
-        <section id="questions" className="mt-12 scroll-mt-20">
-          <h2 className="text-xl font-semibold tracking-tight">Practise one question at a time</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            The same {QUESTION_COUNT} questions, grouped by domain and objective. Pick an answer to see whether
-            it&apos;s right and why.
-          </p>
-          {SECTIONS.map(({ domain, objectives }) => (
-            <div key={domain.number} className="mt-8">
-              <h3 className="flex items-baseline justify-between gap-3 border-b pb-2 font-semibold leading-snug">
-                <span className="min-w-0">
-                  <span className="mr-1.5 font-mono text-xs text-muted-foreground">{domain.number}</span>
-                  {domain.title}
-                </span>
-                <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">
-                  {domain.weight}% of exam
-                </span>
-              </h3>
-              {objectives.map(({ objective, questions }) => (
-                <div key={objective.code} className="mt-5">
-                  <h4 className="text-sm font-medium text-muted-foreground">
-                    <span className="mr-1.5 font-mono text-xs">{objective.code}</span>
-                    {objective.label}
-                  </h4>
-                  <div className="mt-3 grid gap-4">
-                    {questions.map(({ question, number }) => (
-                      <SampleQuestion key={question.id} number={number} question={question} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
+        <section id="questions" className="mt-12 grid scroll-mt-20 gap-4">
+          <div className="grid gap-1">
+            <h2 className="text-xl font-semibold tracking-tight">Practise one question at a time</h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              The same {QUESTION_COUNT} questions in objective order, untimed, each explained as soon as you
+              answer.
+            </p>
+          </div>
+          <QuestionDeck
+            questions={DECK}
+            label="SY0-801 · one at a time"
+            surface="sy0801_practice_test_page"
+            path={PATH_HREF}
+            examName="Security+"
+            listTitle={`All ${QUESTION_COUNT} questions by objective, with answers`}
+          />
         </section>
 
         <section className="mt-12 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">

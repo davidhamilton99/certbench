@@ -4,7 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuestionDeck, type DeckQuestion, type DeckNext } from "@/components/marketing/QuestionDeck";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,23 @@ export const metadata = pageMetadata({
   description: DESCRIPTION,
   path: SY0_801_AI_PATH,
 });
+
+/** The questions for the deck, each tagged with the 2.6 topic it practises. */
+const AI_DECK: DeckQuestion[] = SY0_801_AI_QUESTIONS.map((q) => ({
+  questionText: q.questionText,
+  options: q.options,
+  correctIndex: q.correctIndex,
+  explanation: q.explanation,
+  tag: q.topic,
+}));
+
+/** The guided path is written to SY0-701, which has no AI objective, so the deck leads to the whole SY0-801 test. */
+const AI_NEXT: DeckNext = {
+  title: "The whole SY0-801 exam",
+  body: `${SY0_801_PRACTICE_TEST.length} questions on every objective, timed at the real exam's pace and scored by domain.`,
+  href: SY0_801_PRACTICE_PATH,
+  label: "Take the free practice test",
+};
 
 const FAQS = [
   {
@@ -88,13 +105,16 @@ export default function Sy0801AiQuestionsPage() {
           </p>
         </div>
 
-        <section className="mt-10">
+        <section className="mt-10 grid gap-4">
           <h2 className="text-xl font-semibold tracking-tight">The questions</h2>
-          <div className="mt-4 grid gap-4">
-            {SY0_801_AI_QUESTIONS.map((q, i) => (
-              <SampleQuestion key={q.questionText} number={i + 1} question={q} />
-            ))}
-          </div>
+          <QuestionDeck
+            questions={AI_DECK}
+            label="Objective 2.6 · AI threats"
+            surface="sy0801_ai_page"
+            path={SY0_801_PRACTICE_PATH}
+            examName="SY0-801"
+            next={AI_NEXT}
+          />
         </section>
 
         <section className="mt-10">
