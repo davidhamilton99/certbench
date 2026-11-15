@@ -8,11 +8,16 @@ export const questions: NewQuestion[] = [
     topic: "usability",
     difficulty: 2,
     question:
-      "A company's remote access design makes staff connect to a VPN, sign in to a jump server, then sign in again to each internal app, entering a one-time code at every step. Within a month, help desk tickets triple and some teams start emailing files to personal accounts to avoid the process. Which architecture consideration did the design neglect?",
-    options: ["Usability", "Data sovereignty", "Ease of recovery", "Ownership"],
+      "A hospital wants clinicians to open patient records quickly at shared workstations without weakening sign-in security. Which design BEST balances security with usability?",
+    options: [
+      "A badge tap plus a PIN or fingerprint, with fast re-entry during a shift",
+      "A 20-character password typed at every workstation and changed monthly",
+      "One shared generic account for each ward, so nobody has to sign in",
+      "Sign-in at a single nurses' station, with records printed for the wards",
+    ],
     answer: 0,
     explanation:
-      "Usability is how easy a design is for the people who have to use it. Controls that make routine work too hard push people into workarounds, here emailing files to personal accounts, which leaves the company less secure than a design that balances protection with effort, such as single sign-on with one strong MFA prompt. Data sovereignty is about which country's laws apply to data where it's stored, ease of recovery is how quickly a system can be restored after a failure, and ownership is who owns and answers for the infrastructure.",
+      "Usability is how easy a design is for the people who must use it, and a control that slows urgent work gets bypassed. A badge tap (something you have) plus a PIN or fingerprint (something you know or are) keeps two factors while making each sign-in take seconds. A long password typed at every workstation and changed monthly pushes clinicians toward workarounds, and NIST no longer recommends forced periodic changes; a shared ward account removes accountability; and printing records for the wards swaps one problem for a data exposure.",
   },
   {
     key: "s8-3.1-environmental-1",
@@ -32,16 +37,16 @@ export const questions: NewQuestion[] = [
     topic: "group Managed Service Accounts (gMSAs)",
     difficulty: 2,
     question:
-      "A web application runs on six Windows servers behind a load balancer, and every instance must run under the same domain service account. An administrator changes that account's password by hand once a year, and the current password is kept in a shared spreadsheet. Which change BEST fixes this?",
+      "An administrator is setting up a group Managed Service Account (gMSA) for a scheduled task that runs on two file servers. Which statement about the account is accurate?",
     options: [
-      "Grant the service account Domain Admin rights so it never fails",
-      "Set the account's password to never expire",
-      "Give each server its own local administrator account",
-      "Replace it with a group Managed Service Account (gMSA)",
+      "Its password is chosen by the administrator and typed into each server's task settings",
+      "It can run on only one server, so the second server needs its own account",
+      "It is meant for staff to sign in to interactively when the task fails",
+      "Domain controllers compute and rotate its password; only allowed hosts fetch it",
     ],
     answer: 3,
     explanation:
-      "A gMSA is a domain account whose password Windows manages: domain controllers compute it and change it automatically, and only the servers given permission can retrieve it, so no person needs to know it or keep it in a spreadsheet. Unlike a standalone managed service account, which is tied to one computer, a gMSA can run the same service on many servers, as a load-balanced farm needs. Domain Admin rights break least privilege, a password that never expires keeps the spreadsheet copy valid forever, and separate local accounts can't give every instance the one shared domain identity the service needs.",
+      "With a gMSA, domain controllers compute the password from a key that the Key Distribution Service provides and change it automatically, and only the computers given permission can retrieve it, so nobody types or stores it. One gMSA can run the same service or task on several servers, which is what the group adds over a standalone managed service account tied to one computer. It's an identity for services and tasks, not for people to sign in with.",
   },
   {
     key: "s8-3.2-sse-1",
@@ -49,16 +54,16 @@ export const questions: NewQuestion[] = [
     topic: "Security Service Edge (SSE)",
     difficulty: 2,
     question:
-      "A company already runs SD-WAN between its branches. Most staff now work from home and use SaaS apps directly, so it wants a cloud-delivered service that combines a secure web gateway, a cloud access security broker and zero trust access to its private apps, without changing its networking. Which solution fits BEST?",
+      "A vendor pitches its security service edge (SSE) platform to a company with 40 branch offices. Which capability should the company NOT expect SSE to provide on its own?",
     options: [
-      "A site-to-site IPsec VPN between every branch",
-      "An on-premises unified threat management appliance",
-      "Security service edge (SSE)",
-      "Out-of-band management for the branch routers",
+      "A secure web gateway for users' internet traffic",
+      "A cloud access security broker for SaaS apps",
+      "SD-WAN routing that links the branch offices",
+      "Zero trust network access to private apps",
     ],
     answer: 2,
     explanation:
-      "Security service edge (SSE) is the security half of SASE: a secure web gateway, a CASB and zero trust network access delivered from the cloud, close to wherever users are. The company already has its networking in SD-WAN, so it needs only the security services. A site-to-site VPN joins networks rather than securing remote users' SaaS traffic, an on-premises UTM only inspects traffic that passes through the office, and out-of-band management is a separate path for administering devices.",
+      "SSE is the security half of SASE: a secure web gateway, a CASB and zero trust network access, delivered from the cloud. The networking half, such as SD-WAN linking branches, isn't part of SSE; together the two make SASE, so a company that needs both adds SD-WAN or buys a full SASE service. The other three options are SSE's core capabilities.",
   },
   {
     key: "s8-3.2-e2ee-1",
@@ -66,16 +71,16 @@ export const questions: NewQuestion[] = [
     topic: "end-to-end encrypted messaging",
     difficulty: 2,
     question:
-      "A law firm's chat service uses TLS between each user's app and the provider's servers, but messages are decrypted on those servers before being passed on. The firm wants a service whose provider can't read messages even with full access to its own servers. Which feature should the firm require?",
+      "A company moves staff chat to an end-to-end encrypted messaging service. Which security trade-off should it plan for?",
     options: [
-      "TLS 1.3 with stronger cipher suites",
-      "Encryption at rest on the provider's storage",
-      "Multifactor authentication for every user",
-      "End-to-end encrypted messaging",
+      "Messages will cross the internet unencrypted between users",
+      "Users will no longer need to authenticate to the service",
+      "The provider will be able to read every message stored on its servers",
+      "Server-side DLP and archiving can no longer inspect message content",
     ],
     answer: 3,
     explanation:
-      "With end-to-end encryption, a message is encrypted on the sender's device and only the recipients' devices hold the keys to decrypt it, so the provider relays ciphertext it can't read. TLS, even a newer version, protects each hop only as far as the provider's servers, where messages are decrypted. Encryption at rest protects stored data from someone who takes the disks, but the provider holds those keys. MFA protects accounts from takeover, not message content from the provider.",
+      "With end-to-end encryption only the users' devices hold the keys, so nothing in between, including the company's own server-side DLP, monitoring and archiving tools, can read message content. Retention and inspection then have to happen on the endpoints, through managed devices or the app's own features. Messages stay encrypted the whole way rather than crossing unencrypted, users still authenticate, and the provider can't read messages, which is the point of end-to-end encryption.",
   },
   {
     key: "s8-3.2-diversity-1",
@@ -83,16 +88,16 @@ export const questions: NewQuestion[] = [
     topic: "diversity",
     difficulty: 2,
     question:
-      "A company has two layers of firewalls: one at the internet edge and one between the screened subnet and the internal network. The architect insists the two firewalls come from different vendors. What is the main security benefit of this diversity?",
+      "A security architect proposes a different antivirus vendor for each of two layers: one engine on the email gateway and another on endpoints. What is the main cost of this diversity?",
     options: [
-      "Firewall rules need to be written only once and can be shared by both devices",
-      "A flaw or exploit in one vendor's product won't get through both layers",
-      "Traffic no longer needs logging, because each firewall checks the other",
-      "Neither firewall needs regular patching",
+      "Any malware that one engine misses is guaranteed to get past the other",
+      "More to run: two consoles, two update cycles and two sets of skills",
+      "The two engines will block each other's signature updates",
+      "Email attachments will no longer be scanned at all",
     ],
     answer: 1,
     explanation:
-      "Diversity means using different vendors or technologies for controls that back each other up, so one flaw, such as a zero-day in one vendor's firmware, doesn't defeat every layer at once. The cost is more to manage: two rule syntaxes, so rules can't simply be shared, and two products that both still need patching. Each firewall still needs its own logging too, since neither one records what the other sees.",
+      "Diversity means using different vendors or technologies for controls that back each other up, so a gap in one product, such as a malware sample its engine misses, can still be caught by the other. The price is complexity: two consoles, two update and licensing cycles, and staff who know both. Diversity makes it less likely, not more, that one engine's miss gets through, the engines run on different systems and don't block each other's updates, and the gateway still scans attachments.",
   },
   {
     key: "s8-3.3-structured-1",
@@ -141,11 +146,16 @@ export const questions: NewQuestion[] = [
     topic: "data operator",
     difficulty: 2,
     question:
-      "At an insurer, a contracted team keys in and updates claim records every day by following the claims department's written instructions. The team has no say in why the data is collected, how it's classified or who may access it. Which data protection role does the team hold?",
-    options: ["Data owner", "Data controller", "Data operator", "Data subject"],
+      "While keying in customer records, a data operator notices that a batch marked Public contains card numbers. Whose decision is the right label, and what should the operator do?",
+    options: [
+      "The operator's; relabel the batch Restricted straight away",
+      "The custodian's; ask IT to change the label in the database",
+      "The owner's; report it so the owner or data steward can fix it",
+      "The data subjects'; ask each customer which label they want",
+    ],
     answer: 2,
     explanation:
-      "A data operator works with data, entering, updating and processing it, by following instructions others set, without deciding why it's collected or who may see it. The data owner is the accountable person who decides classification and access, the data controller decides the purposes and means of processing personal data (here, the insurer), and data subjects are the people the data is about, such as the claimants. Running the systems that store the records would make the team custodians, and maintaining the data's definitions and quality would make it stewards.",
+      "Classification is the data owner's decision, and the data steward keeps labels correct day to day on the owner's behalf. A data operator works with data by following rules others set, so the right move is to report the mislabeled batch rather than relabel it. The custodian runs the systems and applies controls as directed but doesn't decide classifications, and data subjects are the people the data is about, not the ones who classify it.",
   },
   {
     key: "s8-3.3-geofencing-1",
@@ -165,11 +175,16 @@ export const questions: NewQuestion[] = [
     topic: "data steward",
     difficulty: 2,
     question:
-      "At a bank, one employee maintains the definitions and permitted values for every field in the customer data set, fixes duplicate and inaccurate records, and checks that the data is labeled and used as policy requires. The employee doesn't decide who gets access and doesn't run the servers. Which role does the employee hold?",
-    options: ["Data steward", "Data custodian", "Data subprocessor", "Data owner"],
+      "A new rule says every customer record must store the country as a standard two-letter ISO code, and thousands of existing records must be cleaned up to match. Which role should own this work?",
+    options: [
+      "The data steward",
+      "The data custodian",
+      "The data subprocessor",
+      "The data subject",
+    ],
     answer: 0,
     explanation:
-      "A data steward looks after the quality and proper use of a set of data: its definitions, permitted values and accuracy, and whether it's labeled and handled as policy requires. The data owner is the accountable person who decides classification and access, the data custodian runs the systems that store and protect the data, and a data subprocessor is a third party that a processor engages to process data on its behalf.",
+      "Data stewards look after data quality and definitions on the data owner's behalf, such as a field's permitted values and cleaning records to match them. The custodian runs the systems that store and protect the data, a subprocessor is a third party that a processor engages, and the data subject is the person the data is about.",
   },
   {
     key: "s8-3.3-lifecycle-1",
@@ -189,15 +204,15 @@ export const questions: NewQuestion[] = [
     topic: "redundant power supply (RPS)",
     difficulty: 2,
     question:
-      "A database server has two hot-swappable power supplies, each plugged into a different power distribution unit fed from a separate circuit. Which failure can the server ride through without going down?",
+      "A server with redundant power supplies crashed when one power strip failed, because both supplies were plugged into it. What should be changed?",
     options: [
-      "A utility outage that cuts power to the whole building",
-      "The failure of one power supply or the loss of one circuit",
-      "A ransomware attack that encrypts the database",
-      "A power surge from a lightning strike nearby",
+      "Replace both power supplies with higher-wattage models",
+      "Feed each supply from a separate PDU on its own circuit",
+      "Remove one power supply, since the second adds nothing",
+      "Add a surge protector between the strip and the server",
     ],
     answer: 1,
     explanation:
-      "Redundant power supplies let a server keep running on one supply if the other fails, and feeding each from its own PDU and circuit extends that to losing a circuit. They don't help when the whole building loses power, which takes a UPS to bridge and a generator for longer outages; a surge calls for a surge protector; and ransomware is a security incident that power redundancy does nothing about.",
+      "Redundant power supplies only help if each one has its own path to power. With both plugged into the same strip, the strip was a single point of failure, so feeding each supply from a separate PDU on its own circuit lets the server survive losing either path. Higher-wattage supplies would still share the strip, removing a supply takes away the redundancy, and a surge protector guards against voltage spikes, not a failed strip.",
   },
 ];

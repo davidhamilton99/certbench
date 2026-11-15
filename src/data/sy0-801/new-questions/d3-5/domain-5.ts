@@ -29,11 +29,11 @@ export const questions: NewQuestion[] = [
     topic: "runbooks",
     difficulty: 2,
     question:
-      "When a monitoring alert shows a web server's certificate will expire within seven days, the on-call engineer follows a document with numbered steps and ready-made commands for renewing and installing the certificate and checking the result. What is this document?",
+      "When monitoring reports that the primary database server is down, the on-call engineer follows a document of numbered steps and ready-made commands to fail over to the standby and confirm the application works. What is this document?",
     options: ["A policy", "A guideline", "A runbook", "A risk register"],
     answer: 2,
     explanation:
-      "A runbook is a procedure with exact steps, often including ready-made commands or scripts, for carrying out one operational task the same way every time, here renewing a certificate. A policy states at a high level what must happen and why, a guideline offers recommendations that can be adapted, and a risk register records identified risks and how they're treated.",
+      "A runbook gives exact steps, often with ready-made commands or scripts, for carrying out one operational task the same way every time, here failing over to the standby database. A policy states at a high level what must happen and why, a guideline offers recommendations that can be adapted, and a risk register records identified risks and how they're treated.",
   },
   {
     key: "s8-5.1-clean-desk-1",
@@ -41,7 +41,7 @@ export const questions: NewQuestion[] = [
     topic: "clean desk policy",
     difficulty: 1,
     question:
-      "An evening walk-through of an office finds printed customer lists on desks, a notebook full of passwords and unlocked laptops left out. Which policy addresses this?",
+      "An office switches to hot desking: nobody has an assigned desk, and different staff use the same desk on different days. Which policy does this change make MOST important?",
     options: [
       "A clean desk policy",
       "A data retention policy",
@@ -50,7 +50,7 @@ export const questions: NewQuestion[] = [
     ],
     answer: 0,
     explanation:
-      "A clean desk policy requires staff to lock away papers and portable devices and secure their workstations whenever they leave, so cleaners, visitors or intruders can't read or take them. A retention policy sets how long data is kept, a BYOD policy governs personal devices used for work, and a vulnerability disclosure policy tells outside researchers how to report flaws.",
+      "With hot desking, whatever one person leaves on a desk is in front of the next person to sit there, so a clean desk policy, which requires papers and devices to be locked away and screens locked whenever staff leave, becomes essential. A retention policy sets how long data is kept, a BYOD policy covers personal devices used for work, and a vulnerability disclosure policy tells outside researchers how to report flaws.",
   },
   {
     key: "s8-5.1-reference-architecture-1",
@@ -107,18 +107,18 @@ export const questions: NewQuestion[] = [
     key: "s8-5.1-vdp-1",
     objective: "5.1",
     topic: "vulnerability disclosure policy",
-    difficulty: 2,
+    difficulty: 3,
     question:
-      "A researcher finds a flaw on a company's website but can't find any way to report it, and worries that testing the site could lead to legal action. Which document should the company publish to solve both problems?",
+      "A company's vulnerability disclosure policy covers its online store and customer portal. During testing, a researcher also probes a login page run by the company's payroll provider. What does the policy mean for that testing?",
     options: [
-      "An acceptable use policy setting out the rules for the company's own staff",
-      "A non-disclosure agreement for every site visitor",
-      "A data classification and retention policy",
-      "A vulnerability disclosure policy with a reporting channel and safe harbor",
+      "It's covered, because any system holding the company's data is in scope",
+      "It's covered, as long as the researcher reports it within 90 days",
+      "It's covered, because the policy speaks for the company's providers too",
+      "It isn't covered: the policy's promises apply only to in-scope systems",
     ],
     answer: 3,
     explanation:
-      "A vulnerability disclosure policy tells outside researchers what's in scope, how to report a flaw and what to expect, and usually promises not to take legal action against good-faith research that follows it, often called safe harbor. A security.txt file at /.well-known/security.txt (RFC 9116) can point researchers to it. An acceptable use policy governs staff, an NDA can't be signed by every anonymous visitor, and a classification policy covers how the company labels and keeps its own data.",
+      "A vulnerability disclosure policy names the systems in scope and the testing allowed, and its promise not to pursue good-faith researchers applies to research within that scope. A company can't authorize testing of a system it doesn't own, such as a login page its payroll provider runs, so that testing isn't covered and could expose the researcher to action by the provider. Holding the company's data doesn't put a third party's system in scope, reporting quickly doesn't change what was authorized, and the policy can't speak for another company.",
   },
   {
     key: "s8-5.1-retention-1",
@@ -145,16 +145,16 @@ export const questions: NewQuestion[] = [
     topic: "RFP, RFI, RFQ and EOI",
     difficulty: 2,
     question:
-      "A company is considering a managed detection and response service but doesn't yet know what's available or how providers approach it. It asks several providers to describe their capabilities, without committing to buy anything. Which document is it issuing?",
+      "A vendor answers a company's request for information (RFI) with a detailed description and an estimated price. Can the company accept the response as a binding offer?",
     options: [
-      "A request for quote (RFQ)",
-      "A statement of work (SOW)",
-      "A request for information (RFI)",
-      "A master services agreement (MSA)",
+      "Yes; any written price from a vendor is a binding offer",
+      "Yes, if the response arrives before the RFI deadline",
+      "No; an RFI response informs planning and isn't an offer",
+      "No; only an expression of interest can form a contract",
     ],
     answer: 2,
     explanation:
-      "A request for information gathers information about the market and what providers can do, early in planning; responses aren't offers and commit nobody. An RFQ asks for prices once requirements are already defined, a statement of work defines the work and deliverables for a specific engagement, and an MSA sets the general terms for an ongoing relationship.",
+      "A request for information gathers information for planning, so responses, even ones with estimated prices, aren't offers and can't be accepted to form a contract; the U.S. Federal Acquisition Regulation says so outright. Binding offers come later, in reply to a request for proposal or quote. A written estimate isn't automatically an offer, a deadline doesn't change what an RFI is, and an expression of interest only signals that a supplier wants to compete.",
   },
   {
     key: "s8-5.3-rfq-1",
@@ -177,18 +177,18 @@ export const questions: NewQuestion[] = [
     key: "s8-5.3-rfp-1",
     objective: "5.3",
     topic: "RFP, RFI, RFQ and EOI",
-    difficulty: 3,
+    difficulty: 2,
     question:
-      "A public agency needs a new identity platform. First it publishes a notice inviting suppliers to say whether they want to bid and to show their qualifications, and uses the replies to build a shortlist. Then it sends shortlisted suppliers detailed requirements, including security controls and a security questionnaire, and asks each to propose a solution and a price. Which two stages are these, in order?",
+      "A hospital wants bidders for its new patient portal to explain how each would meet a detailed list of requirements, including encryption, MFA and breach notification terms, along with a price. Which document should it issue?",
     options: [
-      "Expression of interest, then request for proposal",
-      "Request for information, then request for quote",
-      "Request for proposal, then expression of interest",
-      "Statement of work, then memorandum of understanding",
+      "A request for proposal that includes the security requirements",
+      "A request for quote, since only the bidders' prices matter here",
+      "A request for information, since nothing is committed yet",
+      "An expression of interest, since bidders choose the requirements",
     ],
     answer: 0,
     explanation:
-      "Inviting suppliers to state their interest and qualifications so the buyer can build a shortlist is the expression of interest stage. Asking shortlisted suppliers to propose a solution against detailed requirements is a request for proposal, judged on how well the solution meets them as well as on price, and it's where security requirements belong so they shape every proposal. The reverse order would ask for proposals before anyone was shortlisted. An RFQ asks only for prices on a fixed specification, a statement of work describes the work under an agreement being made, and an MOU records an intent to cooperate, usually without binding terms.",
+      "A request for proposal asks suppliers to propose how they'd meet a need and is judged on the solution as well as the price, and putting security requirements in it means every proposal has to answer them. A request for quote suits fixed specifications where price is the only question, a request for information gathers background before requirements exist, and an expression of interest is a supplier saying it wants to compete; none of them asks for a full solution against detailed requirements.",
   },
   {
     key: "s8-5.3-slo-1",
@@ -230,16 +230,16 @@ export const questions: NewQuestion[] = [
     topic: "vendor lock-in",
     difficulty: 2,
     question:
-      "A company is about to sign a five-year contract with a SaaS provider that stores all data in a proprietary format, offers no bulk export and charges heavily for early termination. Which risk is the company taking on, and which contract term would reduce it?",
+      "A company is negotiating a five-year contract for a cloud HR platform. Which contract term does the MOST to limit vendor lock-in?",
     options: [
-      "Conflict of interest; ask the provider for a list of its other clients",
-      "Staffing limitations; hire more administrators before signing",
-      "Vendor lock-in; require data export in a standard format and help with exit",
-      "Data sovereignty; move the company's headquarters",
+      "A right-to-audit clause covering the provider's controls",
+      "A non-disclosure agreement covering both parties",
+      "Export of all data in a standard format, plus help at exit",
+      "A 99.9% monthly availability target with service credits for misses",
     ],
     answer: 2,
     explanation:
-      "Vendor lock-in is dependence on one provider that makes leaving costly or impractical, here through a proprietary format, no export and termination fees. Contract terms that guarantee data export in a standard format and assistance at the end of the contract keep an exit open. A conflict of interest is a competing interest that could bias a decision, staffing limitations concern the company's own people, and data sovereignty is about which country's laws apply to data.",
+      "Vendor lock-in is dependence that makes leaving a provider costly or impractical. A guaranteed export of all data in a standard format, with help migrating at the end, keeps the exit open. A right-to-audit clause lets the company check the provider's controls, an NDA protects confidential information, and an availability target with credits governs uptime; none of them makes it easier to leave.",
   },
 
   // ---- 5.4 Security compliance ----
@@ -264,18 +264,18 @@ export const questions: NewQuestion[] = [
     key: "s8-5.4-anti-bribery-1",
     objective: "5.4",
     topic: "anti-bribery",
-    difficulty: 2,
+    difficulty: 3,
     question:
-      "A salesperson negotiating a government contract abroad is told that a personal payment to the official in charge would make sure the company wins. Which compliance training topic covers this, and what should the salesperson do?",
+      "A company hires a local agent to help win a government contract abroad. The agent asks for an unusually large success fee and hints that part of it will go to officials. What is the company's position?",
     options: [
-      "Data handling; encrypt the official's emails",
-      "AML/CTF; pay through a bank so the transfer is recorded",
-      "Acknowledgement; ask the official to sign the company's policy",
-      "Anti-bribery; refuse and report it to the compliance team",
+      "It's safe, because only the agent would be paying the officials",
+      "It's safe, as long as the fee is paid through a bank",
+      "It's safe, if the agent signs a confidentiality agreement",
+      "It can be liable for bribes its agent pays, so refuse and report",
     ],
     answer: 3,
     explanation:
-      "Paying an official personally to win business is bribery, which laws such as the U.S. Foreign Corrupt Practices Act and the UK Bribery Act prohibit, so anti-bribery training teaches staff to refuse and report it. Under the UK Act, a company can be liable when someone acting for it pays a bribe unless it can show adequate procedures to prevent bribery, which is one reason companies train staff. Paying through a bank doesn't make a bribe legal, and data handling and policy acknowledgements don't address it.",
+      "Anti-bribery laws reach bribes paid through intermediaries. Under the UK Bribery Act, a company commits an offense if someone performing services for it, such as an agent, bribes to win it business, unless it can show adequate procedures to prevent bribery, and the U.S. Foreign Corrupt Practices Act also covers payments made through third parties. So the company should refuse, report it to compliance and look hard at the agent. It isn't safe just because someone else hands over the money, and routing the fee through a bank or adding a confidentiality agreement doesn't make it lawful.",
   },
   {
     key: "s8-5.4-restriction-1",
@@ -283,16 +283,16 @@ export const questions: NewQuestion[] = [
     topic: "processing restrictions and prevention",
     difficulty: 3,
     question:
-      "A customer tells a company that the income figure in their file is wrong. While the company checks, the customer asks it not to use the data in any decisions, but not to delete it. Under the GDPR, which right does this request rely on?",
+      "A company's retention schedule says a former employee's records are due for destruction this week. The former employee wants them kept, unused, as evidence in a lawsuit. Which GDPR right covers this request?",
     options: [
       "The right to be forgotten",
       "The right to data portability",
       "The right to restriction of processing",
-      "The right to opt out of sale",
+      "The right to opt out of the sale of their data",
     ],
     answer: 2,
     explanation:
-      "Restriction of processing lets a person have their data kept but not used, for example while its accuracy is checked: the company may store it but generally can't process it further without the person's consent or another narrow ground. Fixing the figure once checked is the separate right to rectification. The right to be forgotten would delete the data, data portability gives the person a copy to take elsewhere, and opting out of sale is a right under laws such as California's, not the GDPR.",
+      "Restriction of processing lets a person have their data kept but not used, and one of the GDPR's grounds is exactly this case: the controller no longer needs the data, but the person needs it to establish, exercise or defend a legal claim. The right to be forgotten would erase the data, data portability gives the person a copy to take elsewhere, and opting out of sale is a right under laws such as California's, not the GDPR.",
   },
   {
     key: "s8-5.4-prevention-1",
@@ -300,16 +300,16 @@ export const questions: NewQuestion[] = [
     topic: "processing restrictions and prevention",
     difficulty: 2,
     question:
-      "A customer tells an online store to stop using their personal data for direct marketing altogether. Under the GDPR, what must the store do?",
+      "A shopper tells an online store to stop using their details for direct marketing altogether. Under the GDPR, what must the store do?",
     options: [
       "Keep marketing, but less often",
       "Stop processing the data for direct marketing",
-      "Delete the customer's account and order history",
-      "Ask the customer to show that the marketing harms them",
+      "Delete the shopper's account and order history",
+      "Ask the shopper to show that the marketing harms them",
     ],
     answer: 1,
     explanation:
-      "An objection to direct marketing prevents that processing outright: under the GDPR's right to object, the data must no longer be used for that purpose, with no balancing test. The objection doesn't require deleting the account or order history, which the store may still need for other purposes, and the customer doesn't have to show any harm.",
+      "An objection to direct marketing prevents that processing outright: under the GDPR's right to object, the data must no longer be used for that purpose, with no balancing test. The objection doesn't require deleting the account or order history, which the store may still need for other purposes, and the shopper doesn't have to show any harm.",
   },
   {
     key: "s8-5.4-opt-in-1",
@@ -317,28 +317,33 @@ export const questions: NewQuestion[] = [
     topic: "opt-in and opt-out",
     difficulty: 2,
     question:
-      "A sign-up form includes a box, already ticked, that reads: Send me offers from our partners. A privacy reviewer says this doesn't collect valid consent under the GDPR. Why not?",
+      "A U.S. retailer shares customer data with advertising partners unless a customer clicks a link labeled Do Not Sell or Share My Personal Information. Which consent model is this?",
     options: [
-      "Consent needs an opt-in: a clear act, such as ticking an empty box",
-      "Consent must be given on paper and signed, not collected on a website",
-      "The box must be ticked by a member of the company's staff, not by the user",
-      "Consent is never needed for marketing emails",
+      "Opt-out: sharing goes on until the person says stop",
+      "Opt-in: nothing is shared until the person agrees",
+      "Legal hold: the data is preserved for litigation",
+      "Processing restriction: the data is kept but unused",
     ],
     answer: 0,
     explanation:
-      "The GDPR treats consent as valid only when it's a clear affirmative act, so a pre-ticked box, silence or inactivity doesn't count: the user has to opt in, for example by ticking an empty box. A pre-ticked box is an opt-out design, where processing happens unless the person acts to stop it. Consent can be given online, it has to come from the person, and marketing often does rely on consent.",
+      "In an opt-out model, processing such as selling or sharing data goes ahead by default until the person objects; California's privacy law gives consumers that right, which businesses commonly offer through a Do Not Sell or Share My Personal Information link. Opt-in is the reverse: nothing happens until the person actively agrees, as the GDPR requires for consent. A legal hold preserves data for litigation, and processing restriction keeps data without using it.",
   },
   {
     key: "s8-5.4-correction-1",
     objective: "5.4",
     topic: "data correction",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "A customer finds that an insurer has the wrong date of birth on file, which raises their premium, and asks for it to be fixed. Under laws such as the GDPR, the insurer must also tell partners it shared the data with. Which privacy right applies to this request?",
-    options: ["Opt-out", "Processing restriction", "Legal hold", "Data correction"],
+      "At a customer's request, a company fixes a misspelled name and a wrong date of birth in its records. Last month it shared that record with two partner firms. Under the GDPR, what must it do about the partners?",
+    options: [
+      "Nothing, since the partners are separate organizations with their own duties",
+      "Delete the corrected record from its own systems",
+      "Tell the customer to contact each partner themselves",
+      "Tell each partner, unless that's impossible or takes disproportionate effort",
+    ],
     answer: 3,
     explanation:
-      "Data correction, called rectification in the GDPR, lets a person have inaccurate personal data fixed without undue delay, and the GDPR also requires the organization to pass the correction on to each recipient it disclosed the data to, unless that proves impossible or takes disproportionate effort. Opting out stops a kind of processing, such as sale or marketing; restriction keeps data but stops it being used; and a legal hold preserves data for litigation.",
+      "Under the GDPR, an organization that corrects (rectifies) personal data must pass the correction on to each recipient it disclosed the data to, unless that proves impossible or involves disproportionate effort, and tell the person who those recipients are if asked. That way the partners stop using the wrong data. Doing nothing leaves the errors in use, deleting the record isn't what the customer asked for, and the duty sits with the company, not the customer.",
   },
   {
     key: "s8-5.4-legal-order-1",
@@ -346,16 +351,16 @@ export const questions: NewQuestion[] = [
     topic: "legal orders",
     difficulty: 2,
     question:
-      "A help desk analyst receives an emailed court order demanding a customer's account records within 48 hours. What should the analyst do?",
+      "A company is served with a legal order for one person's account history, and the order bars it from telling that person. What should the company do?",
     options: [
-      "Send the records at once, since court orders must be obeyed",
-      "Ignore it, since orders sent by email are never valid",
-      "Pass it to the legal team to check it's genuine and what it covers",
-      "Delete the customer's records so that there's nothing left to hand over",
+      "Tell the person anyway, because the company's privacy policy promises openness",
+      "Refuse, because an order that limits notice is never valid",
+      "Have counsel verify it, comply within scope and keep it confidential",
+      "Delete the records so that there is nothing to produce",
     ],
     answer: 2,
     explanation:
-      "Legal orders such as subpoenas, warrants and court orders go to the legal team, which confirms the order is genuine, works out exactly what it requires and makes sure only that is disclosed; forged legal requests are a known way of tricking companies into handing over data. Sending the records at once risks a privacy breach if the order is fake or narrower than it looks, ignoring a real order can bring penalties, and deleting records after receiving an order could amount to obstruction.",
+      "Legal orders go to counsel, who confirms the order is genuine and lawful and works out exactly what it requires, and the company then produces only what it covers. Courts can bar a company from telling the person concerned, and breaking that bar can bring penalties of its own, so the restriction is followed while it applies unless counsel challenges it. A privacy policy doesn't override a valid order, such restrictions can be lawful, and deleting records after an order arrives could amount to obstruction.",
   },
 
   // ---- 5.5 Audits and assessments ----
@@ -365,16 +370,16 @@ export const questions: NewQuestion[] = [
     topic: "Diamond Model of Intrusion Analysis",
     difficulty: 2,
     question:
-      "An analyst records each intrusion event using four connected elements: who carried it out, the malware and tools used, the IP addresses and domains involved, and the organization targeted. Starting from a known command-and-control domain, the analyst pivots to find other victims. Which model is the analyst using?",
+      "An analyst knows only one fact about an intrusion: the command-and-control domain the malware called. Using the Diamond Model, how can the analyst find other victims of the same campaign?",
     options: [
-      "MITRE ATT&CK",
-      "The Diamond Model of Intrusion Analysis",
-      "The Cyber Kill Chain",
-      "The Common Vulnerability Scoring System (CVSS)",
+      "Ask the domain's registrar to identify the attacker by name",
+      "Pivot from that infrastructure to other events that used it",
+      "Map the domain onto one phase of the Cyber Kill Chain instead",
+      "Score the domain with the CVSS calculator",
     ],
     answer: 1,
     explanation:
-      "The Diamond Model describes every intrusion event by four core features, adversary, capability, infrastructure and victim, linked to one another, so an analyst can pivot from one known feature, such as a C2 domain (infrastructure), to related ones, such as other victims. ATT&CK catalogs adversary tactics and techniques, the Cyber Kill Chain splits an intrusion into seven phases in sequence, and CVSS scores the severity of vulnerabilities.",
+      "The Diamond Model links each intrusion event's adversary, capability, infrastructure and victim, so knowing one feature lets an analyst pivot to related events: other intrusions that used the same command-and-control domain (infrastructure) point to other victims. A registrar rarely knows or names an attacker, a Kill Chain phase describes the stage of one attack rather than finding related ones, and CVSS scores vulnerabilities, not domains.",
   },
   {
     key: "s8-5.5-audit-charter-1",
@@ -397,18 +402,18 @@ export const questions: NewQuestion[] = [
     key: "s8-5.5-benchmarking-1",
     objective: "5.5",
     topic: "benchmarking",
-    difficulty: 2,
+    difficulty: 3,
     question:
-      "A board asks how the company's security spending, time to patch critical flaws and phishing click rate compare with those of similar companies in its sector. The CISO commissions an assessment that compares the company's results with peer data. Which engagement type is this?",
+      "A benchmarking study shows a company patches critical flaws about as fast as similar firms in its sector. What does this result NOT tell the company?",
     options: [
-      "Gap analysis",
-      "Penetration testing",
-      "Regulatory examination",
-      "Benchmarking",
+      "How its patching speed compares with that of its sector peers",
+      "Where it sits against the sector's typical results",
+      "Whether it's ahead of or behind similar firms",
+      "Whether that speed is fast enough for its own risk appetite",
     ],
     answer: 3,
     explanation:
-      "Benchmarking compares an organization's practices and results with those of peers or an external reference, to show where it stands. A gap analysis compares the current state with a target, such as a framework's requirements, to list what's missing; a penetration test tries to exploit weaknesses; and a regulatory examination is carried out by a regulator to check compliance.",
+      "Benchmarking compares an organization's practices and results with peers or an external reference, so it shows where the company stands against them. It can't say whether that's good enough: if peers are slow too, matching them may still leave more risk than the company's appetite allows, which needs the company's own targets, such as risk-based remediation deadlines. The other three are exactly what a benchmark shows.",
   },
   {
     key: "s8-5.5-functional-testing-1",
@@ -433,16 +438,16 @@ export const questions: NewQuestion[] = [
     topic: "MITRE ATT&CK",
     difficulty: 2,
     question:
-      "A detection team maps each of its SIEM rules to technique IDs such as T1053 (Scheduled Task/Job) and T1566 (Phishing), to see which adversary techniques it has no detection for. Which reference is it using?",
+      "In MITRE ATT&CK, Persistence appears as a column heading, and Scheduled Task/Job (T1053) appears under it. How do the two relate?",
     options: [
-      "MITRE ATT&CK",
-      "The Diamond Model of Intrusion Analysis",
-      "The Cyber Kill Chain",
-      "The CIS Benchmarks",
+      "Persistence is a tactic (the why), Scheduled Task/Job a technique (the how)",
+      "Persistence is the technique, and Scheduled Task/Job is the tactic it serves",
+      "Persistence is a Kill Chain phase, and T1053 is the CVE number of a flaw",
+      "Both are names of threat actor groups that ATT&CK tracks and profiles",
     ],
     answer: 0,
     explanation:
-      "MITRE ATT&CK is a knowledge base of adversary tactics, the goals behind actions, and techniques, the ways those goals are achieved, built from real-world observations and identified by IDs such as T1053. Mapping detections to it shows coverage gaps. The Diamond Model relates adversary, capability, infrastructure and victim, the Cyber Kill Chain has seven broad phases with no technique IDs, and CIS Benchmarks are secure configuration guides.",
+      "ATT&CK's tactics are the adversary's goals, the columns of its matrix, such as Persistence, and its techniques are the ways those goals are achieved, such as T1053 Scheduled Task/Job, which ATT&CK lists under Persistence as well as Execution and Privilege Escalation. The reverse pairing gets the levels backward, ATT&CK IDs aren't CVE numbers and the Kill Chain is a separate model, and ATT&CK profiles threat groups separately from its tactics and techniques.",
   },
   {
     key: "s8-5.5-kill-chain-1",
@@ -462,11 +467,16 @@ export const questions: NewQuestion[] = [
     topic: "sampling",
     difficulty: 2,
     question:
-      "An auditor needs to test whether user access changes were approved, but there were 12,000 of them last year. The auditor selects 60 at random, checks each for an approval and draws a conclusion about the whole year. Which data gathering technique is this?",
-    options: ["Interviews", "Assertion", "Questionnaires", "Sampling"],
+      "To test whether departed employees' accounts were disabled within a day, an auditor checks 25 of last year's 400 departures. What makes the conclusion about all 400 trustworthy?",
+    options: [
+      "Checking the 25 people who left most recently",
+      "Letting the IT team pick the 25 accounts to check",
+      "Interviewing the 25 people about their own accounts",
+      "Choosing the 25 without bias, such as at random",
+    ],
     answer: 3,
     explanation:
-      "Sampling tests a representative subset of a population and uses the results to draw conclusions about the whole, which makes large populations practical to audit; random selection helps keep the sample representative. Interviews and questionnaires gather information by asking people, and an assertion is a claim, such as management's statement that its controls work, that the audit then tests.",
+      "Sampling tests part of a population and draws a conclusion about the whole, which only holds if the sample represents it, so the 25 should be chosen without bias, for example at random. The most recent leavers may have been handled differently from earlier ones, a sample picked by the team being audited invites cherry-picking, and people who have left can't vouch for whether their own accounts were disabled.",
   },
 
   // ---- 5.6 Security awareness ----
@@ -474,9 +484,9 @@ export const questions: NewQuestion[] = [
     key: "s8-5.6-lms-1",
     objective: "5.6",
     topic: "learning management system (LMS)",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "A compliance officer needs proof that all 2,000 employees completed this year's security awareness course, plus automatic reminders for anyone overdue and quiz scores by department. Which delivery mechanism provides this?",
+      "New hires must pass a security course before they get access to customer data, and IT wants that access granted automatically the moment someone passes. Which delivery mechanism should hold the course and its results?",
     options: [
       "A one-to-many webinar",
       "A self-service portal of policy documents",
@@ -485,7 +495,7 @@ export const questions: NewQuestion[] = [
     ],
     answer: 2,
     explanation:
-      "A learning management system assigns and delivers courses, tracks who has completed them, sends reminders, records quiz scores and produces the reports auditors ask for. A one-to-many webinar reaches many people at once but isn't built to assign courses, chase the overdue and keep completion records, a self-service portal lets people look things up when they need to, and one-to-one coaching doesn't scale to 2,000 people.",
+      "A learning management system delivers courses and records who passed and when, and that record can drive other processes, such as granting access once a new hire passes. A webinar presents to many people at once but doesn't record who passed a test, a self-service portal lets people look things up when they need to, and coaching sessions don't produce a pass record that systems can act on.",
   },
   {
     key: "s8-5.6-delivery-1",
@@ -493,32 +503,32 @@ export const questions: NewQuestion[] = [
     topic: "delivery mechanisms",
     difficulty: 2,
     question:
-      "A manager has clicked links in three phishing simulations this quarter. The security team arranges a private session in which an analyst walks the manager through each message and the warning signs it carried. Which delivery mechanism and type of training is this?",
+      "Before a new accounts payable clerk starts approving payments, a security analyst spends an hour with the clerk alone, walking through the payment controls and the scams that target the role. Which delivery mechanism and type of training is this?",
     options: [
-      "One-to-one delivery; corrective training",
-      "One-to-many delivery; onboarding training",
+      "One-to-one delivery; initial (onboarding) training",
+      "One-to-many delivery; corrective training",
       "A self-service portal; ongoing training",
-      "A learning management system; initial training",
+      "A learning management system; annual refresher training",
     ],
     answer: 0,
     explanation:
-      "A private session between an analyst and one person is one-to-one delivery, and training that responds to a particular person's mistakes is corrective. One-to-many delivery, such as a webinar or an all-hands talk, reaches a group at once; a self-service portal lets people find material on their own; an LMS assigns and tracks courses; and onboarding, or initial, training is what new staff receive when they join.",
+      "A private session between an analyst and one person is one-to-one delivery, and training a new starter before they take on the role is initial, or onboarding, training, here aimed at the risks of the job. One-to-many delivery reaches a group at once, corrective training responds to someone's mistake, a self-service portal lets people find material on their own, and an LMS assigns and tracks courses rather than holding a live conversation.",
   },
   {
     key: "s8-5.6-risk-scoring-1",
     objective: "5.6",
     topic: "personnel behavior risk scoring",
-    difficulty: 2,
+    difficulty: 1,
     question:
-      "A security team combines each employee's phishing simulation results, how often they report suspicious email, their training completion and their data loss prevention policy violations into a single score, then uses the scores to decide who gets extra training. What is this?",
+      "A security team is designing a personnel behavior risk score to decide who needs extra training. Which input belongs in it?",
     options: [
-      "Situational awareness",
-      "Personnel behavior risk scoring",
-      "Operational security",
-      "A vulnerability scan",
+      "Each person's salary band and job grade",
+      "How often each person reports suspicious email",
+      "Each person's age and years with the company",
+      "How many sick days each person took over the past year",
     ],
     answer: 1,
     explanation:
-      "Personnel behavior risk scoring rates people by how their actions affect risk, using signals such as simulation clicks, reporting rates, training records and policy violations, so training and monitoring go where they'll help most. Because it concerns individuals, it should be run transparently and fairly. Situational awareness is noticing what's happening around you, operational security protects information that could help an adversary, and a vulnerability scan checks systems, not people.",
+      "A personnel behavior risk score should rest on security behaviors, such as reporting suspicious email, results in phishing simulations, training completion and policy violations, because those are what training can change. Salary, age, tenure and sick days say nothing about security habits, and using them would make the score unfair, which matters for a score that singles out individuals.",
   },
 ];

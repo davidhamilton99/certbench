@@ -12,7 +12,7 @@ export const questions: NewQuestion[] = [
     topic: "wireless intrusion prevention system (WIPS)",
     difficulty: 2,
     question:
-      "Staff notice a new Wi-Fi network in the office that uses the company's network name. It turns out someone connected an access point to a network port under a desk. The company wants rogue access points like this detected and contained automatically in future, including by disconnecting clients from them over the air. Which control should it deploy?",
+      "Laptops keep dropping off the corporate Wi-Fi, and a wireless capture shows a flood of deauthentication frames aimed at them. Which control can detect this kind of attack on the Wi-Fi itself and alert on it?",
     options: [
       "A host-based intrusion prevention system on every laptop",
       "A web application firewall",
@@ -21,7 +21,7 @@ export const questions: NewQuestion[] = [
     ],
     answer: 2,
     explanation:
-      "A WIPS uses radio sensors to watch the airwaves, spot rogue and look-alike access points and contain them, for example by telling clients to disconnect from a rogue AP or by having the wired switch block the port it's plugged into. A HIPS protects individual hosts, a WAF protects web applications from malicious HTTP requests, and a captive portal only makes guests accept terms or sign in before using a network.",
+      "A WIPS uses radio sensors to watch wireless traffic itself, so it can spot attacks on the Wi-Fi protocols, such as a deauthentication flood that knocks clients off, as well as rogue access points, and alert on them or respond. Management frame protection (802.11w) also helps devices ignore forged deauthentication frames. A HIPS sees only its own host, a WAF inspects requests to a web application, and a captive portal just admits guests to a network.",
   },
   {
     key: "s8-4.1-utm-1",
@@ -29,16 +29,16 @@ export const questions: NewQuestion[] = [
     topic: "unified threat management (UTM)",
     difficulty: 2,
     question:
-      "A 30-person accounting office has no dedicated security staff. It wants one appliance at its internet connection that provides a firewall, intrusion prevention, gateway malware scanning, web filtering and VPN access, managed from a single console. Which solution fits, and what is its main trade-off?",
+      "A small company turns on every inspection feature of its unified threat management (UTM) appliance. Internet traffic now slows badly at busy times. What is the MOST likely cause?",
     options: [
-      "Unified threat management; one box can bottleneck or fail as a unit",
-      "A web application firewall; it needs a rule for each application",
-      "A network tap; it can't decrypt VPN traffic",
-      "A jump server; users must sign in twice",
+      "Every feature shares the one appliance's processing capacity",
+      "UTM appliances can't inspect more than one protocol at a time",
+      "The web filter is blocking every site during busy periods",
+      "Turning on IPS disables the appliance's firewall",
     ],
     answer: 0,
     explanation:
-      "A UTM appliance combines a firewall with intrusion prevention, malware scanning, web filtering and VPN in one device and one console, which suits a small office without security staff. The trade-off is that every function shares the same hardware: performance can drop with all of them turned on, and if the device fails, every function fails together. A WAF protects web applications only, a tap passively copies traffic for monitoring and blocks nothing, and a jump server is a hardened host for administrative access.",
+      "A UTM puts several security functions into one device, so they all draw on the same processor and memory; with every inspection feature on, it can become a bottleneck at peak load, and if it fails, every function fails together. Sizing the appliance for the full feature set, or splitting functions across devices, addresses it. UTMs inspect many protocols at once, a web filter blocks categories rather than every site, and turning on IPS doesn't disable the firewall.",
   },
   {
     key: "s8-4.1-secrets-1",
@@ -46,16 +46,16 @@ export const questions: NewQuestion[] = [
     topic: "secrets scanning",
     difficulty: 2,
     question:
-      "A developer copies a payment provider's live API token into a test script to get a failing test working, then runs git push. The company wants pushes like this stopped before the token is stored in the shared repository. Which control does this?",
+      "A company turns on secrets scanning for the first time across 200 existing repositories. Why should it scan each repository's full commit history, not just the latest code?",
     options: [
-      "Code signing of every release build",
-      "Static code analysis in the nightly build",
-      "A web application firewall in front of the app",
-      "Secrets scanning with push protection",
+      "Git deletes old commits automatically after 90 days, so history is short",
+      "Scanning history is the only way to find ordinary code bugs",
+      "Secrets in old commits stop working by themselves, so history holds no risk",
+      "A secret removed in a later commit still sits in history and may still work",
     ],
     answer: 3,
     explanation:
-      "Secrets scanning looks for credentials such as API keys, tokens and passwords in code, and with push protection the repository refuses a push that contains one, before it's stored. A nightly static analysis run happens after the code is already in the repository, code signing proves who published a build and that it hasn't been altered, and a WAF filters web requests to a running application.",
+      "Deleting a secret in a later commit doesn't remove it from the repository's history, where anyone with access can still read it, and it keeps working until it's revoked. Scanning full histories finds those leftovers so they can be revoked and rotated. Git keeps commits unless someone rewrites history, secrets don't expire just because they're old, and secrets scanning looks for credentials, not general code bugs.",
   },
   {
     key: "s8-4.1-secrets-2",
@@ -97,7 +97,7 @@ export const questions: NewQuestion[] = [
     topic: "extended detection and response (XDR)",
     difficulty: 2,
     question:
-      "A SOC sees a phishing alert in the email gateway's console, a suspicious process alert in the EDR console and an impossible-travel sign-in in the identity provider's console, and analysts spend hours linking them by hand. Which solution would correlate these signals into one incident and coordinate a response across email, endpoints and identities?",
+      "EDR isolates a laptop after a phishing attachment runs on it, but copies of the same email are still sitting in 30 other mailboxes. Which capability would have removed those emails as part of the same response?",
     options: [
       "Antivirus with daily signature updates",
       "Extended detection and response (XDR)",
@@ -106,7 +106,7 @@ export const questions: NewQuestion[] = [
     ],
     answer: 1,
     explanation:
-      "XDR extends detection and response beyond the endpoint: it gathers signals from endpoints, email, identities and cloud apps, joins related alerts into one incident and can act across them, for example removing the phishing email from every mailbox while isolating the laptop. EDR on its own sees only endpoints, antivirus blocks known malware on a single host, and DLP watches for sensitive data leaving the organization.",
+      "XDR joins detection and response across endpoints, email, identities and cloud apps, so one incident can trigger actions in each, such as isolating the laptop and purging the same message from every mailbox. EDR on its own acts only on endpoints, antivirus blocks known malware on a single host, and DLP watches for sensitive data leaving the organization.",
   },
   {
     key: "s8-4.1-canary-1",
@@ -114,28 +114,33 @@ export const questions: NewQuestion[] = [
     topic: "canary accounts",
     difficulty: 2,
     question:
-      "A security team creates a domain account named backup-admin with a convincing description, but no person or process ever uses it. Any attempt to authenticate as it raises a high-priority alert. What is this account?",
+      "At 3 a.m., a canary account that no person or system ever uses records a failed sign-in from a PC at the reception desk. What should the security team conclude?",
     options: [
-      "A group Managed Service Account",
-      "An emergency access account",
-      "A honeyfile",
-      "A canary account",
+      "Nothing, because failed sign-ins on canary accounts are routine noise",
+      "The canary account's password has expired and needs resetting",
+      "The reception PC needs a newer version of its antivirus",
+      "Someone on that PC is likely trying accounts, so investigate it now",
     ],
     answer: 3,
     explanation:
-      "A canary account is a decoy account with no legitimate use, so any sign-in attempt, or any use of its credentials, signals an intruder trying accounts or credentials they've harvested. A gMSA is a real service account whose password Windows manages, an emergency access account is a real but rarely used account kept for when normal sign-in fails, and a honeyfile is a decoy file rather than an account.",
+      "A canary account has no legitimate use, so any sign-in attempt, failed or not, is a strong sign of an intruder or insider trying accounts, for example from a stolen credential list or a password-spraying run. That makes it a high-confidence alert: investigate the reception PC and who used it. Canary alerts aren't routine noise, the account's password status doesn't matter because nobody should be using it, and nothing points to the antivirus version.",
   },
   {
     key: "s8-4.1-captive-portal-1",
     objective: "4.1",
     topic: "captive portals",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "When guests join a conference center's Wi-Fi, every web request is redirected to a page where they must accept the acceptable use policy and enter the code printed on their badge before they can reach the internet. What is this page?",
-    options: ["A captive portal", "802.1X authentication", "A reverse proxy", "A screened subnet"],
+      "A coffee shop's guest Wi-Fi is an open, unencrypted network that sends new users to a captive portal to accept terms before they can browse. A customer asks whether that page makes their traffic private from others on the network. What is the accurate answer?",
+    options: [
+      "No; the portal only controls admission, so rely on HTTPS or a VPN",
+      "Yes; accepting the terms turns on WPA3 encryption for the session",
+      "Yes; the portal encrypts all traffic once the customer accepts",
+      "No; captive portals block HTTPS, so browse only plain websites",
+    ],
     answer: 0,
     explanation:
-      "A captive portal holds a newly connected device's traffic until the user completes a step in the browser, such as accepting terms or entering credentials or a code, and then lets it through. It controls admission but doesn't encrypt anything, so guests should still rely on TLS or a VPN. 802.1X authenticates a device or user through a RADIUS server before it's admitted at all, with no web page involved, a reverse proxy sits in front of servers, and a screened subnet is a network zone for public-facing systems.",
+      "A captive portal holds a device's traffic until the user completes a step in the browser, such as accepting terms, then lets it through; it controls admission, not encryption. On an unencrypted open network, nothing protects traffic over the air, so privacy depends on HTTPS or a VPN. Accepting terms doesn't switch on WPA3 or any other encryption, the portal doesn't encrypt traffic, and captive portals don't block HTTPS once the user is through.",
   },
   {
     key: "s8-4.1-rate-limit-1",
@@ -143,16 +148,16 @@ export const questions: NewQuestion[] = [
     topic: "rate-limiting requests",
     difficulty: 2,
     question:
-      "A company's login API is receiving thousands of password attempts a minute, spread across many accounts but coming from a small set of IP addresses. The team wants its web application firewall to slow this down without locking out legitimate users who mistype a password once or twice. Which feature should it configure?",
+      "A retailer's public price-check API is being hammered by a competitor's scraper, which makes 50,000 requests an hour from a handful of addresses and slows the site for real shoppers. Which feature addresses this without taking the API offline?",
     options: [
-      "Port mirroring to an IDS sensor",
+      "Port mirroring of API traffic to an IDS sensor",
       "Data loss prevention rules",
       "Rate limiting of requests per client",
-      "Code signing of the login page",
+      "Code signing of the API's responses",
     ],
     answer: 2,
     explanation:
-      "Rate limiting caps how many requests a client can make in a time window, for example ten login attempts per minute from one IP address, so automated guessing slows to a crawl while a person who mistypes a password is unaffected. Port mirroring copies traffic for monitoring without stopping anything, DLP looks for sensitive data leaving the organization, and code signing proves who published code.",
+      "Rate limiting caps how many requests each client can make in a time window, so the scraper's flood is slowed or rejected while shoppers, who make a few requests each, aren't affected and the API stays up. Port mirroring only copies traffic for monitoring, DLP looks for sensitive data leaving the organization, and code signing proves who published code; none of them limits request volume.",
   },
 
   // ---- 4.3 Vulnerability management ----
@@ -213,7 +218,7 @@ export const questions: NewQuestion[] = [
     topic: "penetration test report review",
     difficulty: 3,
     question:
-      "A penetration test report lists a critical-rated flaw on an isolated test server, and three medium-rated findings on production systems that the testers chained together to reach domain administrator. The team can fix only one set this week. What should a review of the report lead it to prioritize?",
+      "Penetration testers chained three medium-rated flaws on production servers to gain domain administrator rights. Their write-up also rates a flaw on an isolated test server as critical. The team can fix only one set this week. Which should it choose?",
     options: [
       "The critical finding, because the ratings alone set the order",
       "Breaking the chain of medium findings that reached domain administrator",
@@ -230,28 +235,33 @@ export const questions: NewQuestion[] = [
     topic: "responsible disclosure",
     difficulty: 2,
     question:
-      "A researcher finds a flaw in a company's mobile app that exposes customer data. Following responsible disclosure, what should the researcher do?",
+      "A researcher privately reports a serious flaw in a company's mobile app under the company's responsible disclosure policy. What is the company expected to do?",
     options: [
-      "Publish the details at once so customers can protect themselves",
-      "Sell the details to a broker who has promised to pass them on to the company",
-      "Download as much customer data as possible to prove the impact",
-      "Report it privately and allow reasonable time for a fix before publishing",
+      "Threaten legal action unless the researcher signs a lifelong NDA",
+      "Ignore the report until the flaw is actually exploited in the wild",
+      "Ask the researcher to publish every detail right away, before any fix",
+      "Acknowledge it, fix the flaw promptly and coordinate any publication",
     ],
     answer: 3,
     explanation:
-      "Responsible disclosure means reporting a flaw privately to the organization that can fix it, giving it a reasonable time to do so, and only then publishing, often in coordination with it. Publishing at once arms attackers before a fix exists, selling the details puts them in unknown hands, and downloading customer data goes beyond what any disclosure policy allows and may be illegal.",
+      "Responsible disclosure is a two-way commitment: the researcher reports privately and allows time for a fix, and the organization acknowledges the report, keeps the researcher informed, fixes the flaw in a reasonable time and coordinates publication, often crediting the researcher. Legal threats push researchers to publish without warning, ignoring a report leaves customers exposed, and publishing before a fix arms attackers.",
   },
   {
     key: "s8-4.3-bounty-1",
     objective: "4.3",
     topic: "bug bounty programs",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "A software company wants outside security researchers to keep testing its public web services all year, and it pays a reward for each valid, in-scope vulnerability they report. What is this?",
-    options: ["A bug bounty program", "A penetration test", "A tabletop exercise", "An external audit"],
+      "A company already pays for an annual penetration test of its web services. What would adding a bug bounty program give it?",
+    options: [
+      "Ongoing testing by many researchers, paying only for valid findings",
+      "A guarantee that every vulnerability in its services will be found and fixed",
+      "Testing with full access to its source code and administrator credentials",
+      "Legal permission to test any other company's systems",
+    ],
     answer: 0,
     explanation:
-      "A bug bounty program pays rewards to outside researchers for valid vulnerabilities within a published scope, so testing goes on continuously and with many testers. A penetration test is a scoped engagement by a contracted team for a set period, a tabletop exercise walks people through a scenario in discussion, and an external audit checks compliance with a standard or regulation.",
+      "A bug bounty invites many outside researchers to keep testing all year, and the company pays only for valid, in-scope findings, which complements a penetration test's deep but time-boxed look by one team. Neither approach guarantees finding every flaw, bounty researchers usually test from the outside without source code or administrator access, and a bounty authorizes testing only of the company's own in-scope systems.",
   },
   {
     key: "s8-4.3-verification-1",
@@ -380,28 +390,33 @@ export const questions: NewQuestion[] = [
     topic: "port mirroring",
     difficulty: 2,
     question:
-      "A security team wants its intrusion detection sensor to see all traffic between servers on one switch, without placing any device in the traffic's path. Which feature should it use, and what limitation should it plan for?",
+      "A team mirrors four busy 1 Gbps server ports to a single 1 Gbps monitoring port for its packet capture appliance. The captures show gaps during peak hours. What explains the gaps?",
     options: [
-      "Port mirroring; the copy can drop packets when the monitor port is oversubscribed",
-      "An inline IPS; if the device fails, traffic between the servers could stop entirely",
-      "Link aggregation; the servers must be rebooted to join the bundle",
-      "Rate limiting; legitimate traffic slows down to the sensor's speed",
+      "Four busy ports can exceed one monitor port, so copies get dropped",
+      "Port mirroring only copies traffic during business hours",
+      "The capture appliance blocks traffic it can't keep up with",
+      "The switch encrypts mirrored copies, so the appliance can't read some",
     ],
     answer: 0,
     explanation:
-      "Port mirroring (SPAN) has the switch copy traffic from chosen ports or VLANs to a monitoring port, so the sensor sees it without sitting in the path. The copy is best effort: if mirrored traffic exceeds the monitoring port's capacity, packets are dropped from the copy, so a busy network may need a hardware tap or more monitoring ports. An inline IPS sits in the traffic's path, which the team wants to avoid; link aggregation bundles links for capacity; and rate limiting restricts traffic rather than copying it.",
+      "Port mirroring (SPAN) copies traffic from source ports to a monitoring port, but the copy is best effort: four busy 1 Gbps ports can send more than one 1 Gbps monitor port can carry, so the switch drops the excess copies and the capture has gaps. A faster monitor port, fewer sources or a network tap fixes it. Mirroring doesn't follow business hours, a passive capture appliance can't block traffic, and switches don't encrypt mirrored copies.",
   },
   {
     key: "s8-4.4-dashboard-1",
     objective: "4.4",
     topic: "dashboards",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "The CISO wants a single screen, updated continuously, that shows open critical alerts, patch compliance by business unit and the phishing report rate, so the leadership team can see the security posture at a glance. What should the security team build?",
-    options: ["A runbook", "A packet capture", "A dashboard", "A syslog server"],
+      "The SOC shares its analyst dashboard, full of per-host alert details and raw counts, with the executive team, who find it useless. What should the security team do?",
+    options: [
+      "Send executives the raw SIEM logs instead",
+      "Add even more per-host detail and raw counts, so nothing is ever hidden",
+      "Build a separate dashboard with risk and trend metrics for leaders",
+      "Stop reporting to executives until they have learned the SOC's tools",
+    ],
     answer: 2,
     explanation:
-      "A dashboard pulls key metrics from monitoring tools into one continuously updated view, tailored to its audience, here leadership, so trends and problems stand out at a glance. A runbook gives step-by-step instructions for a task, a packet capture records raw traffic, and a syslog server collects log messages but doesn't summarize them.",
+      "A dashboard should fit its audience. Analysts need live, per-host detail, while leaders need a few business-level measures, such as risk trends, patch compliance and response times, so the team should build a view for them rather than reuse the SOC's. Raw logs and more detail make the problem worse, and withholding reporting leaves leadership without the oversight it needs.",
   },
   {
     key: "s8-4.4-agentless-1",
@@ -496,16 +511,16 @@ export const questions: NewQuestion[] = [
     topic: "backup codes",
     difficulty: 2,
     question:
-      "When an employee set up an authenticator app for MFA, the identity provider showed ten backup codes. The employee's phone is now lost. Which statement about the codes is accurate?",
+      "An employee who travels often has used three of the ten backup codes issued when their MFA was set up. Which statement is accurate?",
     options: [
-      "Any code can be reused until the phone is replaced",
-      "Only the help desk is allowed to use the codes",
-      "They replace the password, which must be reset after each use",
-      "Each code works only once, so a used code can't be replayed",
+      "The three used codes start working again automatically after 30 days",
+      "Each code can be used once per device, so all ten still work",
+      "Using backup codes turns off MFA on the account until it's reset",
+      "Those three no longer work, and a new set can be generated when needed",
     ],
     answer: 3,
     explanation:
-      "Backup codes are single-use recovery codes issued when MFA is set up: each one works once and then stops working, and services such as Google also cancel the whole set when a new one is generated. They belong to the user and should be kept somewhere other than the phone they back up, such as a password manager on another device or a printed copy stored safely. They stand in for the second factor, not the password, and the help desk doesn't use them.",
+      "Backup codes are single-use: each one stops working once it's used, so the employee has seven left, and generating a new set, which services such as Google allow at any time, replaces the old set entirely. Used codes don't come back, the one-use limit belongs to the code rather than the device, and using a backup code doesn't switch MFA off; it stands in for the second factor that one time.",
   },
   {
     key: "s8-4.5-passwordless-1",
@@ -547,13 +562,18 @@ export const questions: NewQuestion[] = [
     key: "s8-4.6-agentic-1",
     objective: "4.6",
     topic: "agentic AI",
-    difficulty: 2,
+    difficulty: 3,
     question:
-      "A SOC deploys an AI system that, when an alert arrives, decides on its own which tools to query, pulls evidence from the SIEM and EDR, writes up its findings and can isolate a host or open a ticket without waiting for a person. Which AI capability is this?",
-    options: ["A chatbot", "Agentic AI", "Predictive analysis", "AI-augmented baselines"],
+      "A SOC plans to let an AI agent isolate production servers on its own when it judges an alert serious. Which guardrail BEST limits the risk of this agentic AI?",
+    options: [
+      "Give the agent domain admin rights so it never fails mid-task",
+      "Least privilege, plus human approval for high-impact actions",
+      "Turn off its activity logging so its actions don't flood the SIEM",
+      "Let it raise its own permissions whenever it decides it needs more",
+    ],
     answer: 1,
     explanation:
-      "Agentic AI plans and carries out multi-step tasks toward a goal by using tools, here querying systems, gathering evidence and acting, with little human direction. Because it acts on its own, it needs guardrails: only the permissions it requires, human approval for high-impact actions and a log of everything it does. A chatbot answers questions in conversation, predictive analysis forecasts likely events from past data, and AI-augmented baselines learn what normal activity looks like so deviations stand out.",
+      "Agentic AI plans and acts on its own with tools, so guardrails decide how much damage a mistake or a manipulated prompt can do: least privilege limits what it can touch, a person approves actions with big consequences such as isolating production servers, and every action is logged for review. Domain admin rights or self-granted permissions turn any error into a domain-wide problem, and turning off logging hides what it did.",
   },
   {
     key: "s8-4.6-chatbot-1",
@@ -561,11 +581,11 @@ export const questions: NewQuestion[] = [
     topic: "chatbots",
     difficulty: 1,
     question:
-      "A company adds an AI assistant to its intranet that answers employees' security questions in plain language at any hour, such as how to report a phishing email or request VPN access, and hands the conversation to the help desk when it can't help. Which AI capability is this?",
+      "A company wants an AI tool that answers staff questions about its security policies in conversation, and that has no ability to act in any system. Which AI capability fits?",
     options: ["Agentic AI", "AI-augmented baselines", "Predictive analysis", "A chatbot"],
     answer: 3,
     explanation:
-      "A chatbot holds a conversation with users and answers their questions, which saves the help desk time on routine requests while staff handle the rest. It doesn't carry out tasks across systems on its own, as agentic AI does, learn what normal activity looks like, as AI-augmented baselines do, or forecast future events, as predictive analysis does.",
+      "A chatbot holds a conversation and answers questions, here about policy, without taking actions in other systems, which fits a tool that must never change anything. Agentic AI is the opposite: it plans and carries out tasks with tools. AI-augmented baselines learn what normal activity looks like, and predictive analysis forecasts what's likely to happen.",
   },
   {
     key: "s8-4.6-predictive-1",
@@ -599,16 +619,16 @@ export const questions: NewQuestion[] = [
     topic: "post-incident reporting",
     difficulty: 2,
     question:
-      "Two weeks after a ransomware incident is closed, the security team writes a document for executives and the board: a timeline of events, the business impact, the root cause, what worked and what didn't, and corrective actions with owners and due dates. What is this document?",
+      "Six months after a breach, an auditor asks whether the fixes the company promised were actually made. Which record should list each corrective action with its owner and due date?",
     options: [
-      "A playbook",
-      "A post-incident report",
-      "A chain of custody form",
-      "A legal hold notice",
+      "The incident response playbook",
+      "The post-incident report",
+      "The chain of custody form",
+      "The legal hold notice",
     ],
     answer: 1,
     explanation:
-      "A post-incident report records what happened, why, what it cost and what will change, with owners and dates, so leadership can track the fixes and the organization keeps the lessons. A playbook is written before incidents to guide the response, a chain of custody form tracks who handled each piece of evidence, and a legal hold notice tells people to preserve data for possible litigation.",
+      "A post-incident report records what happened, why, what it cost and what will change, with an owner and a due date for each corrective action, so it's the record leadership and auditors use to check that promised fixes were made. A playbook guides the response before and during an incident, a chain of custody form tracks who handled each piece of evidence, and a legal hold notice tells people to preserve data for litigation.",
   },
   {
     key: "s8-4.7-negotiation-1",
@@ -645,16 +665,16 @@ export const questions: NewQuestion[] = [
     topic: "internal and external advisories",
     difficulty: 2,
     question:
-      "A government cybersecurity agency publishes an advisory that attackers are exploiting a flaw in a VPN appliance to break into networks, and it lists indicators of compromise. A company that runs that appliance searches its logs for the indicators and finds matches from last week. What role did the advisory play in the incident response process?",
+      "A national cybersecurity agency warns that a ransomware crew is breaking into companies through a particular remote support tool, and lists the domains the crew uses. What should a company's security team do FIRST with the advisory?",
     options: [
-      "It was the post-incident report for an earlier breach",
-      "It was the company's own internal advisory to its staff",
-      "It removed the need for containment, since the flaw is public",
-      "It was an external advisory that helped identify the incident",
+      "File it away until the agency publishes its full report next month",
+      "Begin restoring every server from backup as a precaution, just in case",
+      "Forward the advisory to all staff and wait for their replies",
+      "Check whether it runs that tool and search its logs for the domains",
     ],
     answer: 3,
     explanation:
-      "An external advisory is a warning from outside the organization, such as a government agency, a vendor or an industry sharing group, and its indicators of compromise let the company search its own data and identify an intrusion it hadn't detected. It isn't a post-incident report, which the company writes after an incident, or an internal advisory, which the company issues to its own staff, and finding matches makes containment more urgent, not unnecessary.",
+      "An external advisory feeds identification: the team checks whether it's exposed, here whether it runs that remote support tool, and searches its logs and DNS records for the listed domains for any sign the crew is already inside. Filing it wastes the warning, restoring servers with no sign of compromise causes an outage for nothing, and a staff-wide email asks people who can't check logs to do the security team's job.",
   },
 
   // ---- 4.8 Data and sources for investigations ----
@@ -664,16 +684,16 @@ export const questions: NewQuestion[] = [
     topic: "bit-level copies",
     difficulty: 2,
     question:
-      "An investigator must recover files a suspect deleted from a laptop's drive, including fragments left in slack space. Which acquisition method preserves that data?",
+      "An investigator made a logical copy of a suspect's laptop, capturing all the user's folders, but finds no trace of a spreadsheet the suspect is known to have deleted. Why not?",
     options: [
-      "A logical copy of the user's folders",
-      "A bit-level copy of the entire drive",
-      "A screenshot of the desktop",
-      "A copy of the files the suspect still has open",
+      "Deleted files are always overwritten instantly, so no copy method finds them",
+      "A logical copy captures only existing files, not unallocated or slack space",
+      "Spreadsheets are kept in memory and never written to the drive",
+      "The laptop's antivirus quietly removed the file from the copy as it was made",
     ],
     answer: 1,
     explanation:
-      "A bit-level (bit-stream) copy duplicates every bit on the media, including free space and slack space, where deleted files and fragments remain. A logical copy captures only the files and folders that currently exist, so deleted data is lost, and a screenshot or a copy of open files captures even less.",
+      "A logical copy captures the files and folders that currently exist, so leftover data from deleted files in unallocated or slack space is left behind; a bit-level copy of the whole drive would include it. Deleted data often survives until it's overwritten, spreadsheets are saved to the drive, and nothing suggests antivirus touched the copy.",
   },
   {
     key: "s8-4.8-bit-level-2",
@@ -715,16 +735,16 @@ export const questions: NewQuestion[] = [
     topic: "memory dumps",
     difficulty: 2,
     question:
-      "Responders suspect malware is running only in memory on a server, leaving nothing on disk. Before anyone shuts the server down, they capture its RAM. What can analysis of this memory dump reveal that a disk image can't?",
+      "A laptop seized during an investigation is still running and unlocked, and its drive uses full disk encryption. Before shutting it down, the investigator captures its RAM. What might this memory dump hold that would be lost at power-off?",
     options: [
-      "The installed applications and the version of each one on the server",
-      "Files the user deleted a month ago",
-      "Running processes, open connections and keys or data held in memory",
-      "The server's purchase date and warranty status",
+      "The encrypted contents of the whole drive, ready to copy and analyze later",
+      "Files the user deleted from the drive last month, with their old names",
+      "Running processes, open connections and the disk's encryption key",
+      "The laptop's purchase date and warranty status",
     ],
     answer: 2,
     explanation:
-      "RAM holds the system's live state: running processes, including injected code, open network connections, logged-in sessions, recent commands, and data or encryption keys in use. It's lost when the power goes off, which is why it's captured first. Installed applications and deleted files are on the disk, so a disk image covers them, and purchase records live in the asset inventory, not in memory.",
+      "RAM holds the live state of a running system: processes, network connections, logged-in sessions and, while an encrypted drive is unlocked, the key that decrypts it. All of it is lost when the power goes off, and without the key the drive may be unreadable, which is why memory is captured first. The drive's contents and deleted files stay on the disk, so a disk image covers them, and purchase records live in the asset inventory.",
   },
   {
     key: "s8-4.8-log-parsing-1",
