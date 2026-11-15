@@ -259,11 +259,16 @@ export const questions: NewQuestion[] = [
     topic: "verification",
     difficulty: 2,
     question:
-      "A team patches a critical flaw in a web server's TLS library and closes the ticket. The next scheduled scan still reports the flaw, because the service was never restarted and the old library is still loaded. Which vulnerability management step did the team skip?",
-    options: ["Severity assessment", "External reporting", "Asset acquisition", "Verification of the fix"],
+      "A team deploys a fix for a SQL injection flaw in its customer portal and closes the ticket the same afternoon. A month later, an outside penetration tester exploits the same flaw on the same page. Which vulnerability management step would have caught this before the tester did?",
+    options: [
+      "Severity assessment of the flaw",
+      "External reporting",
+      "Asset acquisition",
+      "Verification of the fix",
+    ],
     answer: 3,
     explanation:
-      "Verification confirms that a fix actually worked, usually by rescanning or retesting the system before the ticket is closed, which would have caught the old library still in use. Severity assessment happens before remediation to rank a flaw, external reporting informs parties outside the organization, and acquisition is how assets are bought, not how fixes are checked.",
+      "Verification confirms that a fix actually works, by rescanning or retesting the flaw before the ticket is closed. Here the team closed the ticket without confirming the fix, so nobody knew the flaw was still open until the tester found it. Severity assessment ranks a flaw before it's fixed, external reporting tells parties outside the organization, and acquisition is how assets are bought; none of them checks that a fix worked.",
   },
   {
     key: "s8-4.3-reporting-1",
@@ -305,18 +310,18 @@ export const questions: NewQuestion[] = [
     key: "s8-4.4-nms-1",
     objective: "4.4",
     topic: "network management systems",
-    difficulty: 1,
+    difficulty: 2,
     question:
-      "A network team wants one system that polls every switch, router and firewall for status and performance, draws a map of the network, and alerts when a device stops responding or an interface goes down. What should it use?",
+      "A company's network management system monitors 400 switches by polling them with SNMPv2c, using the community string public. An auditor flags the setup. What should the team change?",
     options: [
-      "A network management system (NMS)",
-      "A packet analyzer",
-      "A data loss prevention system",
-      "A vulnerability scanner",
+      "Move the devices and the NMS to SNMPv3 with authentication and encryption",
+      "Change the community string to private, so only the NMS can read the switches",
+      "Poll the switches over Telnet so administrators can watch each session",
+      "Stop polling and wait for staff to report outages instead",
     ],
     answer: 0,
     explanation:
-      "A network management system monitors network devices' health and performance, usually by polling them with SNMP and receiving the traps they send, and shows topology, utilization and alerts in one place. A packet analyzer decodes individual packets on a link, DLP watches for sensitive data leaving, and a vulnerability scanner looks for known flaws rather than watching availability.",
+      "A network management system watches devices' health and performance, usually by polling them with SNMP. SNMPv1 and v2c authenticate with a community string sent in cleartext, and public is a widely known default, so anyone who can reach the switches could query them and anyone watching the traffic could read the string. SNMPv3 adds per-user authentication and encryption. private is another common default, often with write access, and it still crosses the network in cleartext; Telnet is unencrypted too; and giving up polling trades a fixable weakness for no monitoring at all.",
   },
   {
     key: "s8-4.4-packet-analyzer-1",
@@ -525,7 +530,7 @@ export const questions: NewQuestion[] = [
     topic: "time-based access",
     difficulty: 2,
     question:
-      "A contractor's account should work only from 8:00 to 18:00 on weekdays for the six months of the contract, and sign-in attempts outside those hours should be refused. Which access control model does this apply?",
+      "A tax firm hires seasonal staff each year. Their access to the client records system should run only from February 1 to April 30 and end automatically, without anyone having to remember to remove it. Which access control model provides this?",
     options: [
       "Discretionary access control",
       "Just-in-time access",
@@ -534,7 +539,7 @@ export const questions: NewQuestion[] = [
     ],
     answer: 2,
     explanation:
-      "Time-based access control allows or denies access by time of day, day of the week or date range, so the contractor's account works only during the hours set. Just-in-time access grants elevated rights on request for a short window and then removes them, discretionary access control lets a resource's owner decide who may use it, and mandatory access control compares labels with clearances.",
+      "Time-based access control grants or denies access by time: hours of the day, days of the week or, as here, a date range, so the seasonal staff lose access on April 30 without depending on anyone to remove it. Just-in-time access grants elevated rights on request for a short task, such as an hour on a server, then removes them; discretionary access control lets a resource's owner decide who may use it; and mandatory access control compares classification labels with clearances.",
   },
 
   // ---- 4.6 Automation, orchestration and AI ----
@@ -568,11 +573,11 @@ export const questions: NewQuestion[] = [
     topic: "predictive analysis",
     difficulty: 2,
     question:
-      "A vulnerability team has 4,000 open findings. It starts using a model trained on past exploitation data that estimates how likely each vulnerability is to be exploited in the next 30 days, and fixes the highest-scoring ones first. Which AI capability is the team using?",
+      "A SOC manager uses a model trained on three years of alert and staffing data to forecast how many alerts will arrive each week next quarter, then plans analyst shifts around the busiest weeks. Which AI capability is this?",
     options: ["Predictive analysis", "A chatbot", "Desired state management", "Agentic AI"],
     answer: 0,
     explanation:
-      "Predictive analysis uses patterns in historical data to estimate what is likely to happen next, here which vulnerabilities attackers are most likely to exploit soon, so the team can work on those first. A chatbot answers questions in conversation, desired state management automatically corrects configuration drift, and agentic AI carries out multi-step tasks with tools on its own.",
+      "Predictive analysis uses patterns in historical data to estimate what is likely to happen next, here how many alerts each week will bring, so the SOC can staff for it in advance. A chatbot answers questions in conversation, desired state management automatically corrects configuration drift, and agentic AI carries out multi-step tasks with tools on its own.",
   },
   {
     key: "s8-4.6-ai-baseline-1",

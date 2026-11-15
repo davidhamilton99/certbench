@@ -12,16 +12,16 @@ export const questions: NewQuestion[] = [
     topic: "Request for Comments (RFC)",
     difficulty: 2,
     question:
-      "A company's web server standard requires TLS 1.3 as specified in RFC 8446. In this standard, what is an RFC?",
+      "An engineer drafting the company's email security standard cites a Request for Comments (RFC) for one of the protocols, then learns that a newer RFC has obsoleted it. What should the standard do?",
     options: [
-      "A change request that the change advisory board must review and approve",
-      "A document in the Request for Comments series that specifies a protocol",
-      "A vendor's white paper describing its own products",
-      "A law that a regulator enforces with fines",
+      "Keep citing the old number, because the RFC Editor revises each RFC in place",
+      "Cite the newer RFC; published RFCs are never edited, only updated or obsoleted",
+      "Drop the citation, because RFCs are informal drafts that no product follows",
+      "Ask the change advisory board to approve the new RFC before the standard cites it",
     ],
     answer: 1,
     explanation:
-      "A Request for Comments (RFC) is a numbered document in the series the RFC Editor publishes, which includes the IETF's protocol specifications; RFC 8446 defines TLS 1.3. Citing it gives the standard an exact, public technical reference that any vendor's product can be checked against. A request for change is a change management term that shares the abbreviation, a vendor's white paper isn't an open specification, and an RFC isn't a law.",
+      "A published RFC never changes: corrections are recorded as errata, and new versions come out as new RFCs that update or obsolete earlier ones, with the RFC index showing which is current. So the standard should cite the current RFC. RFCs include the IETF's specifications for internet protocols, which products implement, so they aren't informal drafts. A request for change is the change management meaning of the same letters; a change advisory board approves changes to systems, not the documents a standard cites.",
   },
   {
     key: "s8-5.1-runbook-1",
@@ -382,16 +382,16 @@ export const questions: NewQuestion[] = [
     topic: "audit charter",
     difficulty: 2,
     question:
-      "A company is setting up an internal audit function. Which document, approved by the board, defines the function's purpose, authority, responsibilities and scope, its reporting line to the audit committee and its right of access to records and staff?",
+      "Internal auditors reviewing a business unit ask for its system access logs. The unit's vice president refuses, saying the auditors have no right to see them. Which document should settle the question?",
     options: [
       "The audit charter",
       "The rules of engagement",
-      "A statement of work",
-      "A memorandum of understanding",
+      "The unit's acceptable use policy",
+      "A non-disclosure agreement",
     ],
     answer: 0,
     explanation:
-      "An audit charter formally establishes internal audit: what it's for, the authority and access it has, what it covers, and that it reports to the board or its audit committee, which protects its independence. Rules of engagement set the boundaries of a penetration test, a statement of work describes the deliverables of a contracted engagement, and an MOU records an intent to cooperate between parties.",
+      "The audit charter, approved by the board or its audit committee, sets out internal audit's mandate, including its right of access to the records, systems and people it needs, so it settles disputes like this one and protects the function's independence. Rules of engagement set the limits of a penetration test, an acceptable use policy tells users how they may use company systems, and an NDA protects confidential information shared between parties; none of them grants auditors access.",
   },
   {
     key: "s8-5.5-benchmarking-1",
