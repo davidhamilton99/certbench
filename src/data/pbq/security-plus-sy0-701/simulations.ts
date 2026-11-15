@@ -200,7 +200,7 @@ Hit counters (last 1 hour): Rule 1: 1,842 hits | Rule 2: 0 hits`,
       },
     ],
     explanation:
-      "Firewall ACL configuration is a fundamental Security Architecture skill tested heavily on SY0-701. Key principles: (1) Implicit deny — every ACL must end in a deny-all or the device must be configured to deny by default; everything not explicitly permitted is blocked. (2) Least privilege — rules should use the most specific source and destination possible (host IPs rather than subnets where feasible). (3) Network segmentation — placing internet-facing servers in a DMZ and controlling DMZ-to-internal traffic with a separate internal firewall limits the blast radius of a compromise. The order of ACL rules matters: rules are evaluated top-down and the first match wins.",
+      "Firewall ACL configuration is a core Security+ skill. Key principles: (1) Implicit deny — every ACL must end in a deny-all or the device must be configured to deny by default; everything not explicitly permitted is blocked. (2) Least privilege — rules should use the most specific source and destination possible (host IPs rather than subnets where feasible). (3) Network segmentation — placing internet-facing servers in a DMZ and controlling DMZ-to-internal traffic with a separate internal firewall limits the blast radius of a compromise. The order of ACL rules matters: rules are evaluated top-down and the first match wins.",
     estimatedMinutes: 12,
   },
 
@@ -377,7 +377,7 @@ tcp    0       0       172.16.10.20:80       10.0.0.1:54321        ESTABLISHED  
       },
     ],
     explanation:
-      "This scenario covers SY0-701 Domain 4.0 Security Operations skills: log analysis, indicator-of-compromise identification, and incident response. Key takeaways: brute-force attacks against SSH succeed when password authentication is enabled for root — SSH key-only authentication eliminates this vector entirely. Netcat bind shells are a common post-exploitation technique due to netcat's near-universal availability on Linux systems. Proper incident response requires evidence preservation before remediation — forensic images must be taken before rebooting or modifying the system. Isolate first, then investigate, then remediate.",
+      "This scenario covers security operations skills: log analysis, indicator-of-compromise identification, and incident response. Key takeaways: brute-force attacks against SSH succeed when password authentication is enabled for root — SSH key-only authentication eliminates this vector entirely. Netcat bind shells are a common post-exploitation technique due to netcat's near-universal availability on Linux systems. Proper incident response requires evidence preservation before remediation — forensic images must be taken before rebooting or modifying the system. Isolate first, then investigate, then remediate.",
     estimatedMinutes: 10,
   },
 
@@ -579,7 +579,7 @@ tcp    0       0       172.16.10.20:80       10.0.0.1:54321        ESTABLISHED  
       },
     ],
     explanation:
-      "Wireless security configuration is a core SY0-701 Domain 3.0 topic. Key points: WPA3-Enterprise uses 802.1X/EAP with RADIUS, requires AES-CCMP encryption and mandatory PMF (802.11w). The 5 GHz band provides better enterprise performance. RADIUS uses UDP/1812 for authentication and UDP/1813 for accounting. Certificate validation in 802.1X is critical — the mutual authentication process prevents evil twin attacks by ensuring the client validates the RADIUS server's certificate before transmitting credentials. An expired RADIUS certificate will always cause 802.1X authentication failures, and the correct fix is always certificate renewal, never disabling validation.",
+      "Wireless security configuration is a core Security+ topic. Key points: WPA3-Enterprise uses 802.1X/EAP with RADIUS, requires AES-CCMP encryption and mandatory PMF (802.11w). The 5 GHz band provides better enterprise performance. RADIUS uses UDP/1812 for authentication and UDP/1813 for accounting. Certificate validation in 802.1X is critical — the mutual authentication process prevents evil twin attacks by ensuring the client validates the RADIUS server's certificate before transmitting credentials. An expired RADIUS certificate will always cause 802.1X authentication failures, and the correct fix is always certificate renewal, never disabling validation.",
     estimatedMinutes: 10,
   },
 
@@ -714,7 +714,7 @@ Body excerpt:
       },
     ],
     explanation:
-      "Email authentication protocols are tested in SY0-701 Domain 3.0. SPF authorises sending IPs at the DNS level. DKIM cryptographically signs message content using a private key; receivers verify with the public key published in DNS. DMARC ties SPF and DKIM together and specifies a policy for handling failures — critically, DMARC also requires domain alignment (the From: header domain must match the SPF/DKIM authenticated domain), which defeats lookalike domain spoofing. Deploy in none→quarantine→reject order with aggregate report monitoring at each stage.",
+      "Security+ tests email authentication protocols. SPF authorises sending IPs at the DNS level. DKIM cryptographically signs message content using a private key; receivers verify with the public key published in DNS. DMARC ties SPF and DKIM together and specifies a policy for handling failures — critically, DMARC also requires domain alignment (the From: header domain must match the SPF/DKIM authenticated domain), which defeats lookalike domain spoofing. Deploy in none→quarantine→reject order with aggregate report monitoring at each stage.",
     estimatedMinutes: 8,
   },
 
@@ -863,7 +863,7 @@ Body excerpt:
       },
     ],
     explanation:
-      "Vulnerability assessment and remediation is tested throughout SY0-701 Domain 4.0. Key concepts: CVSS v3 scores range 0–10; Critical is 9.0–10.0, High is 7.0–8.9, Medium is 4.0–6.9. Severity must be considered alongside context: exploitability (network vs local), whether dependent software is installed, and whether compensating controls exist. Informational findings where software is not installed represent no actual risk. Prioritisation frameworks (P1/P2/P3) translate CVSS scores into actionable timelines. Always validate remediation with a follow-up scan. End-of-life software (PHP 8.0, OpenSSL 1.1.1) should be upgraded regardless of specific CVEs since no future patches will be issued.",
+      "Security+ tests vulnerability assessment and remediation. Key concepts: CVSS v3 scores range 0–10; Critical is 9.0–10.0, High is 7.0–8.9, Medium is 4.0–6.9. Severity must be considered alongside context: exploitability (network vs local), whether dependent software is installed, and whether compensating controls exist. Informational findings where software is not installed represent no actual risk. Prioritisation frameworks (P1/P2/P3) translate CVSS scores into actionable timelines. Always validate remediation with a follow-up scan. End-of-life software (PHP 8.0, OpenSSL 1.1.1) should be upgraded regardless of specific CVEs since no future patches will be issued.",
     estimatedMinutes: 10,
   },
 ];
