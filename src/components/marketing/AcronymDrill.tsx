@@ -1,16 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { ResolvedDeck } from "@/lib/recall/recall-deck";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
-import { RecallPlayer } from "@/components/recall/RecallPlayer";
+import { recallToRep } from "@/lib/path/fact-reps";
 import { useDrillRounds } from "./useDrillRounds";
-import { EXAMS, ExamBridge, RoundBar, RoundComplete, RoundStatus } from "./DrillRound";
+import { DrillLoading, DrillPlayer, type Dealt } from "./DrillPlayer";
+import { EXAMS, RoundComplete } from "./DrillRound";
+
+const LABEL = "Acronyms";
 
 /**
- * Public acronym drill for the free tool page, played in rounds: round 1 is
- * free, a free account keeps going with rounds built from the visitor's
- * misses. Wraps the shared RecallPlayer, which this drives item by item.
+ * The acronym drill on the free tool page, played in rounds on the path's own
+ * card, with the path's own recall reps: round 1 is free, a free account keeps
+ * going with rounds built from the visitor's misses, and every round ends on
+ * the Security+ path.
  */
 export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
   // One tile per acronym (the deck's cue column), with its first expansion.
@@ -25,13 +29,15 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
   const ids = useMemo(() => items.map((i) => i.id), [items]);
   const rounds = useDrillRounds({ tool: "acronyms", ids });
 
-  if (!rounds.ready) {
-    return (
-      <div className="grid min-h-72 place-items-center rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-        Loading the drill…
-      </div>
-    );
-  }
+  const deal = useCallback(
+    (id: string | null): Dealt => {
+      const item = id ?? ids[Math.floor(Math.random() * ids.length)];
+      return { rep: recallToRep(deck, item, "", Math.random, false), item };
+    },
+    [deck, ids]
+  );
+
+  if (!rounds.ready) return <DrillLoading label={LABEL} size={rounds.size} />;
 
   if (rounds.complete) {
     const tiles = items.map((i) => ({
@@ -43,35 +49,26 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
     return (
       <RoundComplete
         rounds={rounds}
+        label={LABEL}
         noun={["acronym", "acronyms"]}
         tiles={tiles}
         variant="dots"
-        extra={
-          <ExamBridge
-            tool="acronyms"
-            title="Acronyms are the part anyone can max out."
-            exams={[EXAMS.securityPlus]}
-          >
-            The exam is decided by the scenarios most people underestimate.
-            Your path walks every objective in short rounds like this one.
-          </ExamBridge>
-        }
+        mapTitle="Your acronym map"
+        lead={{
+          title: "Acronyms are the part anyone can max out.",
+          body: "The exam is decided by the scenarios most people underestimate. Your Security+ path walks every objective in short rounds like this one, up to a readiness checkpoint that shows where you stand.",
+          exams: [EXAMS.securityPlus],
+        }}
       />
     );
   }
 
   return (
-    <div className="grid gap-3">
-      <RoundBar rounds={rounds} />
-      <RecallPlayer
-        decks={[deck]}
-        deckKey={deck.config.tableId}
-        nextItem={rounds.nextItem}
-        beforeAdvance={rounds.advance}
-        status={<RoundStatus rounds={rounds} />}
-        nextLabel={rounds.answered >= rounds.size ? "See your round" : undefined}
-        onAnswer={(_tableId, itemId, ok) => rounds.record(itemId, ok)}
-      />
-    </div>
+    <DrillPlayer
+      key={rounds.roundNumber}
+      rounds={rounds}
+      label={`${LABEL} · round ${rounds.roundNumber}`}
+      deal={deal}
+    />
   );
 }

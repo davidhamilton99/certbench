@@ -35,7 +35,7 @@ vi.mock("@/lib/analytics", () => ({ track, identifyUser: vi.fn() }));
 
 import { HeaderAccountLinks } from "@/components/marketing/HeaderAccountLinks";
 import { ReadinessCheck } from "@/components/marketing/ReadinessCheck";
-import { EXAMS, ExamBridge, RoundComplete } from "@/components/marketing/DrillRound";
+import { EXAMS, PathLead, RoundComplete } from "@/components/marketing/DrillRound";
 import type { DrillRounds } from "@/components/marketing/useDrillRounds";
 
 beforeEach(() => {
@@ -108,14 +108,19 @@ describe("ReadinessCheck result", () => {
   });
 });
 
-describe("ExamBridge", () => {
+describe("PathLead", () => {
   it("offers a one-tap path per exam and tracks it", () => {
     render(
-      <ExamBridge tool="ports" title="Ports are a small slice of the exam." exams={[EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1]}>
-        See where you stand.
-      </ExamBridge>
+      <PathLead
+        tool="ports"
+        title="Ports are a small slice of the exam."
+        body="See where you stand."
+        exams={[EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1]}
+        signedIn={false}
+      />
     );
     expect(track).toHaveBeenCalledWith("upsell_viewed", { context: "drill_bridge_ports" });
+    expect(screen.getByText("Which exam are you taking?")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Security+" })).toHaveAttribute(
       "href",
       "/path/security-plus-sy0-701"
@@ -124,6 +129,7 @@ describe("ExamBridge", () => {
       "href",
       "/path/a-plus-core1-220-1201"
     );
+    expect(screen.getByText("Free, no account needed to start.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("link", { name: "Network+" }));
     expect(track).toHaveBeenCalledWith("upsell_clicked", {
       context: "drill_bridge_ports",
@@ -131,19 +137,48 @@ describe("ExamBridge", () => {
     });
   });
 
-  it("names the exam on a single-exam drill", () => {
-    render(
-      <ExamBridge tool="acronyms" title="Acronyms." exams={[EXAMS.securityPlus]}>
-        See where you stand.
-      </ExamBridge>
+  it("names the exam on a single-exam drill, and opens it for someone signed in", () => {
+    const { rerender } = render(
+      <PathLead tool="acronyms" title="Acronyms." body="See where you stand." exams={[EXAMS.securityPlus]} signedIn={false} />
     );
     expect(screen.getByRole("link", { name: "Start my Security+ path" })).toBeInTheDocument();
+    rerender(
+      <PathLead tool="acronyms" title="Acronyms." body="See where you stand." exams={[EXAMS.securityPlus]} signedIn />
+    );
+    expect(screen.getByRole("link", { name: "Open my Security+ path" })).toBeInTheDocument();
+    // Someone signed in already has an account: no "no account needed" line.
+    expect(screen.queryByText("Free, no account needed to start.")).toBeNull();
   });
 });
+
+const LEAD = {
+  title: "Ports are a small slice of the exam.",
+  body: "See where you stand.",
+  exams: [EXAMS.networkPlus],
+};
+
+function roundEnd(rounds: DrillRounds) {
+  return render(
+    <RoundComplete
+      rounds={rounds}
+      label="Port numbers"
+      noun={["port", "ports"]}
+      tiles={[
+        { id: "22", label: "22", status: "got" },
+        { id: "53", label: "53", status: "missed" },
+        { id: "80", label: "80", status: "new" },
+      ]}
+      variant="labels"
+      mapTitle="Your port map"
+      lead={LEAD}
+    />
+  );
+}
 
 describe("RoundComplete for a signed-in visitor", () => {
   const rounds = {
     tool: "ports",
+    signedIn: true,
     gated: false,
     roundNumber: 2,
     roundCorrect: 14,
@@ -153,25 +188,51 @@ describe("RoundComplete for a signed-in visitor", () => {
     startNextRound: vi.fn(),
   } as unknown as DrillRounds;
 
-  it("leads with the exam bridge, with the next round still one tap away", () => {
-    render(
-      <RoundComplete
-        rounds={rounds}
-        noun={["port", "ports"]}
-        tiles={[{ id: "22", label: "22", status: "got" }]}
-        variant="labels"
-        extra={
-          <ExamBridge tool="ports" title="Ports are a small slice of the exam." exams={[EXAMS.networkPlus]}>
-            See where you stand.
-          </ExamBridge>
-        }
-      />
-    );
-    const bridge = screen.getByRole("link", { name: /Network\+ path/ });
+  it("leads with the exam's path, with the next round still one tap away", () => {
+    roundEnd(rounds);
+    const result = screen.getByRole("group", { name: "Port numbers: round 2 result" });
+    expect(result).toHaveTextContent("14 of 20");
+    expect(result).toHaveTextContent("Round 3 starts with your 1 miss, then the 1 you haven't seen yet.");
+    const path = screen.getByRole("link", { name: /Network\+ path/ });
     const next = screen.getByRole("button", { name: /Start round 3/ });
-    // The bridge comes first in reading order; the round button follows it.
-    expect(bridge.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The path comes first in reading order; the round button follows it.
+    expect(path.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Save and start round/ })).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("drill_gate_viewed", expect.anything());
     fireEvent.click(next);
     expect(rounds.startNextRound).toHaveBeenCalled();
+  });
+});
+
+describe("RoundComplete for a visitor with no account", () => {
+  const rounds = {
+    tool: "ports",
+    signedIn: false,
+    gated: true,
+    roundNumber: 1,
+    roundCorrect: 18,
+    size: 20,
+    linked: false,
+    account: "none",
+    startNextRound: vi.fn(),
+    linkAccount: vi.fn(),
+  } as unknown as DrillRounds;
+
+  it("leads with the exam's path, then saves their map with an account to play round 2", () => {
+    roundEnd(rounds);
+    const path = screen.getByRole("link", { name: /Start my Network\+ path/ });
+    expect(path).toHaveAttribute("href", "/path/network-plus-n10-009");
+    expect(track).toHaveBeenCalledWith("upsell_viewed", { context: "drill_bridge_ports" });
+
+    // No round 2 without an account: the map is what one saves.
+    expect(screen.queryByRole("button", { name: /^Start round 2/ })).toBeNull();
+    const map = screen.getByRole("heading", { name: "Your port map" });
+    const save = screen.getByRole("heading", { name: "Save your map and play round 2" });
+    const submit = screen.getByRole("button", { name: "Save and start round 2" });
+    expect(path.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(map.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(submit).toBeInTheDocument();
+    expect(screen.getByText("2 of 3 seen")).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("drill_gate_viewed", { tool: "ports" });
   });
 });

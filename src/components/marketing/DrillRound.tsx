@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
@@ -41,40 +41,8 @@ const STATUS_WORD: Record<ItemStatus, string> = {
   new: "not seen yet",
 };
 
-/** "round 2 · 7 / 20" plus a hairline progress bar, for a drill's scoreboard. */
-export function RoundStatus({ rounds }: { rounds: DrillRounds }) {
-  return (
-    <span className="flex items-center gap-2">
-      <span>
-        round {rounds.roundNumber} · {rounds.answered} / {rounds.size}
-      </span>
-      {rounds.linked && rounds.account === "saved" && (
-        <span className="flex items-center gap-1 text-success">
-          <Check className="size-3.5" />
-          saved to your account
-        </span>
-      )}
-    </span>
-  );
-}
-
-export function RoundBar({ rounds }: { rounds: DrillRounds }) {
-  return (
-    <div
-      className="h-0.5 overflow-hidden rounded-full bg-foreground/[0.06]"
-      role="progressbar"
-      aria-label={`Round ${rounds.roundNumber} progress`}
-      aria-valuemin={0}
-      aria-valuemax={rounds.size}
-      aria-valuenow={rounds.answered}
-    >
-      <div
-        className="h-full rounded-full bg-primary transition-[width] duration-300"
-        style={{ width: `${(rounds.answered / rounds.size) * 100}%` }}
-      />
-    </div>
-  );
-}
+/** Room for the public pages' sticky header when the result scrolls into view. */
+const HEADER_CLEARANCE = 72;
 
 export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: MapVariant }) {
   // Stagger the entrance across ~0.6s however many tiles there are.
@@ -140,30 +108,114 @@ function Legend({ variant }: { variant: MapVariant }) {
   );
 }
 
+/** Exams a drill can lead on to, by path slug. */
+export const EXAMS = {
+  securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
+  networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
+  aPlusCore1: { cert: "a-plus-core1-220-1201", label: "A+ Core 1" },
+} as const;
+
+export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];
+
+/** What a drill's round end says about the path: the drill is a slice, the path is the exam. */
+export interface PathLeadCopy {
+  title: string;
+  body: ReactNode;
+  exams: readonly BridgeExam[];
+}
+
 /**
- * The end of a round: what the visitor built (their progress map), then the
- * way on. Anonymous visitors save it with a free account, right here; signed-in
- * visitors start the next round, which is planned from their misses.
+ * The way on from a free drill: the drilled facts are a small slice of the
+ * exam, so lead with the guided path for the rest, one tap on their exam.
+ * Everyone sees it, signed in or not: the path starts without an account.
+ */
+export function PathLead({
+  tool,
+  title,
+  body,
+  exams,
+  signedIn,
+}: PathLeadCopy & { tool: DrillTool; signedIn: boolean }) {
+  const context = `drill_bridge_${tool}`;
+
+  useEffect(() => {
+    track("upsell_viewed", { context });
+  }, [context]);
+
+  const multi = exams.length > 1;
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-1">
+        <p className="text-balance font-display text-xl font-semibold tracking-tight">{title}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+      </div>
+      <div className="grid gap-2">
+        {multi && <p className="text-xs font-medium text-muted-foreground">Which exam are you taking?</p>}
+        <div
+          className={cn(
+            "grid gap-2",
+            exams.length === 2 && "grid-cols-2",
+            exams.length === 3 && "grid-cols-3"
+          )}
+        >
+          {exams.map((e) => {
+            const href = `/path/${e.cert}`;
+            return (
+              <Button
+                key={e.cert}
+                asChild
+                size="lg"
+                className={cn("h-12 w-full text-base", multi ? "px-2" : "px-6 sm:w-auto sm:justify-self-start")}
+              >
+                <Link href={href} onClick={() => track("upsell_clicked", { context, href })}>
+                  {multi ? (
+                    e.label
+                  ) : (
+                    <>
+                      {signedIn ? "Open" : "Start"} my {e.label} path
+                      <ArrowRight />
+                    </>
+                  )}
+                </Link>
+              </Button>
+            );
+          })}
+        </div>
+        {!signedIn && <p className="text-xs text-muted-foreground">Free, no account needed to start.</p>}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The end of a round, the way a stop ends on the path: the score and the way
+ * on, then the map of what the visitor built. The way on is their exam's path,
+ * for everyone. The map is what an account keeps: a visitor with no account
+ * saves it with one right there to play the next round, which opens with
+ * their misses; someone signed in starts it straight away.
  */
 export function RoundComplete({
   rounds,
+  label,
   noun,
   tiles,
   variant,
-  headline,
+  mapTitle,
   subline,
-  extra,
+  lead,
 }: {
   rounds: DrillRounds;
+  /** What's drilled, e.g. "Port numbers": the result's eyebrow. */
+  label: string;
   /** What's drilled, singular and plural: ["port", "ports"]. */
   noun: [string, string];
   tiles: MapTile[];
   variant: MapVariant;
-  /** Override the generated headline / next-round line (skill drills). */
-  headline?: string;
+  /** e.g. "Your port map". */
+  mapTitle: string;
+  /** Override the generated next-round line (skill drills). */
   subline?: string;
-  /** Shown to signed-in visitors as the lead action, above the next-round button. */
-  extra?: ReactNode;
+  lead: PathLeadCopy;
 }) {
   const pathname = usePathname();
   const { gated, roundNumber: n, roundCorrect, size } = rounds;
@@ -175,165 +227,108 @@ export function RoundComplete({
     if (gated) track("drill_gate_viewed", { tool: rounds.tool });
   }, [gated, rounds.tool]);
 
-  const word = (count: number) => (count === 1 ? noun[0] : noun[1]);
-  const title =
-    headline ??
-    (missed === 0 && unseen === 0
-      ? `All ${tiles.length} ${noun[1]} right.`
-      : missed === 0
-        ? `${got} ${word(got)} right, no misses.`
-        : got === 0
-          ? `${missed} ${word(missed)} still slipping.`
-          : `${got} ${word(got)} right. ${missed} still slipping.`);
+  // The result replaces a question that was a different height, and may have
+  // been scrolled past: bring its top back under the header, and focus with it.
+  const top = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = top.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    const y = el.getBoundingClientRect().top;
+    if (y >= HEADER_CLEARANCE && y <= window.innerHeight / 2) return;
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView?.({ block: "start", behavior: still ? "auto" : "smooth" });
+  }, []);
 
   const parts = [
     missed > 0 && `your ${missed} ${missed === 1 ? "miss" : "misses"}`,
-    unseen > 0 &&
-      (missed + unseen > size ? "new ones" : `the ${unseen} you haven't seen yet`),
+    unseen > 0 && (missed + unseen > size ? "new ones" : `the ${unseen} you haven't seen yet`),
   ].filter(Boolean);
   const next =
     subline ??
     (parts.length > 0
       ? `Round ${n + 1} starts with ${parts.join(", then ")}.`
       : `Round ${n + 1} goes back over the ones you know least.`);
+  const saves =
+    variant === "skills"
+      ? "A free account keeps your scores and opens every round on your weakest skill."
+      : `A free account keeps your map and opens every round with the ${noun[1]} you miss.`;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-6 sm:p-7">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/10 blur-3xl"
-      />
-      <div className="relative grid gap-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground">
-          <span>
-            round {n} complete · {roundCorrect} / {size} correct
+    <div
+      ref={top}
+      tabIndex={-1}
+      role="group"
+      aria-label={`${label}: round ${n} result`}
+      className="grid min-w-0 scroll-mt-24 gap-4 outline-none"
+    >
+      <div className="glass path-rise grid min-w-0 gap-5 rounded-3xl p-6 sm:p-8">
+        <div className="grid min-w-0 gap-1.5">
+          <span className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            {label} · round {n}
           </span>
-          <span>
-            {got + missed} of {tiles.length} seen
-          </span>
+          <p className="font-display text-4xl font-semibold tracking-tight">
+            {roundCorrect} <span className="text-muted-foreground">of {size}</span>
+          </p>
+          <p className="text-muted-foreground">
+            {roundCorrect === size && "Every one right. "}
+            {next}
+          </p>
         </div>
 
-        <div>
-          <h3 className="text-balance font-display text-2xl font-semibold tracking-tight">{title}</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{next}</p>
-        </div>
-
-        <div className="grid gap-3">
-          <ProgressMap tiles={tiles} variant={variant} />
-          <Legend variant={variant} />
-        </div>
-
-        <div className="grid gap-3 border-t pt-5">
-          {gated ? (
-            <>
-              <p className="font-semibold tracking-tight">
-                Save your progress and start round {n + 1}
-              </p>
-              <InlineSignup
-                nextPath={pathname}
-                submitLabel={`Save and start round ${n + 1}`}
-                onSignedIn={(uid, email, method) => rounds.linkAccount(uid, email, method)}
-              />
-            </>
-          ) : (
-            <>
-              {rounds.linked && rounds.account === "saved" && (
-                <p className="flex items-center gap-1.5 text-sm text-success">
-                  <Check className="size-4" />
-                  Saved to your account
-                </p>
-              )}
-              {rounds.account === "error" && (
-                <p className="text-sm text-muted-foreground">
-                  Couldn&apos;t reach your account just now — your progress is
-                  kept on this device and will sync next time.
-                </p>
-              )}
-              {extra}
-              <Button
-                size="lg"
-                variant={extra ? "outline" : "default"}
-                onClick={rounds.startNextRound}
-                className="w-full sm:w-auto sm:justify-self-start"
-              >
-                Start round {n + 1}
-                <ArrowRight />
-              </Button>
-            </>
+        <div className="grid gap-4 border-t border-border/70 pt-5">
+          <PathLead tool={rounds.tool} signedIn={rounds.signedIn} {...lead} />
+          {!gated && (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={rounds.startNextRound}
+              className="h-12 w-full px-6 text-base sm:w-auto sm:justify-self-start"
+            >
+              Start round {n + 1}
+              <ArrowRight />
+            </Button>
           )}
         </div>
       </div>
-    </div>
-  );
-}
 
-/** Exams a drill can bridge to, by path slug. */
-export const EXAMS = {
-  securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
-  networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
-  aPlusCore1: { cert: "a-plus-core1-220-1201", label: "A+ Core 1" },
-} as const;
-
-export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];
-
-/**
- * The way on from a free drill, for signed-in visitors at the end of each
- * round: the drilled facts are a small slice of the exam, so lead with the
- * guided path for the rest — one tap on their exam, and the path takes it
- * from there.
- */
-export function ExamBridge({
-  tool,
-  title,
-  exams,
-  children,
-}: {
-  tool: DrillTool;
-  title: string;
-  exams: readonly BridgeExam[];
-  children: ReactNode;
-}) {
-  const context = `drill_bridge_${tool}`;
-
-  useEffect(() => {
-    track("upsell_viewed", { context });
-  }, [context]);
-
-  return (
-    <div className="grid gap-4 rounded-lg border border-primary/30 bg-primary/[0.06] p-4 sm:p-5">
-      <div>
-        <p className="font-semibold tracking-tight">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{children}</p>
-      </div>
-      <div className="grid gap-2">
-        {exams.length > 1 && (
-          <p className="text-xs font-medium text-muted-foreground">Which exam are you taking?</p>
-        )}
-        <div
-          className={cn(
-            "grid gap-2",
-            exams.length === 2 && "grid-cols-2",
-            exams.length === 3 && "grid-cols-3"
-          )}
-        >
-          {exams.map((e) => {
-            const href = `/path/${e.cert}`;
-            return (
-              <Button key={e.cert} asChild size="lg" className="w-full px-2">
-                <Link href={href} onClick={() => track("upsell_clicked", { context, href })}>
-                  {exams.length > 1 ? (
-                    e.label
-                  ) : (
-                    <>
-                      Start my {e.label} path
-                      <ArrowRight />
-                    </>
-                  )}
-                </Link>
-              </Button>
-            );
-          })}
+      <div className="glass grid min-w-0 gap-5 rounded-3xl p-5 sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-display font-semibold tracking-tight">{mapTitle}</h2>
+          <span className="font-mono text-xs text-muted-foreground">
+            {variant === "skills"
+              ? `${got} of ${tiles.length} solid`
+              : `${got + missed} of ${tiles.length} seen`}
+          </span>
         </div>
+        <ProgressMap tiles={tiles} variant={variant} />
+        <Legend variant={variant} />
+
+        {gated ? (
+          <div className="grid gap-4 border-t border-border/70 pt-5">
+            <div className="grid gap-1">
+              <h2 className="font-display text-xl font-semibold tracking-tight">
+                Save your map and play round {n + 1}
+              </h2>
+              <p className="text-sm text-muted-foreground">{saves}</p>
+            </div>
+            <InlineSignup
+              nextPath={pathname}
+              submitLabel={`Save and start round ${n + 1}`}
+              onSignedIn={(uid, email, method) => rounds.linkAccount(uid, email, method)}
+            />
+          </div>
+        ) : rounds.account === "error" ? (
+          <p className="border-t border-border/70 pt-4 text-sm text-muted-foreground">
+            Couldn&apos;t reach your account just now. Your progress is kept on this device and will sync next
+            time.
+          </p>
+        ) : rounds.linked && rounds.account === "saved" ? (
+          <p className="flex items-center gap-1.5 border-t border-border/70 pt-4 text-sm text-success">
+            <Check className="size-4" aria-hidden />
+            Saved to your account
+          </p>
+        ) : null}
       </div>
     </div>
   );

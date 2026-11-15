@@ -1,14 +1,13 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnetCalculator } from "@/components/marketing/SubnetCalculator";
+import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { calculateSubnet } from "@/lib/tools/subnet-calculator";
-import { Button } from "@/components/ui/button";
 
 export const metadata = pageMetadata({
   title: "Free Subnet Calculator (IPv4 / CIDR)",
@@ -73,51 +72,47 @@ export default function SubnetCalculatorPage() {
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <JsonLd data={learningResource} />
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
+        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           Subnet calculator
         </h1>
-        <p className="mt-4 leading-relaxed text-muted-foreground">
+        <p className="mt-3 leading-relaxed text-muted-foreground">
           Enter an IPv4 address and a CIDR prefix to get the network and
           broadcast addresses, the usable host range, subnet and wildcard
           masks, and the host count — instantly. Free, no signup.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <SubnetCalculator />
         </div>
 
         {/* CIDR cheat sheet — content for readers and crawlers alike */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            CIDR cheat sheet
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The prefixes you&apos;ll meet most on Network+, A+, and CCNA.
-          </p>
-          <div className="mt-4 overflow-x-auto rounded-xl border">
+        <section className="mt-12 grid gap-4">
+          <div className="grid gap-1">
+            <h2 className="text-xl font-semibold tracking-tight">CIDR cheat sheet</h2>
+            <p className="text-sm text-muted-foreground">
+              The prefixes you&apos;ll meet most on Network+, A+, and CCNA.
+            </p>
+          </div>
+          <div className="glass overflow-x-auto rounded-3xl p-2 sm:p-3">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/40 text-left">
-                  <th className="px-4 py-2.5 font-medium">CIDR</th>
-                  <th className="px-4 py-2.5 font-medium">Subnet mask</th>
-                  <th className="hidden px-4 py-2.5 font-medium sm:table-cell">
-                    Wildcard
-                  </th>
-                  <th className="px-4 py-2.5 text-right font-medium">
-                    Usable hosts
-                  </th>
+                <tr className="text-left text-xs text-muted-foreground">
+                  <th className="px-3 py-2 font-medium">CIDR</th>
+                  <th className="px-3 py-2 font-medium">Subnet mask</th>
+                  <th className="hidden px-3 py-2 font-medium sm:table-cell">Wildcard</th>
+                  <th className="px-3 py-2 text-right font-medium">Usable hosts</th>
                 </tr>
               </thead>
               <tbody>
                 {CHEAT.map((r) => (
-                  <tr key={r.prefix} className="border-b last:border-0">
-                    <td className="px-4 py-2 font-mono text-xs">/{r.prefix}</td>
-                    <td className="px-4 py-2 font-mono text-xs">{r.mask}</td>
-                    <td className="hidden px-4 py-2 font-mono text-xs text-muted-foreground sm:table-cell">
+                  <tr key={r.prefix} className="border-t border-border/60">
+                    <td className="px-3 py-2 font-mono text-xs font-medium">/{r.prefix}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{r.mask}</td>
+                    <td className="hidden px-3 py-2 font-mono text-xs text-muted-foreground sm:table-cell">
                       {r.wildcard}
                     </td>
-                    <td className="px-4 py-2 text-right font-mono text-xs tabular-nums">
+                    <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
                       {r.usableHosts.toLocaleString()}
                     </td>
                   </tr>
@@ -128,11 +123,11 @@ export default function SubnetCalculatorPage() {
         </section>
 
         {/* The method, taught in the open */}
-        <section className="mt-10">
+        <section className="glass mt-10 grid gap-4 rounded-3xl p-6 sm:p-8">
           <h2 className="text-xl font-semibold tracking-tight">
             The block-size method in 20 seconds
           </h2>
-          <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+          <div className="grid gap-3 leading-relaxed text-muted-foreground">
             <p>
               You don&apos;t need binary once the mask octets are memorized —
               128, 192, 224, 240, 248, 252, 254, 255. Every subnet question
@@ -169,23 +164,17 @@ export default function SubnetCalculatorPage() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Subnetting is one Network+ objective
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            The N10-009 exam has five domains. Your Network+ path walks every
-            objective in short rounds, and shows where you stand as you go.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href="/path/network-plus-n10-009">
-              Start my Network+ path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
+        <PathCard
+          className="mt-10"
+          kicker="Your Network+ path"
+          title="Subnetting is one Network+ objective"
+          href="/path/network-plus-n10-009"
+          label="Start my Network+ path"
+          context="subnet_calculator_page"
+        >
+          The N10-009 exam has five domains. Your Network+ path walks every objective in short rounds, up to a
+          readiness checkpoint that shows where you stand.
+        </PathCard>
 
         <RelatedLinks
           links={[

@@ -503,7 +503,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: "Security+ PBQ examples you can actually try",
     intro: [
       "Performance-based questions are the part of Security+ people fear most: instead of picking A, B, C, or D, you configure firewall rules, analyse logs, or order incident-response steps in an interactive console. They usually appear first in the exam and are worth more than multiple-choice questions.",
-      "Reading about PBQs isn't the same as doing one. The scenario below is fully interactive — work through it right here, get graded with partial credit, and see exactly how the real thing feels.",
+      "Reading about PBQs isn't the same as doing one. The scenarios on this page are fully interactive: work through one right here, get graded with partial credit, and see exactly how the real thing feels.",
     ],
     faqs: [
       {
@@ -550,7 +550,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: "Network+ PBQ examples you can actually try",
     intro: [
       "Network+ PBQs drop you into a scenario — a topology to complete, a switch to configure, a connectivity issue to trace — instead of a multiple-choice list. They appear early in the exam and carry more weight than regular questions.",
-      "The scenario below is fully interactive: work through it in your browser, get graded with partial credit, and feel what the real exam's hands-on questions are like.",
+      "The scenarios on this page are fully interactive: work through one in your browser, get graded with partial credit, and feel what the real exam's hands-on questions are like.",
     ],
     faqs: [
       {
@@ -597,7 +597,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: "A+ Core 1 PBQ examples you can actually try",
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put a process in order, match ports to services, or work through a hardware fault step by step. They take longer than multiple-choice questions, so they're worth practising before exam day.",
-      "The scenarios below are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 1 feels like.",
+      "The scenarios on this page are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 1 feels like.",
     ],
     faqs: [
       {
@@ -649,7 +649,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: "A+ Core 2 PBQ examples you can actually try",
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put the malware removal steps in order, match Windows tools to their purpose, or set up a security policy from a brief. They take longer than multiple-choice questions, so they're worth practising before exam day.",
-      "The scenarios below are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 2 feels like.",
+      "The scenarios on this page are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 2 feels like.",
     ],
     faqs: [
       {

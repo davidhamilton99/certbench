@@ -25,6 +25,8 @@ function shuffle<T>(arr: readonly T[]): T[] {
  * the same displayed value produce the same React key, which breaks list
  * reconciliation so a stale option lingers on screen from one question to the
  * next. Keying the rendered options by the (unique) port closes that too.
+ * Asked the other way ("RADIUS: which port?"), its other port pair is right
+ * too, so it's never offered as a wrong answer.
  *
  * Pass `target` to ask about a specific entry (a planned round); otherwise
  * one is picked at random.
@@ -37,6 +39,7 @@ export function makeQuestion(entries: PortEntry[], target?: PortEntry): QuizQues
   const taken = new Set<string>([shown(answer)]);
   const pool: PortEntry[] = [];
   for (const entry of entries) {
+    if (entry !== answer && entry.protocol === answer.protocol) continue;
     const label = shown(entry);
     if (taken.has(label)) continue;
     taken.add(label);

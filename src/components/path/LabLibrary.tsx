@@ -1,48 +1,12 @@
 "use client";
 
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  Check,
-  Columns3,
-  ListOrdered,
-  Network,
-  Radar,
-  SquareTerminal,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { LabType, PathLabInfo, PathStructure, StopRecord } from "@/core/path/types";
+import type { PathLabInfo, PathStructure, StopRecord } from "@/core/path/types";
 import { cn } from "@/lib/utils";
+import { domainLabel, handsOnCount, HANDS_ON_TYPES as HANDS_ON, LAB_TYPES, labMeta } from "./lab-types";
 
-const TYPES: Record<LabType, { label: string; Icon: LucideIcon }> = {
-  simulation: { label: "Simulation", Icon: SquareTerminal },
-  topology: { label: "Topology", Icon: Network },
-  "threat-hunt": { label: "Threat hunt", Icon: Radar },
-  ordering: { label: "Ordering drill", Icon: ListOrdered },
-  matching: { label: "Matching drill", Icon: ArrowLeftRight },
-  categorization: { label: "Sorting drill", Icon: Columns3 },
-};
-
-const HANDS_ON: ReadonlySet<LabType> = new Set(["simulation", "topology", "threat-hunt"]);
-const HANDS_ON_NAMES: [LabType, string][] = [
-  ["simulation", "simulations"],
-  ["topology", "topologies"],
-  ["threat-hunt", "threat hunts"],
-];
-
-const domainLabel = (number: string) => number.replace(/\.0$/, "");
-
-/** "7 simulations and topologies": the hands-on labs an exam has, by the kinds it has. */
-function handsOnCount(labs: readonly PathLabInfo[]): string {
-  const handsOn = labs.filter((l) => HANDS_ON.has(l.type));
-  const names = HANDS_ON_NAMES.filter(([type]) => handsOn.some((l) => l.type === type)).map(([, name]) => name);
-  const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : (names[0] ?? "labs");
-  return `${handsOn.length} ${list}`;
-}
-
-/** "Simulation · 12 min", for a lab's line. */
-export const labMeta = (lab: PathLabInfo) => `${TYPES[lab.type].label} · ${lab.minutes} min`;
+export { labMeta } from "./lab-types";
 
 /**
  * Every lab an exam has, domain by domain: the one closing each domain on the
@@ -104,7 +68,7 @@ export function LabLibrary({
               <ul className="grid gap-2">
                 {labs.map((lab) => {
                   const result = results.get(lab.id);
-                  const { Icon } = TYPES[lab.type];
+                  const { Icon } = LAB_TYPES[lab.type];
                   return (
                     <li key={lab.id} className="min-w-0">
                       <button
@@ -170,7 +134,7 @@ export function LabLibrary({
 
 /** After a lab from the library: the next one not played yet. */
 export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => void }) {
-  const { Icon } = TYPES[lab.type];
+  const { Icon } = LAB_TYPES[lab.type];
   return (
     <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
