@@ -36,6 +36,7 @@ export function RepCard({
   promptAs: Prompt = "h2",
   nextLabel,
   keyboard = true,
+  explainMisses = false,
 }: {
   rep: Rep;
   onAnswer: (answer: RepAnswer) => void;
@@ -46,6 +47,8 @@ export function RepCard({
   nextLabel?: string;
   /** Whether keys answer this card: false while another player on the page has the turn. */
   keyboard?: boolean;
+  /** Open "Why, in full" by itself after a wrong answer: the subnetting tool's worked steps. */
+  explainMisses?: boolean;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [typed, setTyped] = useState("");
@@ -231,14 +234,15 @@ export function RepCard({
               disabled={answered}
               onChange={(e) => setTyped(e.target.value)}
               className={cn(
-                "h-12 font-mono text-lg",
+                // A step down on phones, so an address placeholder isn't cut off beside Check.
+                "h-12 font-mono text-base sm:text-lg",
                 rep.answerKind === "dotted" ? "max-w-64" : "max-w-48",
                 answered && correct && "border-success bg-success/10",
                 answered && !correct && "border-destructive bg-destructive/10"
               )}
             />
             {!answered && (
-              <Button type="submit" size="lg" className="h-12" disabled={!typed.trim()}>
+              <Button type="submit" size="lg" className="h-12 px-4 sm:px-6" disabled={!typed.trim()}>
                 Check
               </Button>
             )}
@@ -282,6 +286,8 @@ export function RepCard({
           {rep.explanation && (
             <details
               className="group text-sm text-muted-foreground"
+              // Opens by itself after a miss where the card asks it to.
+              open={explainMisses && !correct ? true : undefined}
               onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
             >
               <summary className="cursor-pointer select-none font-medium text-foreground marker:text-muted-foreground">

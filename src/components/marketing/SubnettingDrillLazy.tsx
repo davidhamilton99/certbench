@@ -3,9 +3,10 @@
 import dynamic from "next/dynamic";
 
 /**
- * Client-only wrapper: the drill's first question is random, so it must not
- * render on the server (SSR output would never match hydration). ssr:false
- * lets the drill create its first question in a plain state initializer.
+ * Client-only wrapper for the workspace's subnetting drill: its first question
+ * is random, so it must not render on the server (SSR output would never
+ * match hydration). ssr:false lets the drill create its first question in a
+ * plain state initializer.
  */
 const LazyInner = dynamic(
   () =>
@@ -22,10 +23,6 @@ const LazyInner = dynamic(
   }
 );
 
-export function SubnettingDrillLazy({
-  showRegisterCta = true,
-}: {
-  showRegisterCta?: boolean;
-} = {}) {
-  return <LazyInner showRegisterCta={showRegisterCta} />;
+export function SubnettingDrillLazy() {
+  return <LazyInner />;
 }

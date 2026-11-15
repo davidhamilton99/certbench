@@ -1,15 +1,13 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
-import { SubnettingDrillLazy } from "@/components/marketing/SubnettingDrillLazy";
+import { SubnettingPractice } from "@/components/marketing/SubnettingPractice";
+import { PathCard } from "@/components/marketing/PathCard";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { MODES } from "@/lib/tools/subnetting";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
-import { Button } from "@/components/ui/button";
 
 export const metadata = pageMetadata({
   title: "Free Subnetting Practice — Rapid Drills",
@@ -50,100 +48,76 @@ export default function SubnettingPracticePage() {
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
+        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           Subnetting practice
         </h1>
-        <p className="mt-4 leading-relaxed text-muted-foreground">
-          Speed comes from drilling one conversion until it&apos;s reflex — not
-          from grinding mixed question sets. Pick a mode, answer as fast as you
-          can, and misses pause on a worked solution that shows the block-size
-          shortcut. Your first round of {ROUND_SIZE} is free with no signup — a
-          free account keeps going and opens each round on your weakest skill.
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          Pick a mode and answer against the clock; a miss shows the worked steps. Round 1 of {ROUND_SIZE} is
+          free, no signup.
         </p>
 
-        <div className="mt-8">
-          <SubnettingDrillLazy />
+        <div className="mt-6">
+          <SubnettingPractice />
         </div>
 
-        {/* What each mode drills — content for readers and crawlers alike */}
-        <section className="mt-10">
+        <p className="mt-10 leading-relaxed text-muted-foreground">
+          Speed comes from drilling one conversion until it&apos;s reflex, not from grinding mixed question sets.
+          Every miss pauses on a worked solution that shows the block-size shortcut, and a free account keeps going,
+          opening each round on your weakest skill.
+        </p>
+
+        {/* What each mode drills: content for readers and crawlers alike. */}
+        <section className="mt-8 grid gap-4">
           <h2 className="text-xl font-semibold tracking-tight">The modes</h2>
-          <div className="mt-4 grid gap-1.5">
-            {MODES.map((m) => (
-              <div
-                key={m.id}
-                className="flex items-baseline justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm"
-              >
+          <ul className="glass grid gap-1.5 rounded-3xl p-3 sm:grid-cols-2 sm:p-4">
+            {[...MODES, { id: "gauntlet", label: "Gauntlet", blurb: "All modes shuffled — exam pace" }].map((m) => (
+              <li key={m.id} className="grid gap-0.5 rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
                 <span className="font-medium">{m.label}</span>
-                <span className="text-right font-mono text-xs text-muted-foreground">
-                  {m.blurb}
-                </span>
-              </div>
+                <span className="font-mono text-xs text-muted-foreground">{m.blurb}</span>
+              </li>
             ))}
-            <div className="flex items-baseline justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm">
-              <span className="font-medium">Gauntlet</span>
-              <span className="text-right font-mono text-xs text-muted-foreground">
-                All modes shuffled — exam pace
-              </span>
-            </div>
-          </div>
+          </ul>
         </section>
 
-        {/* The method, taught in the open — this is the page's teaching core */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            The block-size method in 20 seconds
-          </h2>
-          <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+        {/* The method, taught in the open: this is the page's teaching core. */}
+        <section className="glass mt-10 grid gap-4 rounded-3xl p-6 sm:p-8">
+          <h2 className="text-xl font-semibold tracking-tight">The block-size method in 20 seconds</h2>
+          <div className="grid gap-3 leading-relaxed text-muted-foreground">
             <p>
-              Memorize the eight mask octets — 128, 192, 224, 240, 248, 252,
-              254, 255 — and every subnetting question becomes arithmetic:
+              Memorize the eight mask octets — 128, 192, 224, 240, 248, 252, 254, 255 — and every subnetting
+              question becomes arithmetic:
             </p>
             <ol className="grid gap-2 pl-5" style={{ listStyle: "decimal" }}>
               <li>
-                <span className="text-foreground">Find the block size:</span>{" "}
-                256 minus the interesting mask octet. For /26
-                (255.255.255.192): 256 − 192 = <span className="font-mono">64</span>.
+                <span className="text-foreground">Find the block size:</span> 256 minus the interesting mask octet.
+                For /26 (255.255.255.192): 256 − 192 = <span className="font-mono">64</span>.
               </li>
               <li>
-                <span className="text-foreground">Count the blocks:</span>{" "}
-                subnets start at 0, 64, 128, 192.
+                <span className="text-foreground">Count the blocks:</span> subnets start at 0, 64, 128, 192.
               </li>
               <li>
-                <span className="text-foreground">Place the address:</span>{" "}
-                192.168.1.154 falls in the 128 block → network{" "}
-                <span className="font-mono">192.168.1.128</span>, broadcast one
-                below the next block →{" "}
+                <span className="text-foreground">Place the address:</span> 192.168.1.154 falls in the 128 block →
+                network <span className="font-mono">192.168.1.128</span>, broadcast one below the next block →{" "}
                 <span className="font-mono">192.168.1.191</span>, usable hosts{" "}
                 <span className="font-mono">.129–.190</span>.
               </li>
             </ol>
-            <p>
-              The Network ID and Broadcast &amp; range modes above drill
-              exactly this loop until it takes seconds.
-            </p>
+            <p>The Network ID and Broadcast &amp; range modes above drill exactly this loop until it takes seconds.</p>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Subnetting is one objective of many
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            The N10-009 exam has five domains. Your Network+ path walks every
-            objective in short rounds like these, and shows where you stand as
-            you go.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href="/path/network-plus-n10-009">
-              Start my Network+ path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
+        <PathCard
+          className="mt-10"
+          kicker="Your Network+ path"
+          title="Subnetting is one objective of many"
+          href="/path/network-plus-n10-009"
+          label="Start my Network+ path"
+          context="subnetting_page"
+        >
+          The N10-009 exam has five domains. Your Network+ path walks every objective in short rounds like these, up
+          to a readiness checkpoint that shows where you stand.
+        </PathCard>
 
         <section className="mt-10">
           <ToolEmailCapture source="subnetting-practice" />

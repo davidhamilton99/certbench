@@ -33,4 +33,20 @@ describe("port quiz question generation", () => {
     }
     expect(protocolQuestions).toBeGreaterThan(100);
   });
+
+  it("never offers RADIUS's other port pair as a wrong answer", () => {
+    const radius = PORT_ENTRIES.filter((e) => e.protocol === "RADIUS");
+    expect(radius.length).toBeGreaterThan(1);
+    let asked = 0;
+    for (let i = 0; i < 2000; i++) {
+      for (const target of radius) {
+        const q = makeQuestion(PORT_ENTRIES, target);
+        if (q.direction !== "port") continue;
+        asked++;
+        // Only one option may be a RADIUS port: the one marked right.
+        expect(q.options.filter((o) => o.protocol === "RADIUS")).toEqual([target]);
+      }
+    }
+    expect(asked).toBeGreaterThan(500);
+  });
 });

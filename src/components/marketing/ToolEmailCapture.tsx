@@ -53,7 +53,7 @@ export function ToolEmailCapture({
 
   if (status === "success") {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-success/40 bg-success/5 px-5 py-4">
+      <div className="flex items-center gap-3 rounded-3xl border border-success/40 bg-success/5 px-5 py-4 sm:px-6">
         <Check className="size-5 shrink-0 text-success" />
         <p className="text-sm">
           <span className="font-medium">Check your inbox</span> — your study plan
@@ -64,7 +64,7 @@ export function ToolEmailCapture({
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-3 rounded-xl border bg-card p-5">
+    <form onSubmit={submit} className="glass grid gap-3 rounded-3xl p-5 sm:p-6">
       <div>
         <h3 className="font-semibold tracking-tight">{heading}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{blurb}</p>

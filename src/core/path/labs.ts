@@ -21,7 +21,8 @@ const DRILL_MINUTES = 3;
 /** The hands-on kinds, which work like the exam's PBQs; the rest are quick drills. */
 export const HANDS_ON: ReadonlySet<PbqScenario["type"]> = new Set(["simulation", "topology", "threat-hunt"]);
 
-const minutesOf = (s: PbqScenario) => ("estimatedMinutes" in s ? s.estimatedMinutes : DRILL_MINUTES);
+/** A lab's rough length in minutes. */
+export const minutesOf = (s: PbqScenario) => ("estimatedMinutes" in s ? s.estimatedMinutes : DRILL_MINUTES);
 
 /** The lab for one domain ("1.0"), or undefined when the exam has none for it. */
 export function domainLab(scenarios: readonly PbqScenario[], domain: string): PathLab | undefined {

@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { getRecallDecks } from "@/data/recall";
 import { acronyms } from "@/data/reference/security-plus-sy0-701/acronyms";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
@@ -7,11 +5,12 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { AcronymDrill } from "@/components/marketing/AcronymDrill";
+import { PathCard } from "@/components/marketing/PathCard";
+import { ReferenceFold } from "@/components/marketing/ReferenceFold";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
-import { Button } from "@/components/ui/button";
 
 const COUNT = acronyms.entries.length;
 
@@ -46,79 +45,73 @@ export default function AcronymsQuizPage() {
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
+        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           Security+ acronyms list and quiz
         </h1>
-        <p className="mt-4 leading-relaxed text-muted-foreground">
-          The Security+ SY0-701 exam leans hard on acronyms. This drill covers
-          all {COUNT} on CompTIA&apos;s list, both directions — expand the
-          acronym, or name it from its meaning. Answer with the number keys.
-          Your first round of {ROUND_SIZE} is free with no signup — a free
-          account saves your progress and builds every round after it from the
-          ones you miss.
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          All {COUNT} SY0-701 acronyms, asked both ways round. Round 1 of {ROUND_SIZE} is free, no signup.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-6">
           {deck ? (
             <AcronymDrill deck={deck} />
           ) : (
-            <p className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
-              The drill is unavailable right now — the full list is below.
+            <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">
+              The drill is unavailable right now. The full list is below.
             </p>
           )}
         </div>
 
-        {/* Full reference list */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            The full Security+ acronym list
-          </h2>
-          <div className="mt-4 overflow-hidden rounded-xl border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40 text-left">
-                  <th className="px-4 py-2.5 font-medium">Acronym</th>
-                  <th className="px-4 py-2.5 font-medium">Expansion</th>
-                  <th className="hidden px-4 py-2.5 font-medium sm:table-cell">
-                    Category
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {acronyms.entries.map((e) => (
-                  <tr key={e.columns.acronym} className="border-b last:border-0">
-                    <td className="px-4 py-2 font-mono text-xs font-medium">
-                      {e.columns.acronym}
-                    </td>
-                    <td className="px-4 py-2">{e.columns.expansion}</td>
-                    <td className="hidden px-4 py-2 text-muted-foreground sm:table-cell">
-                      {e.columns.category}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <p className="mt-10 leading-relaxed text-muted-foreground">
+          The Security+ SY0-701 exam leans hard on acronyms. This drill covers all {COUNT} on CompTIA&apos;s
+          list in both directions: expand the acronym, or name it from its meaning. Answer with the number keys.
+          A free account saves your progress and builds every round after the first from the ones you miss.
+        </p>
 
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Acronyms are the easy part
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            The rest of the exam is scenarios. Your Security+ path walks every
-            objective in short rounds like this one, and shows where you stand
-            as you go.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href="/path/security-plus-sy0-701">
-              Start my Security+ path
-              <ArrowRight />
-            </Link>
-          </Button>
-        </section>
+        <ReferenceFold
+          className="mt-8"
+          title="The full Security+ acronym list"
+          summary={
+            <>
+              All {COUNT} from {acronyms.entries[0]?.columns.acronym} to {acronyms.entries.at(-1)?.columns.acronym},
+              each with what it stands for.
+            </>
+          }
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="px-3 py-2 font-medium">Acronym</th>
+                <th className="px-3 py-2 font-medium">Expansion</th>
+                <th className="hidden px-3 py-2 font-medium sm:table-cell">Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              {acronyms.entries.map((e) => (
+                <tr key={e.columns.acronym} className="border-t border-border/60 align-baseline">
+                  <td className="px-3 py-1.5 font-mono text-xs font-medium">{e.columns.acronym}</td>
+                  <td className="px-3 py-1.5">{e.columns.expansion}</td>
+                  <td className="hidden px-3 py-1.5 text-xs text-muted-foreground sm:table-cell">
+                    {e.columns.category}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ReferenceFold>
+
+        <PathCard
+          className="mt-10"
+          kicker="Your Security+ path"
+          title="Acronyms are the easy part"
+          href="/path/security-plus-sy0-701"
+          label="Start my Security+ path"
+          context="acronym_quiz_page"
+        >
+          The rest of the exam is scenarios. Your Security+ path walks every objective in short rounds like this one,
+          up to a readiness checkpoint that shows where you stand.
+        </PathCard>
 
         <section className="mt-10">
           <ToolEmailCapture source="security-plus-acronyms-quiz" />

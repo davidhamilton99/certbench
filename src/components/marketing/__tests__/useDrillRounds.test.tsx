@@ -138,6 +138,41 @@ describe("useDrillRounds — anonymous", () => {
     act(() => result.current.startNextRound());
     expect(result.current.gated).toBe(true);
   });
+
+  it("keeps each answer of the round, in order, across a reload", async () => {
+    const first = setup();
+    await waitFor(() => expect(first.result.current.ready).toBe(true));
+    expect(first.result.current.results).toEqual([]);
+    for (const right of [true, false, true]) {
+      act(() => first.result.current.record(first.result.current.nextItem()!, right));
+    }
+    expect(first.result.current.results).toEqual([true, false, true]);
+    first.unmount();
+
+    const again = setup();
+    await waitFor(() => expect(again.result.current.ready).toBe(true));
+    expect(again.result.current.answered).toBe(3);
+    expect(again.result.current.results).toEqual([true, false, true]);
+  });
+
+  it("picks up a round saved before answers were kept, with a plain bar", async () => {
+    localStorage.setItem(
+      "cb_drill_ports",
+      JSON.stringify({
+        v: 1,
+        owner: null,
+        progress: { items: {}, rounds: 0 },
+        round: { queue: IDS.slice(0, SIZE), answered: 2, correct: 1, done: false },
+      })
+    );
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.answered).toBe(2);
+    expect(result.current.results).toEqual([]);
+    act(() => result.current.record(result.current.nextItem()!, true));
+    expect(result.current.results).toEqual([true]);
+    expect(result.current.answered).toBe(3);
+  });
 });
 
 describe("useDrillRounds — signing up from the gate", () => {

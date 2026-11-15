@@ -1,16 +1,18 @@
-import Link from "next/link";
-import { ArrowRight, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { pbqRegistry } from "@/data/pbq";
 import type { PbqScenario } from "@/data/pbq/types";
+import { EXAM_NAMES } from "@/data/path/titles";
+import { labLibrary, minutesOf } from "@/core/path/labs";
 import type { PbqExamplePage } from "@/lib/seo/cert-pages";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
-import { PbqTryChooser } from "@/components/marketing/PbqTryChooser";
+import { PbqLab, type FreeLab, type LabTier } from "@/components/marketing/PbqLab";
+import { PathCard } from "@/components/marketing/PathCard";
+import { ReferenceFold } from "@/components/marketing/ReferenceFold";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import type { PbqUpsell } from "@/components/workspace/PbqPlayer";
-import { Button } from "@/components/ui/button";
+import { domainLabel, handsOnCount, HANDS_ON_TYPES, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 
 /** Difficulty rank per PBQ type — the on-ramp leads with the lowest. */
 function rank(type: PbqScenario["type"]): number {
@@ -23,6 +25,15 @@ function rank(type: PbqScenario["type"]): number {
     simulation: 5,
   }[type];
 }
+
+const TIER: Record<PbqScenario["type"], LabTier> = {
+  ordering: "Warm-up",
+  "threat-hunt": "Core",
+  matching: "Core",
+  categorization: "Core",
+  topology: "Exam-level",
+  simulation: "Exam-level",
+};
 
 /** Pick up to 3 free scenarios that span easy → exam-level for the chooser. */
 function pickFree(scenarios: PbqScenario[]): PbqScenario[] {
@@ -50,92 +61,110 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const scenarios = pbqRegistry[page.certSlug] ?? [];
   const free = pickFree(scenarios);
   const freeIds = new Set(free.map((s) => s.id));
-  const rest = scenarios.filter((s) => !freeIds.has(s.id));
+  const labs: FreeLab[] = free.map((s) => ({ scenario: s, tier: TIER[s.type], minutes: minutesOf(s) }));
+
+  // The rest, as the path's lab library lists them: domain by domain, hands-on first.
+  const rest = labLibrary(scenarios.filter((s) => !freeIds.has(s.id)));
+  const domains = [...new Map(scenarios.map((s) => [s.domain_number, s.domain_title] as const))]
+    .filter(([number]) => rest.some((l) => l.domain === number))
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+  const drills = rest.filter((l) => !HANDS_ON_TYPES.has(l.type)).length;
 
   const path = `/path/${page.certSlug}`;
-  const upsell: PbqUpsell = {
-    heading: "That's a real exam-style PBQ — and you handled it.",
-    note: "Performance-based questions are the part most people underestimate. Your guided path walks every objective in short stops; Pro adds every hands-on lab.",
-    href: path,
-    label: "Start my path →",
-    context: "public_pbq",
-  };
+  const examName = EXAM_NAMES[page.certSlug] ?? page.title.replace(/ PBQ examples$/, "");
 
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8 sm:py-14">
+        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           {page.h1}
         </h1>
-        <div className="mt-4 grid max-w-2xl gap-3 text-muted-foreground">
+        <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
+          Pick one and work it right here: graded straight away, with partial credit and the explanation. No
+          account needed.
+        </p>
+
+        {/* Lead with the thing they came for: a lab, on the path's own stage. */}
+        {labs.length > 0 && (
+          <div className="mt-6">
+            <PbqLab labs={labs} examName={examName} pathHref={path} labCount={scenarios.length} />
+          </div>
+        )}
+
+        <ExamVersionNote certSlugs={[page.certSlug]} className="mt-10 max-w-2xl" />
+        <div className="mt-6 grid max-w-2xl gap-3 text-muted-foreground">
           {page.intro.map((p) => (
             <p key={p.slice(0, 32)} className="leading-relaxed">
               {p}
             </p>
           ))}
         </div>
-        <ExamVersionNote certSlugs={[page.certSlug]} className="mt-4 max-w-2xl" />
 
-        {free.length > 0 && (
-          <section className="mt-10">
-            <h2 className="mb-4 text-xl font-semibold tracking-tight">
-              Try one — no account needed
-            </h2>
-            <PbqTryChooser scenarios={free} upsell={upsell} />
-          </section>
-        )}
-
+        {/* Every other lab, listed the way the path's lab library lists them,
+            folded so it's there for anyone looking (and for search) without
+            being a wall under the lab. */}
         {rest.length > 0 && (
-          <section className="mt-12 rounded-2xl border bg-muted/40 p-6">
-            <h2 className="text-xl font-semibold tracking-tight">
-              {rest.length} more hands-on labs in your plan
-            </h2>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Hands-on scenarios across every domain, from ordering and matching
-              to full simulations, graded with partial credit. This is the
-              practice that actually moves your readiness.
-            </p>
-            <div className="mt-4 grid gap-1.5">
-              {rest.map((s) => (
-                <Link
-                  key={s.id}
-                  href={path}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-primary/40"
-                >
-                  <span className="flex items-center gap-2">
-                    <Lock className="size-3.5 text-muted-foreground" />
-                    {s.title}
-                  </span>
-                  <span className="shrink-0 font-mono text-xs capitalize text-muted-foreground">
-                    {s.type.replace("-", " ")}
-                  </span>
-                </Link>
-              ))}
+          <ReferenceFold
+            className="mt-8"
+            title={`${rest.length} more labs on your ${examName} path`}
+            summary={
+              <>
+                {handsOnCount(rest)}
+                {drills > 0 && <>, plus {drills} quick drills</>}, graded with partial credit. All{" "}
+                {scenarios.length} come with Pro, offered after your path&apos;s readiness checkpoint.
+              </>
+            }
+          >
+            <div className="grid gap-6 p-1 sm:p-2">
+              {domains.map(([number, title]) => {
+                const inDomain = rest.filter((l) => l.domain === number);
+                return (
+                  <section key={number} aria-labelledby={`labs-${number}`} className="grid gap-2.5">
+                    <h3 id={`labs-${number}`} className="text-sm font-medium leading-snug">
+                      <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(number)}</span>
+                      {title}
+                    </h3>
+                    <ul className="grid gap-2">
+                      {inDomain.map((lab) => {
+                        const { Icon } = LAB_TYPES[lab.type];
+                        return (
+                          <li
+                            key={lab.id}
+                            className="flex min-w-0 items-center gap-3.5 rounded-2xl border border-border bg-card/60 p-3.5"
+                          >
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                              <Icon className="size-[18px]" aria-hidden />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-balance font-medium leading-snug">{lab.title}</span>
+                              <span className="mt-1 block font-mono text-[11px] uppercase leading-relaxed tracking-wider text-muted-foreground">
+                                {labMeta(lab)}
+                              </span>
+                            </span>
+                            <Lock className="size-4 shrink-0 text-muted-foreground" aria-label="With Pro" />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                );
+              })}
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              All {scenarios.length} labs come with Pro, offered after your
-              path&apos;s readiness checkpoint.
-            </p>
-          </section>
+          </ReferenceFold>
         )}
 
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            PBQs are only part of it
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Your guided path walks every exam objective in short stops, and a
-            readiness checkpoint shows where you stand.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={path}>
-              Start my path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
+        <PathCard
+          className="mt-10"
+          kicker={`Your ${examName} path`}
+          title="PBQs are only part of it"
+          href={path}
+          label="Start my path"
+          context="pbq_page"
+        >
+          Your guided path walks every exam objective in short stops, and a readiness checkpoint shows where you
+          stand.
+        </PathCard>
 
         <RelatedLinks links={page.related ?? []} />
 

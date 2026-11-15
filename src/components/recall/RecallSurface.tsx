@@ -148,7 +148,7 @@ export function RecallSurface({
       )}
 
       {active === SUBNETTING_KEY ? (
-        <SubnettingDrillLazy showRegisterCta={false} />
+        <SubnettingDrillLazy />
       ) : (
         <RecallPlayer
           key={`${active}:${typedMode}`}

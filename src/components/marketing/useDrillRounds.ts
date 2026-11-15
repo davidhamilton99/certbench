@@ -21,6 +21,8 @@ interface RoundState {
   queue: string[];
   answered: number;
   correct: number;
+  /** Each answer of the round so far, in order: true for right. Drives its progress bar. */
+  results: boolean[];
   /** The visitor moved past the last question — the round reveal is showing. */
   done: boolean;
 }
@@ -43,6 +45,7 @@ interface View {
 }
 
 const EMPTY_VIEW: View = { userId: null, owner: null, progress: EMPTY_PROGRESS, round: null };
+const NO_RESULTS: readonly boolean[] = [];
 
 export type AccountSave = "none" | "saving" | "saved" | "error";
 export type LinkMethod = "email_signup" | "email_login";
@@ -75,6 +78,10 @@ function readLocal(tool: DrillTool): LocalState | null {
             queue: r.queue.filter((id): id is string => typeof id === "string"),
             answered: r.answered,
             correct: r.correct,
+            // A round saved before results were kept has none: its bar starts plain.
+            results: Array.isArray(r.results)
+              ? r.results.filter((x): x is boolean => typeof x === "boolean").slice(0, r.answered)
+              : [],
             done: r.done === true,
           }
         : null;
@@ -98,7 +105,7 @@ function writeLocal(tool: DrillTool, state: LocalState): void {
 }
 
 function freshRound(ids: readonly string[], progress: DrillProgress, size: number): RoundState {
-  return { queue: planRound(ids, progress.items, size), answered: 0, correct: 0, done: false };
+  return { queue: planRound(ids, progress.items, size), answered: 0, correct: 0, results: [], done: false };
 }
 
 /**
@@ -267,7 +274,12 @@ export function useDrillRounds({
       const { progress: p0, round: r0, userId: uid } = cur.current;
       if (!enabled || !r0 || r0.done || r0.answered >= size) return;
       const p = { ...p0, items: recordAnswer(p0.items, id, correct, Date.now()) };
-      const r = { ...r0, answered: r0.answered + 1, correct: r0.correct + (correct ? 1 : 0) };
+      const r = {
+        ...r0,
+        answered: r0.answered + 1,
+        correct: r0.correct + (correct ? 1 : 0),
+        results: [...r0.results, correct],
+      };
       commit({ ...cur.current, progress: p, round: r });
       if (uid && ++unsaved.current >= SAVE_EVERY) void saveToAccount(p);
     },
@@ -333,6 +345,8 @@ export function useDrillRounds({
     roundNumber: complete ? progress.rounds : progress.rounds + 1,
     answered: round?.answered ?? 0,
     roundCorrect: round?.correct ?? 0,
+    /** This round's answers so far, in order: true for right. */
+    results: round?.results ?? NO_RESULTS,
     size,
     progress,
     account,
