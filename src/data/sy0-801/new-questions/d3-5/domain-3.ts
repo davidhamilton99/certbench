@@ -8,16 +8,11 @@ export const questions: NewQuestion[] = [
     topic: "usability",
     difficulty: 2,
     question:
-      "A hospital wants clinicians to open patient records quickly at shared workstations without weakening sign-in security. Which design BEST balances security with usability?",
-    options: [
-      "A badge tap plus a PIN or fingerprint, with fast re-entry during a shift",
-      "A 20-character password typed at every workstation and changed monthly",
-      "One shared generic account for each ward, so nobody has to sign in",
-      "Sign-in at a single nurses' station, with records printed for the wards",
-    ],
+      "During a pilot of a document encryption tool, staff find that opening any protected file takes nine clicks and a second password, and most of them stop protecting files at all. Which consideration should drive the final choice of tool?",
+    options: ["Usability", "Data sovereignty", "Ease of recovery", "Ownership"],
     answer: 0,
     explanation:
-      "Usability is how easy a design is for the people who must use it, and a control that slows urgent work gets bypassed. A badge tap (something you have) plus a PIN or fingerprint (something you know or are) keeps two factors while making each sign-in take seconds. A long password typed at every workstation and changed monthly pushes clinicians toward workarounds, and NIST no longer recommends forced periodic changes; a shared ward account removes accountability; and printing records for the wards swaps one problem for a data exposure.",
+      "Usability is how easy a design is for the people who must use it, and a control that's too hard to use gets skipped, which here leaves files less protected than a simpler tool would. The pilot shows the choice should favor a tool staff will actually use, such as one that encrypts automatically. Data sovereignty is about which country's laws apply to data where it's stored, ease of recovery is how quickly a system can be restored after a failure, and ownership is who owns and answers for the infrastructure.",
   },
   {
     key: "s8-3.1-environmental-1",
@@ -37,16 +32,16 @@ export const questions: NewQuestion[] = [
     topic: "group Managed Service Accounts (gMSAs)",
     difficulty: 2,
     question:
-      "An administrator is setting up a group Managed Service Account (gMSA) for a scheduled task that runs on two file servers. Which statement about the account is accurate?",
+      "An audit finds that a scheduled task on three Windows servers runs as an ordinary domain user whose password sits in plain text in the task's script. Which change BEST removes the stored password?",
     options: [
-      "Its password is chosen by the administrator and typed into each server's task settings",
-      "It can run on only one server, so the second server needs its own account",
-      "It is meant for staff to sign in to interactively when the task fails",
-      "Domain controllers compute and rotate its password; only allowed hosts fetch it",
+      "Grant the account Domain Admin rights so the task never fails",
+      "Encrypt the script with a key kept in the same folder",
+      "Give each server its own local administrator account",
+      "Run the task under a group Managed Service Account (gMSA)",
     ],
     answer: 3,
     explanation:
-      "With a gMSA, domain controllers compute the password from a key that the Key Distribution Service provides and change it automatically, and only the computers given permission can retrieve it, so nobody types or stores it. One gMSA can run the same service or task on several servers, which is what the group adds over a standalone managed service account tied to one computer. It's an identity for services and tasks, not for people to sign in with.",
+      "A gMSA's password is generated and rotated by Active Directory, and only the servers given permission can retrieve it, so services and scheduled tasks on several servers can run under it with no password stored anywhere. Domain Admin rights break least privilege and leave the password in the script, a key kept beside the script protects nothing, and separate local administrator accounts are more privileged than the task needs and don't give the three servers one domain identity.",
   },
   {
     key: "s8-3.2-sse-1",
@@ -54,16 +49,16 @@ export const questions: NewQuestion[] = [
     topic: "Security Service Edge (SSE)",
     difficulty: 2,
     question:
-      "A vendor pitches its security service edge (SSE) platform to a company with 40 branch offices. Which capability should the company NOT expect SSE to provide on its own?",
+      "A company closes its head office, and staff now work from home and coworking spaces. It wants every user's web and SaaS traffic inspected, and its private apps reachable without a VPN, through a service it subscribes to rather than hardware it runs. Which solution fits BEST?",
     options: [
-      "A secure web gateway for users' internet traffic",
-      "A cloud access security broker for SaaS apps",
-      "SD-WAN routing that links the branch offices",
-      "Zero trust network access to private apps",
+      "A site-to-site IPsec VPN to a data center",
+      "An on-premises unified threat management appliance",
+      "Security service edge (SSE)",
+      "Out-of-band management for the network devices",
     ],
     answer: 2,
     explanation:
-      "SSE is the security half of SASE: a secure web gateway, a CASB and zero trust network access, delivered from the cloud. The networking half, such as SD-WAN linking branches, isn't part of SSE; together the two make SASE, so a company that needs both adds SD-WAN or buys a full SASE service. The other three options are SSE's core capabilities.",
+      "Security service edge delivers security as a cloud service close to wherever users are: web and SaaS inspection through a secure web gateway and a CASB, and access to private apps through zero trust network access instead of a VPN. A site-to-site VPN joins networks rather than securing users who work from anywhere, an on-premises UTM only protects traffic that passes through an office the company no longer has, and out-of-band management is a separate path for administering network devices.",
   },
   {
     key: "s8-3.2-e2ee-1",
@@ -71,16 +66,16 @@ export const questions: NewQuestion[] = [
     topic: "end-to-end encrypted messaging",
     difficulty: 2,
     question:
-      "A company moves staff chat to an end-to-end encrypted messaging service. Which security trade-off should it plan for?",
+      "A company's board discusses a confidential merger over a chat app. Members want message content readable only on their own devices, so that even a breach of the app company's servers would expose nothing readable. Which feature should the app have?",
     options: [
-      "Messages will cross the internet unencrypted between users",
-      "Users will no longer need to authenticate to the service",
-      "The provider will be able to read every message stored on its servers",
-      "Server-side DLP and archiving can no longer inspect message content",
+      "TLS 1.3 with stronger cipher suites",
+      "Encryption at rest on the app company's storage",
+      "Multifactor authentication for every user",
+      "End-to-end encrypted messaging",
     ],
     answer: 3,
     explanation:
-      "With end-to-end encryption only the users' devices hold the keys, so nothing in between, including the company's own server-side DLP, monitoring and archiving tools, can read message content. Retention and inspection then have to happen on the endpoints, through managed devices or the app's own features. Messages stay encrypted the whole way rather than crossing unencrypted, users still authenticate, and the provider can't read messages, which is the point of end-to-end encryption.",
+      "With end-to-end encryption, each message is encrypted on the sender's device and only the recipients' devices hold the keys, so the app company's servers hold only ciphertext and a breach of them exposes nothing readable. TLS protects messages only on the way to the servers, where they're decrypted, encryption at rest leaves the keys with the company, and MFA protects accounts rather than stored message content.",
   },
   {
     key: "s8-3.2-diversity-1",
@@ -146,16 +141,11 @@ export const questions: NewQuestion[] = [
     topic: "data operator",
     difficulty: 2,
     question:
-      "While keying in customer records, a data operator notices that a batch marked Public contains card numbers. Whose decision is the right label, and what should the operator do?",
-    options: [
-      "The operator's; relabel the batch Restricted straight away",
-      "The custodian's; ask IT to change the label in the database",
-      "The owner's; report it so the owner or data steward can fix it",
-      "The data subjects'; ask each customer which label they want",
-    ],
+      "A warehouse clerk scans each incoming parcel, which saves the customer's name and delivery address in the logistics system. The clerk follows set handling procedures and has no say in what's collected or who can see it. Which data protection role does the clerk hold?",
+    options: ["Data owner", "Data controller", "Data operator", "Data subject"],
     answer: 2,
     explanation:
-      "Classification is the data owner's decision, and the data steward keeps labels correct day to day on the owner's behalf. A data operator works with data by following rules others set, so the right move is to report the mislabeled batch rather than relabel it. The custodian runs the systems and applies controls as directed but doesn't decide classifications, and data subjects are the people the data is about, not the ones who classify it.",
+      "A data operator works with data, such as capturing, using or updating it, by following procedures others set, without deciding why it's collected or who may access it. The data owner decides classification and access, the data controller decides the purposes and means of processing personal data (here, the company), and the data subjects are the customers the data is about.",
   },
   {
     key: "s8-3.3-geofencing-1",
