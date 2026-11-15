@@ -4,7 +4,7 @@
 
 ## Which exam versions this covers
 
-- Security+: written to SY0-701, the current exam, open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026. CertBench has no SY0-801 questions yet.
+- Security+: the guided path is written to SY0-701, the current exam, open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026. For SY0-801, CertBench has a free practice test and free AI-threat practice questions, but no study path yet.
 - Network+: written for N10-009, the current exam.
 - A+: written to 220-1201 and 220-1202 (CompTIA's V15), the current exams. CompTIA retired 220-1101 and 220-1102 on September 25, 2025.
 
@@ -19,6 +19,7 @@ Each path starts with a warm-up anyone can play with no account. A free account 
 
 ## Guides
 
+- [Security+ SY0-801 exam guide](https://certbench.dev/security-plus-sy0-801): the launch date, the five domains and their weights, all 27 objectives, the new AI objective, and how to prepare now.
 - [Security+ SY0-801 vs SY0-701](https://certbench.dev/security-plus-sy0-801-vs-sy0-701): launch and retirement dates, domain weight changes, and how to choose by exam date, from CompTIA's own pages.
 - [SY0-701 exam objectives](https://certbench.dev/objectives/security-plus-sy0-701): every objective by domain and exam weight, with practice questions for each one.
 - [220-1201 exam objectives (A+ Core 1)](https://certbench.dev/objectives/a-plus-core1-220-1201): all 27 objectives by domain and exam weight, with practice questions for each one.
@@ -40,6 +41,8 @@ The port, subnetting, and acronym drills give a first round free with no account
 - [CompTIA A+ Core 2 practice test (220-1202)](https://certbench.dev/a-plus-core-2-practice-test): a free warm-up and practice questions with explanations, across all four Core 2 domains.
 - [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions with explanations.
 - [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): free SY0-701 practice questions with full explanations.
+- [CompTIA Security+ SY0-801 practice test](https://certbench.dev/security-plus-sy0-801-practice-test): 45 original questions in 45 minutes, at least one on each of SY0-801's 27 objectives in the exam's domain weights, timed and scored by domain, with every answer explained. No account needed.
+- [SY0-801 AI practice questions](https://certbench.dev/security-plus-sy0-801-ai-practice-questions): 14 original questions on objective 2.6, the threats and vulnerabilities of AI, from prompt injection and poisoning to jailbreaking and hallucinations, each with the answer explained.
 
 ## Performance-based questions (interactive)
 
@@ -52,4 +55,4 @@ The port, subnetting, and acronym drills give a first round free with no account
 
 - [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
 - [Pricing](https://certbench.dev/pricing): the start of every path is free; Pro opens the whole path, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
-- Certifications covered: CompTIA Security+ SY0-701, Network+ N10-009, A+ Core 1 and Core 2 (220-1201 and 220-1202).
+- Certifications covered: CompTIA Security+ SY0-701 (with free SY0-801 practice), Network+ N10-009, A+ Core 1 and Core 2 (220-1201 and 220-1202).
