@@ -35,6 +35,7 @@ export function RepCard({
   onNext,
   promptAs: Prompt = "h2",
   nextLabel,
+  keyboard = true,
 }: {
   rep: Rep;
   onAnswer: (answer: RepAnswer) => void;
@@ -43,6 +44,8 @@ export function RepCard({
   promptAs?: "h2" | "p";
   /** What the button says once answered, where "Next" wouldn't say what follows. */
   nextLabel?: string;
+  /** Whether keys answer this card: false while another player on the page has the turn. */
+  keyboard?: boolean;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [typed, setTyped] = useState("");
@@ -96,6 +99,7 @@ export function RepCard({
   }, [answered]);
 
   useEffect(() => {
+    if (!keyboard) return;
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
@@ -121,7 +125,7 @@ export function RepCard({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [answered, rep, choose, next]);
+  }, [keyboard, answered, rep, choose, next]);
 
   const isExam = rep.tier === "exam";
   // A longer quick prompt steps down a size so it doesn't wrap to four lines.

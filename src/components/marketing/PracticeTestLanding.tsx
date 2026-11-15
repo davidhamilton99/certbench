@@ -4,7 +4,7 @@ import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
-import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { QuickRound } from "@/components/path/QuickRound";
@@ -70,6 +70,17 @@ export function PracticeTestLanding({
         weight: d.examWeight,
       })),
     }));
+
+  // The samples as one deck, shortest first within each exam so the opener is
+  // approachable rather than the most daunting. A page with two exams tags each.
+  const multi = data.sampleGroups.length > 1;
+  const deck: DeckQuestion[] = data.sampleGroups.flatMap((group) =>
+    [...group.questions]
+      .sort((a, b) => a.questionText.length - b.questionText.length)
+      .map((q) => (multi ? { ...q, tag: `${group.certName} · ${group.examCode}` } : q))
+  );
+  const pathHref = page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start";
+  const examName = round?.examName ?? page.title.replace(/ practice test$/i, "");
 
   // GEO/SEO: mark the page as a free educational practice resource so search
   // and generative engines can identify and cite it for "free CompTIA … test".
@@ -156,47 +167,30 @@ export function PracticeTestLanding({
           ))}
         </div>
 
-        {/* Interactive samples — someone who searched "practice test" should
-            be answering real exam questions right away, not reading a pitch
-            and a table. Sorted shortest-first so the opener is approachable
-            rather than the most daunting question. */}
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {round ? "Exam-style sample questions" : "Sample questions"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick an answer to see instant grading and the explanation — the
-            same experience as the full bank of{" "}
-            {data.totalQuestions.toLocaleString()} questions.
-          </p>
-          {data.sampleGroups.map((group, gi) => {
-            // Continuous numbering across groups, computed purely.
-            const offset = data.sampleGroups
-              .slice(0, gi)
-              .reduce((sum, g) => sum + g.questions.length, 0);
-            // Lead with the shortest (least intimidating) question, then ramp up.
-            const ordered = [...group.questions].sort(
-              (a, b) => a.questionText.length - b.questionText.length
-            );
-            return (
-              <div key={group.examCode} className="mt-5">
-                {data.sampleGroups.length > 1 && (
-                  <h3 className="mb-3 text-sm font-medium">
-                    {group.certName}{" "}
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {group.examCode}
-                    </span>
-                  </h3>
-                )}
-                <div className="grid gap-4">
-                  {ordered.map((q, i) => (
-                    <SampleQuestion key={i} number={offset + i + 1} question={q} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </section>
+        {/* The samples, one at a time on the path's own card, so the page
+            plays like the warm-up above instead of ending in a wall of
+            questions. Every question and answer is still in the page, in the
+            deck's folded list. */}
+        {deck.length > 0 && (
+          <section className="mt-8 grid gap-4">
+            <div className="grid gap-1">
+              <h2 className="text-xl font-semibold tracking-tight">
+                {round ? "Exam-style sample questions" : "Sample questions"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {deck.length} exam-style questions, one at a time, each explained as soon as you answer. The full
+                bank holds {data.totalQuestions.toLocaleString()}.
+              </p>
+            </div>
+            <QuestionDeck
+              questions={deck}
+              label={`${examName} · sample questions`}
+              surface="practice_test_page"
+              path={pathHref}
+              examName={examName}
+            />
+          </section>
+        )}
 
         {/* Domain weights — useful, fully-indexed content that shows we mirror
             the real exam. Kept on the page, just moved below the interactive
@@ -306,7 +300,7 @@ export function PracticeTestLanding({
             stand today.
           </p>
           <Button asChild size="lg" className="mt-1">
-            <Link href={page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start"}>
+            <Link href={pathHref}>
               Start my path
               <ArrowRight />
             </Link>

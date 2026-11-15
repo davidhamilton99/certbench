@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Flag, Gauge, RotateCcw, Timer } from "lucide-react";
+import { claimKeyboard, useKeyboardTurn } from "@/components/path/keyboard-turn";
 import { RehearsalPlayer } from "@/components/path/RehearsalPlayer";
 import { domainOf, RehearsalResult } from "@/components/path/RehearsalResult";
 import { clearRun, readRun, writeRun, type RehearsalRun } from "@/components/path/rehearsal-run";
@@ -52,6 +53,9 @@ export function PracticeExam({
   const [run, setRun] = useState<RehearsalRun | null>(null);
   const [view, setView] = useState<View>("intro");
   const rootRef = useRef<HTMLDivElement>(null);
+  // A deck further down the page also takes 1–4: the keys follow whichever was played last.
+  const turnId = useId();
+  const keyboard = useKeyboardTurn(turnId, rootRef);
 
   // This device's run of the test: one in progress, or the last one scored.
   useEffect(() => {
@@ -88,6 +92,7 @@ export function PracticeExam({
       done: null,
     });
     track("practice_test_started", { test: testId, questions: drawn.length, resumed: false });
+    claimKeyboard(turnId);
     setView("test");
     toTop();
   }
@@ -95,6 +100,7 @@ export function PracticeExam({
   function resume() {
     if (!run) return;
     track("practice_test_started", { test: testId, questions: run.reps.length, resumed: true });
+    claimKeyboard(turnId);
     setView("test");
     toTop();
   }
@@ -139,6 +145,7 @@ export function PracticeExam({
         examCode={structure.examCode}
         label="Practice test"
         noun="test"
+        keyboard={keyboard}
         onChange={save}
         onFinish={finish}
         onLeave={() => {

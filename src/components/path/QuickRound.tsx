@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RotateCcw } from "lucide-react";
@@ -12,6 +12,7 @@ import { EMPTY_PATH_PROGRESS, type PathCert, type PathProgress, type PathStructu
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { Button } from "@/components/ui/button";
 import { ExamMap, MapLegend } from "./ExamMap";
+import { useKeyboardTurn } from "./keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { claimLocalPath, readLocalPath, updateLocalPath } from "./local-path";
@@ -64,6 +65,10 @@ export function QuickRound({
   const [ended, setEnded] = useState<RoundResult | null>(null);
   // Asked while the round is played, so its end never waits to know who's there.
   const userId = useSessionUserId();
+  // The keys are this round's until someone plays another player on the page.
+  const turnId = useId();
+  const root = useRef<HTMLDivElement>(null);
+  const keyboard = useKeyboardTurn(turnId, root);
   // Handlers read these, not render state: a right answer moves on by timer.
   const current = useRef(0);
   const right = useRef(0);
@@ -118,49 +123,50 @@ export function QuickRound({
     setRun((r) => r + 1);
   }
 
-  if (ended) {
-    return (
-      <RoundEnd
-        cert={cert}
-        examName={examName}
-        structure={structure}
-        reps={reps}
-        label={label}
-        surface={surface}
-        unit={unit}
-        userId={userId ?? null}
-        result={ended}
-        onReplay={playAgain}
-      />
-    );
-  }
-
   const rep = reps[i];
   // min-w-0 down to the label: the pages lay the round out in a grid, where a
   // one-line label would otherwise widen the card past a phone's screen.
   return (
-    <div className="glass min-w-0 rounded-3xl p-5 sm:p-8">
-      <div className="mb-6 grid gap-3">
-        <div className="flex min-w-0 items-baseline justify-between gap-3">
-          <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            {label}
-          </p>
-          <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-            {i + 1} / {reps.length}
-          </span>
-        </div>
-        <StopProgress results={results} current={i} />
-      </div>
-      {rep && (
-        <RepCard
-          key={`${run}-${i}-${rep.id}`}
-          rep={rep}
-          onAnswer={onAnswer}
-          onNext={onNext}
-          promptAs="p"
-          // The last answer leads somewhere the page hasn't shown yet: say where.
-          nextLabel={i === reps.length - 1 ? "See my result" : undefined}
+    <div ref={root} className="min-w-0">
+      {ended ? (
+        <RoundEnd
+          cert={cert}
+          examName={examName}
+          structure={structure}
+          reps={reps}
+          label={label}
+          surface={surface}
+          unit={unit}
+          userId={userId ?? null}
+          result={ended}
+          onReplay={playAgain}
         />
+      ) : (
+        <div className="glass min-w-0 rounded-3xl p-5 sm:p-8">
+          <div className="mb-6 grid gap-3">
+            <div className="flex min-w-0 items-baseline justify-between gap-3">
+              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                {label}
+              </p>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                {i + 1} / {reps.length}
+              </span>
+            </div>
+            <StopProgress results={results} current={i} />
+          </div>
+          {rep && (
+            <RepCard
+              key={`${run}-${i}-${rep.id}`}
+              rep={rep}
+              onAnswer={onAnswer}
+              onNext={onNext}
+              promptAs="p"
+              keyboard={keyboard}
+              // The last answer leads somewhere the page hasn't shown yet: say where.
+              nextLabel={i === reps.length - 1 ? "See my result" : undefined}
+            />
+          )}
+        </div>
       )}
     </div>
   );

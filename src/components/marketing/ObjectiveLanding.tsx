@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
-import { SampleQuestion } from "@/components/marketing/SampleQuestion";
+import { QuestionDeck } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { QuickRound } from "@/components/path/QuickRound";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -155,17 +155,23 @@ export function ObjectiveLanding({
           )}
         </div>
 
-        {/* Interactive samples */}
-        <section className="mt-8 grid gap-4">
-          {round && (
-            <h2 className="text-lg font-semibold tracking-tight">
-              More {official ? data.code : data.topic} practice questions
-            </h2>
-          )}
-          {data.samples.map((q, i) => (
-            <SampleQuestion key={i} number={i + 1} question={q} />
-          ))}
-        </section>
+        {/* The objective's bank questions, one at a time on the path's own card. */}
+        {data.samples.length > 0 && (
+          <section className="mt-8 grid gap-4">
+            {round && (
+              <h2 className="text-lg font-semibold tracking-tight">
+                More {official ? data.code : data.topic} practice questions
+              </h2>
+            )}
+            <QuestionDeck
+              questions={data.samples}
+              label={official ? `Objective ${data.code} · practice questions` : `${data.topic} · practice questions`}
+              surface="objective_page"
+              path={`/path/${data.certSlug}`}
+              examName={data.shortCertName}
+            />
+          </section>
+        )}
 
         {/* CTA */}
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
