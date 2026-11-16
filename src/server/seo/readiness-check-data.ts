@@ -13,6 +13,7 @@ import {
 } from "@/lib/tools/readiness-estimate";
 import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
 import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
+import { UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
 
 const CHECK_QUESTION_COUNT = 10;
 
@@ -29,7 +30,7 @@ export interface ReadinessCheckData {
 export async function listReadinessCheckCerts(): Promise<{ cert: string }[]> {
   const db = createAnonClient();
   const certs = await listActiveCertifications(db);
-  return certs.map((c) => ({ cert: c.slug }));
+  return certs.filter((c) => !UNPUBLISHED_PAGE_CERTS.includes(c.slug)).map((c) => ({ cert: c.slug }));
 }
 
 const words = (text: string) => text.trim().split(/\s+/).length;

@@ -14,6 +14,7 @@ import {
   SECURITY_PLUS_DOMAIN_CHANGES,
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
+  SY0_801_CERT,
   SY0_801_PATH,
   SY0_801_PRACTICE_PATH,
 } from "@/lib/seo/exam-versions";
@@ -103,7 +104,7 @@ const FAQS = [
   {
     question: "Does CertBench have SY0-801 questions?",
     answer:
-      "Yes, two free sets: a timed SY0-801 practice test across all 27 objectives, and questions on its new AI objective, 2.6. CertBench's guided path and question bank are written to SY0-701, which is still a live exam.",
+      "Yes. CertBench's SY0-801 path covers all 27 objectives in short stops, the new AI objective (2.6) included, and there are two free sets: a timed SY0-801 practice test across every objective, and questions on 2.6. The SY0-701 path stays for anyone sitting SY0-701, and Pro covers both.",
   },
 ];
 
@@ -150,13 +151,13 @@ export default function SecurityPlusVersionsPage() {
             from the start.
           </p>
           <p>
-            A disclosure: CertBench&apos;s Security+ path and question bank are
-            written to SY0-701, apart from a free{" "}
+            A disclosure: CertBench has a guided path for each version, and Pro covers
+            both, so we sell you the same thing whichever you choose. There&apos;s also a
+            free{" "}
             <Link href={SY0_801_PRACTICE_PATH} className="text-primary underline underline-offset-4">
               SY0-801 practice test
             </Link>
-            , so we have a stake in this answer. Every date and weight below comes from
-            CompTIA&apos;s own{" "}
+            . Every date and weight below comes from CompTIA&apos;s own{" "}
             <a
               href={COMPTIA_URLS.securityV7}
               target="_blank"
@@ -283,17 +284,22 @@ export default function SecurityPlusVersionsPage() {
         </section>
 
         <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Going with SY0-701?</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Start the path for your version</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Your Security+ path walks every SY0-701 objective in short stops, and a
-            readiness checkpoint shows where you stand.
+            Each version has its own path: every objective in short stops, and a readiness checkpoint
+            that shows where you stand.
           </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={`/path/${SECURITY_PLUS_CERT}`}>
-              Start my Security+ path
-              <ArrowRight />
-            </Link>
-          </Button>
+          <div className="mt-1 flex flex-wrap justify-center gap-2.5">
+            <Button asChild size="lg">
+              <Link href={`/path/${SY0_801_CERT}`}>
+                Start my SY0-801 path
+                <ArrowRight />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href={`/path/${SECURITY_PLUS_CERT}`}>Start my SY0-701 path</Link>
+            </Button>
+          </div>
           <p className="text-xs text-muted-foreground">No account needed to start.</p>
         </section>
 

@@ -12,7 +12,7 @@ import {
   listQuestionsBySubObjective,
 } from "@/server/data/questions";
 import { codeToSlug, slugToCode } from "@/lib/seo/objective-code";
-import { OBJECTIVE_HUB_CERTS } from "@/lib/seo/exam-versions";
+import { OBJECTIVE_HUB_CERTS, UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
 
 /**
@@ -34,7 +34,7 @@ export interface ObjectiveParam {
 /** Every objective page that meets the content threshold (static params + sitemap). */
 export async function listObjectivePages(): Promise<ObjectiveParam[]> {
   const db = createAnonClient();
-  const certs = await listActiveCertifications(db);
+  const certs = (await listActiveCertifications(db)).filter((c) => !UNPUBLISHED_PAGE_CERTS.includes(c.slug));
   const out: ObjectiveParam[] = [];
   for (const cert of certs) {
     const [subs, counts] = await Promise.all([

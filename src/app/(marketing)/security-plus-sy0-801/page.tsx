@@ -12,6 +12,7 @@ import {
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
+  SY0_801_CERT,
   SY0_801_PATH,
   SY0_801_PRACTICE_PATH,
   SY0_801_PUBLISHED_ISO,
@@ -248,9 +249,15 @@ export default function SecurityPlusV8Page() {
             </Link>
           </p>
           <p className="text-xs text-muted-foreground">
+            Ready to study for it?{" "}
+            <Link href={`/path/${SY0_801_CERT}`} className="underline underline-offset-4 hover:text-foreground">
+              Start your SY0-801 path
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground">
             Taking SY0-701 instead?{" "}
             <Link href={`/path/${SECURITY_PLUS_CERT}`} className="underline underline-offset-4 hover:text-foreground">
-              Start your Security+ path
+              Start your SY0-701 path
             </Link>
           </p>
         </section>

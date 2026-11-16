@@ -32,6 +32,15 @@ export const SY0_801_PRACTICE_PUBLISHED_ISO = "2026-11-14";
 export const SY0_801_PRACTICE_CHECKED = "November 14, 2026";
 
 export const SECURITY_PLUS_CERT = "security-plus-sy0-701";
+/** Security+ SY0-801's path and exam, beside SY0-701's (src/data/sy0-801). */
+export const SY0_801_CERT = "security-plus-sy0-801";
+
+/**
+ * Exams whose generated public pages (a page per objective, a readiness check)
+ * aren't published yet. Most of SY0-801's questions are copies of SY0-701's,
+ * so its pages wait for content of their own rather than repeat SY0-701's.
+ */
+export const UNPUBLISHED_PAGE_CERTS: readonly string[] = [SY0_801_CERT];
 export const NETWORK_PLUS_CERT = "network-plus-n10-009";
 export const A_PLUS_CORE1_CERT = "a-plus-core1-220-1201";
 export const A_PLUS_CORE2_CERT = "a-plus-core2-220-1202";

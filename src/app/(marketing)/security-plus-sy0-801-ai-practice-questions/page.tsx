@@ -4,7 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import { QuestionDeck, type DeckQuestion, type DeckNext } from "@/components/marketing/QuestionDeck";
+import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
   SY0_801_AI_PATH,
+  SY0_801_CERT,
   SY0_801_PATH,
   SY0_801_PRACTICE_PATH,
   SY0_801_PUBLISHED_ISO,
@@ -39,14 +40,6 @@ const AI_DECK: DeckQuestion[] = SY0_801_AI_QUESTIONS.map((q) => ({
   explanation: q.explanation,
   tag: q.topic,
 }));
-
-/** The guided path is written to SY0-701, which has no AI objective, so the deck leads to the whole SY0-801 test. */
-const AI_NEXT: DeckNext = {
-  title: "The whole SY0-801 exam",
-  body: `${SY0_801_PRACTICE_TEST.length} questions on every objective, timed at the real exam's pace and scored by domain.`,
-  href: SY0_801_PRACTICE_PATH,
-  label: "Take the free practice test",
-};
 
 const FAQS = [
   {
@@ -111,9 +104,8 @@ export default function Sy0801AiQuestionsPage() {
             questions={AI_DECK}
             label="Objective 2.6 · AI threats"
             surface="sy0801_ai_page"
-            path={SY0_801_PRACTICE_PATH}
+            path={`/path/${SY0_801_CERT}`}
             examName="SY0-801"
-            next={AI_NEXT}
           />
         </section>
 
@@ -148,9 +140,15 @@ export default function Sy0801AiQuestionsPage() {
             </Link>
           </p>
           <p className="text-xs text-muted-foreground">
+            Ready to study for it?{" "}
+            <Link href={`/path/${SY0_801_CERT}`} className="underline underline-offset-4 hover:text-foreground">
+              Start your SY0-801 path
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground">
             Taking SY0-701 instead?{" "}
             <Link href={`/path/${SECURITY_PLUS_CERT}`} className="underline underline-offset-4 hover:text-foreground">
-              Start your Security+ path
+              Start your SY0-701 path
             </Link>
           </p>
         </section>
