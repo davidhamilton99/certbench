@@ -17,57 +17,11 @@ import type {
   CategorizationScenario,
 } from "@/data/pbq/types";
 import { gradeScenario } from "@/core/pbq/grade";
+import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
 import type { PbqHostProps } from "@/components/workspace/pbq-host";
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                             */
-/* ------------------------------------------------------------------ */
-
-/** Deterministic string → 32-bit seed (FNV-1a), so a scenario shuffles the same every time. */
-function seedFromString(str: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-/** mulberry32 — a small, fast, deterministic PRNG. */
-function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/**
- * Fisher-Yates shuffle, seeded deterministically and guaranteed to differ from
- * the identity order. Deterministic on purpose: the same seed yields the same
- * order on the server and the client, so a shuffled list hydrates without a
- * mismatch. (A Math.random() shuffle differs between SSR and hydration, which
- * makes React throw away the server markup and re-render — a visible flash.)
- */
-function shuffleSeeded(length: number, seed: number): number[] {
-  const rand = mulberry32(seed);
-  const indices = Array.from({ length }, (_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  // If the shuffle happened to produce the identity (correct) order, swap the first two.
-  const isIdentity = indices.every((v, i) => v === i);
-  if (isIdentity && indices.length > 1) {
-    [indices[0], indices[1]] = [indices[1], indices[0]];
-  }
-  return indices;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Main Player                                                        */
