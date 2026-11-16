@@ -564,7 +564,7 @@ tcp    0       0       172.16.10.20:80       10.0.0.1:54321        ESTABLISHED  
           {
             type: "dropdown",
             id: "wifi-trouble-security-risk",
-            label: "Why is option 5 (disabling certificate validation) a serious security risk?",
+            label: "Why is disabling certificate validation on the client a serious security risk?",
             options: [
               "It causes the client to use a weaker encryption cipher",
               "It allows any RADIUS server — including a rogue AP's fake RADIUS — to authenticate the client, enabling credential theft via evil twin attacks",
@@ -814,7 +814,7 @@ Body excerpt:
           {
             type: "zone-placement",
             id: "vuln-priority-zones",
-            label: "Drag each CVE to its correct remediation priority tier:",
+            label: "Sort each CVE into its remediation priority tier",
             items: [
               "CVE-2024-38428 — OpenSSL RCE (CVSS 9.8, pre-auth, network)",
               "CVE-2023-3824 — PHP PHAR RCE (CVSS 9.0, file upload required)",

@@ -32,6 +32,8 @@ type EventMap = {
   google_signin_clicked: { page: string };
   google_signin_cancelled: { page: string; via: "google" | "back" };
   pbq_started: { scenario_id: string; scenario_type: string; surface: Surface };
+  // Each stage of a simulation lab, so it shows how far into a lab people get.
+  sim_stage_cleared: { scenario_id: string; stage: number; stages: number; correct: number; total: number };
   upsell_viewed: { context: string };
   upsell_clicked: { context: string; href: string };
   pricing_viewed: { surface: "upgrade" | "pricing" };
