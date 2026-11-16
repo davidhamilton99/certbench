@@ -518,20 +518,13 @@ describe("a signed-in learner", () => {
     expect(dial).toHaveAttribute("data-label", "Strong start");
     expect(dial).toHaveAttribute("data-ready-mark", "false");
     expect(screen.getByRole("heading", { name: "A strong first read." })).toBeInTheDocument();
-    expect(
-      screen.getByText("100% on 2 exam-style questions, weighted the way the real exam weights its domains.")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "A first read, not a verdict: each answer moves it about 50 points, and the real exam asks up to 90."
-      )
-    ).toBeInTheDocument();
+    // The size of the sample, as a label rather than a paragraph.
+    expect(screen.getByText("2 questions · ±50 pts each · exam asks 90")).toBeInTheDocument();
     expect(screen.queryByText(/exam[- ]ready/i)).toBeNull();
     expect(screen.queryByText(/in good shape/i)).toBeNull();
     // How much of the exam the path has taught so far, above the offer.
-    const studied = screen.getByText("4 of 6 objectives studied so far");
-    expect(screen.getByText("2 ahead")).toBeInTheDocument();
-    expect(screen.getByText(/The stops ahead teach the other 2, one objective at a time\./)).toBeInTheDocument();
+    const studied = screen.getByText("4 of 6 objectives studied");
+    expect(screen.getByText("2 to go")).toBeInTheDocument();
     expect(comesBefore(studied, screen.getByText("Unlock the rest of your path"))).toBe(true);
   });
 

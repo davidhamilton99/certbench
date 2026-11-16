@@ -90,13 +90,9 @@ export function PathReveal({
         verdict={VERDICT[band.key]}
         readyMark={false}
         summary={
-          <>
-            {result.score}% on {asked} exam-style questions, weighted the way the real exam weights its domains.
-            <span className="mt-1.5 block">
-              A first read, not a verdict: each answer moves it about {each} points, and the real exam asks up to{" "}
-              {REHEARSAL_FORMATS.full.questions}.
-            </span>
-          </>
+          <span className="font-mono text-xs uppercase tracking-[0.14em]">
+            {asked} questions · ±{each} pts each · exam asks {REHEARSAL_FORMATS.full.questions}
+          </span>
         }
       />
 
@@ -105,19 +101,15 @@ export function PathReveal({
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:col-span-2">
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="font-medium">
-                {learned} of {objectives} objectives studied so far
+                {learned} of {objectives} objectives studied
               </span>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ahead} ahead</span>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ahead} to go</span>
             </div>
             <div className="flex gap-0.5" aria-hidden>
               {Array.from({ length: objectives }, (_, i) => (
                 <span key={i} className={cn("h-1.5 min-w-0 flex-1 rounded-full", i < learned ? "bg-primary" : "bg-muted")} />
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">
-              The checkpoint sampled all {structure.domains.length} domains, including ground your path hasn&apos;t
-              reached. The stops ahead teach the other {ahead}, one objective at a time.
-            </p>
           </div>
         )}
         {opportunity && <OpportunityNote domain={opportunity} />}
