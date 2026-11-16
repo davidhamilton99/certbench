@@ -4,7 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { getStripe } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
 import { getCertification } from "@/server/data/certifications";
-import { listEnrollments } from "@/server/data/enrollments";
+import { listEnrollments, otherVersionIds } from "@/server/data/enrollments";
 import { BASE_PRICES_CENTS, pppForCountry } from "@/lib/pricing/ppp";
 import { publicEnv } from "@/env";
 
@@ -28,6 +28,11 @@ export const POST = defineEndpoint(addCertCheckout, {
     const enrollments = await listEnrollments(db, user.id);
     if (enrollments.some((e) => e.certificationId === cert.id)) {
       throw new ApiError("conflict", "That certification is already in your plan.");
+    }
+    // Pro on one version of an exam covers its others: never charge for those.
+    const versions = await otherVersionIds(db, cert.id);
+    if (enrollments.some((e) => versions.includes(e.certificationId))) {
+      throw new ApiError("conflict", `Your plan already covers ${cert.examCode}.`);
     }
 
     // PPP discount from the REAL request IP (never client input), same coupons

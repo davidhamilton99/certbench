@@ -10,6 +10,7 @@ import type { ItemMap } from "@/core/drill-rounds/drill-rounds";
 /** The exams that have a path, by certification slug. */
 export const PATH_CERTS = [
   "security-plus-sy0-701",
+  "security-plus-sy0-801",
   "network-plus-n10-009",
   "a-plus-core1-220-1201",
   "a-plus-core2-220-1202",

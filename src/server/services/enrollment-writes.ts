@@ -45,6 +45,34 @@ export async function addEnrollment(
 }
 
 /**
+ * Move an account from one version of an exam to another (Security+ SY0-701 to
+ * SY0-801): the version they left goes inactive (never deleted), the one they
+ * chose becomes active, and other exams stay as they are. Pro covers every
+ * version, so this changes which one the account studies, not what it can open.
+ */
+export async function switchVersion(
+  userId: string,
+  fromCertificationId: string,
+  toCertificationId: string,
+  examDate: string | null
+): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("user_enrollments")
+    .upsert(
+      { user_id: userId, certification_id: toCertificationId, is_active: true, exam_date: examDate },
+      { onConflict: "user_id,certification_id" }
+    );
+  if (error) throw new ApiError("internal", error.message);
+  const { error: offErr } = await db
+    .from("user_enrollments")
+    .update({ is_active: false })
+    .eq("user_id", userId)
+    .eq("certification_id", fromCertificationId);
+  if (offErr) throw new ApiError("internal", offErr.message);
+}
+
+/**
  * Make one exam the user's only active enrollment — a free account studies
  * one exam at a time, and that's the exam Pro unlocks when they buy. Other
  * enrollments are deactivated, not deleted. `examDate` undefined keeps the

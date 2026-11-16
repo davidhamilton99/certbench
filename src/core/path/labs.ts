@@ -24,9 +24,15 @@ export const HANDS_ON: ReadonlySet<PbqScenario["type"]> = new Set(["simulation",
 /** A lab's rough length in minutes. */
 export const minutesOf = (s: PbqScenario) => ("estimatedMinutes" in s ? s.estimatedMinutes : DRILL_MINUTES);
 
-/** The lab for one domain ("1.0"), or undefined when the exam has none for it. */
-export function domainLab(scenarios: readonly PbqScenario[], domain: string): PathLab | undefined {
+/**
+ * The lab for one domain ("1.0"), or undefined when the exam has none for it.
+ * `preferred` names the scenario to use instead of the default pick, when it's
+ * in that domain.
+ */
+export function domainLab(scenarios: readonly PbqScenario[], domain: string, preferred?: string): PathLab | undefined {
   const mine = scenarios.filter((s) => s.domain_number === domain);
+  const chosen = preferred ? mine.find((s) => s.id === preferred) : undefined;
+  if (chosen) return { id: chosen.id, title: chosen.title, minutes: minutesOf(chosen) };
   for (const type of PREFERENCE) {
     const s = mine.find((x) => x.type === type);
     if (s) return { id: s.id, title: s.title, minutes: minutesOf(s) };

@@ -53,6 +53,12 @@ type EventMap = {
   };
   // Guided path: pick an exam, play short stops, checkpoint, then the offer.
   path_exam_picked: { cert: string; surface: string };
+  /** The picker's tile for an exam taught in two versions (Security+) was opened to choose one. */
+  path_versions_opened: { exam: string; surface: string };
+  /** A learner followed the link under the map to the exam's other version. */
+  path_version_switched: { from: string; to: string };
+  /** A first visit to a version's path brought along answers from the version before it. */
+  path_version_carried: { from: string; to: string; answers: number; labs: number; source: "device" | "account" | "both" };
   path_started: { cert: string };
   path_stop_completed: {
     cert: string;

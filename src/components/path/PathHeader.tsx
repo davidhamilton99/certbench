@@ -18,12 +18,15 @@ import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 export function PathHeader({
   cert,
   examName,
+  version,
   signedIn,
   ready = true,
   onHome,
 }: {
   cert: string;
   examName: string;
+  /** The exam code, for an exam taught in more than one version (Security+ SY0-801). */
+  version?: string;
   signedIn: boolean;
   /** False until the account is known: a member mustn't see "Sign in" meanwhile. */
   ready?: boolean;
@@ -68,10 +71,14 @@ export function PathHeader({
               title={`Your ${examName} map`}
             >
               {examName}
+              {version && <> <span className="font-mono text-xs text-muted-foreground">{version}</span></>}
             </Link>
           ) : (
             // Without an account the warm-up is the whole visit: nothing to go back to.
-            <span className="truncate px-1.5 py-1 text-sm font-medium">{examName}</span>
+            <span className="truncate px-1.5 py-1 text-sm font-medium">
+              {examName}
+              {version && <> <span className="font-mono text-xs text-muted-foreground">{version}</span></>}
+            </span>
           )}
         </div>
         <nav className="flex items-center gap-1">

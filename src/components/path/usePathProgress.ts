@@ -8,6 +8,7 @@ import { getPathProgress, savePathProgress } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
+import { carryFromEarlierVersion, type VersionCarry } from "./version-carry";
 import {
   finishLab as finishLabRun,
   finishStop,
@@ -26,6 +27,16 @@ import {
   type PathProgress,
   type RehearsalResult,
 } from "@/core/path/types";
+
+/** Report a carry from an earlier exam version (Security+ SY0-701 → SY0-801). */
+const trackCarry = (cert: PathCert, carry: VersionCarry) =>
+  track("path_version_carried", {
+    from: carry.from,
+    to: cert,
+    answers: carry.answers,
+    labs: carry.labs,
+    source: carry.source,
+  });
 
 export type PathAccess = "anonymous" | "free" | "pro";
 export type LinkMethod = "email_signup" | "email_login";
@@ -155,14 +166,19 @@ export function usePathProgress(cert: PathCert) {
       }
 
       if (!uid) {
+        let progress = local?.owner ? EMPTY_PATH_PROGRESS : (local?.progress ?? EMPTY_PATH_PROGRESS);
+        // A first visit to a newer exam version brings this device's answers on the earlier one.
+        const carry = !local?.owner && !hasStarted(progress) ? await carryFromEarlierVersion(cert, null) : null;
+        if (carry) progress = mergePathProgress(progress, carry.progress);
         if (cancelled) return;
         commit({
           ...INITIAL,
           ready: true,
           // Keep the stored owner: a signed-out account's progress stays theirs.
           owner: local?.owner ?? null,
-          progress: local?.owner ? EMPTY_PATH_PROGRESS : (local?.progress ?? EMPTY_PATH_PROGRESS),
+          progress,
         });
+        if (carry) trackCarry(cert, carry);
         return;
       }
 
@@ -171,13 +187,17 @@ export function usePathProgress(cert: PathCert) {
       identifyUser(uid, email ? { email } : undefined);
 
       const res = await adopt(uid, local);
+      // A first visit to a newer exam version brings the account's (and this
+      // device's) answers on the earlier one.
+      const carry = hasStarted(res.merged) ? null : await carryFromEarlierVersion(cert, uid);
+      const progress = carry ? mergePathProgress(res.merged, carry.progress) : res.merged;
       if (cancelled) return;
       commit({
         ready: true,
         userId: uid,
         email,
         owner: uid,
-        progress: res.merged,
+        progress,
         access: res.access,
         proPlan: res.proPlan,
         certId: res.certId,
@@ -185,7 +205,8 @@ export function usePathProgress(cert: PathCert) {
       });
       // Back from Google with an anonymous stop to keep: it's theirs now.
       if (res.carried) track("path_account_linked", { cert, method: "redirect" });
-      if (res.unsynced) void saveToAccount(res.merged);
+      if (carry) trackCarry(cert, carry);
+      if (res.unsynced || carry) void saveToAccount(progress);
     })();
     return () => {
       cancelled = true;

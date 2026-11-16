@@ -31,9 +31,11 @@ describe("SY0-801's Incident Response Process lab", () => {
     expect(lab.explanation).toMatch(/notification/i);
   });
 
-  it("keeps its own id, so it can sit beside SY0-701's labs when the switch-over registers it", () => {
-    const ids = Object.values(pbqRegistry).flatMap((scenarios) => scenarios.map((s) => s.id));
-    expect(ids).not.toContain(lab.id);
+  it("takes the place of SY0-701's version on the SY0-801 path, in domain 4.0", () => {
+    const sy0801 = pbqRegistry["security-plus-sy0-801"] ?? [];
+    expect(sy0801.filter((s) => s.id === lab.id)).toHaveLength(1);
+    expect(sy0801.some((s) => s.id === "incident-response-steps")).toBe(false);
+    expect((pbqRegistry["security-plus-sy0-701"] ?? []).some((s) => s.id === lab.id)).toBe(false);
     expect(lab.domain_number).toBe("4.0");
   });
 });

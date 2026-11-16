@@ -3,16 +3,18 @@ import { enrollInPath } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
 import { loadPathBank } from "@/server/path/bank";
 import { getPathAccess } from "@/server/path/access";
+import { otherVersionIds } from "@/server/data/enrollments";
 import { updateProfile } from "@/server/data/profiles";
-import { makeOnlyActiveEnrollment, setExamDate } from "@/server/services/enrollment-writes";
+import { makeOnlyActiveEnrollment, setExamDate, switchVersion } from "@/server/services/enrollment-writes";
 import { sendWelcome } from "@/server/services/lifecycle-email";
 
 /**
  * Point the account at the exam it's studying. Pro access is scoped to
  * enrolled exams, so a free account holds exactly one active enrollment — the
  * path it's on — and buying Pro unlocks that exam. Pro accounts add exams by
- * purchase only; here they can just set the date on an exam they already have.
- * The writes go through the server (accounts can only read enrollments).
+ * purchase only; here they can set the date on an exam they already have, or
+ * move to another version of it (Pro covers both Security+ versions). The
+ * writes go through the server (accounts can only read enrollments).
  */
 export const POST = defineEndpoint(enrollInPath, {
   auth: "user",
@@ -35,7 +37,14 @@ export const POST = defineEndpoint(enrollInPath, {
     // A Pro account with no exam yet claims its first one here; after that,
     // more exams are added by purchase.
     if (proPlan && anyActive) {
-      if (!mine?.is_active) return { enrolled: false };
+      if (!mine?.is_active) {
+        // Another version of an exam they have: they move to this one.
+        const versions = await otherVersionIds(db, certId);
+        const from = (existing ?? []).find((e) => e.is_active && versions.includes(e.certification_id));
+        if (!from) return { enrolled: false };
+        await switchVersion(user.id, from.certification_id, certId, input.examDate ?? from.exam_date ?? null);
+        return { enrolled: true };
+      }
       if (input.examDate) await setExamDate(user.id, certId, input.examDate);
       return { enrolled: true };
     }

@@ -554,7 +554,7 @@ describe("a signed-in learner", () => {
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     await screen.findByText("Prompt a|1.1|s1-0");
-    fireEvent.click(screen.getByRole("link", { name: "Security+" }));
+    fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
     expect(await screen.findByText("Your Security+ path")).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|s1-0")).toBeNull();
     // Switching exams is still a click away, under the map.
@@ -962,7 +962,7 @@ describe("exam rehearsals", () => {
     expect(saved.stops.rehearsal).toBeUndefined();
 
     // Home again, the latest reading is the rehearsal's, and its answers are a tap away.
-    fireEvent.click(screen.getByRole("link", { name: "Security+" }));
+    fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
     expect(await screen.findByText(/last rehearsal 75%/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "see its answers" }));
     expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();

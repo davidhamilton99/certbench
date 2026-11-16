@@ -17,11 +17,18 @@ const chip =
 export function GoalStep({
   step,
   examName,
+  retiring,
   onExam,
   onMinutes,
 }: {
   step: "exam" | "minutes";
   examName: string;
+  /**
+   * This exam version's last day in English and the version after it (SY0-701
+   * and SY0-801): a later date gets a pointer there. Not a block, since other
+   * languages run longer.
+   */
+  retiring?: { lastDay: string; code: string; newer: { code: string; href: string } };
   onExam: (examDate: string | null, target: string | null) => void;
   onMinutes: (minutes: number) => void;
 }) {
@@ -96,6 +103,16 @@ export function GoalStep({
           {wrong && (
             <p id="exam-date-hint" role="alert" className="text-sm text-destructive">
               That date doesn&apos;t look right. Pick one from today to {longDate(latest)}.
+            </p>
+          )}
+          {retiring && plannable && date > retiring.lastDay && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {retiring.code} can be taken in English until {longDate(retiring.lastDay)}. Sitting it in English
+              after that means {retiring.newer.code}:{" "}
+              <a href={retiring.newer.href} className="font-medium text-primary underline underline-offset-4">
+                study {retiring.newer.code} instead
+              </a>
+              .
             </p>
           )}
         </form>

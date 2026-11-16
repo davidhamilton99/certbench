@@ -1,13 +1,22 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { domainLab } from "@/core/path/labs";
-import { pbqRegistry } from "@/data/pbq";
+import { pbqClosingLabs, pbqRegistry } from "@/data/pbq";
+import { OBJECTIVE_TITLES } from "@/data/path/titles";
 import { SY0_801_DOMAINS } from "@/data/security-plus-v8";
 import { SY0_801_PRACTICE_TEST } from "@/data/security-plus-v8-practice-test";
 import { SY0_801_MAP, carriedCounts, sy0801Codes, sy0801ObjectiveOf } from "..";
+import { buildSy0801Migration, expectedCounts } from "../migration-sql";
+import { SY0_801_NEW_QUESTIONS_D1_2 } from "../new-questions/d1-2";
+import { SY0_801_NEW_QUESTIONS_D3_5 } from "../new-questions/d3-5";
 import bankJson from "../sy0-701-bank.json";
+import copiesJson from "../copies.json";
 
 // JSON arrays type as string[][]; each row is an [id, SY0-701 objective] pair.
 const bank = (bankJson as unknown as Record<string, [string, string][]>)[SY0_801_MAP.sourceSlug];
+// SY0-701 question id → [its copy's id, the copy's SY0-801 objective].
+const copies = copiesJson as unknown as Record<string, [string, string]>;
 const ids = new Set(bank.map(([id]) => id));
 const sourceCode = new Map(bank);
 const codes = sy0801Codes();
@@ -108,26 +117,103 @@ describe("the SY0-701 bank on SY0-801", () => {
 });
 
 describe("SY0-801's labs", () => {
-  const scenarios = pbqRegistry[SY0_801_MAP.sourceSlug] ?? [];
-  const onSy0801 = scenarios.map((s) => ({ ...s, domain_number: SY0_801_MAP.labDomains[s.id] }));
+  const sy0701 = pbqRegistry[SY0_801_MAP.sourceSlug] ?? [];
+  const sy0801 = pbqRegistry[SY0_801_MAP.slug] ?? [];
   const domains = SY0_801_MAP.domains.map((d) => d.number);
+  const domainTitle = new Map(SY0_801_MAP.domains.map((d) => [d.number, d.title]));
 
-  it("places every Security+ lab in an SY0-801 domain", () => {
-    expect(new Set(Object.keys(SY0_801_MAP.labDomains))).toEqual(new Set(scenarios.map((s) => s.id)));
+  it("places every SY0-701 lab in an SY0-801 domain", () => {
+    expect(new Set(Object.keys(SY0_801_MAP.labDomains))).toEqual(new Set(sy0701.map((s) => s.id)));
     for (const d of Object.values(SY0_801_MAP.labDomains)) expect(domains).toContain(d);
   });
 
-  it("closes every domain with a lab of its own", () => {
-    for (const [d, id] of Object.entries(SY0_801_MAP.closingLabs)) expect(SY0_801_MAP.labDomains[id]).toBe(d);
+  it("plays every SY0-701 lab, in its own version where SY0-801 has one, and the AI threat hunt", () => {
+    const ids = sy0801.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const s of sy0701) {
+      const own = SY0_801_MAP.replacedLabs[s.id];
+      expect(ids).toContain(own ?? s.id);
+      if (own) expect(ids).not.toContain(s.id);
+    }
+    expect(ids).toContain("sec801-hunt-ai-assistant");
+    expect(ids).toHaveLength(sy0701.length + 1);
+  });
+
+  it("files each lab in its SY0-801 domain, under SY0-801's domain name", () => {
+    for (const s of sy0801) {
+      const expected = SY0_801_MAP.labDomains[s.id] ?? s.domain_number;
+      expect(s.domain_number, s.id).toBe(expected);
+      expect(s.domain_title, s.id).toBe(domainTitle.get(s.domain_number));
+    }
+  });
+
+  it("closes every domain with the lab the map picks, or the most hands-on one", () => {
+    for (const [d, id] of Object.entries(SY0_801_MAP.closingLabs)) {
+      expect(sy0801.find((s) => s.id === id)?.domain_number, id).toBe(d);
+    }
     const closing = Object.fromEntries(
-      domains.map((d) => [d, SY0_801_MAP.closingLabs[d] ?? domainLab(onSy0801, d)?.id])
+      domains.map((d) => [d, domainLab(sy0801, d, pbqClosingLabs[SY0_801_MAP.slug]?.[d])?.id])
     );
     expect(closing).toEqual({
       "1.0": "certificate-lifecycle",
-      "2.0": "sp-topo-wireless-security",
+      "2.0": "sec801-hunt-ai-assistant",
       "3.0": "sp-topo-network-segmentation",
       "4.0": "security-incident-log-analysis",
       "5.0": "risk-assessment-process",
     });
+  });
+});
+
+describe("SY0-801's objective labels", () => {
+  it("are the path's short names, the same on every page", () => {
+    const labels = Object.fromEntries(SY0_801_DOMAINS.flatMap((d) => d.objectives.map((o) => [o.code, o.label])));
+    expect(labels).toEqual(OBJECTIVE_TITLES[SY0_801_MAP.slug]);
+  });
+});
+
+describe("the copies migration 030 makes", () => {
+  const ids = (list: string[]) => list.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id));
+  const copyIds = Object.values(copies).map(([id]) => id);
+
+  it("gives every copied question one fixed id and its SY0-801 objective", () => {
+    const copied = bank.filter(([id]) => !(id in SY0_801_MAP.retired));
+    expect(new Set(Object.keys(copies))).toEqual(new Set(copied.map(([id]) => id)));
+    for (const [id, code] of copied) expect(copies[id][1], id).toBe(sy0801ObjectiveOf(id, code));
+    expect(ids(copyIds)).toBe(true);
+    expect(new Set(copyIds).size).toBe(copyIds.length);
+    for (const id of copyIds) expect(sourceCode.has(id)).toBe(false);
+  });
+});
+
+describe("migration 030", () => {
+  const input = {
+    map: SY0_801_MAP,
+    bank,
+    copies,
+    newQuestions: [...SY0_801_NEW_QUESTIONS_D1_2, ...SY0_801_NEW_QUESTIONS_D3_5],
+  };
+
+  it("leaves every objective with 20 questions or more, and 2.6 with 30", () => {
+    const counts = expectedCounts(input);
+    expect(Object.keys(counts)).toEqual(codes);
+    for (const [code, n] of Object.entries(counts)) expect(n, code).toBeGreaterThanOrEqual(code === "2.6" ? 30 : 20);
+    expect(Object.values(counts).reduce((s, n) => s + n, 0)).toBe(836 + 172);
+  });
+
+  it("is committed as 030 exactly as the builder makes it", () => {
+    const file = readFileSync(join(process.cwd(), "supabase/migrations/030_security_plus_sy0_801.sql"), "utf8");
+    // Git may check the file out with Windows line endings.
+    expect(file.replace(/\r\n/g, "\n")).toBe(buildSy0801Migration(input));
+  });
+
+  it("only adds rows, all in one transaction, and checks before it commits", () => {
+    const sql = buildSy0801Migration(input);
+    expect(sql.startsWith("-- Add Security+ SY0-801")).toBe(true);
+    expect(sql).toMatch(/\nbegin;\n/);
+    expect(sql.trimEnd().endsWith("commit;")).toBe(true);
+    expect(sql).not.toMatch(/\b(delete from|drop table|truncate)\b/i);
+    // Updates touch only the copies the fixes name, never an SY0-701 question.
+    const updated = [...sql.matchAll(/update cert_questions set[\s\S]*?where id = '([0-9a-f-]+)';/g)].map((m) => m[1]);
+    expect(updated.sort()).toEqual(Object.keys(SY0_801_MAP.fixes).map((id) => copies[id][0]).sort());
   });
 });

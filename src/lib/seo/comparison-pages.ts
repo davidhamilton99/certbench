@@ -237,17 +237,16 @@ export const ROUNDUP: RoundupData = {
     {
       name: "CertBench",
       price: "Pro $19/mo or $39 per exam cycle",
-      bestFor: "A guided path through every SY0-701 objective",
+      bestFor: "A guided path through every objective, on SY0-701 or SY0-801",
       isSelf: true,
       strengths: [
-        "A guided path written to SY0-701: every objective in short stops, a readiness checkpoint, then timed full-length exams",
+        "A guided path for each Security+ version, SY0-701 and SY0-801: every objective in short stops, a readiness checkpoint, then timed full-length exams",
         "Spaced repetition on every miss, and a readiness score weighted the way the real exam weights its domains",
         "Playable PBQ simulations in the browser, and free tools to try before you commit — no account",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
         "Newer question bank than the incumbents, and CompTIA-only coverage",
-        "The guided path is written to SY0-701; for SY0-801 there's a free practice test, not yet a path",
       ],
     },
     {

@@ -76,7 +76,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Is this for SY0-701 or SY0-801?",
         answer:
-          "SY0-701. It's the current exam, and CompTIA keeps it open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026, and CertBench has a separate free practice test for it. Both versions lead to the same Security+ certification, so if you can sit SY0-701 by June 2027 there's no need to wait.",
+          "SY0-701. It's the current exam, and CompTIA keeps it open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026, and CertBench has a separate path and free practice test for it. Both versions lead to the same Security+ certification, so if you can sit SY0-701 by June 2027 there's no need to wait.",
       },
     ],
     related: [

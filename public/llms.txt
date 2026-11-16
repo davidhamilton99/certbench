@@ -1,10 +1,10 @@
 # CertBench
 
-> Guided CompTIA exam prep. Pick your exam and CertBench lays out every exam objective as a path of short, interactive stops — quick questions first, the real exam's wording as you go — with a readiness checkpoint that shows where you stand, for CompTIA Security+ (SY0-701), Network+ (N10-009), and A+ (Core 1 and Core 2). Every question is original and comes with a full explanation. No braindumps or leaked exam content.
+> Guided CompTIA exam prep. Pick your exam and CertBench lays out every exam objective as a path of short, interactive stops — quick questions first, the real exam's wording as you go — with a readiness checkpoint that shows where you stand, for CompTIA Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ (Core 1 and Core 2). Every question is original and comes with a full explanation. No braindumps or leaked exam content.
 
 ## Which exam versions this covers
 
-- Security+: the guided path is written to SY0-701, the current exam, open until June 11, 2027 in English. CompTIA lists SY0-801 as launching on or around November 17, 2026. For SY0-801, CertBench has a free practice test and free AI-threat practice questions, but no study path yet.
+- Security+: a guided path for each version. SY0-701 is open until June 11, 2027 in English; CompTIA lists SY0-801 as launching on or around November 17, 2026. Pro covers both versions. For SY0-801 there are also a free practice test and free AI-threat practice questions.
 - Network+: written for N10-009, the current exam.
 - A+: written to 220-1201 and 220-1202 (CompTIA's V15), the current exams. CompTIA retired 220-1101 and 220-1102 on September 25, 2025.
 
@@ -12,6 +12,7 @@
 
 Each path starts with a warm-up anyone can play with no account. A free account keeps your progress and opens the next stops through the readiness checkpoint; Pro opens the rest of the path.
 
+- [Security+ study path (SY0-801)](https://certbench.dev/path/security-plus-sy0-801): all 27 objectives, the new AI objective included, one short stop each, with domain practice and a readiness checkpoint.
 - [Security+ study path (SY0-701)](https://certbench.dev/path/security-plus-sy0-701): all 28 objectives, one short stop each, with domain practice and a readiness checkpoint.
 - [Network+ study path (N10-009)](https://certbench.dev/path/network-plus-n10-009): the N10-009 topics, from the OSI model to troubleshooting.
 - [A+ Core 1 study path (220-1201)](https://certbench.dev/path/a-plus-core1-220-1201): mobile devices, networking, hardware, virtualization and cloud, and troubleshooting.
@@ -55,4 +56,4 @@ The port, subnetting, and acronym drills give a first round free with no account
 
 - [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
 - [Pricing](https://certbench.dev/pricing): the start of every path is free; Pro opens the whole path, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
-- Certifications covered: CompTIA Security+ SY0-701 (with free SY0-801 practice), Network+ N10-009, A+ Core 1 and Core 2 (220-1201 and 220-1202).
+- Certifications covered: CompTIA Security+ SY0-701 and SY0-801, Network+ N10-009, A+ Core 1 and Core 2 (220-1201 and 220-1202).

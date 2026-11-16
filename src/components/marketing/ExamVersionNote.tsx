@@ -6,6 +6,7 @@ import {
   COMPTIA_URLS,
   SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_CERT,
   SY0_801_PATH,
   SY0_801_PRACTICE_PATH,
 } from "@/lib/seo/exam-versions";
@@ -50,9 +51,13 @@ export function ExamVersionNote({
         <Link href={SECURITY_PLUS_VERSIONS_PATH} className={LINK}>
           Which one should you take?
         </Link>{" "}
-        Studying for SY0-801?{" "}
+        Studying for SY0-801? It has{" "}
+        <Link href={`/path/${SY0_801_CERT}`} className={LINK}>
+          its own path
+        </Link>{" "}
+        and a{" "}
         <Link href={SY0_801_PRACTICE_PATH} className={LINK}>
-          Take the free SY0-801 practice test
+          free practice test
         </Link>
         .
       </>

@@ -12,8 +12,8 @@ import { SY0_801_DOMAINS } from "@/data/security-plus-v8";
 import { SY0_801_PRACTICE_TEST } from "@/data/security-plus-v8-practice-test";
 import {
   COMPTIA_URLS,
-  SECURITY_PLUS_CERT,
   SECURITY_PLUS_VERSIONS_PATH,
+  SY0_801_CERT,
   SY0_801_AI_PATH,
   SY0_801_PATH,
   SY0_801_PRACTICE_CHECKED,
@@ -26,7 +26,7 @@ import { examReps, examStructure } from "@/lib/tools/practice-exam";
 
 const QUESTION_COUNT = SY0_801_PRACTICE_TEST.length;
 const OBJECTIVE_COUNT = SY0_801_DOMAINS.reduce((n, d) => n + d.objectives.length, 0);
-const PATH_HREF = `/path/${SECURITY_PLUS_CERT}`;
+const PATH_HREF = `/path/${SY0_801_CERT}`;
 
 const TITLE = "Free Security+ SY0-801 Practice Test";
 const DESCRIPTION = `Free ${QUESTION_COUNT}-question Security+ SY0-801 practice test covering all ${OBJECTIVE_COUNT} objectives in the exam's weights. Timed, scored by domain, every answer explained. No account.`;
@@ -79,9 +79,9 @@ const DECK: DeckQuestion[] = SECTIONS.flatMap(({ objectives }) =>
 );
 
 const NEXT: PracticeExamNext = {
-  heading: "Keep going on the Security+ path",
-  body: "CertBench's Security+ path is built on SY0-701, the exam CompTIA keeps open until June 11, 2027 in English. It covers the ground the two exams share in short stops and brings back whatever you miss. SY0-801's new AI objective has its own free questions.",
-  primary: { href: PATH_HREF, label: "Start my Security+ path" },
+  heading: "Keep going on the SY0-801 path",
+  body: `CertBench's SY0-801 path covers all ${OBJECTIVE_COUNT} objectives in short stops, the new AI objective included, and brings back whatever you miss. About twenty minutes in, a readiness checkpoint shows where you stand by domain.`,
+  primary: { href: PATH_HREF, label: "Start my SY0-801 path" },
   links: [
     { href: SY0_801_AI_PATH, label: "Practise the AI objective" },
     { href: SECURITY_PLUS_VERSIONS_PATH, label: "SY0-801 or SY0-701?" },
@@ -91,7 +91,7 @@ const NEXT: PracticeExamNext = {
 const FAQS = [
   {
     question: "Is this practice test for SY0-801 or SY0-701?",
-    answer: `SY0-801, the Security+ exam CompTIA lists as launching on or around November 17, 2026. Each question is tagged to one of SY0-801's ${OBJECTIVE_COUNT} objectives. For SY0-701, which stays open until June 11, 2027 in English, use CertBench's Security+ practice test and path.`,
+    answer: `SY0-801, the Security+ exam CompTIA lists as launching on or around November 17, 2026. Each question is tagged to one of SY0-801's ${OBJECTIVE_COUNT} objectives. For SY0-701, which stays open until June 11, 2027 in English, use CertBench's SY0-701 practice test and path.`,
   },
   {
     question: "How long is the real SY0-801 exam?",
@@ -220,15 +220,14 @@ export default function Sy0801PracticeTestPage() {
         </section>
 
         <section className="mt-12 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Study Security+ one short step at a time</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Study SY0-801 one short step at a time</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            CertBench&apos;s Security+ path covers every SY0-701 objective in short stops. About twenty minutes
-            in, a readiness checkpoint shows where you stand by domain. SY0-701 stays open until June 11, 2027 in
-            English.
+            CertBench&apos;s SY0-801 path covers all {OBJECTIVE_COUNT} objectives in short stops, AI threats
+            included. About twenty minutes in, a readiness checkpoint shows where you stand by domain.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href={PATH_HREF}>
-              Start my Security+ path
+              Start my SY0-801 path
               <ArrowRight />
             </Link>
           </Button>
