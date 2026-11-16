@@ -171,6 +171,7 @@ export const OBJECTIVE_TITLES: Record<string, Record<string, string>> = {
 /** Short exam names for headings ("Your Security+ path"). */
 export const EXAM_NAMES: Record<string, string> = {
   "security-plus-sy0-701": "Security+",
+  "security-plus-sy0-801": "Security+",
   "network-plus-n10-009": "Network+",
   "a-plus-core1-220-1201": "A+ Core 1",
   "a-plus-core2-220-1202": "A+ Core 2",

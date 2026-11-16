@@ -6,6 +6,7 @@ import { regionPricing } from "@/lib/pricing/ppp";
 import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
+import { otherVersions } from "@/core/path/versions";
 import { getUserPlan } from "@/server/services/subscription";
 import { ManageBillingButton } from "@/components/workspace/UpgradePanel";
 import { PlanPicker } from "@/components/billing/PlanPicker";
@@ -70,7 +71,10 @@ export default async function UpgradePage({
     return c ? [c] : [];
   });
   const enrolledIds = new Set(enrollments.map((e) => e.certificationId));
-  const otherCerts = allCerts.filter((c) => !enrolledIds.has(c.id));
+  // Pro on one version of an exam covers its others (Security+ SY0-701 and
+  // SY0-801), so those are never offered as an exam to buy.
+  const coveredSlugs = new Set(enrolledCerts.flatMap((c) => [c.slug, ...otherVersions(c.slug)]));
+  const otherCerts = allCerts.filter((c) => !enrolledIds.has(c.id) && !coveredSlugs.has(c.slug));
 
   return (
     <div className="mx-auto grid w-full max-w-lg gap-6">

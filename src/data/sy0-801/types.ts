@@ -51,8 +51,10 @@ export interface Sy0801Map {
   retired: Record<string, string>;
   /** Copies that need SY0-801 wording, by the SY0-701 question's id. */
   fixes: Record<string, V8QuestionFix>;
-  /** Every Security+ lab scenario's SY0-801 domain, by scenario id. */
+  /** Every SY0-701 lab scenario's SY0-801 domain, by scenario id. */
   labDomains: Record<string, string>;
+  /** SY0-701 labs SY0-801 plays in its own version: SY0-701 scenario id → SY0-801 scenario id. */
+  replacedLabs: Record<string, string>;
   /** Domains whose closing lab isn't the default pick (core/path/labs.ts): domain → scenario id. */
   closingLabs: Record<string, string>;
 }

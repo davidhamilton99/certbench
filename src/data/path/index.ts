@@ -4,6 +4,7 @@ import type { AuthoredRep } from "./types";
 import { domain1, domain2, warmup as securityPlusWarmup } from "./security-plus-sy0-701/domains-1-2";
 import { domain3, domain4 } from "./security-plus-sy0-701/domains-3-4";
 import { domain5 } from "./security-plus-sy0-701/domain-5";
+import { SY0_801_PATH_CONTENT } from "./security-plus-sy0-801";
 
 /**
  * What each exam's path is made of, beyond the question bank:
@@ -36,6 +37,7 @@ export const PATH_CONTENT: Record<PathCert, PathContent> = {
     warmup: { authored: securityPlusWarmup },
     recallTables: {},
   },
+  "security-plus-sy0-801": SY0_801_PATH_CONTENT,
   "network-plus-n10-009": {
     authored: [],
     warmup: {

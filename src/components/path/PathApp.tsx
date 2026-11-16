@@ -21,6 +21,7 @@ import {
   stopsDone,
 } from "@/core/path/progress";
 import { questionIdOf } from "@/core/path/rep-id";
+import { EXAM_CODES, examVersions, LAST_EXAM_DAY, newerVersion } from "@/core/path/versions";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
 import { latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
 import type {
@@ -41,6 +42,7 @@ import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap"
 import { LabLibrary, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
+import { VersionSwitch } from "./VersionSwitch";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
 import { PathActivating, PathUnlocked } from "./PathUnlocked";
@@ -596,6 +598,15 @@ export function PathApp({
     return changed;
   }, [view.kind, play.before, statuses]);
 
+  // An exam version with a last day CompTIA has announced (SY0-701): a date
+  // after it can't be this version, so the goal question points to the newer one.
+  const newer = newerVersion(cert);
+  const lastDay = LAST_EXAM_DAY[cert];
+  const retiring =
+    newer && lastDay
+      ? { lastDay, code: EXAM_CODES[cert], newer: { code: EXAM_CODES[newer], href: `/path/${newer}` } }
+      : undefined;
+
   async function saveGoalExam(examDate: string | null, target: string | null) {
     p.setGoal({ examDate, target, minutes: null });
     track("path_goal_set", { cert, step: "exam", value: examDate ? "booked" : (target ?? "unknown") });
@@ -763,6 +774,7 @@ export function PathApp({
         <GoalStep
           step={view.step}
           examName={structure.examName}
+          retiring={retiring}
           onExam={async (examDate, target) => {
             await saveGoalExam(examDate, target);
             setView({ kind: "goal", step: "minutes", then: view.then });
@@ -910,6 +922,7 @@ export function PathApp({
       <PathHeader
         cert={cert}
         examName={structure.examName}
+        version={examVersions(cert).length ? EXAM_CODES[cert] : undefined}
         signedIn={p.signedIn}
         ready={p.ready}
         onHome={() => {
@@ -1280,6 +1293,7 @@ export function PathApp({
             </Link>
           </p>
         )}
+        {!anonymousDone && <VersionSwitch cert={cert} />}
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
           <p className="-mt-3 text-center text-xs text-muted-foreground">

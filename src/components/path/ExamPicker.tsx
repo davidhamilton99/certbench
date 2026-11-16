@@ -1,28 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { hasStarted } from "@/core/path/progress";
 import { PATH_CERTS, type PathCert } from "@/core/path/types";
+import { EXAM_CODES, LAST_EXAM_DAY, examVersions, longDate } from "@/core/path/versions";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { readLocalPath } from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
 import { cn } from "@/lib/utils";
 
-const EXAM_CODES: Record<PathCert, string> = {
-  "security-plus-sy0-701": "SY0-701",
-  "network-plus-n10-009": "N10-009",
-  "a-plus-core1-220-1201": "220-1201",
-  "a-plus-core2-220-1202": "220-1202",
-};
+/** One tile per exam. An exam taught in two versions gets one tile that asks which. */
+const TILES: PathCert[][] = (() => {
+  const placed = new Set<string>();
+  const tiles: PathCert[][] = [];
+  for (const cert of PATH_CERTS) {
+    if (placed.has(cert)) continue;
+    const versions = examVersions(cert);
+    const tile = versions.length ? [...versions] : [cert];
+    for (const c of tile) placed.add(c);
+    tiles.push(tile);
+  }
+  return tiles;
+})();
+
+const objectiveCount = (cert: PathCert) =>
+  `${Object.keys(OBJECTIVE_TITLES[cert]).length} ${usesOfficialObjectiveNumbers(cert) ? "objectives" : "topics"}`;
+
+/** What a version's row says: when it stops, or that it's the newest. */
+function versionNote(cert: PathCert): string {
+  const last = LAST_EXAM_DAY[cert];
+  return last ? `Can be taken until ${longDate(last)}` : "The newest version";
+}
+
+const tileClass =
+  "glass group grid gap-1 rounded-2xl px-4 py-4 text-left transition-[border-color,transform] hover:border-primary/60 active:scale-[0.99] sm:px-5 sm:py-5";
 
 /**
- * The only choice on CertBench: which exam. Four tiles, each straight into
- * that exam's path. A path already started on this device is offered first.
- * `upgraded`: just paid, so the path opens with the unlock moment.
+ * The only choice on CertBench: which exam. A tile per exam, each straight into
+ * that exam's path; an exam with two versions asks which one first. A path
+ * already started on this device is offered first. `upgraded`: just paid, so
+ * the path opens with the unlock moment.
  */
 export function ExamPicker({
   surface,
@@ -34,6 +55,8 @@ export function ExamPicker({
   className?: string;
 }) {
   const [resume, setResume] = useState<{ cert: PathCert; stops: number } | null>(null);
+  /** The versioned exam whose versions are showing, by its newest version's slug. */
+  const [open, setOpen] = useState<PathCert | null>(null);
   const flag = upgraded ? "?upgraded=1" : "";
 
   // Reading this device's storage can only happen after mount.
@@ -57,6 +80,60 @@ export function ExamPicker({
     };
   }, []);
 
+  const openIndex = open ? TILES.findIndex((t) => t[0] === open) : -1;
+  // The versions open under the tile's own row, spanning both columns.
+  const rowEnd = openIndex < 0 ? -1 : Math.min(openIndex | 1, TILES.length - 1);
+
+  const cells: ReactNode[] = [];
+  TILES.forEach((tile, i) => {
+    const [first] = tile;
+    if (tile.length === 1) {
+      cells.push(
+        <Link
+          key={first}
+          href={`/path/${first}${flag}`}
+          onClick={() => track("path_exam_picked", { cert: first, surface })}
+          className={tileClass}
+        >
+          <span className="flex items-center justify-between gap-2">
+            <span className="font-display text-lg font-semibold tracking-tight sm:text-xl">{EXAM_NAMES[first]}</span>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
+          </span>
+          <span className="font-mono text-xs text-muted-foreground">
+            {EXAM_CODES[first]} · {objectiveCount(first)}
+          </span>
+        </Link>
+      );
+    } else {
+      const isOpen = open === first;
+      cells.push(
+        <button
+          key={first}
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls={`exam-versions-${first}`}
+          onClick={() => {
+            setOpen(isOpen ? null : first);
+            if (!isOpen) track("path_versions_opened", { exam: EXAM_NAMES[first], surface });
+          }}
+          className={cn(tileClass, isOpen && "border-primary/60")}
+        >
+          <span className="flex items-center justify-between gap-2">
+            <span className="font-display text-lg font-semibold tracking-tight sm:text-xl">{EXAM_NAMES[first]}</span>
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:text-primary",
+                isOpen && "rotate-180 text-primary"
+              )}
+            />
+          </span>
+          <span className="font-mono text-xs text-muted-foreground">{tile.map((c) => EXAM_CODES[c]).join(" · ")}</span>
+        </button>
+      );
+    }
+    if (i === rowEnd && open) cells.push(<VersionChoice key="versions" versions={TILES[openIndex]} flag={flag} surface={surface} />);
+  });
+
   return (
     <div className={cn("grid gap-3", className)}>
       {resume && (
@@ -69,35 +146,56 @@ export function ExamPicker({
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">Pick up where you left off</span>
             <span className="font-display text-lg font-semibold tracking-tight">
               Your {EXAM_NAMES[resume.cert]} path
-              {resume.stops > 0 && (
-                <span className="font-sans text-sm font-normal text-muted-foreground">
-                  {" "}· {resume.stops} {resume.stops === 1 ? "stop" : "stops"} done
-                </span>
-              )}
+              <span className="font-sans text-sm font-normal text-muted-foreground">
+                {examVersions(resume.cert).length > 0 && <> · {EXAM_CODES[resume.cert]}</>}
+                {resume.stops > 0 && (
+                  <>
+                    {" "}· {resume.stops} {resume.stops === 1 ? "stop" : "stops"} done
+                  </>
+                )}
+              </span>
             </span>
           </span>
           <ArrowRight className="size-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
         </Link>
       )}
-      <div className="grid grid-cols-2 gap-3">
-        {PATH_CERTS.map((cert) => (
-          <Link
-            key={cert}
-            href={`/path/${cert}${flag}`}
-            onClick={() => track("path_exam_picked", { cert, surface })}
-            className="glass group grid gap-1 rounded-2xl px-4 py-4 text-left transition-[border-color,transform] hover:border-primary/60 active:scale-[0.99] sm:px-5 sm:py-5"
-          >
-            <span className="flex items-center justify-between gap-2">
-              <span className="font-display text-lg font-semibold tracking-tight sm:text-xl">{EXAM_NAMES[cert]}</span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
+      <div className="grid grid-cols-2 gap-3">{cells}</div>
+    </div>
+  );
+}
+
+/** Which version of an exam: a row per version, newest first, and how to tell. */
+function VersionChoice({ versions, flag, surface }: { versions: PathCert[]; flag: string; surface: string }) {
+  const [newest] = versions;
+  const retiring = versions.find((c) => LAST_EXAM_DAY[c]);
+  return (
+    <div
+      id={`exam-versions-${newest}`}
+      className="path-rise col-span-2 grid gap-2 rounded-2xl border border-primary/40 bg-primary/[0.04] p-3 sm:p-4"
+    >
+      <p className="px-1 text-sm font-medium">Which {EXAM_NAMES[newest]} exam are you taking?</p>
+      {versions.map((cert) => (
+        <Link
+          key={cert}
+          href={`/path/${cert}${flag}`}
+          onClick={() => track("path_exam_picked", { cert, surface })}
+          className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/60"
+        >
+          <span className="grid gap-0.5">
+            <span className="font-display text-base font-semibold tracking-tight">{EXAM_CODES[cert]}</span>
+            <span className="text-xs text-muted-foreground">
+              {versionNote(cert)} · {objectiveCount(cert)}
             </span>
-            <span className="font-mono text-xs text-muted-foreground">
-              {EXAM_CODES[cert]} · {Object.keys(OBJECTIVE_TITLES[cert]).length}{" "}
-              {usesOfficialObjectiveNumbers(cert) ? "objectives" : "topics"}
-            </span>
-          </Link>
-        ))}
-      </div>
+          </span>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
+        </Link>
+      ))}
+      {retiring && (
+        <p className="px-1 text-xs text-muted-foreground">
+          Sitting it in English after {longDate(LAST_EXAM_DAY[retiring]!)}? Then it&apos;s{" "}
+          <span className="whitespace-nowrap">{EXAM_CODES[newest]}</span>.
+        </p>
+      )}
     </div>
   );
 }

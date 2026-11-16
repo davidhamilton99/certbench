@@ -1,4 +1,5 @@
-import { SY0_801_DOMAINS } from "@/data/security-plus-v8";
+// Relative, so the migration builder (scripts/sy0-801) can load it outside Next.
+import { SY0_801_DOMAINS } from "../security-plus-v8";
 import type { Sy0801Map } from "./types";
 
 /**
@@ -361,9 +362,16 @@ export const SY0_801_MAP: Sy0801Map = {
     "sec-hunt-ssh-bruteforce": "4.0",
     "risk-assessment-process": "5.0",
   },
-  // Domain 4 would otherwise close on the firewall ACL lab, the first
-  // simulation it now holds; incident log analysis closed it on SY0-701 too.
+  // SY0-801 names its incident response activities differently, so its path
+  // plays its own version of the ordering lab (src/data/pbq/security-plus-sy0-801).
+  replacedLabs: {
+    "incident-response-steps": "incident-response-process",
+  },
   closingLabs: {
+    // The AI threat hunt, SY0-801's own; the default pick would be the wireless topology.
+    "2.0": "sec801-hunt-ai-assistant",
+    // Domain 4 would otherwise close on the firewall ACL lab, the first
+    // simulation it now holds; incident log analysis closed it on SY0-701 too.
     "4.0": "security-incident-log-analysis",
   },
 };
