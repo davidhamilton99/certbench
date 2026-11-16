@@ -5,38 +5,57 @@ import { CalendarClock, Target } from "lucide-react";
 import { ReadinessDial } from "@/components/instrument/ReadinessDial";
 import { bandFor, bandVars } from "@/lib/readiness/band";
 import { biggestOpportunity, daysUntil, projectFinish } from "@/core/path/checkpoint";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointResult, PathDomain, PathGoal, PathStructure } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
+/**
+ * A checkpoint is a dozen questions, so its top band is a strong first read,
+ * never "exam ready": that's a call for a full rehearsal to make. From Nov 1
+ * to 15, 2026, 11 of the 13 people who finished one scored 75% or more, were
+ * told they were exam-ready, and left without opening the offer under it.
+ */
 const HEADLINE = {
   work: "Here's your starting point.",
   close: "You're on your way.",
-  ready: "You're in good shape.",
+  ready: "A strong first read.",
 } as const;
+
+/** Under the score, in place of the band's own label where that would overclaim. */
+const VERDICT: Partial<Record<string, string>> = { ready: "Strong start" };
 
 const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 
 /**
- * The checkpoint result: score on the readiness dial, how each domain went,
- * where the biggest gain is, and when the rest of the path gets done at the
- * pace they set. Ends with what to do next (`children`): the offer, or
- * "Continue" for Pro.
+ * The checkpoint result: score on the readiness dial as a first read, how each
+ * domain went, how much of the exam the path has taught so far, where the
+ * biggest gain is, and when the rest of the path gets done at the pace they
+ * set. Ends with what to do next (`children`): the offer, or "Continue" for Pro.
  */
 export function PathReveal({
   result,
   structure,
   goal,
   remainingStops,
+  studied,
   children,
 }: {
   result: CheckpointResult;
   structure: PathStructure;
   goal: PathGoal | null;
   remainingStops: number;
+  /** Objectives whose learn stop is done. */
+  studied: number;
   children: ReactNode;
 }) {
   const band = bandFor(result.score);
   const opportunity = biggestOpportunity(result, structure.domains);
+  const asked = result.domains.reduce((s, d) => s + d.total, 0);
+  // What one answer is worth, so the size of the sample is plain.
+  const each = asked > 0 ? Math.round(100 / asked) : 0;
+  const objectives = structure.domains.reduce((n, d) => n + d.objectives.length, 0);
+  const learned = Math.max(0, Math.min(studied, objectives));
+  const ahead = objectives - learned;
   // "Today" for the projection, fixed for the life of the screen.
   const [now] = useState(() => Date.now());
   const minutes = goal?.minutes || 20;
@@ -68,10 +87,31 @@ export function PathReveal({
         kicker={`Readiness checkpoint · ${structure.examName}`}
         headline={HEADLINE[band.key as keyof typeof HEADLINE] ?? HEADLINE.work}
         caption="Checkpoint"
-        summary={`${result.score}% across ${result.domains.reduce((s, d) => s + d.total, 0)} exam-style questions, weighted the way the real exam weights its domains. 75% is where we call it exam-ready.`}
+        verdict={VERDICT[band.key]}
+        readyMark={false}
+        summary={
+          <span className="font-mono text-xs uppercase tracking-[0.14em]">
+            {asked} questions · ±{each} pts each · exam asks {REHEARSAL_FORMATS.full.questions}
+          </span>
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
+        {ahead > 0 && (
+          <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:col-span-2">
+            <div className="flex items-baseline justify-between gap-3 text-sm">
+              <span className="font-medium">
+                {learned} of {objectives} objectives studied
+              </span>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ahead} to go</span>
+            </div>
+            <div className="flex gap-0.5" aria-hidden>
+              {Array.from({ length: objectives }, (_, i) => (
+                <span key={i} className={cn("h-1.5 min-w-0 flex-1 rounded-full", i < learned ? "bg-primary" : "bg-muted")} />
+              ))}
+            </div>
+          </div>
+        )}
         {opportunity && <OpportunityNote domain={opportunity} />}
         <div className={cn("flex gap-3 rounded-2xl border border-border bg-card p-4", !opportunity && "sm:col-span-2")}>
           <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" />
@@ -104,6 +144,8 @@ export function ReadingCard({
   caption,
   summary,
   from,
+  verdict,
+  readyMark = true,
 }: {
   result: CheckpointResult;
   structure: PathStructure;
@@ -112,6 +154,10 @@ export function ReadingCard({
   caption: string;
   summary: ReactNode;
   from?: number;
+  /** Under the score, in place of the band's label ("Exam ready" and so on). */
+  verdict?: string;
+  /** The dial's "75 · READY" mark; off for a reading too small to call it. */
+  readyMark?: boolean;
 }) {
   const band = bandFor(result.score);
   return (
@@ -127,7 +173,14 @@ export function ReadingCard({
       <div className="relative grid justify-items-center gap-2 text-center">
         <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{kicker}</span>
         <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">{headline}</h2>
-        <ReadinessDial score={result.score} band={band} caption={caption} size={250} from={from} />
+        <ReadinessDial
+          score={result.score}
+          band={verdict ? { ...band, label: verdict } : band}
+          caption={caption}
+          size={250}
+          from={from}
+          readyMark={readyMark}
+        />
         <p className="max-w-sm text-balance text-sm text-muted-foreground">{summary}</p>
       </div>
 

@@ -54,6 +54,7 @@ export function ReadinessDial({
   caption = "Readiness",
   size = 360,
   from,
+  readyMark = true,
   className,
 }: {
   score: number;
@@ -63,6 +64,8 @@ export function ReadinessDial({
   size?: number;
   /** An earlier score to sweep from. */
   from?: number;
+  /** The "75 · READY" mark. Off where a reading is too small to call anyone ready. */
+  readyMark?: boolean;
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -139,24 +142,26 @@ export function ReadinessDial({
         {TICKS.map((t, i) => (
           <line
             key={i}
-            className={cn("rv-tick", t.major && "major", t.ready && "ready")}
+            className={cn("rv-tick", t.major && "major", t.ready && readyMark && "ready")}
             x1={t.ix}
             y1={t.iy}
             x2={t.ox}
             y2={t.oy}
-            strokeWidth={t.ready ? 2.4 : t.major ? 1.8 : 1}
+            strokeWidth={t.ready && readyMark ? 2.4 : t.major ? 1.8 : 1}
             strokeLinecap="round"
           />
         ))}
-        <text
-          className="rv-ready-label"
-          x={lx}
-          y={ly}
-          textAnchor="middle"
-          dominantBaseline="middle"
-        >
-          75 · READY
-        </text>
+        {readyMark && (
+          <text
+            className="rv-ready-label"
+            x={lx}
+            y={ly}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            75 · READY
+          </text>
+        )}
         <path
           ref={sweepRef}
           className="rv-sweep"

@@ -3,6 +3,7 @@ import "server-only";
 import { publicEnv } from "@/env";
 import type { ToolSource } from "@/contracts/tools";
 import { CHECKPOINT_SIZE, MINUTES_PER_STOP, PRACTICE_SIZE } from "@/core/path/plan";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
 import type { PathDomain } from "@/core/path/types";
@@ -275,7 +276,7 @@ export function pathNudgeEmail(input: {
   if (nudge.next.kind === "checkpoint") {
     const what = `Next is your readiness checkpoint: ${CHECKPOINT_SIZE} exam-style questions across every domain, weighted the way the real exam weights them.`;
     const then =
-      "When you finish, you'll see your readiness score, how you did on each domain, and when you could be exam-ready.";
+      "When you finish, you'll see a first read of your readiness, how you did on each domain, and when you'd finish the rest of your path.";
     return {
       subject: `Your ${examName} readiness checkpoint is next`,
       html: layout(
@@ -333,8 +334,9 @@ function bar(pct: number, color: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${cells}</tr></table>`;
 }
 
+// A checkpoint is a dozen questions: its top band is a strong start, never "exam ready".
 const bandLabel = (score: number) =>
-  score >= 75 ? "Exam ready" : score >= 40 ? "Getting close" : "Your starting point";
+  score >= 75 ? "Strong start" : score >= 40 ? "Getting close" : "Your starting point";
 
 /**
  * The one-time follow-up for someone who took their readiness checkpoint and
@@ -355,12 +357,14 @@ export function checkpointResultEmail(input: {
   const first = input.displayName.split(" ")[0] || input.displayName;
   const score = result.score;
   const asked = result.domains.reduce((s, d) => s + d.total, 0);
-  const price = formatUsd(BASE_PRICES_CENTS.quarterly);
+  // The path's offer sells both plans, so the email states both.
+  const monthly = formatUsd(BASE_PRICES_CENTS.monthly);
+  const quarterly = formatUsd(BASE_PRICES_CENTS.quarterly);
   const guarantee = `${APP()}${PASS_GUARANTEE_HREF}`;
 
   const read =
     score >= 75
-      ? `You scored ${score}% on your ${examName} readiness checkpoint, past the 75% we call exam-ready. Still, that's a first read from ${asked} questions: the rest of your path and full timed practice exams are how you make sure.`
+      ? `You scored ${score}% on your ${examName} readiness checkpoint: ${asked} exam-style questions, weighted the way the real exam weights its domains. That's a strong first read, not a verdict: the real exam asks up to ${REHEARSAL_FORMATS.full.questions} questions, and the rest of your path and full timed practice exams are how you make sure.`
       : `You scored ${score}% on your ${examName} readiness checkpoint: ${asked} exam-style questions, weighted the way the real exam weights its domains. 75% is where we call it exam-ready.`;
   const rows = domains.map((d) => {
     const r = result.domains.find((x) => x.number === d.number);
@@ -377,7 +381,7 @@ export function checkpointResultEmail(input: {
     `Practice across all ${input.questionCount.toLocaleString("en-US")} ${examName} questions`,
     "Timed practice exams, PBQ labs and spaced review",
   ];
-  const terms = "Renews every 3 months. Cancel anytime.";
+  const terms = "Both plans renew. Cancel anytime.";
 
   return {
     subject: `Your ${examName} checkpoint: ${score}%`,
@@ -416,7 +420,7 @@ export function checkpointResultEmail(input: {
             )
             .join("")}
         </table>
-        <div style="margin:14px 0 0;"><span style="font-size:28px;font-weight:700;">${price}</span> <span style="font-size:13px;color:#71717a;">for 3 months</span></div>
+        <div style="margin:14px 0 0;"><span style="font-size:28px;font-weight:700;">${monthly}</span> <span style="font-size:13px;color:#71717a;">a month, or ${quarterly} for 3 months</span></div>
         <div style="font-size:12px;color:#71717a;margin:2px 0 6px;">${terms}</div>
         ${button(href, "Unlock my path")}
         <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:#71717a;"><span style="color:#15803d;font-weight:600;">&#10003; Pass guarantee:</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${guarantee}" style="color:#71717a;">Terms</a></div>
@@ -430,7 +434,7 @@ export function checkpointResultEmail(input: {
       read,
       rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
       gain,
-      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${price} for 3 months. ${terms}\nPass guarantee: ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
+      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${monthly} a month, or ${quarterly} for 3 months. ${terms}\nPass guarantee: ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
       `Unlock your path: ${href}`,
       `Unsubscribe: ${input.unsubscribeUrl}`,
     ]

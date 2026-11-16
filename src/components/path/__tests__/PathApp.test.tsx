@@ -35,7 +35,11 @@ vi.mock("@/lib/analytics", () => ({ track, identifyUser, resetAnalytics: vi.fn()
 
 // The dial animates with rAF; its look isn't under test here.
 vi.mock("@/components/instrument/ReadinessDial", () => ({
-  ReadinessDial: ({ score }: { score: number }) => <div data-testid="dial">{score}%</div>,
+  ReadinessDial: ({ score, band, readyMark = true }: { score: number; band: { label: string }; readyMark?: boolean }) => (
+    <div data-testid="dial" data-label={band.label} data-ready-mark={String(readyMark)}>
+      {score}%
+    </div>
+  ),
 }));
 
 // The lab players have their own tests; here a lab only has to report a grade.
@@ -484,12 +488,44 @@ describe("a signed-in learner", () => {
     await answer(true);
     await answer(false);
     expect(await screen.findByTestId("dial")).toHaveTextContent("50%");
+    expect(screen.getByRole("heading", { name: "You're on your way." })).toBeInTheDocument();
     expect(screen.getByText("Unlock the rest of your path")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Unlock my path/ })).toBeInTheDocument();
     // The guarantee states its conditions right on the offer.
     expect(screen.getByText(/Study with Pro for 30\+ days and don't pass\? We refund your last payment\./)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", { cert: "security-plus-sy0-701", score: 50 });
     expect(track).toHaveBeenCalledWith("path_offer_viewed", { cert: "security-plus-sy0-701", context: "reveal" });
+  });
+
+  it("calls a high checkpoint a strong first read, never exam-ready, and shows what's still unstudied", async () => {
+    // Warm-up, 1.1–1.3, domain 1's practice and 2.1 are done: four of the six objectives.
+    const before = plan.stops.slice(0, plan.freeThrough).map((s) => s.id);
+    server.progress = done(before, { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("q|1.1|33333333-3333-4333-8333-333333333333", "1.1", "exam"), rep("q|2.2|44444444-4444-4444-8444-444444444444", "2.2", "exam")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the checkpoint/ }));
+    await screen.findByText(/Prompt q\|1\.1/);
+    await answer(true);
+    await answer(true);
+
+    const dial = await screen.findByTestId("dial");
+    expect(dial).toHaveTextContent("100%");
+    // A dozen questions can't call anyone exam-ready: not the label, the mark or the copy.
+    expect(dial).toHaveAttribute("data-label", "Strong start");
+    expect(dial).toHaveAttribute("data-ready-mark", "false");
+    expect(screen.getByRole("heading", { name: "A strong first read." })).toBeInTheDocument();
+    // The size of the sample, as a label rather than a paragraph.
+    expect(screen.getByText("2 questions · ±50 pts each · exam asks 90")).toBeInTheDocument();
+    expect(screen.queryByText(/exam[- ]ready/i)).toBeNull();
+    expect(screen.queryByText(/in good shape/i)).toBeNull();
+    // How much of the exam the path has taught so far, above the offer.
+    const studied = screen.getByText("4 of 6 objectives studied");
+    expect(screen.getByText("2 to go")).toBeInTheDocument();
+    expect(comesBefore(studied, screen.getByText("Unlock the rest of your path"))).toBe(true);
   });
 
   it("offers the rest of the path when the server says it's Pro-only", async () => {
