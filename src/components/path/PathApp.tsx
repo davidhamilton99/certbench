@@ -802,7 +802,13 @@ export function PathApp({
   } else if (view.kind === "reveal") {
     const result = p.progress.checkpoint;
     screen = result ? (
-      <PathReveal result={result} structure={structure} goal={p.progress.goal} remainingStops={remaining}>
+      <PathReveal
+        result={result}
+        structure={structure}
+        goal={p.progress.goal}
+        remainingStops={remaining}
+        studied={plan.stops.filter((s) => s.kind === "learn" && isStopDone(p.progress, s.id)).length}
+      >
         {pro ? (
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         ) : (

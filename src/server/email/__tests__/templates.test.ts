@@ -190,7 +190,9 @@ describe("checkpointResultEmail", () => {
     const e = email(followUp(74));
     expect(e.text).toContain("- All 28 remaining stops of your Network+ path");
     expect(e.text).toContain("- Practice across all 617 Network+ questions");
-    expect(e.text).toContain("$39 for 3 months. Renews every 3 months. Cancel anytime.");
+    // Both plans the path's offer sells, monthly first.
+    expect(e.text).toContain("$19 a month, or $39 for 3 months. Both plans renew. Cancel anytime.");
+    expect(e.html).toContain("a month, or $39 for 3 months");
     // The guarantee always comes with its conditions, never as a bare promise.
     expect(e.text).toContain(
       "Pass guarantee: Study with Pro for 30+ days and don't pass? We refund your last payment. Terms: https://certbench.dev/terms#pass-guarantee"
@@ -205,10 +207,14 @@ describe("checkpointResultEmail", () => {
     expect(email(followUp(74)).html).toMatch(/<body[^>]*>\s*<div style="display:none;[^"]*">How each domain went/);
   });
 
-  it("is honest that a passing checkpoint is only a first read", () => {
+  it("calls a high checkpoint a strong first read, never exam-ready", () => {
     const e = email(followUp(82));
-    expect(e.html).toContain("Exam ready");
-    expect(e.text).toContain("past the 75% we call exam-ready. Still, that's a first read from 6 questions");
+    expect(e.html).toContain("Strong start");
+    expect(e.html).not.toMatch(/exam[- ]ready/i);
+    expect(e.text).not.toMatch(/exam[- ]ready/i);
+    expect(e.text).toContain(
+      "You scored 82% on your Network+ readiness checkpoint: 6 exam-style questions, weighted the way the real exam weights its domains. That's a strong first read, not a verdict: the real exam asks up to 90 questions, and the rest of your path and full timed practice exams are how you make sure."
+    );
   });
 
   it("leaves out what doesn't apply", () => {
