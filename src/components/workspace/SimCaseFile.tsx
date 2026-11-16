@@ -41,7 +41,7 @@ export function CaseFile({ briefing, evidence }: { briefing: string; evidence?: 
  * is in view and the rest is a tap away. The whole card opens it (replays
  * showed people clicking the briefing and nothing happening).
  */
-function Ticket({ text }: { text: string }) {
+export function Ticket({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   const [clipped, setClipped] = useState(false);
   const body = useRef<HTMLParagraphElement>(null);
@@ -101,7 +101,7 @@ function Ticket({ text }: { text: string }) {
  * opened yet, line numbers, and colour so failures, successes and addresses
  * stand out before a word is read.
  */
-function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] }) {
+export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] }) {
   const [tab, setTab] = useState(0);
   const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set([0]));
   const [open, setOpen] = useState(true);

@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { PbqPlayer } from "../PbqPlayer";
-import type { OrderingScenario } from "@/data/pbq/types";
+import { MOVE_ADVANCE_MS, STEP_ADVANCE_MS } from "../SimMoves";
+import { gradeScenario } from "@/core/pbq/grade";
+import type { CategorizationScenario, MatchingScenario, OrderingScenario } from "@/data/pbq/types";
 
 const dora: OrderingScenario = {
   type: "ordering",
@@ -35,7 +37,7 @@ describe("ordering PBQs", () => {
     tap("Acknowledge");
     fireEvent.click(check());
     expect(screen.getByText("100%")).toBeInTheDocument();
-    expect(screen.getByText("4/4 correct")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Your score" })).toHaveTextContent("4 of 4in the right place");
   });
 
   it("sends a placed item back with a tap, without moving the other choices", () => {
@@ -69,6 +71,122 @@ describe("ordering PBQs", () => {
     tap("Discover");
     fireEvent.click(screen.getByRole("button", { name: "Back to scenarios" }));
     expect(onBack).not.toHaveBeenCalled();
-    expect(screen.getByText("Leave scenario?")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Leave this lab?" })).toBeInTheDocument();
+  });
+});
+
+const ports: MatchingScenario = {
+  type: "matching",
+  id: "ports-test",
+  title: "Ports",
+  description: "Match each port to its service.",
+  domain_number: "1.0",
+  domain_title: "Networking Concepts",
+  left: ["22", "53", "443"],
+  right: ["SSH", "DNS", "HTTPS"],
+  correct_map: [0, 1, 2],
+  explanation: "22 is SSH, 53 is DNS, 443 is HTTPS.",
+};
+
+const PARTNER: Record<string, string> = { "22": "SSH", "53": "DNS", "443": "HTTPS" };
+const portUp = () => screen.getByText(/^(22|53|443)$/).textContent!;
+const status = () => screen.getByRole("status");
+
+describe("matching PBQs, one item at a time", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("asks for one item's partner at a time, drops matched partners out, and grades once", () => {
+    const onGraded = vi.fn();
+    render(<PbqPlayer scenario={ports} onBack={vi.fn()} onGraded={onGraded} />);
+    expect(screen.getByText("Match each port to its service.")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).toBeNull();
+
+    const first = portUp();
+    fireEvent.click(screen.getByRole("radio", { name: PARTNER[first] }));
+    expect(status()).toHaveTextContent("Right.");
+    act(() => vi.advanceTimersByTime(STEP_ADVANCE_MS));
+
+    // The first item's partner is out of play now.
+    expect(screen.getByRole("radio", { name: PARTNER[first] })).toBeDisabled();
+    const second = portUp();
+    const wrong = Object.values(PARTNER).find((s) => s !== PARTNER[first] && s !== PARTNER[second])!;
+    fireEvent.click(screen.getByRole("radio", { name: wrong }));
+    expect(status()).toHaveTextContent(`Not quite. The answer is ticked. It's ${PARTNER[second]}.`);
+    fireEvent.click(screen.getByRole("button", { name: /^Got it/ }));
+
+    const third = portUp();
+    fireEvent.click(screen.getByRole("radio", { name: PARTNER[third] }));
+    expect(status()).toHaveTextContent("2 of 3 matched right.");
+    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
+
+    const map = [-1, -1, -1];
+    map[ports.left.indexOf(first)] = ports.right.indexOf(PARTNER[first]);
+    map[ports.left.indexOf(second)] = ports.right.indexOf(wrong);
+    map[ports.left.indexOf(third)] = ports.right.indexOf(PARTNER[third]);
+    expect(onGraded).toHaveBeenCalledTimes(1);
+    expect(onGraded.mock.calls[0][0]).toEqual(gradeScenario(ports, map));
+    expect(screen.getByRole("group", { name: "Your score" })).toHaveTextContent("2 of 3matched right");
+    expect(screen.getByText("The one to look at again")).toBeInTheDocument();
+  });
+
+  it("answers from the keyboard and asks before leaving mid-way", () => {
+    const onBack = vi.fn();
+    render(<PbqPlayer scenario={ports} onBack={onBack} />);
+    const tiles = screen.getAllByRole("radio").map((r) => r.textContent!.replace(/^\d/, ""));
+    fireEvent.keyDown(document, { key: String(tiles.indexOf(PARTNER[portUp()]) + 1) });
+    expect(status()).toHaveTextContent("Right.");
+    fireEvent.click(screen.getByRole("button", { name: "Back to scenarios" }));
+    expect(screen.getByRole("dialog", { name: "Leave this lab?" })).toBeInTheDocument();
+    expect(onBack).not.toHaveBeenCalled();
+  });
+});
+
+const transport: CategorizationScenario = {
+  type: "categorization",
+  id: "transport-test",
+  title: "TCP or UDP",
+  description: "Sort each protocol by its transport.",
+  domain_number: "1.0",
+  domain_title: "Networking Concepts",
+  categories: ["TCP", "UDP"],
+  items: [
+    { text: "HTTP", category: 0 },
+    { text: "TFTP", category: 1 },
+    { text: "SSH", category: 0 },
+  ],
+  explanation: "HTTP and SSH ride TCP; TFTP rides UDP.",
+};
+
+describe("sorting PBQs, one item at a time", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("drops each item into a bin, marks it on the spot, and grades once", () => {
+    const onGraded = vi.fn();
+    render(<PbqPlayer scenario={transport} onBack={vi.fn()} onGraded={onGraded} />);
+    expect(screen.getByText("Sort each protocol by its transport.")).toBeInTheDocument();
+    const bin = (name: string) => screen.getByRole("button", { name });
+    for (let i = 0; i < 3; i++) {
+      const item = screen.getByText(/^(HTTP|TFTP|SSH)$/).textContent!;
+      fireEvent.click(bin(item === "TFTP" ? "UDP" : "TCP"));
+      expect(status()).toHaveTextContent("Right.");
+      act(() => vi.advanceTimersByTime(i < 2 ? STEP_ADVANCE_MS : MOVE_ADVANCE_MS));
+    }
+    expect(onGraded).toHaveBeenCalledTimes(1);
+    expect(onGraded.mock.calls[0][0]).toEqual(gradeScenario(transport, [0, 1, 0]));
+    expect(screen.getByRole("group", { name: "Your score" })).toHaveTextContent("3 of 3sorted right");
+    expect(screen.queryByText(/to look at again/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Play again/ }));
+    expect(screen.getByText(/^(HTTP|TFTP|SSH)$/)).toBeInTheDocument();
   });
 });

@@ -14,6 +14,8 @@ import type {
   SimTask,
   SimTextInputField,
   SimZonePlacementField,
+  TopoDevice,
+  TopologyScenario,
 } from "@/data/pbq/types";
 import { gradeField } from "@/core/pbq/grade-field";
 import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
@@ -91,13 +93,21 @@ export function answerText(field: SimDropdownField | SimTextInputField): string 
   return field.type === "dropdown" ? field.options[field.correctIndex] : field.acceptedValues[0];
 }
 
+/**
+ * The devices a topology lab asks to fix: not pre-configured, with settings
+ * to set. Each is a stage; the pre-configured ones are read, not played.
+ */
+export function devicesToFix(scenario: TopologyScenario): TopoDevice[] {
+  return scenario.devices.filter((d) => !d.preConfigured && d.fields.length > 0);
+}
+
 /** The tasks that have something to answer: each is a stage. */
 export function playableStages(tasks: readonly SimTask[]): SimTask[] {
   return tasks.filter((t) => t.fields.length > 0);
 }
 
-/** How a stage went: moves fully right, partly right, and how many in all. */
-export function stageTally(task: SimTask, credit: Readonly<Record<string, number>>) {
+/** How a stage went (a task, or a device to fix): moves fully right, partly right, and how many in all. */
+export function stageTally(task: { fields: readonly SimField[] }, credit: Readonly<Record<string, number>>) {
   let right = 0;
   let partly = 0;
   let points = 0;

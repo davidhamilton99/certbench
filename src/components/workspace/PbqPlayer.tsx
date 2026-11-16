@@ -1,35 +1,59 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
-import { Panel } from "@/components/ui/panel";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  PbqUpsellCard,
-  type PbqUpsell,
-} from "@/components/workspace/pbq-upsell";
+import type { PbqUpsell } from "@/components/workspace/pbq-upsell";
 import type {
   PbqScenario,
   PbqGradeResult,
   OrderingScenario,
   MatchingScenario,
   CategorizationScenario,
+  SimZonePlacementField,
 } from "@/data/pbq/types";
 import { gradeScenario } from "@/core/pbq/grade";
 import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
 import { SimulationPlayer } from "@/components/workspace/SimulationPlayer";
 import { TopologyPlayer } from "@/components/workspace/TopologyPlayer";
 import { ThreatHuntPlayer } from "@/components/workspace/ThreatHuntPlayer";
+import { MatchMove, SimMove } from "@/components/workspace/SimMoves";
+import { LabHeader, LabResult, PairList, useKeepInView, useLabTurn } from "@/components/workspace/LabKit";
 import type { PbqHostProps } from "@/components/workspace/pbq-host";
-
-/* ------------------------------------------------------------------ */
-/*  Main Player                                                        */
-/* ------------------------------------------------------------------ */
+import { cn } from "@/lib/utils";
 
 // Re-exported so existing importers of PbqPlayer keep resolving the type.
 export type { PbqUpsell } from "@/components/workspace/pbq-upsell";
 
+type OneMoveLab = OrderingScenario | MatchingScenario | CategorizationScenario;
+
+/** What "7 of 9" counts, by lab. */
+const UNIT: Record<OneMoveLab["type"], string> = {
+  ordering: "in the right place",
+  matching: "matched right",
+  categorization: "sorted right",
+};
+
+/** A sorting lab is the sort move: each item, one at a time, into its bin. */
+function sortField(s: CategorizationScenario): SimZonePlacementField {
+  return {
+    type: "zone-placement",
+    id: s.id,
+    label: s.description,
+    items: s.items.map((i) => i.text),
+    zones: s.categories,
+    correctZones: s.items.map((i) => i.category),
+  };
+}
+
+/**
+ * Any PBQ lab. Simulations, topologies and threat hunts have players of their
+ * own; the rest are one move each, played the way the simulations' moves are:
+ * an ordering is tapped into place, a matching lab pairs one item at a time,
+ * a sorting lab drops one item at a time into its bin. Every lab ends on the
+ * same score screen.
+ */
 export function PbqPlayer({
   scenario,
   onBack,
@@ -39,241 +63,168 @@ export function PbqPlayer({
 }: {
   scenario: PbqScenario;
   onBack: () => void;
-  /** Optional CTA rendered after grading (ordering/matching/categorization). */
+  /** Optional CTA rendered after grading. */
   upsell?: PbqUpsell;
 } & PbqHostProps) {
-  const [result, setResult] = useState<PbqGradeResult | null>(null);
-  const [, setUserAnswer] = useState<number[] | null>(null);
+  const { root, keyboard } = useLabTurn();
+  const [run, setRun] = useState(0);
+  const [graded, setGraded] = useState<{ result: PbqGradeResult; answer: number[] } | null>(null);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  // A move's final answer, graded when the player moves on from its last mark.
+  const pending = useRef<number[] | null>(null);
 
   const handleSubmit = useCallback(
     (answer: number[]) => {
-      const graded = gradeScenario(scenario, answer);
-      setUserAnswer(answer);
-      setResult(graded);
-      onGraded?.(graded);
+      const result = gradeScenario(scenario, answer);
+      setGraded({ result, answer });
+      onGraded?.(result);
     },
     [scenario, onGraded]
   );
 
+  const finish = useCallback(() => {
+    if (pending.current) handleSubmit(pending.current);
+  }, [handleSubmit]);
+
+  const started = useCallback(() => setHasInteracted(true), []);
+
   const handleRetry = useCallback(() => {
-    setResult(null);
-    setUserAnswer(null);
+    pending.current = null;
+    setGraded(null);
     setHasInteracted(false);
+    setRun((r) => r + 1);
   }, []);
 
   const handleBack = useCallback(() => {
-    if (hasInteracted && !result) {
-      setShowBackConfirm(true);
-    } else {
-      onBack();
-    }
-  }, [hasInteracted, result, onBack]);
+    if (hasInteracted && !graded) setShowBackConfirm(true);
+    else onBack();
+  }, [hasInteracted, graded, onBack]);
 
-  /* Simulation scenarios use their own self-contained player */
+  // The score from its top, and a replay from the start.
+  useKeepInView(`${run}:${Boolean(graded)}`, () => root.current);
+
   const host = { onGraded, backLabel };
   if (scenario.type === "simulation") {
     return <SimulationPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
-
-  /* Topology scenarios use the topology player */
   if (scenario.type === "topology") {
     return <TopologyPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
-
-  /* Threat hunts use the log-console player */
   if (scenario.type === "threat-hunt") {
     return <ThreatHuntPlayer scenario={scenario} onBack={onBack} upsell={upsell} {...host} />;
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Back confirmation */}
+    <div ref={root} className="flex min-w-0 scroll-mt-24 flex-col gap-4 sm:gap-5">
       <ConfirmDialog
         open={showBackConfirm}
-        title="Leave scenario?"
-        message="Your progress will be lost. Are you sure you want to go back?"
+        title="Leave this lab?"
+        message="Your answers so far won't be kept."
         confirmLabel="Leave"
         cancelLabel="Stay"
         onConfirm={onBack}
         onCancel={() => setShowBackConfirm(false)}
       />
+      <LabHeader
+        title={scenario.title}
+        subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+        onBack={handleBack}
+        backLabel={backLabel}
+      />
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleBack}
-          aria-label={backLabel ?? "Back to scenarios"}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-            />
-          </svg>
-        </button>
-        <div>
-          <h2 className="text-[18px] font-semibold text-foreground">
-            {scenario.title}
-          </h2>
-          <p className="text-[13px] text-muted-foreground">
-            {scenario.domain_number} {scenario.domain_title}
-          </p>
-        </div>
-      </div>
-
-      {/* Description */}
-      <Panel padding="md">
-        <p className="text-[14px] text-foreground">{scenario.description}</p>
-      </Panel>
-
-      {/* Interactive area or results */}
-      {result ? (
-        <ResultView
-          scenario={scenario}
-          result={result}
-          onRetry={handleRetry}
-          onBack={onBack}
+      {graded ? (
+        <LabResult
+          result={graded.result}
+          unit={UNIT[scenario.type]}
+          missCount={graded.result.totalItems - graded.result.correctItems}
+          misses={<Misses scenario={scenario} answer={graded.answer} />}
+          explanation={scenario.explanation}
           upsell={upsell}
           backLabel={backLabel}
+          onRetry={handleRetry}
+          onBack={onBack}
+        />
+      ) : scenario.type === "ordering" ? (
+        <div className="grid gap-4">
+          <p className="text-balance text-[17px] font-medium leading-relaxed">{scenario.description}</p>
+          <OrderingPlayer key={run} scenario={scenario} onSubmit={handleSubmit} onInteract={started} />
+        </div>
+      ) : scenario.type === "matching" ? (
+        <MatchMove
+          key={run}
+          prompt={scenario.description}
+          left={scenario.left}
+          right={scenario.right}
+          correctMap={scenario.correct_map}
+          seed={scenario.id}
+          keyboard={keyboard}
+          takeFocus={run > 0}
+          onStep={started}
+          onAnswer={(map) => {
+            pending.current = map;
+          }}
+          onNext={finish}
         />
       ) : (
-        <>
-          {scenario.type === "ordering" && (
-            <OrderingPlayer
-              scenario={scenario}
-              onSubmit={handleSubmit}
-              onInteract={() => setHasInteracted(true)}
-            />
-          )}
-          {scenario.type === "matching" && (
-            <MatchingPlayer
-              scenario={scenario}
-              onSubmit={handleSubmit}
-              onInteract={() => setHasInteracted(true)}
-            />
-          )}
-          {scenario.type === "categorization" && (
-            <CategorizationPlayer
-              scenario={scenario}
-              onSubmit={handleSubmit}
-              onInteract={() => setHasInteracted(true)}
-            />
-          )}
-        </>
+        <SimMove
+          key={run}
+          field={sortField(scenario)}
+          keyboard={keyboard}
+          takeFocus={run > 0}
+          onStep={started}
+          onAnswer={(answer) => {
+            if (answer.type === "zone-placement") pending.current = answer.placements;
+          }}
+          onNext={finish}
+        />
       )}
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Result View                                                        */
-/* ------------------------------------------------------------------ */
-
-function ResultView({
-  scenario,
-  result,
-  onRetry,
-  onBack,
-  upsell,
-  backLabel,
-}: {
-  scenario: PbqScenario;
-  result: PbqGradeResult;
-  onRetry: () => void;
-  onBack: () => void;
-  upsell?: PbqUpsell;
-  backLabel?: string;
-}) {
-  const scoreColor =
-    result.score >= 75
-      ? "text-success"
-      : result.score >= 40
-      ? "text-warning"
-      : "text-danger";
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Score */}
-      <Panel padding="lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-3">
-            <span
-              className={`text-[40px] font-mono font-semibold tabular-nums leading-none ${scoreColor}`}
-            >
-              {result.score}%
-            </span>
-            <span className="text-[14px] text-muted-foreground">
-              {result.correctItems}/{result.totalItems} correct
-            </span>
-          </div>
-          <Badge
-            variant={
-              result.score >= 75
-                ? "success"
-                : result.score >= 40
-                ? "warning"
-                : "danger"
-            }
-          >
-            {result.score >= 75
-              ? "Passed"
-              : result.score >= 40
-              ? "Partial Credit"
-              : "Needs Work"}
-          </Badge>
-        </div>
-      </Panel>
-
-      {/* Incorrect items */}
-      {result.feedback.length > 0 && (
-        <Panel padding="md">
-          <h3 className="text-[14px] font-semibold text-foreground mb-2">
-            Corrections
-          </h3>
-          <div className="flex flex-col gap-1.5">
-            {result.feedback.map((fb, i) => (
-              <p key={i} className="text-[13px] text-muted-foreground">
-                • {fb}
-              </p>
-            ))}
-          </div>
-        </Panel>
-      )}
-
-      {/* Explanation */}
-      <Panel padding="md">
-        <h3 className="text-[14px] font-semibold text-foreground mb-2">
-          Explanation
-        </h3>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
-          {scenario.explanation}
-        </p>
-      </Panel>
-
-      {/* Convert at the win — surface the value right after a success */}
-      {upsell && <PbqUpsellCard upsell={upsell} />}
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button onClick={onRetry}>
-          Try Again
-        </Button>
-        <Button variant="secondary" onClick={onBack}>
-          {backLabel ?? "Back to Scenarios"}
-        </Button>
-      </div>
-    </div>
-  );
+/** What a one-move lab's misses should have been. */
+function Misses({ scenario, answer }: { scenario: OneMoveLab; answer: number[] }) {
+  switch (scenario.type) {
+    case "ordering":
+      // The right order, each place marked by whether it was put there.
+      return (
+        <ol className="mt-1 grid gap-1.5">
+          {scenario.correct_order.map((item, i) => {
+            const ok = answer[i] === item;
+            return (
+              <li key={i} className="flex items-baseline gap-2.5">
+                <span className="w-5 shrink-0 text-right font-mono text-xs text-muted-foreground">{i + 1}.</span>
+                <span className={cn("min-w-0 flex-1", ok ? "text-foreground" : "font-medium text-success")}>
+                  {scenario.items[item]}
+                </span>
+                {ok ? (
+                  <Check className="size-3.5 shrink-0 translate-y-0.5 text-success" strokeWidth={3} aria-label="placed right" />
+                ) : (
+                  <X className="size-3.5 shrink-0 translate-y-0.5 text-destructive" strokeWidth={3} aria-label="was out of place" />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      );
+    case "matching":
+      return (
+        <PairList
+          pairs={scenario.left
+            .map((l, i) => [l, scenario.right[scenario.correct_map[i]]] as const)
+            .filter((_, i) => answer[i] !== scenario.correct_map[i])}
+        />
+      );
+    case "categorization":
+      return (
+        <PairList
+          pairs={scenario.items
+            .map((it) => [it.text, scenario.categories[it.category]] as const)
+            .filter((_, i) => answer[i] !== scenario.items[i].category)}
+        />
+      );
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -406,265 +357,6 @@ function OrderingPlayer({
 
       <Button onClick={() => onSubmit(placed)} disabled={!done}>
         Check my order
-      </Button>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Matching Player                                                    */
-/* ------------------------------------------------------------------ */
-
-function MatchingPlayer({
-  scenario,
-  onSubmit,
-  onInteract,
-}: {
-  scenario: MatchingScenario;
-  onSubmit: (answer: number[]) => void;
-  onInteract: () => void;
-}) {
-  const [selections, setSelections] = useState<number[]>(
-    () => new Array(scenario.left.length).fill(-1)
-  );
-  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-
-  // Shuffle right column display order — deterministic per scenario so the
-  // server and client render the same order (no hydration mismatch).
-  const [shuffledRight] = useState<number[]>(() =>
-    shuffleSeeded(scenario.right.length, seedFromString(scenario.id + ":match"))
-  );
-
-  // Track which right-side options are already used
-  const usedRightIndices = new Set(selections.filter((s) => s !== -1));
-
-  const updateSelection = (leftIdx: number, rightIdx: number) => {
-    const next = [...selections];
-    next[leftIdx] = rightIdx;
-    setSelections(next);
-    onInteract();
-  };
-
-  const allSelected = selections.every((s) => s !== -1);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <ConfirmDialog
-        open={showSubmitConfirm}
-        title="Submit answer?"
-        message="Once submitted, your answer will be graded and you cannot change it."
-        confirmLabel="Submit"
-        cancelLabel="Review"
-        onConfirm={() => {
-          setShowSubmitConfirm(false);
-          onSubmit(selections);
-        }}
-        onCancel={() => setShowSubmitConfirm(false)}
-      />
-
-      <p className="text-[13px] text-muted-foreground">
-        Select the correct match for each item on the left.
-      </p>
-
-      <div className="flex flex-col gap-2">
-        {scenario.left.map((leftItem, leftIdx) => (
-          <div
-            key={leftIdx}
-            className="bg-card border border-border rounded-lg p-4"
-          >
-            <div className="flex items-center gap-4">
-              <span className="text-[14px] font-mono font-medium text-foreground min-w-[80px]">
-                {leftItem}
-              </span>
-              <svg
-                className="w-4 h-4 text-muted-foreground flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                />
-              </svg>
-              <select
-                value={selections[leftIdx]}
-                onChange={(e) =>
-                  updateSelection(leftIdx, parseInt(e.target.value))
-                }
-                className="flex-1 bg-muted/40 border border-border rounded-md px-3 py-2 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              >
-                <option value={-1}>— Select match —</option>
-                {shuffledRight.map((rightIdx) => {
-                  const isUsedByOther =
-                    usedRightIndices.has(rightIdx) &&
-                    selections[leftIdx] !== rightIdx;
-                  return (
-                    <option
-                      key={rightIdx}
-                      value={rightIdx}
-                      disabled={isUsedByOther}
-                    >
-                      {scenario.right[rightIdx]}
-                      {isUsedByOther ? " (used)" : ""}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Button
-       
-        onClick={() => setShowSubmitConfirm(true)}
-        disabled={!allSelected}
-      >
-        Submit Answer
-      </Button>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Categorization Player                                              */
-/* ------------------------------------------------------------------ */
-
-function CategorizationPlayer({
-  scenario,
-  onSubmit,
-  onInteract,
-}: {
-  scenario: CategorizationScenario;
-  onSubmit: (answer: number[]) => void;
-  onInteract: () => void;
-}) {
-  const [placements, setPlacements] = useState<number[]>(
-    () => new Array(scenario.items.length).fill(-1)
-  );
-  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-
-  // Shuffled item display order — deterministic per scenario so the server and
-  // client render the same order (no hydration mismatch).
-  const [shuffledItems] = useState<number[]>(() =>
-    shuffleSeeded(scenario.items.length, seedFromString(scenario.id + ":cat"))
-  );
-
-  const placeItem = (itemIdx: number, categoryIdx: number) => {
-    const next = [...placements];
-    next[itemIdx] = categoryIdx;
-    setPlacements(next);
-    onInteract();
-  };
-
-  const allPlaced = placements.every((p) => p !== -1);
-
-  // Dynamic grid columns based on category count
-  const gridCols =
-    scenario.categories.length === 2
-      ? "sm:grid-cols-2"
-      : scenario.categories.length === 4
-      ? "sm:grid-cols-2 lg:grid-cols-4"
-      : "sm:grid-cols-3";
-
-  return (
-    <div className="flex flex-col gap-4">
-      <ConfirmDialog
-        open={showSubmitConfirm}
-        title="Submit answer?"
-        message="Once submitted, your answer will be graded and you cannot change it."
-        confirmLabel="Submit"
-        cancelLabel="Review"
-        onConfirm={() => {
-          setShowSubmitConfirm(false);
-          onSubmit(placements);
-        }}
-        onCancel={() => setShowSubmitConfirm(false)}
-      />
-
-      <p className="text-[13px] text-muted-foreground">
-        Assign each item to the correct category.
-      </p>
-
-      {/* Items with category selectors */}
-      <div className="flex flex-col gap-2">
-        {shuffledItems.map((itemIdx) => {
-          const item = scenario.items[itemIdx];
-          return (
-            <div
-              key={itemIdx}
-              className="bg-card border border-border rounded-lg p-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[14px] text-foreground">
-                  {item.text}
-                </span>
-                <div className="flex gap-1">
-                  {scenario.categories.map((cat, catIdx) => {
-                    const isSelected = placements[itemIdx] === catIdx;
-                    return (
-                      <button
-                        key={catIdx}
-                        onClick={() => placeItem(itemIdx, catIdx)}
-                        className={`
-                          px-2.5 py-1 rounded-md text-[12px] font-medium
-                          transition-colors duration-150 whitespace-nowrap
-                          ${
-                            isSelected
-                              ? "bg-primary text-white"
-                              : "bg-muted/40 border border-border-light text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                          }
-                        `}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Summary of placements */}
-      <div className={`grid grid-cols-1 ${gridCols} gap-2`}>
-        {scenario.categories.map((cat, catIdx) => {
-          const placedItems = scenario.items.filter(
-            (_, i) => placements[i] === catIdx
-          );
-          return (
-            <Panel key={catIdx} padding="sm">
-              <span className="text-[12px] font-semibold text-foreground uppercase tracking-wider">
-                {cat}
-              </span>
-              <div className="mt-1.5 flex flex-col gap-0.5">
-                {placedItems.length === 0 ? (
-                  <span className="text-[12px] text-muted-foreground italic">
-                    No items placed
-                  </span>
-                ) : (
-                  placedItems.map((item, i) => (
-                    <span key={i} className="text-[12px] text-muted-foreground">
-                      • {item.text}
-                    </span>
-                  ))
-                )}
-              </div>
-            </Panel>
-          );
-        })}
-      </div>
-
-      <Button
-       
-        onClick={() => setShowSubmitConfirm(true)}
-        disabled={!allPlaced}
-      >
-        Submit Answer
       </Button>
     </div>
   );

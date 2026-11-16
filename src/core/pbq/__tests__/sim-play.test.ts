@@ -6,12 +6,14 @@ import type {
   SimFieldAnswer,
   SimTextInputField,
   SimulationScenario,
+  TopologyScenario,
 } from "@/data/pbq/types";
 import { gradeField } from "@/core/pbq/grade-field";
 import { gradeSimulationScenario } from "@/core/pbq/grade-simulation";
 import {
   callOrder,
   callPrompt,
+  devicesToFix,
   fieldCredit,
   inputModeFor,
   isNumberSet,
@@ -45,6 +47,26 @@ function rightAnswer(f: SimField): SimFieldAnswer {
       return { type: "zone-placement", placements: f.correctZones };
   }
 }
+
+describe("topology labs, as the map plays them", () => {
+  const topologies = Object.values(pbqRegistry)
+    .flat()
+    .filter((s): s is TopologyScenario => s.type === "topology");
+
+  it("each have at least one device to fix, and each of those has a config to read", () => {
+    expect(topologies.length).toBeGreaterThan(0);
+    for (const t of topologies) {
+      const fixes = devicesToFix(t);
+      expect(fixes.length, t.id).toBeGreaterThan(0);
+      for (const d of fixes) expect(d.currentConfig, `${t.id}: ${d.id}`).toBeTruthy();
+    }
+  });
+
+  it("never give a pre-configured device settings: the map shows it as checking out, and never opens them", () => {
+    for (const t of topologies)
+      for (const d of t.devices) if (d.preConfigured) expect(d.fields, `${t.id}: ${d.id}`).toHaveLength(0);
+  });
+});
 
 describe("stage titles", () => {
   it("drop the exam's 'Task N —' prefix, since the stage track numbers them", () => {

@@ -33,6 +33,7 @@ import {
   pickOrder,
   sortOrder,
 } from "@/core/pbq/sim-play";
+import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
 import { wordCount } from "@/core/path/text";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +51,8 @@ export interface MoveProps {
   keyboard: boolean;
   /** Take focus when shown (every move after a run's first), so keys and screen readers follow. */
   takeFocus: boolean;
+  /** Each answer given inside the move, the first included: the host knows play has started. */
+  onStep?: () => void;
 }
 
 /**
@@ -76,7 +79,7 @@ export function SimMove({ field, ...props }: MoveProps & { field: SimField }) {
 /*  Pick: tiles                                                        */
 /* ------------------------------------------------------------------ */
 
-function PickMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & { field: SimDropdownField }) {
+function PickMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimDropdownField }) {
   const root = useRef<HTMLDivElement>(null);
   useTakeFocus(root, takeFocus);
   const order = useMemo(() => pickOrder(field), [field]);
@@ -89,6 +92,7 @@ function PickMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
   function choose(option: number) {
     if (answered) return;
     setPicked(option);
+    onStep?.();
     onAnswer({ type: "dropdown", selectedIndex: option });
   }
 
@@ -146,12 +150,7 @@ function PickMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
           {ok ? (
             <Right />
           ) : (
-            // The answer is ticked on its tile; spelling it out again would be a sentence to read.
-            <>
-              <Correction>Not quite.</Correction>{" "}
-              <span className="text-muted-foreground">The answer is ticked.</span>
-              <span className="sr-only"> It&apos;s {answerText(field)}.</span>
-            </>
+            <TickedMiss answer={answerText(field)} />
           )}
         </Verdict>
       )}
@@ -163,7 +162,7 @@ function PickMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
 /*  Pick-all: a yes or no on each option                               */
 /* ------------------------------------------------------------------ */
 
-function CallMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & { field: SimSelectManyField }) {
+function CallMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimSelectManyField }) {
   const root = useRef<HTMLDivElement>(null);
   const card = useRef<HTMLDivElement>(null);
   useTakeFocus(root, takeFocus);
@@ -187,6 +186,7 @@ function CallMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
     if (answered) return;
     const made = calls.map((c, p) => (p === pos ? yes : c));
     setCalls(made);
+    onStep?.();
     if (pos === order.length - 1) {
       onAnswer({ type: "select-many", selectedIndices: order.filter((_, p) => made[p] === true) });
     }
@@ -271,7 +271,7 @@ function CallMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
 /*  Placement: sort each item into its bin                             */
 /* ------------------------------------------------------------------ */
 
-function SortMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & { field: SimZonePlacementField }) {
+function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimZonePlacementField }) {
   const root = useRef<HTMLDivElement>(null);
   const card = useRef<HTMLDivElement>(null);
   useTakeFocus(root, takeFocus);
@@ -291,6 +291,7 @@ function SortMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
     if (answered) return;
     const made = placed.map((p, i) => (i === item ? z : p));
     setPlaced(made);
+    onStep?.();
     if (pos === order.length - 1) onAnswer({ type: "zone-placement", placements: made });
   }
 
@@ -378,7 +379,7 @@ function SortMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
 /*  Typed: a box                                                       */
 /* ------------------------------------------------------------------ */
 
-function TypeMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & { field: SimTextInputField }) {
+function TypeMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimTextInputField }) {
   const root = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLInputElement>(null);
   const [typed, setTyped] = useState("");
@@ -400,6 +401,7 @@ function TypeMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
     if (answered || !typed.trim()) return;
     const answer: SimFieldAnswer = { type: "text", value: typed };
     setOk(fieldCredit(field, answer) >= 1);
+    onStep?.();
     onAnswer(answer);
   }
 
@@ -445,6 +447,150 @@ function TypeMove({ field, onAnswer, onNext, keyboard, takeFocus }: MoveProps & 
           )}
         </Verdict>
       )}
+    </MoveFrame>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Matching: one item at a time, its partner from tiles               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A matching lab as a run of picks: each item comes up on its own and its
+ * partner is a tile. A partner that has been matched (or shown after a miss)
+ * drops out, the way pairs leave a matching game, while every tile keeps its
+ * place so nothing moves under a finger.
+ */
+export function MatchMove({
+  prompt,
+  left,
+  right,
+  correctMap,
+  seed,
+  onAnswer,
+  onNext,
+  onStep,
+  keyboard,
+  takeFocus,
+}: Omit<MoveProps, "onAnswer"> & {
+  prompt: string;
+  left: readonly string[];
+  right: readonly string[];
+  /** correctMap[leftIndex] = rightIndex. */
+  correctMap: readonly number[];
+  /** Seeds the order the items come up in and the tiles' places. */
+  seed: string;
+  /** Each item's pick by its index, once every item is matched. */
+  onAnswer: (map: number[]) => void;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const card = useRef<HTMLDivElement>(null);
+  useTakeFocus(root, takeFocus);
+  const order = useMemo(() => shuffleSeeded(left.length, seedFromString(`${seed}:match-items`)), [left.length, seed]);
+  const tiles = useMemo(() => shuffleSeeded(right.length, seedFromString(`${seed}:match-tiles`)), [right.length, seed]);
+  const [picks, setPicks] = useState<number[]>(() => left.map(() => -1));
+  const [pos, setPos] = useState(0);
+  const next = useOnce(onNext);
+
+  const item = order[pos];
+  const picked = picks[item];
+  const answered = picked !== -1;
+  const ok = answered && picked === correctMap[item];
+  const finished = answered && pos === order.length - 1;
+  const matched = left.filter((_, l) => picks[l] !== -1 && picks[l] === correctMap[l]).length;
+  // The partners of the items already played are out of play.
+  const gone = useMemo(() => new Set(order.slice(0, pos).map((l) => correctMap[l])), [order, pos, correctMap]);
+
+  function choose(r: number) {
+    if (answered || gone.has(r)) return;
+    const made = picks.map((p, l) => (l === item ? r : p));
+    setPicks(made);
+    onStep?.();
+    if (pos === order.length - 1) onAnswer(made);
+  }
+
+  const step = useCallback(() => setPos((p) => Math.min(p + 1, order.length - 1)), [order.length]);
+
+  const shown = useRef(pos);
+  useEffect(() => {
+    if (shown.current === pos) return;
+    shown.current = pos;
+    card.current?.focus({ preventScroll: true });
+  }, [pos]);
+
+  useKeys(keyboard, (e) => {
+    if (!answered) {
+      const digit = Number(e.key);
+      if (!Number.isInteger(digit) || digit < 1 || digit > tiles.length || gone.has(tiles[digit - 1])) return false;
+      choose(tiles[digit - 1]);
+      return true;
+    }
+    return enterTo(e, finished ? next : step);
+  });
+
+  const numbers = isNumberSet(right);
+  const partner = right[correctMap[item]];
+  return (
+    <MoveFrame rootRef={root} kind="Match it" count={`${pos + 1} / ${order.length}`} prompt={prompt} lead>
+      <ItemCard
+        cardRef={card}
+        key={`card-${pos}`}
+        state={answered ? (ok ? "right" : "wrong") : null}
+        mono={isNumberSet(left)}
+      >
+        {left[item]}
+      </ItemCard>
+      <div role="radiogroup" aria-label="Partners" className={cn("grid gap-2.5", isShortSet(right) && "grid-cols-2")}>
+        {tiles.map((r, n) => {
+          const out = gone.has(r);
+          const isAnswer = answered && r === correctMap[item];
+          const isPicked = answered && r === picked;
+          return (
+            <button
+              key={r}
+              type="button"
+              role="radio"
+              aria-checked={isPicked}
+              disabled={answered || out}
+              onClick={() => choose(r)}
+              className={cn(
+                "group flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-[border-color,background-color,opacity,transform] duration-150",
+                !answered && !out && "hover:border-primary/60 hover:bg-primary/[0.03] active:scale-[0.99]",
+                out && "border-dashed opacity-30",
+                isAnswer && "border-success bg-success/10",
+                isPicked && !isAnswer && "border-destructive bg-destructive/10",
+                answered && !out && !isAnswer && !isPicked && "opacity-45"
+              )}
+            >
+              <Mark n={n + 1} right={isAnswer} wrong={isPicked && !isAnswer} />
+              <span
+                className={cn(
+                  "min-w-0 [overflow-wrap:anywhere]",
+                  numbers ? "font-mono text-lg font-medium" : "text-[15px] leading-snug",
+                  out && "line-through"
+                )}
+              >
+                {right[r]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <Pips
+        count={order.length}
+        current={pos}
+        result={(p) => (picks[order[p]] === -1 ? null : picks[order[p]] === correctMap[order[p]])}
+      />
+      {answered &&
+        (finished ? (
+          <Verdict ok={ok} onNext={next} auto={matched === order.length} ms={MOVE_ADVANCE_MS} focusButton>
+            {ok ? <Right /> : <TickedMiss answer={partner} />} <Tally n={matched} of={order.length} what="matched right" />
+          </Verdict>
+        ) : (
+          <Verdict key={`step-${pos}`} ok={ok} onNext={step} auto={ok} ms={STEP_ADVANCE_MS} focusButton={!ok}>
+            {ok ? <Right /> : <TickedMiss answer={partner} />}
+          </Verdict>
+        ))}
     </MoveFrame>
   );
 }
@@ -500,10 +646,13 @@ function MoveFrame({
 function ItemCard({
   cardRef,
   state,
+  mono = false,
   children,
 }: {
   cardRef: RefObject<HTMLDivElement | null>;
   state: "right" | "wrong" | null;
+  /** A code or a number (a port, a RAID level): set large in mono. */
+  mono?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -517,7 +666,14 @@ function ItemCard({
         state === "wrong" && "border-destructive bg-destructive/[0.05]"
       )}
     >
-      <p className="text-balance text-lg font-medium leading-snug [overflow-wrap:anywhere] sm:text-xl">{children}</p>
+      <p
+        className={cn(
+          "text-balance leading-snug [overflow-wrap:anywhere]",
+          mono ? "font-mono text-2xl font-semibold sm:text-3xl" : "text-lg font-medium sm:text-xl"
+        )}
+      >
+        {children}
+      </p>
     </div>
   );
 }
@@ -566,6 +722,16 @@ function Right() {
 
 function Correction({ children }: { children: ReactNode }) {
   return <span className="font-semibold text-destructive">{children}</span>;
+}
+
+/** A miss whose answer is already ticked on its tile: spelling it out again would be a sentence to read. */
+function TickedMiss({ answer }: { answer: string }) {
+  return (
+    <>
+      <Correction>Not quite.</Correction> <span className="text-muted-foreground">The answer is ticked.</span>
+      <span className="sr-only"> It&apos;s {answer}.</span>
+    </>
+  );
 }
 
 function Tally({ n, of, what }: { n: number; of: number; what: string }) {
