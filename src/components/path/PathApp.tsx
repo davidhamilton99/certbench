@@ -1197,8 +1197,9 @@ export function PathApp({
 
   /**
    * What a tapped map tile says and offers: an objective's stop to start or
-   * play again, what's still ahead, or what Pro opens. Played stops stay
-   * playable for everyone: the path's own runs, not new ground.
+   * play again, what's still ahead, or what Pro opens. Playing a stop again
+   * is Pro's (David, Nov 16): a free learner sees their score, and once past
+   * the checkpoint, the way to the offer.
    */
   function tileInfo(key: MapTile): TileInfo | null {
     const result = p.progress.checkpoint;
@@ -1283,13 +1284,15 @@ export function PathApp({
     const record = p.progress.stops[plan.stops[index].id];
     const locked = index > plan.freeThrough && !pro;
     if (record && record.n > 0) {
+      const ran = `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.`;
+      if (!pro) {
+        return { ...base, state: "done", line: `${ran} Playing it again comes with Pro.`, action: toOffer() };
+      }
       return {
         ...base,
         state: "done",
-        line: `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.${
-          status === "missed" ? " Its misses come back in your next stops." : ""
-        }`,
-        action: locked ? toOffer() : { label: "Play it again", kind: "replay", run: () => void startStop(index) },
+        line: `${ran}${status === "missed" ? " Its misses come back in your next stops." : ""}`,
+        action: { label: "Play it again", kind: "replay", run: () => void startStop(index) },
       };
     }
     // Past the free stops, even the next one is Pro's to open.

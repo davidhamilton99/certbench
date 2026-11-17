@@ -1326,8 +1326,11 @@ describe("the map", () => {
   const stopCalls = () => server.calls.filter((c) => c.path === "/api/path/stop").map((c) => c.input as { index: number; run: number });
   const tileButton = (code: string) => screen.getByRole("button", { name: new RegExp(`^${code.replace(".", "\\.")} Objective`) });
 
-  it("opens a played stop's card from its tile, and plays it again", async () => {
+  it("opens a played stop's card from its tile, and plays it again with Pro", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    // Pro's first visit opens on the unlock moment; this device has seen it.
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
     server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
     renderPath();
     fireEvent.click(await waitFor(() => tileButton("1.1")));
@@ -1339,6 +1342,19 @@ describe("the map", () => {
     await screen.findByText(`Prompt a|1.1|s${index("1.1")}-0`);
     expect(stopCalls().at(-1)).toMatchObject({ index: index("1.1"), run: 1 });
     expect(track).toHaveBeenCalledWith("path_map_action", { cert: "security-plus-sy0-701", tile: "1.1", action: "replay" });
+  });
+
+  it("shows a free learner a played stop's score, and that playing it again comes with Pro", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await waitFor(() => tileButton("1.1")));
+    const card = screen.getByRole("region", { name: "Objective 1.1" });
+    expect(card).toHaveTextContent("Last run 3 of 3 right");
+    expect(card).toHaveTextContent("Playing it again comes with Pro.");
+    // Before the checkpoint there's no offer on the page to lead to.
+    expect(screen.queryByRole("button", { name: /Play it again|See what Pro opens/ })).toBeNull();
+    expect(track).toHaveBeenCalledWith("path_map_tile_opened", { cert: "security-plus-sy0-701", tile: "1.1", state: "done" });
   });
 
   it("starts the stop that's next from its tile, and says how far off a later one is", async () => {
@@ -1373,6 +1389,12 @@ describe("the map", () => {
       "path_map_action",
       expect.objectContaining({ tile: later.objectives[0], action: "offer" })
     );
+
+    // A stop they played leads there too, past the checkpoint (what a replay showed them tapping).
+    fireEvent.click(tileButton("1.1"));
+    expect(screen.getByRole("region", { name: "Objective 1.1" })).toHaveTextContent("Playing it again comes with Pro.");
+    expect(screen.getByRole("button", { name: /See what Pro opens/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Play it again/ })).toBeNull();
   });
 
 });
