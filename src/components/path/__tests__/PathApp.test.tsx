@@ -622,7 +622,7 @@ describe("back from paying", () => {
 
   it("says the payment went through while Stripe confirms it, never the offer, then opens", async () => {
     renderPath();
-    await screen.findByRole("button", { name: "Sign out" });
+    await screen.findByRole("button", { name: "Account" });
     expect(screen.getByRole("heading", { name: "Opening your whole path…" })).toBeInTheDocument();
     expect(screen.getByText(/Payment received/)).toBeInTheDocument();
     expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
@@ -640,7 +640,7 @@ describe("back from paying", () => {
 
   it("says when confirming is slow, and looks again on request", async () => {
     renderPath();
-    await screen.findByRole("button", { name: "Sign out" });
+    await screen.findByRole("button", { name: "Account" });
     await act(async () => {});
     // Its own clock says 25 seconds have gone by.
     const realNow = Date.now.bind(Date);
@@ -685,7 +685,14 @@ describe("keeping a learner's work", () => {
   it("leaves an account's device copy alone through a signed-out visit, and saves it on signing back in", async () => {
     unsavedOnDevice("u1");
     const signedOut = renderPath();
-    expect(await screen.findByRole("radio", { name: /Right answer/ })).toBeInTheDocument();
+    // Signing back in comes first, not a blank path.
+    expect(await screen.findByRole("heading", { name: "Your Security+ path is in your account" })).toBeInTheDocument();
+    expect(screen.getByText(/4 stops done\./)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in with email" })).toHaveAttribute(
+      "href",
+      "/login?next=/path/security-plus-sy0-701"
+    );
+    expect(track).toHaveBeenCalledWith("path_welcome_back_viewed", { cert: "security-plus-sy0-701" });
     expect(JSON.parse(localStorage.getItem(key)!).progress.stops).toHaveProperty("1.3");
     signedOut.unmount();
 
@@ -693,6 +700,30 @@ describe("keeping a learner's work", () => {
     server.progress = done(["warmup", "1.1"]);
     renderPath();
     await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+  });
+
+  it("keeps guest work played beside an account's copy through a Google sign-in, and adds it to the account", async () => {
+    unsavedOnDevice("u1");
+    const signedOut = renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Play without signing in" }));
+    expect(track).toHaveBeenCalledWith("path_welcome_back_played", { cert: "security-plus-sy0-701" });
+    await screen.findByText("Prompt a|1.1|w1");
+    await answer();
+    await answer();
+    // Kept beside the account's copy, which stays as it was.
+    const guest = JSON.parse(localStorage.getItem("cb_path_guest_security-plus-sy0-701")!);
+    expect(Object.keys(guest.items)).toHaveLength(2);
+    expect(JSON.parse(localStorage.getItem(key)!).progress.items).toEqual({});
+    // Google's sign-in reloads the page.
+    signedOut.unmount();
+
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"]);
+    renderPath();
+    await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+    expect(Object.keys(saves().at(-1)!.items)).toEqual(expect.arrayContaining(Object.keys(guest.items)));
+    expect(localStorage.getItem("cb_path_guest_security-plus-sy0-701")).toBeNull();
+    expect(track).toHaveBeenCalledWith("path_account_linked", { cert: "security-plus-sy0-701", method: "redirect" });
   });
 
   it("saves rounds a public page handed to a new account, and opens on the way on", async () => {
@@ -718,6 +749,7 @@ describe("keeping a learner's work", () => {
     unsavedOnDevice("old-user");
     server.progress = done(["warmup", "1.1"]);
     renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Play without signing in" }));
     await screen.findByText("Prompt a|1.1|w1");
     for (let i = 0; i < 3; i++) await answer();
     await screen.findByText(/Warm-up complete/i);
@@ -726,8 +758,9 @@ describe("keeping a learner's work", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Log in and keep going" }));
     await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
+    expect(saves().at(-1)?.stops).toHaveProperty("warmup");
+    expect(localStorage.getItem("cb_path_guest_security-plus-sy0-701")).toBeNull();
   });
-
   it("won't take an exam date that can't be right, and saves a real one", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup", "1.1"]);
@@ -1271,4 +1304,97 @@ describe("the lab library", () => {
     expect(await screen.findByText("All 4 hands-on PBQ labs, one closing every domain")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
+});
+
+describe("the account menu", () => {
+  it("keeps signing out a step away, and says which account the path saves to", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderPath();
+    const account = await screen.findByRole("button", { name: "Account" });
+    expect(screen.queryByRole("menuitem", { name: "Sign out" })).toBeNull();
+    fireEvent.click(account);
+    expect(screen.getByRole("menu", { name: "Account" })).toHaveTextContent("Signed in as u1@example.com");
+    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+});
+
+describe("the map", () => {
+  const index = (id: string) => plan.stops.findIndex((s) => s.id === id);
+  const stopCalls = () => server.calls.filter((c) => c.path === "/api/path/stop").map((c) => c.input as { index: number; run: number });
+  const tileButton = (code: string) => screen.getByRole("button", { name: new RegExp(`^${code.replace(".", "\\.")} Objective`) });
+
+  it("opens a played stop's card from its tile, and plays it again with Pro", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    // Pro's first visit opens on the unlock moment; this device has seen it.
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await waitFor(() => tileButton("1.1")));
+    const card = screen.getByRole("region", { name: "Objective 1.1" });
+    expect(card).toHaveTextContent("1.1 · Not started");
+    expect(card).toHaveTextContent("Last run 3 of 3 right");
+    expect(track).toHaveBeenCalledWith("path_map_tile_opened", { cert: "security-plus-sy0-701", tile: "1.1", state: "done" });
+    fireEvent.click(screen.getByRole("button", { name: /Play it again/ }));
+    await screen.findByText(`Prompt a|1.1|s${index("1.1")}-0`);
+    expect(stopCalls().at(-1)).toMatchObject({ index: index("1.1"), run: 1 });
+    expect(track).toHaveBeenCalledWith("path_map_action", { cert: "security-plus-sy0-701", tile: "1.1", action: "replay" });
+  });
+
+  it("shows a free learner a played stop's score, and that playing it again comes with Pro", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await waitFor(() => tileButton("1.1")));
+    const card = screen.getByRole("region", { name: "Objective 1.1" });
+    expect(card).toHaveTextContent("Last run 3 of 3 right");
+    expect(card).toHaveTextContent("Playing it again comes with Pro.");
+    // Before the checkpoint there's no offer on the page to lead to.
+    expect(screen.queryByRole("button", { name: /Play it again|See what Pro opens/ })).toBeNull();
+    expect(track).toHaveBeenCalledWith("path_map_tile_opened", { cert: "security-plus-sy0-701", tile: "1.1", state: "done" });
+  });
+
+  it("starts the stop that's next from its tile, and says how far off a later one is", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await waitFor(() => tileButton("1.3")));
+    expect(screen.getByRole("region", { name: "Objective 1.3" })).toHaveTextContent(/Comes up/);
+    expect(screen.queryByRole("button", { name: /Play it again|Start/ })).toBeNull();
+    // A second tap closes it; the next stop's tile has the way on.
+    fireEvent.click(tileButton("1.3"));
+    expect(screen.queryByRole("region", { name: "Objective 1.3" })).toBeNull();
+    fireEvent.click(tileButton("1.2"));
+    expect(screen.getByRole("region", { name: "Objective 1.2" })).toHaveTextContent("Up next on your path.");
+    fireEvent.click(screen.getByRole("button", { name: /^Start/ }));
+    await screen.findByText(`Prompt a|1.2|s${index("1.2")}-0`);
+  });
+
+  it("shows a free learner what Pro opens past the checkpoint, and leads to the offer", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    const free = plan.stops.slice(0, plan.freeThrough + 1).map((s) => s.id);
+    server.progress = done(free, {
+      goal: { examDate: null, target: null, minutes: 20, at: 1 },
+      checkpoint: { score: 70, domains: [], at: 1 } as unknown as PathProgress["checkpoint"],
+    });
+    renderPath();
+    const later = plan.stops.find((s, i) => s.kind === "learn" && i > plan.freeThrough)!;
+    fireEvent.click(await waitFor(() => tileButton(later.objectives[0])));
+    expect(screen.getByRole("region", { name: `Objective ${later.objectives[0]}` })).toHaveTextContent("Opens with Pro.");
+    fireEvent.click(screen.getByRole("button", { name: /See what Pro opens/ }));
+    expect(track).toHaveBeenCalledWith(
+      "path_map_action",
+      expect.objectContaining({ tile: later.objectives[0], action: "offer" })
+    );
+
+    // A stop they played leads there too, past the checkpoint (what a replay showed them tapping).
+    fireEvent.click(tileButton("1.1"));
+    expect(screen.getByRole("region", { name: "Objective 1.1" })).toHaveTextContent("Playing it again comes with Pro.");
+    expect(screen.getByRole("button", { name: /See what Pro opens/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Play it again/ })).toBeNull();
+  });
+
 });

@@ -6,7 +6,14 @@ import { api } from "@/lib/api-client";
 import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/path";
 import { ApiError } from "@/contracts/common";
-import { readLocalPath, writeLocalPath, type LocalPath as LocalState } from "./local-path";
+import {
+  clearGuestPath,
+  readGuestPath,
+  readLocalPath,
+  writeGuestPath,
+  writeLocalPath,
+  type LocalPath as LocalState,
+} from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
 import { carryFromEarlierVersion, type VersionCarry } from "./version-carry";
 import {
@@ -54,6 +61,11 @@ interface View {
   certId: string | null;
   /** false when the account can't store progress yet; null when unknown. */
   stored: boolean | null;
+  /**
+   * Signed out on a device that holds an account's path: that account's copy,
+   * so the page can offer to sign back in to it. Null otherwise.
+   */
+  held: PathProgress | null;
 }
 
 const INITIAL: View = {
@@ -66,6 +78,7 @@ const INITIAL: View = {
   proPlan: false,
   certId: null,
   stored: null,
+  held: null,
 };
 
 /** Save to the account after this many unsaved answers (and at every stop end). */
@@ -86,10 +99,15 @@ export function usePathProgress(cert: PathCert) {
     (next: View) => {
       cur.current = next;
       setView(next);
-      // Signed out on a device that holds an account's path: the page starts
-      // fresh, but the account's copy stays as it is. It can hold work the
-      // account hasn't stored yet, and signing back in carries it up.
-      if (!next.userId && next.owner) return;
+      // Signed out on a device that holds an account's path: the account's
+      // copy stays as it is (it can hold work the account hasn't stored yet,
+      // and signing back in carries it up). This page's work goes beside it,
+      // for whichever account signs in next; a Google sign-in reloads the
+      // page, and memory alone lost it (replay, Nov 16).
+      if (!next.userId && next.owner) {
+        if (hasStarted(next.progress)) writeGuestPath(cert, next.progress);
+        return;
+      }
       writeLocalPath(cert, { v: 1, owner: next.owner, progress: next.progress });
     },
     [cert]
@@ -121,9 +139,12 @@ export function usePathProgress(cert: PathCert) {
     [cert]
   );
 
-  /** Pull the account's saved path and merge this device's into it. */
+  /**
+   * Pull the account's saved path and merge this device's into it, and any
+   * guest work played beside another account's copy (whoever signs in played it).
+   */
   const adopt = useCallback(
-    async (uid: string, local: LocalState | null) => {
+    async (uid: string, local: LocalState | null, guest: PathProgress | null = null) => {
       let server = EMPTY_PATH_PROGRESS;
       let access: PathAccess = "free";
       let proPlan = false;
@@ -142,9 +163,13 @@ export function usePathProgress(cert: PathCert) {
       // Only fold in progress that's anonymous or already this account's —
       // never another account's from a shared device.
       const mine = local && (local.owner === null || local.owner === uid) ? local : null;
-      const merged = mergePathProgress(server, mine?.progress ?? EMPTY_PATH_PROGRESS);
-      const carried = mine?.owner === null && hasStarted(mine.progress);
-      const unsynced = !!mine && hasStarted(mine.progress);
+      const played = guest && hasStarted(guest) ? guest : null;
+      const merged = mergePathProgress(
+        mergePathProgress(server, mine?.progress ?? EMPTY_PATH_PROGRESS),
+        played ?? EMPTY_PATH_PROGRESS
+      );
+      const carried = (mine?.owner === null && hasStarted(mine.progress)) || played !== null;
+      const unsynced = (!!mine && hasStarted(mine.progress)) || played !== null;
       return { merged, carried, unsynced, access, proPlan, certId, stored };
     },
     [cert]
@@ -166,7 +191,10 @@ export function usePathProgress(cert: PathCert) {
       }
 
       if (!uid) {
-        let progress = local?.owner ? EMPTY_PATH_PROGRESS : (local?.progress ?? EMPTY_PATH_PROGRESS);
+        // Beside an account's copy, the page picks up any guest work instead.
+        let progress = local?.owner
+          ? (readGuestPath(cert) ?? EMPTY_PATH_PROGRESS)
+          : (local?.progress ?? EMPTY_PATH_PROGRESS);
         // A first visit to a newer exam version brings this device's answers on the earlier one.
         const carry = !local?.owner && !hasStarted(progress) ? await carryFromEarlierVersion(cert, null) : null;
         if (carry) progress = mergePathProgress(progress, carry.progress);
@@ -177,6 +205,7 @@ export function usePathProgress(cert: PathCert) {
           // Keep the stored owner: a signed-out account's progress stays theirs.
           owner: local?.owner ?? null,
           progress,
+          held: local?.owner ? local.progress : null,
         });
         if (carry) trackCarry(cert, carry);
         return;
@@ -186,7 +215,8 @@ export function usePathProgress(cert: PathCert) {
       // learner stays anonymous without this (PostHog runs identified_only).
       identifyUser(uid, email ? { email } : undefined);
 
-      const res = await adopt(uid, local);
+      const guest = readGuestPath(cert);
+      const res = await adopt(uid, local, guest);
       // A first visit to a newer exam version brings the account's (and this
       // device's) answers on the earlier one.
       const carry = hasStarted(res.merged) ? null : await carryFromEarlierVersion(cert, uid);
@@ -202,7 +232,10 @@ export function usePathProgress(cert: PathCert) {
         proPlan: res.proPlan,
         certId: res.certId,
         stored: res.stored,
+        held: null,
       });
+      // The guest work is in this account's copy now (and saved, below).
+      if (guest) clearGuestPath(cert);
       // Back from Google with an anonymous stop to keep: it's theirs now.
       if (res.carried) track("path_account_linked", { cert, method: "redirect" });
       if (carry) trackCarry(cert, carry);
@@ -313,11 +346,11 @@ export function usePathProgress(cert: PathCert) {
       identifyUser(uid, { email });
       track("path_account_linked", { cert, method });
       const c = cur.current;
-      // Signed out, the page left the account's device copy alone (see commit):
-      // it joins this page's work, so logging back in here loses nothing either.
-      const kept = c.owner ? readLocalPath(cert) : null;
-      const progress = kept?.owner === c.owner ? mergePathProgress(kept.progress, c.progress) : c.progress;
-      const res = await adopt(uid, { v: 1, owner: c.owner, progress });
+      // Signed out beside an account's device copy (see commit), this page's
+      // work is guest work: it joins whoever signs in, and the copy joins only
+      // its own account. Otherwise the page's work is the device's anonymous path.
+      const local: LocalState | null = c.owner ? readLocalPath(cert) : { v: 1, owner: null, progress: c.progress };
+      const res = await adopt(uid, local, c.owner ? c.progress : null);
       commit({
         ready: true,
         userId: uid,
@@ -328,7 +361,9 @@ export function usePathProgress(cert: PathCert) {
         proPlan: res.proPlan,
         certId: res.certId,
         stored: res.stored,
+        held: null,
       });
+      clearGuestPath(cert);
       await saveToAccount(res.merged);
       return res.merged;
     },
@@ -341,6 +376,7 @@ export function usePathProgress(cert: PathCert) {
     if (!c.userId) return;
     const res = await adopt(c.userId, { v: 1, owner: c.owner, progress: c.progress });
     commit({ ...cur.current, progress: res.merged, access: res.access, proPlan: res.proPlan, certId: res.certId });
+    // (A signed-in page has no guest work: it was carried in when it loaded.)
   }, [adopt, commit]);
 
   return {

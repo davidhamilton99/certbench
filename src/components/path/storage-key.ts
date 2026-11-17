@@ -1,6 +1,14 @@
 /** Where this device keeps one exam's path progress (shared by server and client code). */
 export const pathStorageKey = (cert: string) => `cb_path_${cert}`;
 
+/**
+ * Work played signed out on a device that holds an account's path for the
+ * exam: kept beside that account's copy, never in it (it may be someone else
+ * at the keyboard), and carried into whichever account signs in next. A
+ * Google sign-in reloads the page, so memory alone would lose it.
+ */
+export const pathGuestKey = (cert: string) => `cb_path_guest_${cert}`;
+
 /** Set once this device has shown Pro opening one exam's path. */
 export const pathUnlockedKey = (cert: string) => `cb_path_unlocked_${cert}`;
 
