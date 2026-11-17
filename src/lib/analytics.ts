@@ -32,6 +32,12 @@ type EventMap = {
   google_signin_clicked: { page: string };
   google_signin_cancelled: { page: string; via: "google" | "back" };
   pbq_started: { scenario_id: string; scenario_type: string; surface: Surface };
+  // The path's map is tappable: what was opened, and what was done from it.
+  path_map_tile_opened: { cert: string; tile: string; state: string };
+  path_map_action: { cert: string; tile: string; action: string };
+  // Signed out on a device that holds an account's path: signing back in is offered first.
+  path_welcome_back_viewed: { cert: string };
+  path_welcome_back_played: { cert: string };
   // Each stage of a simulation lab, so it shows how far into a lab people get.
   sim_stage_cleared: { scenario_id: string; stage: number; stages: number; correct: number; total: number };
   upsell_viewed: { context: string };

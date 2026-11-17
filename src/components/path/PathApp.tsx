@@ -38,7 +38,8 @@ import type {
 } from "@/core/path/types";
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
-import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
+import { ExamMap, labTileKey, MapLegend, REHEARSAL_TILE, type LabState, type MapRehearsal, type MapTile } from "./ExamMap";
+import { WelcomeBack } from "./WelcomeBack";
 import { LabLibrary, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
@@ -85,6 +86,8 @@ interface Play {
 type View =
   | { kind: "play" }
   | { kind: "home" }
+  /** Signed out on a device that holds an account's path: sign back in first. */
+  | { kind: "welcome" }
   | { kind: "loading"; label?: string }
   | {
       kind: "end";
@@ -117,6 +120,23 @@ const domainOf = (objective: string) =>
   objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
 
 const domainLabel = (number: string | null) => (number ?? "").replace(/\.0$/, "");
+
+/** What a map tile's card offers to do. `kind` names it for analytics. */
+interface TileAction {
+  label: string;
+  kind: "start" | "replay" | "lab" | "rehearsal" | "offer" | "save";
+  run: () => void;
+}
+
+/** A tapped map tile's card: where it stands, and the one thing to do with it. */
+interface TileInfo {
+  /** For analytics: done, next, later, locked, open, anonymous, none. */
+  state: string;
+  kicker: string;
+  title: string;
+  line?: string;
+  action?: TileAction;
+}
 
 function stopLabel(stop: PathStop, total: number): string {
   switch (stop.kind) {
@@ -228,8 +248,17 @@ export function PathApp({
   useEffect(() => {
     if (!p.ready || booted.current) return;
     booted.current = true;
+    // Signed out beside an account's path: offer that account before a blank one.
+    if (!p.signedIn && p.held && hasStarted(p.held)) {
+      setView({ kind: "welcome" });
+      track("path_welcome_back_viewed", { cert });
+      return;
+    }
     if (hasStarted(p.progress)) setView({ kind: "home" });
-  }, [p.ready, p.progress]);
+  }, [p.ready, p.progress, p.signedIn, p.held, cert]);
+
+  // The map tile that's open on the home screen, if any.
+  const [tile, setTile] = useState<MapTile | null>(null);
 
   const statuses = useMemo(() => objectiveStatuses(p.progress.items), [p.progress.items]);
   const next = nextStopIndex(plan, p.progress);
@@ -626,6 +655,20 @@ export function PathApp({
 
   if (awaitingPro) {
     screen = <PathActivating examName={structure.examName} slow={slow} onCheck={() => void refreshAccess()} />;
+  } else if (view.kind === "welcome") {
+    screen = (
+      <WelcomeBack
+        cert={cert}
+        examName={structure.examName}
+        stopsDone={p.held ? stopsDone(plan, p.held) : 0}
+        onPlay={() => {
+          track("path_welcome_back_played", { cert });
+          // Guest work kept from before carries on from home; otherwise the warm-up.
+          setView(hasStarted(p.progress) ? { kind: "home" } : { kind: "play" });
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
   } else if (view.kind === "play") {
     const rep = play.reps[play.i];
     screen = (
@@ -924,6 +967,7 @@ export function PathApp({
         examName={structure.examName}
         version={examVersions(cert).length ? EXAM_CODES[cert] : undefined}
         signedIn={p.signedIn}
+        email={p.email}
         ready={p.ready}
         onHome={() => {
           setView({ kind: "home" });
@@ -1145,6 +1189,172 @@ export function PathApp({
     else setView({ kind: "home" });
   }
 
+  /** Bring a card on the home screen into view (the offer, the save card). */
+  function reveal(id: string) {
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(id)?.scrollIntoView?.({ behavior: still ? "auto" : "smooth", block: "start" });
+  }
+
+  /**
+   * What a tapped map tile says and offers: an objective's stop to start or
+   * play again, what's still ahead, or what Pro opens. Played stops stay
+   * playable for everyone: the path's own runs, not new ground.
+   */
+  function tileInfo(key: MapTile): TileInfo | null {
+    const result = p.progress.checkpoint;
+    const toOffer = (): TileAction | undefined =>
+      !p.signedIn
+        ? { label: "Save my map", kind: "save", run: () => reveal("path-save") }
+        : result && !pro
+          ? { label: "See what Pro opens", kind: "offer", run: () => reveal("path-offer") }
+          : undefined;
+
+    if (key === REHEARSAL_TILE) {
+      const title = `${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes`;
+      if (!pro) {
+        return {
+          state: "locked",
+          kicker: "Exam rehearsal · with Pro",
+          title,
+          line: "The whole exam, timed, scored on your readiness dial.",
+          action: toOffer(),
+        };
+      }
+      return {
+        state: lastRehearsal ? "done" : "open",
+        kicker: "Exam rehearsal",
+        title,
+        line: lastRehearsal
+          ? `Last one ${lastRehearsal.score}% on ${fmtDay(lastRehearsal.at)}.`
+          : "Scored on your readiness dial, like the real exam.",
+        action: {
+          label: lastRehearsal ? "Take another" : "Start",
+          kind: "rehearsal",
+          run: () => {
+            setView({ kind: "rehearsal-intro", asStop: false });
+            window.scrollTo({ top: 0 });
+          },
+        },
+      };
+    }
+
+    if (key.startsWith("lab:")) {
+      const domain = structure.domains.find((d) => labTileKey(d.number) === key);
+      const lab = domain?.lab;
+      if (!domain || !lab) return null;
+      const info = library.find((l) => l.id === lab.id);
+      const record = labResults.get(lab.id);
+      if (!pro || !info) {
+        return {
+          state: "locked",
+          kicker: `Hands-on lab ${domainLabel(domain.number)} · with Pro`,
+          title: lab.title,
+          line: "Played like the exam's PBQs, graded with partial credit.",
+          action: toOffer(),
+        };
+      }
+      return {
+        state: record ? "done" : "open",
+        kicker: `Hands-on lab ${domainLabel(domain.number)}`,
+        title: lab.title,
+        line: record
+          ? `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.`
+          : `About ${lab.minutes} minutes, graded with partial credit.`,
+        action: { label: record ? "Play it again" : "Open the lab", kind: "lab", run: () => void openLibraryLab(info) },
+      };
+    }
+
+    // An objective, and the learn stop that teaches it.
+    const objective = structure.domains.flatMap((d) => d.objectives).find((o) => o.code === key);
+    if (!objective) return null;
+    const status = statuses.get(key) ?? "new";
+    const kicker = `${key} · ${status === "got" ? "Covered" : status === "missed" ? "A miss to revisit" : "Not started"}`;
+    const base = { kicker, title: objective.title };
+    if (!p.signedIn) {
+      return {
+        ...base,
+        state: "anonymous",
+        line: "A free account saves your map and opens every stop through to your readiness checkpoint.",
+        action: toOffer(),
+      };
+    }
+    const index = plan.stops.findIndex((s) => s.kind === "learn" && s.objectives.includes(key));
+    if (index < 0) return { ...base, state: "none" };
+    const record = p.progress.stops[plan.stops[index].id];
+    const locked = index > plan.freeThrough && !pro;
+    if (record && record.n > 0) {
+      return {
+        ...base,
+        state: "done",
+        line: `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.${
+          status === "missed" ? " Its misses come back in your next stops." : ""
+        }`,
+        action: locked ? toOffer() : { label: "Play it again", kind: "replay", run: () => void startStop(index) },
+      };
+    }
+    // Past the free stops, even the next one is Pro's to open.
+    if (locked) {
+      return {
+        ...base,
+        state: "locked",
+        line: result ? "Opens with Pro." : "Opens with Pro, after your readiness checkpoint.",
+        action: toOffer(),
+      };
+    }
+    if (index === next) {
+      return {
+        ...base,
+        state: "next",
+        line: "Up next on your path.",
+        action: { label: "Start", kind: "start", run: () => void startStop(index) },
+      };
+    }
+    const ahead = index - next;
+    return {
+      ...base,
+      state: "later",
+      line: ahead === 1 ? "Comes up right after your next stop." : `Comes up in ${ahead} stops.`,
+    };
+  }
+
+  function pickTile(key: MapTile | null) {
+    setTile(key);
+    if (key) track("path_map_tile_opened", { cert, tile: key, state: tileInfo(key)?.state ?? "none" });
+  }
+
+  function renderTileDetail(key: MapTile) {
+    const info = tileInfo(key);
+    if (!info) return null;
+    const action = info.action;
+    return (
+      <div
+        role="region"
+        aria-label={info.title}
+        className="path-rise flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/80 p-4"
+      >
+        <div className="grid min-w-0 flex-1 basis-56 gap-0.5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{info.kicker}</p>
+          <p className="font-medium leading-snug">{info.title}</p>
+          {info.line && <p className="text-sm text-muted-foreground">{info.line}</p>}
+        </div>
+        {action && (
+          <Button
+            size="sm"
+            className="shrink-0"
+            onClick={() => {
+              track("path_map_action", { cert, tile: key, action: action.kind });
+              setTile(null);
+              action.run();
+            }}
+          >
+            {action.label}
+            <ArrowRight />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   function renderHome() {
     const result = p.progress.checkpoint;
     const anonymousDone = !p.signedIn && hasStarted(p.progress);
@@ -1183,19 +1393,23 @@ export function PathApp({
         )}
 
         {anonymousDone ? (
-          <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
+          <div id="path-save" className="scroll-mt-24">
+            <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
+          </div>
         ) : lockedNext && result ? (
-          <PathOffer
-            cert={cert}
-            certId={p.certId}
-            examName={structure.examName}
-            remainingStops={remaining}
-            questionCount={questionCount}
-            proPlan={p.proPlan}
-            examDate={p.progress.goal?.examDate ?? null}
-            context="home"
-            labCount={library.length}
-          />
+          <div id="path-offer" className="scroll-mt-24">
+            <PathOffer
+              cert={cert}
+              certId={p.certId}
+              examName={structure.examName}
+              remainingStops={remaining}
+              questionCount={questionCount}
+              proPlan={p.proPlan}
+              examDate={p.progress.goal?.examDate ?? null}
+              context="home"
+              labCount={library.length}
+            />
+          </div>
         ) : (
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         )}
@@ -1274,13 +1488,19 @@ export function PathApp({
         )}
 
         <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
-          <h2 className="font-display font-semibold tracking-tight">Your map</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-display font-semibold tracking-tight">Your map</h2>
+            <span className="font-mono text-[11px] text-muted-foreground">Tap any tile</span>
+          </div>
           <ExamMap
             structure={structure}
             statuses={statuses}
             current={nextStop && nextStop.objectives.length <= 3 ? new Set(nextStop.objectives) : undefined}
             labs={labs}
             rehearsal={mapRehearsal}
+            selected={tile}
+            onSelect={pickTile}
+            detail={tile ? renderTileDetail(tile) : null}
           />
           <MapLegend labs={labLegend} />
         </div>

@@ -1,6 +1,6 @@
-import { sanitizePathProgress } from "@/core/path/progress";
+import { hasStarted, sanitizePathProgress } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type PathProgress } from "@/core/path/types";
-import { pathStorageKey } from "./storage-key";
+import { pathGuestKey, pathStorageKey } from "./storage-key";
 
 /**
  * This device's copy of one exam's path, in localStorage. Dependency-free so
@@ -34,6 +34,34 @@ export function writeLocalPath(cert: string, state: LocalPath): void {
     window.localStorage.setItem(pathStorageKey(cert), JSON.stringify(state));
   } catch {
     /* storage blocked — progress still works for this tab */
+  }
+}
+
+/** Guest work beside an account's copy (see pathGuestKey), once some has been played. */
+export function readGuestPath(cert: string): PathProgress | null {
+  try {
+    const raw = window.localStorage.getItem(pathGuestKey(cert));
+    if (!raw) return null;
+    const progress = sanitizePathProgress(JSON.parse(raw));
+    return hasStarted(progress) ? progress : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeGuestPath(cert: string, progress: PathProgress): void {
+  try {
+    window.localStorage.setItem(pathGuestKey(cert), JSON.stringify(progress));
+  } catch {
+    /* storage blocked — the work still counts for this tab */
+  }
+}
+
+export function clearGuestPath(cert: string): void {
+  try {
+    window.localStorage.removeItem(pathGuestKey(cert));
+  } catch {
+    /* storage blocked: nothing was kept */
   }
 }
 
