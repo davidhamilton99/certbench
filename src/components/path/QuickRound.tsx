@@ -257,7 +257,7 @@ function RoundEnd({
               Play again
             </button>
           </div>
-          <p className="font-display text-4xl font-semibold tracking-tight">
+          <p className="cb-display text-5xl tabular-nums">
             {result.correct} <span className="text-muted-foreground">of {result.total}</span>
           </p>
           <p className="text-muted-foreground">

@@ -178,8 +178,8 @@ function longDate(iso: string): string {
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
   return (
     <div className="grid gap-2">
-      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{eyebrow}</span>
-      <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-[1.75rem]">{title}</h2>
+      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</span>
+      <h2 className="cb-display text-balance text-[1.75rem] sm:text-[2.1rem]">{title}</h2>
       {sub && <p className="text-sm text-muted-foreground">{sub}</p>}
     </div>
   );

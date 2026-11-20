@@ -64,9 +64,9 @@ export default function RegisterPage() {
           ))}
         </ol>
       </aside>
-      <Card>
+      <Card className="rounded-[1.75rem] py-8">
         <CardHeader className="text-center">
-          <CardTitle className="font-display text-xl font-bold tracking-tight">
+          <CardTitle className="text-3xl font-semibold tracking-[-0.035em]">
             Create your account
           </CardTitle>
           <CardDescription>

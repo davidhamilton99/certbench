@@ -14,9 +14,9 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <Card className="mx-auto w-full max-w-sm">
+    <Card className="mx-auto w-full max-w-[26rem] rounded-[1.75rem] py-8">
       <CardHeader className="text-center">
-        <CardTitle className="font-display text-xl font-bold tracking-tight">
+        <CardTitle className="text-3xl font-semibold tracking-[-0.035em]">
           Welcome back
         </CardTitle>
         <CardDescription>Sign in to pick up your plan</CardDescription>

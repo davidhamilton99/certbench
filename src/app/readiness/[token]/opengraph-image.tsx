@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { verifyShare, type SharePayload } from "@/server/share/readiness-token";
 import { CARD, readinessBand, truncate } from "@/lib/share/card";
+import { OgMark } from "@/lib/og/mark";
 
 export const alt = "CompTIA exam readiness — CertBench";
 export const size = { width: 1200, height: 630 };
@@ -20,22 +21,7 @@ export default async function Image({
 function Brandmark() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 44,
-          height: 44,
-          borderRadius: 10,
-          background: CARD.brand,
-          color: "#fff",
-          fontSize: 20,
-          fontWeight: 700,
-        }}
-      >
-        CB
-      </div>
+      <OgMark size={44} />
       <div style={{ color: CARD.text, fontSize: 26, fontWeight: 600 }}>
         CertBench
       </div>
@@ -61,7 +47,7 @@ function Card({ payload }: { payload: SharePayload | null }) {
         <Brandmark />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ color: CARD.text, fontSize: 56, fontWeight: 700 }}>
-            One short step at a time
+            One short stop at a time
           </div>
           <div style={{ color: CARD.sub, fontSize: 28 }}>
             Every objective of CompTIA Security+, Network+, and A+, as a guided path.

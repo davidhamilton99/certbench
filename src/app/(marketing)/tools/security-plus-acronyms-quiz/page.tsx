@@ -1,8 +1,7 @@
 import { getRecallDecks } from "@/data/recall";
 import { acronyms } from "@/data/reference/security-plus-sy0-701/acronyms";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { AcronymDrill } from "@/components/marketing/AcronymDrill";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -43,26 +42,23 @@ export default function AcronymsQuizPage() {
   );
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
-        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          Security+ acronyms list and quiz
-        </h1>
-        <p className="mt-3 leading-relaxed text-muted-foreground">
-          All {COUNT} SY0-701 acronyms, asked both ways round. Round 1 of {ROUND_SIZE} is free, no signup.
-        </p>
-
-        <div className="mt-6">
-          {deck ? (
-            <AcronymDrill deck={deck} />
-          ) : (
-            <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">
-              The drill is unavailable right now. The full list is below.
-            </p>
-          )}
-        </div>
-
+    <LanderPage>
+      <LanderHero
+        eyebrow="Security+ SY0-701"
+        title="Security+ acronyms list and quiz"
+        sub={`All ${COUNT} SY0-701 acronyms, asked both ways round.`}
+        specs={[`Round 1 of ${ROUND_SIZE} free`, "No signup", "Number keys answer"]}
+      />
+      <LanderStage width="md">
+        {deck ? (
+          <AcronymDrill deck={deck} />
+        ) : (
+          <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">
+            The drill is unavailable right now. The full list is below.
+          </p>
+        )}
+      </LanderStage>
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
         <p className="mt-10 leading-relaxed text-muted-foreground">
           The Security+ SY0-701 exam leans hard on acronyms. This drill covers all {COUNT} on CompTIA&apos;s
           list in both directions: expand the acronym, or name it from its meaning. Answer with the number keys.
@@ -143,8 +139,7 @@ export default function AcronymsQuizPage() {
         />
 
         <FaqSection faqs={FAQS} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

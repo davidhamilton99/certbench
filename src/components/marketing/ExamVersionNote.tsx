@@ -101,7 +101,7 @@ export function ExamVersionNote({
   return (
     <p
       className={cn(
-        "rounded-lg border bg-muted/40 px-4 py-3 text-sm leading-relaxed text-muted-foreground",
+        "rounded-2xl border border-border/80 bg-foreground/[0.03] px-4 py-3 text-left text-[13px] leading-relaxed text-muted-foreground sm:px-5",
         className
       )}
     >

@@ -15,9 +15,9 @@ export default function ContactPage() {
     <div className="min-h-screen overflow-x-hidden aurora-bg text-foreground">
       <MarketingHeader />
 
-      <main className="max-w-2xl mx-auto px-6 py-16">
+      <main className="mx-auto max-w-2xl px-5 pb-16 pt-12 sm:px-6 sm:pt-20">
         <div className="text-center mb-12">
-          <h1 className="font-display text-[36px] sm:text-[40px] font-bold text-foreground tracking-tight">
+          <h1 className="cb-display text-[2.35rem] sm:text-6xl">
             Get in touch
           </h1>
           <p className="text-[17px] text-muted-foreground mt-3 max-w-md mx-auto">

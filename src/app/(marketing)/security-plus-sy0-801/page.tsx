@@ -4,6 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { CtaBand } from "@/components/marketing/lander/Article";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,16 +92,16 @@ export default function SecurityPlusV8Page() {
         })}
       />
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-12 sm:px-6 sm:pt-20">
         <p className="font-mono text-xs text-muted-foreground">
           CompTIA Security+ V8 · Checked against CompTIA&apos;s exam objectives on {EXAM_FACTS_CHECKED}
         </p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-4 cb-display text-balance text-[2.35rem] sm:text-[3.5rem]">
           Security+ <span className="whitespace-nowrap">SY0-801</span>: the exam, its domains and all{" "}
           {OBJECTIVE_COUNT} objectives
         </h1>
 
-        <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+        <div className="mt-6 grid gap-4 text-[17px] leading-relaxed text-muted-foreground sm:mt-8">
           <p>
             <strong className="font-medium text-foreground">
               SY0-801 is the next Security+ exam, launching on or around November 17, 2026.
@@ -123,13 +124,13 @@ export default function SecurityPlusV8Page() {
           </p>
         </div>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">At a glance</h2>
-          <div className="mt-4 overflow-hidden rounded-xl border">
-            <table className="w-full text-sm">
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">At a glance</h2>
+          <div className="glass mt-5 overflow-hidden rounded-[1.5rem]">
+            <table className="w-full text-[15px]">
               <tbody>
                 {AT_A_GLANCE.map((row) => (
-                  <tr key={row.label} className="border-b last:border-0">
+                  <tr key={row.label} className="border-b border-foreground/[0.06] last:border-0">
                     <th scope="row" className="w-2/5 px-3 py-2.5 text-left align-top font-medium sm:px-4">
                       {row.label}
                     </th>
@@ -141,14 +142,14 @@ export default function SecurityPlusV8Page() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">Domains and objectives</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">Domains and objectives</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Each domain&apos;s share of the exam, and what it covers.
           </p>
           <div className="mt-5 grid gap-6">
             {SY0_801_DOMAINS.map((d) => (
-              <div key={d.number} className="rounded-xl border bg-card p-4 sm:p-5">
+              <div key={d.number} className="glass rounded-[1.5rem] p-5 sm:p-7">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="min-w-0 font-semibold leading-snug">
                     <span className="mr-1.5 font-mono text-xs text-muted-foreground">{d.number}</span>{" "}
@@ -156,7 +157,7 @@ export default function SecurityPlusV8Page() {
                   </h3>
                   <span className="shrink-0 font-mono text-sm tabular-nums">{d.weight}%</span>
                 </div>
-                <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]" aria-hidden>
                   <div className="h-full rounded-full bg-primary" style={{ width: `${(d.weight / 27) * 100}%` }} />
                 </div>
                 <ul className="mt-4 grid gap-1.5 text-sm">
@@ -179,8 +180,8 @@ export default function SecurityPlusV8Page() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">What changed from SY0-701</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">What changed from SY0-701</h2>
           <ul className="mt-4 grid list-disc gap-2.5 pl-5 leading-relaxed text-muted-foreground">
             <li>
               <strong className="font-medium text-foreground">A new AI objective, 2.6.</strong> It covers
@@ -215,14 +216,14 @@ export default function SecurityPlusV8Page() {
           </p>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">The new AI objective</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">The new AI objective</h2>
           <p className="mt-2 leading-relaxed text-muted-foreground">
             Objective 2.6 names {SY0_801_AI_TOPICS.length} topics. Here&apos;s each one in a line.
           </p>
           <dl className="mt-4 grid gap-2.5">
             {SY0_801_AI_TOPICS.map((t) => (
-              <div key={t.term} className="rounded-lg border bg-card px-4 py-3 text-sm">
+              <div key={t.term} className="glass rounded-2xl px-5 py-4 text-[15px]">
                 <dt className="font-medium">{t.term}</dt>
                 <dd className="mt-0.5 leading-relaxed text-muted-foreground">{t.gist}</dd>
               </div>
@@ -230,9 +231,8 @@ export default function SecurityPlusV8Page() {
           </dl>
         </section>
 
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Take the free SY0-801 practice test</h2>
-          <p className="max-w-md text-sm text-muted-foreground">
+        <CtaBand title="Take the free SY0-801 practice test">
+          <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             {SY0_801_PRACTICE_TEST.length} questions across all {OBJECTIVE_COUNT} objectives in the exam&apos;s
             weights, timed, with a score by domain and every answer explained. No account needed.
           </p>
@@ -260,7 +260,7 @@ export default function SecurityPlusV8Page() {
               Start your SY0-701 path
             </Link>
           </p>
-        </section>
+        </CtaBand>
 
         <RelatedLinks
           links={[

@@ -50,22 +50,13 @@ const jetbrainsMono = localFont({
   adjustFontFallback: false,
 });
 
-// Display face for CertBench 2.0 — a characterful grotesque used for headline
-// and instrument moments, paired with Inter for body and JetBrains Mono for data.
-const bricolage = localFont({
-  src: "./fonts/bricolage-grotesque-latin.woff2",
-  weight: "500 700",
-  variable: "--font-bricolage",
-  display: "swap",
-});
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#18181b" },
+    { media: "(prefers-color-scheme: dark)", color: "#08090c" },
   ],
 };
 
@@ -131,7 +122,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${bricolage.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body>

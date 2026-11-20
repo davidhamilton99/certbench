@@ -671,22 +671,48 @@ export function PathApp({
     );
   } else if (view.kind === "play") {
     const rep = play.reps[play.i];
+    // The rep just answered pops its objective on the map beside the card.
+    const answered = rep && play.results[play.i] !== null ? new Set([rep.objective]) : undefined;
     screen = (
-      <div className="glass rounded-3xl p-5 sm:p-8">
-        <div className="mb-6 grid gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {play.focus === "misses" ? "Review · your misses" : stopLabel(play.stop, total)}
-              {play.stop.kind === "learn" && <span className="text-foreground"> · {play.stop.title}</span>}
-              {play.stop.kind === "practice" && <span className="text-foreground"> · {play.stop.title}</span>}
-            </p>
-            <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-              {play.i + 1} / {play.reps.length}
-            </span>
+      // One screen: the stop on the left and, on wide screens, the exam's map
+      // filling in beside it as each answer lands.
+      <div className="glass overflow-hidden rounded-3xl lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:rounded-[2rem]">
+        <div className="p-5 sm:p-8 lg:p-9">
+          <div className="mb-6 grid gap-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                {play.focus === "misses" ? "Review · your misses" : stopLabel(play.stop, total)}
+                {play.stop.kind === "learn" && <span className="text-foreground"> · {play.stop.title}</span>}
+                {play.stop.kind === "practice" && <span className="text-foreground"> · {play.stop.title}</span>}
+              </p>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                {play.i + 1} / {play.reps.length}
+              </span>
+            </div>
+            <StopProgress results={play.results} current={play.i} />
           </div>
-          <StopProgress results={play.results} current={play.i} />
+          {rep && <RepCard key={`${play.stop.id}-${play.i}-${rep.id}`} rep={rep} onAnswer={onAnswer} onNext={onNext} />}
         </div>
-        {rep && <RepCard key={`${play.stop.id}-${play.i}-${rep.id}`} rep={rep} onAnswer={onAnswer} onNext={onNext} />}
+        <aside
+          aria-label={`Your ${structure.examName} map`}
+          className="hidden border-l border-border/70 bg-foreground/[0.018] p-6 lg:grid lg:content-start lg:gap-4"
+        >
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-semibold tracking-[-0.01em]">Your {structure.examName} map</p>
+            <p className="font-mono text-xs text-muted-foreground">
+              {statuses.size} of {structure.domains.reduce((s, d) => s + d.objectives.length, 0)}
+            </p>
+          </div>
+          <ExamMap
+            structure={structure}
+            statuses={statuses}
+            current={rep ? new Set([rep.objective]) : undefined}
+            fresh={answered}
+            labs={labs}
+            rehearsal={mapRehearsal}
+            className="gap-3.5"
+          />
+        </aside>
       </div>
     );
   } else if (view.kind === "loading") {
@@ -837,10 +863,10 @@ export function PathApp({
   } else if (view.kind === "intro") {
     screen = (
       <div className="glass path-rise grid gap-5 rounded-3xl p-6 sm:p-8">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
           Stop {view.index + 1} · Readiness checkpoint
         </span>
-        <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h2 className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">
           Now try it the way the exam asks.
         </h2>
         <p className="max-w-prose text-muted-foreground">
@@ -896,9 +922,10 @@ export function PathApp({
     const missed = view.total - view.correct;
     const reviewed = view.focus === "misses";
     screen = (
-      <div className="path-rise grid gap-6">
+      <div className="path-rise grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <div className="grid min-w-0 gap-6">
         <div className="grid gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             {view.stop.kind === "review"
               ? "Review"
               : view.stop.kind === "warmup"
@@ -906,8 +933,9 @@ export function PathApp({
                 : `Stop ${view.stop.index + 1}`}{" "}
             complete
           </span>
-          <h2 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            {view.correct} <span className="text-muted-foreground">of {view.total}</span>
+          <h2 className="cb-display text-7xl sm:text-8xl">
+            {view.correct}
+            <span className="text-muted-foreground/60"> of {view.total}</span>
           </h2>
           <p className="text-muted-foreground">
             {reviewed
@@ -937,9 +965,11 @@ export function PathApp({
           </Button>
         )}
 
-        <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
+        </div>
+
+        <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-6 lg:sticky lg:top-20">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-display font-semibold tracking-tight">Your {structure.examName} map</h3>
+            <h3 className="font-semibold tracking-[-0.01em]">Your {structure.examName} map</h3>
             <span className="font-mono text-xs text-muted-foreground">
               {statuses.size} of {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
             </span>
@@ -978,7 +1008,11 @@ export function PathApp({
       <main
         className={cn(
           "mx-auto w-full flex-1 px-4 pb-20 pt-6 sm:px-6 sm:pt-10",
-          view.kind === "lab" ? "max-w-3xl" : "max-w-2xl"
+          view.kind === "lab"
+            ? "max-w-3xl"
+            : view.kind === "play" || view.kind === "home" || view.kind === "end"
+              ? "max-w-2xl lg:max-w-5xl"
+              : "max-w-2xl"
         )}
       >
         <div className="path-stage" data-ready={p.ready ? "true" : "false"}>
@@ -1363,24 +1397,32 @@ export function PathApp({
     const anonymousDone = !p.signedIn && hasStarted(p.progress);
     const lockedNext = p.signedIn && next > plan.freeThrough && !pro;
     return (
-      <div className="path-rise grid gap-6">
-        <div className="grid gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="path-rise grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <div className="grid min-w-0 gap-6">
+        <div className="grid gap-3">
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             {structure.examCode}
           </span>
-          <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Your {structure.examName} path
-          </h1>
-          <p className="text-muted-foreground">
-            {Math.min(next, total)} of {total} stops done · {statuses.size} of{" "}
-            {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
-            {reading && (
-              <>
-                {" "}
-                · last {reading.source} {reading.score}%
-              </>
-            )}
-          </p>
+          <h1 className="cb-display text-balance text-[2.5rem] sm:text-6xl">Your {structure.examName} path</h1>
+          {/* How far along, as a line lit up to here, then the numbers. */}
+          <div className="mt-2 grid gap-2.5">
+            <div className="h-[3px] overflow-hidden rounded-full bg-foreground/[0.08]" aria-hidden>
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-signal shadow-[0_0_12px_var(--primary)]"
+                style={{ width: `${Math.max(1.5, (Math.min(next, total) / Math.max(1, total)) * 100)}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {Math.min(next, total)} of {total} stops done · {statuses.size} of{" "}
+              {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
+              {reading && (
+                <>
+                  {" "}
+                  · last {reading.source} {reading.score}%
+                </>
+              )}
+            </p>
+          </div>
         </div>
 
         {/* A rehearsal left mid-way comes first: its clock is waiting. */}
@@ -1490,9 +1532,11 @@ export function PathApp({
           />
         )}
 
-        <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
+        </div>
+
+        <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-6 lg:sticky lg:top-20">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display font-semibold tracking-tight">Your map</h2>
+            <h2 className="font-semibold tracking-[-0.01em]">Your map</h2>
             <span className="font-mono text-[11px] text-muted-foreground">Tap any tile</span>
           </div>
           <ExamMap
@@ -1510,16 +1554,20 @@ export function PathApp({
 
         {/* The save card carries its own. */}
         {!anonymousDone && (
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground lg:col-span-2">
             <Link href="/start?pick=1" className="underline underline-offset-4 hover:text-foreground">
               Studying for a different exam?
             </Link>
           </p>
         )}
-        {!anonymousDone && <VersionSwitch cert={cert} />}
+        {!anonymousDone && (
+          <div className="lg:col-span-2">
+            <VersionSwitch cert={cert} />
+          </div>
+        )}
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
-          <p className="-mt-3 text-center text-xs text-muted-foreground">
+          <p className="-mt-3 text-center text-xs text-muted-foreground lg:col-span-2">
             Study sets from your notes and full spaced repetition are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
@@ -1562,12 +1610,16 @@ function ContinueCard({
           ? `Last stop · the whole exam, timed`
           : `Next · stop ${stop.index + 1} of ${total}`;
   return (
-    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
-      <div className="min-w-0">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{kicker}</p>
-        <p className="mt-1 truncate font-display text-xl font-semibold tracking-tight">{label}</p>
+    <div className="glass relative isolate flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-[1.75rem] p-6 sm:p-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 left-0 -z-10 h-48 w-2/3 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_22%,transparent),transparent)]"
+      />
+      <div className="min-w-0 flex-1 basis-64">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{kicker}</p>
+        <p className="mt-2 text-balance text-2xl font-semibold leading-tight tracking-[-0.03em] sm:text-[2rem]">{label}</p>
       </div>
-      <Button size="lg" className={cn("h-12 w-full px-6 text-base sm:w-auto")} onClick={onContinue}>
+      <Button size="lg" className={cn("h-12 w-full px-7 text-base sm:w-auto")} onClick={onContinue}>
         {locked ? "See what's next" : "Continue"}
         <ArrowRight />
       </Button>
@@ -1586,7 +1638,7 @@ function SaveCard({
   onSaved: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => Promise<void>;
 }) {
   return (
-    <div className="glass grid gap-4 rounded-3xl p-5 sm:p-6">
+    <div className="glass grid gap-4 rounded-[1.75rem] p-5 sm:p-7">
       <SaveAsk cert={cert} surface="path" title={nextUpTitle(next) ?? "Save your map to keep going"} onSaved={onSaved}>
         {nextUpLead(next)}A free account saves your map and opens every stop through to your readiness checkpoint.
       </SaveAsk>

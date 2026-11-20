@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase-browser";
 import { track } from "@/lib/analytics";
+import { loadBrowserClient } from "@/lib/supabase-lazy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -51,7 +51,12 @@ export function InlineSignup({
     setError("");
     setNotice("");
     setBusy(true);
-    const supabase = createClient();
+    const supabase = await loadBrowserClient().catch(() => null);
+    if (!supabase) {
+      setError("Couldn't reach sign-in. Check your connection and try again.");
+      setBusy(false);
+      return;
+    }
 
     if (mode === "login") {
       const { data, error: loginError } = await supabase.auth.signInWithPassword({

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { ChevronRight } from "lucide-react";
 import { QuestionDeck } from "@/components/marketing/QuestionDeck";
+import { PathCard } from "@/components/marketing/PathCard";
+import { LanderHero, LanderPage, LanderProse, LanderSection, LanderStage } from "@/components/marketing/lander/Lander";
+import { TileGrid } from "@/components/marketing/lander/TileGrid";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { QuickRound } from "@/components/path/QuickRound";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { Button } from "@/components/ui/button";
 import { practicePageFor } from "@/lib/seo/cert-pages";
 import {
   OBJECTIVE_HUB_CERTS,
@@ -63,173 +63,158 @@ export function ObjectiveLanding({
   ]);
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <LanderPage>
       <JsonLd data={breadcrumbs} />
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        {/* Breadcrumb */}
-        <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <Link href={hub} className="hover:text-foreground">
-            {data.shortCertName} practice
-          </Link>
-          <ChevronRight className="size-3" />
-          {objectiveHub && (
-            <>
-              <Link href={objectiveHub} className="hover:text-foreground">
-                {data.examCode} objectives
-              </Link>
-              <ChevronRight className="size-3" />
-            </>
-          )}
-          {official && data.domainNumber && (
-            <>
-              <span>Domain {data.domainNumber}</span>
-              <ChevronRight className="size-3" />
-            </>
-          )}
-          <span className={official ? "font-mono" : undefined}>{crumb}</span>
-        </nav>
-
-        <p className="font-mono text-xs text-muted-foreground">
-          {data.certName} · {data.examCode}
-        </p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {heading}
-        </h1>
-        {retired && <ExamVersionNote certSlugs={[data.certSlug]} className="mt-4" />}
-
-        {/* Lead with something to do: this objective's stop of the path. */}
-        {round && (
-          <section className="mt-6 grid gap-3">
-            <p className="text-sm text-muted-foreground">
-              Try it now: {round.reps.length} quick questions on this{" "}
-              {official ? "objective" : "topic"}, no account needed.
-            </p>
-            <QuickRound
-              cert={round.cert}
-              stopId={data.code}
-              examName={round.examName}
-              structure={round.structure}
-              reps={round.reps}
-              label={official ? `Objective ${data.code} · ${round.title}` : round.title}
-              surface="objective_page"
-              unit={official ? "objectives" : "topics"}
-            />
-          </section>
-        )}
-
-        <div className={round ? "mt-10 grid gap-3 text-muted-foreground" : "mt-4 grid gap-3 text-muted-foreground"}>
-          {official ? (
-            <p className="leading-relaxed">
-              Practice questions for {data.shortCertName} objective {data.code},{" "}
-              &ldquo;{data.title}.&rdquo; Every question is original, written to
-              the {data.examCode} exam objectives, and comes with a full
-              explanation — answer them below to see instant grading.
-            </p>
-          ) : (
-            <p className="leading-relaxed">
-              Practice questions on {data.topic} for {data.shortCertName}{" "}
-              {data.examCode}. Every question is original, written for the
-              exam, and comes with a full explanation — answer them below to
-              see instant grading.
-            </p>
-          )}
-          {official && data.domainTitle && data.domainWeight !== null && (
-            <p className="leading-relaxed">
-              This objective sits in{" "}
-              <strong className="text-foreground">
-                Domain {data.domainNumber}: {data.domainTitle}
-              </strong>
-              {retired ? (
-                <>
-                  {" "}
-                  of the {data.examCode} exam.
-                </>
-              ) : (
-                <>
-                  , which is about {data.domainWeight}% of the exam — so mastering
-                  it moves your readiness score meaningfully.
-                </>
-              )}
-            </p>
-          )}
-        </div>
-
-        {/* The objective's bank questions, one at a time on the path's own card. */}
-        {data.samples.length > 0 && (
-          <section className="mt-8 grid gap-4">
-            {round && (
-              <h2 className="text-lg font-semibold tracking-tight">
-                More {official ? data.code : data.topic} practice questions
-              </h2>
-            )}
-            <QuestionDeck
-              questions={data.samples}
-              label={official ? `Objective ${data.code} · practice questions` : `${data.topic} · practice questions`}
-              surface="objective_page"
-              path={`/path/${data.certSlug}`}
-              examName={data.shortCertName}
-            />
-          </section>
-        )}
-
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {official ? `Learn ${data.code} and every other objective` : "Learn this and every other objective"}
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Your {data.shortCertName} path walks the whole exam in short stops,
-            one objective at a time, and maps where you stand as you go.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={`/path/${data.certSlug}`}>
-              Start my {data.shortCertName} path
-              <ArrowRight />
+      <LanderHero
+        above={
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center justify-center gap-1 text-xs text-muted-foreground">
+            <Link href={hub} className="hover:text-foreground">
+              {data.shortCertName} practice
             </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
-
-        {/* Sibling objectives — internal linking within the domain */}
-        {data.siblings.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-lg font-semibold tracking-tight">
-              {official
-                ? `More objectives${data.domainNumber ? ` in Domain ${data.domainNumber}` : ""}`
-                : `More ${data.shortCertName} topics`}
-            </h2>
-            <div className="mt-3 grid gap-1.5">
-              {data.siblings.map((s) => (
-                <Link
-                  key={s.slug}
-                  href={`/objectives/${data.certSlug}/${s.slug}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  {official ? (
-                    <span>
-                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                        {s.code}
-                      </span>
-                      {s.title}
-                    </span>
-                  ) : (
-                    <span>{s.topic}</span>
-                  )}
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            <ChevronRight className="size-3" />
+            {objectiveHub && (
+              <>
+                <Link href={objectiveHub} className="hover:text-foreground">
+                  {data.examCode} objectives
                 </Link>
-              ))}
-            </div>
-          </section>
-        )}
+                <ChevronRight className="size-3" />
+              </>
+            )}
+            {official && data.domainNumber && (
+              <>
+                <span>Domain {data.domainNumber}</span>
+                <ChevronRight className="size-3" />
+              </>
+            )}
+            <span className={official ? "font-mono" : undefined}>{crumb}</span>
+          </nav>
+        }
+        eyebrow={`${data.certName} · ${data.examCode}`}
+        title={heading}
+        sub={
+          round
+            ? `Try it now: ${round.reps.length} quick questions on this ${official ? "objective" : "topic"}.`
+            : "Original questions, each explained the moment you answer."
+        }
+        specs={[
+          ...(official && data.domainNumber ? [`Domain ${data.domainNumber}`] : []),
+          ...(official && data.domainWeight !== null && !retired ? [`${data.domainWeight}% of the exam`] : []),
+          "No account needed",
+        ]}
+      />
+      {retired && (
+        <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+          <ExamVersionNote certSlugs={[data.certSlug]} />
+        </div>
+      )}
 
-        <p className="mt-8 text-sm">
-          <Link href={objectiveHub ?? hub} className="text-primary underline underline-offset-4">
-            ← All {data.shortCertName} {objectiveHub ? `${data.examCode} objectives` : "practice questions"}
-          </Link>
-        </p>
-      </main>
-      <Footer />
-    </div>
+      {/* Lead with something to do: this objective's stop of the path. */}
+      {round && (
+        <LanderStage>
+          <QuickRound
+            cert={round.cert}
+            stopId={data.code}
+            examName={round.examName}
+            structure={round.structure}
+            reps={round.reps}
+            label={official ? `Objective ${data.code} · ${round.title}` : round.title}
+            surface="objective_page"
+            unit={official ? "objectives" : "topics"}
+          />
+        </LanderStage>
+      )}
+
+      {/* The objective's bank questions, one at a time on the path's own card. */}
+      {data.samples.length > 0 && (
+        <LanderSection
+          eyebrow="Exam style"
+          title={round ? `More ${official ? data.code : data.topic} practice questions` : undefined}
+          sub={`${data.samples.length} questions · explained as you answer`}
+          width="md"
+          className={round ? undefined : "sm:pt-14"}
+        >
+          <QuestionDeck
+            questions={data.samples}
+            label={official ? `Objective ${data.code} · practice questions` : `${data.topic} · practice questions`}
+            surface="objective_page"
+            path={`/path/${data.certSlug}`}
+            examName={data.shortCertName}
+          />
+        </LanderSection>
+      )}
+
+      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
+        <PathCard
+          kicker={`Your ${data.shortCertName} path`}
+          title={official ? `Learn ${data.code} and every other objective` : "Learn this and every other objective"}
+          href={`/path/${data.certSlug}`}
+          label={`Start my ${data.shortCertName} path`}
+          context="objective_page"
+          note="No account needed to start."
+        >
+          Your {data.shortCertName} path walks the whole exam in short stops, one objective at a time, and maps where
+          you stand as you go.
+        </PathCard>
+      </div>
+
+      <LanderProse>
+        {official ? (
+          <p>
+            Practice questions for {data.shortCertName} objective {data.code}, &ldquo;{data.title}.&rdquo; Every
+            question is original, written to the {data.examCode} exam objectives, and comes with a full explanation —
+            answer them above to see instant grading.
+          </p>
+        ) : (
+          <p>
+            Practice questions on {data.topic} for {data.shortCertName} {data.examCode}. Every question is original,
+            written for the exam, and comes with a full explanation — answer them above to see instant grading.
+          </p>
+        )}
+        {official && data.domainTitle && data.domainWeight !== null && (
+          <p>
+            This objective sits in{" "}
+            <strong>
+              Domain {data.domainNumber}: {data.domainTitle}
+            </strong>
+            {retired ? (
+              <> of the {data.examCode} exam.</>
+            ) : (
+              <>, which is about {data.domainWeight}% of the exam — so mastering it moves your readiness score meaningfully.</>
+            )}
+          </p>
+        )}
+      </LanderProse>
+
+      {/* Sibling objectives — internal linking within the domain */}
+      {data.siblings.length > 0 && (
+        <LanderSection
+          title={
+            official
+              ? `More objectives${data.domainNumber ? ` in Domain ${data.domainNumber}` : ""}`
+              : `More ${data.shortCertName} topics`
+          }
+          width="xl"
+          className="sm:pt-24"
+        >
+          <TileGrid
+            groups={[
+              {
+                tiles: data.siblings.map((sib) =>
+                  official
+                    ? { href: `/objectives/${data.certSlug}/${sib.slug}`, code: sib.code, title: sib.topic, detail: sib.title }
+                    : { href: `/objectives/${data.certSlug}/${sib.slug}`, title: sib.topic }
+                ),
+              },
+            ]}
+          />
+        </LanderSection>
+      )}
+
+      <p className="mx-auto mt-12 w-full max-w-5xl px-5 text-sm sm:px-6">
+        <Link href={objectiveHub ?? hub} className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          ← All {data.shortCertName} {objectiveHub ? `${data.examCode} objectives` : "practice questions"}
+        </Link>
+      </p>
+    </LanderPage>
   );
 }

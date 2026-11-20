@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase-browser";
 import { track } from "@/lib/analytics";
+import { loadBrowserClient } from "@/lib/supabase-lazy";
 import { SIGNIN_CANCELLED_PARAM } from "@/lib/google-signin";
 import { Button } from "@/components/ui/button";
 
@@ -42,7 +42,12 @@ export function GoogleSignInButton({ next }: { next?: string }) {
     setLoading(true);
     setCancelled(false);
     track("google_signin_clicked", { page: window.location.pathname });
-    const supabase = createClient();
+    const supabase = await loadBrowserClient().catch(() => null);
+    if (!supabase) {
+      leaving.current = false;
+      setLoading(false);
+      return;
+    }
 
     const redirect = next && next.startsWith("/") ? next : "/start";
     const back = window.location.pathname + window.location.search;

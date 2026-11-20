@@ -23,11 +23,11 @@ export function HeaderAccountLinks() {
 
   return (
     <>
-      <Button asChild variant="ghost" size="sm">
+      <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
         <Link href="/login">Sign in</Link>
       </Button>
       <Button asChild size="sm">
-        <Link href="/start">Get started</Link>
+        <Link href="/start">Start free</Link>
       </Button>
     </>
   );

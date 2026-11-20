@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { Logo } from "@/components/brand/Logo";
 
 // Sign-in and account screens: nothing here should answer a search.
 export const metadata: Metadata = {
@@ -16,19 +16,11 @@ export default function AuthLayout({
     <div className="relative flex min-h-svh flex-col overflow-hidden aurora-bg px-4 pb-10 pt-8 text-foreground">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-32 left-1/2 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        className="pointer-events-none absolute -top-48 left-1/2 h-[28rem] w-[56rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_12%,transparent),transparent)]"
       />
       {/* Wordmark anchored top-centre like a header; content centres in the
           space below so tall pages (register's rail) don't push it adrift. */}
-      <Link
-        href="/"
-        className="relative mx-auto flex items-center gap-2 font-display text-xl font-semibold tracking-tight"
-      >
-        <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
-          CB
-        </span>
-        CertBench
-      </Link>
+      <Logo className="relative mx-auto" />
       {/* Pages own their width so register can widen for its value rail. */}
       <div className="relative flex w-full flex-1 items-center justify-center py-8">
         {children}

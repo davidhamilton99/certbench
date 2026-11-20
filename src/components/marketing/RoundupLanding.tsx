@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, Check, Minus } from "lucide-react";
 import { ROUNDUPS, type RoundupData } from "@/lib/seo/comparison-pages";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
+import { PathCard } from "@/components/marketing/PathCard";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import { ArticleBand, ArticleBody, ArticleHero, ArticleTail, TickWell } from "@/components/marketing/lander/Article";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /** "CompTIA A+" from "best-a-plus-practice-tests". */
 function certLabel(path: string): string {
@@ -22,9 +24,73 @@ function pathFor(path: string): string {
   return "/start";
 }
 
+type Tool = RoundupData["tools"][number];
+
+/** One tool: what it's best for, then its strengths and weaknesses. */
+function ToolCard({ tool }: { tool: Tool }) {
+  return (
+    <article
+      className={cn(
+        "glass relative isolate overflow-hidden rounded-[1.75rem] p-6 sm:p-8",
+        tool.isSelf && "border-primary/45 shadow-[0_30px_80px_-44px_var(--primary)]"
+      )}
+    >
+      {tool.isSelf && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-1/2 -z-10 h-full [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_14%,transparent),transparent)]"
+        />
+      )}
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <h2 className="text-xl font-semibold tracking-[-0.025em] sm:text-2xl">{tool.name}</h2>
+        <span className="rounded-full bg-foreground/[0.06] px-3 py-1 text-[13px] text-muted-foreground">
+          {tool.price}
+        </span>
+      </div>
+      {tool.isSelf && (
+        <p className="mt-2.5 inline-flex rounded-full bg-primary/12 px-2.5 py-1 text-xs font-medium text-primary">
+          Our product — bias disclosed
+        </p>
+      )}
+      <p className="mt-3 text-[15px] leading-relaxed">
+        <span className="text-muted-foreground">Best for: </span>
+        {tool.bestFor}
+      </p>
+      <ul className="mt-5 grid gap-2.5 text-[15px] leading-relaxed">
+        {tool.strengths.map((s) => (
+          <li key={s} className="flex items-start gap-3">
+            <TickWell lit>
+              <Check strokeWidth={3} />
+            </TickWell>
+            {s}
+          </li>
+        ))}
+        {tool.weaknesses.map((w) => (
+          <li key={w} className="flex items-start gap-3 text-muted-foreground">
+            <TickWell>
+              <Minus strokeWidth={3} />
+            </TickWell>
+            {w}
+          </li>
+        ))}
+      </ul>
+      {tool.compareSlug && (
+        <Link
+          href={`/compare/${tool.compareSlug}`}
+          className="group mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+        >
+          Full CertBench comparison
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      )}
+    </article>
+  );
+}
+
 /** Presentational template for the "best {cert} practice tests" roundups. */
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
+  const exam = certLabel(data.path);
 
   // ItemList structured data so search and generative engines read this as a
   // genuine roundup of tools. No fabricated ratings — just the ranked list.
@@ -41,120 +107,49 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
   };
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <LanderPage>
       <JsonLd data={itemList} />
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {data.h1}
-        </h1>
-        <div className="mt-4 grid gap-3 text-muted-foreground">
+      <ArticleBody>
+        <ArticleHero eyebrow={`${exam} · Compared`} title={data.h1}>
           {data.intro.map((p) => (
-            <p key={p.slice(0, 32)} className="leading-relaxed">
-              {p}
-            </p>
+            <p key={p.slice(0, 32)}>{p}</p>
           ))}
-        </div>
+        </ArticleHero>
 
-        <section className="mt-10 grid gap-5">
+        <section className="mt-12 grid gap-4 sm:mt-16 sm:gap-5">
           {data.tools.map((tool) => (
-            <div
-              key={tool.name}
-              className={
-                tool.isSelf
-                  ? "rounded-xl border border-primary/40 bg-card p-6"
-                  : "rounded-xl border bg-card p-6"
-              }
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-lg font-semibold tracking-tight">
-                  {tool.name}{" "}
-                  {tool.isSelf && (
-                    <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 align-middle text-[11px] font-medium text-primary">
-                      our product — bias disclosed
-                    </span>
-                  )}
-                </h2>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {tool.price}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Best for: {tool.bestFor}
-              </p>
-              <ul className="mt-4 grid gap-2 text-sm leading-relaxed">
-                {tool.strengths.map((s) => (
-                  <li key={s} className="flex items-start gap-2">
-                    <Check className="mt-1 size-3.5 shrink-0 text-success" />
-                    {s}
-                  </li>
-                ))}
-                {tool.weaknesses.map((w) => (
-                  <li
-                    key={w}
-                    className="flex items-start gap-2 text-muted-foreground"
-                  >
-                    <Minus className="mt-1 size-3.5 shrink-0" />
-                    {w}
-                  </li>
-                ))}
-              </ul>
-              {tool.compareSlug && (
-                <p className="mt-4 text-sm">
-                  <Link
-                    href={`/compare/${tool.compareSlug}`}
-                    className="text-primary underline underline-offset-4"
-                  >
-                    Full CertBench comparison
-                  </Link>
-                </p>
-              )}
-            </div>
+            <ToolCard key={tool.name} tool={tool} />
           ))}
         </section>
+      </ArticleBody>
 
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Try it before you buy anything
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            The guided path walks every exam objective in short stops, and its
-            readiness checkpoint shows where you stand. The first stops are
-            free, no card.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={pathFor(data.path)}>
-              Start the free stops
-              <ArrowRight />
-            </Link>
-          </Button>
-        </section>
+      <ArticleBand>
+        <PathCard
+          kicker={`Your ${exam.replace(/^CompTIA\s+/, "")} path`}
+          title="Try it before you buy anything"
+          href={pathFor(data.path)}
+          label="Start the free stops"
+          context="roundup_page"
+          note="No card, no account needed to start."
+        >
+          The guided path walks every exam objective in short stops, and its readiness checkpoint shows where you stand.
+          The first stops are free.
+        </PathCard>
+      </ArticleBand>
 
-        {/* Cross-links to the other cert guides */}
+      <ArticleTail>
         {others.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Studying for a different exam?
-            </h2>
-            <div className="mt-4 grid gap-1.5">
-              {others.map((r) => (
-                <Link
-                  key={r.path}
-                  href={`/${r.path}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  <span>Best {certLabel(r.path)} practice tests</span>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
+          <RelatedLinks
+            title="Studying for a different exam?"
+            links={others.map((r) => ({
+              href: `/${r.path}`,
+              label: `Best ${certLabel(r.path)} practice tests`,
+              note: r.metaDescription,
+            }))}
+          />
         )}
-
         <FaqSection faqs={data.faqs} />
-      </main>
-      <Footer />
-    </div>
+      </ArticleTail>
+    </LanderPage>
   );
 }

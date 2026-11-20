@@ -392,7 +392,7 @@ export function RehearsalPlayer({
 
       {panel === "finish" && (
         <div className="path-rise grid justify-items-center gap-4 py-2 text-center">
-          <h2 className="text-balance font-display text-2xl font-semibold tracking-tight">
+          <h2 className="cb-display text-balance text-[1.75rem] sm:text-[2rem]">
             {unanswered > 0
               ? `${unanswered} ${unanswered === 1 ? "question" : "questions"} still unanswered`
               : "Every question answered"}

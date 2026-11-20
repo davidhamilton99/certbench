@@ -29,8 +29,8 @@ export function WelcomeBack({
     <div className="path-rise grid gap-6">
       <div className="glass grid gap-6 rounded-3xl p-6 sm:p-8">
         <div className="grid gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">Welcome back</span>
-          <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-primary">Welcome back</span>
+          <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
             Your {examName} path is in your account
           </h1>
           <p className="text-muted-foreground">

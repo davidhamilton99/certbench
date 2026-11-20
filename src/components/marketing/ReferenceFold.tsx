@@ -19,10 +19,10 @@ export function ReferenceFold({
   className?: string;
 }) {
   return (
-    <details className={`group glass rounded-3xl ${className ?? ""}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-3xl p-5 sm:p-6 [&::-webkit-details-marker]:hidden">
+    <details className={`group glass rounded-[1.75rem] text-left ${className ?? ""}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[1.75rem] p-5 sm:p-7 [&::-webkit-details-marker]:hidden">
         <span className="grid min-w-0 gap-1">
-          <h2 className="text-balance text-xl font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-balance text-xl font-semibold tracking-[-0.02em]">{title}</h2>
           <span className="text-sm leading-relaxed text-muted-foreground">{summary}</span>
         </span>
         <span className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground group-hover:text-foreground">

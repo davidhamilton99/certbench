@@ -8,12 +8,13 @@ const track = vi.hoisted(() => vi.fn());
 const identifyUser = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics", () => ({ track, identifyUser }));
 
-/** Who the mocked Supabase client says is signed in. */
-const auth = vi.hoisted(() => ({ session: null as null | { user: { id: string; email: string } } }));
+/** Who the mocked Supabase client says is signed in, and how often it's been asked. */
+const auth = vi.hoisted(() => ({ session: null as null | { user: { id: string; email: string } }, reads: 0 }));
 vi.mock("@/lib/supabase-browser", () => ({
   createClient: () => ({
     auth: {
       onAuthStateChange: (heard: (event: string, session: unknown) => void) => {
+        auth.reads++;
         heard("INITIAL_SESSION", auth.session);
         return { data: { subscription: { unsubscribe() {} } } };
       },
@@ -116,6 +117,7 @@ beforeEach(() => {
   identifyUser.mockClear();
   push.mockClear();
   auth.session = null;
+  auth.reads = 0;
   window.history.replaceState(null, "", "/objectives/security-plus-sy0-701/1-1");
 });
 
@@ -234,10 +236,12 @@ describe("QuickRound", () => {
     expect(JSON.parse(store.get(KEY)!).owner).toBe("user-1");
   });
 
-  it("gives someone signed in the way back to their path, not a signup", () => {
+  it("gives someone signed in the way back to their path, not a signup", async () => {
     auth.session = { user: { id: "user-1", email: "a@b.co" } };
     seed("user-1", recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
     renderRound();
+    // Who's there is found while the round is played, once the auth client loads.
+    await waitFor(() => expect(auth.reads).toBe(1));
     play(true);
     play(true, true);
 
@@ -255,10 +259,11 @@ describe("QuickRound", () => {
     expect(track).toHaveBeenCalledWith("path_exam_picked", { cert: CERT, surface: "objective_page" });
   });
 
-  it("shows someone signed in only this round when the device's copy is another account's", () => {
+  it("shows someone signed in only this round when the device's copy is another account's", async () => {
     auth.session = { user: { id: "user-2", email: "c@d.co" } };
     seed("user-1", recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
     renderRound();
+    await waitFor(() => expect(auth.reads).toBe(1));
     play(true);
     play(true, true);
 

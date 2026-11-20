@@ -114,10 +114,10 @@ export function PlanPicker({
             aria-checked={interval === o.interval}
             onClick={() => setInterval(o.interval)}
             className={cn(
-              "flex items-center justify-between gap-4 rounded-lg border px-4 py-3.5 text-left text-sm transition-colors",
+              "flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left text-[15px] transition-[border-color,background-color,box-shadow] duration-150",
               interval === o.interval
-                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                : "hover:border-muted-foreground/40"
+                ? "border-primary bg-primary/[0.07] ring-1 ring-primary/60 shadow-[0_16px_40px_-26px_var(--primary)]"
+                : "border-border hover:border-foreground/25"
             )}
           >
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
@@ -129,7 +129,7 @@ export function PlanPicker({
               )}
             </span>
             <span className="shrink-0 text-right leading-tight">
-              <span className="font-mono text-base font-semibold">
+              <span className="cb-display text-2xl">
                 {region.prices[o.key].discounted}
               </span>
               <span className="block text-xs text-muted-foreground">

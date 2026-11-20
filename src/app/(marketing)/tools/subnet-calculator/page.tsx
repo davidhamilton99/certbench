@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnetCalculator } from "@/components/marketing/SubnetCalculator";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -69,23 +68,18 @@ const learningResource = {
 
 export default function SubnetCalculatorPage() {
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <LanderPage>
       <JsonLd data={learningResource} />
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
-        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          Subnet calculator
-        </h1>
-        <p className="mt-3 leading-relaxed text-muted-foreground">
-          Enter an IPv4 address and a CIDR prefix to get the network and
-          broadcast addresses, the usable host range, subnet and wildcard
-          masks, and the host count — instantly. Free, no signup.
-        </p>
-
-        <div className="mt-6">
-          <SubnetCalculator />
-        </div>
-
+      <LanderHero
+        eyebrow="Free tool"
+        title="Subnet calculator"
+        sub="Network and broadcast addresses, host range, masks and host count for any IPv4 address."
+        specs={["Instant", "Free", "No signup"]}
+      />
+      <LanderStage width="md">
+        <SubnetCalculator />
+      </LanderStage>
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
         {/* CIDR cheat sheet — content for readers and crawlers alike */}
         <section className="mt-12 grid gap-4">
           <div className="grid gap-1">
@@ -197,8 +191,7 @@ export default function SubnetCalculatorPage() {
         />
 
         <FaqSection faqs={FAQS} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

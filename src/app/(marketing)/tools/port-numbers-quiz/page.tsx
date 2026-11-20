@@ -1,7 +1,6 @@
 import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PortQuiz } from "@/components/marketing/PortQuiz";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -50,21 +49,17 @@ export default function PortQuizPage() {
   );
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
-        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          CompTIA port numbers quiz
-        </h1>
-        <p className="mt-3 leading-relaxed text-muted-foreground">
-          The {PORT_ENTRIES.length} ports A+, Network+ and Security+ test, asked both ways round. Round 1 of{" "}
-          {ROUND_SIZE} is free, no signup.
-        </p>
-
-        <div className="mt-6">
-          <PortQuiz entries={PORT_ENTRIES} />
-        </div>
-
+    <LanderPage>
+      <LanderHero
+        eyebrow="A+ · Network+ · Security+"
+        title="CompTIA port numbers quiz"
+        sub={`The ${PORT_ENTRIES.length} ports CompTIA tests, asked both ways round.`}
+        specs={[`Round 1 of ${ROUND_SIZE} free`, "No signup", "Marked as you tap"]}
+      />
+      <LanderStage width="md">
+        <PortQuiz entries={PORT_ENTRIES} />
+      </LanderStage>
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
         <p className="mt-10 leading-relaxed text-muted-foreground">
           Every CompTIA exam expects you to know your ports cold. This drill covers the {PORT_ENTRIES.length}{" "}
           they actually test, in both directions: name the port, and name the protocol. A free account saves
@@ -140,8 +135,7 @@ export default function PortQuizPage() {
         />
 
         <FaqSection faqs={FAQS} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

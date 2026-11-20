@@ -4,14 +4,13 @@ import type { PbqScenario } from "@/data/pbq/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { labLibrary, minutesOf } from "@/core/path/labs";
 import type { PbqExamplePage } from "@/lib/seo/cert-pages";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PbqLab, type FreeLab, type LabTier } from "@/components/marketing/PbqLab";
 import { PathCard } from "@/components/marketing/PathCard";
 import { ReferenceFold } from "@/components/marketing/ReferenceFold";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 
 /** Difficulty rank per PBQ type — the on-ramp leads with the lowest. */
@@ -74,39 +73,29 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const examName = EXAM_NAMES[page.certSlug] ?? page.title.replace(/ PBQ examples$/, "");
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8 sm:py-14">
-        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          {page.h1}
-        </h1>
-        <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
-          Pick one and work it right here: graded straight away, with partial credit and the explanation. No
-          account needed.
-        </p>
+    <LanderPage>
+      <LanderHero
+        eyebrow={`${examName} · PBQ labs`}
+        title={page.h1}
+        sub="Pick one and work it right here."
+        specs={["Graded as you go", "Partial credit", "No account"]}
+      />
 
-        {/* Lead with the thing they came for: a lab, on the path's own stage. */}
-        {labs.length > 0 && (
-          <div className="mt-6">
-            <PbqLab labs={labs} examName={examName} pathHref={path} labCount={scenarios.length} />
-          </div>
-        )}
+      {/* Lead with the thing they came for: a lab, on the path's own stage. */}
+      {labs.length > 0 && (
+        <LanderStage width="lg">
+          <PbqLab labs={labs} examName={examName} pathHref={path} labCount={scenarios.length} />
+        </LanderStage>
+      )}
 
-        <ExamVersionNote certSlugs={[page.certSlug]} className="mt-10 max-w-2xl" />
-        <div className="mt-6 grid max-w-2xl gap-3 text-muted-foreground">
-          {page.intro.map((p) => (
-            <p key={p.slice(0, 32)} className="leading-relaxed">
-              {p}
-            </p>
-          ))}
-        </div>
+      <div className="mx-auto mt-10 grid w-full max-w-3xl gap-8 px-5 sm:px-6">
+        <ExamVersionNote certSlugs={[page.certSlug]} />
 
         {/* Every other lab, listed the way the path's lab library lists them,
             folded so it's there for anyone looking (and for search) without
             being a wall under the lab. */}
         {rest.length > 0 && (
           <ReferenceFold
-            className="mt-8"
             title={`${rest.length} more labs on your ${examName} path`}
             summary={
               <>
@@ -125,7 +114,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
                       <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(number)}</span>
                       {title}
                     </h3>
-                    <ul className="grid gap-2">
+                    <ul className="grid gap-2 sm:grid-cols-2">
                       {inDomain.map((lab) => {
                         const { Icon } = LAB_TYPES[lab.type];
                         return (
@@ -153,9 +142,10 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
             </div>
           </ReferenceFold>
         )}
+      </div>
 
+      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
         <PathCard
-          className="mt-10"
           kicker={`Your ${examName} path`}
           title="PBQs are only part of it"
           href={path}
@@ -165,12 +155,18 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
           Your guided path walks every exam objective in short stops, and a readiness checkpoint shows where you
           stand.
         </PathCard>
+      </div>
 
+      <LanderProse>
+        {page.intro.map((p) => (
+          <p key={p.slice(0, 32)}>{p}</p>
+        ))}
+      </LanderProse>
+
+      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
         <RelatedLinks links={page.related ?? []} />
-
         <FaqSection faqs={page.faqs} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

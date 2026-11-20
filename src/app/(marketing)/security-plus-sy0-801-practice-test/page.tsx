@@ -5,6 +5,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PracticeExam, type PracticeExamNext } from "@/components/marketing/PracticeExam";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { CtaBand } from "@/components/marketing/lander/Article";
 import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
@@ -139,12 +140,12 @@ export default function Sy0801PracticeTestPage() {
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
       <JsonLd data={learningResource} />
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-12 sm:px-6 sm:pt-20">
         <p className="font-mono text-xs text-muted-foreground">
           CompTIA Security+ V8 · Questions checked against CompTIA&apos;s SY0-801 objectives on{" "}
           {SY0_801_PRACTICE_CHECKED}
         </p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-4 cb-display text-balance text-[2.35rem] sm:text-[3.5rem]">
           Free Security+ <span className="whitespace-nowrap">SY0-801</span> practice test
         </h1>
 
@@ -165,8 +166,8 @@ export default function Sy0801PracticeTestPage() {
           <PracticeExam testId="security-plus-sy0-801" structure={STRUCTURE} reps={REPS} size="half" next={NEXT} />
         </section>
 
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">What the test covers</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">What the test covers</h2>
           <div className="mt-2 grid gap-3 leading-relaxed text-muted-foreground">
             <p>
               SY0-801 is the Security+ exam CompTIA lists as launching on or around November 17, 2026. CertBench
@@ -181,7 +182,7 @@ export default function Sy0801PracticeTestPage() {
             {SECTIONS.map(({ domain, count }) => (
               <div
                 key={domain.number}
-                className="flex items-baseline justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm"
+                className="flex items-baseline justify-between gap-3 glass rounded-2xl px-5 py-3.5 text-[15px]"
               >
                 <span className="min-w-0">
                   <span className="mr-1.5 font-mono text-xs text-muted-foreground">{domain.number}</span>
@@ -201,9 +202,9 @@ export default function Sy0801PracticeTestPage() {
           </p>
         </section>
 
-        <section id="questions" className="mt-12 grid scroll-mt-20 gap-4">
+        <section id="questions" className="mt-16 grid scroll-mt-20 gap-4 sm:mt-20">
           <div className="grid gap-1">
-            <h2 className="text-xl font-semibold tracking-tight">Practise one question at a time</h2>
+            <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">Practise one question at a time</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
               The same {QUESTION_COUNT} questions in objective order, untimed, each explained as soon as you
               answer.
@@ -219,9 +220,8 @@ export default function Sy0801PracticeTestPage() {
           />
         </section>
 
-        <section className="mt-12 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Study SY0-801 one short step at a time</h2>
-          <p className="max-w-md text-sm text-muted-foreground">
+        <CtaBand title="Study SY0-801 one short step at a time">
+          <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             CertBench&apos;s SY0-801 path covers all {OBJECTIVE_COUNT} objectives in short stops, AI threats
             included. About twenty minutes in, a readiness checkpoint shows where you stand by domain.
           </p>
@@ -237,7 +237,7 @@ export default function Sy0801PracticeTestPage() {
               SY0-801 or SY0-701: which to take
             </Link>
           </p>
-        </section>
+        </CtaBand>
 
         <RelatedLinks
           links={[

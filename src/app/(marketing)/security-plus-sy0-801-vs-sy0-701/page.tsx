@@ -4,6 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { CtaBand } from "@/components/marketing/lander/Article";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,16 +127,16 @@ export default function SecurityPlusVersionsPage() {
         })}
       />
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-12 sm:px-6 sm:pt-20">
         <p className="font-mono text-xs text-muted-foreground">
           CompTIA Security+ · Checked against CompTIA&apos;s pages on {EXAM_FACTS_CHECKED}
         </p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-4 cb-display text-balance text-[2.35rem] sm:text-[3.5rem]">
           Security+ <span className="whitespace-nowrap">SY0-801</span> vs{" "}
           <span className="whitespace-nowrap">SY0-701</span>: which should you take?
         </h1>
 
-        <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+        <div className="mt-6 grid gap-4 text-[17px] leading-relaxed text-muted-foreground sm:mt-8">
           <p>
             <strong className="font-medium text-foreground">
               Take SY0-701 if you can sit it by June 11, 2027 with room for a retake.
@@ -179,12 +180,12 @@ export default function SecurityPlusVersionsPage() {
           </p>
         </div>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">Key dates</h2>
-          <div className="mt-4 overflow-x-auto rounded-xl border">
-            <table className="w-full text-sm">
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">Key dates</h2>
+          <div className="glass mt-5 overflow-x-auto rounded-[1.5rem]">
+            <table className="w-full text-[15px]">
               <thead>
-                <tr className="border-b bg-muted/40 text-left">
+                <tr className="border-b border-foreground/[0.08] text-left">
                   <th className="px-3 py-2.5 font-medium sm:px-4">
                     <span className="sr-only">Detail</span>
                   </th>
@@ -194,7 +195,7 @@ export default function SecurityPlusVersionsPage() {
               </thead>
               <tbody>
                 {DATES.map((row) => (
-                  <tr key={row.label} className="border-b last:border-0">
+                  <tr key={row.label} className="border-b border-foreground/[0.06] last:border-0">
                     <td className="px-3 py-2.5 align-top font-medium sm:px-4">{row.label}</td>
                     <td className="px-3 py-2.5 align-top text-muted-foreground sm:px-4">{row.sy0701}</td>
                     <td className="px-3 py-2.5 align-top text-muted-foreground sm:px-4">{row.sy0801}</td>
@@ -205,8 +206,8 @@ export default function SecurityPlusVersionsPage() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">What stays the same</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">What stays the same</h2>
           <ul className="mt-4 grid list-disc gap-2 pl-5 leading-relaxed text-muted-foreground">
             {SAME.map((item) => (
               <li key={item}>{item}</li>
@@ -214,12 +215,12 @@ export default function SecurityPlusVersionsPage() {
           </ul>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">What changes</h2>
-          <div className="mt-4 overflow-x-auto rounded-xl border">
-            <table className="w-full text-sm">
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">What changes</h2>
+          <div className="glass mt-5 overflow-x-auto rounded-[1.5rem]">
+            <table className="w-full text-[15px]">
               <thead>
-                <tr className="border-b bg-muted/40 text-left">
+                <tr className="border-b border-foreground/[0.08] text-left">
                   <th className="px-3 py-2.5 font-medium sm:px-4">Domain</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-right font-mono text-xs font-medium sm:px-4">SY0-701</th>
                   <th className="whitespace-nowrap px-2 py-2.5 text-right font-mono text-xs font-medium sm:px-4">SY0-801</th>
@@ -228,7 +229,7 @@ export default function SecurityPlusVersionsPage() {
               </thead>
               <tbody>
                 {SECURITY_PLUS_DOMAIN_CHANGES.map((d) => (
-                  <tr key={d.name} className="border-b last:border-0">
+                  <tr key={d.name} className="border-b border-foreground/[0.06] last:border-0">
                     <td className="px-3 py-2.5 sm:px-4">{d.name}</td>
                     <td className="px-2 py-2.5 text-right font-mono text-xs tabular-nums sm:px-4">{d.sy0701}%</td>
                     <td className="px-2 py-2.5 text-right font-mono text-xs tabular-nums sm:px-4">{d.sy0801}%</td>
@@ -240,7 +241,7 @@ export default function SecurityPlusVersionsPage() {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+          <div className="mt-6 grid gap-4 text-[17px] leading-relaxed text-muted-foreground sm:mt-8">
             <p>
               The largest move is security program management, down six points,
               with general security concepts up four. SY0-801 also adds a new
@@ -265,11 +266,11 @@ export default function SecurityPlusVersionsPage() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">How to choose</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">How to choose</h2>
           <div className="mt-4 grid gap-1.5">
             {CHOICES.map((c) => (
-              <div key={c.situation} className="rounded-lg border bg-card px-4 py-3 text-sm">
+              <div key={c.situation} className="glass rounded-2xl px-5 py-4 text-[15px]">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <span className="font-medium">{c.situation}</span>
                   <span className="font-mono text-xs text-primary">{c.take}</span>
@@ -283,9 +284,8 @@ export default function SecurityPlusVersionsPage() {
           </p>
         </section>
 
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Start the path for your version</h2>
-          <p className="max-w-md text-sm text-muted-foreground">
+        <CtaBand title="Start the path for your version">
+          <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             Each version has its own path: every objective in short stops, and a readiness checkpoint
             that shows where you stand.
           </p>
@@ -301,7 +301,7 @@ export default function SecurityPlusVersionsPage() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
+        </CtaBand>
 
         <RelatedLinks
           links={[

@@ -154,24 +154,24 @@ export function PathOffer({
   const saving = monthly && quarterly && quarterly < 3 * monthly ? Math.round((1 - quarterly / (3 * monthly)) * 100) : null;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-b from-primary/[0.09] to-card p-6 shadow-sm sm:p-7">
+    <div className="glass relative isolate overflow-hidden rounded-[2rem] border-primary/35 p-6 sm:p-9">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 left-1/2 h-44 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[22rem] w-[38rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_26%,transparent),transparent)]"
       />
       <div className="relative grid gap-5">
         <div className="grid gap-1.5">
-          <h3 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
+          <h3 className="cb-display text-balance text-[1.9rem] sm:text-[2.6rem]">
             {proPlan ? `Add ${examName} to your plan` : "Unlock the rest of your path"}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground">
             {proPlan
               ? `One payment adds ${examName} to the Pro plan you already have.`
               : "Everything from here to exam day, in the same short stops."}
           </p>
         </div>
 
-        <ul className="grid gap-2 text-sm">
+        <ul className="grid gap-2.5 text-[15px]">
           {includes.map((line) => (
             <li key={line} className="flex items-start gap-2.5">
               <Check className="mt-0.5 size-4 shrink-0 text-primary" strokeWidth={2.5} />
@@ -185,7 +185,7 @@ export function PathOffer({
             {prices.quarterly.was && (
               <span className="pb-1 text-lg text-muted-foreground line-through">{prices.quarterly.was}</span>
             )}
-            <span className="font-display text-4xl font-bold tracking-tight">{prices.quarterly.now}</span>
+            <span className="cb-display text-5xl">{prices.quarterly.now}</span>
             <span className="pb-1.5 text-sm text-muted-foreground">one time</span>
           </div>
         ) : (
@@ -197,7 +197,7 @@ export function PathOffer({
                 <label
                   key={p}
                   className={cn(
-                    "relative grid cursor-pointer gap-1 rounded-2xl border bg-card/70 px-4 py-3.5 transition-[border-color,background-color,box-shadow] duration-150",
+                    "relative grid cursor-pointer gap-1.5 rounded-2xl border bg-foreground/[0.02] px-4 py-4 transition-[border-color,background-color,box-shadow] duration-150",
                     "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
                     selected ? "border-primary bg-primary/[0.08] ring-1 ring-primary/40" : "hover:border-primary/50"
                   )}
@@ -231,7 +231,7 @@ export function PathOffer({
                     {prices[p].was && (
                       <span className="text-sm text-muted-foreground line-through">{prices[p].was}</span>
                     )}
-                    <span className="font-display text-2xl font-bold tracking-tight">{prices[p].now}</span>
+                    <span className="cb-display text-3xl">{prices[p].now}</span>
                     <span className="text-sm text-muted-foreground">{PLAN_COPY[p].per}</span>
                   </span>
                 </label>

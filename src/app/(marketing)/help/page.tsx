@@ -244,10 +244,10 @@ export default function HelpPage() {
     <div className="min-h-screen overflow-x-hidden aurora-bg text-foreground">
       <MarketingHeader />
 
-      <main className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-3xl px-5 pb-16 pt-12 sm:px-6 sm:pt-20">
         {/* Hero */}
         <div className="text-center mb-6">
-          <h1 className="text-[28px] sm:text-[36px] md:text-[40px] font-bold text-foreground tracking-tight">
+          <h1 className="cb-display text-[2.35rem] sm:text-6xl">
             Help Centre
           </h1>
           <p className="text-[17px] text-muted-foreground mt-3 max-w-xl mx-auto">

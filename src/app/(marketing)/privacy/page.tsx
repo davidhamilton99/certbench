@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen aurora-bg text-foreground">
       <div className="max-w-3xl mx-auto px-4 py-16">
         <BackLink />
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight mb-2">
+        <h1 className="cb-display mb-3 text-4xl sm:text-5xl">
           Privacy Policy
         </h1>
         <p className="text-[13px] text-muted-foreground mb-2">

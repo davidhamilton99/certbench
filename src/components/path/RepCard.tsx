@@ -135,6 +135,11 @@ export function RepCard({
   const longPrompt = !isExam && wordCount(rep.prompt) > 14;
   const compact =
     rep.type === "choice" && !isExam && rep.options.every((o) => o.length <= 16);
+  // Two columns on a phone leave each answer ~90px, room for an 8-letter word:
+  // a longer one ("Operational") would break mid-word, so those answers stack
+  // there and only pair up from sm.
+  const pairOnPhones =
+    compact && rep.options.every((o) => o.split(/\s+/).every((w) => w.length <= 8));
   const rightAnswer = rep.type === "choice" ? rep.options[rep.answer] : rep.answerText;
 
   return (
@@ -165,7 +170,7 @@ export function RepCard({
         <div
           role="radiogroup"
           aria-label="Answers"
-          className={cn("grid gap-2.5", compact && "grid-cols-2")}
+          className={cn("grid gap-2.5", compact && (pairOnPhones ? "grid-cols-2" : "sm:grid-cols-2"))}
         >
           {rep.options.map((option, i) => {
             const isAnswer = i === rep.answer;
