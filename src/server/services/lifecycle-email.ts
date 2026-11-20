@@ -8,7 +8,8 @@ import { listEnrollments } from "@/server/data/enrollments";
 import { getCertification } from "@/server/data/certifications";
 import { getPathProgress } from "@/server/data/path-progress";
 import { loadPathBank } from "@/server/path/bank";
-import { sendEmail } from "@/server/email/resend";
+import { sendEmail, type SendEmailInput } from "@/server/email/resend";
+import { captureServerEvent } from "@/server/analytics";
 import {
   checkpointResultEmail,
   pathCountdownEmail,
@@ -53,6 +54,25 @@ interface EmailPrefs {
   digestEnabled: boolean;
   /** Turns off all lifecycle mail. */
   unsubscribeUrl: string;
+}
+
+/**
+ * Sends one lifecycle email and records it in PostHog against the person, sent
+ * or failed. A send that fails only logs in Vercel otherwise, and the event
+ * lets clicks (utm_source=email) be read against sends.
+ */
+async function deliver(
+  userId: string,
+  emailType: string,
+  input: SendEmailInput,
+  result?: LifecycleRunResult
+): Promise<boolean> {
+  const sent = await sendEmail(input);
+  if (!sent && result) result.sendFailures += 1;
+  await captureServerEvent(userId, sent ? "lifecycle_email_sent" : "lifecycle_email_failed", {
+    email_type: emailType,
+  });
+  return sent;
 }
 
 /** Fetch-or-create the user's email preferences row. */
@@ -139,7 +159,7 @@ export async function sendWelcome(
       getCertification(admin, certId),
     ]);
     if (!cert) return;
-    await sendEmail({
+    await deliver(userId, "welcome", {
       to: email,
       ...welcomeEmail({
         displayName: profile?.displayName ?? "there",
@@ -159,6 +179,10 @@ export interface LifecycleRunResult {
   postExam: number;
   pathNudges: number;
   pathOffers: number;
+  /** Sends Resend refused (or skipped with no API key). */
+  sendFailures: number;
+  /** Accounts with a path saved inside the path emails' window. */
+  recentPaths: number;
 }
 
 /** A path someone saved progress on, as of its last save. */
@@ -200,6 +224,8 @@ export async function runLifecycleEmails(
     postExam: 0,
     pathNudges: 0,
     pathOffers: 0,
+    sendFailures: 0,
+    recentPaths: 0,
   };
 
   const { data: userPage, error } = await admin.auth.admin.listUsers({
@@ -209,6 +235,7 @@ export async function runLifecycleEmails(
 
   const [pro, recent] = await Promise.all([loadProUsers(admin), loadRecentPaths(admin, now)]);
   const ctx: RunContext = { now, pro, recent };
+  result.recentPaths = recent.size;
 
   for (const user of userPage.users) {
     if (!user.email || !user.email_confirmed_at) continue;
@@ -310,7 +337,7 @@ async function processUser(
     if (days === -POST_EXAM_DAY) {
       const cert = await getCertification(admin, enrollment.certificationId);
       if (cert && (await claimSend(admin, userId, `postexam_${cert.id}`))) {
-        const sent = await sendEmail({
+        const sent = await deliver(userId, `postexam_${cert.slug}`, {
           to: email,
           headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
           ...postExamEmail({
@@ -318,7 +345,7 @@ async function processUser(
             certName: cert.name,
             unsubscribeUrl: prefs.unsubscribeUrl,
           }),
-        });
+        }, result);
         if (sent) result.postExam += 1;
       }
       continue;
@@ -332,11 +359,12 @@ async function processUser(
     const content = await pathCountdown(admin, userId, cert.slug, days, displayName, pro, prefs.unsubscribeUrl);
     if (!content) continue;
     if (!(await claimSend(admin, userId, `countdown_${days}`))) continue;
-    const sent = await sendEmail({
-      to: email,
-      headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
-      ...content,
-    });
+    const sent = await deliver(
+      userId,
+      `countdown_${days}`,
+      { to: email, headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` }, ...content },
+      result
+    );
     if (sent) {
       result.countdowns += 1;
       sentStudyEmailToday = true;
@@ -345,7 +373,7 @@ async function processUser(
 
   // ---- without Pro: their path, at a stall or after the checkpoint ----
   if (!pro && !sentStudyEmailToday) {
-    const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now);
+    const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now, result);
     if (sent === "nudge") result.pathNudges += 1;
     if (sent === "offer") result.pathOffers += 1;
   }
@@ -389,7 +417,8 @@ async function sendPathEmail(
   displayName: string,
   unsubscribeUrl: string,
   recent: SavedPath[],
-  now: Date
+  now: Date,
+  result: LifecycleRunResult
 ): Promise<"nudge" | "offer" | null> {
   for (const saved of [...recent].sort((a, b) => b.updatedAt - a.updatedAt)) {
     const bank = await loadPathBank(saved.cert);
@@ -424,7 +453,12 @@ async function sendPathEmail(
     const type = kind === "offer" ? pathOfferType(saved.cert) : pathNudgeType(saved.cert);
     if (await sentBefore(admin, userId, type)) continue;
     if (!(await claimSend(admin, userId, type))) continue;
-    const sent = await sendEmail({ to: email, headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` }, ...content });
+    const sent = await deliver(
+      userId,
+      type,
+      { to: email, headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` }, ...content },
+      result
+    );
     return sent ? kind : null;
   }
   return null;

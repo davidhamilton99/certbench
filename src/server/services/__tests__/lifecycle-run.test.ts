@@ -54,6 +54,8 @@ vi.mock("@/env", () => ({
   serverEnvOptional: vi.fn(),
 }));
 vi.mock("@/server/email/resend", () => ({ sendEmail: h.sendEmail }));
+const capture = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/server/analytics", () => ({ captureServerEvent: capture }));
 vi.mock("@/server/data/enrollments", () => ({
   listEnrollments: async (_db: unknown, userId: string) => {
     if (h.failing.has(userId)) throw new Error("enrollments read failed");
@@ -212,6 +214,23 @@ beforeEach(() => {
 });
 
 describe("runLifecycleEmails", () => {
+  it("records each email in PostHog against its person, and counts what Resend refused", async () => {
+    account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
+    account("dated", { examDate: "2026-11-09" });
+    capture.mockClear();
+    h.sendEmail.mockImplementation(async (e) => !e.to.startsWith("dated"));
+
+    const monday = await run(MONDAY);
+    h.sendEmail.mockImplementation(async () => true);
+
+    expect(monday.result).toMatchObject({ pathNudges: 1, countdowns: 0, sendFailures: 1, recentPaths: 1 });
+    expect(capture).toHaveBeenCalledWith("free", "lifecycle_email_sent", {
+      email_type: pathNudgeType("security-plus-sy0-701"),
+    });
+    expect(capture).toHaveBeenCalledWith("dated", "lifecycle_email_failed", { email_type: "countdown_7" });
+    expect(capture).toHaveBeenCalledTimes(2);
+  });
+
   it("nudges an account without Pro back to its path, and sends Pro no nudge", async () => {
     account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
     account("pro", { pro: true, path: { progress: played("warmup", "1.1"), savedDaysAgo: 3 } });
