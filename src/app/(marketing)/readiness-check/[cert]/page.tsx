@@ -4,11 +4,10 @@ import {
   listReadinessCheckCerts,
   loadReadinessCheck,
 } from "@/server/seo/readiness-check-data";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { ReadinessCheck } from "@/components/marketing/ReadinessCheck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks, type RelatedLink } from "@/components/marketing/RelatedLinks";
+import { LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 86400;
@@ -64,29 +63,37 @@ export default async function ReadinessCheckPage({
   if (!data || data.questions.length === 0) notFound();
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          Am I ready for {data.shortCertName}?
-        </h1>
-        <p className="mt-4 leading-relaxed text-muted-foreground">
-          Find out in about three minutes: {data.questions.length} questions,
-          weighted the way the real {data.examCode} exam weights its domains,
-          with instant grading and explanations. No account needed.
+    <LanderPage>
+      <LanderHero
+        eyebrow={`${data.shortCertName} · ${data.examCode}`}
+        title={`Am I ready for ${data.shortCertName}?`}
+        sub="Find out in about three minutes."
+        specs={[`${data.questions.length} questions`, "Weighted like the real exam", "No account"]}
+      />
+
+      <LanderStage>
+        <ReadinessCheck
+          cert={cert}
+          questions={data.questions}
+          shortCertName={data.shortCertName}
+          objectiveCount={data.objectiveCount}
+        />
+      </LanderStage>
+
+      <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+        <ExamVersionNote certSlugs={[cert]} />
+      </div>
+
+      <LanderProse>
+        <p>
+          Find out in about three minutes: {data.questions.length} questions, weighted the way the real{" "}
+          {data.examCode} exam weights its domains, with instant grading and explanations. No account needed.
         </p>
-        <ExamVersionNote certSlugs={[cert]} className="mt-4" />
-        <div className="mt-8">
-          <ReadinessCheck
-            cert={cert}
-            questions={data.questions}
-            shortCertName={data.shortCertName}
-            objectiveCount={data.objectiveCount}
-          />
-        </div>
+      </LanderProse>
+
+      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
         <RelatedLinks links={READINESS_RELATED[cert] ?? []} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

@@ -15,10 +15,10 @@ export const metadata = {
 
 export default function VerifyPage() {
   return (
-    <Card className="mx-auto w-full max-w-sm">
+    <Card className="mx-auto w-full max-w-[26rem] rounded-[1.75rem] py-8">
       <CardHeader className="items-center text-center">
         <MailCheck className="mb-2 size-8 text-primary" />
-        <CardTitle className="text-lg">Check your inbox</CardTitle>
+        <CardTitle className="text-2xl font-semibold tracking-[-0.03em]">Check your inbox</CardTitle>
         <CardDescription>
           We sent you a verification link. Click it to activate your account,
           then sign in.

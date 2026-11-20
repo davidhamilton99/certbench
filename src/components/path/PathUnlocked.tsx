@@ -15,10 +15,10 @@ function UnlockCard({ eyebrow, children }: { eyebrow: string; children: ReactNod
     <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-6 shadow-sm sm:p-8">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-28 left-1/2 h-64 w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+        className="pointer-events-none absolute -top-44 left-1/2 h-[24rem] w-[40rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_20%,transparent),transparent)]"
       />
       <div className="relative grid justify-items-center gap-3 text-center">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">{eyebrow}</span>
+        <span className="text-xs font-medium uppercase tracking-[0.16em] text-primary">{eyebrow}</span>
         {children}
       </div>
     </div>
@@ -43,7 +43,7 @@ export function PathActivating({
   return (
     <div className="path-rise grid gap-6" role="status">
       <UnlockCard eyebrow={`Payment received · ${examName}`}>
-        <h2 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h2 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
           Opening your whole path…
         </h2>
         {slow ? (
@@ -126,7 +126,7 @@ export function PathUnlocked({
   return (
     <div className="path-rise grid gap-6">
       <UnlockCard eyebrow={`Pro · ${structure.examName}`}>
-        <h2 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h2 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
           Your whole path is open.
         </h2>
         <p className="max-w-md text-balance text-muted-foreground">
@@ -146,7 +146,7 @@ export function PathUnlocked({
               className="flex flex-col-reverse gap-0.5 rounded-2xl border border-border bg-background/50 px-2 py-3 text-center sm:py-4"
             >
               <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="font-display text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">{n}</dd>
+              <dd className="cb-display text-4xl tabular-nums sm:text-5xl">{n}</dd>
             </div>
           ))}
         </dl>

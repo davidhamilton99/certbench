@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase-browser";
 import { resetAnalytics } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
+import { Logo } from "@/components/brand/Logo";
 
 /**
  * The path's only chrome: the brand, which exam this is, and the account.
@@ -48,17 +49,9 @@ export function PathHeader({
 
   return (
     <header className="glass-nav sticky top-0 z-40">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 px-4 py-2.5 sm:px-6">
+      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2 font-display text-base font-semibold tracking-tight"
-          >
-            <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
-              CB
-            </span>
-            <span className="hidden sm:inline">CertBench</span>
-          </Link>
+          <Logo wordmark="sm" />
           <span className="text-muted-foreground/50" aria-hidden>
             /
           </span>

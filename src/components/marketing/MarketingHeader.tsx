@@ -1,29 +1,22 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 import { HeaderAccountLinks } from "./HeaderAccountLinks";
 
 export function MarketingHeader() {
   return (
     <header className="glass-nav sticky top-0 z-40">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2.5 font-display text-lg font-semibold tracking-tight"
-        >
-          <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
-            CB
-          </span>
-          CertBench
-        </Link>
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-2 px-4 sm:px-6">
+        <Logo />
         <nav className="flex items-center gap-1">
-          <ThemeToggle />
           {/* Pricing is secondary on a phone-width header (still linked in the
-              footer); dropping it keeps the primary "Get started" CTA from
-              being pushed off-screen on mobile. */}
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              footer); dropping it keeps the primary action from being pushed
+              off-screen on mobile. */}
+          <Button asChild variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex">
             <Link href="/pricing">Pricing</Link>
           </Button>
+          <ThemeToggle />
           <HeaderAccountLinks />
         </nav>
       </div>

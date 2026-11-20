@@ -1,5 +1,4 @@
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnettingPractice } from "@/components/marketing/SubnettingPractice";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -46,21 +45,17 @@ const FAQS = [
 
 export default function SubnettingPracticePage() {
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:py-14">
-        <h1 className="text-balance font-display text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          Subnetting practice
-        </h1>
-        <p className="mt-3 leading-relaxed text-muted-foreground">
-          Pick a mode and answer against the clock; a miss shows the worked steps. Round 1 of {ROUND_SIZE} is
-          free, no signup.
-        </p>
-
-        <div className="mt-6">
-          <SubnettingPractice />
-        </div>
-
+    <LanderPage>
+      <LanderHero
+        eyebrow="Network+ N10-009"
+        title="Subnetting practice"
+        sub="Pick a mode and beat the clock. A miss shows the worked steps."
+        specs={[`Round 1 of ${ROUND_SIZE} free`, "No signup", "Seven modes"]}
+      />
+      <LanderStage width="md">
+        <SubnettingPractice />
+      </LanderStage>
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
         <p className="mt-10 leading-relaxed text-muted-foreground">
           Speed comes from drilling one conversion until it&apos;s reflex, not from grinding mixed question sets.
           Every miss pauses on a worked solution that shows the block-size shortcut, and a free account keeps going,
@@ -149,8 +144,7 @@ export default function SubnettingPracticePage() {
         />
 
         <FaqSection faqs={FAQS} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

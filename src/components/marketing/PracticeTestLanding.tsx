@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { PathCard } from "@/components/marketing/PathCard";
+import { LanderHero, LanderPage, LanderProse, LanderSection, LanderStage } from "@/components/marketing/lander/Lander";
+import { ExamOutline } from "@/components/marketing/lander/ExamOutline";
+import { TileGrid, type Tile } from "@/components/marketing/lander/TileGrid";
 import { QuickRound } from "@/components/path/QuickRound";
 import type { QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { Button } from "@/components/ui/button";
 import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 
 export interface PracticeTestLandingData {
@@ -81,6 +82,10 @@ export function PracticeTestLanding({
   );
   const pathHref = page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start";
   const examName = round?.examName ?? page.title.replace(/ practice test$/i, "");
+  const codes = examOutlines.map((e) => e.examCode).join(" · ");
+
+  // Objectives as tiles, a group per domain (per exam and domain on a page with two exams).
+  const groups = objectiveGroups(objectives, examOutlines, official);
 
   // GEO/SEO: mark the page as a free educational practice resource so search
   // and generative engines can identify and cite it for "free CompTIA … test".
@@ -103,214 +108,184 @@ export function PracticeTestLanding({
   };
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <LanderPage>
       <JsonLd data={learningResource} />
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {page.h1}
-        </h1>
+      <LanderHero
+        eyebrow={`Free · ${codes}`}
+        title={page.h1}
+        sub={
+          round
+            ? `Start with ${round.reps.length} quick questions. No account needed.`
+            : "Exam-style questions, each explained the moment you answer."
+        }
+        specs={
+          round
+            ? ["Marked as you tap", `${data.totalQuestions.toLocaleString()} in the bank`, "Free"]
+            : [`${data.totalQuestions.toLocaleString()} questions`, "Full explanations", "Free"]
+        }
+      >
         {/* An exam taken in parts: each part's own practice test comes first. */}
         {page.cores && (
-          <section className="mt-6">
-            <h2 className="text-sm font-medium text-muted-foreground">Practice one core at a time</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {page.cores.map((core) => (
-                <Link
-                  key={core.href}
-                  href={core.href}
-                  className="group grid gap-1 rounded-xl border bg-card px-5 py-4 transition-colors hover:border-primary/50"
-                >
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="font-display text-lg font-semibold tracking-tight">{core.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{core.examCode}</span>
+          <div className="mt-4 grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
+            {page.cores.map((core) => (
+              <Link
+                key={core.href}
+                href={core.href}
+                className="glass group grid gap-2 rounded-2xl p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_24px_60px_-30px_var(--primary)] sm:p-6"
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="text-xl font-semibold tracking-[-0.02em]">{core.name}</span>
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
+                    <ArrowRight className="size-3.5" />
                   </span>
-                  <span className="text-sm leading-relaxed text-muted-foreground">{core.blurb}</span>
-                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                    {core.name} practice test
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </section>
+                </span>
+                <span className="font-mono text-xs text-muted-foreground">{core.examCode}</span>
+                <span className="text-sm leading-relaxed text-muted-foreground">{core.blurb}</span>
+              </Link>
+            ))}
+          </div>
         )}
-        {/* A retired exam changes what this page is, so that's said first. */}
-        {retired && <ExamVersionNote certSlugs={page.certSlugs} className="mt-4" />}
-        {/* Lead with something to do: the exam's warm-up, the same quick
-            round the guided path opens with. */}
-        {round && (
-          <section className="mt-6 grid gap-3">
-            <p className="text-sm text-muted-foreground">
-              Start with {round.reps.length} quick questions, no account needed.
-            </p>
-            <QuickRound
-              cert={round.cert}
-              stopId="warmup"
-              examName={round.examName}
-              structure={round.structure}
-              reps={round.reps}
-              label={`${round.examName} warm-up`}
-              surface="practice_test_page"
-              unit={official ? "objectives" : "topics"}
-            />
-          </section>
-        )}
+      </LanderHero>
 
-        {!retired && <ExamVersionNote certSlugs={page.certSlugs} className="mt-6" />}
-
-        <div className={round ? "mt-10 grid gap-3 text-muted-foreground" : "mt-4 grid gap-3 text-muted-foreground"}>
-          {page.intro.map((p) => (
-            <p key={p.slice(0, 32)} className="leading-relaxed">
-              {p}
-            </p>
-          ))}
+      {/* A retired exam changes what this page is, so that's said first. */}
+      {retired && (
+        <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+          <ExamVersionNote certSlugs={page.certSlugs} />
         </div>
+      )}
 
-        {/* The samples, one at a time on the path's own card, so the page
-            plays like the warm-up above instead of ending in a wall of
-            questions. Every question and answer is still in the page, in the
-            deck's folded list. */}
-        {deck.length > 0 && (
-          <section className="mt-8 grid gap-4">
-            <div className="grid gap-1">
-              <h2 className="text-xl font-semibold tracking-tight">
-                {round ? "Exam-style sample questions" : "Sample questions"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {deck.length} exam-style questions, one at a time, each explained as soon as you answer. The full
-                bank holds {data.totalQuestions.toLocaleString()}.
-              </p>
-            </div>
-            <QuestionDeck
-              questions={deck}
-              label={`${examName} · sample questions`}
-              surface="practice_test_page"
-              path={pathHref}
-              examName={examName}
+      {/* Lead with something to do: the exam's warm-up, the same quick round
+          the guided path opens with. */}
+      {round && (
+        <LanderStage>
+          <QuickRound
+            cert={round.cert}
+            stopId="warmup"
+            examName={round.examName}
+            structure={round.structure}
+            reps={round.reps}
+            label={`${round.examName} warm-up`}
+            surface="practice_test_page"
+            unit={official ? "objectives" : "topics"}
+          />
+        </LanderStage>
+      )}
+
+      {!retired && (
+        <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+          <ExamVersionNote certSlugs={page.certSlugs} />
+        </div>
+      )}
+
+      {/* The samples, one at a time on the path's own card. Every question and
+          answer is still in the page, in the deck's folded list. */}
+      {deck.length > 0 && (
+        <LanderSection
+          eyebrow="Exam style"
+          title={round ? "Exam-style sample questions" : "Sample questions"}
+          sub={`${deck.length} questions · explained as you answer · ${data.totalQuestions.toLocaleString()} in the full bank`}
+          width="md"
+        >
+          <QuestionDeck
+            questions={deck}
+            label={`${examName} · sample questions`}
+            surface="practice_test_page"
+            path={pathHref}
+            examName={examName}
+          />
+        </LanderSection>
+      )}
+
+      {/* Domain weights, to scale: the exam at a glance. */}
+      <LanderSection eyebrow={codes} title="What the exam covers" sub="Each domain's share of the exam." width="xl">
+        <ExamOutline exams={examOutlines} />
+      </LanderSection>
+
+      {/* Practice by objective — hub links to the programmatic pages */}
+      {groups.length > 0 && (
+        <LanderSection
+          eyebrow={`${objectives.length} ${official ? "objectives" : "topics"}`}
+          title={official ? "Practice by exam objective" : "Practice by topic"}
+          sub={`Each ${official ? "objective" : "topic"} has its own questions, explained.`}
+          width="xl"
+        >
+          <TileGrid groups={groups} />
+        </LanderSection>
+      )}
+
+      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
+        <PathCard
+          kicker={`Your ${examName} path`}
+          title="Study it one short stop at a time"
+          href={pathHref}
+          label="Start my path"
+          context="practice_test_page"
+          note="No account needed to start."
+        >
+          The guided path walks every exam objective in quick rounds like these, then a readiness checkpoint shows
+          where you&apos;d stand today.
+        </PathCard>
+      </div>
+
+      <LanderProse>
+        {page.intro.map((p) => (
+          <p key={p.slice(0, 32)}>{p}</p>
+        ))}
+      </LanderProse>
+
+      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
+        <RelatedLinks links={page.related ?? []} />
+        {otherHubs.length > 0 && (
+          <section className="mt-14">
+            <h2 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">Other CompTIA practice tests</h2>
+            <TileGrid
+              className="mt-5"
+              columns={2}
+              groups={[{ tiles: otherHubs.map((h) => ({ href: `/${h.path}`, title: h.title })) }]}
             />
           </section>
         )}
-
-        {/* Domain weights — useful, fully-indexed content that shows we mirror
-            the real exam. Kept on the page, just moved below the interactive
-            moment so it never blocks a visitor from doing a question. */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            What the exam covers
-          </h2>
-          {examOutlines.map((exam) => (
-            <div key={exam.examCode} className="mt-4">
-              {examOutlines.length > 1 && (
-                <h3 className="mb-2 text-sm font-medium">
-                  {exam.name}{" "}
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {exam.examCode}
-                  </span>
-                </h3>
-              )}
-              <div className="grid gap-1.5">
-                {exam.domains.map((d) => (
-                  <div
-                    key={d.number}
-                    className="flex items-baseline justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm"
-                  >
-                    <span>
-                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                        {d.number}
-                      </span>
-                      {d.title}
-                    </span>
-                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                      {d.weight}% of exam
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* Practice by objective — hub links to the programmatic pages */}
-        {objectives.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold tracking-tight">
-              {official ? "Practice by exam objective" : "Practice by topic"}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Drill a specific {official ? "objective" : "topic"} — each page
-              has its own set of questions with explanations.
-            </p>
-            <div className="mt-4 grid gap-1.5">
-              {objectives.map((o) => (
-                <Link
-                  key={`${o.certSlug}/${o.slug}`}
-                  href={`/objectives/${o.certSlug}/${o.slug}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  {official ? (
-                    <span>
-                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                        {o.code}
-                      </span>
-                      {o.title}
-                    </span>
-                  ) : (
-                    <span>{o.topic}</span>
-                  )}
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Related free resources — internal links to tools, PBQ pages, roundup */}
-        <RelatedLinks links={page.related ?? []} />
-
-        {/* Other CompTIA practice tests — cross-link the sibling hubs */}
-        {otherHubs.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Other CompTIA practice tests
-            </h2>
-            <div className="mt-4 grid gap-1.5 sm:grid-cols-2">
-              {otherHubs.map((h) => (
-                <Link
-                  key={h.path}
-                  href={`/${h.path}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  <span className="font-medium">{h.title}</span>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Study it one short step at a time
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            The guided path walks every exam objective in quick rounds like the
-            questions above, then a readiness checkpoint shows where you&apos;d
-            stand today.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={pathHref}>
-              Start my path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
-
         <FaqSection faqs={page.faqs} />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
+}
+
+/** Objectives as tile groups: one per domain, labelled by exam too when a page has two. */
+function objectiveGroups(
+  objectives: ObjectiveLink[],
+  exams: { name: string; examCode: string; domains: { number: string; title: string }[] }[],
+  official: boolean
+): { label?: string; tiles: Tile[] }[] {
+  const certs = [...new Set(objectives.map((o) => o.certSlug))];
+  const byKey = new Map<string, { label?: string; tiles: Tile[] }>();
+  // In exam order: by exam, then domain, then objective ("1.10" after "1.9").
+  const num = (code: string) => code.split(".").map(Number);
+  const ordered = [...objectives].sort((a, b) => {
+    const exam = certs.indexOf(a.certSlug) - certs.indexOf(b.certSlug);
+    if (exam !== 0) return exam;
+    const [a1 = 0, a2 = 0] = num(a.code);
+    const [b1 = 0, b2 = 0] = num(b.code);
+    return a1 - b1 || a2 - b2;
+  });
+  for (const o of ordered) {
+    const domain = `${o.code.split(".")[0]}.0`;
+    const key = official ? `${o.certSlug}|${domain}` : o.certSlug;
+    if (!byKey.has(key)) {
+      const examIndex = certs.indexOf(o.certSlug);
+      const exam = exams[examIndex] ?? exams[0];
+      const title = exam?.domains.find((d) => d.number === domain)?.title;
+      const prefix = certs.length > 1 && exam ? `${exam.examCode} · ` : "";
+      byKey.set(key, {
+        label: official ? `${prefix}Domain ${domain.replace(/\.0$/, "")}${title ? ` · ${title}` : ""}` : prefix || undefined,
+        tiles: [],
+      });
+    }
+    byKey.get(key)!.tiles.push(
+      official
+        ? { href: `/objectives/${o.certSlug}/${o.slug}`, code: o.code, title: o.topic, detail: o.title }
+        : { href: `/objectives/${o.certSlug}/${o.slug}`, title: o.topic }
+    );
+  }
+  return [...byKey.values()];
 }

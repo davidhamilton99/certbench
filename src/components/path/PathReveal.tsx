@@ -98,7 +98,7 @@ export function PathReveal({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {ahead > 0 && (
-          <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:col-span-2">
+          <div className="glass grid gap-3 rounded-2xl p-4 sm:col-span-2 sm:p-5">
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="font-medium">
                 {learned} of {objectives} objectives studied
@@ -113,9 +113,9 @@ export function PathReveal({
           </div>
         )}
         {opportunity && <OpportunityNote domain={opportunity} />}
-        <div className={cn("flex gap-3 rounded-2xl border border-border bg-card p-4", !opportunity && "sm:col-span-2")}>
+        <div className={cn("glass flex gap-3 rounded-2xl p-4 sm:p-5", !opportunity && "sm:col-span-2")}>
           <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" />
-          <div className="grid gap-0.5 text-sm">
+          <div className="grid content-start gap-0.5 text-sm">
             <span className="font-medium">
               {remainingStops > 0
                 ? `At ${minutes} minutes a day, you finish the path by ${fmt(finish)}`
@@ -162,17 +162,17 @@ export function ReadingCard({
   const band = bandFor(result.score);
   return (
     <div
-      className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
+      className="glass relative isolate overflow-hidden rounded-[2rem] p-6 sm:p-10"
       style={bandVars(band)}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 left-1/2 h-64 w-96 -translate-x-1/2 rounded-full blur-3xl"
-        style={{ background: "var(--rv-accent-dim)" }}
+        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[26rem] w-[40rem] max-w-[200%] -translate-x-1/2"
+        style={{ background: "radial-gradient(closest-side, var(--rv-accent-dim), transparent)" }}
       />
       <div className="relative grid justify-items-center gap-2 text-center">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{kicker}</span>
-        <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">{headline}</h2>
+        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{kicker}</span>
+        <h2 className="cb-display text-balance text-[2rem] sm:text-5xl">{headline}</h2>
         <ReadinessDial
           score={result.score}
           band={verdict ? { ...band, label: verdict } : band}
@@ -201,7 +201,7 @@ export function ReadingCard({
                   {r ? `${r.correct}/${r.total}` : "not asked"}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]">
                 <div
                   className="h-full rounded-full transition-[width] duration-700"
                   style={{ width: `${pct ?? 0}%`, background: tone?.accent }}
@@ -218,9 +218,9 @@ export function ReadingCard({
 /** The domain with the most to gain, as a note beside a result. */
 export function OpportunityNote({ domain }: { domain: PathDomain }) {
   return (
-    <div className="flex gap-3 rounded-2xl border border-border bg-card p-4">
+    <div className="glass flex gap-3 rounded-2xl p-4 sm:p-5">
       <Target className="mt-0.5 size-5 shrink-0 text-primary" />
-      <div className="grid gap-0.5 text-sm">
+      <div className="grid content-start gap-0.5 text-sm">
         <span className="font-medium">Biggest opportunity</span>
         <span className="text-muted-foreground">
           {domain.title}, {domain.weight}% of the exam.

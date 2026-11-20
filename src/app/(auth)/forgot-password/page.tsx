@@ -13,9 +13,9 @@ export const metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <Card className="mx-auto w-full max-w-sm">
+    <Card className="mx-auto w-full max-w-[26rem] rounded-[1.75rem] py-8">
       <CardHeader className="text-center">
-        <CardTitle className="text-lg">Reset your password</CardTitle>
+        <CardTitle className="text-2xl font-semibold tracking-[-0.03em]">Reset your password</CardTitle>
         <CardDescription>
           We&apos;ll email you a link to set a new one
         </CardDescription>

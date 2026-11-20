@@ -30,10 +30,10 @@ export function RehearsalIntro({
 }) {
   return (
     <div className="glass path-rise grid gap-5 rounded-3xl p-6 sm:p-8">
-      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
         {stopNumber ? `Stop ${stopNumber} · Exam rehearsal` : `Exam rehearsal · ${structure.examCode}`}
       </span>
-      <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+      <h2 className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">
         Sit the whole exam, start to finish.
       </h2>
       <p className="max-w-prose text-muted-foreground">

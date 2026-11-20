@@ -4,25 +4,33 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * CertBench 3 buttons: pills. The main action is solid ink (white on the dark
+ * canvas, black on the light one), the brightest thing on any screen; blue is
+ * kept for light and progress, so it never competes with the action.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+        default:
+          "bg-foreground text-background shadow-[0_10px_30px_-14px_color-mix(in_oklab,var(--foreground)_55%,transparent)] hover:bg-foreground/88 disabled:bg-foreground/[0.08] disabled:text-foreground/40 disabled:opacity-100 disabled:shadow-none",
+        accent:
+          "bg-primary text-primary-foreground shadow-[0_10px_30px_-12px_var(--primary)] hover:bg-primary/90",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-foreground/15 bg-transparent hover:border-foreground/30 hover:bg-foreground/[0.05]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-foreground/[0.07] text-foreground hover:bg-foreground/[0.11]",
+        ghost: "hover:bg-foreground/[0.06]",
+        link: "rounded-md text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md px-3 text-xs has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        default: "h-10 px-5 has-[>svg]:px-4",
+        sm: "h-8 px-3.5 text-[13px] has-[>svg]:px-3",
+        lg: "h-12 px-7 text-[15px] has-[>svg]:px-6",
         icon: "size-9",
       },
     },

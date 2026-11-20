@@ -1,13 +1,20 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Check } from "lucide-react";
-import { VS_PAGES } from "@/lib/seo/comparison-pages";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
+import { Check } from "lucide-react";
+import { ROUNDUPS, VS_PAGES } from "@/lib/seo/comparison-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
+import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import {
+  ArticleBand,
+  ArticleBody,
+  ArticleHero,
+  ArticleSection,
+  ArticleTail,
+  TickWell,
+} from "@/components/marketing/lander/Article";
 import { pageMetadata } from "@/lib/seo/metadata";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const dynamicParams = false;
 
@@ -30,6 +37,40 @@ export async function generateMetadata({
   });
 }
 
+/** One side of the verdict: when to pick that tool. */
+function Verdict({ title, items, ours = false }: { title: string; items: string[]; ours?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "glass relative isolate overflow-hidden rounded-[1.75rem] p-6 sm:p-7",
+        ours && "border-primary/45 shadow-[0_30px_80px_-44px_var(--primary)]"
+      )}
+    >
+      {ours && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-1/2 -z-10 h-full [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_16%,transparent),transparent)]"
+        />
+      )}
+      <h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2>
+      <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed text-muted-foreground">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-3">
+            <TickWell lit={ours}>
+              <Check strokeWidth={3} />
+            </TickWell>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// On phones each row stacks: the feature, then each tool's answer under its name.
+const CELL =
+  "px-6 py-4 align-top max-sm:block max-sm:p-0 max-sm:before:mb-0.5 max-sm:before:block max-sm:before:text-[11px] max-sm:before:font-medium max-sm:before:uppercase max-sm:before:tracking-[0.14em] max-sm:before:text-muted-foreground/80 max-sm:before:content-[attr(data-label)]";
+
 export default async function VsPage({
   params,
 }: {
@@ -39,73 +80,52 @@ export default async function VsPage({
   const page = VS_PAGES.find((p) => p.slug === slug);
   if (!page) notFound();
 
+  const guide = ROUNDUPS.find((r) => r.path === "best-security-plus-practice-tests");
+
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          {page.h1}
-        </h1>
-        <div className="mt-4 grid gap-3 text-muted-foreground">
+    <LanderPage>
+      <ArticleBody>
+        <ArticleHero eyebrow="Comparison" title={page.h1}>
           {page.intro.map((p) => (
-            <p key={p.slice(0, 32)} className="leading-relaxed">
-              {p}
-            </p>
+            <p key={p.slice(0, 32)}>{p}</p>
           ))}
-        </div>
+        </ArticleHero>
 
         {/* The verdict, both directions */}
-        <section className="mt-10 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border bg-card p-5">
-            <h2 className="text-sm font-semibold">
-              Choose {page.competitorName} if
-            </h2>
-            <ul className="mt-3 grid gap-2.5 text-sm leading-relaxed text-muted-foreground">
-              {page.chooseThem.map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <Check className="mt-1 size-3.5 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-xl border border-primary/40 bg-card p-5">
-            <h2 className="text-sm font-semibold">Choose CertBench if</h2>
-            <ul className="mt-3 grid gap-2.5 text-sm leading-relaxed text-muted-foreground">
-              {page.chooseUs.map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <Check className="mt-1 size-3.5 shrink-0 text-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <section className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2">
+          <Verdict title={`Choose ${page.competitorName} if`} items={page.chooseThem} />
+          <Verdict title="Choose CertBench if" items={page.chooseUs} ours />
         </section>
 
-        {/* Feature table */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Side by side
-          </h2>
-          <div className="mt-4 overflow-x-auto rounded-xl border">
-            <table className="w-full min-w-[36rem] text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40 text-left">
-                  <th className="px-4 py-2.5 font-medium">Feature</th>
-                  <th className="px-4 py-2.5 font-medium">CertBench</th>
-                  <th className="px-4 py-2.5 font-medium">
+        <ArticleSection title="Side by side">
+          <div className="glass overflow-hidden rounded-[1.75rem]">
+            <table className="w-full text-left text-[15px] leading-relaxed max-sm:block">
+              <thead className="max-sm:sr-only">
+                <tr className="border-b border-foreground/[0.08]">
+                  <th scope="col" className="w-[24%] px-6 py-4 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    Feature
+                  </th>
+                  <th scope="col" className="px-6 py-4 font-semibold">
+                    CertBench
+                  </th>
+                  <th scope="col" className="px-6 py-4 font-semibold">
                     {page.competitorName}
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="max-sm:block">
                 {page.rows.map((row) => (
-                  <tr key={row.feature} className="border-b align-top last:border-0">
-                    <td className="px-4 py-2.5 font-medium">{row.feature}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
+                  <tr
+                    key={row.feature}
+                    className="border-b border-foreground/[0.06] last:border-0 max-sm:grid max-sm:gap-3 max-sm:px-5 max-sm:py-5"
+                  >
+                    <th scope="row" className="px-6 py-4 align-top font-medium max-sm:block max-sm:p-0 max-sm:text-base">
+                      {row.feature}
+                    </th>
+                    <td data-label="CertBench" className={cn(CELL, "text-muted-foreground")}>
                       {row.certbench}
                     </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
+                    <td data-label={page.competitorName} className={cn(CELL, "text-muted-foreground")}>
                       {row.competitor}
                     </td>
                   </tr>
@@ -113,51 +133,47 @@ export default async function VsPage({
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Competitor details and prices are approximate as of mid-2026 —
-            always check their site for current offers.
+          <p className="mt-3 text-xs text-muted-foreground">
+            Competitor details and prices are approximate as of mid-2026 — always check their site for current offers.
           </p>
-        </section>
+        </ArticleSection>
+      </ArticleBody>
 
-        {/* CTA */}
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            The fastest way to decide
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Start the guided path for your exam. The first stops are free, and
-            the readiness checkpoint shows where you stand.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href="/start">
-              Start my exam path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            Comparing more options?{" "}
-            <Link
-              href="/best-security-plus-practice-tests"
-              className="text-primary underline underline-offset-4"
-            >
-              See the full 2026 guide
-            </Link>
-            .
-          </p>
-        </section>
+      <ArticleBand>
+        <PathCard
+          kicker="Your exam path"
+          title="The fastest way to decide"
+          href="/start"
+          label="Start my exam path"
+          context="compare_page"
+        >
+          Start the guided path for your exam. The first stops are free, and the readiness checkpoint shows where you
+          stand.
+        </PathCard>
+      </ArticleBand>
 
+      <ArticleTail>
         <RelatedLinks
           title="Other comparisons"
-          links={VS_PAGES.filter((p) => p.slug !== page.slug).map((p) => ({
-            href: `/compare/${p.slug}`,
-            label: `CertBench vs ${p.competitorName}`,
-            note: p.metaDescription,
-          }))}
+          links={[
+            ...VS_PAGES.filter((p) => p.slug !== page.slug).map((p) => ({
+              href: `/compare/${p.slug}`,
+              label: `CertBench vs ${p.competitorName}`,
+              note: p.metaDescription,
+            })),
+            ...(guide
+              ? [
+                  {
+                    href: `/${guide.path}`,
+                    label: "The full 2026 Security+ guide",
+                    note: "Every practice test worth a look, side by side, CertBench included",
+                  },
+                ]
+              : []),
+          ]}
         />
-
         <FaqSection faqs={page.faqs} />
-      </main>
-      <Footer />
-    </div>
+      </ArticleTail>
+    </LanderPage>
   );
 }

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 function Explanation({ text }: { text: string }) {
   const { takeaway, rest } = splitExplanation(text);
   return (
-    <div className="grid gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm leading-relaxed">
+    <div className="grid gap-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3.5 text-[15px] leading-relaxed">
       <p>{takeaway}</p>
       {rest && (
         <details className="text-muted-foreground">
@@ -93,34 +93,34 @@ export function ReadinessCheck({
     const band = BAND[result.band];
     const correct = answers.filter((a) => a.correct).length;
     return (
-      <div className="grid gap-5 rounded-2xl border bg-card p-8">
-        <div className="grid justify-items-center gap-1 text-center">
-          <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+      <div className="glass grid gap-6 rounded-[1.75rem] p-6 sm:p-9">
+        <div className="grid justify-items-center gap-2 text-center">
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Estimated readiness
           </span>
-          <span className={cn("font-mono text-6xl font-semibold", band.tone)}>
+          <span className={cn("cb-display text-7xl tabular-nums sm:text-8xl", band.tone)}>
             {result.score}
-            <span className="text-3xl">%</span>
+            <span className="ml-0.5 text-4xl sm:text-5xl">%</span>
           </span>
-          <span className={cn("text-sm font-medium", band.tone)}>
+          <span className={cn("text-[15px] font-medium", band.tone)}>
             {band.label}
           </span>
-          <span className="mt-1 text-xs text-muted-foreground">
+          <span className="mt-1 max-w-sm text-balance text-sm text-muted-foreground">
             {correct} of {total} correct, weighted by how the real exam weights
             each domain
           </span>
         </div>
 
-        <div className="grid gap-2.5 border-t pt-4">
+        <div className="grid gap-3.5 border-t border-foreground/[0.08] pt-6">
           {result.domains.map((d) => (
-            <div key={d.domainTitle} className="grid min-w-0 gap-1">
-              <div className="flex items-baseline justify-between gap-3 text-xs">
+            <div key={d.domainTitle} className="grid min-w-0 gap-1.5">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
                 <span className="truncate">{d.domainTitle}</span>
-                <span className="shrink-0 font-mono text-muted-foreground">
+                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {d.correct}/{d.total}
                 </span>
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]">
                 <div
                   className={cn("h-full rounded-full", BAND[d.pct >= 75 ? "ready" : d.pct >= 40 ? "close" : "start"].bar)}
                   style={{ width: `${Math.max(3, d.pct)}%` }}
@@ -130,8 +130,8 @@ export function ReadinessCheck({
           ))}
         </div>
 
-        <div className="grid justify-items-center gap-3 border-t pt-5 text-center">
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+        <div className="grid justify-items-center gap-4 border-t border-foreground/[0.08] pt-6 text-center">
+          <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             That&apos;s an estimate from {total} questions. Your {shortCertName}{" "}
             path covers all {objectiveCount} objectives, one short stop at a
             time, and shows you where you stand as you go.
@@ -148,9 +148,9 @@ export function ReadinessCheck({
           <button
             type="button"
             onClick={restart}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
-            <RotateCcw className="size-3" />
+            <RotateCcw className="size-3.5" />
             Retake the check
           </button>
         </div>
@@ -161,23 +161,23 @@ export function ReadinessCheck({
   // ---------- question flow ----------
   const revealed = picked !== null;
   return (
-    <div className="grid gap-4 rounded-2xl border bg-card p-6 sm:p-8">
-      <div className="flex items-baseline justify-between font-mono text-xs text-muted-foreground">
-        <span>
+    <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-8">
+      <div className="flex items-baseline justify-between gap-4 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+        <span className="min-w-0 truncate">{question.domainTitle}</span>
+        <span className="shrink-0 tabular-nums">
           {index + 1} / {total}
         </span>
-        <span>{question.domainTitle}</span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-muted">
+      <div className="-mt-2 h-1 overflow-hidden rounded-full bg-foreground/[0.08]">
         <div
           className="h-full rounded-full bg-primary transition-all"
           style={{ width: `${(answers.length / total) * 100}%` }}
         />
       </div>
 
-      <p className="leading-relaxed">{question.questionText}</p>
+      <p className="text-balance text-[17px] font-medium leading-relaxed sm:text-lg">{question.questionText}</p>
 
-      <div role="radiogroup" className="grid gap-2">
+      <div role="radiogroup" aria-label="Answers" className="grid gap-2.5">
         {question.options.map((option, i) => {
           const isCorrect = revealed && i === question.correctIndex;
           const isWrongPick = revealed && i === picked && !isCorrect;
@@ -190,29 +190,31 @@ export function ReadinessCheck({
               disabled={revealed}
               onClick={() => choose(i)}
               className={cn(
-                "flex items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors",
-                !revealed && "hover:border-muted-foreground/40 hover:bg-accent",
+                "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left text-[15px] leading-snug transition-[border-color,background-color,opacity,transform] duration-150",
+                !revealed && "hover:border-primary/60 hover:bg-primary/[0.03] active:scale-[0.99]",
                 isCorrect && "border-success bg-success/10",
                 isWrongPick && "border-danger bg-danger/10",
+                revealed && !isCorrect && !isWrongPick && "opacity-45",
                 revealed && "cursor-default"
               )}
             >
               <span
+                aria-hidden
                 className={cn(
-                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border font-mono text-[11px]",
+                  "flex size-6 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] text-muted-foreground transition-colors",
                   isCorrect && "border-success bg-success text-success-foreground",
                   isWrongPick && "border-danger bg-danger text-danger-foreground"
                 )}
               >
                 {isCorrect ? (
-                  <Check className="size-3" />
+                  <Check className="size-3.5" strokeWidth={3} />
                 ) : isWrongPick ? (
-                  <X className="size-3" />
+                  <X className="size-3.5" strokeWidth={3} />
                 ) : (
                   String.fromCharCode(65 + i)
                 )}
               </span>
-              <span className="leading-relaxed">{option}</span>
+              <span className="min-w-0 [overflow-wrap:anywhere]">{option}</span>
             </button>
           );
         })}
@@ -221,7 +223,7 @@ export function ReadinessCheck({
       {revealed && <Explanation text={question.explanation} />}
 
       <div className="flex justify-end">
-        <Button onClick={next} disabled={!revealed} className="min-w-32">
+        <Button onClick={next} disabled={!revealed} size="lg" className="min-w-36">
           {index === total - 1 ? "See my estimate" : "Next"}
           <ArrowRight />
         </Button>

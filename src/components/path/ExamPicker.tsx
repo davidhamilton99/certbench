@@ -37,7 +37,11 @@ function versionNote(cert: PathCert): string {
 }
 
 const tileClass =
-  "glass group grid gap-1 rounded-2xl px-4 py-4 text-left transition-[border-color,transform] hover:border-primary/60 active:scale-[0.99] sm:px-5 sm:py-5";
+  "glass group grid gap-1.5 rounded-2xl px-4 py-4 text-left transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_24px_60px_-30px_var(--primary)] active:translate-y-0 active:scale-[0.99] sm:px-6 sm:py-5";
+
+/** The arrow in a small round well that fills with ink on hover. */
+const wellClass =
+  "flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background";
 
 /**
  * The only choice on CertBench: which exam. A tile per exam, each straight into
@@ -96,8 +100,10 @@ export function ExamPicker({
           className={tileClass}
         >
           <span className="flex items-center justify-between gap-2">
-            <span className="font-display text-lg font-semibold tracking-tight sm:text-xl">{EXAM_NAMES[first]}</span>
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
+            <span className="text-lg font-semibold tracking-[-0.02em] sm:text-[1.375rem]">{EXAM_NAMES[first]}</span>
+            <span className={wellClass}>
+              <ArrowRight className="size-3.5" />
+            </span>
           </span>
           <span className="font-mono text-xs text-muted-foreground">
             {EXAM_CODES[first]} · {objectiveCount(first)}
@@ -116,16 +122,13 @@ export function ExamPicker({
             setOpen(isOpen ? null : first);
             if (!isOpen) track("path_versions_opened", { exam: EXAM_NAMES[first], surface });
           }}
-          className={cn(tileClass, isOpen && "border-primary/60")}
+          className={cn(tileClass, isOpen && "border-primary/60 hover:translate-y-0")}
         >
           <span className="flex items-center justify-between gap-2">
-            <span className="font-display text-lg font-semibold tracking-tight sm:text-xl">{EXAM_NAMES[first]}</span>
-            <ChevronDown
-              className={cn(
-                "size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:text-primary",
-                isOpen && "rotate-180 text-primary"
-              )}
-            />
+            <span className="text-lg font-semibold tracking-[-0.02em] sm:text-[1.375rem]">{EXAM_NAMES[first]}</span>
+            <span className={cn(wellClass, isOpen && "bg-foreground text-background")}>
+              <ChevronDown className={cn("size-3.5 transition-transform", isOpen && "rotate-180")} />
+            </span>
           </span>
           <span className="font-mono text-xs text-muted-foreground">{tile.map((c) => EXAM_CODES[c]).join(" · ")}</span>
         </button>

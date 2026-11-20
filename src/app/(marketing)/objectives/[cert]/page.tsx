@@ -1,14 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { loadObjectiveHub } from "@/server/seo/objective-data";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
+import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { LanderHero, LanderPage, LanderProse, LanderSection } from "@/components/marketing/lander/Lander";
+import { TileGrid } from "@/components/marketing/lander/TileGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { Button } from "@/components/ui/button";
 import { PBQ_EXAMPLE_PAGES, practicePageFor } from "@/lib/seo/cert-pages";
 import {
   A_PLUS_CORE1_CERT,
@@ -72,6 +72,8 @@ export async function generateMetadata({
   });
 }
 
+const domainLabel = (n: string) => n.replace(/\.0$/, "");
+
 export default async function ObjectiveHubPage({
   params,
 }: {
@@ -84,8 +86,26 @@ export default async function ObjectiveHubPage({
   const practicePage = practicePageFor(cert);
   const pbqPage = PBQ_EXAMPLE_PAGES.find((p) => p.certSlug === cert);
 
+  // Every objective as a tile, grouped by domain with its share of the exam.
+  const groups = data.domains
+    .filter((d) => d.objectives.length > 0)
+    .map((d) => ({
+      label: (
+        <>
+          Domain {domainLabel(d.number)} · {d.title}
+          <span className="ml-2 font-normal text-muted-foreground">{d.weight}% of the exam</span>
+        </>
+      ),
+      tiles: d.objectives.map((o) => ({
+        href: `/objectives/${cert}/${o.slug}`,
+        code: o.code,
+        title: o.topic,
+        detail: o.title,
+      })),
+    }));
+
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <LanderPage>
       <JsonLd
         data={breadcrumbList([
           { name: "CertBench", path: "/" },
@@ -93,86 +113,62 @@ export default async function ObjectiveHubPage({
           { name: `${data.examCode} objectives`, path: `/objectives/${cert}` },
         ])}
       />
-      <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
-        <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <Link href={practicePage} className="hover:text-foreground">
-            {data.shortCertName} practice
-          </Link>
-          <ChevronRight className="size-3" />
-          <span>{data.examCode} objectives</span>
-        </nav>
+      <LanderHero
+        above={
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center justify-center gap-1 text-xs text-muted-foreground">
+            <Link href={practicePage} className="hover:text-foreground">
+              {data.shortCertName} practice
+            </Link>
+            <ChevronRight className="size-3" />
+            <span>{data.examCode} objectives</span>
+          </nav>
+        }
+        eyebrow={`${data.certName} · ${data.examCode}`}
+        title={`${data.examCode} exam objectives, with practice for each one`}
+        sub="Each one opens its own practice questions, explained."
+        specs={[`${data.objectiveCount} objectives`, `${data.domains.length} domains`, "No account needed"]}
+      />
 
-        <p className="font-mono text-xs text-muted-foreground">
-          {data.certName} · {data.examCode}
-        </p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {data.examCode} exam objectives, with practice for each one
-        </h1>
-        <p className="mt-4 leading-relaxed text-muted-foreground">
-          The {data.examCode} exam has {data.objectiveCount} objectives across{" "}
-          {data.domains.length} domains. Each one below opens a page of original
-          practice questions with full explanations, no account needed. CompTIA
+      <div className="mx-auto mt-10 max-w-2xl px-5 sm:px-6">
+        <ExamVersionNote certSlugs={[cert]} />
+      </div>
+
+      <LanderSection width="xl" className="pt-14 sm:pt-20">
+        <TileGrid groups={groups} details="always" />
+      </LanderSection>
+
+      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
+        <PathCard
+          kicker={`Your ${data.shortCertName} path`}
+          title="Study them in order, one short stop at a time"
+          href={`/path/${cert}`}
+          label={`Start my ${data.shortCertName} path`}
+          context="objective_hub"
+          note="No account needed to start."
+        >
+          Your {data.shortCertName} path walks every objective above in quick rounds, then a readiness checkpoint shows
+          where you stand.
+        </PathCard>
+      </div>
+
+      <LanderProse>
+        <p>
+          The {data.examCode} exam has {data.objectiveCount} objectives across {data.domains.length} domains. Each one
+          above opens a page of original practice questions with full explanations, no account needed. CompTIA
           publishes the full objectives on its{" "}
           <a
             href={COMPTIA_EXAM_PAGES[cert]}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary underline underline-offset-4"
+            className="text-foreground underline underline-offset-4"
           >
             {data.examCode} exam page
           </a>
           .
         </p>
-        <ExamVersionNote certSlugs={[cert]} className="mt-4" />
+      </LanderProse>
 
-        {data.domains.map((domain) => (
-          <section key={domain.number} className="mt-10">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h2 className="text-xl font-semibold tracking-tight">
-                Domain {domain.number}: {domain.title}
-              </h2>
-              <span className="font-mono text-xs text-muted-foreground">
-                {domain.weight}% of exam
-              </span>
-            </div>
-            <div className="mt-3 grid gap-1.5">
-              {domain.objectives.map((o) => (
-                <Link
-                  key={o.slug}
-                  href={`/objectives/${cert}/${o.slug}`}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-sm transition-colors hover:border-muted-foreground/40"
-                >
-                  <span>
-                    <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                      {o.code}
-                    </span>
-                    {o.title}
-                  </span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
-
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Study them in order, one short stop at a time
-          </h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Your {data.shortCertName} path walks every objective above in quick
-            rounds, then a readiness checkpoint shows where you stand.
-          </p>
-          <Button asChild size="lg" className="mt-1">
-            <Link href={`/path/${cert}`}>
-              Start my {data.shortCertName} path
-              <ArrowRight />
-            </Link>
-          </Button>
-          <p className="text-xs text-muted-foreground">No account needed to start.</p>
-        </section>
-
+      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
         <RelatedLinks
           links={[
             {
@@ -197,8 +193,7 @@ export default async function ObjectiveHubPage({
             ...(MORE_LINKS[cert] ?? []),
           ]}
         />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </LanderPage>
   );
 }

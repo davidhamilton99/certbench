@@ -49,7 +49,7 @@ describe("HeaderAccountLinks", () => {
     render(<HeaderAccountLinks />);
     await act(async () => {});
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/start");
+    expect(screen.getByRole("link", { name: "Start free" })).toHaveAttribute("href", "/start");
   });
 
   it("becomes a way into the app once signed in", async () => {
@@ -64,7 +64,7 @@ describe("HeaderAccountLinks", () => {
   it("switches the moment an inline signup creates a session", async () => {
     render(<HeaderAccountLinks />);
     await act(async () => {});
-    expect(screen.getByRole("link", { name: "Get started" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start free" })).toBeInTheDocument();
     act(() => auth.listeners.forEach((l) => l("SIGNED_IN", { user: { id: "u1" } })));
     expect(screen.getByRole("link", { name: "Your path" })).toBeInTheDocument();
   });

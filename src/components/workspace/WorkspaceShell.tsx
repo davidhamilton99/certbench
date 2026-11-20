@@ -17,6 +17,7 @@ import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { SignOutButton } from "./SignOutButton";
+import { Logo } from "@/components/brand/Logo";
 
 export interface ShellCert {
   slug: string;
@@ -214,15 +215,7 @@ export function WorkspaceShell({
       {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center px-4 py-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2.5 text-base font-semibold tracking-tight"
-          >
-            <span className="flex size-6 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-bold text-primary-foreground">
-              CB
-            </span>
-            CertBench
-          </Link>
+          <Logo href="/dashboard" />
         </div>
         <CertSwitcher certs={certs} />
         <DesktopNav pathHref={pathHref} />

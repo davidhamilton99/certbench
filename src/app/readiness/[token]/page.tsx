@@ -59,7 +59,7 @@ export default async function ReadinessSharePage({
         )}
 
         <section className="mt-10 grid w-full justify-items-center gap-3 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="cb-display text-4xl sm:text-5xl">
             How ready are you?
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">

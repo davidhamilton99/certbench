@@ -40,7 +40,7 @@ function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): 
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>` : ""}
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
     <div style="margin-bottom:24px;">
-      <span style="display:inline-block;background:#2563eb;color:#ffffff;border-radius:6px;padding:3px 7px;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;">CB</span>
+      <img src="https://certbench.dev/icon-192.png" width="24" height="24" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:6px;" />
       <span style="font-size:16px;font-weight:600;margin-left:8px;">CertBench</span>
     </div>
     <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;padding:28px;">

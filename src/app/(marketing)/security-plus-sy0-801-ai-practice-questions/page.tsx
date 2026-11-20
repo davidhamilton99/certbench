@@ -4,6 +4,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { CtaBand } from "@/components/marketing/lander/Article";
 import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
@@ -77,13 +78,13 @@ export default function Sy0801AiQuestionsPage() {
         })}
       />
       <MarketingHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 sm:py-16">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-12 sm:px-6 sm:pt-20">
         <p className="font-mono text-xs text-muted-foreground">CompTIA Security+ SY0-801 · Objective 2.6</p>
-        <h1 className="mt-1 text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-4 cb-display text-balance text-[2.35rem] sm:text-[3.5rem]">
           SY0-801 practice questions: AI threats and vulnerabilities
         </h1>
 
-        <div className="mt-4 grid gap-3 leading-relaxed text-muted-foreground">
+        <div className="mt-6 grid gap-4 text-[17px] leading-relaxed text-muted-foreground sm:mt-8">
           <p>
             <strong className="font-medium text-foreground">
               SY0-801 adds an objective Security+ has never had: 2.6, on the threats and vulnerabilities of
@@ -98,8 +99,8 @@ export default function Sy0801AiQuestionsPage() {
           </p>
         </div>
 
-        <section className="mt-10 grid gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">The questions</h2>
+        <section className="mt-16 grid gap-4 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">The questions</h2>
           <QuestionDeck
             questions={AI_DECK}
             label="Objective 2.6 · AI threats"
@@ -109,11 +110,11 @@ export default function Sy0801AiQuestionsPage() {
           />
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">The {SY0_801_AI_TOPICS.length} topics in one line each</h2>
+        <section className="mt-16 sm:mt-20">
+          <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">The {SY0_801_AI_TOPICS.length} topics in one line each</h2>
           <dl className="mt-4 grid gap-2.5">
             {SY0_801_AI_TOPICS.map((t) => (
-              <div key={t.term} className="rounded-lg border bg-card px-4 py-3 text-sm">
+              <div key={t.term} className="glass rounded-2xl px-5 py-4 text-[15px]">
                 <dt className="font-medium">{t.term}</dt>
                 <dd className="mt-0.5 leading-relaxed text-muted-foreground">{t.gist}</dd>
               </div>
@@ -121,9 +122,8 @@ export default function Sy0801AiQuestionsPage() {
           </dl>
         </section>
 
-        <section className="mt-10 grid justify-items-center gap-3 rounded-xl border bg-muted/40 px-6 py-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">Now try the whole exam</h2>
-          <p className="max-w-md text-sm text-muted-foreground">
+        <CtaBand title="Now try the whole exam">
+          <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             A free {SY0_801_PRACTICE_TEST.length}-question SY0-801 practice test across all 27 objectives, timed,
             with a score by domain.
           </p>
@@ -151,7 +151,7 @@ export default function Sy0801AiQuestionsPage() {
               Start your SY0-701 path
             </Link>
           </p>
-        </section>
+        </CtaBand>
 
         <RelatedLinks
           links={[

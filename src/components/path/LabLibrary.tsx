@@ -33,10 +33,10 @@ export function LabLibrary({
   return (
     <div className="path-rise grid gap-6">
       <div className="grid gap-2">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
           Hands-on labs · {structure.examCode}
         </span>
-        <h1 className="text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
           Every lab for {structure.examName}
         </h1>
         <p className="text-muted-foreground">
@@ -45,7 +45,7 @@ export function LabLibrary({
         </p>
       </div>
 
-      <div className="glass grid gap-7 rounded-3xl p-5 sm:p-6">
+      <div className="grid gap-9">
         {structure.domains.map((d) => {
           const labs = library.filter((l) => l.domain === d.number);
           if (labs.length === 0) return null;
@@ -82,7 +82,7 @@ export function LabLibrary({
                         ]
                           .filter(Boolean)
                           .join(", ")}
-                        className="group flex w-full min-w-0 items-center gap-3.5 rounded-2xl border border-border bg-card/60 p-3.5 text-left transition-[border-color,background-color] duration-150 hover:border-primary/50 hover:bg-primary/[0.03]"
+                        className="glass group flex w-full min-w-0 items-center gap-3.5 rounded-2xl p-3.5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-[0_22px_50px_-30px_var(--primary)] sm:p-4"
                       >
                         <span
                           className={cn(
