@@ -175,6 +175,15 @@
   .font-mono {
     font-variant-numeric: tabular-nums;
   }
+  /* Tailwind v4 dropped the pointer cursor on buttons, so a tile that's a
+     button (the Security+ exam tile, answer options, map tiles) showed an
+     arrow while tiles that are links showed a hand. Anything you can press
+     gets the hand. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* One-shot entrance animations for the readiness instrument. Server-rendered
