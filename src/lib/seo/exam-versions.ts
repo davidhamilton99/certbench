@@ -1,11 +1,13 @@
 /**
  * What CompTIA says about exam versions, in one place so pages can't drift.
- * Checked against CompTIA's exam pages on the date below. The wording on the
- * pages ("lists its launch as on or around") is chosen to stay true after a
- * date passes, but re-check these when one does.
+ * Checked against CompTIA's exam pages on the date below: on Nov 21, 2026
+ * CompTIA's Security+ page called V8 (SY0-801) "the recommended version" and
+ * kept V7 (SY0-701) open until June 11, 2027 in English. It gives no exact
+ * launch date for V8, so pages say it was scheduled for on or around Nov 17.
+ * Re-check these when a date passes.
  */
-export const EXAM_FACTS_CHECKED = "November 8, 2026";
-export const EXAM_FACTS_CHECKED_ISO = "2026-11-08";
+export const EXAM_FACTS_CHECKED = "November 21, 2026";
+export const EXAM_FACTS_CHECKED_ISO = "2026-11-21";
 
 export const COMPTIA_URLS = {
   securityV7: "https://www.comptia.org/en-us/certifications/security/v7/",
@@ -26,7 +28,7 @@ export const SY0_801_PRACTICE_PATH = "/security-plus-sy0-801-practice-test";
 /** When the first SY0-801 pages went up. */
 export const SY0_801_PUBLISHED_ISO = "2026-11-08";
 /** When the SY0-801 pages last changed, for the sitemap. */
-export const SY0_801_UPDATED_ISO = "2026-11-14";
+export const SY0_801_UPDATED_ISO = "2026-11-21";
 /** When the practice test went up, and when its questions were checked against CompTIA's SY0-801 objectives. */
 export const SY0_801_PRACTICE_PUBLISHED_ISO = "2026-11-14";
 export const SY0_801_PRACTICE_CHECKED = "November 14, 2026";

@@ -24,7 +24,7 @@ import { articleData } from "@/lib/seo/structured-data";
 
 const TITLE = "Security+ SY0-801 vs SY0-701: Which Should You Take?";
 const DESCRIPTION =
-  "CompTIA lists SY0-801 as launching around November 17, 2026, and SY0-701 retires June 11, 2027. What changes, what stays the same, and how to pick by exam date.";
+  "SY0-801 is the Security+ version CompTIA now recommends, and SY0-701 retires June 11, 2027. What changes, what stays the same, and how to pick by exam date.";
 
 export const metadata = pageMetadata({
   title: TITLE,
@@ -73,9 +73,9 @@ const CHOICES = [
 
 const FAQS = [
   {
-    question: "When does SY0-801 come out?",
+    question: "When did SY0-801 come out?",
     answer:
-      "CompTIA lists Security+ V8 (SY0-801) as launching on or around November 17, 2026. The wording leaves room for a short slip, so check CompTIA's exam page before you plan around the exact day.",
+      "CompTIA scheduled Security+ V8 (SY0-801) for on or around November 17, 2026, and now lists it as the recommended version.",
   },
   {
     question: "When does SY0-701 retire?",
@@ -83,12 +83,12 @@ const FAQS = [
       "The English exam retires on June 11, 2027. The Japanese, Portuguese, Spanish and Thai versions retire on August 13, 2027. Until then you can still book SY0-701.",
   },
   {
-    question: "Should I wait for SY0-801?",
+    question: "Should I take SY0-701 or switch to SY0-801?",
     answer:
-      "Not if you can sit SY0-701 by June 11, 2027 with room for a retake. Both lead to the same certification, and SY0-701 has three years of study material behind it. Wait only if your exam date falls after that, or you have no date and would rather learn the newest objectives from the start.",
+      "SY0-701, if you can sit it by June 11, 2027 with room for a retake: both lead to the same certification, and SY0-701 has three years of study material behind it. Take SY0-801 if your exam date falls after that, or you have no date and would rather learn the newest objectives from the start.",
   },
   {
-    question: "Will my Security+ expire early once SY0-801 launches?",
+    question: "Will my Security+ expire early now that SY0-801 is out?",
     answer:
       "No. CompTIA says Security+ is good for three years from the date you pass, so a new exam version doesn't shorten a certification you already hold.",
   },

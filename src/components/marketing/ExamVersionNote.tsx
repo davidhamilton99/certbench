@@ -41,13 +41,13 @@ export function ExamVersionNote({
     note = (
       <>
         <strong className="font-medium text-foreground">
-          Written to SY0-701, the current Security+ exam.
+          Written to SY0-701 (Security+ V7).
         </strong>{" "}
-        It stays open until June 11, 2027 in English. CompTIA lists its replacement,{" "}
+        It stays open until June 11, 2027 in English. Its replacement,{" "}
         <Link href={SY0_801_PATH} className={LINK}>
           SY0-801
         </Link>
-        , as launching on or around November 17, 2026.{" "}
+        , is the version CompTIA now recommends.{" "}
         <Link href={SECURITY_PLUS_VERSIONS_PATH} className={LINK}>
           Which one should you take?
         </Link>{" "}
