@@ -26,7 +26,7 @@ import { articleData } from "@/lib/seo/structured-data";
 
 const TITLE = "Security+ SY0-801: Exam Objectives, Domains and Launch Date";
 const DESCRIPTION =
-  "CompTIA Security+ SY0-801 (V8) launches on or around November 17, 2026. Its five domains and weights, all 27 objectives, the new AI objective, and how to prepare now.";
+  "CompTIA Security+ SY0-801 (V8), the version CompTIA now recommends. Its five domains and weights, all 27 objectives, the new AI objective, and how to prepare now.";
 
 export const metadata = pageMetadata({
   title: TITLE,
@@ -49,9 +49,9 @@ const AT_A_GLANCE = [
 
 const FAQS = [
   {
-    question: "When does Security+ SY0-801 launch?",
+    question: "When did Security+ SY0-801 launch?",
     answer:
-      "CompTIA lists SY0-801 as launching on or around November 17, 2026. The current exam, SY0-701, stays open until June 11, 2027 in English, so both can be booked for several months.",
+      "CompTIA scheduled SY0-801 for on or around November 17, 2026, and now lists Security+ V8 as its recommended version. The previous exam, SY0-701, stays open until June 11, 2027 in English, so both can be booked until then.",
   },
   {
     question: "How many objectives does SY0-801 have?",
@@ -104,7 +104,7 @@ export default function SecurityPlusV8Page() {
         <div className="mt-6 grid gap-4 text-[17px] leading-relaxed text-muted-foreground sm:mt-8">
           <p>
             <strong className="font-medium text-foreground">
-              SY0-801 is the next Security+ exam, launching on or around November 17, 2026.
+              SY0-801 is the newest Security+ exam: scheduled for on or around November 17, 2026, and now the version CompTIA recommends.
             </strong>{" "}
             It keeps SY0-701&apos;s format and passing score, regroups its objectives into{" "}
             {OBJECTIVE_COUNT}, and adds one on the threats and vulnerabilities of AI.

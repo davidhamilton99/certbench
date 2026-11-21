@@ -4,7 +4,7 @@
 
 ## Which exam versions this covers
 
-- Security+: a guided path for each version. SY0-701 is open until June 11, 2027 in English; CompTIA lists SY0-801 as launching on or around November 17, 2026. Pro covers both versions. For SY0-801 there are also a free practice test and free AI-threat practice questions.
+- Security+: a guided path for each version. SY0-701 is open until June 11, 2027 in English; SY0-801 (Security+ V8) is the version CompTIA now recommends. Pro covers both versions. For SY0-801 there are also a free practice test and free AI-threat practice questions.
 - Network+: written for N10-009, the current exam.
 - A+: written to 220-1201 and 220-1202 (CompTIA's V15), the current exams. CompTIA retired 220-1101 and 220-1102 on September 25, 2025.
 

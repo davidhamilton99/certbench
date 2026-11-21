@@ -92,7 +92,7 @@ const NEXT: PracticeExamNext = {
 const FAQS = [
   {
     question: "Is this practice test for SY0-801 or SY0-701?",
-    answer: `SY0-801, the Security+ exam CompTIA lists as launching on or around November 17, 2026. Each question is tagged to one of SY0-801's ${OBJECTIVE_COUNT} objectives. For SY0-701, which stays open until June 11, 2027 in English, use CertBench's SY0-701 practice test and path.`,
+    answer: `SY0-801, the newest Security+ exam and the version CompTIA now recommends. Each question is tagged to one of SY0-801's ${OBJECTIVE_COUNT} objectives. For SY0-701, which stays open until June 11, 2027 in English, use CertBench's SY0-701 practice test and path.`,
   },
   {
     question: "How long is the real SY0-801 exam?",
@@ -170,7 +170,7 @@ export default function Sy0801PracticeTestPage() {
           <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem] sm:leading-tight">What the test covers</h2>
           <div className="mt-2 grid gap-3 leading-relaxed text-muted-foreground">
             <p>
-              SY0-801 is the Security+ exam CompTIA lists as launching on or around November 17, 2026. CertBench
+              SY0-801 is the newest Security+ exam, the version CompTIA now recommends. CertBench
               wrote these questions for it, including its new objective on the threats of AI. None are taken
               from the exam.
             </p>
