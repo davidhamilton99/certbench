@@ -9,6 +9,8 @@ vi.hoisted(() => {
 
 const run = vi.hoisted(() => vi.fn());
 vi.mock("@/server/services/lifecycle-email", () => ({ runLifecycleEmails: run }));
+const capture = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/server/analytics", () => ({ captureServerEvent: capture }));
 
 import { GET } from "@/app/api/cron/lifecycle/route";
 
@@ -21,6 +23,7 @@ const call = (authorization?: string) =>
 
 beforeEach(() => {
   run.mockReset();
+  capture.mockClear();
   vi.unstubAllEnvs();
 });
 
@@ -33,6 +36,12 @@ describe("the daily lifecycle cron", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ users: 2, failed: 0, countdowns: 1, pathNudges: 1 });
     expect(run).toHaveBeenCalledOnce();
+    // The run's numbers land in PostHog, on the job rather than a person.
+    expect(capture).toHaveBeenCalledWith(
+      "system:lifecycle-cron",
+      "lifecycle_run",
+      expect.objectContaining({ users: 2, countdowns: 1, pathNudges: 1 })
+    );
   });
 
   it.each([undefined, "Bearer wrong", "s3cret", "Basic s3cret"])("turns away %s with a 401, and never runs", async (auth) => {
@@ -40,6 +49,7 @@ describe("the daily lifecycle cron", () => {
     const res = await call(auth);
     expect(res.status).toBe(401);
     expect(run).not.toHaveBeenCalled();
+    expect(capture).not.toHaveBeenCalled();
   });
 
   // Production from July to November 2026: Vercel's daily call got a 500 and
@@ -65,6 +75,9 @@ describe("the daily lifecycle cron", () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: { code: "internal", message: "Lifecycle run failed" } });
     expect(consoleError).toHaveBeenCalledWith("lifecycle cron failed:", expect.any(Error));
+    expect(capture).toHaveBeenCalledWith("system:lifecycle-cron", "lifecycle_run_failed", {
+      message: "listUsers failed: timeout",
+    });
     consoleError.mockRestore();
   });
 });
