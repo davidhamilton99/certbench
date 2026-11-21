@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
-import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
+import { QuestionDeck, QuestionList, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -186,7 +186,7 @@ export function PracticeTestLanding({
       {test && (
         <LanderSection
           id="practice-test"
-          eyebrow="Timed · scored by domain"
+          eyebrow="Exam simulator · timed · scored by domain"
           title={`Free ${examName} practice test`}
           sub="No answers until the end, as on the exam. Every one is explained with your score."
           width="md"
@@ -204,6 +204,9 @@ export function PracticeTestLanding({
               primary: { href: pathHref, label: "Start my path" },
             }}
           />
+          <div className="mt-4">
+            <QuestionList questions={testQuestions(test)} title={`All ${test.reps.length} questions, with answers`} />
+          </div>
         </LanderSection>
       )}
 
@@ -318,4 +321,16 @@ function objectiveGroups(
     );
   }
   return [...byKey.values()];
+}
+
+/** The timed test's questions for the folded list, each tagged with its objective. */
+function testQuestions(test: PublicTestData): DeckQuestion[] {
+  const titles = new Map(test.structure.domains.flatMap((d) => d.objectives.map((o) => [o.code, o.title] as const)));
+  return test.reps.map((rep) => ({
+    questionText: rep.prompt,
+    options: rep.options,
+    correctIndex: rep.answer,
+    explanation: [rep.takeaway, rep.explanation].filter(Boolean).join(" "),
+    tag: titles.has(rep.objective) ? `${rep.objective} · ${titles.get(rep.objective)}` : undefined,
+  }));
 }
