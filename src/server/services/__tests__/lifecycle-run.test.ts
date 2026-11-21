@@ -89,6 +89,8 @@ vi.mock("@/server/path/bank", () => ({
 vi.mock("@/server/supabase/admin", () => ({ createAdminClient: () => fakeAdmin() }));
 
 import { pathNudgeType, pathOfferType, runLifecycleEmails } from "../lifecycle-email";
+import { serverEnv } from "@/env";
+import { verifyStoryToken } from "@/server/story/story-token";
 
 /** Just enough of the Supabase query builder for the run's reads and writes. */
 function fakeAdmin() {
@@ -214,6 +216,25 @@ beforeEach(() => {
 });
 
 describe("runLifecycleEmails", () => {
+  it("asks how the exam went two days after it, on links that need no sign-in", async () => {
+    vi.mocked(serverEnv).mockReturnValue("test-service-role-secret");
+    account("sat", { examDate: "2026-10-31" });
+
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["sat: How did your CompTIA Security+ exam go?"]);
+    const links = [...monday.emails[0].html.matchAll(/href="([^"]*\/story\?[^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, "&"));
+    expect(links).toHaveLength(2);
+    for (const [link, answer] of links.map((l, i) => [l, i === 0 ? "pass" : "fail"] as const)) {
+      const url = new URL(link);
+      expect(url.origin + url.pathname).toBe("https://certbench.dev/story");
+      expect(url.searchParams.get("r")).toBe(answer);
+      expect(url.searchParams.get("utm_campaign")).toBe("postexam");
+      expect(verifyStoryToken(url.searchParams.get("t")!)).toMatchObject({ userId: "sat", certId: "sec" });
+    }
+    expect(monday.emails[0].text).toContain("https://certbench.dev/story?t=");
+    expect(monday.emails[0].html + monday.emails[0].text).not.toContain("/feedback");
+  });
+
   it("records each email in PostHog against its person, and counts what Resend refused", async () => {
     account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
     account("dated", { examDate: "2026-11-09" });

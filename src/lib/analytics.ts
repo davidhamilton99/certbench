@@ -148,6 +148,9 @@ type EventMap = {
     /** The plan picked on a Pro offer. */
     interval?: "monthly" | "quarterly";
   };
+  /** The post-exam email's page; `preset` is the button they pressed in it. */
+  story_viewed: { preset: "pass" | "fail" | "none" };
+  story_answer_picked: { passed: boolean };
 };
 
 /** Capture a typed product event. */

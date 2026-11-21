@@ -73,6 +73,11 @@ const stopCount = (n: number) => `${n} stop${n === 1 ? "" : "s"}`;
  * works on any device: signed in, /login forwards straight to the path; signed
  * out, they sign in and land on it with their saved progress.
  */
+/** The post-exam email's links: the signed story page, preset to their answer. */
+export function storyEmailLink(token: string, answer: "pass" | "fail"): string {
+  return `${APP()}/story?t=${encodeURIComponent(token)}&r=${answer}&utm_source=email&utm_medium=lifecycle&utm_campaign=postexam`;
+}
+
 export function pathEmailLink(cert: string, campaign: string): string {
   const next = `/path/${cert}?utm_source=email&utm_medium=lifecycle&utm_campaign=${campaign}`;
   return `${APP()}/login?next=${encodeURIComponent(next)}`;
@@ -178,9 +183,11 @@ export function postExamEmail(input: {
   displayName: string;
   certName: string;
   unsubscribeUrl: string;
+  /** The signed /story links: no sign-in between the button and the form. */
+  passHref: string;
+  failHref: string;
 }): EmailContent {
   const first = input.displayName.split(" ")[0] || input.displayName;
-  const app = APP();
   return {
     subject: `How did your ${input.certName} exam go?`,
     html: layout(
@@ -191,16 +198,16 @@ export function postExamEmail(input: {
         Let us know how it went:
       </p>
       <div style="margin:0 0 8px;">
-        ${button(`${app}/feedback?r=pass`, "I passed 🎉")}
+        ${button(input.passHref, "I passed 🎉")}
       </div>
       <p style="font-size:14px;line-height:1.7;margin:8px 0 0;">
         Didn't get it this time?
-        <a href="${app}/feedback?r=fail" style="color:#2563eb;">We'll help you regroup →</a>
+        <a href="${esc(input.failHref)}" style="color:#2563eb;">We'll help you regroup →</a>
       </p>
     `,
       input.unsubscribeUrl
     ),
-    text: `How did your ${input.certName} exam go?\n\nPassed? Tell us: ${app}/feedback?r=pass\nNot this time? We'll help you regroup: ${app}/feedback?r=fail\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `How did your ${input.certName} exam go?\n\nPassed? Tell us: ${input.passHref}\nNot this time? We'll help you regroup: ${input.failHref}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 
