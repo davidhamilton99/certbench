@@ -10,7 +10,8 @@ import { LanderHero, LanderPage, LanderProse, LanderSection, LanderStage } from 
 import { ExamOutline } from "@/components/marketing/lander/ExamOutline";
 import { TileGrid, type Tile } from "@/components/marketing/lander/TileGrid";
 import { QuickRound } from "@/components/path/QuickRound";
-import type { QuickRoundData } from "@/core/path/types";
+import { PracticeExam } from "@/components/marketing/PracticeExam";
+import type { PublicTestData, QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 
@@ -46,12 +47,15 @@ export function PracticeTestLanding({
   data,
   objectives = [],
   round = null,
+  test = null,
 }: {
   page: PracticeTestPage;
   data: PracticeTestLandingData;
   objectives?: ObjectiveLink[];
   /** The exam's warm-up, played inline at the top (single-exam pages). */
   round?: QuickRoundData | null;
+  /** The exam's free timed practice test, on single-exam pages. */
+  test?: PublicTestData | null;
 }) {
   // The cores' own pages are offered at the top, so they aren't repeated here.
   const otherHubs = PRACTICE_TEST_PAGES.filter(
@@ -120,7 +124,7 @@ export function PracticeTestLanding({
         }
         specs={
           round
-            ? ["Marked as you tap", `${data.totalQuestions.toLocaleString()} in the bank`, "Free"]
+            ? [`${round.reps.length}-question warm-up`, ...(test ? [`${test.reps.length}-question timed test`] : []), `${data.totalQuestions.toLocaleString()} in the bank`]
             : [`${data.totalQuestions.toLocaleString()} questions`, "Full explanations", "Free"]
         }
       >
@@ -175,6 +179,32 @@ export function PracticeTestLanding({
         <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
           <ExamVersionNote certSlugs={page.certSlugs} />
         </div>
+      )}
+
+      {/* What a "practice test" search is after: a timed test, sat on the
+          path's own exam player and scored by domain, then the way on. */}
+      {test && (
+        <LanderSection
+          id="practice-test"
+          eyebrow="Timed · scored by domain"
+          title={`Free ${examName} practice test`}
+          sub="No answers until the end, as on the exam. Every one is explained with your score."
+          width="md"
+          className="scroll-mt-20"
+        >
+          <PracticeExam
+            testId={test.testId}
+            structure={test.structure}
+            reps={test.reps}
+            size="half"
+            headingLevel="h3"
+            next={{
+              heading: `Keep going on your ${examName} path`,
+              body: "Your path walks every objective in short stops and brings back whatever you miss, then a readiness checkpoint shows where you stand by domain.",
+              primary: { href: pathHref, label: "Start my path" },
+            }}
+          />
+        </LanderSection>
       )}
 
       {/* The samples, one at a time on the path's own card. Every question and

@@ -4,6 +4,7 @@ import { PracticeTestLanding } from "@/components/marketing/PracticeTestLanding"
 import { listObjectivesForCerts } from "@/server/seo/objective-data";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { loadQuickRound } from "@/server/path/quick-round";
+import { loadPublicTest } from "@/server/path/public-test";
 
 const page = PRACTICE_TEST_PAGES.find(
   (p) => p.path === "security-plus-practice-test"
@@ -18,12 +19,13 @@ export const metadata = pageMetadata({
 });
 
 export default async function Page() {
-  const [data, objectives, round] = await Promise.all([
+  const [data, objectives, round, test] = await Promise.all([
     loadPracticeTestData(page.certSlugs),
     listObjectivesForCerts(page.certSlugs),
     loadQuickRound(page.certSlugs[0], "warmup"),
+    loadPublicTest(page.certSlugs[0]),
   ]);
   return (
-    <PracticeTestLanding page={page} data={data} objectives={objectives} round={round} />
+    <PracticeTestLanding page={page} data={data} objectives={objectives} round={round} test={test} />
   );
 }

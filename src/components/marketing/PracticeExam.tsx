@@ -37,6 +37,7 @@ export function PracticeExam({
   reps,
   size,
   next,
+  headingLevel = "h2",
 }: {
   /** Names the test in analytics and the run on this device, e.g. "security-plus-sy0-801". */
   testId: string;
@@ -47,6 +48,8 @@ export function PracticeExam({
   size: RehearsalSize;
   /** The way on, shown under the score. */
   next: PracticeExamNext;
+  /** The intro title's level: h3 under a section that already has an h2. */
+  headingLevel?: "h2" | "h3";
 }) {
   const storageId = `${testId}-practice-test`;
   const { minutes } = REHEARSAL_FORMATS[size];
@@ -194,6 +197,7 @@ export function PracticeExam({
   } else {
     screen = (
       <Intro
+        heading={headingLevel}
         structure={structure}
         questions={reps.length}
         minutes={minutes}
@@ -220,6 +224,7 @@ const FULL = REHEARSAL_FORMATS.full;
 
 /** Before the test, or between sittings: what it is, and the way back into one left mid-way. */
 function Intro({
+  heading: Heading,
   structure,
   questions,
   minutes,
@@ -229,6 +234,7 @@ function Intro({
   onDiscard,
   onSeeResult,
 }: {
+  heading: "h2" | "h3";
   structure: PathStructure;
   questions: number;
   minutes: number;
@@ -244,13 +250,13 @@ function Intro({
   const answered = inProgress ? inProgress.picks.filter((pick) => pick !== null).length : 0;
 
   return (
-    <div className="glass grid gap-5 rounded-3xl p-6 sm:p-8">
-      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="glass grid gap-5 rounded-[1.75rem] p-6 sm:p-8">
+      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
         Practice test · {structure.examCode}
       </span>
-      <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+      <Heading className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">
         {questions} questions, {minutes} minutes.
-      </h2>
+      </Heading>
       <p className="max-w-prose text-muted-foreground">
         Half of the real exam&apos;s limit of {FULL.questions} questions in {FULL.minutes} minutes, so the pace is the
         same. No answers until the end, as on the exam.
