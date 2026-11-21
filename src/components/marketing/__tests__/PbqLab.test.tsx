@@ -124,6 +124,32 @@ describe("PbqLab", () => {
     expect(screen.queryByText("Free, no account needed to start.")).toBeNull();
   });
 
+  it("lists the free labs past the chooser's three under the stage, and plays one", () => {
+    const CABLES = { ...ordering("cables", "Cable speeds", ["Cat 5e", "Cat 6", "Cat 6a"]), domain_number: "2.0", domain_title: "Network Implementation" };
+    const PORTS = ordering("ports", "Port numbers", ["FTP", "SSH", "Telnet"]);
+    render(
+      <PbqLab
+        labs={[...LABS, { scenario: CABLES, tier: "Core", minutes: 3 }, { scenario: PORTS, tier: "Warm-up", minutes: 3 }]}
+        examName="Network+"
+        pathHref="/path/network-plus-n10-009"
+        labCount={20}
+      />
+    );
+    // The chooser keeps its three.
+    expect(chooser().getAllByRole("button")).toHaveLength(3);
+    expect(screen.getByRole("heading", { name: "2 more free labs" })).toBeInTheDocument();
+    // A domain at a time, in exam order.
+    const domains = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    expect(domains).toEqual(["1Networking Concepts", "2Network Implementation"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min" }));
+    expect(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("heading", { name: "Cable speeds" })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("pbq_started", { scenario_id: "cables", scenario_type: "ordering", surface: "public" });
+    solve(CABLES.items);
+    expect(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min, done" })).toBeInTheDocument();
+  });
+
   it("goes back to the other labs from the player", () => {
     render(lab());
     solve(DORA.items);

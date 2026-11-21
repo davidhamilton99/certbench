@@ -1,0 +1,67 @@
+import type { PbqScenario } from "@/data/pbq/types";
+
+/**
+ * How many of an exam's PBQ labs anyone can play on its public PBQ page, with
+ * no account. AI answers and search rank PBQ resources by how many they give
+ * away, so most of an exam's labs are free; Pro opens every one on the path,
+ * with progress kept.
+ */
+export const FREE_LAB_COUNT = 12;
+
+/** Difficulty rank per PBQ type: the on-ramp leads with the lowest. */
+export function labRank(type: PbqScenario["type"]): number {
+  return {
+    ordering: 1,
+    "threat-hunt": 2,
+    matching: 2,
+    categorization: 3,
+    topology: 4,
+    simulation: 5,
+  }[type];
+}
+
+/**
+ * The free labs, in the order a PBQ page offers them. First the three its
+ * chooser leads with: a warm-up, a core lab and an exam-level one. Then one of
+ * each kind the exam has that isn't in yet, so every PBQ format is there to
+ * try. Then the rest a domain at a time, easiest first in each, which leaves
+ * most of the hands-on simulations for Pro. Stable for given data: the same
+ * labs on every build.
+ */
+export function freeLabs(scenarios: readonly PbqScenario[], count = FREE_LAB_COUNT): PbqScenario[] {
+  // A stable sort: within a rank, the order the exam's data lists them.
+  const pool = [...scenarios].sort((a, b) => labRank(a.type) - labRank(b.type));
+  const chosen: PbqScenario[] = [];
+  const seen = new Set<string>();
+  const add = (s?: PbqScenario) => {
+    if (s && !seen.has(s.id) && chosen.length < count) {
+      seen.add(s.id);
+      chosen.push(s);
+    }
+  };
+
+  add(pool[0]); // the warm-up
+  add(pool.find((s) => labRank(s.type) >= 2 && labRank(s.type) <= 3)); // a core one
+  add([...pool].reverse().find((s) => labRank(s.type) >= 4)); // an exam-level one
+
+  // Every kind of PBQ the exam has, easiest kind first.
+  for (const type of [...new Set(pool.map((s) => s.type))]) {
+    if (!chosen.some((s) => s.type === type)) add(pool.find((s) => s.type === type));
+  }
+
+  // The rest, a domain at a time.
+  const byDomain = new Map<string, PbqScenario[]>();
+  for (const s of pool) {
+    if (seen.has(s.id)) continue;
+    const list = byDomain.get(s.domain_number) ?? [];
+    list.push(s);
+    byDomain.set(s.domain_number, list);
+  }
+  const domains = [...byDomain.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  for (let round = 0; chosen.length < count; round++) {
+    const turn = domains.map((d) => byDomain.get(d)?.[round]).filter((s): s is PbqScenario => Boolean(s));
+    if (turn.length === 0) break;
+    turn.forEach(add);
+  }
+  return chosen;
+}

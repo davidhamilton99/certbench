@@ -210,15 +210,17 @@ export const EMPTY_PATH_PROGRESS: PathProgress = {
 
 export type ObjectiveStatus = "new" | "missed" | "got";
 
-/** One stop of a path, packaged for a public page to play inline. */
 /** A free timed practice test for a public page, in the exam player's shapes. */
 export interface PublicTestData {
   /** Names the test in analytics and the run kept on this device. */
   testId: string;
   structure: PathStructure;
+  /** How long the test is against the real exam: `reps` holds that many questions. */
+  size: RehearsalSize;
   reps: ChoiceRep[];
 }
 
+/** One stop of a path, packaged for a public page to play inline. */
 export interface QuickRoundData {
   cert: PathCert;
   examName: string;

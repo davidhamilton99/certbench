@@ -23,7 +23,7 @@ export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";
 export const SY0_801_PATH = "/security-plus-sy0-801";
 /** Free practice on SY0-801's new AI objective, 2.6. */
 export const SY0_801_AI_PATH = "/security-plus-sy0-801-ai-practice-questions";
-/** The free SY0-801 practice test: 45 questions across all 27 objectives. */
+/** The free SY0-801 practice test: a full-length 90-question exam, plus 45 questions to work one at a time. */
 export const SY0_801_PRACTICE_PATH = "/security-plus-sy0-801-practice-test";
 /** When the first SY0-801 pages went up. */
 export const SY0_801_PUBLISHED_ISO = "2026-11-08";

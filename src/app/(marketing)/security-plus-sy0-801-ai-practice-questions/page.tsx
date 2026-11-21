@@ -158,7 +158,7 @@ export default function Sy0801AiQuestionsPage() {
             {
               href: SY0_801_PRACTICE_PATH,
               label: "SY0-801 practice test",
-              note: "A free timed test across every objective",
+              note: "A free timed exam, scored by domain",
             },
             {
               href: SY0_801_PATH,

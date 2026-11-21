@@ -114,12 +114,12 @@ export default function PortQuizPage() {
             {
               href: "/security-plus-practice-test",
               label: "Security+ practice test",
-              note: "Original SY0-701 questions with full explanations",
+              note: "A free full-length SY0-701 exam: 90 questions, 90 minutes",
             },
             {
               href: "/network-plus-practice-test",
               label: "Network+ practice test",
-              note: "Original N10-009 questions with full explanations",
+              note: "A free full-length N10-009 exam: 90 questions, 90 minutes",
             },
             {
               href: "/a-plus-practice-test",

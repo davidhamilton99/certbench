@@ -40,15 +40,23 @@ beforeEach(() => {
 });
 
 describe("loadPublicTest", () => {
-  it("draws a 45-question test in the exam's weights, the same on every build", async () => {
-    bank.current = withQuestions(120);
+  it("draws a full-length 90-question exam in the exam's weights, the same on every build", async () => {
+    bank.current = withQuestions(200);
     const first = await loadPublicTest("network-plus-n10-009");
     const again = await loadPublicTest("network-plus-n10-009");
-    expect(first?.reps).toHaveLength(45);
+    expect(first?.size).toBe("full");
+    expect(first?.reps).toHaveLength(90);
     expect(first?.reps.map((r) => r.id)).toEqual(again?.reps.map((r) => r.id));
-    expect(first?.reps.filter((r) => r.objective === "1.1")).toHaveLength(27);
+    expect(first?.reps.filter((r) => r.objective === "1.1")).toHaveLength(54);
     expect(first?.structure).toEqual({ certSlug: "network-plus-n10-009", examName: "Network+", examCode: "N10-009", domains: DOMAINS });
     expect(first?.reps.every((r) => r.tier === "exam")).toBe(true);
+  });
+
+  it("draws a half-length test from a bank too thin for a full one", async () => {
+    bank.current = withQuestions(60);
+    const test = await loadPublicTest("network-plus-n10-009");
+    expect(test?.size).toBe("half");
+    expect(test?.reps).toHaveLength(45);
   });
 
   it("leaves the page without a test when the bank can't fill one, or isn't there", async () => {

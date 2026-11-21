@@ -14,6 +14,7 @@ import { PracticeExam } from "@/components/marketing/PracticeExam";
 import type { PublicTestData, QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 
 export interface PracticeTestLandingData {
   certs: {
@@ -87,6 +88,8 @@ export function PracticeTestLanding({
   const pathHref = page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start";
   const examName = round?.examName ?? page.title.replace(/ practice test$/i, "");
   const codes = examOutlines.map((e) => e.examCode).join(" · ");
+  const testMinutes = test ? REHEARSAL_FORMATS[test.size].minutes : 0;
+  const fullTest = test?.size === "full";
 
   // Objectives as tiles, a group per domain (per exam and domain on a page with two exams).
   const groups = objectiveGroups(objectives, examOutlines, official);
@@ -102,6 +105,7 @@ export function PracticeTestLanding({
     learningResourceType: "Practice test",
     educationalUse: "Practice",
     isAccessibleForFree: true,
+    ...(test ? { timeRequired: `PT${testMinutes}M` } : {}),
     inLanguage: "en",
     provider: {
       "@type": "Organization",
@@ -119,13 +123,22 @@ export function PracticeTestLanding({
         title={page.h1}
         sub={
           round
-            ? `Start with ${round.reps.length} quick questions. No account needed.`
+            ? test
+              ? `Start with ${round.reps.length} quick questions, then sit a ${fullTest ? "full-length " : ""}timed exam. No account needed.`
+              : `Start with ${round.reps.length} quick questions. No account needed.`
             : "Exam-style questions, each explained the moment you answer."
         }
         specs={
-          round
-            ? [`${round.reps.length}-question warm-up`, ...(test ? [`${test.reps.length}-question timed test`] : []), `${data.totalQuestions.toLocaleString()} in the bank`]
-            : [`${data.totalQuestions.toLocaleString()} questions`, "Full explanations", "Free"]
+          test
+            ? [
+                `${fullTest ? "Full-length " : ""}${test.reps.length}-question exam`,
+                `${testMinutes}-minute timer`,
+                "Scored by domain",
+                `${data.totalQuestions.toLocaleString()} in the bank`,
+              ]
+            : round
+              ? [`${round.reps.length}-question warm-up`, `${data.totalQuestions.toLocaleString()} in the bank`]
+              : [`${data.totalQuestions.toLocaleString()} questions`, "Full explanations", "Free"]
         }
       >
         {/* An exam taken in parts: each part's own practice test comes first. */}
@@ -181,14 +194,19 @@ export function PracticeTestLanding({
         </div>
       )}
 
-      {/* What a "practice test" search is after: a timed test, sat on the
-          path's own exam player and scored by domain, then the way on. */}
+      {/* What a "practice test" search is after: a full-length timed exam,
+          sat on the path's own exam player and scored by domain, then the way
+          on. A half-length sitting is cut from the same questions. */}
       {test && (
         <LanderSection
           id="practice-test"
-          eyebrow="Exam simulator · timed · scored by domain"
-          title={`Free ${examName} practice test`}
-          sub="No answers until the end, as on the exam. Every one is explained with your score."
+          eyebrow={`${fullTest ? "Full-length exam" : "Exam"} simulator · timed · scored by domain`}
+          title={`Free ${examName} practice exam`}
+          sub={
+            fullTest
+              ? `${test.reps.length} questions in ${testMinutes} minutes, the real exam's limit, or a half exam of ${REHEARSAL_FORMATS.half.questions}. No answers until the end; every one is explained with your score.`
+              : "No answers until the end, as on the exam. Every one is explained with your score."
+          }
           width="md"
           className="scroll-mt-20"
         >
@@ -196,7 +214,8 @@ export function PracticeTestLanding({
             testId={test.testId}
             structure={test.structure}
             reps={test.reps}
-            size="half"
+            size={test.size}
+            offerHalf
             headingLevel="h3"
             next={{
               heading: `Keep going on your ${examName} path`,

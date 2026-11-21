@@ -3,6 +3,8 @@ import { pbqRegistry } from "@/data/pbq";
 import type { PbqScenario } from "@/data/pbq/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { labLibrary, minutesOf } from "@/core/path/labs";
+import { freeLabs } from "@/core/path/free-labs";
+import { JsonLd } from "@/components/seo/JsonLd";
 import type { PbqExamplePage } from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PbqLab, type FreeLab, type LabTier } from "@/components/marketing/PbqLab";
@@ -13,18 +15,6 @@ import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 
-/** Difficulty rank per PBQ type — the on-ramp leads with the lowest. */
-function rank(type: PbqScenario["type"]): number {
-  return {
-    ordering: 1,
-    "threat-hunt": 2,
-    matching: 2,
-    categorization: 3,
-    topology: 4,
-    simulation: 5,
-  }[type];
-}
-
 const TIER: Record<PbqScenario["type"], LabTier> = {
   ordering: "Warm-up",
   "threat-hunt": "Core",
@@ -34,31 +24,11 @@ const TIER: Record<PbqScenario["type"], LabTier> = {
   simulation: "Exam-level",
 };
 
-/** Pick up to 3 free scenarios that span easy → exam-level for the chooser. */
-function pickFree(scenarios: PbqScenario[]): PbqScenario[] {
-  const pool = [...scenarios].sort((a, b) => rank(a.type) - rank(b.type));
-  const seen = new Set<string>();
-  const chosen: PbqScenario[] = [];
-  const add = (s?: PbqScenario) => {
-    if (s && !seen.has(s.id)) {
-      seen.add(s.id);
-      chosen.push(s);
-    }
-  };
-  add(pool[0]); // easiest (warm-up)
-  add(pool.find((s) => rank(s.type) >= 2 && rank(s.type) <= 3)); // a core one
-  add([...pool].reverse().find((s) => rank(s.type) >= 4)); // an exam-level one
-  for (const s of pool) {
-    if (chosen.length >= 3) break;
-    add(s);
-  }
-  return chosen.slice(0, 3);
-}
-
 /** Shared server template for the /​*-pbq-examples pages. */
 export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const scenarios = pbqRegistry[page.certSlug] ?? [];
-  const free = pickFree(scenarios);
+  // Most of the exam's labs, free with no account (core/path/free-labs.ts).
+  const free = freeLabs(scenarios);
   const freeIds = new Set(free.map((s) => s.id));
   const labs: FreeLab[] = free.map((s) => ({ scenario: s, tier: TIER[s.type], minutes: minutesOf(s) }));
 
@@ -72,13 +42,31 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const path = `/path/${page.certSlug}`;
   const examName = EXAM_NAMES[page.certSlug] ?? page.title.replace(/ PBQ examples$/, "");
 
+  // GEO/SEO: a free, interactive practice resource, so search and AI answers
+  // can say what it is and how many labs it gives away.
+  const learningResource = {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: page.metaTitle,
+    description: page.metaDescription,
+    url: `https://certbench.dev/${page.path}`,
+    learningResourceType: "Interactive simulation",
+    interactivityType: "active",
+    educationalUse: "Practice",
+    isAccessibleForFree: true,
+    inLanguage: "en",
+    provider: { "@type": "Organization", name: "CertBench", url: "https://certbench.dev" },
+    about: [{ "@type": "Thing", name: `CompTIA ${examName} performance-based questions` }],
+  };
+
   return (
     <LanderPage>
+      <JsonLd data={learningResource} />
       <LanderHero
         eyebrow={`${examName} · PBQ labs`}
         title={page.h1}
         sub="Pick one and work it right here."
-        specs={["Graded as you go", "Partial credit", "No account"]}
+        specs={[`${free.length} free interactive PBQs`, "Graded with partial credit", "No account needed"]}
       />
 
       {/* Lead with the thing they came for: a lab, on the path's own stage. */}
@@ -96,12 +84,13 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
             being a wall under the lab. */}
         {rest.length > 0 && (
           <ReferenceFold
-            title={`${rest.length} more labs on your ${examName} path`}
+            title={`${rest.length} more labs with Pro`}
             summary={
               <>
                 {handsOnCount(rest)}
-                {drills > 0 && <>, plus {drills} quick drills</>}, graded with partial credit. All{" "}
-                {scenarios.length} come with Pro, offered after your path&apos;s readiness checkpoint.
+                {drills > 0 && <>, plus {drills} quick drills</>}, graded with partial credit. Pro opens all{" "}
+                {scenarios.length} on your {examName} path, offered after its readiness checkpoint, with your
+                progress kept.
               </>
             }
           >

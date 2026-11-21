@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import type { PbqScenario } from "@/data/pbq/types";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
-import { LAB_TYPES } from "@/components/path/lab-types";
+import { domainLabel, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,15 @@ export interface FreeLab {
 /** Analytics context for the way onto the path once a lab is graded. */
 const CONTEXT = "public_pbq";
 
+/** The labs the chooser leads with: a warm-up, a core lab and an exam-level one. */
+const FEATURED = 3;
+
 /**
- * The public PBQ pages' labs, played the way the path plays one: pick one of
- * three, warm-up to exam-level, and work it on the path's lab stage with the
- * same player. Once one is graded, the way on is the exam's path, where Pro
- * opens every lab.
+ * The public PBQ pages' labs, played the way the path plays one: three lead
+ * the chooser, warm-up to exam-level, and the rest of the free ones are listed
+ * under the stage, a domain at a time. Each is worked on the path's lab stage
+ * with the same player. Once one is graded, the way on is the exam's path,
+ * where Pro opens every lab.
  */
 export function PbqLab({
   labs,
@@ -35,6 +39,7 @@ export function PbqLab({
   pathHref,
   labCount,
 }: {
+  /** Every free lab: the first three lead the chooser, the rest are listed under the stage. */
   labs: FreeLab[];
   /** "Security+". */
   examName: string;
@@ -49,6 +54,7 @@ export function PbqLab({
   const chooser = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const userId = useSessionUserId();
+  const moreId = useId();
 
   const active = labs[selected];
   const activeId = active?.scenario.id;
@@ -85,10 +91,15 @@ export function PbqLab({
   const nextIndex = labs.findIndex((l, i) => i !== selected && !graded.has(l.scenario.id));
   const next = nextIndex >= 0 ? labs[nextIndex] : null;
 
+  // The free labs past the chooser's three, a domain at a time, in exam order.
+  const more = labs.map((lab, index) => ({ lab, index })).slice(FEATURED);
+  const moreDomains = [...new Map(more.map(({ lab }) => [lab.scenario.domain_number, lab.scenario.domain_title] as const))]
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+
   return (
     <div className="grid min-w-0 gap-4">
       <div ref={chooser} role="group" aria-label="Pick a lab" className="grid scroll-mt-24 grid-cols-3 gap-2">
-        {labs.map((lab, i) => {
+        {labs.slice(0, FEATURED).map((lab, i) => {
           const isActive = i === selected;
           const done = graded.has(lab.scenario.id);
           const { Icon } = LAB_TYPES[lab.scenario.type];
@@ -153,6 +164,73 @@ export function PbqLab({
           next={next}
           onNext={() => pick(nextIndex, true)}
         />
+      )}
+
+      {more.length > 0 && (
+        <section aria-labelledby={moreId} className="mt-6 grid gap-5">
+          <div className="grid gap-1">
+            <h2 id={moreId} className="text-balance text-xl font-semibold tracking-[-0.02em] sm:text-2xl">
+              {more.length} more free labs
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Each one graded with partial credit, right here. No account needed.
+            </p>
+          </div>
+          {moreDomains.map(([number, title]) => (
+            <div key={number} className="grid gap-2.5">
+              <h3 className="text-sm font-medium leading-snug">
+                <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(number)}</span>
+                {title}
+              </h3>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {more
+                  .filter(({ lab }) => lab.scenario.domain_number === number)
+                  .map(({ lab, index }) => {
+                    const isActive = index === selected;
+                    const done = graded.has(lab.scenario.id);
+                    const { Icon } = LAB_TYPES[lab.scenario.type];
+                    const meta = labMeta({ type: lab.scenario.type, minutes: lab.minutes });
+                    return (
+                      <li key={lab.scenario.id} className="min-w-0">
+                        <button
+                          type="button"
+                          aria-pressed={isActive}
+                          aria-label={`${lab.scenario.title}, ${meta}${done ? ", done" : ""}`}
+                          onClick={() => pick(index, true)}
+                          className={cn(
+                            "flex w-full min-w-0 items-center gap-3.5 rounded-2xl border p-3.5 text-left transition-[border-color,background-color] duration-150",
+                            isActive
+                              ? "border-primary bg-primary/[0.06]"
+                              : "border-border bg-card/60 hover:border-primary/50 hover:bg-primary/[0.03]"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                              done ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            )}
+                          >
+                            {done ? (
+                              <Check className="size-[18px]" strokeWidth={3} aria-hidden />
+                            ) : (
+                              <Icon className="size-[18px]" aria-hidden />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-balance font-medium leading-snug">{lab.scenario.title}</span>
+                            <span className="mt-1 block font-mono text-[11px] uppercase leading-relaxed tracking-wider text-muted-foreground">
+                              {meta}
+                            </span>
+                          </span>
+                          <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          ))}
+        </section>
       )}
     </div>
   );

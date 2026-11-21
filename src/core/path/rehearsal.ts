@@ -1,5 +1,6 @@
 import { scoreCheckpoint, type CheckpointAnswer } from "./checkpoint";
-import type { PathDomain, PathProgress, RehearsalResult, RehearsalSize } from "./types";
+import { allocate } from "./compose";
+import type { ChoiceRep, PathDomain, PathProgress, RehearsalResult, RehearsalSize } from "./types";
 
 /**
  * The exam rehearsal: the whole exam in one sitting, timed, with no answers
@@ -12,6 +13,37 @@ export const REHEARSAL_FORMATS: Record<RehearsalSize, { questions: number; minut
   full: { questions: 90, minutes: 90 },
   half: { questions: 45, minutes: 45 },
 };
+
+/**
+ * A half-length sitting cut from a full-length draw: each domain keeps its
+ * exam weight's share of the half's questions, taken in the draw's own order,
+ * so a page that holds one full exam can offer either length. Fewer questions
+ * than a half are returned as they are.
+ */
+export function halfOfExam(reps: readonly ChoiceRep[], domains: readonly PathDomain[]): ChoiceRep[] {
+  const wanted = REHEARSAL_FORMATS.half.questions;
+  if (reps.length <= wanted) return [...reps];
+  const domainOf = (objective: string) => (objective.includes(".") ? `${objective.split(".")[0]}.0` : objective);
+  const slots = allocate(
+    domains.map((d) => d.weight),
+    wanted
+  );
+  const taken = new Set<number>();
+  domains.forEach((d, i) => {
+    let left = slots[i];
+    reps.forEach((rep, index) => {
+      if (left > 0 && domainOf(rep.objective) === d.number) {
+        taken.add(index);
+        left--;
+      }
+    });
+  });
+  // A domain too thin for its share leaves room: fill it in draw order.
+  reps.forEach((_, index) => {
+    if (taken.size < wanted) taken.add(index);
+  });
+  return reps.filter((_, index) => taken.has(index));
+}
 
 /** Finished rehearsals kept with a path: the newest. */
 export const MAX_REHEARSALS = 20;

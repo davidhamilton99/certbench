@@ -4,13 +4,15 @@
 
 ## Which exam versions this covers
 
-- Security+: a guided path for each version. SY0-701 is open until June 11, 2027 in English; SY0-801 (Security+ V8) is the version CompTIA now recommends. Pro covers both versions. For SY0-801 there are also a free practice test and free AI-threat practice questions.
+- Security+: a guided path for each version. SY0-701 is open until June 11, 2027 in English; SY0-801 (Security+ V8) is the version CompTIA now recommends. Pro covers both versions. For SY0-801 there are also a free timed practice exam and free AI-threat practice questions.
 - Network+: written for N10-009, the current exam.
 - A+: written to 220-1201 and 220-1202 (CompTIA's V15), the current exams. CompTIA retired 220-1101 and 220-1102 on September 25, 2025.
 
 ## Guided study paths
 
 Each path starts with a warm-up anyone can play with no account. A free account keeps your progress and opens the next stops through the readiness checkpoint; Pro opens the rest of the path.
+
+Security+ (SY0-701), Network+ and both A+ cores also each have, free with no account: a full-length practice exam, 90 questions in 90 minutes as on the real exam (or a 45-question half), scored by domain with every answer explained; and 12 interactive performance-based questions (PBQs), graded with partial credit.
 
 - [Security+ study path (SY0-801)](https://certbench.dev/path/security-plus-sy0-801): all 27 objectives, the new AI objective included, one short stop each, with domain practice and a readiness checkpoint.
 - [Security+ study path (SY0-701)](https://certbench.dev/path/security-plus-sy0-701): all 28 objectives, one short stop each, with domain practice and a readiness checkpoint.
@@ -37,23 +39,23 @@ The port, subnetting, and acronym drills give a first round free with no account
 
 ## Free practice tests
 
-- [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): free practice questions with explanations, written to 220-1201 and 220-1202.
-- [CompTIA A+ Core 1 practice test (220-1201)](https://certbench.dev/a-plus-core-1-practice-test): a free warm-up and practice questions with explanations, across all five Core 1 domains.
-- [CompTIA A+ Core 2 practice test (220-1202)](https://certbench.dev/a-plus-core-2-practice-test): a free warm-up and practice questions with explanations, across all four Core 2 domains.
-- [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): free N10-009 practice questions with explanations.
-- [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): free SY0-701 practice questions with full explanations.
-- [CompTIA Security+ SY0-801 practice test](https://certbench.dev/security-plus-sy0-801-practice-test): 45 original questions in 45 minutes, at least one on each of SY0-801's 27 objectives in the exam's domain weights, timed and scored by domain, with every answer explained. No account needed.
+- [CompTIA A+ practice test (Core 1 & Core 2)](https://certbench.dev/a-plus-practice-test): a free full-length practice exam for each core, 90 questions in 90 minutes, written to 220-1201 and 220-1202.
+- [CompTIA A+ Core 1 practice test (220-1201)](https://certbench.dev/a-plus-core-1-practice-test): a free full-length exam, 90 questions in 90 minutes across all five Core 1 domains, timed and scored by domain, with every answer explained. No account needed.
+- [CompTIA A+ Core 2 practice test (220-1202)](https://certbench.dev/a-plus-core-2-practice-test): a free full-length exam, 90 questions in 90 minutes across all four Core 2 domains, timed and scored by domain, with every answer explained. No account needed.
+- [CompTIA Network+ practice test (N10-009)](https://certbench.dev/network-plus-practice-test): a free full-length N10-009 exam, 90 questions in 90 minutes, timed and scored by domain, with every answer explained. No account needed.
+- [CompTIA Security+ practice test (SY0-701)](https://certbench.dev/security-plus-practice-test): a free full-length SY0-701 exam, 90 questions in 90 minutes, timed and scored by domain, with every answer explained. No account needed.
+- [CompTIA Security+ SY0-801 practice test](https://certbench.dev/security-plus-sy0-801-practice-test): a free timed SY0-801 practice exam in the exam's domain weights, scored by domain, with every answer explained, and original questions on all 27 objectives to work one at a time. No account needed.
 - [SY0-801 AI practice questions](https://certbench.dev/security-plus-sy0-801-ai-practice-questions): 14 original questions on objective 2.6, the threats and vulnerabilities of AI, from prompt injection and poisoning to jailbreaking and hallucinations, each with the answer explained.
 
 ## Performance-based questions (interactive)
 
-- [Security+ PBQ examples](https://certbench.dev/security-plus-pbq-examples): interactive performance-based questions — firewall rules, log analysis, incident response — you can work through in the browser.
-- [Network+ PBQ examples](https://certbench.dev/network-plus-pbq-examples): interactive topology, configuration, and troubleshooting scenarios.
-- [A+ Core 1 PBQ examples](https://certbench.dev/a-plus-core-1-pbq-examples): ports, hardware faults, and SOHO network setup.
-- [A+ Core 2 PBQ examples](https://certbench.dev/a-plus-core-2-pbq-examples): malware removal, Windows tools, and mobile security scenarios.
+- [Security+ PBQs](https://certbench.dev/security-plus-pbq-examples): 12 free interactive SY0-701 PBQs in the browser, no account: a vulnerability simulation, network segmentation and firewall rules, a threat hunt, and ordering, matching and sorting drills, graded with partial credit.
+- [Network+ PBQs](https://certbench.dev/network-plus-pbq-examples): 12 free interactive N10-009 PBQs, no account: troubleshooting with commands, VLAN configuration and trunking, and drills on ports, cabling, the OSI model and DHCP.
+- [A+ Core 1 PBQs](https://certbench.dev/a-plus-core-1-pbq-examples): 12 free interactive 220-1201 PBQs, no account: a laptop display troubleshooting simulation, and drills on ports, connectors, cables, Wi-Fi, printers and the boot sequence.
+- [A+ Core 2 PBQs](https://certbench.dev/a-plus-core-2-pbq-examples): 12 free interactive 220-1202 PBQs, no account: a mobile device security simulation, and drills on malware removal, Windows tools, Linux commands and change management.
 
 ## About
 
 - [Readiness check](https://certbench.dev/readiness-check/security-plus-sy0-701): a free 3-minute check that estimates how ready you are, no account required.
-- [Pricing](https://certbench.dev/pricing): the start of every path is free; Pro opens the whole path, unlimited practice, full-length exams, hands-on PBQ labs, and a readiness score.
+- [Pricing](https://certbench.dev/pricing): the start of every path is free, and so are a full-length practice exam and 12 PBQs per exam; Pro opens the whole path, unlimited practice, fresh full-length exams, every PBQ lab, and a readiness score.
 - Certifications covered: CompTIA Security+ SY0-701 and SY0-801, Network+ N10-009, A+ Core 1 and Core 2 (220-1201 and 220-1202).

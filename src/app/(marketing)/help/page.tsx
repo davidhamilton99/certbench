@@ -46,7 +46,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, try the practice-test pages and PBQ examples, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
+        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), work 12 interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
         link: { href: "/pricing", label: "See plans and prices" },
       },
       {
@@ -137,7 +137,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What are PBQs, and how do the labs work?",
-        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. The PBQ example pages let you try some free.",
+        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. Each exam’s PBQ page has 12 you can play free, with no account.",
       },
       {
         q: "How are labs scored?",
@@ -145,7 +145,7 @@ const sections: Section[] = [
       },
       {
         q: "What is the exam rehearsal?",
-        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time.",
+        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time, each drawn fresh. Each exam’s practice-test page also has a free full-length exam, the same for everyone, with no account.",
       },
       {
         q: "Can I flag questions?",
