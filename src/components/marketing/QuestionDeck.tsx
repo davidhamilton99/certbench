@@ -266,7 +266,8 @@ function DeckScore({
 }
 
 /** Every question with its answer and explanation, folded away until someone opens it. */
-function QuestionList({ questions, title }: { questions: DeckQuestion[]; title?: string }) {
+/** Every question with its answer, folded: in the page for readers and search, out of the way of play. */
+export function QuestionList({ questions, title }: { questions: DeckQuestion[]; title?: string }) {
   return (
     <details className="group rounded-2xl border border-border/70 bg-card/40 px-5 py-4">
       <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
