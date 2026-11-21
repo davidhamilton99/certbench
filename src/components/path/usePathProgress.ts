@@ -26,6 +26,7 @@ import {
   sanitizePathProgress,
 } from "@/core/path/progress";
 import { addRehearsal } from "@/core/path/rehearsal";
+import { importExam as bringExam, type ExamAnswer } from "@/core/path/exam-import";
 import {
   EMPTY_PATH_PROGRESS,
   type CheckpointResult,
@@ -379,12 +380,29 @@ export function usePathProgress(cert: PathCert) {
     // (A signed-in page has no guest work: it was carried in when it loaded.)
   }, [adopt, commit]);
 
+  /**
+   * A practice exam finished on a public page, brought onto the path in one
+   * save (core/path/exam-import.ts). True when it became the checkpoint.
+   */
+  const importExam = useCallback(
+    (answers: readonly ExamAnswer[], result: RehearsalResult): boolean => {
+      const c = cur.current;
+      const { progress: p, asCheckpoint } = bringExam(c.progress, answers, result);
+      if (p === c.progress) return false;
+      commit({ ...c, progress: p });
+      if (c.userId) void saveToAccount(p);
+      return asCheckpoint;
+    },
+    [commit, saveToAccount]
+  );
+
   return {
     ...view,
     signedIn: view.userId !== null,
     record,
     finish,
     finishRehearsal,
+    importExam,
     finishLab,
     retire,
     setGoal,

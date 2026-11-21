@@ -38,6 +38,7 @@ export function PathReveal({
   goal,
   remainingStops,
   studied,
+  fromExam = false,
   children,
 }: {
   result: CheckpointResult;
@@ -46,6 +47,8 @@ export function PathReveal({
   remainingStops: number;
   /** Objectives whose learn stop is done. */
   studied: number;
+  /** The reading came from a practice exam sat on a public page, not the checkpoint's dozen. */
+  fromExam?: boolean;
   children: ReactNode;
 }) {
   const band = bandFor(result.score);
@@ -84,9 +87,9 @@ export function PathReveal({
       <ReadingCard
         result={result}
         structure={structure}
-        kicker={`Readiness checkpoint · ${structure.examName}`}
+        kicker={`${fromExam ? "Your practice exam" : "Readiness checkpoint"} · ${structure.examName}`}
         headline={HEADLINE[band.key as keyof typeof HEADLINE] ?? HEADLINE.work}
-        caption="Checkpoint"
+        caption={fromExam ? "Practice exam" : "Checkpoint"}
         verdict={VERDICT[band.key]}
         readyMark={false}
         summary={

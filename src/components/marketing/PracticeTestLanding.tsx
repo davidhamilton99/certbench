@@ -218,9 +218,9 @@ export function PracticeTestLanding({
             offerHalf
             headingLevel="h3"
             next={{
-              heading: `Keep going on your ${examName} path`,
-              body: "Your path walks every objective in short stops and brings back whatever you miss, then a readiness checkpoint shows where you stand by domain.",
-              primary: { href: pathHref, label: "Start my path" },
+              heading: `Your ${examName} study plan starts from this score`,
+              body: "On your path, this exam counts as your readiness checkpoint: everything you missed comes back, and every objective is laid out in short stops from here to exam day.",
+              primary: { href: `${pathHref}?from=practice-test`, label: "Open my study plan" },
             }}
           />
           <div className="mt-4">
