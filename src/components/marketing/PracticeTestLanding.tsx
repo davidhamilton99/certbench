@@ -124,7 +124,7 @@ export function PracticeTestLanding({
         sub={
           round
             ? test
-              ? `Start with ${round.reps.length} quick questions, then sit a ${fullTest ? "full-length " : ""}timed exam. No account needed.`
+              ? `Start with ${round.reps.length} quick questions, then sit a ${fullTest ? "full-length " : ""}timed exam. No account needed to start.`
               : `Start with ${round.reps.length} quick questions. No account needed.`
             : "Exam-style questions, each explained the moment you answer."
         }

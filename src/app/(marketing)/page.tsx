@@ -156,7 +156,7 @@ export default async function LandingPage() {
               <div className="glass grid gap-1 rounded-2xl p-5">
                 <p className="text-sm text-muted-foreground">Free · no card</p>
                 <p className="text-[17px] font-semibold tracking-[-0.01em]">
-                  Warm-up, {LEARN_BEFORE_CHECKPOINT} stops and the checkpoint
+                  Warm-up, {LEARN_BEFORE_CHECKPOINT === 1 ? "your first stop" : `${LEARN_BEFORE_CHECKPOINT} stops`} and the checkpoint
                 </p>
               </div>
               <div className="glass grid gap-1 rounded-2xl p-5">

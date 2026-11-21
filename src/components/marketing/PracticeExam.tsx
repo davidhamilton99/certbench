@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Flag, Gauge, RotateCcw, Timer } from "lucide-react";
+import { InlineSignup } from "@/components/auth/InlineSignup";
+import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { claimKeyboard, useKeyboardTurn } from "@/components/path/keyboard-turn";
 import { RehearsalPlayer } from "@/components/path/RehearsalPlayer";
 import { domainOf, RehearsalResult } from "@/components/path/RehearsalResult";
@@ -10,11 +12,14 @@ import { clearRun, readRun, writeRun, type RehearsalRun } from "@/components/pat
 import { Button } from "@/components/ui/button";
 import { clock, halfOfExam, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
 import type { ChoiceRep, PathStructure, RehearsalSize } from "@/core/path/types";
-import { track } from "@/lib/analytics";
+import { identifyUser, track } from "@/lib/analytics";
 import { shuffled } from "@/lib/tools/practice-exam";
 
 /** Runs on a public page belong to the device, not to an account. */
 const OWNER = "public";
+
+/** On the page's address after a Google sign-in from the score gate: show the score. */
+const SCORED = "exam";
 
 export interface PracticeExamNext {
   heading: string;
@@ -31,6 +36,8 @@ type View = "intro" | "test" | "result";
  * It runs on the path's own exam player and result. The run is kept on the
  * device, so leaving (or a closed tab) stops the clock and loses nothing. A
  * full-length test can also be sat as a half, cut from the same questions.
+ * Anyone can sit it; the score comes with a free account, which the intro says
+ * before they start and the end asks for, right there.
  */
 export function PracticeExam({
   testId,
@@ -58,6 +65,10 @@ export function PracticeExam({
   const storageId = `${testId}-practice-test`;
   const { minutes } = REHEARSAL_FORMATS[size];
   const halfToo = offerHalf && size === "full" && reps.length > REHEARSAL_FORMATS.half.questions;
+  const userId = useSessionUserId();
+  // An account made at the score gate opens the score straight away, ahead of the session event.
+  const [signedUpHere, setSignedUpHere] = useState(false);
+  const signedIn = typeof userId === "string" || signedUpHere;
   const [run, setRun] = useState<RehearsalRun | null>(null);
   const [view, setView] = useState<View>("intro");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -69,6 +80,17 @@ export function PracticeExam({
   useEffect(() => {
     setRun(readRun(storageId, OWNER));
   }, [storageId]);
+
+  // Back from a Google sign-in made at the score gate: the score they signed up for.
+  useEffect(() => {
+    if (!signedIn || !run?.done) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get(SCORED) !== "scored") return;
+    url.searchParams.delete(SCORED);
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    track("practice_test_account_linked", { test: testId, method: "redirect" });
+    setView("result");
+  }, [signedIn, run, testId]);
 
   const save = useCallback(
     (nextRun: RehearsalRun) => {
@@ -164,6 +186,21 @@ export function PracticeExam({
         }}
       />
     );
+  } else if (view === "result" && run?.done && !signedIn) {
+    screen = (
+      <ScoreGate
+        heading={headingLevel}
+        testId={testId}
+        answered={run.done.result.answered}
+        total={run.reps.length}
+        onSignedIn={(uid, email, method) => {
+          identifyUser(uid, email ? { email } : undefined);
+          track("practice_test_account_linked", { test: testId, method });
+          setSignedUpHere(true);
+          setView("result");
+        }}
+      />
+    );
   } else if (view === "result" && run?.done) {
     screen = (
       <RehearsalResult run={{ ...run, done: run.done }} structure={structure} label="Practice test" caption="Practice test">
@@ -209,6 +246,7 @@ export function PracticeExam({
         questions={reps.length}
         minutes={minutes}
         half={halfToo ? REHEARSAL_FORMATS.half : null}
+        signedIn={signedIn}
         run={run}
         onStart={() => start()}
         onStartHalf={() => start("half")}
@@ -231,6 +269,42 @@ export function PracticeExam({
 
 const FULL = REHEARSAL_FORMATS.full;
 
+/**
+ * The end of a sitting for someone signed out: the score is ready, and a free
+ * account shows it, made right here. Google sign-in comes back to the page
+ * with the score open.
+ */
+function ScoreGate({
+  heading: Heading,
+  testId,
+  answered,
+  total,
+  onSignedIn,
+}: {
+  heading: "h2" | "h3";
+  testId: string;
+  answered: number;
+  total: number;
+  onSignedIn: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => void;
+}) {
+  useEffect(() => {
+    track("practice_test_gate_viewed", { test: testId });
+  }, [testId]);
+  const nextPath = typeof window === "undefined" ? "/" : `${window.location.pathname}?${SCORED}=scored`;
+
+  return (
+    <div className="glass grid gap-5 rounded-[1.75rem] p-6 sm:p-8">
+      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Practice test · scored</span>
+      <Heading className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">Your score is ready.</Heading>
+      <p className="max-w-prose text-muted-foreground">
+        You answered {answered} of {total}. Create a free account to see your score by domain, with every answer
+        explained. It stays with your account, next to your path.
+      </p>
+      <InlineSignup nextPath={nextPath} submitLabel="Show my score" onSignedIn={onSignedIn} />
+    </div>
+  );
+}
+
 /** Before the test, or between sittings: what it is, and the way back into one left mid-way. */
 function Intro({
   heading: Heading,
@@ -238,6 +312,7 @@ function Intro({
   questions,
   minutes,
   half,
+  signedIn,
   run,
   onStart,
   onStartHalf,
@@ -251,6 +326,8 @@ function Intro({
   minutes: number;
   /** A half-length sitting on offer too, with a full-length test. */
   half: { questions: number; minutes: number } | null;
+  /** Signed out, the score comes with a free account: said here, before they start. */
+  signedIn: boolean;
   run: RehearsalRun | null;
   onStart: () => void;
   onStartHalf: () => void;
@@ -328,15 +405,24 @@ function Intro({
         </div>
       ) : (
         <div className="grid gap-3">
-          {last && (
-            <p className="text-sm text-muted-foreground">
-              Last time you scored{" "}
-              <span className="font-mono tabular-nums text-foreground">{last.result.score}%</span>.{" "}
-              <button type="button" onClick={onSeeResult} className="underline underline-offset-4 hover:text-foreground">
-                See that result
-              </button>
-            </p>
-          )}
+          {last &&
+            (signedIn ? (
+              <p className="text-sm text-muted-foreground">
+                Last time you scored{" "}
+                <span className="font-mono tabular-nums text-foreground">{last.result.score}%</span>.{" "}
+                <button type="button" onClick={onSeeResult} className="underline underline-offset-4 hover:text-foreground">
+                  See that result
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                You finished it last time.{" "}
+                <button type="button" onClick={onSeeResult} className="underline underline-offset-4 hover:text-foreground">
+                  See your score
+                </button>{" "}
+                with a free account.
+              </p>
+            ))}
           <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">
             <Button size="lg" className="h-12 w-full text-base sm:w-auto" onClick={onStart}>
               {last ? "Take the test again" : fullLength ? "Start the full exam" : "Start the test"}
@@ -347,7 +433,9 @@ function Intro({
                 Half exam: {half.questions} questions, {half.minutes} min
               </Button>
             )}
-            <span className="text-sm text-muted-foreground">Free, no account needed.</span>
+            <span className="text-sm text-muted-foreground">
+              {signedIn ? "Free." : "Free. A free account shows your score when you finish."}
+            </span>
           </div>
         </div>
       )}

@@ -176,7 +176,7 @@ export const VS_PAGES: VsPage[] = [
       {
         question: "Can I switch from Pocket Prep to CertBench mid-study?",
         answer:
-          "Yes, and there's nothing to import: your CertBench path's readiness checkpoint, about twenty minutes in, measures where you stand by domain directly. With Pro you can also sit a timed rehearsal of the whole exam whenever you like, for a fuller reading.",
+          "Yes, and there's nothing to import: your CertBench path's readiness checkpoint, a few minutes in, measures where you stand by domain directly. With Pro you can also sit a timed rehearsal of the whole exam whenever you like, for a fuller reading.",
       },
     ],
   },
@@ -242,7 +242,7 @@ export const ROUNDUP: RoundupData = {
       strengths: [
         "A guided path for each Security+ version, SY0-701 and SY0-801: every objective in short stops, a readiness checkpoint, then timed full-length exams",
         "Spaced repetition on every miss, and a readiness score weighted the way the real exam weights its domains",
-        "Free with no account: a full-length 90-question timed exam for each version and 12 interactive PBQs, plus port, acronym and subnetting tools",
+        "Free: a full-length 90-question timed exam for each version and 12 interactive PBQs, plus port, acronym and subnetting tools",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
@@ -358,7 +358,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       strengths: [
         "A guided path per core, written to 220-1201 and 220-1202: every objective in short stops, a readiness checkpoint, then timed full-length exams",
         "Spaced repetition on every miss, plus playable PBQ simulations in the browser",
-        "1,300+ A+ questions across the two cores, and free with no account: a full-length 90-question exam and 12 interactive PBQs per core",
+        "1,300+ A+ questions across the two cores, and free: a full-length 90-question exam and 12 interactive PBQs per core",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",
@@ -463,7 +463,7 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
       strengths: [
         "A guided path written for N10-009: every topic in short stops, a readiness checkpoint, then timed full-length exams, with spaced repetition on every miss",
         "Free subnetting and port-number drills for the timed math Network+ leans on, plus playable network-topology PBQs",
-        "600+ Network+ questions, and free with no account: a full-length 90-question exam and 12 interactive PBQs",
+        "600+ Network+ questions, and free: a full-length 90-question exam and 12 interactive PBQs",
       ],
       weaknesses: [
         "Web app only — no native mobile app or offline mode yet",

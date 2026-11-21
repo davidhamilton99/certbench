@@ -16,7 +16,7 @@ const structure = (sizes: number[]): PathStructure => ({
   })),
 });
 
-// Security+ shape: warm-up, 1.1–1.4, checkpoint (index 5), d1, 2.1, ...
+// Security+ shape: warm-up, 1.1, checkpoint (index 2), 1.2–1.4, d1, 2.1, ...
 const plan = buildPlan(structure([4, 5, 4, 9, 6]));
 const HOUR = 3_600_000;
 const NOW = Date.UTC(2026, 10, 2, 14);
@@ -30,17 +30,14 @@ const played = (...stops: string[]): PathProgress =>
 
 describe("pathNudge", () => {
   it("names the next stop and how far away the checkpoint is", () => {
-    expect(pathNudge(plan, played("warmup", "1.1"), DAYS_AGO_3, NOW)).toEqual({
-      done: 2,
+    expect(pathNudge(plan, played("warmup"), DAYS_AGO_3, NOW)).toEqual({
+      done: 1,
       total: plan.stops.length,
-      freeLeft: 4,
-      next: { title: "Obj 1.2", kind: "learn" },
-      toCheckpoint: 3,
+      freeLeft: 2,
+      next: { title: "Obj 1.1", kind: "learn" },
+      toCheckpoint: 1,
       stretch: [
         { kind: "warmup", done: true },
-        { kind: "learn", done: true },
-        { kind: "learn", done: false },
-        { kind: "learn", done: false },
         { kind: "learn", done: false },
         { kind: "checkpoint", done: false },
       ],
@@ -48,15 +45,15 @@ describe("pathNudge", () => {
   });
 
   it("points at the checkpoint itself once every stop before it is done", () => {
-    const nudge = pathNudge(plan, played("warmup", "1.1", "1.2", "1.3", "1.4"), DAYS_AGO_3, NOW);
+    const nudge = pathNudge(plan, played("warmup", "1.1"), DAYS_AGO_3, NOW);
     expect(nudge?.next).toEqual({ title: "Readiness checkpoint", kind: "checkpoint" });
     expect(nudge?.toCheckpoint).toBe(0);
   });
 
   it("starts from the first stop not played, even when a later one was", () => {
-    const nudge = pathNudge(plan, played("warmup", "1.1", "1.3"), DAYS_AGO_3, NOW);
-    expect(nudge?.next.title).toBe("Obj 1.2");
-    expect(nudge?.toCheckpoint).toBe(2);
+    const nudge = pathNudge(plan, played("warmup", "1.2"), DAYS_AGO_3, NOW);
+    expect(nudge?.next.title).toBe("Obj 1.1");
+    expect(nudge?.toCheckpoint).toBe(1);
   });
 
   it("waits two days, and lets it go after a week", () => {
@@ -70,7 +67,7 @@ describe("pathNudge", () => {
 
   it("is never for someone who hasn't started, or who has reached the checkpoint", () => {
     expect(pathNudge(plan, EMPTY_PATH_PROGRESS, DAYS_AGO_3, NOW)).toBeNull();
-    const reached = played("warmup", "1.1", "1.2", "1.3", "1.4", "checkpoint");
+    const reached = played("warmup", "1.1", "checkpoint");
     expect(pathNudge(plan, reached, DAYS_AGO_3, NOW)).toBeNull();
   });
 
@@ -79,7 +76,7 @@ describe("pathNudge", () => {
     expect(pathNudge(plan, progress, DAYS_AGO_3, NOW)).toMatchObject({
       done: 0,
       next: { title: "Warm-up", kind: "warmup" },
-      toCheckpoint: 5,
+      toCheckpoint: 2,
     });
   });
 });

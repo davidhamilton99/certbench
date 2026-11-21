@@ -253,18 +253,18 @@ describe("runLifecycleEmails", () => {
   });
 
   it("nudges an account without Pro back to its path, and sends Pro no nudge", async () => {
-    account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
+    account("free", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
     account("pro", { pro: true, path: { progress: played("warmup", "1.1"), savedDaysAgo: 3 } });
 
     const monday = await run(MONDAY);
-    expect(monday.sent).toEqual(["free: Next on your Security+ path: Change management"]);
+    expect(monday.sent).toEqual(["free: Next on your Security+ path: Security controls"]);
     expect(monday.result).toMatchObject({ users: 2, failed: 0, pathNudges: 1 });
 
     const nudge = monday.emails[0];
     expect(nudge.html).toContain(
       `https://certbench.dev/login?next=${encodeURIComponent("/path/security-plus-sy0-701?utm_source=email&utm_medium=lifecycle&utm_campaign=path_nudge")}`
     );
-    expect(nudge.text).toContain("It's 2 short stops from here to your readiness checkpoint");
+    expect(nudge.text).toContain("Right after it comes your readiness checkpoint");
 
     // Next day: the nudge never repeats.
     const tuesday = await run(TUESDAY);
@@ -285,7 +285,8 @@ describe("runLifecycleEmails", () => {
     expect(countdown.html).toContain(encodeURIComponent("utm_campaign=countdown"));
 
     const tuesday = await run(TUESDAY);
-    expect(tuesday.sent).toEqual(["dated: Next on your Security+ path: Security concepts"]);
+    // Two stops in, the checkpoint is next: the nudge names it.
+    expect(tuesday.sent).toEqual(["dated: Your Security+ readiness checkpoint is next"]);
   });
 
   it("gives Pro its countdown on the path too, counting the whole path", async () => {
@@ -354,12 +355,12 @@ describe("runLifecycleEmails", () => {
 
   it("counts an account whose pass fails, and still reaches everyone after it", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    account("broken", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
-    account("free", { path: { progress: played("warmup", "1.1", "1.2"), savedDaysAgo: 3 } });
+    account("broken", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
+    account("free", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
     h.failing.add("broken");
 
     const monday = await run(MONDAY);
-    expect(monday.sent).toEqual(["free: Next on your Security+ path: Change management"]);
+    expect(monday.sent).toEqual(["free: Next on your Security+ path: Security controls"]);
     expect(monday.result).toMatchObject({ users: 2, failed: 1, pathNudges: 1 });
     expect(consoleError).toHaveBeenCalledOnce();
     consoleError.mockRestore();

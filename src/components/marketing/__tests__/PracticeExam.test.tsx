@@ -4,7 +4,25 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 const track = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/analytics", () => ({ track }));
+const identifyUser = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/analytics", () => ({ track, identifyUser }));
+
+// Who's signed in, and the account form: one tap stands in for signing up.
+const session = vi.hoisted(() => ({ userId: "u1" as string | null }));
+vi.mock("@/components/auth/useSignedIn", () => ({ useSessionUserId: () => session.userId }));
+vi.mock("@/components/auth/InlineSignup", () => ({
+  InlineSignup: ({
+    submitLabel,
+    onSignedIn,
+  }: {
+    submitLabel: string;
+    onSignedIn: (id: string, email: string | undefined, method: "email_signup") => void;
+  }) => (
+    <button type="button" onClick={() => onSignedIn("u9", "new@example.com", "email_signup")}>
+      {submitLabel}
+    </button>
+  ),
+}));
 
 // The dial animates with rAF; its look isn't under test here.
 vi.mock("@/components/instrument/ReadinessDial", () => ({
@@ -88,7 +106,20 @@ beforeEach(() => {
   visibility = "visible";
   window.localStorage.clear();
   track.mockClear();
+  identifyUser.mockClear();
+  session.userId = "u1";
+  window.history.replaceState(null, "", "/security-plus-sy0-801-practice-test");
 });
+
+/** Sit the three-question test, every answer right, to the score. */
+function sitIt() {
+  fireEvent.click(screen.getByRole("button", { name: /Start the test/ }));
+  for (let k = 0; k < 3; k++) {
+    answer(true);
+    fireEvent.click(screen.getByRole("button", { name: k < 2 ? /^Next/ : /^Finish/ }));
+  }
+  fireEvent.click(screen.getByRole("button", { name: /See my score/ }));
+}
 afterEach(() => {
   vi.useRealTimers();
 });
@@ -127,6 +158,48 @@ describe("PracticeExam", () => {
     expect(saved.size).toBe("full");
     expect(saved.reps).toHaveLength(90);
     expect(saved.limitMs).toBe(90 * 60_000);
+  });
+
+  it("keeps the score for a free account, says so before they start, and shows it once they sign up", () => {
+    session.userId = null;
+    mount();
+    expect(screen.getByText("Free. A free account shows your score when you finish.")).toBeInTheDocument();
+    sitIt();
+
+    expect(screen.getByRole("heading", { name: "Your score is ready." })).toBeInTheDocument();
+    expect(screen.getByText(/You answered 3 of 3\. Create a free account to see your score by domain/)).toBeInTheDocument();
+    expect(screen.queryByTestId("dial")).toBeNull();
+    expect(track).toHaveBeenCalledWith("practice_test_gate_viewed", { test: "security-plus-sy0-801" });
+    // Scored all the same: the result is counted, and kept on the device.
+    expect(track).toHaveBeenCalledWith("practice_test_completed", expect.objectContaining({ score: 100 }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Show my score" }));
+    expect(screen.getByTestId("dial")).toHaveTextContent("100%");
+    expect(identifyUser).toHaveBeenCalledWith("u9", { email: "new@example.com" });
+    expect(track).toHaveBeenCalledWith("practice_test_account_linked", { test: "security-plus-sy0-801", method: "email_signup" });
+  });
+
+  it("doesn't show a signed-out visitor an earlier score, only the way to it", () => {
+    mount();
+    sitIt();
+    cleanup();
+    session.userId = null;
+    mount();
+    expect(screen.getByText(/You finished it last time\./)).toBeInTheDocument();
+    expect(screen.queryByText(/Last time you scored/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "See your score" }));
+    expect(screen.getByRole("heading", { name: "Your score is ready." })).toBeInTheDocument();
+  });
+
+  it("opens the score straight away when Google sign-in brings them back", () => {
+    mount();
+    sitIt();
+    cleanup();
+    window.history.replaceState(null, "", "/security-plus-sy0-801-practice-test?exam=scored");
+    mount();
+    expect(screen.getByTestId("dial")).toHaveTextContent("100%");
+    expect(window.location.search).toBe("");
+    expect(track).toHaveBeenCalledWith("practice_test_account_linked", { test: "security-plus-sy0-801", method: "redirect" });
   });
 
   it("offers the test in the server-rendered page, before any script runs", () => {

@@ -19,7 +19,7 @@ import { pageMetadata } from "@/lib/seo/metadata";
 export const metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Start free: a full-length practice exam and 12 PBQs per exam, no account. CertBench Pro opens the whole path, unlimited practice, fresh full-length exams and every PBQ lab: $19 a month or $39 for a three-month exam cycle, adjusted regionally.",
+    "Start free: a full-length practice exam and 12 PBQs per exam with a free account. CertBench Pro opens the whole path, unlimited practice, fresh full-length exams and every PBQ lab: $19 a month or $39 for a three-month exam cycle, adjusted regionally.",
   path: "/pricing",
 });
 
@@ -28,7 +28,7 @@ export const metadata = pageMetadata({
 const FREE_TOOLS = [
   "The guided path's warm-up — no account",
   "The stops through the readiness checkpoint — free account",
-  "A full-length practice exam and 12 PBQs per exam — no account",
+  "A full-length practice exam and 12 PBQs per exam — free account",
   "Subnetting, ports & acronym trainers",
   "Exam-objective study guides",
 ];

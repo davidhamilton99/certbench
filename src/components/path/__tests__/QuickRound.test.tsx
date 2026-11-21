@@ -184,9 +184,9 @@ describe("QuickRound", () => {
     expect(screen.getByText("Every one right.")).toBeInTheDocument();
     expect(screen.getByText("2 of 3 objectives started")).toBeInTheDocument();
     expect(tile("2.1")).toHaveAccessibleName("2.1 Threat actors: covered");
-    // Warm-up and 1.1 done: 1.2 is next on their path, as the path's own card would say.
-    expect(screen.getByRole("heading", { name: "Next up: Core security concepts" })).toBeInTheDocument();
-    expect(screen.getByText(/About 4 minutes of quick questions\./)).toBeInTheDocument();
+    // Warm-up and 1.1 done: the readiness checkpoint is next on their path, as the path's own card would say.
+    expect(screen.getByRole("heading", { name: "Next up: your readiness checkpoint" })).toBeInTheDocument();
+    expect(screen.getByText(/12 exam-style questions, then your score by domain\./)).toBeInTheDocument();
     expect(screen.queryByText(/kept on this device only/)).toBeNull();
   });
 

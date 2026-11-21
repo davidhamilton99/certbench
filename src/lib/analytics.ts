@@ -133,6 +133,12 @@ type EventMap = {
   /** A free timed practice test on a public page: started, or picked back up after leaving. */
   practice_test_started: { test: string; questions: number; resumed: boolean };
   /** That test scored: `score` is the percent weighted by exam domain. */
+  /** The timed test's score, kept for an account: who saw the ask, and who signed up for it. */
+  practice_test_gate_viewed: { test: string };
+  practice_test_account_linked: { test: string; method: "email_signup" | "email_login" | "redirect" };
+  /** The PBQ page's labs past the first three, opened with a free account. */
+  pbq_gate_viewed: { scenario_id: string };
+  pbq_account_linked: { scenario_id: string; method: "email_signup" | "email_login" | "redirect" };
   practice_test_completed: {
     test: string;
     score: number;

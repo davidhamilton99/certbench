@@ -16,7 +16,7 @@ export const dynamicParams = false;
 const READINESS_RELATED: Record<string, RelatedLink[]> = {
   "security-plus-sy0-701": [
     { href: "/security-plus-practice-test", label: "Security+ practice test", note: "A free full-length SY0-701 exam: 90 questions, 90 minutes" },
-    { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples", note: "12 free interactive PBQs, no account" },
+    { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples", note: "12 free interactive PBQs, 3 with no account" },
   ],
   "network-plus-n10-009": [
     { href: "/network-plus-practice-test", label: "Network+ practice test", note: "A free full-length N10-009 exam: 90 questions, 90 minutes" },

@@ -6,6 +6,21 @@ import type { OrderingScenario } from "@/data/pbq/types";
 const track = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics", () => ({ track, identifyUser: vi.fn() }));
 
+// The account form: one tap stands in for signing up.
+vi.mock("@/components/auth/InlineSignup", () => ({
+  InlineSignup: ({
+    submitLabel,
+    onSignedIn,
+  }: {
+    submitLabel: string;
+    onSignedIn: (id: string, email: string | undefined, method: "email_signup") => void;
+  }) => (
+    <button type="button" onClick={() => onSignedIn("u9", "new@example.com", "email_signup")}>
+      {submitLabel}
+    </button>
+  ),
+}));
+
 let signedInAs: string | null = null;
 vi.mock("@/components/auth/useSignedIn", () => ({ useSessionUserId: () => signedInAs }));
 
@@ -124,7 +139,7 @@ describe("PbqLab", () => {
     expect(screen.queryByText("Free, no account needed to start.")).toBeNull();
   });
 
-  it("lists the free labs past the chooser's three under the stage, and plays one", () => {
+  it("lists the free labs past the chooser's three under the stage, and opens one with a free account", () => {
     const CABLES = { ...ordering("cables", "Cable speeds", ["Cat 5e", "Cat 6", "Cat 6a"]), domain_number: "2.0", domain_title: "Network Implementation" };
     const PORTS = ordering("ports", "Port numbers", ["FTP", "SSH", "Telnet"]);
     render(
@@ -142,12 +157,37 @@ describe("PbqLab", () => {
     const domains = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
     expect(domains).toEqual(["1Networking Concepts", "2Network Implementation"]);
 
+    expect(screen.getByText(/^Free with an account\./)).toBeInTheDocument();
+
+    // Signed out, the stage asks for the account first.
     fireEvent.click(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min" }));
+    expect(screen.getByRole("heading", { name: "Open 2 more free labs" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Cable speeds" })).toBeNull();
+    expect(track).toHaveBeenCalledWith("pbq_gate_viewed", { scenario_id: "cables" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Open the labs" }));
+    expect(track).toHaveBeenCalledWith("pbq_account_linked", { scenario_id: "cables", method: "email_signup" });
     expect(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("heading", { name: "Cable speeds" })).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("pbq_started", { scenario_id: "cables", scenario_type: "ordering", surface: "public" });
     solve(CABLES.items);
     expect(screen.getByRole("button", { name: "Cable speeds, Ordering drill · 3 min, done" })).toBeInTheDocument();
+  });
+
+  it("plays a listed lab straight away for someone signed in", () => {
+    signedInAs = "u1";
+    const PORTS = ordering("ports", "Port numbers", ["FTP", "SSH", "Telnet"]);
+    render(
+      <PbqLab
+        labs={[...LABS, { scenario: PORTS, tier: "Warm-up", minutes: 3 }]}
+        examName="Network+"
+        pathHref="/path/network-plus-n10-009"
+        labCount={20}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Port numbers, Ordering drill · 3 min" }));
+    expect(screen.getByRole("heading", { name: "Port numbers" })).toBeInTheDocument();
+    expect(track).not.toHaveBeenCalledWith("pbq_gate_viewed", expect.anything());
   });
 
   it("goes back to the other labs from the player", () => {

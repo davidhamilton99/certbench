@@ -123,7 +123,7 @@ export default function AcronymsQuizPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, no account",
+              note: "12 free interactive PBQs, 3 with no account",
             },
             {
               href: SECURITY_PLUS_VERSIONS_PATH,
