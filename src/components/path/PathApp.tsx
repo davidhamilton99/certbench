@@ -21,6 +21,7 @@ import {
   stopsDone,
 } from "@/core/path/progress";
 import { questionIdOf } from "@/core/path/rep-id";
+import { checkpointFromExam, examToImport } from "@/core/path/exam-import";
 import { EXAM_CODES, examVersions, LAST_EXAM_DAY, newerVersion } from "@/core/path/versions";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
 import { latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
@@ -256,6 +257,35 @@ export function PathApp({
     }
     if (hasStarted(p.progress)) setView({ kind: "home" });
   }, [p.ready, p.progress, p.signedIn, p.held, cert]);
+
+  // A practice exam this device finished on the exam's public page counts on
+  // the path: its misses come back, and with no checkpoint yet it becomes the
+  // checkpoint, so its reveal and the offer come straight away.
+  const examChecked = useRef(false);
+  useEffect(() => {
+    if (!p.ready || !p.signedIn || examChecked.current) return;
+    examChecked.current = true;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("from")) {
+      url.searchParams.delete("from");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+    const run = readRun(`${cert}-practice-test`, "public");
+    const exam = run ? examToImport(run, Date.now()) : null;
+    if (!run || !exam) return;
+    if (!p.importExam(exam.answers, exam.result)) return;
+    // The bank answers go to the account too, as a stop's do.
+    const answers = run.reps.flatMap((rep, i) => {
+      const pick = run.picks[i];
+      const qid = questionIdOf(rep.id);
+      if (!qid || pick === null) return [];
+      return [{ questionId: qid, selectedIndex: rep.type === "choice" && rep.order ? (rep.order[pick] ?? pick) : pick }];
+    });
+    if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
+    track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
+    setView({ kind: "reveal" });
+    window.scrollTo({ top: 0 });
+  }, [p, cert]);
 
   // The map tile that's open on the home screen, if any.
   const [tile, setTile] = useState<MapTile | null>(null);
@@ -889,6 +919,7 @@ export function PathApp({
         goal={p.progress.goal}
         remainingStops={remaining}
         studied={plan.stops.filter((s) => s.kind === "learn" && isStopDone(p.progress, s.id)).length}
+        fromExam={checkpointFromExam(p.progress)}
       >
         {pro ? (
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />

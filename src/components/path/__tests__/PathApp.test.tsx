@@ -134,6 +134,7 @@ vi.mock("@/lib/api-client", async () => {
 
 import { PathApp } from "../PathApp";
 import { ApiError } from "@/contracts/common";
+import { pathRehearsalKey } from "../storage-key";
 
 // Node's own experimental `localStorage` global shadows jsdom's — use a plain
 // in-memory Storage so the path's persistence is exercised for real.
@@ -1436,4 +1437,83 @@ describe("the map", () => {
     expect(screen.queryByRole("button", { name: /Play it again/ })).toBeNull();
   });
 
+});
+
+describe("a practice exam finished on the exam's public page", () => {
+  const KEY = pathRehearsalKey("security-plus-sy0-701-practice-test");
+  const uuid = (i: number) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`;
+  const examReps = Array.from({ length: 12 }, (_, i) => rep(`q|1.1|${uuid(i)}`, "1.1", "exam"));
+  const saved = () =>
+    server.calls.flatMap((c) =>
+      c.path === "/api/path/progress" && "progress" in (c.input as object)
+        ? [(c.input as { progress: PathProgress }).progress]
+        : []
+    );
+
+  function finishedExam(at = Date.now() - 600_000) {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({
+        v: 1,
+        owner: "public",
+        size: "half",
+        asStop: false,
+        reps: examReps,
+        picks: examReps.map((_, i) => (i < 8 ? 0 : 1)),
+        flagged: [],
+        i: 0,
+        spentMs: 900_000,
+        limitMs: 2_700_000,
+        startedAt: at - 900_000,
+        done: {
+          result: { score: 67, at, domains: [{ number: "1.0", correct: 8, total: 12 }], size: "half", answered: 12, total: 12, seconds: 900 },
+          before: null,
+          timedOut: false,
+        },
+      })
+    );
+  }
+
+  it("counts as the checkpoint, and opens on its reveal with the offer", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    finishedExam();
+    window.history.replaceState(null, "", "/path/security-plus-sy0-701?from=practice-test");
+    renderPath();
+
+    expect(await screen.findByText("Your practice exam · Security+")).toBeInTheDocument();
+    expect(screen.getByText("Unlock the rest of your path")).toBeInTheDocument();
+    expect(screen.getByText("12 questions · ±8 pts each · exam asks 90")).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_checkpoint_completed", {
+      cert: "security-plus-sy0-701",
+      score: 67,
+      source: "practice_exam",
+    });
+    expect(window.location.search).toBe("");
+
+    await waitFor(() => expect(saved().at(-1)?.checkpoint?.score).toBe(67));
+    expect(saved().at(-1)?.rehearsals).toHaveLength(1);
+    expect(saved().at(-1)?.stops.checkpoint).toMatchObject({ c: 8, t: 12 });
+    const answers = server.calls.find((c) => c.path === "/api/path/answers")?.input as { answers: unknown[] } | undefined;
+    expect(answers?.answers).toHaveLength(12);
+  });
+
+  it("leaves a checkpoint already taken in place, and keeps the exam as a rehearsal", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1", "checkpoint"], { checkpoint: { score: 55, at: 1, domains: [] } });
+    finishedExam();
+    renderPath();
+    await waitFor(() => expect(saved().at(-1)?.rehearsals).toHaveLength(1));
+    expect(saved().at(-1)?.checkpoint?.score).toBe(55);
+    expect(screen.queryByText("Your practice exam · Security+")).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("path_checkpoint_completed", expect.objectContaining({ source: "practice_exam" }));
+  });
+
+  it("waits for an account: a signed-out visitor's path doesn't take it", async () => {
+    finishedExam();
+    renderPath();
+    await screen.findByText(/Warm-up/);
+    expect(saved()).toHaveLength(0);
+    expect(screen.queryByText("Your practice exam · Security+")).toBeNull();
+  });
 });

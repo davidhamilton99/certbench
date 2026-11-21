@@ -94,7 +94,8 @@ type EventMap = {
    * only: once per visit and API error code ("internal" includes offline).
    */
   path_save_failed: { cert: string; code: string };
-  path_checkpoint_completed: { cert: string; score: number };
+  /** `source`: a practice exam from a public page, brought onto the path as its checkpoint. */
+  path_checkpoint_completed: { cert: string; score: number; source?: "practice_exam" };
   path_offer_viewed: { cert: string; context: "reveal" | "home" };
   /** Pro opened this exam's path: the once-per-device unlock moment. */
   path_unlock_viewed: { cert: string };

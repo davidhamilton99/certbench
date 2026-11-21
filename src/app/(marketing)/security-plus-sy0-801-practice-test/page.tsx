@@ -100,9 +100,9 @@ const DECK: DeckQuestion[] = SECTIONS.flatMap(({ objectives }) =>
 );
 
 const NEXT: PracticeExamNext = {
-  heading: "Keep going on the SY0-801 path",
-  body: `CertBench's SY0-801 path covers all ${OBJECTIVE_COUNT} objectives in short stops, the new AI objective included, and brings back whatever you miss. A few minutes in, a readiness checkpoint shows where you stand by domain.`,
-  primary: { href: PATH_HREF, label: "Start my SY0-801 path" },
+  heading: "Your SY0-801 study plan starts from this score",
+  body: `CertBench's SY0-801 path covers all ${OBJECTIVE_COUNT} objectives in short stops, the new AI objective included, and brings back whatever you miss. This exam counts as your readiness checkpoint there, so it picks up from your score.`,
+  primary: { href: `${PATH_HREF}?from=practice-test`, label: "Open my study plan" },
   links: [
     { href: SY0_801_AI_PATH, label: "Practise the AI objective" },
     { href: SECURITY_PLUS_VERSIONS_PATH, label: "SY0-801 or SY0-701?" },
