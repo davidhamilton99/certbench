@@ -1,3 +1,4 @@
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { SECURITY_PLUS_VERSIONS_PATH, SY0_801_PRACTICE_PATH } from "./exam-versions";
 
 /**
@@ -46,11 +47,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     // keep these base titles ≤ ~48 chars so the full tag stays under 60.
     metaTitle: "Free CompTIA Security+ Practice Test (SY0-701)",
     metaDescription:
-      "Free Security+ SY0-701 practice questions with full explanations, weighted by real exam domains. Take the free readiness check and get your readiness score.",
+      "Free full-length Security+ SY0-701 practice exam: 90 questions in 90 minutes, scored by domain, every answer explained. Plus 12 free PBQs. No account.",
     h1: "Free CompTIA Security+ (SY0-701) practice test",
     intro: [
       "Every question below is original, written against the SY0-701 exam objectives, and comes with a full explanation — no braindumps, no recycled question banks. CertBench holds 800+ Security+ questions across all five domains, weighted the way the real exam weights them.",
-      "Try the samples, then take the free 3-minute readiness check for a readiness score that tells you exactly which domains need work — no account.",
+      "Start with the warm-up, then sit the free full-length exam: 90 questions in 90 minutes, scored by domain, with every answer explained at the end. No account needed. For the hands-on part of the exam, the Security+ PBQ page has 12 free interactive PBQs.",
     ],
     faqs: [
       {
@@ -88,7 +89,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         href: SY0_801_PRACTICE_PATH,
         label: "SY0-801 practice test",
-        note: "A free timed test for the newest Security+ exam",
+        note: "A free timed exam for the newest Security+ exam",
       },
       {
         href: "/readiness-check/security-plus-sy0-701",
@@ -103,7 +104,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         href: "/security-plus-pbq-examples",
         label: "Security+ PBQ examples",
-        note: "Work through interactive performance-based questions",
+        note: "12 free interactive PBQs, no account",
       },
       {
         href: "/best-security-plus-practice-tests",
@@ -128,11 +129,11 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "Network+ practice test",
     metaTitle: "Free CompTIA Network+ Practice Test (N10-009)",
     metaDescription:
-      "Free Network+ N10-009 practice questions with explanations, weighted by the real exam domains. Take the free readiness check and get your readiness score.",
+      "Free full-length Network+ N10-009 practice exam: 90 questions in 90 minutes, scored by domain, every answer explained. Plus 12 free PBQs. No account.",
     h1: "Free CompTIA Network+ (N10-009) practice test",
     intro: [
       "These are original questions written against the N10-009 objectives — subnetting, routing, wireless, troubleshooting — each with a full explanation. CertBench holds 600+ Network+ questions weighted by the real exam domains.",
-      "Try the samples, then take the free 3-minute readiness check to see your readiness score and weakest domains — no account.",
+      "Start with the warm-up, then sit the free full-length exam: 90 questions in 90 minutes, scored by domain, with every answer explained at the end. No account needed. For the hands-on part, the Network+ PBQ page has 12 free interactive PBQs, and the subnetting drills cover the math.",
     ],
     faqs: [
       {
@@ -213,10 +214,10 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "A+ practice test",
     metaTitle: "Free CompTIA A+ Practice Test (Core 1 & 2)",
     metaDescription:
-      "Free CompTIA A+ Core 1 and Core 2 practice questions with full explanations, written to today's 220-1201/1202 exams. No account needed.",
+      "Free full-length A+ practice exams for Core 1 and Core 2 (220-1201/1202): 90 questions in 90 minutes each, every answer explained. No account.",
     h1: "Free CompTIA A+ practice test (Core 1 & Core 2)",
     intro: [
-      "A+ is two exams: Core 1 (hardware, networking, mobile devices, cloud) and Core 2 (operating systems, security, software troubleshooting). Each has its own practice test above; the samples below come from both, each with a full explanation. CertBench holds 1,300+ A+ questions across the two cores, all written to 220-1201 and 220-1202.",
+      "A+ is two exams: Core 1 (hardware, networking, mobile devices, cloud) and Core 2 (operating systems, security, software troubleshooting). Each has its own free full-length practice exam above, 90 questions in 90 minutes; the samples below come from both, each with a full explanation. CertBench holds 1,300+ A+ questions across the two cores, all written to 220-1201 and 220-1202.",
       "Try them, then take the free readiness check for whichever core you're sitting first.",
     ],
     cores: [
@@ -332,7 +333,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "A+ Core 1 practice test",
     metaTitle: "Free CompTIA A+ Core 1 Practice Test (220-1201)",
     metaDescription:
-      "Free A+ Core 1 (220-1201) practice questions with full explanations, across all five domains: mobile devices, networking, hardware, cloud and troubleshooting. No account needed.",
+      "Free full-length A+ Core 1 (220-1201) practice exam: 90 questions in 90 minutes across all five domains, scored by domain, every answer explained. No account.",
     h1: "Free CompTIA A+ Core 1 (220-1201) practice test",
     intro: [
       "Core 1 is the hardware and networking half of A+: mobile devices, networking, hardware, virtualization and cloud computing, and hardware and network troubleshooting. Every question here is original, written to the 220-1201 objectives, with a full explanation. CertBench holds 650+ Core 1 questions across all 27 objectives.",
@@ -409,7 +410,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
     title: "A+ Core 2 practice test",
     metaTitle: "Free CompTIA A+ Core 2 Practice Test (220-1202)",
     metaDescription:
-      "Free A+ Core 2 (220-1202) practice questions with full explanations: operating systems, security, software troubleshooting and operational procedures, AI included. No account needed.",
+      "Free full-length A+ Core 2 (220-1202) practice exam: 90 questions in 90 minutes across all four domains, scored by domain, every answer explained. No account.",
     h1: "Free CompTIA A+ Core 2 (220-1202) practice test",
     intro: [
       "Core 2 is the software half of A+: operating systems, security, software troubleshooting and operational procedures. Every question here is original, written to the 220-1202 objectives, with a full explanation. CertBench holds 700+ Core 2 questions across all 36 objectives, including the two 220-1202 added: cloud productivity tools and artificial intelligence.",
@@ -480,6 +481,9 @@ export function practicePageFor(certSlug: string): string {
   return page ? `/${page.path}` : "/start";
 }
 
+/** "12": how many PBQs each exam's PBQ page gives away (core/path/free-labs.ts). */
+const FREE_PBQS = String(FREE_LAB_COUNT);
+
 export interface PbqExamplePage {
   path: string;
   certSlug: string;
@@ -497,15 +501,18 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "security-plus-pbq-examples",
     certSlug: "security-plus-sy0-701",
     title: "Security+ PBQ examples",
-    metaTitle: "Free Interactive Security+ PBQ Examples",
-    metaDescription:
-      "Interactive Security+ performance-based question examples you can actually work through in your browser — firewall rules, log analysis, and more. Free, no signup.",
-    h1: "Security+ PBQ examples you can actually try",
+    metaTitle: `${FREE_PBQS} Free Interactive Security+ PBQs (SY0-701)`,
+    metaDescription: `${FREE_PBQS} free interactive Security+ SY0-701 PBQs in your browser: firewall rules, a threat hunt, a vulnerability simulation and drag-and-drop drills. No account.`,
+    h1: `${FREE_PBQS} free Security+ PBQs you can actually try`,
     intro: [
       "Performance-based questions are the part of Security+ people fear most: instead of picking A, B, C, or D, you configure firewall rules, analyse logs, or order incident-response steps in an interactive console. They usually appear first in the exam and are worth more than multiple-choice questions.",
-      "Reading about PBQs isn't the same as doing one. The scenarios on this page are fully interactive: work through one right here, get graded with partial credit, and see exactly how the real thing feels.",
+      `Reading about PBQs isn't the same as doing one. ${FREE_PBQS} of the labs on this page are free, with no account: a vulnerability simulation, network segmentation and firewall rules, a threat hunt on a compromised server, and a drill for every drag-and-drop format. Work one right here, get graded with partial credit, and see exactly how the real thing feels.`,
     ],
     faqs: [
+      {
+        question: "Are these Security+ PBQs free?",
+        answer: `Yes. ${FREE_PBQS} interactive PBQs on this page are free, with no account, covering every PBQ format CertBench has for SY0-701: a simulation, a network topology, a threat hunt, and ordering, matching and sorting drills. Pro opens every Security+ lab on your path, with your progress kept.`,
+      },
       {
         question: "How many PBQs are on the Security+ exam?",
         answer:
@@ -526,7 +533,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         href: "/security-plus-practice-test",
         label: "Security+ practice test",
-        note: "Original SY0-701 questions with full explanations",
+        note: "A free full-length SY0-701 exam: 90 questions, 90 minutes",
       },
       {
         href: "/readiness-check/security-plus-sy0-701",
@@ -544,15 +551,18 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "network-plus-pbq-examples",
     certSlug: "network-plus-n10-009",
     title: "Network+ PBQ examples",
-    metaTitle: "Free Interactive Network+ PBQ Examples",
-    metaDescription:
-      "Interactive Network+ performance-based question examples — network topology, configuration, and troubleshooting scenarios you can work through free in your browser.",
-    h1: "Network+ PBQ examples you can actually try",
+    metaTitle: `${FREE_PBQS} Free Interactive Network+ PBQs (N10-009)`,
+    metaDescription: `${FREE_PBQS} free interactive Network+ N10-009 PBQs in your browser: troubleshooting commands, VLAN trunking, ports, cabling and more. No account.`,
+    h1: `${FREE_PBQS} free Network+ PBQs you can actually try`,
     intro: [
       "Network+ PBQs drop you into a scenario — a topology to complete, a switch to configure, a connectivity issue to trace — instead of a multiple-choice list. They appear early in the exam and carry more weight than regular questions.",
-      "The scenarios on this page are fully interactive: work through one in your browser, get graded with partial credit, and feel what the real exam's hands-on questions are like.",
+      `${FREE_PBQS} of the labs on this page are free, with no account: troubleshooting with real commands, VLAN configuration and trunking, and drills on ports, cabling, the OSI model and DHCP. Work one in your browser, get graded with partial credit, and feel what the real exam's hands-on questions are like.`,
     ],
     faqs: [
+      {
+        question: "Are these Network+ PBQs free?",
+        answer: `Yes. ${FREE_PBQS} interactive PBQs on this page are free, with no account, covering every PBQ format CertBench has for N10-009: a command-line simulation, a network topology, and ordering, matching and sorting drills. Pro opens every Network+ lab on your path, with your progress kept.`,
+      },
       {
         question: "How many PBQs are on the Network+ exam?",
         answer:
@@ -573,7 +583,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         href: "/network-plus-practice-test",
         label: "Network+ practice test",
-        note: "Original N10-009 questions with full explanations",
+        note: "A free full-length N10-009 exam: 90 questions, 90 minutes",
       },
       {
         href: "/readiness-check/network-plus-n10-009",
@@ -591,15 +601,18 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "a-plus-core-1-pbq-examples",
     certSlug: "a-plus-core1-220-1201",
     title: "A+ Core 1 PBQ examples",
-    metaTitle: "Free Interactive A+ Core 1 PBQ Examples",
-    metaDescription:
-      "Interactive CompTIA A+ Core 1 (220-1201) performance-based question examples you can work through in your browser: ports, hardware faults, and SOHO network setup. Free, no signup.",
-    h1: "A+ Core 1 PBQ examples you can actually try",
+    metaTitle: `${FREE_PBQS} Free Interactive A+ Core 1 PBQs (220-1201)`,
+    metaDescription: `${FREE_PBQS} free interactive A+ Core 1 (220-1201) PBQs in your browser: laptop display troubleshooting, ports, connectors, printers and more. No account.`,
+    h1: `${FREE_PBQS} free A+ Core 1 PBQs you can actually try`,
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put a process in order, match ports to services, or work through a hardware fault step by step. They take longer than multiple-choice questions, so they're worth practising before exam day.",
-      "The scenarios on this page are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 1 feels like.",
+      `${FREE_PBQS} of the labs on this page are free, with no account: a laptop display troubleshooting simulation, and drills on ports, cables, connectors, Wi-Fi, the laser printer and the boot sequence. Work one in your browser, get graded straight away, and see what the hands-on part of Core 1 feels like.`,
     ],
     faqs: [
+      {
+        question: "Are these A+ Core 1 PBQs free?",
+        answer: `Yes. ${FREE_PBQS} interactive PBQs on this page are free, with no account: a troubleshooting simulation plus ordering, matching and sorting drills. Pro opens every Core 1 lab on your path, with your progress kept.`,
+      },
       {
         question: "How many PBQs are on A+ Core 1?",
         answer:
@@ -625,7 +638,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         href: "/a-plus-core-1-practice-test",
         label: "A+ Core 1 practice test",
-        note: "Original 220-1201 questions with full explanations",
+        note: "A free full-length 220-1201 exam: 90 questions, 90 minutes",
       },
       {
         href: "/readiness-check/a-plus-core1-220-1201",
@@ -643,15 +656,18 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     path: "a-plus-core-2-pbq-examples",
     certSlug: "a-plus-core2-220-1202",
     title: "A+ Core 2 PBQ examples",
-    metaTitle: "Free Interactive A+ Core 2 PBQ Examples",
-    metaDescription:
-      "Interactive CompTIA A+ Core 2 (220-1202) performance-based question examples you can work through in your browser: malware removal, Windows tools, and mobile security. Free, no signup.",
-    h1: "A+ Core 2 PBQ examples you can actually try",
+    metaTitle: `${FREE_PBQS} Free Interactive A+ Core 2 PBQs (220-1202)`,
+    metaDescription: `${FREE_PBQS} free interactive A+ Core 2 (220-1202) PBQs in your browser: mobile device security, malware removal, Windows tools, Linux commands and more. No account.`,
+    h1: `${FREE_PBQS} free A+ Core 2 PBQs you can actually try`,
     intro: [
       "Performance-based questions ask you to do the job instead of picking A, B, C, or D: put the malware removal steps in order, match Windows tools to their purpose, or set up a security policy from a brief. They take longer than multiple-choice questions, so they're worth practising before exam day.",
-      "The scenarios on this page are fully interactive. Work through one in your browser, get graded straight away, and see what the hands-on part of Core 2 feels like.",
+      `${FREE_PBQS} of the labs on this page are free, with no account: a mobile device security simulation, and drills on malware removal, Windows tools, Linux commands, social engineering and change management. Work one in your browser, get graded straight away, and see what the hands-on part of Core 2 feels like.`,
     ],
     faqs: [
+      {
+        question: "Are these A+ Core 2 PBQs free?",
+        answer: `Yes. ${FREE_PBQS} interactive PBQs on this page are free, with no account: a mobile security simulation plus ordering, matching and sorting drills. Pro opens every Core 2 lab on your path, with your progress kept.`,
+      },
       {
         question: "How many PBQs are on A+ Core 2?",
         answer:
@@ -677,7 +693,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       {
         href: "/a-plus-core-2-practice-test",
         label: "A+ Core 2 practice test",
-        note: "Original 220-1202 questions with full explanations",
+        note: "A free full-length 220-1202 exam: 90 questions, 90 minutes",
       },
       {
         href: "/readiness-check/a-plus-core2-220-1202",

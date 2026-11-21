@@ -267,7 +267,7 @@ export default function SecurityPlusV8Page() {
             {
               href: SY0_801_PRACTICE_PATH,
               label: "SY0-801 practice test",
-              note: "A free timed test across every objective",
+              note: "A free timed exam, scored by domain",
             },
             {
               href: SECURITY_PLUS_VERSIONS_PATH,
@@ -287,7 +287,7 @@ export default function SecurityPlusV8Page() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "Interactive performance-based questions",
+              note: "12 free interactive PBQs, no account",
             },
           ]}
         />

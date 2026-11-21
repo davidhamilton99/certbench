@@ -93,7 +93,42 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** A full-length draw: 36 questions in domain 1 (weight 40) and 54 in domain 2 (weight 60). */
+const FULL_REPS = examReps(Array.from({ length: 90 }, (_, i) => question(i + 1, i % 5 < 2 ? "1.1" : "2.1")));
+
 describe("PracticeExam", () => {
+  it("offers a full-length exam, or a half cut from it in the exam's weights", () => {
+    render(
+      <PracticeExam testId="security-plus-sy0-801" structure={STRUCTURE} reps={FULL_REPS} size="full" offerHalf next={NEXT} />
+    );
+    expect(screen.getByRole("heading", { name: "90 questions, 90 minutes." })).toBeInTheDocument();
+    expect(screen.getByText(/The real exam's limit, so it's full length at the real pace./)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Start the full exam/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Half exam: 45 questions, 45 min" }));
+    expect(track).toHaveBeenCalledWith("practice_test_started", { test: "security-plus-sy0-801", questions: 45, resumed: false });
+    const saved = JSON.parse(store.get(STORAGE_KEY)!);
+    expect(saved.size).toBe("half");
+    expect(saved.limitMs).toBe(45 * 60_000);
+    expect(saved.reps).toHaveLength(45);
+    expect(saved.reps.filter((r: { objective: string }) => r.objective === "1.1")).toHaveLength(18);
+
+    fireEvent.click(screen.getByRole("button", { name: "All questions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Leave for now" }));
+    expect(screen.getByText(/In progress: 0 of 45 answered/)).toBeInTheDocument();
+  });
+
+  it("starts the full exam at the real exam's length", () => {
+    render(
+      <PracticeExam testId="security-plus-sy0-801" structure={STRUCTURE} reps={FULL_REPS} size="full" offerHalf next={NEXT} />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^Start the full exam/ }));
+    const saved = JSON.parse(store.get(STORAGE_KEY)!);
+    expect(saved.size).toBe("full");
+    expect(saved.reps).toHaveLength(90);
+    expect(saved.limitMs).toBe(90 * 60_000);
+  });
+
   it("offers the test in the server-rendered page, before any script runs", () => {
     const html = renderToStaticMarkup(
       <PracticeExam testId="security-plus-sy0-801" structure={STRUCTURE} reps={REPS} size="half" next={NEXT} />

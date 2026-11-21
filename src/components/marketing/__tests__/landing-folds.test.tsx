@@ -17,6 +17,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/", useRouter: () => ({ 
 import { PbqExampleLanding } from "../PbqExampleLanding";
 import { PBQ_EXAMPLE_PAGES } from "@/lib/seo/cert-pages";
 import { pbqRegistry } from "@/data/pbq";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 import { acronyms } from "@/data/reference/security-plus-sy0-701/acronyms";
 import PortQuizPage from "@/app/(marketing)/tools/port-numbers-quiz/page";
@@ -47,18 +48,29 @@ describe("PBQ example pages", () => {
     expect(chooser?.querySelectorAll("button")).toHaveLength(3);
     expect(chooser?.querySelector('button[aria-pressed="true"]')?.getAttribute("aria-label")).toMatch(/^Warm-up: /);
 
-    // The rest, folded the way the path's lab library lists them: in the page, closed.
-    const labs = fold(doc, `${scenarios.length - 3} more labs on your`);
+    // The rest of the free labs, listed under the player to play right there.
+    const more = [...doc.querySelectorAll("section")].find(
+      (s) => text(s.querySelector("h2")) === `${FREE_LAB_COUNT - 3} more free labs`
+    );
+    expect(more).toBeTruthy();
+    const moreLabels = [...more!.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") ?? "");
+    expect(moreLabels).toHaveLength(FREE_LAB_COUNT - 3);
+
+    // The labs that come with Pro, folded the way the path's lab library lists them: in the page, closed.
+    const labs = fold(doc, `${scenarios.length - FREE_LAB_COUNT} more labs with Pro`);
     expect(labs).not.toBeNull();
     expect(labs!.hasAttribute("open")).toBe(false);
     const titles = [...labs!.querySelectorAll("li")].map((li) => text(li.querySelector("span.block")));
     const free = [...chooser!.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") ?? "");
     for (const s of scenarios) {
       const listed = titles.includes(s.title);
-      const offered = free.some((label) => label.includes(`: ${s.title}, about`));
+      const offered =
+        free.some((label) => label.includes(`: ${s.title}, about`)) || moreLabels.some((label) => label.startsWith(`${s.title}, `));
       expect(listed !== offered, `${s.title}: listed once, either free or folded`).toBe(true);
     }
-    expect(text(labs)).toContain(`All ${scenarios.length} come with Pro, offered after your path's readiness checkpoint.`);
+    expect(text(labs)).toContain(`Pro opens all ${scenarios.length} on your`);
+    // The hero says how many are free.
+    expect(text(doc.querySelector("main"))).toContain(`${FREE_LAB_COUNT} free interactive PBQs`);
 
     // The way onto the path at the foot of the page.
     const start = [...doc.querySelectorAll("a")].find((a) => text(a) === "Start my path");

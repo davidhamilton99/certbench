@@ -181,7 +181,7 @@ export default async function ObjectiveHubPage({
                   {
                     href: `/${pbqPage.path}`,
                     label: `${data.shortCertName} PBQ examples`,
-                    note: "Work through interactive performance-based questions",
+                    note: "12 free interactive PBQs, no account",
                   },
                 ]
               : []),

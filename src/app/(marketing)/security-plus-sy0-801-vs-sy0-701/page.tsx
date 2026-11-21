@@ -308,7 +308,7 @@ export default function SecurityPlusVersionsPage() {
             {
               href: SY0_801_PRACTICE_PATH,
               label: "SY0-801 practice test",
-              note: "A free timed test across every SY0-801 objective",
+              note: "A free timed SY0-801 exam, scored by domain",
             },
             {
               href: SY0_801_PATH,
@@ -323,7 +323,7 @@ export default function SecurityPlusVersionsPage() {
             {
               href: "/security-plus-practice-test",
               label: "Security+ practice test",
-              note: "Original SY0-701 questions with full explanations",
+              note: "A free full-length SY0-701 exam: 90 questions, 90 minutes",
             },
             {
               href: `/objectives/${SECURITY_PLUS_CERT}`,
@@ -333,7 +333,7 @@ export default function SecurityPlusVersionsPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "Work through interactive performance-based questions",
+              note: "12 free interactive PBQs, no account",
             },
           ]}
         />

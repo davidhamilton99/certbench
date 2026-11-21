@@ -118,12 +118,12 @@ export default function AcronymsQuizPage() {
             {
               href: "/security-plus-practice-test",
               label: "Security+ practice test",
-              note: "Original SY0-701 questions with full explanations",
+              note: "A free full-length SY0-701 exam: 90 questions, 90 minutes",
             },
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "Work through interactive performance-based questions",
+              note: "12 free interactive PBQs, no account",
             },
             {
               href: SECURITY_PLUS_VERSIONS_PATH,
