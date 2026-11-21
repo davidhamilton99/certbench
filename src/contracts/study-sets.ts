@@ -20,19 +20,6 @@ export const studyQuestion = z.object({
 });
 export type StudyQuestion = z.infer<typeof studyQuestion>;
 
-export const createStudySet = {
-  path: "/api/study-sets/create",
-  method: "POST",
-  input: z.object({
-    title: z.string().trim().min(1).max(120),
-    description: z.string().trim().max(500).nullish(),
-    category: z.string().trim().max(60).nullish(),
-    sourcePreview: z.string().max(500).nullish(),
-    questions: z.array(studyQuestionInput).min(1).max(100),
-  }),
-  output: z.object({ setId: z.uuid() }),
-} as const satisfies EndpointContract;
-
 export const updateStudySet = {
   path: "/api/study-sets/update",
   method: "POST",
@@ -69,18 +56,6 @@ export const deleteStudyQuestion = {
   method: "POST",
   input: z.object({ setId: z.uuid(), questionId: z.uuid() }),
   output: z.object({ deleted: z.boolean() }),
-} as const satisfies EndpointContract;
-
-/** On-demand AI explanation for a study question (cached on the row). */
-export const explainStudyQuestion = {
-  path: "/api/study-sets/explain",
-  method: "POST",
-  input: z.object({
-    questionId: z.uuid(),
-    /** Text of what the user picked, for "why yours was wrong" context. */
-    selectedAnswer: z.string().max(1000).optional().default(""),
-  }),
-  output: z.object({ explanation: z.string() }),
 } as const satisfies EndpointContract;
 
 /** Cross-device resume for study-set practice (study_set_progress). */

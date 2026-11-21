@@ -48,9 +48,8 @@ Client components call `api(contract, input)` from `src/lib/api-client.ts` —
 the return type is inferred from the contract and the response is
 runtime-validated. There is no manual casting anywhere.
 
-**Two documented exceptions** are plain route handlers: the AI generation SSE
-stream (`/api/study-sets/generate`) and the Stripe webhook (raw-body signature
-verification).
+**One documented exception** is a plain route handler: the Stripe webhook
+(raw-body signature verification).
 
 ## Data fetching
 

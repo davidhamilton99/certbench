@@ -29,7 +29,6 @@ export const publicEnv = publicSchema.parse({
 /** Server-side secrets. Every name the app may need lives here. */
 type ServerKey =
   | "SUPABASE_SERVICE_ROLE_KEY"
-  | "ANTHROPIC_API_KEY"
   | "STRIPE_SECRET_KEY"
   | "STRIPE_WEBHOOK_SECRET"
   | "STRIPE_PRO_PRICE_ID"

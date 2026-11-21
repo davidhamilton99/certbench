@@ -2,10 +2,6 @@ import "server-only";
 
 import { ApiError } from "@/contracts/common";
 import type { Db } from "@/server/supabase/server";
-import { createAdminClient } from "@/server/supabase/admin";
-
-/** Free tier: AI generations per calendar month. */
-export const FREE_GENERATION_LIMIT = 3;
 
 /**
  * Free tier: practice questions per UTC day, metered when a quiz STARTS
@@ -17,18 +13,9 @@ export const FREE_DAILY_QUESTION_LIMIT = 20;
 
 export interface UserPlan {
   plan: "free" | "pro";
-  generationsUsed: number;
-  generationsLimit: number | null; // null = unlimited
-  canGenerate: boolean;
   /** Practice questions started today (UTC) via metered quiz starts. */
   questionsUsedToday: number;
   questionsLimitPerDay: number | null; // null = unlimited
-}
-
-/** Current month key for usage tracking (e.g. '2026-07'). */
-function currentMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 /** Start of the current UTC day, ISO — the daily quota window boundary. */
@@ -67,36 +54,12 @@ export async function getUserPlan(db: Db, userId: string): Promise<UserPlan> {
   const isPro =
     sub?.plan === "pro" && (sub.status === "active" || sub.status === "trialing");
 
-  const [{ data: usage }, questionsUsedToday] = await Promise.all([
-    db
-      .from("ai_generation_usage")
-      .select("generation_count")
-      .eq("user_id", userId)
-      .eq("month", currentMonth())
-      .maybeSingle(),
-    questionsStartedToday(db, userId),
-  ]);
-
-  const generationsUsed = usage?.generation_count ?? 0;
+  const questionsUsedToday = await questionsStartedToday(db, userId);
 
   if (isPro) {
-    return {
-      plan: "pro",
-      generationsUsed,
-      generationsLimit: null,
-      canGenerate: true,
-      questionsUsedToday,
-      questionsLimitPerDay: null,
-    };
+    return { plan: "pro", questionsUsedToday, questionsLimitPerDay: null };
   }
-  return {
-    plan: "free",
-    generationsUsed,
-    generationsLimit: FREE_GENERATION_LIMIT,
-    canGenerate: generationsUsed < FREE_GENERATION_LIMIT,
-    questionsUsedToday,
-    questionsLimitPerDay: FREE_DAILY_QUESTION_LIMIT,
-  };
+  return { plan: "free", questionsUsedToday, questionsLimitPerDay: FREE_DAILY_QUESTION_LIMIT };
 }
 
 /**
@@ -133,24 +96,4 @@ export async function assertCanStartQuiz(
     requestedQuestions
   );
   if (message) throw new ApiError("quota_exceeded", message);
-}
-
-/**
- * Atomic monthly counter bump (RPC: INSERT ... ON CONFLICT count+1).
- *
- * Runs on the ADMIN client: the RPC is SECURITY INVOKER and
- * ai_generation_usage has no INSERT policy, so a user-scoped call fails
- * silently under RLS — which is why the old app never actually enforced
- * the free-tier quota. userId comes from the authenticated session, never
- * from client input.
- */
-export async function incrementGenerationUsage(
-  _db: Db,
-  userId: string
-): Promise<void> {
-  const { error } = await createAdminClient().rpc("increment_generation_count", {
-    p_user_id: userId,
-    p_month: currentMonth(),
-  });
-  if (error) console.error("generation counter failed:", error.message);
 }
