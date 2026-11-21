@@ -32,6 +32,13 @@ const OLD_WORKSPACE: { claim: string; pattern: RegExp }[] = [
   { claim: "the old confidence-penalised score", pattern: /confidence[- ]penali[sz]ed/i },
 ];
 
+/**
+ * The AI study-set tool (questions written from your notes) is no longer part
+ * of what CertBench offers (Nov 2026), so no page may sell it.
+ */
+const AI_STUDY_SETS =
+  /AI (?:question |quiz )?generation|AI study sets?|(?:questions|quizzes|study sets?) (?:written |generated )?from your (?:own )?notes/i;
+
 function files(path: string): string[] {
   if (!statSync(path).isDirectory()) return [path];
   return readdirSync(path, { withFileTypes: true }).flatMap((entry) => {
@@ -63,6 +70,18 @@ describe("public copy", () => {
         return match ? [`${path}: ${claim} ("${match[0]}")`] : [];
       })
     );
+    expect(found).toEqual([]);
+  });
+
+  it("never sells the AI study-set tool", () => {
+    // The privacy policy and terms still describe the study-set data members
+    // made with it, so they stay out of this check.
+    const found = copy
+      .filter(({ path }) => !/\/(?:privacy|terms)\//.test(path))
+      .flatMap(({ path, text }) => {
+        const match = text.match(AI_STUDY_SETS);
+        return match ? [`${path}: "${match[0]}"`] : [];
+      });
     expect(found).toEqual([]);
   });
 });

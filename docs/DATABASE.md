@@ -45,7 +45,7 @@ first generated run.)
 - `question_flags` — one per user per question; status pending|actioned|dismissed
 - `user_subscriptions` — plan free|pro, status, Stripe ids, synced only by the
   webhook (service role)
-- `ai_generation_usage` — per-user per-month counter
+- `ai_generation_usage` — per-user per-month counter for the retired AI study-set generator; nothing writes it now
 - `rate_limit_buckets` (migration 020) — no RLS policies; service-role only
 
 ## RPCs

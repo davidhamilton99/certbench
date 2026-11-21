@@ -20,9 +20,11 @@ const nextConfig: NextConfig = {
     { source: "/add-certification", destination: "/profile", permanent: true },
     {
       source: "/study-materials/import",
-      destination: "/study-materials/new",
+      destination: "/study-materials",
       permanent: true,
     },
+    // The set maker (AI generation with it) was retired in Nov 2026; sets made with it stay.
+    { source: "/study-materials/new", destination: "/study-materials", permanent: false },
     {
       source: "/certifications/:certId",
       destination: "/dashboard",

@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Globe, Lock, Plus } from "lucide-react";
+import { Globe, Lock } from "lucide-react";
 import { createClient } from "@/server/supabase/server";
 import { listMyStudySets } from "@/server/data/study-sets";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = {
@@ -21,30 +20,16 @@ export default async function StudyMaterialsPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Study sets</h1>
-          <p className="text-sm text-muted-foreground">
-            Your own material — created by hand, imported, or AI-generated
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/study-materials/new">
-            <Plus />
-            New set
-          </Link>
-        </Button>
+      <div>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Study sets</h1>
+        <p className="text-sm text-muted-foreground">
+          The sets you’ve made. Practise, edit or share them.
+        </p>
       </div>
 
       {sets.length === 0 ? (
         <div className="grid gap-4 rounded-lg border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            No study sets yet — create one from your notes or let the AI
-            generate questions for you.
-          </p>
-          <Button asChild className="justify-self-center">
-            <Link href="/study-materials/new">Create your first set</Link>
-          </Button>
+          <p className="text-sm text-muted-foreground">You don’t have any study sets.</p>
         </div>
       ) : (
         <div className="grid gap-3">

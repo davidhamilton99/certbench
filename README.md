@@ -15,7 +15,6 @@ notes.
 - **Supabase** — Postgres (RLS everywhere) + Auth (password & Google OAuth)
 - **Tailwind CSS v4** with a shadcn-style token system (light + dark)
 - **Zod v4** — end-to-end typed API contracts shared client/server
-- **Anthropic API** — AI question generation with a two-pass quality review
 - **Stripe** — Pro subscriptions (checkout, portal, webhook sync)
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layering rules and
@@ -35,7 +34,6 @@ Required in `.env.local` for a working app:
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase project (RLS-scoped access) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin client (webhook, rate limiter, account deletion) |
-| `ANTHROPIC_API_KEY` | AI question generation (503s cleanly if absent) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRO_PRICE_ID` | Billing (use TEST keys locally) |
 
 `src/env.ts` is the authority: public vars are validated at boot, secrets at

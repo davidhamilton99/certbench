@@ -93,51 +93,6 @@ export async function listSetQuestions(
   }));
 }
 
-export async function createSet(
-  db: Db,
-  userId: string,
-  input: {
-    title: string;
-    description: string | null;
-    category: string | null;
-    sourcePreview: string | null;
-    questions: StudyQuestionInput[];
-  }
-): Promise<string> {
-  const { data: set, error } = await db
-    .from("user_study_sets")
-    .insert({
-      user_id: userId,
-      title: input.title,
-      description: input.description,
-      category: input.category,
-      source_material_preview: input.sourcePreview,
-      question_count: input.questions.length,
-    })
-    .select("id")
-    .single();
-  if (error) throw new ApiError("internal", error.message);
-
-  const { error: qError } = await db.from("user_study_questions").insert(
-    input.questions.map((q, i) => ({
-      study_set_id: set.id,
-      user_id: userId,
-      question_type: q.question_type,
-      question_text: q.question_text,
-      options: q.options as unknown as Json,
-      correct_index: q.correct_index,
-      explanation: q.explanation ?? null,
-      sort_order: i,
-    }))
-  );
-  if (qError) {
-    // Roll back the header row so we never leave an empty set behind.
-    await db.from("user_study_sets").delete().eq("id", set.id);
-    throw new ApiError("internal", qError.message);
-  }
-  return set.id;
-}
-
 export async function updateSet(
   db: Db,
   userId: string,
