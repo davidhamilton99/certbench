@@ -10,12 +10,14 @@ import { getPathProgress } from "@/server/data/path-progress";
 import { loadPathBank } from "@/server/path/bank";
 import { sendEmail, type SendEmailInput } from "@/server/email/resend";
 import { captureServerEvent } from "@/server/analytics";
+import { signStoryToken } from "@/server/story/story-token";
 import {
   checkpointResultEmail,
   pathCountdownEmail,
   pathEmailLink,
   pathNudgeEmail,
   postExamEmail,
+  storyEmailLink,
   welcomeEmail,
   type EmailContent,
 } from "@/server/email/templates";
@@ -344,6 +346,8 @@ async function processUser(
             displayName,
             certName: cert.name,
             unsubscribeUrl: prefs.unsubscribeUrl,
+            passHref: storyEmailLink(signStoryToken(userId, cert.id), "pass"),
+            failHref: storyEmailLink(signStoryToken(userId, cert.id), "fail"),
           }),
         }, result);
         if (sent) result.postExam += 1;
