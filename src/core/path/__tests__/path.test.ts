@@ -43,11 +43,11 @@ const rep = (id: string, objective = "1.1"): ChoiceRep => ({
 });
 
 describe("buildPlan", () => {
-  it("puts the checkpoint after the warm-up and four learn stops, before the domain's practice stop", () => {
-    // Security+ shape: domain 1 has exactly four objectives.
+  it("puts the checkpoint right after the warm-up and the first learn stop", () => {
+    // Security+ shape: domain 1 has four objectives, and the rest of it follows the checkpoint.
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(plan.stops.slice(0, 7).map((s) => s.id)).toEqual([
-      "warmup", "1.1", "1.2", "1.3", "1.4", "checkpoint", "d1",
+      "warmup", "1.1", "checkpoint", "1.2", "1.3", "1.4", "d1",
     ]);
     expect(plan.freeThrough).toBe(1 + LEARN_BEFORE_CHECKPOINT);
     expect(plan.stops[plan.freeThrough].kind).toBe("checkpoint");
@@ -57,8 +57,8 @@ describe("buildPlan", () => {
     // Network+ shape: domain 1 has eight objectives.
     const plan = buildPlan(structure([8, 4]));
     const ids = plan.stops.map((s) => s.id);
-    expect(ids.indexOf("checkpoint")).toBe(5);
-    expect(ids.indexOf("1.5")).toBe(6);
+    expect(ids.indexOf("checkpoint")).toBe(2);
+    expect(ids.indexOf("1.2")).toBe(3);
     expect(ids.indexOf("d1")).toBe(ids.indexOf("1.8") + 1);
     expect(ids.at(-2)).toBe("d2");
     expect(ids.at(-1)).toBe("rehearsal");
@@ -73,9 +73,9 @@ describe("buildPlan", () => {
   });
 
   it("still has a checkpoint when the exam has very few objectives", () => {
-    const plan = buildPlan(structure([2]));
-    expect(plan.stops.map((s) => s.id)).toEqual(["warmup", "1.1", "1.2", "d1", "checkpoint", "rehearsal"]);
-    expect(plan.freeThrough).toBe(4);
+    const plan = buildPlan(structure([1]));
+    expect(plan.stops.map((s) => s.id)).toEqual(["warmup", "1.1", "checkpoint", "d1", "rehearsal"]);
+    expect(plan.freeThrough).toBe(2);
   });
 
   it("keeps going past the end with review rounds", () => {
@@ -114,11 +114,11 @@ describe("labs on the path", () => {
     expect(plan.stops.slice(0, plan.freeThrough + 1).some((s) => s.kind === "lab")).toBe(false);
   });
 
-  it("holds a short first domain's lab until just after the checkpoint", () => {
-    // An A+-like first domain of three objectives ends before the checkpoint.
+  it("keeps the first domain's lab after its practice, past the checkpoint", () => {
+    // An A+-like first domain of three objectives: the checkpoint comes after its first.
     const plan = buildPlan(withLabs([3, 5]));
     expect(plan.stops.map((s) => s.id).slice(0, 8)).toEqual([
-      "warmup", "1.1", "1.2", "1.3", "d1", "2.1", "checkpoint", "lab1",
+      "warmup", "1.1", "checkpoint", "1.2", "1.3", "d1", "lab1", "2.1",
     ]);
     expect(isFreeStop(plan, plan.stops.findIndex((s) => s.id === "lab1"))).toBe(false);
   });

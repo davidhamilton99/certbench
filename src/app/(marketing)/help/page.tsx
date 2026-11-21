@@ -46,12 +46,12 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), work 12 interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
+        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), try the first three interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account shows your practice exam score, opens 9 more PBQs, saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
         link: { href: "/pricing", label: "See plans and prices" },
       },
       {
         q: "Where do I start?",
-        a: "Pick your exam. Its first stop is a warm-up that needs no account. Save your map with a free account to keep going: your first few objectives, then the readiness checkpoint, about twenty minutes in, which shows where you stand in each domain.",
+        a: "Pick your exam. Its first stop is a warm-up that needs no account. Save your map with a free account to keep going: your first objective, then the readiness checkpoint, a few minutes in, which shows where you stand in each domain.",
         link: { href: "/start", label: "Pick your exam" },
       },
       {
@@ -71,7 +71,7 @@ const sections: Section[] = [
     items: [
       {
         q: "How does the path work?",
-        a: "Your path goes through the exam’s objectives in order, domain by domain. Most stops cover one objective: quick questions first, then one in the real exam’s wording. When a domain ends, a practice stop asks 10 exam-style questions from it, and with Pro a hands-on lab closes it. The readiness checkpoint comes after your first four objectives, and a timed exam rehearsal ends the path. Your map shows each objective as covered, a miss that comes back later, or not started.",
+        a: "Your path goes through the exam’s objectives in order, domain by domain. Most stops cover one objective: quick questions first, then one in the real exam’s wording. When a domain ends, a practice stop asks 10 exam-style questions from it, and with Pro a hands-on lab closes it. The readiness checkpoint comes after your first objective, and a timed exam rehearsal ends the path. Your map shows each objective as covered, a miss that comes back later, or not started.",
       },
       {
         q: "Do I have to go in order?",
@@ -95,7 +95,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What is the readiness checkpoint?",
-        a: "Twelve exam-style questions across every domain of your exam, after your first four objectives. It’s free with an account. You get a score weighted the way the real exam weights its domains, how each domain went, the domain with the most to gain, and when you’ll finish the path at your pace.",
+        a: "Twelve exam-style questions across every domain of your exam, after your first objective. It’s free with an account. You get a score weighted the way the real exam weights its domains, how each domain went, the domain with the most to gain, and when you’ll finish the path at your pace.",
       },
       {
         q: "How is my readiness score worked out?",
@@ -137,7 +137,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What are PBQs, and how do the labs work?",
-        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. Each exam’s PBQ page has 12 you can play free, with no account.",
+        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. Each exam’s PBQ page has 12 you can play free: 3 with no account, the rest with a free account.",
       },
       {
         q: "How are labs scored?",
@@ -145,7 +145,7 @@ const sections: Section[] = [
       },
       {
         q: "What is the exam rehearsal?",
-        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time, each drawn fresh. Each exam’s practice-test page also has a free full-length exam, the same for everyone, with no account.",
+        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time, each drawn fresh. Each exam’s practice-test page also has a free full-length exam, the same for everyone; a free account shows its score.",
       },
       {
         q: "Can I flag questions?",

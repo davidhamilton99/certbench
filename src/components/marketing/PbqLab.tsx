@@ -7,7 +7,8 @@ import type { PbqScenario } from "@/data/pbq/types";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 import { domainLabel, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
-import { track } from "@/lib/analytics";
+import { InlineSignup } from "@/components/auth/InlineSignup";
+import { identifyUser, track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -23,15 +24,19 @@ export interface FreeLab {
 /** Analytics context for the way onto the path once a lab is graded. */
 const CONTEXT = "public_pbq";
 
-/** The labs the chooser leads with: a warm-up, a core lab and an exam-level one. */
+/** The labs the chooser leads with: a warm-up, a core lab and an exam-level one. Anyone can play these. */
 const FEATURED = 3;
+
+/** On the page's address after a Google sign-in from a lab's ask: open that lab. */
+const OPEN_LAB = "lab";
 
 /**
  * The public PBQ pages' labs, played the way the path plays one: three lead
  * the chooser, warm-up to exam-level, and the rest of the free ones are listed
  * under the stage, a domain at a time. Each is worked on the path's lab stage
- * with the same player. Once one is graded, the way on is the exam's path,
- * where Pro opens every lab.
+ * with the same player. The chooser's three are open to anyone; the rest open
+ * with a free account, asked for on the stage the moment one is picked. Once
+ * a lab is graded, the way on is the exam's path, where Pro opens every lab.
  */
 export function PbqLab({
   labs,
@@ -54,20 +59,51 @@ export function PbqLab({
   const chooser = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const userId = useSessionUserId();
+  // An account made at a lab's ask opens the lab straight away, ahead of the session event.
+  const [signedUpHere, setSignedUpHere] = useState(false);
+  const signedIn = typeof userId === "string" || signedUpHere;
   const moreId = useId();
+  // A lab past the chooser's three, picked while signed out: the stage asks for the account.
+  const [asking, setAsking] = useState<number | null>(null);
 
   const active = labs[selected];
   const activeId = active?.scenario.id;
   const activeType = active?.scenario.type;
 
   useEffect(() => {
-    if (!activeId || !activeType) return;
+    if (!activeId || !activeType || asking !== null) return;
     track("pbq_started", { scenario_id: activeId, scenario_type: activeType, surface: "public" });
-  }, [activeId, activeType]);
+  }, [activeId, activeType, asking]);
+
+  // Back from a Google sign-in made at a lab's ask: open the lab they picked.
+  useEffect(() => {
+    if (!signedIn) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get(OPEN_LAB);
+    if (!id) return;
+    url.searchParams.delete(OPEN_LAB);
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    const i = labs.findIndex((l) => l.scenario.id === id);
+    if (i < 0) return;
+    track("pbq_account_linked", { scenario_id: id, method: "redirect" });
+    // The address can only be read after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAsking(null);
+    setSelected(i);
+    setAttempt((n) => n + 1);
+    stage.current?.scrollIntoView?.({ block: "start" });
+  }, [signedIn, labs]);
 
   if (!active) return null;
 
   function pick(i: number, focusStage = false) {
+    // Past the chooser's three, a free account opens the lab: ask for it on the stage.
+    if (i >= FEATURED && !signedIn) {
+      setAsking(i);
+      track("pbq_gate_viewed", { scenario_id: labs[i].scenario.id });
+    } else {
+      setAsking(null);
+    }
     if (i !== selected) {
       setSelected(i);
       setAttempt((n) => n + 1);
@@ -144,15 +180,28 @@ export function PbqLab({
 
       {/* min-w-0: a lab's tab row doesn't wrap, and would widen a phone's page. */}
       <div ref={stage} className="glass min-w-0 scroll-mt-24 rounded-3xl p-4 sm:p-6">
-        <PbqPlayer
-          key={`${active.scenario.id}-${attempt}`}
-          scenario={active.scenario}
-          backLabel="Pick another lab"
-          onBack={toChooser}
-          onGraded={() =>
-            setGraded((prev) => (prev.has(active.scenario.id) ? prev : new Set([...prev, active.scenario.id])))
-          }
-        />
+        {asking !== null && !signedIn ? (
+          <LabAsk
+            lab={labs[asking]}
+            more={labs.length - FEATURED}
+            onSignedIn={(uid, email, method) => {
+              identifyUser(uid, email ? { email } : undefined);
+              track("pbq_account_linked", { scenario_id: labs[asking].scenario.id, method });
+              setSignedUpHere(true);
+              setAsking(null);
+            }}
+          />
+        ) : (
+          <PbqPlayer
+            key={`${active.scenario.id}-${attempt}`}
+            scenario={active.scenario}
+            backLabel="Pick another lab"
+            onBack={toChooser}
+            onGraded={() =>
+              setGraded((prev) => (prev.has(active.scenario.id) ? prev : new Set([...prev, active.scenario.id])))
+            }
+          />
+        )}
       </div>
 
       {graded.size > 0 && (
@@ -173,7 +222,9 @@ export function PbqLab({
               {more.length} more free labs
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Each one graded with partial credit, right here. No account needed.
+              {signedIn
+                ? "Each one graded with partial credit, right here."
+                : "Free with an account. Each one graded with partial credit, right here."}
             </p>
           </div>
           {moreDomains.map(([number, title]) => (
@@ -232,6 +283,40 @@ export function PbqLab({
           ))}
         </section>
       )}
+    </div>
+  );
+}
+
+/**
+ * A lab past the chooser's three, picked while signed out: a free account
+ * opens it and the rest of the free labs, made right here on the stage.
+ * Google sign-in comes back to the page with that lab open.
+ */
+function LabAsk({
+  lab,
+  more,
+  onSignedIn,
+}: {
+  lab: FreeLab;
+  /** The free labs past the chooser's three. */
+  more: number;
+  onSignedIn: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => void;
+}) {
+  const nextPath =
+    typeof window === "undefined" ? "/" : `${window.location.pathname}?${OPEN_LAB}=${encodeURIComponent(lab.scenario.id)}`;
+  return (
+    <div className="grid gap-5">
+      <div className="grid gap-1">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          {lab.scenario.title} · {lab.minutes} min
+        </p>
+        <h3 className="text-balance font-display text-xl font-semibold tracking-tight">Open {more} more free labs</h3>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          A free account opens this lab and the other free ones, graded with partial credit, and keeps your results.
+          No card.
+        </p>
+      </div>
+      <InlineSignup nextPath={nextPath} submitLabel="Open the labs" onSignedIn={onSignedIn} />
     </div>
   );
 }

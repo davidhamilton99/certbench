@@ -333,7 +333,7 @@ export default function SecurityPlusVersionsPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, no account",
+              note: "12 free interactive PBQs, 3 with no account",
             },
           ]}
         />

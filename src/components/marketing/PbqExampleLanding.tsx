@@ -66,7 +66,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
         eyebrow={`${examName} · PBQ labs`}
         title={page.h1}
         sub="Pick one and work it right here."
-        specs={[`${free.length} free interactive PBQs`, "Graded with partial credit", "No account needed"]}
+        specs={[`${free.length} free interactive PBQs`, "Graded with partial credit", "Start with no account"]}
       />
 
       {/* Lead with the thing they came for: a lab, on the path's own stage. */}

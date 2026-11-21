@@ -43,8 +43,8 @@ const TITLE = "Free Security+ SY0-801 Practice Test";
 /** What the page offers, as search and AI answers read it: the test it serves, whichever that is. */
 function describe(exam: PublicTestData): string {
   return exam.size === "full"
-    ? `Free full-length Security+ SY0-801 practice exam: ${exam.reps.length} questions in ${FULL.minutes} minutes in the exam's domain weights, scored by domain, every answer explained. No account.`
-    : `Free ${exam.reps.length}-question Security+ SY0-801 practice test covering all ${OBJECTIVE_COUNT} objectives in the exam's weights. Timed, scored by domain, every answer explained. No account.`;
+    ? `Free full-length Security+ SY0-801 practice exam: ${exam.reps.length} questions in ${FULL.minutes} minutes in the exam's domain weights, scored by domain, every answer explained.`
+    : `Free ${exam.reps.length}-question Security+ SY0-801 practice test covering all ${OBJECTIVE_COUNT} objectives in the exam's weights. Timed, scored by domain, every answer explained.`;
 }
 
 export async function generateMetadata() {
@@ -101,7 +101,7 @@ const DECK: DeckQuestion[] = SECTIONS.flatMap(({ objectives }) =>
 
 const NEXT: PracticeExamNext = {
   heading: "Keep going on the SY0-801 path",
-  body: `CertBench's SY0-801 path covers all ${OBJECTIVE_COUNT} objectives in short stops, the new AI objective included, and brings back whatever you miss. About twenty minutes in, a readiness checkpoint shows where you stand by domain.`,
+  body: `CertBench's SY0-801 path covers all ${OBJECTIVE_COUNT} objectives in short stops, the new AI objective included, and brings back whatever you miss. A few minutes in, a readiness checkpoint shows where you stand by domain.`,
   primary: { href: PATH_HREF, label: "Start my SY0-801 path" },
   links: [
     { href: SY0_801_AI_PATH, label: "Practise the AI objective" },
@@ -138,7 +138,7 @@ function faqs(fullTest: boolean) {
   {
     question: "Does this test include performance-based questions?",
     answer:
-      "No, all of it is multiple-choice. The real exam also has performance-based questions: CertBench's Security+ PBQ page has 12 interactive ones to work free in the browser, with no account.",
+      "No, all of it is multiple-choice. The real exam also has performance-based questions: CertBench's Security+ PBQ page has 12 interactive ones to work free in the browser, the first three with no account.",
   },
   ];
 }
@@ -272,7 +272,7 @@ export default async function Sy0801PracticeTestPage() {
         <CtaBand title="Study SY0-801 one short step at a time">
           <p className="max-w-md text-balance text-[15px] leading-relaxed text-muted-foreground">
             CertBench&apos;s SY0-801 path covers all {OBJECTIVE_COUNT} objectives in short stops, AI threats
-            included. About twenty minutes in, a readiness checkpoint shows where you stand by domain.
+            included. A few minutes in, a readiness checkpoint shows where you stand by domain.
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href={PATH_HREF}>
@@ -308,7 +308,7 @@ export default async function Sy0801PracticeTestPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, no account",
+              note: "12 free interactive PBQs, 3 with no account",
             },
             {
               href: "/security-plus-practice-test",

@@ -140,13 +140,13 @@ describe("buildStop — Security+", () => {
   it("brings earlier misses back first, from any source", () => {
     const missedBank = secPlus.questions.find((q) => q.objective === "2.4")!;
     const missed = [`a|4.5|w1`, `q|2.4|${missedBank.id}`, "a|1.1|1.1c"];
-    const { reps } = build(secPlus, secPlan, 2, { missed });
+    const { reps } = build(secPlus, secPlan, secPlan.stops.findIndex((s) => s.id === "1.2"), { missed });
     expect(reps.slice(0, 2).map((r) => r.id)).toEqual(["a|4.5|w1", `q|2.4|${missedBank.id}`]);
     expectValid(reps);
   });
 
   it("skips misses it can no longer resolve", () => {
-    const { reps } = build(secPlus, secPlan, 2, { missed: ["a|9.9|gone", "q|1.1|not-a-question"] });
+    const { reps } = build(secPlus, secPlan, secPlan.stops.findIndex((s) => s.id === "1.2"), { missed: ["a|9.9|gone", "q|1.1|not-a-question"] });
     expect(reps.every((r) => r.objective === "1.2")).toBe(true);
   });
 

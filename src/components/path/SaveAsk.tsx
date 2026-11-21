@@ -2,18 +2,22 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { track } from "@/lib/analytics";
-import { MINUTES_PER_STOP } from "@/core/path/plan";
+import { CHECKPOINT_SIZE, MINUTES_PER_STOP } from "@/core/path/plan";
 import type { PathCert, PathStop } from "@/core/path/types";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 
-/** The stop an account opens next, named when it's one to learn from. */
+/** The stop an account opens next, named when it's one to learn from, or the checkpoint. */
 export function nextUpTitle(next: PathStop | null): string | null {
-  return next?.kind === "learn" ? `Next up: ${next.title}` : null;
+  if (next?.kind === "learn") return `Next up: ${next.title}`;
+  if (next?.kind === "checkpoint") return "Next up: your readiness checkpoint";
+  return null;
 }
 
 /** How long that stop takes: the sentence ahead of what an account does. */
 export function nextUpLead(next: PathStop | null): string {
-  return next?.kind === "learn" ? `About ${MINUTES_PER_STOP} minutes of quick questions. ` : "";
+  if (next?.kind === "learn") return `About ${MINUTES_PER_STOP} minutes of quick questions. `;
+  if (next?.kind === "checkpoint") return `${CHECKPOINT_SIZE} exam-style questions, then your score by domain. `;
+  return "";
 }
 
 /**
