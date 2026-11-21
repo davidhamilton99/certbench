@@ -46,7 +46,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), try the first three interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account shows your practice exam score, opens 9 more PBQs, saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses, plus AI study sets from your notes. ${PASS_GUARANTEE_TERMS}`,
+        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), try the first three interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account shows your practice exam score, opens 9 more PBQs, saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses. ${PASS_GUARANTEE_TERMS}`,
         link: { href: "/pricing", label: "See plans and prices" },
       },
       {
@@ -154,25 +154,6 @@ const sections: Section[] = [
     ],
   },
   {
-    id: "ai-study-materials",
-    title: "AI Study Sets",
-    description: "Practice questions written from your own notes, with Pro.",
-    items: [
-      {
-        q: "How does AI question generation work?",
-        a: "Paste your notes or upload a file (PDF, Word, plain text, or a photo of a page) and choose how many questions you want, up to 50. CertBench writes them from your material: a mix of multiple choice, true/false, multi-select, ordering, and matching. A second pass reviews each question for quality before you save the set. Pro members find it under “Study sets”, in the study tools linked under their map.",
-      },
-      {
-        q: "What are the limits on AI generation?",
-        a: "It comes with Pro, with no cap on how many sets you make. Each run writes up to 50 questions, from the first 100,000 characters of your material.",
-      },
-      {
-        q: "Can I share my study sets?",
-        a: "Yes. Make a set public and other Pro members can find and bookmark it in Community, and its share link opens for anyone, no account needed.",
-      },
-    ],
-  },
-  {
     id: "account",
     title: "Account & Billing",
     description:
@@ -180,7 +161,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers one exam: the rest of its path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, spaced review of your misses, and a readiness score, plus unlimited AI study sets from your notes. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel any time.`,
+        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers one exam: the rest of its path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, spaced review of your misses, and a readiness score. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel any time.`,
       },
       {
         q: "Can I study for more than one exam?",

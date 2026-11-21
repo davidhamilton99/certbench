@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { regionPricing } from "@/lib/pricing/ppp";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { Button } from "@/components/ui/button";
@@ -23,22 +25,23 @@ export const metadata = pageMetadata({
   path: "/pricing",
 });
 
-// The free offering: the start of the guided path plus the public tools.
-// These are the real things a visitor can use right now.
+// The free offering: the start of the guided path plus the public pages.
+// Each line is something a visitor can use right now, and says what it needs.
 const FREE_TOOLS = [
-  "The guided path's warm-up — no account",
-  "The stops through the readiness checkpoint — free account",
-  "A full-length practice exam and 12 PBQs per exam — free account",
-  "Subnetting, ports & acronym trainers",
+  "Each exam's warm-up — no account",
+  `A full-length ${REHEARSAL_FORMATS.full.questions}-question practice exam — scored with a free account`,
+  `${FREE_LAB_COUNT} interactive PBQs per exam — the first three with no account`,
+  "Your first stop and the readiness checkpoint — free account",
+  "Subnetting, port & acronym drills",
   "Exam-objective study guides",
 ];
 
+// Pro in the same terms as the path's own offer (PathOffer).
 const PRO_FEATURES = [
   "The whole guided path, every objective to exam day",
-  "Unlimited practice + fresh full-length exams, unseen questions first",
-  "Every PBQ simulation and concept drill",
-  "Spaced repetition + a readiness score you can trust",
-  "Unlimited AI question generation from your notes",
+  "Every hands-on PBQ lab",
+  `Fresh ${REHEARSAL_FORMATS.full.questions}-question timed exam rehearsals, scored by domain`,
+  "Every question for your exam, with spaced review of your misses",
   `Pass guarantee: ${PASS_GUARANTEE_TERMS}`,
 ];
 
@@ -49,7 +52,7 @@ export default async function PricingPage() {
   const pricing = regionPricing(country);
 
   return (
-    <div className="flex min-h-svh flex-col aurora-bg text-foreground">
+    <div className="flex min-h-svh flex-col overflow-x-clip aurora-bg text-foreground">
       <MarketingHeader />
 
       <main className="relative isolate mx-auto w-full max-w-5xl flex-1 px-5 pb-20 pt-12 sm:px-6 sm:pt-20">

@@ -1599,7 +1599,7 @@ export function PathApp({
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
           <p className="-mt-3 text-center text-xs text-muted-foreground lg:col-span-2">
-            Study sets from your notes and full spaced repetition are in your{" "}
+            Your study sets and full spaced repetition are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
             </Link>

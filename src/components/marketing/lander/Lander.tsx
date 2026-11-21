@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 export function LanderPage({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("relative flex min-h-svh flex-col aurora-bg text-foreground", className)}>
+    <div className={cn("relative flex min-h-svh flex-col overflow-x-clip aurora-bg text-foreground", className)}>
       <MarketingHeader />
       <main className="flex-1 pb-8">{children}</main>
       <Footer />
