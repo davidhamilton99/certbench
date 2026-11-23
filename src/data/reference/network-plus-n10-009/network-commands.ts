@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const networkCommands: ReferenceTable = {
   id: "network-commands",
-  title: "Network Troubleshooting Commands",
+  title: "Network troubleshooting commands",
   description: "CLI commands for network diagnostics and troubleshooting, covering platforms tested on Network+ N10-009.",
   columnHeaders: [
     { key: "command", label: "Command", mono: true },

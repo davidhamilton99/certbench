@@ -334,44 +334,6 @@
   }
 }
 
-/* One-shot entrance animations for score bars. Server-rendered (pure CSS):
-   bars grow from the left. Disabled under prefers-reduced-motion. */
-@keyframes gauge-sweep {
-  from {
-    stroke-dashoffset: var(--gauge-track);
-  }
-}
-@keyframes bar-grow {
-  from {
-    transform: scaleX(0);
-  }
-}
-/* Free-drill progress map: tiles settle in, staggered by inline delay. */
-@keyframes tile-in {
-  from {
-    transform: scale(0.8);
-  }
-}
-@layer utilities {
-  .animate-tile {
-    animation: tile-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-  .animate-gauge {
-    animation: gauge-sweep 1s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .animate-bar {
-    transform-origin: left;
-    animation: bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .animate-gauge,
-    .animate-bar,
-    .animate-tile {
-      animation: none;
-    }
-  }
-}
-
 /* =========================================================================
  * Materials
  * `.glass` is the one panel every card is made of. The name is historical:
@@ -649,9 +611,8 @@
 }
 
 /* ─── Guided path ───────────────────────────────────────────────────────────
- * Motion for the player: a new question rises a few pixels, an objective's
- * cell is stamped when a step marks it, and the auto-advance bar drains. The
- * stage stays invisible until the client knows whether to resume or start
+ * Motion for the player: a new screen rises a few pixels, and nothing else
+ * moves. The stage is held until the client knows whether to resume or start
  * fresh, so a returning learner never sees the first question flash past.
  *
  * Entrances move, they don't fade from nothing: content must be readable at
@@ -666,28 +627,6 @@
   to { transform: none; }
 }
 .path-rise { animation: path-rise 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-
-/* A mark pressed onto its cell: down, then settled. No bounce. */
-@keyframes path-pop {
-  0% { transform: scale(1.22); }
-  100% { transform: scale(1); }
-}
-.path-pop {
-  animation: path-pop 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: var(--d, 0ms);
-}
-
-@keyframes path-drain {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
-}
-.path-drain {
-  transform-origin: left;
-  animation: path-drain var(--dur, 1.4s) linear both;
-}
-
-/* The objective in hand is outlined, not pulsing. */
-.path-current { animation: none; }
 
 /* The held stage. Only a returning learner (flagged before first paint by the
    inline script in src/components/path/path-hold.ts) waits for the page's
@@ -712,11 +651,9 @@ html[data-path-late] .path-stage[data-ready="false"] > .path-late { display: blo
 html[data-path-returning][data-path-late] .path-stage[data-ready="false"] > .path-stage-body { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .path-rise,
-  .path-pop {
+  .path-rise {
     animation: none !important;
   }
-  .path-drain { animation-duration: 0.01ms !important; }
 }
 
 /* =========================================================================

@@ -10,6 +10,7 @@ import {
   listDiagnosticQuestions,
 } from "@/server/data/questions";
 import { createAttempt, getInFlightAttempt } from "@/server/data/diagnostics";
+import { requireCertAccess } from "@/server/data/enrollments";
 
 /** Strip answers before questions leave the server. */
 function toExamQuestion(q: CertQuestion) {
@@ -26,6 +27,9 @@ export const POST = defineEndpoint(startDiagnostic, {
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
+    // Pro is granted for each exam: this one must be in the member's plan,
+    // for a new attempt and for one that is resumed.
+    await requireCertAccess(db, user.id, input.certId);
 
     // Resume an in-flight attempt if one exists.
     const inFlight = await getInFlightAttempt(db, user.id, input.certId);

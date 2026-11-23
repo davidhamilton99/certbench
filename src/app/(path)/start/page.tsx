@@ -22,7 +22,13 @@ export const metadata: Metadata = pageMetadata({
  * study path lands here too (`?upgraded=1`), and goes on to their study path,
  * which opens with what Pro opened.
  *
- * While the server is still answering, loading.tsx stands in for this page.
+ * This page has no loading.tsx, and must not be given one. It is every
+ * member's home, and for a member it answers with `redirect()`. With a loading
+ * file beside it the server sends its first bytes, with status 200, before the
+ * page has decided, so on a full page load the redirect can no longer be an
+ * HTTP redirect: the member is sent a page that says it is loading and is then
+ * moved on by a script. Without one, the server answers a member with the
+ * redirect itself, and a visitor with the list of exams in the page's own HTML.
  */
 export default async function StartPage({
   searchParams,

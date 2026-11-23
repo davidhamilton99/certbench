@@ -101,6 +101,7 @@ export function ExamMap({
   rehearsal,
   selected = null,
   onSelect,
+  onLabIntent,
   detail,
   className,
 }: {
@@ -113,23 +114,26 @@ export function ExamMap({
    * calls both "Complete".
    */
   doneStops?: ReadonlySet<string>;
-  /** Objectives of the step that's next (or in hand): the only rows that are tinted. */
-  current?: ReadonlySet<string>;
   /**
-   * Kept for callers. A row that a step has just changed is no longer tinted:
-   * one tint means "next", and the sentence above the outline says what changed.
+   * Objectives of the step that's next (or in hand): the only rows that are
+   * tinted. One tint means "next"; what a step has just changed is said in the
+   * sentence above the outline, and no row is tinted or moved for it.
    */
-  fresh?: ReadonlySet<string>;
+  current?: ReadonlySet<string>;
   /** Each domain's lab, by domain number. A domain without one shows none. */
   labs?: ReadonlyMap<string, LabState>;
-  /** Kept for callers; lab rows are not animated. */
-  labsFresh?: boolean;
   /** The practice exam that ends the path. */
   rehearsal?: MapRehearsal;
   /** The row that's open. */
   selected?: MapTile | null;
   /** Press a row (null closes it). Makes every row a button. */
   onSelect?: (tile: MapTile | null) => void;
+  /**
+   * Called with a lab's id when the lab's row is hovered or takes the focus,
+   * so that a page on which the lab opens can begin to fetch what the lab
+   * needs before it is pressed. Only rows that can be pressed call it.
+   */
+  onLabIntent?: (labId: string) => void;
   /** What opens beneath the selected row. */
   detail?: ReactNode;
   className?: string;
@@ -143,6 +147,7 @@ export function ExamMap({
       {structure.domains.map((d) => {
         const done = d.objectives.filter((o) => standingOf(o.code) === "complete").length;
         const headingId = `${id}-domain-${d.number}`;
+        const labId = d.lab?.id;
         return (
           <section key={d.number} className="grid gap-0">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-foreground/70 pb-2">
@@ -185,6 +190,7 @@ export function ExamMap({
               {d.lab && labs?.has(d.number) && (
                 <Row
                   onTap={tap?.(labTileKey(d.number))}
+                  onIntent={onLabIntent && labId ? () => onLabIntent(labId) : undefined}
                   selected={selected === labTileKey(d.number)}
                   detail={selected === labTileKey(d.number) ? detail : null}
                 >
@@ -289,12 +295,15 @@ function ExamStatus({ rehearsal }: { rehearsal: MapRehearsal }) {
 /** A row of the outline: a list item, or a button in one when rows can be pressed. */
 function Row({
   onTap,
+  onIntent,
   selected,
   detail,
   highlight = false,
   children,
 }: {
   onTap?: () => void;
+  /** The row is hovered or takes the focus: it is about to be pressed, or may be. */
+  onIntent?: () => void;
   selected: boolean;
   /** What opens beneath this row while it is selected. */
   detail?: ReactNode;
@@ -313,6 +322,8 @@ function Row({
         type="button"
         aria-expanded={selected}
         onClick={onTap}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
         className={cn(
           row,
           "w-[calc(100%+1rem)] transition-[background-color] focus-visible:-outline-offset-2",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
+import { longDate } from "@/core/path/versions";
 import { regionPricing } from "@/lib/pricing/ppp";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { PRO_PRICES, PRO_PRICE_REGION_NOTE, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
@@ -10,12 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 import { isBillingPeriod } from "@/components/billing/plans";
+import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { PRICING_PAGE_UPDATED_ISO } from "@/lib/seo/page-dates";
 import { PRICING_COLUMN, PRICING_PLANS, PricingIntro } from "./intro";
 
 export const metadata = pageMetadata({
   title: "Pricing",
-  description: `CertBench is free to start. A free account includes a full-length ${REHEARSAL_FORMATS.full.questions}-question practice exam and ${FREE_LAB_COUNT} hands-on labs (PBQs) for each exam. CertBench Pro opens the whole study path, every lab and new timed practice exams for ${PRO_PRICES.monthly} a month, ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year. ${PRO_PRICE_REGION_NOTE}`,
+  // The free labs are named with their exams: Security+ SY0-801 has no free lab (see EXAMS_WITH_FREE_LABS).
+  description: `CertBench is free to start. A free account includes a full-length ${REHEARSAL_FORMATS.full.questions}-question practice exam for each exam, and ${FREE_LAB_COUNT} hands-on labs (PBQs) for each of ${EXAMS_WITH_FREE_LABS}. CertBench Pro opens the whole study path, every lab and new timed practice exams for ${PRO_PRICES.monthly} a month, ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year. ${PRO_PRICE_REGION_NOTE}`,
   path: "/pricing",
 });
 
@@ -24,7 +28,7 @@ export const metadata = pageMetadata({
 const FREE_TOOLS = [
   "The introductory questions for each exam, with no account",
   `One full-length practice exam of ${REHEARSAL_FORMATS.full.questions} questions, scored with a free account`,
-  `${FREE_LAB_COUNT} hands-on labs (PBQs) for each exam, the first three with no account`,
+  `${FREE_LAB_COUNT} hands-on labs (PBQs) for each of ${EXAMS_WITH_FREE_LABS}, the first three with no account`,
   "Your first study step and the readiness checkpoint, with a free account",
   "Practice drills for subnetting, port numbers and acronyms",
   "Study guides for the exam objectives",
@@ -138,6 +142,8 @@ export default async function PricingPage({
             </Link>
             .
           </p>
+          {/* The day these words last changed, kept beside the sitemap's date for this page. */}
+          <p className="text-note">This page was last updated on {longDate(PRICING_PAGE_UPDATED_ISO)}.</p>
         </div>
       </div>
     </div>

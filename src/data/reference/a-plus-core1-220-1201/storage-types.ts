@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const storageTypes: ReferenceTable = {
   id: "storage-types",
-  title: "Storage Devices",
+  title: "Storage devices",
   description: "Storage technologies, interfaces, speeds, and use cases for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "type", label: "Storage Type" },

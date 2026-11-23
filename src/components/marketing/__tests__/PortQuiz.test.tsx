@@ -48,18 +48,33 @@ const ENTRIES: PortEntry[] = [
   { port: "3389", protocol: "RDP", service: "Remote Desktop", transport: "TCP" },
 ];
 
+/**
+ * What the ports decks say about each of these, which is what a visitor reads
+ * after the verdict. Four are rows of the Security+ table, whose deck gives a
+ * port one sentence. "SSH" by that name is a row of the Network+ table, whose
+ * deck adds what the protocol is for. None of them is the note in `service`.
+ */
+const SENTENCES: Record<string, string> = {
+  "22": "SSH uses port 22. Secure Shell is used for encrypted remote access, SCP and SFTP.",
+  "53": "DNS uses port 53.",
+  "80": "HTTP uses port 80.",
+  "443": "HTTPS uses port 443.",
+  "3389": "RDP uses port 3389.",
+};
+
 /** The card's answers: a group named by the question, each answer a plain button. */
 const answerGroup = () => screen.getByRole("group");
 const answers = () => within(answerGroup());
 
-/** The right answer to the card on screen, read off its cue the way a visitor would. */
-function rightAnswer(): string {
+/** The fact on the card on screen and its right answer, read off the cue the way a visitor would. */
+function shown(): { entry: PortEntry; right: string } {
   const asksPort = screen.queryByText("Which port?") !== null;
   // The group is named by the prompt: a protocol, or a port.
   const prompt = document.getElementById(answerGroup().getAttribute("aria-labelledby")!)!.textContent!;
   const entry = ENTRIES.find((e) => (asksPort ? e.protocol : e.port) === prompt)!;
-  return asksPort ? entry.port : entry.protocol;
+  return { entry, right: asksPort ? entry.port : entry.protocol };
 }
+const rightAnswer = () => shown().right;
 
 function answer(right: boolean) {
   const target = rightAnswer();
@@ -105,7 +120,7 @@ describe("portRep", () => {
       options: ["80", "22", "443", "3389"],
       answer: 1,
       mono: true,
-      takeaway: "SSH uses port 22 over TCP. Secure Shell.",
+      takeaway: SENTENCES["22"],
     });
   });
 
@@ -117,8 +132,28 @@ describe("portRep", () => {
       options: ["HTTP", "SSH", "HTTPS", "RDP"],
       answer: 1,
       mono: false,
-      takeaway: "SSH uses port 22 over TCP. Secure Shell.",
+      takeaway: SENTENCES["22"],
     });
+  });
+
+  it("prints the sentences of the row's own ports deck, the same whichever way it is asked", () => {
+    const ftp: PortEntry = { port: "20/21", protocol: "FTP", service: "File Transfer Protocol (data/control)", transport: "TCP" };
+    const sentences = "FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data and port 21 for control.";
+    expect(portRep({ direction: "port", answer: ftp, options: [ftp, ...options] }).takeaway).toBe(sentences);
+    expect(portRep({ direction: "protocol", answer: ftp, options: [ftp, ...options] }).takeaway).toBe(sentences);
+    // Each fixture reads as its deck has it, and none ends on its note ("... over TCP. Secure Shell.").
+    for (const entry of ENTRIES) {
+      const { takeaway } = portRep({ direction: "port", answer: entry, options: ENTRIES });
+      expect(takeaway).toBe(SENTENCES[entry.port]);
+      expect(takeaway.endsWith(entry.service + ".")).toBe(false);
+    }
+  });
+
+  it("gives a port that no deck explains one plain sentence, and never the table's note", () => {
+    const other: PortEntry = { port: "9999", protocol: "Example", service: "A note: not a sentence", transport: "TCP" };
+    expect(portRep({ direction: "port", answer: other, options: [other, ...options] }).takeaway).toBe("Example uses port 9999 over TCP.");
+    const bare = { ...other, transport: "" };
+    expect(portRep({ direction: "protocol", answer: bare, options: [bare, ...options] }).takeaway).toBe("Example uses port 9999.");
   });
 });
 
@@ -136,11 +171,15 @@ describe("PortQuiz", () => {
 
     for (let i = 0; i < 20; i++) {
       const miss = i === 0 || i === 3;
+      const { entry, right } = shown();
       answer(!miss);
-      // The verdict is a sentence, read with the button that takes the focus.
+      // The verdict is a sentence, read with the button that takes the focus,
+      // and the ports deck's own sentences follow it.
       const next = screen.getByRole("button", { name: i === 19 ? /^View my result/ : /^Continue/ });
       expect(next).toHaveFocus();
-      expect(next).toHaveAccessibleDescription(miss ? /^Incorrect\. The correct answer is / : /^Correct\./);
+      expect(next).toHaveAccessibleDescription(
+        miss ? `Incorrect. The correct answer is ${right}. ${SENTENCES[entry.port]}` : `Correct. ${SENTENCES[entry.port]}`
+      );
       if (i === 2) expect(bar().slice(0, 4)).toBe("WRR-");
       fireEvent.click(next);
       if (i < 19) {

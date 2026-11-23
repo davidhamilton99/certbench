@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const printerTypes: ReferenceTable = {
   id: "printer-types",
-  title: "Printer Types",
+  title: "Printer types",
   description: "Printer technologies, consumables, maintenance procedures, and use cases for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "type", label: "Printer Type" },

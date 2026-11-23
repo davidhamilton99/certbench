@@ -15,9 +15,10 @@ vi.mock("@/lib/analytics", () => ({ track: vi.fn(), identifyUser: vi.fn() }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/", useRouter: () => ({ push: vi.fn() }) }));
 
 import { PbqExampleLanding } from "../PbqExampleLanding";
-import { PBQ_EXAMPLE_PAGES } from "@/lib/seo/cert-pages";
+import { CERT_PAGES_UPDATED_ISO, PBQ_EXAMPLE_PAGES } from "@/lib/seo/cert-pages";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pbqRegistry } from "@/data/pbq";
-import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { FREE_LAB_COUNT, LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
 import { EXAM_CODES } from "@/core/path/versions";
 import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 import { MODES } from "@/lib/tools/subnetting";
@@ -77,13 +78,16 @@ describe("PBQ example pages", () => {
     }
     expect(text(chooser?.querySelector('button[aria-pressed="true"]'))).toMatch(/^\d+ minutes?, Introductory, /);
 
+    // The chooser's labs are the ones that need no account: the product's one figure for it.
+    expect(tiles).toHaveLength(LABS_WITHOUT_ACCOUNT);
+
     // The rest of the free labs, listed under the player to play on the page.
     const more = [...doc.querySelectorAll("section")].find(
-      (s) => text(s.querySelector("h2")) === `${FREE_LAB_COUNT - 3} more free labs`
+      (s) => text(s.querySelector("h2")) === `${FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT} more free labs`
     );
     expect(more).toBeTruthy();
     const rows = [...more!.querySelectorAll("button")];
-    expect(rows).toHaveLength(FREE_LAB_COUNT - 3);
+    expect(rows).toHaveLength(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT);
     for (const row of rows) expect(row.hasAttribute("aria-label")).toBe(false);
     // Each domain's heading reads as words: "Domain 1: General Security Concepts".
     const domains = [...more!.querySelectorAll("h3")].map(text);
@@ -108,11 +112,26 @@ describe("PBQ example pages", () => {
     expect(text(labs)).toContain(`Pro opens all ${scenarios.length} on your`);
 
     // The facts under the title say how many labs are free, and what an account is needed for.
+    expect(LABS_WITHOUT_ACCOUNT).toBe(3);
     expect(facts(doc)).toEqual({
       "Free labs": String(FREE_LAB_COUNT),
       Grading: "With partial credit",
-      Account: "Not required for the first 3 labs",
+      Account: `Not required for the first ${LABS_WITHOUT_ACCOUNT} labs`,
     });
+
+    // For search and AI answers: the structured data carries the day the page's words last changed.
+    const resource = [...doc.querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent ?? "{}") as Record<string, unknown>)
+      .find((d) => d["@type"] === "LearningResource");
+    expect(resource?.dateModified).toBe(CERT_PAGES_UPDATED_ISO);
+
+    // What the study path covers, in words that are true of the exam: Network+
+    // is set out by CertBench's own topics, so its page does not say "every exam objective".
+    const official = usesOfficialObjectiveNumbers(page.certSlug);
+    expect(text(doc.body)).toContain(
+      `The study path covers every ${official ? "exam objective" : "topic"} in short steps, and a readiness checkpoint shows where you stand.`
+    );
+    if (!official) expect(text(doc.body)).not.toMatch(/every (?:exam )?objective/);
     // The line over the title holds the one fact the title does not: the exam's code.
     expect(text(doc.querySelector("h1")?.previousElementSibling)).toContain(
       (EXAM_CODES as Record<string, string>)[page.certSlug]

@@ -62,6 +62,16 @@ describe("POST /api/story", () => {
     expect(insert).not.toHaveBeenCalled();
   });
 
+  // Such a signature used to make the comparison throw, and the endpoint answered 500.
+  it("turns away a signature of the right length with a character outside ASCII, as it does any forged link", async () => {
+    const [body, sig] = signStoryToken("user-1", "cert-1").split(".");
+    const token = `${body}.${sig.slice(0, -1)}${String.fromCharCode(0xe9)}`;
+    const res = await post({ token, passed: true, quote: "A long enough story here.", displayName: "X" });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: { code: "unauthorized", message: "This link has expired." } });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
   it("asks a pass for a sentence or two", async () => {
     const res = await post({ token: signStoryToken("user-1", "cert-1"), passed: true, quote: "ok", displayName: "Sam K." });
     expect(res.status).toBe(400);

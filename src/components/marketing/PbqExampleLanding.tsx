@@ -3,10 +3,11 @@ import { pbqRegistry } from "@/data/pbq";
 import type { PbqScenario } from "@/data/pbq/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { labLibrary, minutesOf } from "@/core/path/labs";
-import { freeLabs } from "@/core/path/free-labs";
+import { freeLabs, LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
 import { EXAM_CODES } from "@/core/path/versions";
 import { JsonLd } from "@/components/seo/JsonLd";
-import type { PbqExamplePage } from "@/lib/seo/cert-pages";
+import { CERT_PAGES_UPDATED_ISO, type PbqExamplePage } from "@/lib/seo/cert-pages";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PbqLab, type FreeLab, type LabTier } from "@/components/marketing/PbqLab";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -25,8 +26,8 @@ const TIER: Record<PbqScenario["type"], LabTier> = {
   simulation: "Exam level",
 };
 
-/** The labs that the chooser leads with, which need no account (see PbqLab). */
-const OPEN_TO_ALL = 3;
+/** The labs that the chooser leads with, which need no account: the product's one figure for it (see PbqLab). */
+const OPEN_TO_ALL = LABS_WITHOUT_ACCOUNT;
 
 /** The server template that the four PBQ example pages share. */
 export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
@@ -46,6 +47,8 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const path = `/path/${page.certSlug}`;
   const examName = EXAM_NAMES[page.certSlug] ?? page.title.replace(/ PBQ examples$/, "");
   const examCode = (EXAM_CODES as Record<string, string | undefined>)[page.certSlug];
+  // Network+ is set out by CertBench's own topics, so nothing here says that its study path covers every objective.
+  const official = usesOfficialObjectiveNumbers(page.certSlug);
 
   // A free, interactive practice resource, described so that search and AI
   // answers can say what it is and that it is free.
@@ -55,6 +58,8 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
     name: page.metaTitle,
     description: page.metaDescription,
     url: `https://certbench.dev/${page.path}`,
+    // The day the page's words last changed: the day the sitemap gives for it.
+    dateModified: CERT_PAGES_UPDATED_ISO,
     learningResourceType: "Interactive simulation",
     interactivityType: "active",
     educationalUse: "Practice",
@@ -85,7 +90,13 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
       {/* The thing the visitor came for comes first: a lab, on the study path's own stage. */}
       {labs.length > 0 && (
         <LanderStage width="lg">
-          <PbqLab labs={labs} examName={examName} pathHref={path} labCount={scenarios.length} />
+          <PbqLab
+            labs={labs}
+            examName={examName}
+            pathHref={path}
+            labCount={scenarios.length}
+            officialObjectives={official}
+          />
         </LanderStage>
       )}
 
@@ -163,7 +174,8 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
         label="Start the study path"
         context="pbq_page"
       >
-        The study path covers every exam objective in short steps, and a readiness checkpoint shows where you stand.
+        The study path covers every {official ? "exam objective" : "topic"} in short steps, and a readiness checkpoint
+        shows where you stand.
       </PathCard>
 
       <LanderProse>

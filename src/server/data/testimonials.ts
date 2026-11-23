@@ -24,6 +24,29 @@ interface Row {
 const COLUMNS =
   "id, certification_id, passed, quote, display_name, created_at";
 
+/** What the person who sent a comment is told when it could not be stored. */
+export const COMMENT_NOT_SAVED = "The comment could not be saved. Please try again.";
+
+/** What the page that lists testimonials reports when they could not be read. */
+export const TESTIMONIALS_NOT_READ = "The testimonials could not be read. Please try again.";
+
+/** What the admin is told when a testimonial's status could not be changed. */
+export const TESTIMONIAL_NOT_UPDATED = "The testimonial could not be updated. Please try again.";
+
+/**
+ * The error for a fault that the database reports on this table.
+ *
+ * The database's own text names tables, columns, constraints and policies, and
+ * an endpoint answers its caller with the message of an ApiError
+ * (src/server/api/define-endpoint.ts). One of the callers is public
+ * (/api/story). So the database's text goes to the server log, and the caller
+ * is given a sentence.
+ */
+function databaseFault(what: string, cause: { message: string; code?: string }, sentence: string): ApiError {
+  console.error(`[testimonials] ${what} failed${cause.code ? ` (${cause.code})` : ""}: ${cause.message}`);
+  return new ApiError("internal", sentence);
+}
+
 /** Resolve certification_id → name for a set of rows (avoids an embedded join). */
 async function attachCertNames(
   db: Db,
@@ -62,7 +85,7 @@ export async function listApprovedTestimonials(
     .eq("passed", true)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error) throw new ApiError("internal", error.message);
+  if (error) throw databaseFault("the read of the approved testimonials", error, TESTIMONIALS_NOT_READ);
   return attachCertNames(db, (data ?? []) as Row[]);
 }
 
@@ -80,7 +103,7 @@ export async function listPendingTestimonials(db: Db): Promise<Testimonial[]> {
     .select(COLUMNS)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
-  if (error) throw new ApiError("internal", error.message);
+  if (error) throw databaseFault("the read of the testimonials waiting for review", error, TESTIMONIALS_NOT_READ);
   return attachCertNames(db, (data ?? []) as Row[]);
 }
 
@@ -106,7 +129,7 @@ export async function insertTestimonial(
   if (error?.code === "23505") {
     throw new ApiError("conflict", "You have already shared a story for this exam.");
   }
-  if (error) throw new ApiError("internal", error.message);
+  if (error) throw databaseFault("the insert of a testimonial", error, COMMENT_NOT_SAVED);
 }
 
 /**
@@ -129,7 +152,7 @@ export async function setTestimonialStatus(
     .update({ status })
     .eq("id", id)
     .select("id");
-  if (error) throw new ApiError("internal", error.message);
+  if (error) throw databaseFault("the update of a testimonial's status", error, TESTIMONIAL_NOT_UPDATED);
   if (!data || data.length === 0) {
     throw new ApiError("not_found", "This testimonial could not be found, so nothing was changed.");
   }

@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const attackTypes: ReferenceTable = {
   id: "attack-types",
-  title: "Attack Types",
+  title: "Attack types",
   description: "Common threat categories, attack vectors, and mitigations for the SY0-701 exam.",
   columnHeaders: [
     { key: "attack", label: "Attack" },

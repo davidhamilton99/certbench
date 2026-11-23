@@ -21,6 +21,13 @@ export const CONNECTION_LOST = "The connection was lost. Please check your conne
 /** The server did not answer within the time allowed. */
 export const REQUEST_TIMED_OUT = "The request took too long. Please try again.";
 
+/**
+ * The server answered, but a part of this page that is needed to read the
+ * answer is no longer there to fetch: a new version of the site was published
+ * while the page was open. Asking again cannot help; loading the page can.
+ */
+export const PAGE_OUT_OF_DATE = "This page is out of date. Please reload the page.";
+
 /** Anything without a more exact sentence. */
 export const REQUEST_FAILED = `The request could not be completed. Please try again. If the problem continues, write to ${SUPPORT_EMAIL}.`;
 
@@ -53,7 +60,9 @@ export function userMessage(error: unknown, fallback: string = REQUEST_FAILED): 
     // your 10 free questions for today."). An internal error never does.
     if (error.code !== "internal" && isSentence(error.message)) return error.message;
     if (error.code === "internal") {
-      if (error.message === CONNECTION_LOST || error.message === REQUEST_TIMED_OUT) return error.message;
+      if (error.message === CONNECTION_LOST || error.message === REQUEST_TIMED_OUT || error.message === PAGE_OUT_OF_DATE) {
+        return error.message;
+      }
       return fallback;
     }
     return BY_CODE[error.code];

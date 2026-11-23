@@ -38,12 +38,18 @@ function headline(score: number, before: NonNullable<RehearsalRun["done"]>["befo
  * It is shown in answer to a press or to the clock running out, so it takes the
  * focus as it arrives (`takeFocus`): a screen reader is told that this is the
  * result, and that the time limit was reached when it was, before anything else.
+ *
+ * On the study path the result is a screen of its own, and its headline is
+ * that screen's title (`headlineAs="h1"`). On a public page it stands under the
+ * page's own title, and the headline is an h2. "Your answers" is the heading
+ * one level under the headline in both places.
  */
 export function RehearsalResult({
   run,
   structure,
   label = "Practice exam",
   caption = "Practice exam result",
+  headlineAs = "h2",
   takeFocus = true,
   children,
 }: {
@@ -53,6 +59,8 @@ export function RehearsalResult({
   label?: string;
   /** The words above the score's figure. */
   caption?: string;
+  /** "h1" where the result is the title of the screen it is on (the study path). */
+  headlineAs?: "h1" | "h2";
   /** False where the page that shows it moves the focus itself. */
   takeFocus?: boolean;
   children: ReactNode;
@@ -85,6 +93,7 @@ export function RehearsalResult({
         structure={structure}
         kicker={name}
         headline={headline(result.score, before)}
+        headlineAs={headlineAs}
         caption={caption}
         from={before?.score}
         summary={
@@ -100,8 +109,9 @@ export function RehearsalResult({
       <div className="grid gap-3 sm:grid-cols-2">
         {opportunity && <OpportunityNote domain={opportunity} />}
         <div className={cn("glass flex gap-3 rounded-lg p-4 sm:p-5", !opportunity && "sm:col-span-2")}>
-          <Timer className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-          <div className="grid gap-0.5 text-sm">
+          {/* In the ink of the note beside it: the pressable colour is kept for what can be pressed. */}
+          <Timer className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <div className="grid content-start gap-0.5 text-small">
             <span className="font-medium">
               {timedOut ? `The time limit of ${limit} minutes was reached.` : `You used ${minutesUsed} of ${limit} minutes.`}
             </span>
@@ -116,12 +126,21 @@ export function RehearsalResult({
 
       {children}
 
-      <RehearsalAnswers run={run} structure={structure} />
+      <RehearsalAnswers run={run} structure={structure} headingAs={headlineAs === "h1" ? "h2" : "h3"} />
     </div>
   );
 }
 
-function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: PathStructure }) {
+function RehearsalAnswers({
+  run,
+  structure,
+  headingAs: Heading,
+}: {
+  run: RehearsalRun;
+  structure: PathStructure;
+  /** One level under the result's headline. */
+  headingAs: "h2" | "h3";
+}) {
   const items = run.reps.map((rep, i) => ({ rep, i, pick: run.picks[i], right: run.picks[i] === rep.answer }));
   const missed = items.filter((x) => !x.right);
   const [show, setShow] = useState<"missed" | "all">(missed.length > 0 ? "missed" : "all");
@@ -131,10 +150,13 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
   return (
     <section className="glass grid gap-5 rounded-lg p-5 sm:p-6" aria-labelledby="rehearsal-answers">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 id="rehearsal-answers" className="cb-statement">
+        <Heading id="rehearsal-answers" className="cb-statement">
           Your answers
-        </h3>
-        <div role="tablist" aria-label="Which answers to show" className="inline-flex rounded-md bg-muted p-1 text-small">
+        </Heading>
+        {/* A filter of the one list under it: two buttons, of which one is
+            pressed. They are not tabs, which would each need a panel of their
+            own and the arrow keys to move between them. */}
+        <div role="group" aria-label="Which answers to show" className="inline-flex rounded-md bg-muted p-1 text-small">
           {(
             [
               ["missed", `Missed (${missed.length})`],
@@ -144,8 +166,7 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
             <button
               key={key}
               type="button"
-              role="tab"
-              aria-selected={show === key}
+              aria-pressed={show === key}
               onClick={() => setShow(key)}
               className={cn(
                 "cb-tap rounded-xs px-3 py-1 font-medium transition-colors duration-100",

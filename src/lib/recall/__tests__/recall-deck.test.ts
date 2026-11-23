@@ -573,6 +573,23 @@ describe("all recall decks (every cert)", () => {
     );
   });
 
+  it("names every deck and every table in sentence case, with 'and' written out", () => {
+    // These names are the tabs of the Recall and Reference pages.
+    const names = slugs.flatMap((slug) => [
+      ...referenceRegistry[slug].map((table) => table.title),
+      ...getRecallDecks(slug).map((deck) => deck.config.label),
+    ]);
+    expect(names.length).toBeGreaterThanOrEqual(48);
+    // A proper name keeps its capital wherever it stands; an abbreviation (OSI, AAA, CIDR, CLI) is all capitals.
+    const PROPER = /^(?:Windows|Linux|Wi-Fi)$/;
+    for (const name of names) {
+      expect(name, name).toMatch(/^[A-Z]/);
+      expect(name, name).not.toMatch(/[&/]/);
+      const capitalized = name.split(" ").slice(1).filter((word) => /^[A-Z][a-z]/.test(word) && !PROPER.test(word));
+      expect(capitalized, name).toEqual([]);
+    }
+  });
+
   it("no deck in any cert drills a placeholder like N/A", () => {
     for (const slug of slugs) {
       for (const deck of getRecallDecks(slug)) {
@@ -691,6 +708,17 @@ describe("acronyms data integrity", () => {
   it("acronyms are unique, so the drill is never ambiguous", () => {
     const acronyms = table.entries.map((e) => e.columns.acronym);
     expect(new Set(acronyms).size).toBe(acronyms.length);
+  });
+
+  it("names its study groupings in sentence case, with 'and' written out", () => {
+    // The grouping is printed in the Category column of the public acronym list and of the Reference page.
+    const groupings = [...new Set(table.entries.map((e) => e.columns.category))];
+    expect(groupings.length).toBeGreaterThanOrEqual(10);
+    for (const name of groupings) {
+      expect(name, name).toMatch(/^[A-Z]/);
+      expect(name, name).not.toMatch(/&/);
+      expect(name.split(" ").slice(1).filter((word) => /^[A-Z][a-z]/.test(word)), name).toEqual([]);
+    }
   });
 
   it("expansions are unique too", () => {

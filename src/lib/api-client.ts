@@ -1,7 +1,7 @@
 import type { ContractInput, ContractOutput, EndpointContract } from "@/contracts/common";
 import { API_ERROR_CODES, ApiError, type ApiErrorCode } from "@/contracts/errors";
 import { isLazyContract, type LazyContract } from "@/contracts/lazy";
-import { CONNECTION_LOST, REQUEST_TIMED_OUT } from "@/lib/errors/user-message";
+import { CONNECTION_LOST, PAGE_OUT_OF_DATE, REQUEST_TIMED_OUT } from "@/lib/errors/user-message";
 
 /** How long a request may take before the caller is told it took too long. */
 export const API_TIMEOUT_MS = 15_000;
@@ -70,8 +70,17 @@ export async function api<C extends EndpointContract>(
     full = await schemas;
   } catch {
     // The request was answered, but the part of the page that checks the
-    // answer could not be fetched: the connection went in between.
-    throw new ApiError("internal", CONNECTION_LOST);
+    // answer could not be fetched. One more attempt: a single failed fetch is
+    // common on a phone.
+    try {
+      full = await (contract as LazyContract<C>).load();
+    } catch {
+      // The server has just answered, so the connection is there. What is
+      // missing is the file: a new version of the site was published while
+      // this page was open, and the old file is gone. The request itself was
+      // carried out, so the page says to reload and does not say to try again.
+      throw new ApiError("internal", PAGE_OUT_OF_DATE);
+    }
   }
   // parse() on a generic ZodType loses the inferred output type, so this cast is safe.
   return full.output.parse(body) as ContractOutput<C>;

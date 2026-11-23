@@ -43,10 +43,13 @@ export function verifyStoryToken(token: string, now: number = Date.now()): Story
   if (dot < 1) return null;
   const body = token.slice(0, dot);
   const sig = token.slice(dot + 1);
-  const expected = sign(body);
-  if (sig.length !== expected.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
-    return null;
-  }
+  // The comparison in constant time throws when its inputs differ in byte
+  // length, and the token is whatever the address carried: a signature with the
+  // right number of characters and one of them outside ASCII is longer in
+  // bytes. So the lengths compared first are the byte lengths.
+  const given = Buffer.from(sig);
+  const expected = Buffer.from(sign(body));
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
   try {
     const p = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as Record<string, unknown>;
     if (typeof p.u !== "string" || typeof p.c !== "string" || typeof p.e !== "number") return null;

@@ -29,6 +29,8 @@ const h = vi.hoisted(() => ({
   failingPage: 0,
   /** The pages of accounts the run asked for, in order. */
   pagesAsked: [] as number[],
+  /** The display name on every profile, or null for an account that has no profile. */
+  displayName: "Sam Lee" as string | null,
   sendEmail: vi.fn<(email: Sent) => Promise<boolean>>(async () => true),
   structure: {
     certSlug: "security-plus-sy0-701",
@@ -74,7 +76,7 @@ vi.mock("@/server/data/enrollments", () => ({
   },
 }));
 vi.mock("@/server/data/profiles", () => ({
-  getProfile: async () => ({ displayName: "Sam Lee" }),
+  getProfile: async () => (h.displayName === null ? null : { displayName: h.displayName }),
 }));
 vi.mock("@/server/data/certifications", () => ({
   getCertification: async (_db: unknown, id: string) => ({
@@ -251,6 +253,7 @@ beforeEach(() => {
   h.ignoresPage = false;
   h.failingPage = 0;
   h.pagesAsked = [];
+  h.displayName = "Sam Lee";
   h.sendEmail.mockReset();
   h.sendEmail.mockImplementation(async () => true);
   capture.mockClear();
@@ -393,6 +396,9 @@ describe("runLifecycleEmails", () => {
       });
       expect(email.html).toContain(`href="${address}"`);
       expect(email.text).toContain(`Unsubscribe: ${address}`);
+      // Every email names its sender, in the footer and at the end of the text part.
+      expect(email.html).toContain("Sent by CertBench.<br>");
+      expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${address}`)).toBe(true);
     }
   });
 
@@ -517,6 +523,38 @@ describe("runLifecycleEmails", () => {
     const monday = await run(MONDAY);
     expect(monday.sent).toEqual(["close: Your Security+ readiness checkpoint is next"]);
   });
+
+  // A display name is whatever was typed at sign-up. One that is a link or
+  // markup is not printed, escaped or otherwise, in any part of any email.
+  it("leaves a display name that is not a name out of every lifecycle email", async () => {
+    h.displayName = '<a href="https://evil.example/claim">Claim</a>';
+    account("sat", { examDate: "2026-10-31" });
+    account("dated", { examDate: "2026-11-09" });
+    account("free", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
+    account("decided", { path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+
+    const monday = await run(MONDAY);
+    expect(monday.emails).toHaveLength(4);
+    for (const email of monday.emails) {
+      for (const part of [email.subject, email.html, email.text]) {
+        expect(part).not.toContain("evil.example");
+        expect(part).not.toContain("Claim");
+      }
+    }
+    expect(monday.emails.map((e) => /<h1[^>]*>([^<]*)<\/h1>/.exec(e.html)?.[1]).sort()).toEqual([
+      "Continue your study path",
+      "How did your exam go?",
+      "Your checkpoint result",
+      "Your exam is in 7 days",
+    ]);
+  });
+
+  it("greets an account that has no profile without a name", async () => {
+    h.displayName = null;
+    account("dated", { examDate: "2026-11-09" });
+    const monday = await run(MONDAY);
+    expect(monday.emails[0].text).toMatch(/^Your exam is in 7 days\.\n/);
+  });
 });
 
 describe("runLifecycleEmails, beyond one page of accounts", () => {
@@ -614,10 +652,50 @@ describe("sendWelcome", () => {
     expect(await welcome(WEDNESDAY)).toEqual([]);
   });
 
-  it("is transactional: it carries no unsubscribe header, and it is sent whatever the email preferences say", async () => {
-    h.tables.email_preferences.push({ user_id: "new", digest_enabled: false, unsubscribe_token: "tok-new" });
+  // The welcome used to be sent as a transactional email: no unsubscribe
+  // header, and sent whatever the preferences said. It goes to an address that
+  // nobody has confirmed, so it now carries what every other email carries.
+  it("carries the unsubscribe address in its footer, in its text part and in both headers", async () => {
     expect(await welcome(MONDAY)).toEqual([SUBJECT]);
-    expect(h.sendEmail.mock.calls[0][0].headers).toBeUndefined();
+    const email = h.sendEmail.mock.calls[0][0];
+    const address = "https://certbench.dev/api/email/unsubscribe?token=tok-new";
+    expect(email.headers).toEqual({
+      "List-Unsubscribe": `<${address}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    });
+    expect(email.html).toContain(`href="${address}"`);
+    expect(email.text).toContain(`Sent by CertBench.\nUnsubscribe: ${address}`);
+    // The preferences row that holds the token is created with the welcome.
+    expect(h.tables.email_preferences).toMatchObject([{ user_id: "new", digest_enabled: true, unsubscribe_token: "tok-new" }]);
+  });
+
+  it("is not sent to an account that has unsubscribed, on that day or on a later one", async () => {
+    h.tables.email_preferences.push({ user_id: "new", digest_enabled: false, unsubscribe_token: "tok-new" });
+    expect(await welcome(MONDAY)).toEqual([]);
+    expect(await welcome(TUESDAY)).toEqual([]);
+    expect(welcomed()).toHaveLength(0);
+    expect(capture).not.toHaveBeenCalled();
+  });
+
+  // The welcome goes to an address that nobody has confirmed, and the display
+  // name is whatever was typed at sign-up. Printed as it stood, a stranger
+  // could have CertBench send their own markup and link to any address.
+  it("sends nobody a stranger's markup or link: a name that is not a name is left out of the greeting", async () => {
+    h.displayName = '<a href="https://evil.example/claim">Claim your prize</a>';
+    expect(await welcome(MONDAY)).toEqual([SUBJECT]);
+    const email = h.sendEmail.mock.calls[0][0];
+    expect(email.html).toContain(">Welcome to CertBench</h1>");
+    expect(email.text).toMatch(/^Welcome to CertBench\.\n/);
+    for (const part of [email.subject, email.html, email.text]) {
+      expect(part).not.toContain("evil.example");
+      expect(part).not.toContain("Claim");
+    }
+  });
+
+  it("welcomes an account that has no profile without a name", async () => {
+    h.displayName = null;
+    expect(await welcome(MONDAY)).toEqual([SUBJECT]);
+    expect(h.sendEmail.mock.calls[0][0].text).toMatch(/^Welcome to CertBench\.\n/);
   });
 
   it("never welcomes a test account, and never throws when the email cannot be prepared", async () => {

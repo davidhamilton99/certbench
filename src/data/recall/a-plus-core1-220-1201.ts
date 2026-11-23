@@ -4,7 +4,7 @@ import { isDataRate, type RecallDeckConfig } from "@/lib/recall/recall-deck";
 export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
   {
     id: "a1-ports",
-    label: "Ports & protocols",
+    label: "Ports and protocols",
     blurb: "Match protocols to their port numbers.",
     tableId: "ports-protocols",
     mode: "choice",
@@ -59,9 +59,9 @@ export const aPlusCore1RecallConfigs: RecallDeckConfig[] = [
         "Cat 6": "Cat 6 has a maximum speed of 10 Gbps. That speed reaches 55 m, and 1 Gbps reaches 100 m.",
         "Single-mode fiber (SMF)": "Single-mode fiber (SMF) carries 100 Gbps or more. It reaches 40 km or more.",
         "Multimode fiber (MMF)":
-          "Multimode fiber (MMF) has a maximum speed of 10 Gbps. Its maximum distance is 550 m with OM3 or OM4 fiber.",
+          "Multimode fiber (MMF) has a maximum speed of 10 Gbps. Its maximum distance at that speed is 300 m on OM3 fiber.",
         "USB Type-C":
-          "USB Type-C carries up to 40 Gbps with Thunderbolt 4 (TB4). Its maximum distance is 2 m with a passive cable.",
+          "USB Type-C carries up to 40 Gbps with Thunderbolt 4 (TB4). Passive cables reach 0.8 m and active cables reach 2 m.",
         "Thunderbolt 3":
           "Thunderbolt 3 has a maximum speed of 40 Gbps. A passive cable reaches 0.5 m and an active cable reaches 2 m.",
         "Thunderbolt 4":

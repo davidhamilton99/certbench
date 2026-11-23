@@ -8,9 +8,11 @@ import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { CHECKPOINT_SIZE } from "@/core/path/plan";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { longDate } from "@/core/path/versions";
+import { keepCodes } from "@/lib/keep-codes";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
 import { READINESS_TARGET } from "@/lib/readiness/band";
+import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { COMPTIA_URLS, EXAM_FACTS_CHECKED } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { ABOUT_PAGES_UPDATED_ISO } from "@/lib/seo/page-dates";
@@ -175,7 +177,8 @@ export default function AboutPage() {
                   is one of the pages a careful reader is sent to. */}
               <p>
                 The beginning of every study path is free. A free account also includes one full-length practice exam
-                and {FREE_LAB_COUNT} hands-on labs for each exam. Pro opens the remainder. {PRO_PRICE_TERMS} The{" "}
+                for each exam, and {FREE_LAB_COUNT} hands-on labs for each of {keepCodes(EXAMS_WITH_FREE_LABS)}. Pro
+                opens the remainder. {PRO_PRICE_TERMS} The{" "}
                 <Link href="/pricing" className="cb-link">
                   pricing page
                 </Link>{" "}

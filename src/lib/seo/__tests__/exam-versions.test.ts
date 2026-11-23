@@ -82,6 +82,10 @@ describe("exam facts on the public pages", () => {
     expect(aPlus.metaDescription).toContain("220-1201/1202");
     expect(aPlus.currentExams?.map((e) => e.examCode)).toEqual(["220-1201", "220-1202"]);
     expect(aPlus.faqs.map((f) => f.answer).join(" ")).toContain("retired on September 25, 2025");
+    // CompTIA's exam pages do not give that date: its blog post on the two A+ exams does.
+    expect(COMPTIA_URLS.aPlusSeries).toBe(
+      "https://www.comptia.org/en-us/blog/comptia-a-has-two-exams-what-you-need-to-know/"
+    );
     expect(A_PLUS_ROUNDUP.metaDescription).toContain("220-1201 and 220-1202");
 
     // Nothing says our A+ content is on the retired exams any more.
@@ -133,7 +137,37 @@ describe("what the PBQ pages say about the exam's own PBQs", () => {
     for (const p of PBQ_EXAMPLE_PAGES) {
       expect(copyOf(p), p.path).not.toMatch(range);
       const count = p.faqs.find((f) => /^How many PBQs/.test(f.question));
-      expect(count?.answer, p.path).toMatch(/^CompTIA does not publish a number, and it varies by exam form\./);
+      // What CompTIA's exam page does state, and nothing more.
+      expect(count?.answer, p.path).toBe(
+        "CompTIA does not publish the number. Its exam page gives a maximum of 90 questions, which are multiple-choice and performance-based, and a time limit of 90 minutes."
+      );
+    }
+  });
+
+  it("does not say how many to expect, where they come in the exam, or how long to allow", () => {
+    for (const p of PBQ_EXAMPLE_PAGES) {
+      expect(copyOf(p), p.path).not.toMatch(
+        /varies by exam form|near the start|at the (?:start|beginning) of the exam|a small number|a handful|allow extra time/i
+      );
+    }
+  });
+
+  it("answers what the exam's PBQs cover with what its own labs cover, on every page", () => {
+    for (const p of PBQ_EXAMPLE_PAGES) {
+      const topics = p.faqs.find((f) => /^What topics do .* PBQs cover\?$/.test(f.question));
+      expect(topics, p.path).toBeDefined();
+      expect(topics?.answer, p.path).toMatch(
+        /^CompTIA's exam questions are confidential, so it publishes no list of PBQ topics\. The labs on this page cover /
+      );
+      // No page tells a visitor what the real exam will ask.
+      expect(topics?.answer, p.path).not.toMatch(/\bexpect\b|largest domain/i);
+    }
+  });
+
+  it("describes a lab on the page, and promises nothing about how the real exam feels", () => {
+    for (const p of PBQ_EXAMPLE_PAGES) {
+      expect(p.intro.at(-1), p.path).toMatch(/Each lab is graded with partial credit on this page\.$/);
+      expect(copyOf(p), p.path).not.toMatch(/the real thing|straight away|right here|feels? like|how the real/i);
     }
   });
 

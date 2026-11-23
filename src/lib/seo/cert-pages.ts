@@ -1,4 +1,7 @@
 import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import type { PathCert } from "@/core/path/types";
+import { EXAM_CODES, examVersions } from "@/core/path/versions";
+import { EXAM_NAMES } from "@/data/path/titles";
 import { READINESS_TARGET } from "@/lib/readiness/band";
 import { SECURITY_PLUS_VERSIONS_PATH, SY0_801_PRACTICE_PATH } from "./exam-versions";
 
@@ -68,13 +71,22 @@ const freeLabsOn = (pbqPage: string) =>
 
 /**
  * How many performance-based questions an exam has. CompTIA publishes neither
- * the number nor how they are weighted, so no page states either.
+ * the number, nor where they come in the exam, nor how they are weighted, so
+ * no page states any of them or tells a visitor what to expect. The answer
+ * gives what each of CompTIA's five exam pages does state.
  */
 const PBQ_COUNT_ANSWER =
-  "CompTIA does not publish a number, and it varies by exam form. Expect a small number among the questions, often near the start, and allow extra time for them.";
+  "CompTIA does not publish the number. Its exam page gives a maximum of 90 questions, which are multiple-choice and performance-based, and a time limit of 90 minutes.";
 
 /** Opens an answer about what the exam's PBQs cover: the page can speak only for its own labs. */
 const PBQ_TOPICS_UNPUBLISHED = "CompTIA's exam questions are confidential, so it publishes no list of PBQ topics.";
+
+/**
+ * Closes each PBQ page's account of its free labs, in the words the page's own
+ * chooser uses (PbqLab). It describes the lab and promises nothing about how
+ * the real exam feels.
+ */
+const LAB_ON_THE_PAGE = "Each lab is graded with partial credit on this page.";
 
 export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
   {
@@ -169,14 +181,15 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       "Free full-length Network+ N10-009 practice exam: 90 questions in 90 minutes, scored by domain, with every answer explained. There are also 12 free interactive PBQs.",
     h1: "Free CompTIA Network+ (N10-009) practice test",
     intro: [
-      "Every question on this page is original, is written against the N10-009 objectives (subnetting, routing, wireless and troubleshooting among them), and has its answer explained. CertBench holds more than 600 Network+ questions, and the practice exam draws on them in the proportions of the real exam.",
+      // CertBench groups its Network+ questions into topics of its own (exam-versions.ts), so the page claims no mapping to CompTIA's numbered objectives.
+      "Every question on this page is original, is written for the N10-009 exam (subnetting, routing, wireless networking and troubleshooting among its topics), and has its answer explained. CertBench holds more than 600 Network+ questions, and the practice exam draws on them in the proportions of the real exam.",
       `${FREE_EXAM_INTRO} For the hands-on part, the Network+ PBQ page has 12 free interactive PBQs, and the subnetting drills cover the calculations.`,
     ],
     faqs: [
       {
         question: "How many questions are on the Network+ exam?",
         answer:
-          "The N10-009 exam has a maximum of 90 questions in 90 minutes, mixing multiple-choice with performance-based questions such as network topology and configuration scenarios.",
+          "The N10-009 exam has a maximum of 90 questions, a mix of multiple-choice and performance-based questions (PBQs), in 90 minutes.",
       },
       {
         question: "What score do I need to pass Network+?",
@@ -190,7 +203,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "Are these real Network+ exam questions?",
         answer:
-          "No. They are original questions mapped to the same N10-009 objectives at exam-level difficulty. Braindumps violate CompTIA policy and can void your certification.",
+          "No. They are original questions written for the N10-009 exam at exam-level difficulty. Braindumps violate CompTIA policy and can void your certification.",
       },
       {
         question: "Is there a free N10-009 practice test here?",
@@ -466,7 +479,7 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
       {
         question: "What is new in 220-1202?",
         answer:
-          "Two new objectives: installing and configuring cloud-based productivity tools (1.11), and basic concepts of artificial intelligence (4.10). Windows 11 joins Windows 10, the Linux tools add commands such as dnf, fsck and curl, and malware removal is now part of the Security domain. 220-1202 replaced 220-1102, which CompTIA retired on September 25, 2025.",
+          "Two new objectives: installing and configuring cloud-based productivity tools (1.11), and basic concepts of artificial intelligence (4.10). The objective on Windows editions now lists Windows 11 beside Windows 10, the Linux tools add commands such as dnf, fsck and curl, and malware removal is now part of the Security domain. 220-1202 replaced 220-1102, which CompTIA retired on September 25, 2025.",
       },
       {
         question: "Do I need to take Core 1 first?",
@@ -539,7 +552,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: `${FREE_PBQS} free Security+ PBQs to try in your browser`,
     intro: [
       "Performance-based questions (PBQs) are the hands-on part of Security+. Instead of choosing A, B, C or D, you configure firewall rules, analyze logs or put incident-response steps in order in an interactive console. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
-      `Reading about PBQs is not the same as doing one. ${FREE_PBQS} of the labs on this page are free: a vulnerability simulation, network segmentation and firewall rules, a threat hunt on a compromised server, and a drill for every drag-and-drop format. The first three need no account, and a free account opens the rest. Work one right here, get graded with partial credit, and see exactly how the real thing feels.`,
+      `${FREE_PBQS} of the labs on this page are free: a vulnerability simulation, network segmentation and firewall rules, a threat hunt on a compromised server, and a drill for every drag-and-drop format. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
       {
@@ -587,7 +600,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: `${FREE_PBQS} free Network+ PBQs to try in your browser`,
     intro: [
       "Network+ PBQs give you a scenario (a topology to complete, a switch to configure, a connectivity issue to trace) instead of a multiple-choice list. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
-      `${FREE_PBQS} of the labs on this page are free: troubleshooting with real commands, VLAN configuration and trunking, and drills on ports, cabling, the OSI model and DHCP. The first three need no account, and a free account opens the rest. Work one in your browser, get graded with partial credit, and feel what the real exam's hands-on questions are like.`,
+      `${FREE_PBQS} of the labs on this page are free: troubleshooting with real commands, VLAN configuration and trunking, and drills on ports, cabling, the OSI model and DHCP. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
       {
@@ -635,7 +648,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: `${FREE_PBQS} free A+ Core 1 PBQs to try in your browser`,
     intro: [
       "Performance-based questions ask you to carry out a task instead of choosing A, B, C or D: put a process in order, match ports to services, or work through a hardware fault step by step. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
-      `${FREE_PBQS} of the labs on this page are free: a laptop display troubleshooting simulation, and drills on ports, cables, connectors, Wi-Fi, the laser printer and the boot sequence. The first three need no account, and a free account opens the rest. Work one in your browser, get graded straight away, and see what the hands-on part of Core 1 feels like.`,
+      `${FREE_PBQS} of the labs on this page are free: a laptop display troubleshooting simulation, and drills on ports, cables, connectors, Wi-Fi, the laser printer and the boot sequence. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
       {
@@ -648,8 +661,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       },
       {
         question: "What topics do A+ Core 1 PBQs cover?",
-        answer:
-          "Hardware and network troubleshooting is the largest domain in Core 1, so expect fault-finding scenarios, together with networking tasks such as matching ports to services and hardware tasks such as choosing connectors or printer steps.",
+        answer: `${PBQ_TOPICS_UNPUBLISHED} The labs on this page cover laptop display troubleshooting in a simulation, and ordering, matching and sorting tasks on ports, cables, connectors, Wi-Fi standards, the laser printer and the boot sequence.`,
       },
       {
         question: "Are these written for 220-1201 or 220-1101?",
@@ -689,7 +701,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     h1: `${FREE_PBQS} free A+ Core 2 PBQs to try in your browser`,
     intro: [
       "Performance-based questions ask you to carry out a task instead of choosing A, B, C or D: put the malware removal steps in order, match Windows tools to their purpose, or set up a security policy from a brief. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
-      `${FREE_PBQS} of the labs on this page are free: a mobile device security simulation, and drills on malware removal, Windows tools, Linux commands, social engineering and change management. The first three need no account, and a free account opens the rest. Work one in your browser, get graded straight away, and see what the hands-on part of Core 2 feels like.`,
+      `${FREE_PBQS} of the labs on this page are free: a mobile device security simulation, and drills on malware removal, Windows tools, Linux commands, social engineering and change management. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
       {
@@ -702,8 +714,7 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
       },
       {
         question: "What topics do A+ Core 2 PBQs cover?",
-        answer:
-          "Operating systems and security are the two largest domains in Core 2, so expect Windows tools and settings, malware removal steps, and security configuration, along with troubleshooting scenarios.",
+        answer: `${PBQ_TOPICS_UNPUBLISHED} The labs on this page cover mobile device security in a simulation, and ordering, matching and sorting tasks on malware removal, Windows tools, Linux commands, social engineering and change management.`,
       },
       {
         question: "Are these written for 220-1202 or 220-1102?",
@@ -730,3 +741,20 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     ],
   },
 ];
+
+/** "Security+ SY0-701", "Network+", "A+ Core 1": an exam that is taught in two versions is named with its code. */
+const examAsNamed = (certSlug: string) =>
+  `${EXAM_NAMES[certSlug]}${examVersions(certSlug).length > 0 ? ` ${EXAM_CODES[certSlug as PathCert]}` : ""}`;
+
+/**
+ * The exams that have a public page of labs, as a sentence lists them:
+ * "Security+ SY0-701, Network+, A+ Core 1 and A+ Core 2". The free labs are
+ * the ones on those pages (core/path/free-labs.ts). An exam without such a
+ * page, Security+ SY0-801 today, has no free lab: its study path says that its
+ * labs are included with Pro. So a sentence that states how many labs are
+ * free names these exams, and never says "for each exam".
+ */
+export const EXAMS_WITH_FREE_LABS: string = (() => {
+  const names = PBQ_EXAMPLE_PAGES.map((page) => examAsNamed(page.certSlug));
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names.join("");
+})();

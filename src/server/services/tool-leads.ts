@@ -4,7 +4,7 @@ import type { Db } from "@/server/supabase/server";
 import { createAdminClient } from "@/server/supabase/admin";
 import { sendEmail } from "@/server/email/resend";
 import { studyPlanEmail } from "@/server/email/templates";
-import { unsubscribeHeaders, unsubscribeUrl } from "@/server/email/unsubscribe";
+import { leadsForAddress, unsubscribeHeaders, unsubscribeUrl } from "@/server/email/unsubscribe";
 import type { LeadDelivery, ToolSource } from "@/contracts/tools";
 
 /**
@@ -29,8 +29,9 @@ interface ClaimedLead {
 
 /**
  * Records a free-tool email lead and sends the study plan email, at most once
- * in 24 hours for each address and tool. It answers what happened, so that the
- * form can say so:
+ * in 24 hours for each address and tool, and never to an address that has
+ * unsubscribed from it, whichever tool the unsubscribe came from. It answers
+ * what happened, so that the form can say so:
  *  - "sent": the mail service accepted the email.
  *  - "skipped": nothing was sent on purpose (sent in the last 24 hours,
  *    unsubscribed, or a test address).
@@ -52,12 +53,11 @@ export async function captureLead(
     // One row for an address however it is typed: the key is the lower-case
     // form. Otherwise the same person could be sent the email once for each
     // way of writing the capitals.
-    const typed = email.trim();
-    const address = typed.toLowerCase();
+    const address = email.trim().toLowerCase();
     if (isTestAccount(address)) return "skipped";
     const admin = createAdminClient();
 
-    const lead = await claimLead(admin, address, typed, source, context, now);
+    const lead = await claimLead(admin, address, source, context, now);
     if (lead === "skipped" || lead === "failed") return lead;
 
     const url = unsubscribeUrl(lead.token, "lead");
@@ -80,31 +80,32 @@ export async function captureLead(
 async function claimLead(
   admin: Db,
   address: string,
-  typed: string,
   source: ToolSource,
   context: Record<string, string | number>,
   now: Date
 ): Promise<ClaimedLead | "skipped" | "failed"> {
   const sentAt = now.toISOString();
 
-  // A row stored before addresses were lower-cased keeps the form it was typed
-  // in, so that form is looked up as well: an unsubscribe recorded on such a
-  // row still holds, and so does the time of its last send.
-  const { data: rows, error: readError } = await admin
-    .from("tool_leads")
-    .select("id, unsubscribe_token, unsubscribed, updated_at")
-    .in("email", [...new Set([address, typed])])
-    .eq("source", source);
+  // Every lead of this address, from every tool. A row stored before addresses
+  // were lower-cased keeps the capitals it was typed with, and it is found as
+  // well: an unsubscribe recorded on such a row still holds, and so does the
+  // time of its last send.
+  const { rows, error: readError } = await leadsForAddress(admin, address);
   if (readError) {
     console.error("tool lead read failed:", readError.message);
     return "failed";
   }
 
-  // Someone who unsubscribed is never sent the email again, whoever asks.
+  // An address that unsubscribed is never sent the study plan again, whoever
+  // asks and from whichever tool. The unsubscribe page says so to the person:
+  // "CertBench will not send this study plan email to your address again."
   if (rows.some((row) => row.unsubscribed)) return "skipped";
 
-  // Where both forms have a row, the one sent last decides whether 24 hours have passed.
-  const existing = [...rows].sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))[0];
+  // This tool's own lead decides whether 24 hours have passed. Where the
+  // address is stored in more than one form, the one sent last decides.
+  const existing = rows
+    .filter((row) => row.source === source)
+    .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))[0];
 
   if (!existing) {
     const { data: created, error } = await admin

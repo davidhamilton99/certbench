@@ -25,7 +25,8 @@ const h = vi.hoisted(() => ({
   certIdFor: vi.fn(),
   getPathAccess: vi.fn(),
   listAnswerKeys: vi.fn(),
-  updatePerformance: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}),
+  /** True: the history was updated. False: it could not be read, and nothing was written. */
+  updatePerformance: vi.fn<(...args: unknown[]) => Promise<boolean>>(async () => true),
   recompute: vi.fn<(...args: unknown[]) => Promise<null>>(async () => null),
   otherVersionIds: vi.fn<(...args: unknown[]) => Promise<string[]>>(async () => []),
   updateProfile: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}),
@@ -327,6 +328,18 @@ describe("POST /api/path/answers", () => {
     const res = await call([{ questionId: Q(9), selectedIndex: 1 }]);
     expect(await res.json()).toEqual({ ok: true });
     expect(h.updatePerformance).not.toHaveBeenCalled();
+    expect(h.recompute).not.toHaveBeenCalled();
+  });
+
+  // The history service writes nothing when it cannot read what the member
+  // already has (see submit-exam.ts). The route then says so, and takes no
+  // readiness score from answers that were not recorded.
+  it("answers 500 with a sentence, and records no score, when the member's history could not be read", async () => {
+    h.keys = [{ id: Q(1), correct_index: 2 }];
+    h.updatePerformance.mockResolvedValueOnce(false);
+    const res = await call([{ questionId: Q(1), selectedIndex: 2 }]);
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.message).toBe("Your answers could not be recorded. Please try again.");
     expect(h.recompute).not.toHaveBeenCalled();
   });
 

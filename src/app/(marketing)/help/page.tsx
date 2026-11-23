@@ -2,13 +2,14 @@ import Link from "next/link";
 import { LanderPage } from "@/components/marketing/lander/Lander";
 import { ArticleBody, ArticleHero, ArticleSection } from "@/components/marketing/lander/Article";
 import { COLUMN } from "@/components/marketing/lander/layout";
-import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { FREE_LAB_COUNT, LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
 import { CHECKPOINT_SIZE, MAX_RESURFACED, PRACTICE_SIZE } from "@/core/path/plan";
 import { REVIEW_AGAIN_DAYS } from "@/core/path/progress";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { PRO_PRICES, PRO_PRICE_TERMS, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
 import { READINESS_TARGET } from "@/lib/readiness/band";
+import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { cn } from "@/lib/utils";
 
@@ -39,12 +40,6 @@ interface Section {
 
 const FULL = REHEARSAL_FORMATS.full;
 const HALF = REHEARSAL_FORMATS.half;
-/**
- * The labs anyone can open on a PBQ page without an account (the three its
- * chooser leads with, `FEATURED` in PbqLab.tsx). A free account opens the rest
- * of the free ones.
- */
-const LABS_WITHOUT_ACCOUNT = 3;
 
 /** A count as a sentence writes it: in words below ten, in figures from ten. */
 function count(n: number): string {
@@ -68,7 +63,7 @@ const sections: Section[] = [
       },
       {
         q: "Is CertBench free?",
-        a: `The first part is free. Without an account you can try the introductory questions for each exam, take the three-minute readiness check, take a full-length practice exam (${FULL.questions} questions in ${FULL.minutes} minutes, or a half-length exam of ${HALF.questions} questions), try the first ${count(LABS_WITHOUT_ACCOUNT)} hands-on labs, use the subnet calculator, and try a first round of the port, subnetting and acronym drills. A free account shows your practice exam score, opens ${count(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT)} more hands-on labs so that ${FREE_LAB_COUNT} are free for each exam, saves your progress, opens your study path up to the readiness checkpoint, and removes the limit on the drills. Pro opens the rest of your study path, covering every objective, with domain practice, every hands-on lab, new timed practice exams that begin with questions you have not seen, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS}`,
+        a: `The first part is free. Without an account you can try the introductory questions for each exam, take the three-minute readiness check, take a full-length practice exam (${FULL.questions} questions in ${FULL.minutes} minutes, or a half-length exam of ${HALF.questions} questions), try the first ${count(LABS_WITHOUT_ACCOUNT)} hands-on labs, use the subnet calculator, and try a first round of the port, subnetting and acronym drills. A free account shows your practice exam score, opens ${count(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT)} more hands-on labs so that ${FREE_LAB_COUNT} are free for each of ${EXAMS_WITH_FREE_LABS}, saves your progress, opens your study path up to the readiness checkpoint, and removes the limit on the drills. Pro opens the rest of your study path, covering every objective, with domain practice, every hands-on lab, new timed practice exams that begin with questions you have not seen, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS}`,
         link: { href: "/pricing", label: "View plans and prices" },
       },
       {
@@ -159,7 +154,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What are PBQs, and how do the labs work?",
-        a: `Performance-based questions (PBQs) are the hands-on tasks in real CompTIA exams. CertBench’s hands-on labs run in your browser. They include simulations, network topologies and threat hunts, and also ordering, matching and sorting tasks. On your study path a lab completes every domain, and Pro opens the whole lab library for your exam. The PBQ page for each exam has ${FREE_LAB_COUNT} labs that are free: ${count(LABS_WITHOUT_ACCOUNT)} with no account, and the rest with a free account.`,
+        a: `Performance-based questions (PBQs) are the hands-on tasks in real CompTIA exams. CertBench’s hands-on labs run in your browser. They include simulations, network topologies and threat hunts, and also ordering, matching and sorting tasks. On your study path a lab completes every domain, and Pro opens the whole lab library for your exam. ${EXAMS_WITH_FREE_LABS} each have a PBQ page with ${FREE_LAB_COUNT} labs that are free: ${count(LABS_WITHOUT_ACCOUNT)} with no account, and the rest with a free account.`,
       },
       {
         q: "How are labs scored?",

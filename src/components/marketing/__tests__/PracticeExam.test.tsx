@@ -289,7 +289,8 @@ describe("PracticeExam", () => {
     expect(track).toHaveBeenCalledWith("upsell_viewed", { context: "security-plus-sy0-801_practice_test" });
 
     // The miss is explained, and the way on is offered.
-    expect(screen.getByRole("tab", { name: "Missed (1)" })).toHaveAttribute("aria-selected", "true");
+    // The filter is two pressed buttons in a named group (it has no tab panels, so it is not tabs).
+    expect(screen.getByRole("button", { name: "Missed (1)" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Question text 3?")).toBeInTheDocument();
     expect(screen.getByText("Takeaway 3.")).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: /Open the study path/ });

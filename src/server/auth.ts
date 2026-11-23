@@ -13,10 +13,30 @@ export interface AuthContext {
   user: User;
 }
 
-/** Resolve the current user or null, with an RLS-scoped client. */
+/**
+ * True for an answer of the sign-in service that says nothing about who is
+ * signed in: it could not be reached, or it failed on its own side. "No
+ * session" and "this token is not valid" are answers; these are not.
+ */
+function couldNotCheck(error: { name?: string; status?: number } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.name === "AuthRetryableFetchError" || error.name === "AuthUnknownError") return true;
+  return typeof error.status === "number" && (error.status === 0 || error.status >= 500);
+}
+
+/**
+ * Resolve the current user or null, with an RLS-scoped client.
+ *
+ * `checked` is false when the question could not be settled: the session
+ * check threw, ran out of time, or the sign-in service failed. `user` is then
+ * null, but that null is not "nobody is signed in". A page may still treat it
+ * so (it shows the signed-out view, which is always safe). An endpoint must
+ * not: see requireUser.
+ */
 export async function getOptionalUser(): Promise<{
   db: Db;
   user: User | null;
+  checked: boolean;
 }> {
   const db = await createClient();
   // Guard against transient JWT validation errors (e.g. "JWT issued at future"
@@ -25,19 +45,35 @@ export async function getOptionalUser(): Promise<{
   // same holds when the sign-in service does not answer in time: its client
   // retries an expired token for up to 30 seconds, which no request waits for.
   let user: User | null = null;
+  let checked = true;
   try {
     const result = await withDeadline(db.auth.getUser(), SESSION_CHECK_LIMIT_MS, "The session check");
     user = result.data.user;
+    if (!user && couldNotCheck(result.error)) {
+      checked = false;
+      console.warn("[auth] the sign-in service could not be asked; the session is unknown", result.error?.name);
+    }
   } catch (err) {
-    console.warn("[auth] the session check failed or ran out of time; treating as unauthenticated", err);
+    checked = false;
+    console.warn("[auth] the session check failed or ran out of time; the session is unknown", err);
   }
-  return { db, user };
+  return { db, user, checked };
 }
 
-/** Require an authenticated user. Throws ApiError("unauthorized"). */
+/**
+ * Require an authenticated user. Throws ApiError("unauthorized") when nobody
+ * is signed in, and an "account could not be checked" error when the session
+ * could not be checked at all: a failed check is not an answer. Told
+ * "unauthorized", the study path would show a signed-in (perhaps paying)
+ * member the visitor's screen; told that the account could not be checked,
+ * it keeps what it has and asks again.
+ */
 export async function requireUser(): Promise<AuthContext> {
-  const { db, user } = await getOptionalUser();
-  if (!user) throw new ApiError("unauthorized");
+  const { db, user, checked } = await getOptionalUser();
+  if (!user) {
+    if (!checked) throw accountNotChecked("session", { message: "the session check did not complete" });
+    throw new ApiError("unauthorized");
+  }
   return { db, user };
 }
 

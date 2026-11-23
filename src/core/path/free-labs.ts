@@ -9,6 +9,15 @@ import type { PbqScenario } from "@/data/pbq/types";
 export const FREE_LAB_COUNT = 12;
 
 /**
+ * How many of those free labs need no account at all: the three that a PBQ
+ * page's chooser leads with (an introductory lab, a core lab and one at exam
+ * level; they are the first three that freeLabs returns). A free account opens
+ * the rest of the free labs. The chooser, the page's summary and the help page
+ * all take the number from here, so that none can say another.
+ */
+export const LABS_WITHOUT_ACCOUNT = 3;
+
+/**
  * What an exam gives away on its public pages, as its study path needs it in
  * order to say so: where the free practice exam is, where the free labs are,
  * and which labs they are. The study path's own page works this out on the

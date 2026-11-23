@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const portsProtocols: ReferenceTable = {
   id: "ports-protocols",
-  title: "Ports & Protocols",
+  title: "Ports and protocols",
   description: "Common ports and protocols tested on the CompTIA Network+ N10-009 exam.",
   columnHeaders: [
     { key: "port", label: "Port", mono: true },
@@ -36,6 +36,6 @@ export const portsProtocols: ReferenceTable = {
     { columns: { port: "3306", protocol: "MySQL", service: "MySQL / MariaDB database", transport: "TCP" } },
     { columns: { port: "3389", protocol: "RDP", service: "Remote Desktop Protocol: Windows GUI remote access", transport: "TCP" } },
     { columns: { port: "5060/5061", protocol: "SIP", service: "Session Initiation Protocol: VoIP signaling (plain/TLS)", transport: "TCP/UDP" } },
-    { columns: { port: "8080", protocol: "HTTP Alt", service: "HTTP alternate port: proxy, dev servers, HTTP/2 clear", transport: "TCP" } },
+    { columns: { port: "8080", protocol: "HTTP Alt", service: "HTTP alternate port: proxies and development servers", transport: "TCP" } },
   ],
 };

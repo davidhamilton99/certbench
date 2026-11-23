@@ -35,13 +35,16 @@ export const POST = defineEndpoint(recordPathAnswers, {
       .map(([questionId, selectedIndex]) => ({ questionId, selectedIndex }));
     if (answers.length === 0) return { ok: true as const };
 
-    await updateQuestionPerformanceForAnswers(db, {
+    const recorded = await updateQuestionPerformanceForAnswers(db, {
       userId: user.id,
       certificationId: certId,
       answers,
       questions: keys,
       upsertNew: true,
     });
+    // The history could not be read, so nothing was written: say so honestly.
+    // The study path sends these in the background and keeps its own record.
+    if (!recorded) throw new ApiError("internal", "Your answers could not be recorded. Please try again.");
     await recomputeAndSnapshotReadiness(db, { userId: user.id, certificationId: certId });
     return { ok: true as const };
   },

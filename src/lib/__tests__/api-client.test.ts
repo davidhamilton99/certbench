@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { EndpointContract } from "@/contracts/common";
 import { ApiError } from "@/contracts/errors";
 import { lazyContract } from "@/contracts/lazy";
-import { CONNECTION_LOST, REQUEST_TIMED_OUT, userMessage } from "@/lib/errors/user-message";
+import { CONNECTION_LOST, PAGE_OUT_OF_DATE, REQUEST_TIMED_OUT, userMessage } from "@/lib/errors/user-message";
 import { api } from "../api-client";
 
 const save = {
@@ -104,13 +104,33 @@ describe("api()", () => {
     expect(userMessage(err)).toBe(REQUEST_TIMED_OUT);
   });
 
-  it("says the connection was lost when the schemas cannot be fetched", async () => {
+  // A new version of the site published while a page is open takes the old
+  // schema file away. The server has answered, so the connection is there:
+  // the page must say to reload, and must not say to try again (the request
+  // was carried out).
+  it("says the page is out of date when the schemas cannot be fetched after the server answered", async () => {
     vi.stubGlobal("fetch", respond(200, { ok: true }));
-    const lazy = lazyContract<typeof save>("/api/thing", "POST", async () => {
+    const load = vi.fn(async (): Promise<typeof save> => {
       throw new Error("Failed to fetch dynamically imported module");
     });
+    const lazy = lazyContract<typeof save>("/api/thing", "POST", load);
     const err = await api(lazy, { name: "a" }).catch((e) => e);
-    expect(userMessage(err)).toBe(CONNECTION_LOST);
+    expect(userMessage(err)).toBe(PAGE_OUT_OF_DATE);
+    expect(userMessage(err)).not.toMatch(/try again/i);
+    // One request to the server, and the file was asked for twice.
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("reads the answer when the schemas arrive at the second attempt", async () => {
+    vi.stubGlobal("fetch", respond(200, { ok: true }));
+    let calls = 0;
+    const lazy = lazyContract<typeof save>("/api/thing", "POST", async () => {
+      calls += 1;
+      if (calls === 1) throw new Error("Failed to fetch dynamically imported module");
+      return save;
+    });
+    await expect(api(lazy, { name: "a" })).resolves.toEqual({ ok: true });
+    expect(calls).toBe(2);
   });
 
   it("passes keepalive through for a last save", async () => {

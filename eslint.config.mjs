@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Agent worktrees and one-off maintenance scripts:
     ".claude/**",
     "scripts/**",
+    // Working papers, which git ignores as well (see .gitignore):
+    "reviews/**",
   ]),
 
   // ── Architecture layering rules ──────────────────────────────────────

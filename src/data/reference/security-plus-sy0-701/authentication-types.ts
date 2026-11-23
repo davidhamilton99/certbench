@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const authenticationTypes: ReferenceTable = {
   id: "authentication-types",
-  title: "Authentication & AAA",
+  title: "Authentication and AAA",
   description: "Authentication protocols, methods, and identity frameworks.",
   columnHeaders: [
     { key: "method", label: "Method / Protocol" },

@@ -24,11 +24,14 @@ const h = vi.hoisted(() => ({
 
 vi.mock("@/env", () => ({
   publicEnv: { NEXT_PUBLIC_APP_URL: "https://certbench.dev" },
+  // No optional setting is set: the email's footer prints no postal address.
+  serverEnvOptional: () => undefined,
 }));
 vi.mock("@/server/email/resend", () => ({ sendEmail: h.sendEmail }));
 vi.mock("@/server/supabase/admin", () => ({ createAdminClient: h.createAdminClient }));
 
 import { RESEND_AFTER_MS, captureLead } from "../tool-leads";
+import { ilike } from "@/server/email/__tests__/ilike";
 
 const refused = (step: Step) => ({ data: null, error: { code: "XX000", message: `${step} refused` } });
 
@@ -82,6 +85,11 @@ function fakeAdmin() {
         delete: () => ((mode = "delete"), q),
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
         in: (c: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[c])), q),
+        ilike: (c: string, pattern: string) => {
+          const matches = ilike(pattern);
+          filters.push((r) => matches(r[c]));
+          return q;
+        },
         lt: (c: string, v: string) => (filters.push((r) => String(r[c]) < v), q),
         single: async () => {
           const { data, error } = settle();
@@ -147,6 +155,9 @@ describe("captureLead", () => {
     });
     expect(email.html).toContain(`href="${address.replace(/&/g, "&amp;")}"`);
     expect(email.text).toContain(`Unsubscribe: ${address}`);
+    // The email names its sender, in the footer and at the end of the text part.
+    expect(email.html).toContain("Sent by CertBench.<br>");
+    expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${address}`)).toBe(true);
   });
 
   // The form is public. Before, every accepted request sent the email again.
@@ -177,6 +188,37 @@ describe("captureLead", () => {
     expect(await captureLead("sam@example.com", "port-numbers-quiz", {}, NOON)).toBe("skipped");
     expect(h.sendEmail).not.toHaveBeenCalled();
     expect(row).toMatchObject({ unsubscribed: true, updated_at: before });
+  });
+
+  // The unsubscribe page says "CertBench will not send this study plan email
+  // to your address again". An unsubscribe used to hold for one tool only, so
+  // the same address was sent the email again from the next tool.
+  it("never sends the study plan from any tool to an address that unsubscribed from one of them", async () => {
+    const row = stored("sam@example.com", "port-numbers-quiz", 24 * 30, true);
+
+    expect(await captureLead("sam@example.com", "subnetting-practice", {}, NOON)).toBe("skipped");
+    expect(await captureLead("Sam@Example.com", "security-plus-acronyms-quiz", {}, NOON)).toBe("skipped");
+    expect(h.sendEmail).not.toHaveBeenCalled();
+    // No lead is stored for the other tools either: nothing is kept about a request that was not served.
+    expect(h.leads).toEqual([row]);
+  });
+
+  it("holds an unsubscribe that was recorded under other capitals, for every tool", async () => {
+    stored("Sam@Example.COM", "port-numbers-quiz", 24 * 30, true);
+    expect(await captureLead("sam@example.com", "subnetting-practice", {}, NOON)).toBe("skipped");
+    expect(await captureLead("SAM@EXAMPLE.COM", "port-numbers-quiz", {}, NOON)).toBe("skipped");
+    expect(h.sendEmail).not.toHaveBeenCalled();
+    expect(h.leads).toHaveLength(1);
+  });
+
+  // "_" is a wildcard in the database's match. It must not make one person's
+  // unsubscribe hold for another person's address.
+  it("does not take another address's unsubscribe for this one", async () => {
+    stored("samXlee@example.com", "port-numbers-quiz", 24 * 30, true);
+    stored("sam-lee@example.com", "subnetting-practice", 24 * 30, true);
+    expect(await captureLead("sam_lee@example.com", "port-numbers-quiz", {}, NOON)).toBe("sent");
+    expect(await captureLead("Sam_Lee@example.com", "subnetting-practice", {}, NOON)).toBe("sent");
+    expect(h.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["sam_lee@example.com", "sam_lee@example.com"]);
   });
 
   // Addresses were stored as typed before they were lower-cased. Such a row

@@ -2,17 +2,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/seo/objective-data", () => ({
-  listObjectivePages: async () => [{ cert: "security-plus-sy0-701", code: "1-2" }],
+// The two reads of the database, each of which a test can make fail.
+const db = vi.hoisted(() => ({
+  objectivePages: vi.fn(async () => [{ cert: "security-plus-sy0-701", code: "1-2" }]),
+  readinessCerts: vi.fn(async () => [{ cert: "security-plus-sy0-701" }]),
 }));
-vi.mock("@/server/seo/readiness-check-data", () => ({
-  listReadinessCheckCerts: async () => [{ cert: "security-plus-sy0-701" }],
-}));
+vi.mock("@/server/seo/objective-data", () => ({ listObjectivePages: db.objectivePages }));
+vi.mock("@/server/seo/readiness-check-data", () => ({ listReadinessCheckCerts: db.readinessCerts }));
 
 import { CERT_PAGES_UPDATED_ISO, PBQ_EXAMPLE_PAGES, PRACTICE_TEST_PAGES } from "@/lib/seo/cert-pages";
 import { COMPARISON_PAGES_UPDATED_ISO, ROUNDUPS, VS_PAGES } from "@/lib/seo/comparison-pages";
 import { SY0_801_PATH, SY0_801_UPDATED_ISO } from "@/lib/seo/exam-versions";
-import { ABOUT_PAGES_UPDATED_ISO } from "@/lib/seo/page-dates";
+import { ABOUT_PAGES_UPDATED_ISO, PRICING_PAGE_UPDATED_ISO } from "@/lib/seo/page-dates";
 import sitemap from "../sitemap";
 
 const paths = (urls: { url: string }[]) => urls.map((u) => u.url.replace("https://certbench.dev", ""));
@@ -120,6 +121,25 @@ describe("sitemap", () => {
     for (const guide of ROUNDUPS) expect(date.get(`/${guide.path}`), guide.path).toBe(COMPARISON_PAGES_UPDATED_ISO);
     for (const page of VS_PAGES) expect(date.get(`/compare/${page.slug}`), page.slug).toBe(COMPARISON_PAGES_UPDATED_ISO);
     expect(date.get(SY0_801_PATH)).toBe(SY0_801_UPDATED_ISO);
+  });
+
+  // The sitemap is made once for each deployment. A read that fails must stop
+  // the build, so that the previous deployment stays live with its whole
+  // sitemap: swallowed, it would publish one without 122 pages.
+  it.each([
+    ["the objective pages", () => db.objectivePages.mockRejectedValueOnce(new Error("read failed"))],
+    ["the readiness checks", () => db.readinessCerts.mockRejectedValueOnce(new Error("read failed"))],
+  ])("fails, and publishes nothing, when %s cannot be read", async (_, fail) => {
+    fail();
+    await expect(sitemap()).rejects.toThrow("read failed");
+  });
+
+  it("gives /pricing the date that the page prints, once", async () => {
+    const urls = paths(await sitemap());
+    expect(urls.filter((u) => u === "/pricing")).toHaveLength(1);
+    expect((await dates()).get("/pricing")).toBe(PRICING_PAGE_UPDATED_ISO);
+    const source = readFileSync(join(process.cwd(), "src/app/(marketing)/pricing/page.tsx"), "utf8");
+    expect(source).toContain("This page was last updated on {longDate(PRICING_PAGE_UPDATED_ISO)}.");
   });
 
   it("gives /about and /educators the date that each page prints", async () => {

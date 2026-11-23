@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 import type { PortEntry } from "@/lib/tools/port-quiz-data";
 import { makeQuestion, type QuizQuestion } from "@/lib/tools/port-quiz";
+import { portExplanation } from "@/lib/recall/port-explanations";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import type { ChoiceRep } from "@/core/path/types";
 import { useDrillRounds } from "./useDrillRounds";
@@ -12,14 +13,21 @@ import { EXAMS, RoundComplete } from "./DrillRound";
 const LABEL = "Port numbers";
 
 /**
- * A port question as the path asks a recall fact: the cue big, the ask under
- * it, ports set in mono, and the pairing with its transport and service as
- * the line to remember.
+ * A port question as the study path asks a recall fact: the cue big, the ask
+ * under it, and ports set in mono.
+ *
+ * After the verdict the card prints the sentences that the exam's own ports
+ * deck gives the row, the same ones the study path and the Recall page print
+ * ("FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data
+ * and port 21 for control."). A port that no deck explains gets one plain
+ * sentence. The table's "Service / Use" cell is a note and is never printed
+ * as if it were a sentence.
  */
 export function portRep(q: QuizQuestion): ChoiceRep {
   const { answer, options } = q;
   const asksPort = q.direction === "port";
   const cue = asksPort ? answer.protocol : answer.port;
+  const plain = `${answer.protocol} uses port ${answer.port}${answer.transport ? ` over ${answer.transport}` : ""}.`;
   return {
     id: `port|${answer.port}`,
     type: "choice",
@@ -30,7 +38,7 @@ export function portRep(q: QuizQuestion): ChoiceRep {
     cue: asksPort ? "Which port?" : "Which protocol?",
     options: options.map((o) => (asksPort ? o.port : o.protocol)),
     answer: options.indexOf(answer),
-    takeaway: `${answer.protocol} uses port ${answer.port} over ${answer.transport}.${answer.service ? ` ${answer.service}.` : ""}`,
+    takeaway: portExplanation(answer.port, answer.protocol) ?? plain,
     mono: asksPort,
   };
 }

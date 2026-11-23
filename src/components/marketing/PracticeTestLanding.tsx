@@ -1,4 +1,4 @@
-import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
+import { CERT_PAGES_UPDATED_ISO, PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
@@ -147,6 +147,8 @@ export function PracticeTestLanding({
     name: page.metaTitle,
     description: page.metaDescription,
     url: `https://certbench.dev/${page.path}`,
+    // The day the page's words last changed: the day the sitemap gives for it.
+    dateModified: CERT_PAGES_UPDATED_ISO,
     learningResourceType: "Practice test",
     educationalUse: "Practice",
     isAccessibleForFree: true,
@@ -246,7 +248,8 @@ export function PracticeTestLanding({
             objectiveCodes={official}
             next={{
               heading: `Your ${examName} study path begins from this result`,
-              body: "On your study path, this exam counts as your readiness checkpoint. The questions that you missed are brought back for review, and every objective is set out in short steps.",
+              // Network+ is set out by CertBench's own topics, so its page says "topic".
+              body: `On your study path, this exam counts as your readiness checkpoint. The questions that you missed are brought back for review, and every ${official ? "objective" : "topic"} is set out in short steps.`,
               primary: { href: `${pathHref}?from=practice-test`, label: "Open the study path" },
             }}
           />
@@ -296,8 +299,8 @@ export function PracticeTestLanding({
         context="practice_test_page"
         note="You do not need an account to start."
       >
-        The study path covers every exam objective in short sets of questions like these. A readiness checkpoint
-        then shows where you stand.
+        The study path covers every {official ? "exam objective" : "topic"} in short sets of questions like these. A
+        readiness checkpoint then shows where you stand.
       </PathCard>
 
       <LanderProse>

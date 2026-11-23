@@ -133,6 +133,30 @@ describe("the course outline's rows", () => {
     expect(onSelect).toHaveBeenLastCalledWith(null);
   });
 
+  it("tell the page when a lab's row is hovered or takes the focus, with the lab's id, and say nothing for any other row", () => {
+    const onLabIntent = vi.fn();
+    render(
+      <ExamMap
+        structure={structure}
+        statuses={statuses}
+        labs={labs("open", "done")}
+        rehearsal={exam("open")}
+        onSelect={() => {}}
+        onLabIntent={onLabIntent}
+      />
+    );
+    fireEvent.pointerEnter(row("Lab, PKI Certificate Lifecycle, Available"));
+    expect(onLabIntent).toHaveBeenLastCalledWith("certificate-lifecycle");
+    fireEvent.focus(row("Lab, Match Attacks to Descriptions, Complete"));
+    expect(onLabIntent).toHaveBeenLastCalledWith("attack-definitions");
+    expect(onLabIntent).toHaveBeenCalledTimes(2);
+
+    // An objective's row and the practice exam's row open no lab.
+    fireEvent.pointerEnter(row("1.2 Core security concepts, Complete"));
+    fireEvent.focus(row("Exam, Full-length timed practice exam, Available"));
+    expect(onLabIntent).toHaveBeenCalledTimes(2);
+  });
+
   it("keep the page's focus outline, set inside the row", () => {
     render(<ExamMap structure={structure} statuses={statuses} onSelect={() => {}} />);
     for (const button of screen.getAllByRole("button")) {
@@ -184,16 +208,9 @@ describe("where an objective stands", () => {
 });
 
 describe("what the outline tints and aligns", () => {
-  it("tints the next step's row and no other, whatever a step has just changed", () => {
-    render(
-      <ExamMap
-        structure={structure}
-        statuses={statuses}
-        current={new Set(["1.1"])}
-        fresh={new Set(["1.2", "1.4", "2.2"])}
-        onSelect={() => {}}
-      />
-    );
+  it("tints the next step's row and no other, whatever the rows around it have just become", () => {
+    // Three other objectives have answers: none of their rows is marked out for it.
+    render(<ExamMap structure={structure} statuses={statuses} current={new Set(["1.1"])} onSelect={() => {}} />);
     const tinted = screen.getAllByRole("button").filter((b) => /\bbg-tint-selected\b/.test(b.className));
     expect(tinted).toHaveLength(1);
     expect(tinted[0].textContent).toBe("1.1 Security controls, Next step");

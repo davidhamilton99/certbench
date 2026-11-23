@@ -1,23 +1,33 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+/** The optional settings a deployment has. The postal address is the owner's to supply. */
+const settings = vi.hoisted(() => ({ EMAIL_POSTAL_ADDRESS: undefined as string | undefined }));
 
 vi.mock("@/env", () => ({
   publicEnv: { NEXT_PUBLIC_APP_URL: "https://certbench.dev" },
+  serverEnvOptional: (key: string) => (key === "EMAIL_POSTAL_ADDRESS" ? settings.EMAIL_POSTAL_ADDRESS : undefined),
 }));
 
 import {
+  GREETING_NAME_MAX,
+  SENT_BY,
   checkpointResultEmail,
+  greetingName,
   pathCountdownEmail,
   pathEmailLink,
   pathNudgeEmail,
   postExamEmail,
+  senderLine,
   studyPlanEmail,
   welcomeEmail,
+  type EmailContent,
 } from "../templates";
 import { EMAIL_BAND_COLORS, EMAIL_COLORS } from "../colors";
 import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge } from "@/core/path/nudge";
+import { MINUTES_PER_STOP } from "@/core/path/plan";
 import type { PathDomain } from "@/core/path/types";
 import { OG } from "@/lib/og/mark";
 import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
@@ -70,9 +80,16 @@ const followUp = (score: number, over: Partial<CheckpointFollowUp> = {}): Checkp
 const checkpoint = (f: CheckpointFollowUp, displayName = "Sam Lee") =>
   checkpointResultEmail({ ...base, displayName, examName: "Network+", domains, followUp: f, questionCount: 617 });
 
+const welcome = (displayName = "Sam Lee", certName = "CompTIA Security+") =>
+  welcomeEmail({ displayName, certName, unsubscribeUrl: base.unsubscribeUrl });
+
+afterEach(() => {
+  settings.EMAIL_POSTAL_ADDRESS = undefined;
+});
+
 /** One of every email CertBench sends, with every band and every state of the path strip in them. */
 const everyEmail = () => [
-  welcomeEmail({ displayName: "Sam Lee", certName: "CompTIA Security+" }),
+  welcome(),
   studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: base.unsubscribeUrl }),
   postExamEmail({
     displayName: "Sam Lee",
@@ -134,7 +151,7 @@ describe("the look of every email", () => {
   });
 
   it("sets the email on a sheet of paper on the desk-coloured ground, in the ink and rule of the site", () => {
-    const { html } = welcomeEmail({ displayName: "Sam Lee", certName: "CompTIA Security+" });
+    const { html } = welcome();
     expect(html).toContain(`<body style="margin:0;padding:0;background:${EMAIL_COLORS.ground};">`);
     expect(html).toContain(`background:${EMAIL_COLORS.paper};border:1px solid ${EMAIL_COLORS.rule};`);
     expect(html).toContain(`color:${EMAIL_COLORS.ink};`);
@@ -157,14 +174,71 @@ describe("the look of every email", () => {
 
 describe("welcomeEmail", () => {
   it("says the study path is saved, how CertBench works, and where to continue", () => {
-    const email = welcomeEmail({ displayName: "Sam Lee", certName: "CompTIA Security+" });
+    const email = welcome();
     expect(email.subject).toBe("Your CompTIA Security+ study path is saved");
     expect(email.text).toContain("Welcome to CertBench, Sam.");
     expect(email.text).toContain("Continue your study path: https://certbench.dev/start");
     expect(email.html).toContain('href="https://certbench.dev/start"');
-    // Transactional: it carries no unsubscribe link.
-    expect(email.html).not.toContain("Unsubscribe");
-    expect(email.text).not.toContain("Unsubscribe");
+  });
+
+  // It used to carry no unsubscribe link, as a transactional email. It goes to
+  // an address that nobody has confirmed, so the person who reads it may never
+  // have asked for an account: it now carries the link as every other email does.
+  it("carries the unsubscribe address, in its footer and at the end of its text part", () => {
+    const email = welcome();
+    expect(email.html).toContain(`<a href="${base.unsubscribeUrl}" style="color:${EMAIL_COLORS.muted};">Unsubscribe from these emails</a>.`);
+    expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+  });
+});
+
+describe("the footer of every email", () => {
+  const ADDRESS = "1 Example Street, Example Town, EX 00000, Canada";
+
+  it("names the sender, says what CertBench is, and has the unsubscribe link", () => {
+    expect(SENT_BY).toBe("Sent by CertBench.");
+    for (const email of everyEmail()) {
+      expect(email.html).toMatch(
+        /<p style="font-size:12px;[^"]*">\s*Sent by CertBench\.<br>\s*CertBench is an independent study program for CompTIA exams\.\s*<a href="https:\/\/certbench\.dev\/api\/email\/unsubscribe\?token=t" style="[^"]*">Unsubscribe from these emails<\/a>\.\s*<\/p>/
+      );
+      expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+    }
+  });
+
+  // The address is the owner's to supply. Until it is set, no email prints one.
+  it("prints no postal address until the owner has supplied one", () => {
+    expect(senderLine()).toBe("Sent by CertBench.");
+    for (const blank of ["", "   ", "\n"]) {
+      settings.EMAIL_POSTAL_ADDRESS = blank;
+      expect(senderLine()).toBe("Sent by CertBench.");
+    }
+    for (const email of everyEmail()) expect(email.html + email.text).not.toContain("Postal address");
+  });
+
+  it("prints the postal address after the sender's name in every email, once it is set", () => {
+    settings.EMAIL_POSTAL_ADDRESS = ADDRESS;
+    const line = `Sent by CertBench. Postal address: ${ADDRESS}.`;
+    expect(senderLine()).toBe(line);
+    const emails = everyEmail();
+    expect(emails).toHaveLength(9);
+    for (const email of emails) {
+      expect(email.html).toContain(`${line}<br>`);
+      expect(email.text.endsWith(`\n\n${line}\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+    }
+  });
+
+  it("sets an address that was supplied on several lines, or with a full stop, as one sentence", () => {
+    settings.EMAIL_POSTAL_ADDRESS = " 1 Example Street,\r\nExample Town\n\nEX 00000, Canada. ";
+    expect(senderLine()).toBe("Sent by CertBench. Postal address: 1 Example Street, Example Town, EX 00000, Canada.");
+    // A setting typed with the two characters of an escaped line break reads the same.
+    settings.EMAIL_POSTAL_ADDRESS = ["1 Example Street", "Example Town", "EX 00000, Canada"].join(String.fromCharCode(92) + "n");
+    expect(senderLine()).toBe("Sent by CertBench. Postal address: 1 Example Street, Example Town, EX 00000, Canada.");
+  });
+
+  it("escapes the postal address in the HTML", () => {
+    settings.EMAIL_POSTAL_ADDRESS = `1 <b>Example</b> Street & "Suite" 2`;
+    const email = welcome();
+    expect(email.html).toContain("Postal address: 1 &lt;b&gt;Example&lt;/b&gt; Street &amp; &quot;Suite&quot; 2.<br>");
+    expect(email.html).not.toContain("<b>Example</b>");
   });
 });
 
@@ -177,6 +251,39 @@ describe("studyPlanEmail", () => {
     expect(email.text).toContain("Start the study path (you do not need an account): https://certbench.dev/start");
     expect(email.text).toContain(`Unsubscribe: ${address}`);
     expect(email.html).toContain(`href="${address.replace(/&/g, "&amp;")}"`);
+  });
+
+  // The email said "about three minutes", typed by hand, while every page
+  // states the product's own figure (MINUTES_PER_STOP).
+  it("states the length of a step from the product's own figure", () => {
+    const email = studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: base.unsubscribeUrl });
+    expect(email.html).toContain(`Each step is about ${MINUTES_PER_STOP} minutes of short questions on one objective.`);
+    expect(email.text).toContain(
+      `Each step takes about ${MINUTES_PER_STOP} minutes, and a question that you miss returns until you answer it correctly.`
+    );
+    expect(email.html + email.text).not.toMatch(/three minutes/i);
+  });
+
+  // "These three steps" counted the list by hand, and used the word that the
+  // product keeps for one stop on the study path, two lines above "one step or
+  // more each day".
+  it("introduces its list as the plan, and keeps the word step for the study path", () => {
+    const email = studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: base.unsubscribeUrl });
+    const intro = "You have been practicing port numbers on CertBench. Drills of that kind cover the facts. The plan below covers the rest of the exam.";
+    expect(email.html.replace(/\s+/g, " ")).toContain(intro);
+    expect(email.text).toContain(`${intro}\n1. Choose your exam.`);
+    expect(email.html + email.text).not.toContain("three steps");
+  });
+
+  // A length of time or a number of questions belongs to the product
+  // (src/core/path/plan.ts) or to the run that sends the email, never to a sentence.
+  it("has no number of minutes, days, weeks or questions typed into the templates themselves", () => {
+    const source = readFileSync(join(process.cwd(), "src/server/email/templates.ts"), "utf8");
+    expect(
+      source.match(
+        /\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+) (?:exam-style )?(?:minutes?|hours?|days?|weeks?|questions?)\b/gi
+      )
+    ).toBeNull();
   });
 });
 
@@ -262,15 +369,21 @@ describe("pathNudgeEmail", () => {
     expect(email.text).toContain("You have started your Security+ study path. Your next step is Introductory questions");
   });
 
-  it("escapes names and titles in the HTML", () => {
+  // A name with markup in it used to be escaped and printed. It is now left out
+  // of the greeting altogether (see "a display name that is not a name").
+  it("escapes a name and a title in the HTML, and leaves out a name that holds markup", () => {
     const email = pathNudgeEmail({
       ...base,
-      displayName: "<b>Sam</b>",
+      displayName: "D'Arcy Lee",
       nudge: nudge({ next: { title: "Ports & protocols", kind: "learn" } }),
     });
-    expect(email.html).toContain("&lt;b&gt;Sam&lt;/b&gt;");
+    expect(email.html).toContain(">Continue your study path, D&#39;Arcy</h1>");
+    expect(email.text).toContain("Continue your study path, D'Arcy.");
     expect(email.html).toContain("Ports &amp; protocols");
-    expect(email.html).not.toContain("<b>Sam</b>");
+
+    const marked = pathNudgeEmail({ ...base, displayName: "<b>Zed</b>", nudge: nudge() });
+    expect(marked.html).toContain(">Continue your study path</h1>");
+    expect(marked.html + marked.text).not.toContain("Zed");
   });
 });
 
@@ -291,6 +404,21 @@ describe("pathCountdownEmail", () => {
     const email = countdown(14, { done: 0, total: 35, freeLeft: 6 });
     expect(email.text).toContain("Your Security+ study path is ready. It has 35 steps of about 4 minutes each.");
     expect(email.html).toContain("Start the study path");
+  });
+
+  // "With two weeks remaining" was typed by hand for every countdown of more
+  // than seven days. The sentence now states the days that the run counted.
+  it("states the days that remain from the run's own count", () => {
+    const fortnight = countdown(14, { done: 3, total: 35, freeLeft: 3 });
+    expect(fortnight.subject).toBe("14 days until your Security+ exam");
+    expect(fortnight.text).toContain(
+      `With 14 days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`
+    );
+    expect(countdown(10, { done: 3, total: 35, freeLeft: 3 }).text).toContain("With 10 days remaining,");
+    expect(fortnight.html + fortnight.text).not.toContain("two weeks");
+    expect(countdown(7, { done: 3, total: 35, freeLeft: 3 }).text).toContain(
+      `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
+    );
   });
 
   it("is straight about the free steps being done", () => {
@@ -415,18 +543,277 @@ describe("checkpointResultEmail", () => {
     expect(e.text).not.toContain("remaining step");
   });
 
-  it("escapes names and titles in the HTML", () => {
+  // A name with markup in it used to be escaped and printed. It is now left out
+  // of the greeting altogether (see "a display name that is not a name").
+  it("escapes titles in the HTML, and leaves out a name that holds markup", () => {
     const tricky = { ...domains[1], title: "Implementation & <ops>" };
     const e = checkpointResultEmail({
       ...base,
-      displayName: "<b>Sam</b>",
+      displayName: "<b>Zed</b>",
       examName: "Network+",
       domains: [domains[0], tricky],
       followUp: followUp(60, { opportunity: tricky }),
       questionCount: 617,
     });
-    expect(e.html).toContain("&lt;b&gt;Sam&lt;/b&gt;");
+    expect(e.html).toContain(">Your checkpoint result</h1>");
+    expect(e.html + e.text).not.toContain("Zed");
     expect(e.html).toContain("Implementation &amp; &lt;ops&gt;");
     expect(e.html).not.toContain("<ops>");
+  });
+});
+
+/** The text of an email's one heading. */
+const heading = (email: EmailContent) => /<h1[^>]*>([^<]*)<\/h1>/.exec(email.html)?.[1];
+
+/**
+ * Every email that greets someone, built for one display name, with the
+ * heading it has when the name is left out.
+ */
+const GREETED: [string, (displayName: string) => EmailContent, string][] = [
+  ["the welcome email", (displayName) => welcome(displayName), "Welcome to CertBench"],
+  [
+    "the question after the exam",
+    (displayName) =>
+      postExamEmail({
+        displayName,
+        certName: "CompTIA Security+",
+        unsubscribeUrl: base.unsubscribeUrl,
+        passHref: "https://certbench.dev/story?t=x&r=pass",
+        failHref: "https://certbench.dev/story?t=x&r=fail",
+      }),
+    "How did your exam go?",
+  ],
+  [
+    "the countdown",
+    (displayName) =>
+      pathCountdownEmail({ ...base, displayName, daysUntilExam: 7, standing: { done: 3, total: 35, freeLeft: 3 }, pro: false }),
+    "Your exam is in 7 days",
+  ],
+  ["the reminder to continue", (displayName) => pathNudgeEmail({ ...base, displayName, nudge: nudge() }), "Continue your study path"],
+  [
+    "the reminder that the checkpoint is next",
+    (displayName) =>
+      pathNudgeEmail({
+        ...base,
+        displayName,
+        nudge: nudge({ done: 5, freeLeft: 1, toCheckpoint: 0, next: { title: "Readiness checkpoint", kind: "checkpoint" } }),
+      }),
+    "Your readiness checkpoint is next",
+  ],
+  ["the checkpoint result", (displayName) => checkpoint(followUp(60), displayName), "Your checkpoint result"],
+];
+
+/** A heading with a first name in it: after a comma, and before the question mark of a question. */
+const named = (bare: string, name: string) => (bare.endsWith("?") ? `${bare.slice(0, -1)}, ${name}?` : `${bare}, ${name}`);
+
+const LINE_SEPARATOR = String.fromCharCode(0x2028);
+
+/**
+ * Display names that are not names, each with the words that must not be sent.
+ * The display name comes from sign-up, where nothing bounds it, and the welcome
+ * email goes to an address that nobody has confirmed.
+ */
+const NOT_A_NAME: [string, string, string[]][] = [
+  ["an image tag that runs a script", "<img src=x onerror=alert(1)>", ["onerror", "&lt;img", "alert(1)"]],
+  ["a link", '<a href="https://evil.example/claim">Claim</a>', ["evil.example", "Claim", "&lt;a"]],
+  ["markup after a first name", "Zed <script>alert(1)</script>", ["Zed", "alert(1)", "&lt;script"]],
+  ["a closing bracket alone", "Zed>Quux", ["Zed", "Quux"]],
+  ["a web address with a scheme", "https://evil.example/login", ["evil.example"]],
+  ["a web address that starts with www", "www.evil.example", ["evil.example"]],
+  ["a bare domain", "evil.example", ["evil.example"]],
+  ["a web address after a first name", "Zed visit evil.example", ["Zed", "evil.example"]],
+  ["a web address in full-width letters", "ｅｖｉｌ．ｅｘａｍｐｌｅ", ["ｅｖｉｌ"]],
+  ["a scheme with no dot", "Zed://Quux", ["Zed", "Quux"]],
+  ["a line break", "Zed\nBcc: victim@example.org", ["Zed", "Bcc"]],
+  ["a carriage return and a header", "Zed\r\nX-Injected: 1", ["Zed", "X-Injected"]],
+  ["a Unicode line separator", `Zed${LINE_SEPARATOR}Quux`, ["Zed", "Quux"]],
+  ["a tab", "Zed\tQuux", ["Zed", "Quux"]],
+  ["one character more than a greeting uses", "Z".repeat(GREETING_NAME_MAX + 1), ["ZZZZ"]],
+];
+
+describe("greetingName", () => {
+  it("is the first word of an ordinary name, as it was typed", () => {
+    expect(greetingName("Sam Lee")).toBe("Sam");
+    expect(greetingName("  Sam   Lee ")).toBe("Sam");
+    expect(greetingName("Anne-Marie Dupont")).toBe("Anne-Marie");
+    expect(greetingName("D'Arcy")).toBe("D'Arcy");
+    expect(greetingName("José Núñez")).toBe("José");
+    expect(greetingName("李雷")).toBe("李雷");
+    expect(greetingName("Dr. Lee")).toBe("Dr.");
+    expect(greetingName("R&D Team")).toBe("R&D");
+    expect(greetingName("sam_lee99")).toBe("sam_lee99");
+  });
+
+  it("uses a name of 40 characters and no longer one", () => {
+    const longest = `${"Z".repeat(GREETING_NAME_MAX - 4)} Lee`;
+    expect(longest).toHaveLength(40);
+    expect(greetingName(longest)).toBe("Z".repeat(36));
+    expect(greetingName(`${longest}s`)).toBeNull();
+    // Characters are counted, not code units: 40 characters that each take two units are still 40.
+    const outsideTheBasicPlane = String.fromCodePoint(0x10400).repeat(GREETING_NAME_MAX);
+    expect(outsideTheBasicPlane).toHaveLength(GREETING_NAME_MAX * 2);
+    expect(greetingName(outsideTheBasicPlane)).toBe(outsideTheBasicPlane);
+    expect(greetingName(`${outsideTheBasicPlane}${String.fromCodePoint(0x10400)}`)).toBeNull();
+    expect(greetingName("Z".repeat(100_000))).toBeNull();
+  });
+
+  it("is null when there is no name", () => {
+    for (const none of ["", "   ", "\n", null, undefined]) expect(greetingName(none)).toBeNull();
+  });
+
+  it.each(NOT_A_NAME)("is null for %s", (_, displayName) => {
+    expect(greetingName(displayName)).toBeNull();
+  });
+
+  // The profile of an account that gave no name is named from its email
+  // address, which often has a full stop in it. That is not a first name.
+  it("is null for the first part of an email address with a full stop in it", () => {
+    expect(greetingName("sam.lee")).toBeNull();
+  });
+});
+
+describe("a display name that is not a name", () => {
+  it.each(GREETED)("is left out of %s: the heading has no name, and none of its words are sent", (_, build, bare) => {
+    for (const [, displayName, words] of NOT_A_NAME) {
+      const email = build(displayName);
+      expect(heading(email)).toBe(bare);
+      for (const part of [email.subject, email.html, email.text]) {
+        expect(part).not.toContain(displayName);
+        for (const word of words) expect(part).not.toContain(word);
+      }
+    }
+  });
+
+  it.each(GREETED)("%s greets an ordinary name by its first word, escaped in the HTML", (_, build, bare) => {
+    expect(heading(build("Zebedee Quux"))).toBe(named(bare, "Zebedee"));
+    const email = build("D'Arcy & Co");
+    expect(heading(email)).toBe(named(bare, "D&#39;Arcy"));
+    expect(email.html).not.toContain("D'Arcy");
+  });
+
+  it.each(GREETED)("%s greets nobody by name when the account has no name", (_, build, bare) => {
+    expect(heading(build(""))).toBe(bare);
+    expect(heading(build("   "))).toBe(bare);
+  });
+
+  it("opens the text part with the same greeting, with or without a name", () => {
+    expect(welcome("Zebedee Quux").text).toMatch(/^Welcome to CertBench, Zebedee\.\n/);
+    expect(welcome("evil.example").text).toMatch(/^Welcome to CertBench\.\n/);
+    expect(pathCountdownEmail({ ...base, displayName: "", daysUntilExam: 7, standing: { done: 3, total: 35, freeLeft: 3 }, pro: false }).text).toMatch(
+      /^Your exam is in 7 days\.\n/
+    );
+    expect(pathNudgeEmail({ ...base, displayName: "<b>Zed</b>", nudge: nudge() }).text).toMatch(/^Continue your study path\.\n/);
+    expect(checkpoint(followUp(60), "www.evil.example").text).toMatch(/^Your checkpoint result\.\n/);
+  });
+
+  // A subject is the one line a mail client shows before the email is opened.
+  it.each(GREETED)("%s has no name in its subject", (_, build) => {
+    expect(build("Zebedee Quux").subject).not.toContain("Zebedee");
+    expect(build("Zebedee Quux").subject).not.toContain("Quux");
+  });
+});
+
+describe("a value that comes from outside the templates", () => {
+  const MARK = `<x>&"'`;
+  const ESCAPED = "&lt;x&gt;&amp;&quot;&#39;";
+  const link = (path: string) => `https://certbench.dev/${path}?a=1&b="><x>`;
+  const escapedLink = (path: string) => `href="https://certbench.dev/${path}?a=1&amp;b=&quot;&gt;&lt;x&gt;"`;
+  const title = `Ports ${MARK}`;
+  const markedDomains: PathDomain[] = [
+    { number: `1.0${MARK}`, title: `Concepts ${MARK}`, weight: 23, objectives: [] },
+    { number: "2.0", title: `Implementation ${MARK}`, weight: 20, objectives: [] },
+  ];
+
+  /** One of every email, with every name, title and address it is given carrying markup. */
+  const marked = (): [string, EmailContent, string[]][] => [
+    [
+      "welcome",
+      welcomeEmail({ displayName: "Sam Lee", certName: `Security+ ${MARK}`, unsubscribeUrl: link("unsubscribe") }),
+      [`<strong>Security+ ${ESCAPED}</strong>`, escapedLink("unsubscribe")],
+    ],
+    ["study plan", studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: link("unsubscribe") }), [escapedLink("unsubscribe")]],
+    [
+      "post-exam",
+      postExamEmail({
+        displayName: "Sam Lee",
+        certName: `Security+ ${MARK}`,
+        unsubscribeUrl: link("unsubscribe"),
+        passHref: link("pass"),
+        failHref: link("fail"),
+      }),
+      [`Security+ ${ESCAPED} exam has passed`, escapedLink("pass"), escapedLink("fail"), escapedLink("unsubscribe")],
+    ],
+    [
+      "countdown",
+      pathCountdownEmail({
+        displayName: "Sam Lee",
+        examName: `Security+ ${MARK}`,
+        daysUntilExam: 7,
+        standing: { done: 3, total: 35, freeLeft: 3 },
+        pro: false,
+        href: link("path"),
+        unsubscribeUrl: link("unsubscribe"),
+      }),
+      [`steps in your Security+ ${ESCAPED} study path.`, escapedLink("path"), escapedLink("unsubscribe")],
+    ],
+    [
+      "reminder",
+      pathNudgeEmail({
+        displayName: "Sam Lee",
+        examName: `Security+ ${MARK}`,
+        nudge: nudge({ next: { title, kind: "learn" } }),
+        href: link("path"),
+        unsubscribeUrl: link("unsubscribe"),
+      }),
+      [`of your Security+ ${ESCAPED} study path.`, `<strong>Ports ${ESCAPED}</strong>`, escapedLink("path"), escapedLink("unsubscribe")],
+    ],
+    [
+      "checkpoint next",
+      pathNudgeEmail({
+        displayName: "Sam Lee",
+        examName: `Security+ ${MARK}`,
+        nudge: nudge({ done: 5, freeLeft: 1, toCheckpoint: 0, next: { title: "Readiness checkpoint", kind: "checkpoint" } }),
+        href: link("path"),
+        unsubscribeUrl: link("unsubscribe"),
+      }),
+      [`of your Security+ ${ESCAPED} study path.`, escapedLink("path"), escapedLink("unsubscribe")],
+    ],
+    [
+      "checkpoint result",
+      checkpointResultEmail({
+        displayName: "Sam Lee",
+        examName: `Network+ ${MARK}`,
+        domains: markedDomains,
+        followUp: followUp(60, { opportunity: markedDomains[1] }),
+        questionCount: 617,
+        href: link("path"),
+        unsubscribeUrl: link("unsubscribe"),
+      }),
+      [
+        `>Network+ ${ESCAPED} readiness checkpoint</div>`,
+        `on your Network+ ${ESCAPED} readiness checkpoint`,
+        `>1.0${ESCAPED}</span>Concepts ${ESCAPED}</td>`,
+        `<strong>Implementation ${ESCAPED}</strong>`,
+        `The rest of your Network+ ${ESCAPED} study path</div>`,
+        `remaining steps of your Network+ ${ESCAPED} study path</td>`,
+        `Network+ ${ESCAPED} questions</td>`,
+        escapedLink("path"),
+        escapedLink("unsubscribe"),
+      ],
+    ],
+  ];
+
+  it.each(marked())("is escaped wherever it enters the HTML of the %s email", (_, email, escaped) => {
+    expect(email.html).not.toContain("<x>");
+    // No attribute is closed early by a quotation mark inside a value.
+    expect(email.html).not.toContain(`b="`);
+    for (const piece of escaped) expect(email.html).toContain(piece);
+  });
+
+  it("is printed as it stands in the text part, which is not HTML", () => {
+    const [, countdown] = marked()[3];
+    expect(countdown.text).toContain(`steps in your Security+ ${MARK} study path.`);
+    expect(countdown.text).toContain(`Continue the study path: ${link("path")}`);
+    expect(countdown.text).not.toContain("&amp;");
   });
 });

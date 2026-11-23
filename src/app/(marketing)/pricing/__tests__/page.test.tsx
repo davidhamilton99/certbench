@@ -11,6 +11,8 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/lib/api-client", () => ({ api: vi.fn() }));
 
+import { longDate } from "@/core/path/versions";
+import { PRICING_PAGE_UPDATED_ISO } from "@/lib/seo/page-dates";
 import PricingLoading from "../loading";
 import PricingPage, { metadata } from "../page";
 
@@ -47,8 +49,22 @@ describe("the pricing page", () => {
   it("says in its description what the body says: three prices, in US dollars, adjusted by region", () => {
     expect(metadata.description).toContain("for $19 a month, $39 every three months, or $99 a year.");
     expect(metadata.description).toContain("Prices are in US dollars and are adjusted by region.");
-    expect(metadata.description).toContain("a full-length 90-question practice exam and 12 hands-on labs (PBQs) for each exam");
+    expect(metadata.description).toContain(
+      "a full-length 90-question practice exam for each exam, and 12 hands-on labs (PBQs) for each of Security+ SY0-701, Network+, A+ Core 1 and A+ Core 2."
+    );
     expect(metadata.description).not.toMatch(/or \$39 for three months/);
+  });
+
+  it("names the exams whose labs are free, because Security+ SY0-801 has no free lab", async () => {
+    const free = [...(await page(null)).querySelectorAll("h2")]
+      .find((h) => h.textContent === "Free")
+      ?.closest("[data-slot='card']");
+    expect(text(free)).toContain(
+      "12 hands-on labs (PBQs) for each of Security+ SY0-701, Network+, A+ Core 1 and A+ Core 2, the first three with no account"
+    );
+    // The practice exam is free for every exam; the labs are not.
+    expect(text(free)).not.toMatch(/labs \(PBQs\) for each exam/);
+    expect(metadata.description).not.toMatch(/labs \(PBQs\) for each exam/);
   });
 
   it("says that Pro covers one exam, and that A+ is two", async () => {
@@ -112,6 +128,15 @@ describe("the pricing page", () => {
     for (const link of links) expect(link.getAttribute("href")).toBe("/help#account");
     // Every link inside a sentence is underlined.
     for (const link of [...root.querySelectorAll("p a")]) expect(link.className).toContain("cb-link");
+  });
+
+  it("prints the day its words last changed, from the page's own date", async () => {
+    expect(PRICING_PAGE_UPDATED_ISO).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const root = await page(null);
+    const dated = [...root.querySelectorAll("p")].filter((p) => /^This page was last updated on /.test(text(p)));
+    expect(dated.map(text)).toEqual([`This page was last updated on ${longDate(PRICING_PAGE_UPDATED_ISO)}.`]);
+    // The same for every country: it is a fact about the page, not about the visitor.
+    expect(text(await page("IN"))).toContain(`This page was last updated on ${longDate(PRICING_PAGE_UPDATED_ISO)}.`);
   });
 
   it("squares the corners that the rule along the top of the Pro plan meets", async () => {

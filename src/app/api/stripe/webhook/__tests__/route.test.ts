@@ -25,6 +25,13 @@ const h = vi.hoisted(() => ({
   afterTasks: [] as (() => unknown)[],
   /** When true, `after` refuses, as it does where there is no request to wait for. */
   afterRefuses: false,
+  /**
+   * The customer's row, for the tests that deliver several events one after
+   * another. When it is set (null is a customer with no row), a read answers
+   * from it and a write changes it, as the table would. Left undefined, every
+   * call answers from `answers` alone.
+   */
+  row: undefined as Record<string, unknown> | null | undefined,
 }));
 
 vi.mock("@/env", () => ({ serverEnv: () => "whsec_test" }));
@@ -47,7 +54,16 @@ vi.mock("@/server/supabase/admin", () => ({
       const call = { table, op: "select", values: undefined, filters: [] } as DbCall;
       const answer = () => {
         h.calls.push(call);
-        return Promise.resolve(h.answers[`${table}.${call.op}`] ?? { data: null, error: null });
+        const fixed = h.answers[`${table}.${call.op}`];
+        if (fixed || h.row === undefined || table !== "user_subscriptions") {
+          return Promise.resolve(fixed ?? { data: null, error: null });
+        }
+        // The kept row: found only by the columns the call filters on.
+        const found = h.row && call.filters.every(([column, value]) => h.row?.[column] === value) ? h.row : null;
+        if (call.op === "select") return Promise.resolve({ data: found, error: null });
+        // An update changes the row it finds; an upsert also makes the row when there is none.
+        if (found || call.op === "upsert") h.row = { ...h.row, ...(call.values as Record<string, unknown>) };
+        return Promise.resolve({ data: null, error: null });
       };
       const query = {
         upsert(values: unknown, options: unknown) {
@@ -123,12 +139,20 @@ const subscriptionEvent = (type: string, status: string) => ({
   },
 });
 
+/**
+ * What Stripe answers when it is asked for a subscription as it is now. The
+ * handler writes this, and not the copy inside an event (which can be late).
+ */
+const stripeHolds = (status: string, id = "sub_1") =>
+  h.retrieve.mockResolvedValue({ id, status, items: { data: [{ current_period_end: PERIOD_END }] } });
+
 let consoleError: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   h.event = null;
   h.calls = [];
   h.answers = {};
+  h.row = undefined;
   h.afterTasks = [];
   h.afterRefuses = false;
   h.capture.mockClear();
@@ -387,6 +411,8 @@ describe("the Stripe webhook: a subscription that changes", () => {
     ["canceled", "free", "canceled"],
   ])("writes a subscription that is %s as plan %s, status %s", async (stripeStatus, plan, status) => {
     known();
+    // An event that is not late: Stripe holds what the event says.
+    stripeHolds(stripeStatus);
     h.event = subscriptionEvent("customer.subscription.updated", stripeStatus);
 
     const res = await deliver();
@@ -459,6 +485,7 @@ describe("the Stripe webhook: a subscription that changes", () => {
 
   it("marks the row past due when a payment for its plan fails", async () => {
     known();
+    stripeHolds("past_due");
     h.event = {
       id: "evt_invoice",
       type: "invoice.payment_failed",
@@ -489,6 +516,7 @@ describe("the Stripe webhook: a subscription that changes", () => {
 
   it("answers 500 when the failed payment cannot be recorded", async () => {
     known();
+    stripeHolds("past_due");
     h.event = { id: "evt_invoice", type: "invoice.payment_failed", data: { object: { customer: "cus_1" } } };
     h.answers["user_subscriptions.update"] = { error: { message: "TypeError: fetch failed" } };
     expect((await deliver()).status).toBe(500);
@@ -593,4 +621,265 @@ describe("the Stripe webhook: a checkout delivered again after its subscription 
       expect(h.capture).not.toHaveBeenCalled();
     }
   );
+});
+
+// Stripe does not deliver events in the order it made them, and it delivers
+// one again for up to three days after a failure. Until November 2026 the copy
+// of the subscription inside each event was written as it stood. A change that
+// said "active", arriving after the deletion, brought Pro back for good: the
+// deletion clears the subscription from the row, and a row that holds none
+// accepts any. Now a change is only a reason to ask Stripe, and what Stripe
+// holds at that moment is what is written.
+describe("the Stripe webhook: events that arrive late or out of order", () => {
+  // A type and not an interface, so that it can be kept as the fake table's row.
+  type Row = {
+    user_id: string;
+    stripe_customer_id: string;
+    stripe_subscription_id: string | null;
+    plan: string;
+    status: string;
+    current_period_end: string | null;
+  };
+  /** A member whose plan is recorded. */
+  const member = (): Row => ({
+    user_id: "user-1",
+    stripe_customer_id: "cus_1",
+    stripe_subscription_id: "sub_1",
+    plan: "pro",
+    status: "active",
+    current_period_end: "2026-01-01T00:00:00.000Z",
+  });
+  /** An account that has begun a checkout: a customer at Stripe, and no plan yet. */
+  const buyer = (): Row => ({ ...member(), stripe_subscription_id: null, plan: "free", current_period_end: null });
+  const row = () => h.row as unknown as Row;
+
+  /** The subscription at Stripe at this moment, whatever the copy inside an event says. */
+  let now: string;
+
+  type Named = [name: string, event: () => unknown];
+  const checkout = () => checkoutCompleted();
+  const changed = (copy: string, id = "sub_1") => ({
+    id: "evt_sub",
+    type: "customer.subscription.updated",
+    data: { object: { id, customer: "cus_1", status: copy, items: { data: [{ current_period_end: PERIOD_END }] } } },
+  });
+  const deleted = () => subscriptionEvent("customer.subscription.deleted", "canceled");
+  const paymentFailed = (invoice: Record<string, unknown> = { subscription: "sub_1" }) => ({
+    id: "evt_invoice",
+    type: "invoice.payment_failed",
+    data: { object: { customer: "cus_1", ...invoice } },
+  });
+
+  /** Delivers one event, which the handler must acknowledge. */
+  const send = async (event: unknown) => {
+    h.event = event;
+    expect((await deliver()).status).toBe(200);
+  };
+
+  /** Every order in which the events can arrive. */
+  function orders<T>(items: T[]): T[][] {
+    if (items.length <= 1) return [items];
+    return items.flatMap((item, i) => orders(items.filter((_, j) => j !== i)).map((rest) => [item, ...rest]));
+  }
+  const titled = (events: Named[]) =>
+    orders(events).map((order) => ({ title: order.map(([name]) => name).join(", then "), order }));
+
+  beforeEach(() => {
+    now = "active";
+    h.retrieve.mockReset().mockImplementation(async (id: string) => ({
+      id,
+      status: now,
+      items: { data: [{ current_period_end: PERIOD_END }] },
+    }));
+  });
+
+  // The reviewer's case.
+  it("does not bring Pro back when a change that says active arrives after the deletion", async () => {
+    h.row = member();
+    now = "canceled";
+    await send(deleted());
+    // What the deletion leaves: no plan, and no subscription on the row.
+    expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: null });
+
+    h.calls = [];
+    await send(changed("active"));
+    expect(h.retrieve).toHaveBeenCalledExactlyOnceWith("sub_1");
+    expect(writes()).toEqual([]);
+    expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: null });
+  });
+
+  // The same fault by another road: an end that arrives as a change keeps the subscription on the row.
+  it("does not bring Pro back when the end was recorded by a change and an older change follows", async () => {
+    h.row = member();
+    now = "canceled";
+    await send(changed("canceled"));
+    expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: "sub_1" });
+
+    await send(changed("active"));
+    expect(row()).toMatchObject({ plan: "free", status: "canceled" });
+  });
+
+  it("keeps a plan past due when an older change that says active arrives", async () => {
+    h.row = member();
+    now = "past_due";
+    await send(changed("past_due"));
+    expect(row()).toMatchObject({ plan: "free", status: "past_due" });
+
+    await send(changed("active"));
+    expect(row()).toMatchObject({ plan: "free", status: "past_due" });
+  });
+
+  it("does not shut out a member who has paid when an older change that says past due arrives", async () => {
+    h.row = member();
+    await send(changed("past_due"));
+    expect(row()).toMatchObject({ plan: "pro", status: "active" });
+  });
+
+  it("does not mark a member past due for a failed payment that has since been made", async () => {
+    h.row = member();
+    await send(paymentFailed());
+    expect(h.retrieve).toHaveBeenCalledExactlyOnceWith("sub_1");
+    expect(writes()).toEqual([]);
+    expect(row()).toMatchObject({ plan: "pro", status: "active" });
+  });
+
+  it.each(["canceled", "unpaid"])(
+    "does not mark a plan past due for a failed payment once Stripe holds it as %s",
+    async (status) => {
+      h.row = member();
+      now = status;
+      await send(paymentFailed());
+      expect(writes()).toEqual([]);
+    }
+  );
+
+  it("asks about the row's own subscription when the failed invoice names none", async () => {
+    h.row = member();
+    now = "past_due";
+    await send(paymentFailed({}));
+    expect(h.retrieve).toHaveBeenCalledExactlyOnceWith("sub_1");
+    expect(row()).toMatchObject({ plan: "pro", status: "past_due" });
+  });
+
+  it.each(titled([["the failed payment", paymentFailed], ["the change to past due", () => changed("past_due")]]))(
+    "records a failed renewal while it is owed, and then the payment: $title",
+    async ({ order }) => {
+      h.row = member();
+      now = "past_due";
+      for (const [, event] of order) await send(event());
+      expect(row()).toMatchObject({ plan: "free", status: "past_due", stripe_subscription_id: "sub_1" });
+
+      now = "active";
+      await send(changed("active"));
+      expect(row()).toMatchObject({ plan: "pro", status: "active", stripe_subscription_id: "sub_1" });
+    }
+  );
+
+  it.each(titled([["the subscription's own event", () => changed("active")], ["the checkout", checkout]]))(
+    "records a new plan in either order: $title",
+    async ({ order }) => {
+      h.row = buyer();
+      for (const [, event] of order) await send(event());
+      expect(row()).toEqual(member());
+    }
+  );
+
+  describe("a plan that was bought and has ended", () => {
+    const events: Named[] = [
+      ["the checkout", checkout],
+      ["a change that says active", () => changed("active")],
+      ["the deletion", deleted],
+    ];
+
+    // Every event is late: all three arrive after the subscription has ended.
+    it.each(titled(events))("is never Pro when all three arrive after the end: $title", async ({ order }) => {
+      h.row = buyer();
+      now = "canceled";
+      for (const [, event] of order) {
+        await send(event());
+        expect(row().plan).toBe("free");
+      }
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: null });
+    });
+
+    // The subscription is alive until its deletion is made, and ended from then on.
+    it.each(titled(events))("ends without Pro in whatever order they arrive: $title", async ({ order }) => {
+      h.row = buyer();
+      for (const [name, event] of order) {
+        if (name === "the deletion") now = "canceled";
+        await send(event());
+      }
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: null });
+    });
+  });
+
+  describe("a renewal that failed and was then paid", () => {
+    const events: Named[] = [
+      ["the failed payment", paymentFailed],
+      ["a change that says past due", () => changed("past_due")],
+      ["a change that says active", () => changed("active")],
+    ];
+
+    // All three arrive after the member has paid: none of them may take Pro away.
+    it.each(titled(events))("keeps Pro at every step when all three arrive after the payment: $title", async ({ order }) => {
+      h.row = member();
+      for (const [, event] of order) {
+        await send(event());
+        expect(row()).toMatchObject({ plan: "pro", status: "active", stripe_subscription_id: "sub_1" });
+      }
+    });
+  });
+
+  it.each(["canceled", "incomplete_expired"])(
+    "takes an end from the event itself, without asking Stripe: %s",
+    async (status) => {
+      h.row = member();
+      await send(changed(status));
+      expect(h.retrieve).not.toHaveBeenCalled();
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: "sub_1" });
+    }
+  );
+
+  // Pro written by the new plan's own event, before its checkout has been
+  // recorded: the row holds no subscription yet. The first attempt, never paid
+  // for, expires about a day later and must not end the plan.
+  it("changes nothing when a subscription the row never held has ended", async () => {
+    h.row = { ...buyer(), plan: "pro" };
+    await send(changed("incomplete_expired", "sub_unfinished"));
+    expect(h.retrieve).not.toHaveBeenCalled();
+    expect(writes()).toEqual([]);
+    expect(row().plan).toBe("pro");
+  });
+
+  it("does not ask Stripe about a customer it has no row for, or about another subscription", async () => {
+    h.row = null;
+    await send(changed("active"));
+    h.row = { ...member(), stripe_subscription_id: "sub_paid" };
+    await send(changed("active"));
+    await send(paymentFailed());
+    expect(h.retrieve).not.toHaveBeenCalled();
+    expect(writes()).toEqual([]);
+    expect(row()).toMatchObject({ plan: "pro", status: "active", stripe_subscription_id: "sub_paid" });
+  });
+
+  // Without Stripe's answer nothing is known, so nothing is written and Stripe is asked to send the event again.
+  it.each<Named>([
+    ["a change", () => changed("active")],
+    ["a failed payment", paymentFailed],
+  ])("answers 500 and writes nothing when Stripe cannot be asked about %s", async (_name, event) => {
+    h.row = member();
+    h.retrieve.mockRejectedValue(new Error("An error occurred with our connection to Stripe."));
+    h.event = event();
+
+    const res = await deliver();
+    expect(res.status).toBe(500);
+    expect(writes()).toEqual([]);
+    expect(row()).toEqual(member());
+    await runAfterTasks();
+    expect(h.capture).toHaveBeenCalledWith(
+      "system:stripe-webhook",
+      "stripe_webhook_failed",
+      expect.objectContaining({ step: "event handling" })
+    );
+  });
 });

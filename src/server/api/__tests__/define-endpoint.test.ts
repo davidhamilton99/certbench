@@ -190,6 +190,64 @@ describe("defineEndpoint", () => {
     consoleError.mockRestore();
   });
 
+  // Many data functions throw the database's own text inside an internal
+  // ApiError. That text names tables, columns and policies: it is logged and
+  // reported, and the caller reads a sentence that says nothing of them.
+  it.each([
+    'new row violates row-level security policy for table "user_subscriptions"',
+    "permission denied for table profiles",
+    'duplicate key value violates unique constraint "user_enrollments_pkey"',
+    "canceling statement due to statement timeout",
+    "TypeError: fetch failed",
+    "The operation was aborted due to timeout",
+    "Something went wrong",
+    // A database's text that happens to end with a full stop is still not for the caller.
+    'relation "profiles" does not exist.',
+    "Could not find the table public.user_subscriptions in the schema cache.",
+    "Malformed options JSON on question 4f0c.",
+  ])("answers an internal ApiError that carries %s with a sentence of its own", async (text) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fault = new ApiError("internal", text);
+    const route = defineEndpoint(echoContract, {
+      auth: "user",
+      handler: async () => {
+        throw fault;
+      },
+    });
+
+    const res = await route(post({ value: 1 }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({
+      error: { code: "internal", message: "The request could not be completed. Please try again." },
+    });
+    // The fault itself is still logged and reported.
+    expect(consoleError).toHaveBeenCalledWith("[POST /api/test/echo]", fault);
+    consoleError.mockRestore();
+  });
+
+  // The sentences the product itself throws with an internal error must all
+  // still reach the caller.
+  it.each([
+    "Your account could not be checked. Please try again.",
+    "Your answers could not be recorded. Please try again.",
+    "The payment page could not be opened. Please try again.",
+    "The billing page could not be opened. Please try again.",
+    "The comment could not be saved. Please try again.",
+    "The testimonials could not be read. Please try again.",
+  ])("keeps the product's own sentence: %s", async (sentence) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const route = defineEndpoint(echoContract, {
+      auth: "user",
+      handler: async () => {
+        throw new ApiError("internal", sentence);
+      },
+    });
+    const res = await route(post({ value: 1 }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.message).toBe(sentence);
+    consoleError.mockRestore();
+  });
+
   it("reports a fault that was thrown as an internal ApiError, and still answers with its sentence", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     const fault = new ApiError("internal", "Your account could not be checked. Please try again.");

@@ -3,6 +3,7 @@ import { submitSrsAnswer } from "@/contracts/srs";
 import { ApiError } from "@/contracts/common";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { getCardSchedule } from "@/server/data/srs";
+import { requireCertAccess } from "@/server/data/enrollments";
 import { updateQuestionPerformanceForAnswers } from "@/server/services/submit-exam";
 
 export const POST = defineEndpoint(submitSrsAnswer, {
@@ -13,6 +14,10 @@ export const POST = defineEndpoint(submitSrsAnswer, {
 
     const [question] = await getQuestionsByIds(db, [input.questionId]);
     if (!question) throw new ApiError("not_found", "Question not found");
+    // The question's own exam decides, and not the exam the request names:
+    // the correct answer and its explanation are returned only for an exam
+    // in the member's plan.
+    await requireCertAccess(db, user.id, question.certification_id);
 
     // upsertNew: false — an SRS card without a performance row would be a
     // bug (it was selected FROM the user's performance).

@@ -11,7 +11,7 @@ import {
   SY0_801_PRACTICE_PATH,
   SY0_801_UPDATED_ISO,
 } from "@/lib/seo/exam-versions";
-import { ABOUT_PAGES_UPDATED_ISO } from "@/lib/seo/page-dates";
+import { ABOUT_PAGES_UPDATED_ISO, PRICING_PAGE_UPDATED_ISO } from "@/lib/seo/page-dates";
 
 const BASE_URL = "https://certbench.dev";
 
@@ -22,7 +22,7 @@ const BASE_URL = "https://certbench.dev";
  * words do. Change a date in the commit that changes the words, and only then.
  */
 
-/** Pages whose words are in their own files: the home page, pricing, help, the tools, the objective pages and the readiness checks. */
+/** Pages whose words are in their own files: the home page, help, the tools, the objective pages and the readiness checks. */
 const CONTENT_UPDATED = new Date("2026-11-22");
 /** The same day as the "Last updated" line printed on each of these two pages (sitemap.test.ts compares them). */
 const TERMS_UPDATED = new Date("2026-11-22");
@@ -30,6 +30,8 @@ const PRIVACY_UPDATED = new Date("2026-11-22");
 const CONTACT_UPDATED = new Date("2026-11-22");
 /** /about and /educators, which print the same day (src/lib/seo/page-dates.ts). */
 const ABOUT_UPDATED = new Date(ABOUT_PAGES_UPDATED_ISO);
+/** /pricing, which prints its own day: a plan or a price can change when no other page does. */
+const PRICING_UPDATED = new Date(PRICING_PAGE_UPDATED_ISO);
 /** The practice-test pages and the PBQ pages (src/lib/seo/cert-pages.ts). */
 const CERT_PAGES_UPDATED = new Date(CERT_PAGES_UPDATED_ISO);
 /** The guides and the comparisons (src/lib/seo/comparison-pages.ts). */
@@ -43,7 +45,6 @@ const SY0_801_UPDATED = new Date(SY0_801_UPDATED_ISO);
  */
 const STATIC_PATHS = [
   "",
-  "/pricing",
   "/tools/port-numbers-quiz",
   "/tools/subnetting-practice",
   "/tools/subnet-calculator",
@@ -57,15 +58,18 @@ function entry(path: string, lastModified: Date): MetadataRoute.Sitemap[number] 
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // The pages generated from the database. A failed read leaves them out for
-  // this request and never breaks the sitemap.
-  const objectivePages = await listObjectivePages()
-    .then((pages) => pages.map((p) => entry(`/objectives/${p.cert}/${p.code}`, CONTENT_UPDATED)))
-    .catch(() => []);
-
-  const readinessChecks = await listReadinessCheckCerts()
-    .then((certs) => certs.map((c) => entry(`/readiness-check/${c.cert}`, CONTENT_UPDATED)))
-    .catch(() => []);
+  // The pages generated from the database. The sitemap is made once, when the
+  // site is built, and is then served as it is until the next deployment. So a
+  // read that fails must fail the build: the previous deployment stays live
+  // with its whole sitemap. Swallowed, the failure would publish a sitemap
+  // without the objective pages and the readiness checks, and say nothing.
+  // (The objective pages need the same read to be built at all.)
+  const objectivePages = (await listObjectivePages()).map((p) =>
+    entry(`/objectives/${p.cert}/${p.code}`, CONTENT_UPDATED)
+  );
+  const readinessChecks = (await listReadinessCheckCerts()).map((c) =>
+    entry(`/readiness-check/${c.cert}`, CONTENT_UPDATED)
+  );
 
   return [
     ...STATIC_PATHS.map((path) => entry(path, CONTENT_UPDATED)),
@@ -77,6 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...readinessChecks,
     ...objectivePages,
+    entry("/pricing", PRICING_UPDATED),
     entry("/about", ABOUT_UPDATED),
     entry("/educators", ABOUT_UPDATED),
     entry("/contact", CONTACT_UPDATED),

@@ -7,7 +7,8 @@ import { clock, REHEARSAL_FORMATS, type Reading } from "@/core/path/rehearsal";
 import type { PathStructure, RehearsalSize } from "@/core/path/types";
 import type { RehearsalRun } from "./rehearsal-run";
 
-const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "long", day: "numeric" });
+/** "March 3": the page is in English, so its dates are too, whatever the browser's own language. */
+const fmtDay = (at: number) => new Date(at).toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
 const FULL = REHEARSAL_FORMATS.full;
 const HALF = REHEARSAL_FORMATS.half;
@@ -44,9 +45,10 @@ export function RehearsalIntro({
             from anywhere else it has no line above it: the exam's code is in
             the sentence below. */}
         {stopNumber && <p className="cb-label text-muted-foreground">Step {stopNumber}: practice exam</p>}
-        <h2 ref={headingRef} tabIndex={-1} className="cb-subsection">
+        {/* The screen's title: on the study path this is a screen of its own. */}
+        <h1 ref={headingRef} tabIndex={-1} className="cb-subsection">
           Take a full-length practice exam.
-        </h2>
+        </h1>
       </div>
       <p className="cb-measure text-body text-muted-foreground">
         The practice exam has {FULL.questions} questions and a time limit of {FULL.minutes} minutes, which are the

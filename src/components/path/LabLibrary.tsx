@@ -2,6 +2,7 @@
 
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { preloadLab } from "@/components/workspace/pbq-host";
 import type { PathLabInfo, PathStructure, StopRecord } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES as HANDS_ON, LAB_TYPES, labMeta } from "./lab-types";
@@ -78,6 +79,11 @@ export function LabLibrary({
                       <button
                         type="button"
                         onClick={() => onOpen(lab)}
+                        // A simulation, a topology and a threat hunt each have a large
+                        // player: its fetch starts as the row is hovered or takes the
+                        // focus, so that it is usually there when the lab opens.
+                        onPointerEnter={() => preloadLab(lab.type)}
+                        onFocus={() => preloadLab(lab.type)}
                         className="glass flex w-full min-w-0 items-center gap-3.5 rounded-md p-3.5 text-left transition-[border-color,background-color] duration-150 hover:border-primary hover:bg-tint-hover active:bg-tint-press sm:p-4"
                       >
                         <span
@@ -139,7 +145,13 @@ export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => v
           <h2 className="cb-statement mt-1">{lab.title}</h2>
         </div>
       </div>
-      <Button size="lg" className="w-full sm:w-auto" onClick={onOpen}>
+      <Button
+        size="lg"
+        className="w-full sm:w-auto"
+        onClick={onOpen}
+        onPointerEnter={() => preloadLab(lab.type)}
+        onFocus={() => preloadLab(lab.type)}
+      >
         Open the lab
         <ArrowRight aria-hidden />
       </Button>

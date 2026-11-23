@@ -51,6 +51,7 @@ export function RehearsalPlayer({
   examCode,
   label = "Practice exam",
   noun = "practice exam",
+  titleAs: Title = "p",
   heading: Heading = "h2",
   scoreNeedsAccount = false,
   onChange,
@@ -64,6 +65,12 @@ export function RehearsalPlayer({
   label?: string;
   /** The same in running words, as in "Finish the practice exam". */
   noun?: string;
+  /**
+   * "h1" where the exam is a screen of its own, so that the line that names it
+   * is that screen's title (the study path). A public page has its own title
+   * above the exam, and the line stays a paragraph.
+   */
+  titleAs?: "h1" | "p";
   /** The level of the question and panel headings: "h3" under a section that already has an h2. */
   heading?: "h2" | "h3";
   /**
@@ -266,9 +273,9 @@ export function RehearsalPlayer({
     >
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <p className="cb-label min-w-0 text-muted-foreground">
+          <Title className="cb-label min-w-0 text-muted-foreground">
             {examCode} {label.toLowerCase()}
-          </p>
+          </Title>
           <span
             role="timer"
             aria-label={`${clock(left)} left`}

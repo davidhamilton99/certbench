@@ -23,6 +23,7 @@ import {
   createAttempt,
   getInFlightAttempt,
 } from "@/server/data/practice-exams";
+import { requireCertAccess } from "@/server/data/enrollments";
 import { assertCanStartQuiz } from "@/server/services/subscription";
 
 function toExamQuestion(q: CertQuestion) {
@@ -39,6 +40,9 @@ export const POST = defineEndpoint(startPracticeExam, {
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
+    // Pro is granted for each exam: this one must be in the member's plan,
+    // for a new attempt and for one that is resumed.
+    await requireCertAccess(db, user.id, input.certId);
     const domainId = input.domainId ?? null;
 
     // Resume an in-flight attempt of this type if one exists.

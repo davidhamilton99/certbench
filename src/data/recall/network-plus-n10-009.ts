@@ -9,7 +9,7 @@ import { isDataRate, type RecallDeckConfig } from "@/lib/recall/recall-deck";
 export const networkPlusRecallConfigs: RecallDeckConfig[] = [
   {
     id: "net-ports",
-    label: "Ports & protocols",
+    label: "Ports and protocols",
     blurb: "Match protocols to their port numbers, cold.",
     tableId: "ports-protocols",
     mode: "choice",
@@ -51,7 +51,7 @@ export const networkPlusRecallConfigs: RecallDeckConfig[] = [
         MySQL: "MySQL uses port 3306. MySQL and MariaDB databases use this port.",
         RDP: "RDP uses port 3389. The Remote Desktop Protocol provides remote access to the Windows GUI.",
         SIP: "SIP uses ports 5060 and 5061. The Session Initiation Protocol carries VoIP signaling on port 5060, or on port 5061 over TLS.",
-        "HTTP Alt": "HTTP Alt uses port 8080. This is the alternate HTTP port, used by proxies, development servers and HTTP/2 in clear text.",
+        "HTTP Alt": "HTTP Alt uses port 8080. This is the alternate HTTP port, used by proxies and development servers.",
       },
     },
   },

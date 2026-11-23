@@ -306,6 +306,24 @@ describe("RehearsalPlayer", () => {
     expect(screen.getByRole("button", { name: /Finish the practice test/ })).toBeInTheDocument();
   });
 
+  it("names itself in the title of its screen where it is a screen of its own, and in a line under a page's own title elsewhere", () => {
+    // On a public page the page's title stands above the exam: the line is a paragraph, and the question is the first heading.
+    setup();
+    expect(screen.getByText("SY0-701 practice exam").tagName).toBe("P");
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(question(1).tagName).toBe("H2");
+    cleanup();
+
+    // On the study path the exam is the whole screen: the line is its title, on every panel.
+    setup(makeRun(), { titleAs: "h1" });
+    const title = screen.getByRole("heading", { level: 1, name: "SY0-701 practice exam" });
+    expect(title.className).toBe(screen.getByText("SY0-701 practice exam").className);
+    expect(question(1).tagName).toBe("H2");
+    fireEvent.click(gridButton(1));
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 2, name: "All questions" })).toBeInTheDocument();
+  });
+
   it("where the score needs an account, the last button only finishes the exam and the panel says why", () => {
     const { onFinish } = setup(makeRun({ picks: [0, 1, 2], i: 2 }), { scoreNeedsAccount: true });
     fireEvent.click(screen.getByRole("button", { name: /^Finish/ }));

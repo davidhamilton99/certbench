@@ -2,6 +2,7 @@ import { defineEndpoint } from "@/server/api/define-endpoint";
 import { startSrsReview } from "@/contracts/srs";
 import { ApiError } from "@/contracts/common";
 import { listDueCards } from "@/server/data/srs";
+import { requireCertAccess } from "@/server/data/enrollments";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { SRS_MAX_CARDS_PER_SESSION } from "@/core/constants";
 
@@ -12,6 +13,8 @@ export const POST = defineEndpoint(startSrsReview, {
   rateLimit: { limit: 20, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
+    // Pro is granted for each exam: this one must be in the member's plan.
+    await requireCertAccess(db, user.id, input.certId);
 
     const { cards, totalDue } = await listDueCards(
       db,

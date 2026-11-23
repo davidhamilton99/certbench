@@ -80,6 +80,27 @@ export async function canAccessCert(
   return profile?.role === "admin";
 }
 
+/** What a Pro endpoint answers for an exam that the member's plan does not cover. */
+export const EXAM_NOT_IN_PLAN = "That exam is not included in your plan.";
+
+/**
+ * For an endpoint that serves one exam to Pro members (a practice exam, the
+ * diagnostic, a review of due questions): stops unless this member's plan
+ * covers the exam. The endpoint factory's "pro" check says only that the
+ * account has Pro. Pro is granted for each exam, so without this a member with
+ * Pro on one exam could ask for any other by its id. The workspace pages make
+ * the same decision before they render; this is the lock at the data.
+ *
+ * Throws ApiError("forbidden") for an exam outside the plan. When the answer
+ * could not be read it throws the "account could not be checked" error, as
+ * canAccessCert does: a failed read never turns a paying member away.
+ */
+export async function requireCertAccess(db: Db, userId: string, certificationId: string): Promise<void> {
+  if (!(await canAccessCert(db, userId, certificationId))) {
+    throw new ApiError("forbidden", EXAM_NOT_IN_PLAN);
+  }
+}
+
 export async function listEnrollments(db: Db, userId: string): Promise<Enrollment[]> {
   const { data, error } = await db
     .from("user_enrollments")
@@ -87,7 +108,8 @@ export async function listEnrollments(db: Db, userId: string): Promise<Enrollmen
     .eq("user_id", userId)
     .eq("is_active", true)
     .order("enrolled_at");
-  if (error) throw new ApiError("internal", error.message);
+  // The database's own words go to the server log, not into an endpoint's answer.
+  if (error) throw accountNotChecked("enrollments", error);
   return (data ?? []).map((e) => ({
     id: e.id,
     certificationId: e.certification_id,

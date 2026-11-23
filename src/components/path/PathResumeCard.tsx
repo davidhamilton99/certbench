@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -28,27 +27,22 @@ export function PathResumeCard({
   return (
     <div className="glass rounded-lg p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <span
-            aria-hidden
-            className="flex size-11 shrink-0 items-center justify-center rounded-xs bg-primary/10 text-primary"
-          >
-            <Route className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-small text-muted-foreground">
-              Your {examName} study path.
-              {started && total ? ` You have completed ${done} of ${total} steps.` : ""}
-            </p>
-            {/* It wraps and is never cut short: the title says which step is next. */}
-            <p className="cb-statement mt-0.5">
-              {nextTitle
-                ? `Next step: ${nextTitle}`
-                : started
-                  ? "Continue from where you stopped"
-                  : "Begin with the introductory questions"}
-            </p>
-          </div>
+        {/* Words only, with no icon in a tinted tile beside them: the pressable
+            colour is kept for the button. The block takes the room that the
+            button leaves, so a long title wraps beside it or above it. */}
+        <div className="min-w-0 flex-1 basis-64">
+          <p className="text-small text-muted-foreground">
+            Your {examName} study path.
+            {started && total ? ` You have completed ${done} of ${total} steps.` : ""}
+          </p>
+          {/* It wraps and is never cut short: the title says which step is next. */}
+          <p className="cb-statement mt-0.5">
+            {nextTitle
+              ? `Next step: ${nextTitle}`
+              : started
+                ? "Continue from where you stopped"
+                : "Begin with the introductory questions"}
+          </p>
         </div>
         <Button asChild size="lg" className="w-full sm:w-auto">
           <Link href={href}>

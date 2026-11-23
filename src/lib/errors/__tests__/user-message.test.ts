@@ -8,6 +8,7 @@ import {
   AUTH_WEAK_PASSWORD,
   AUTH_WRONG_CREDENTIALS,
   CONNECTION_LOST,
+  PAGE_OUT_OF_DATE,
   REQUEST_FAILED,
   REQUEST_TIMED_OUT,
   authMessage,
@@ -49,9 +50,12 @@ describe("userMessage", () => {
     expect(userMessage(new ApiError("internal", "relation \"x\" does not exist."))).toBe(REQUEST_FAILED);
   });
 
-  it("passes on the two sentences the client writes itself", () => {
+  it("passes on the sentences the client writes itself", () => {
     expect(userMessage(new ApiError("internal", CONNECTION_LOST))).toBe(CONNECTION_LOST);
     expect(userMessage(new ApiError("internal", REQUEST_TIMED_OUT))).toBe(REQUEST_TIMED_OUT);
+    expect(userMessage(new ApiError("internal", PAGE_OUT_OF_DATE))).toBe(PAGE_OUT_OF_DATE);
+    // The request was carried out, so the sentence asks for a reload and never for another try.
+    expect(PAGE_OUT_OF_DATE).toBe("This page is out of date. Please reload the page.");
   });
 
   it("uses the caller's fallback for anything unknown", () => {

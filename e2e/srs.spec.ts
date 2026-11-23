@@ -3,9 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { loadLocalEnv, registerOnboardPro } from "./helpers";
 
 /**
- * SRS: complete a short history, backdate the cards via the service role,
- * then review one card and confirm rescheduling. Skips when no service key
- * is available (e.g. running against a deployment without local env).
+ * Spaced review: complete a short history, backdate the questions through the
+ * service role, then review one question and confirm that it is scheduled
+ * again. The spec is skipped when no service key is available (for example,
+ * when it runs against a deployment without the local environment file).
+ *
+ * The words the spec looks for are the components' own. Where one changes,
+ * copy it from the component named beside it.
  */
 test("srs review reschedules an overdue card", async ({ page }) => {
   const env = loadLocalEnv();
@@ -32,8 +36,10 @@ test("srs review reschedules an overdue card", async ({ page }) => {
     await page.locator('[role="radio"]').first().click();
     if (i < 24) await next.click();
   }
-  await page.getByRole("button", { name: "Finish diagnostic" }).click();
-  await expect(page.getByText("Diagnostic complete")).toBeVisible({
+  // The button's words are DiagnosticClient.tsx's, and the result's heading is
+  // ReadinessReveal.tsx's: "You have completed the CompTIA Security+ SY0-701 diagnostic."
+  await page.getByRole("button", { name: "Finish the diagnostic", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /^You have completed the .+ diagnostic\.$/ })).toBeVisible({
     timeout: 30_000,
   });
 
@@ -47,16 +53,19 @@ test("srs review reschedules an overdue card", async ({ page }) => {
     .eq("user_id", user!.id);
   expect(error).toBeNull();
 
-  // ---- Review one card ----
+  // ---- Review one question (SrsReviewClient.tsx) ----
+  // In the review, choosing an answer submits it, so the answers are plain
+  // buttons in a group that the question names (MultipleChoice.tsx, `commit`),
+  // and not radio buttons as they are in the diagnostic.
   await page.goto("/certifications/security-plus-sy0-701/srs");
-  await expect(page.locator('[role="radio"]').first()).toBeVisible({
+  const answers = page.getByRole("group").getByRole("button");
+  await expect(answers.first()).toBeVisible({
     timeout: 20_000,
   });
-  await page.locator('[role="radio"]').first().click();
-  await expect(page.getByText(/Next review in \d+ day/)).toBeVisible({
+  await answers.first().click();
+  await expect(page.getByText(/This question will be shown again in \d+ days?\./)).toBeVisible({
     timeout: 15_000,
   });
-  await expect(
-    page.getByRole("button", { name: /Next card|Finish session/ })
-  ).toBeVisible();
+  // Nothing moves on by itself: the card waits for "Continue".
+  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeVisible();
 });

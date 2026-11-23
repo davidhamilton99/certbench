@@ -64,6 +64,7 @@ describe("serverErrorEvent", () => {
     const event = serverErrorEvent(new Error("x"), {
       route: "/objectives/[cert]/[code]",
       path: "/objectives/security-plus-sy0-701/1-2?email=member@example.com&utm_source=mail#top",
+      kind: "render",
     });
     expect(event.path).toBe("/objectives/security-plus-sy0-701/1-2");
   });
@@ -79,6 +80,17 @@ describe("serverErrorEvent", () => {
       const event = serverErrorEvent(new Error("x"), { route, path });
       expect(event.path, route).toBe(route);
       expect(JSON.stringify(event), route).not.toContain(path);
+    }
+  });
+
+  // The proxy sees every address, and its route ("/proxy") has no parameters
+  // to judge by: a failure there must never report the address it was serving.
+  it("reports the route alone for a failure in the proxy, or in anything that is not a page or a route handler", () => {
+    const token = "/readiness/eyJ1IjoidXNlci0xIiwibiI6IlNhbSJ9.c2lnbmF0dXJl";
+    for (const kind of ["proxy", "middleware", "action", "service", undefined]) {
+      const event = serverErrorEvent(new Error("x"), { route: "/proxy", path: token + "?t=secret", kind });
+      expect(event.path, String(kind)).toBe("/proxy");
+      expect(JSON.stringify(event), String(kind)).not.toContain("eyJ1");
     }
   });
 

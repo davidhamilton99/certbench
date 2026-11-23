@@ -4,7 +4,10 @@ import { ApiError } from "@/contracts/common";
 type Result = { data: unknown; error: { message: string } | null };
 
 const session = vi.hoisted(() => ({
-  getUser: (async () => ({ data: { user: null } })) as () => Promise<{ data: { user: { id: string } | null } }>,
+  getUser: (async () => ({ data: { user: null } })) as () => Promise<{
+    data: { user: { id: string } | null };
+    error?: { name?: string; status?: number; message?: string } | null;
+  }>,
   subscription: { data: null, error: null } as Result,
   profile: { data: null, error: null } as Result,
 }));
@@ -74,11 +77,29 @@ describe("getOptionalUser", () => {
     expect((await getOptionalUser()).user).toEqual({ id: "user-1" });
   });
 
-  it("treats a session check that fails as signed out, instead of failing the request", async () => {
+  it("does not fail the request when the session check fails, and says that nobody could be asked", async () => {
     session.getUser = async () => {
       throw new Error("JWT issued at future");
     };
-    expect((await getOptionalUser()).user).toBeNull();
+    expect(await getOptionalUser()).toMatchObject({ user: null, checked: false });
+  });
+
+  it("says that the session was checked when the answer is that nobody is signed in", async () => {
+    // No session cookie at all, and a token that the service refused: both are answers.
+    expect(await getOptionalUser()).toMatchObject({ user: null, checked: true });
+    session.getUser = async () => ({ data: { user: null }, error: { name: "AuthSessionMissingError", status: 400 } });
+    expect(await getOptionalUser()).toMatchObject({ user: null, checked: true });
+    session.getUser = async () => ({ data: { user: null }, error: { name: "AuthApiError", status: 403 } });
+    expect(await getOptionalUser()).toMatchObject({ user: null, checked: true });
+  });
+
+  it.each([
+    ["could not be reached", { name: "AuthRetryableFetchError", status: 0 }],
+    ["answered with a fault of its own", { name: "AuthApiError", status: 503 }],
+    ["answered with something unreadable", { name: "AuthUnknownError" }],
+  ])("says that the session is unknown when the sign-in service %s", async (_, error) => {
+    session.getUser = async () => ({ data: { user: null }, error });
+    expect(await getOptionalUser()).toMatchObject({ user: null, checked: false });
   });
 
   it("stops waiting for the sign-in service after 3.5 seconds", async () => {
@@ -90,13 +111,38 @@ describe("getOptionalUser", () => {
     await vi.advanceTimersByTimeAsync(3400);
     expect(settled).toBe(false);
     await vi.advanceTimersByTimeAsync(100);
-    expect((await pending).user).toBeNull();
+    expect(await pending).toMatchObject({ user: null, checked: false });
   });
 });
 
 describe("requireUser", () => {
   it("refuses a signed-out request", async () => {
     expect((await refusal(requireUser())).code).toBe("unauthorized");
+  });
+
+  // Told "unauthorized", the study path shows a signed-in (perhaps paying)
+  // member the visitor's screen. A check that could not be made is not that
+  // answer: the page is told that the account could not be checked, keeps
+  // what it has and asks again.
+  it.each([
+    ["throws", async () => { throw new Error("JWT issued at future"); }],
+    ["cannot reach the sign-in service", async () => ({ data: { user: null }, error: { name: "AuthRetryableFetchError", status: 0 } })],
+  ] as const)("does not say 'signed out' when the session check %s", async (_, getUser) => {
+    session.getUser = getUser as typeof session.getUser;
+    const error = await refusal(requireUser());
+    expect(error.code).toBe("internal");
+    expect(error.message).toBe(NOT_CHECKED);
+    for (const guarded of [requirePro, requireAdmin]) {
+      expect((await refusal(guarded())).message).toBe(NOT_CHECKED);
+    }
+  });
+
+  it("does not say 'signed out' when the sign-in service does not answer in time", async () => {
+    vi.useFakeTimers();
+    session.getUser = () => new Promise(() => {});
+    const pending = refusal(requireUser());
+    await vi.advanceTimersByTimeAsync(3500);
+    expect((await pending).message).toBe(NOT_CHECKED);
   });
 });
 

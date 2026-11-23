@@ -8,7 +8,7 @@ Exam versions covered:
 - Network+: the study path is written for N10-009, the current exam.
 - A+: the study paths are written to 220-1201 and 220-1202 (CompTIA's V15), the current exams. CompTIA retired 220-1101 and 220-1102 on September 25, 2025.
 
-The exam versions, their launch dates and the SY0-701 retirement date were last checked against CompTIA's exam pages on November 22, 2026.
+The exam versions, their launch dates and the SY0-701 retirement date were last checked against CompTIA's exam pages on November 22, 2026. The date on which 220-1101 and 220-1102 retired is not on those pages: it is from CompTIA's own article about the two A+ exams, which was read on the same day.
 
 What is free: every study path starts with introductory questions that anyone can try without an account. A free account keeps your progress and opens the next steps up to the readiness checkpoint. Each exam has a free full-length practice exam of 90 questions with a time limit of 90 minutes, or a half-length exam of 45 questions, that anyone can take. A free account shows the score by domain, with every answer explained. Security+ (SY0-701), Network+ and both A+ cores each have 12 free interactive performance-based questions (PBQs), graded with partial credit, and the first three need no account.
 

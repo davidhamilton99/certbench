@@ -257,6 +257,28 @@ describe("PbqLab", () => {
     expect(screen.queryByText("It is free, and you do not need an account to start.")).toBeNull();
   });
 
+  it("says topic, and never every objective, for an exam whose topics are not CompTIA's objectives", () => {
+    render(
+      <PbqLab
+        labs={LABS}
+        examName="Network+"
+        pathHref="/path/network-plus-n10-009"
+        labCount={20}
+        officialObjectives={false}
+      />
+    );
+    finish();
+    expect(
+      screen.getByRole("heading", { name: "PBQs are one part of the Network+ exam. The study path covers every domain." })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /^The study path covers every Network\+ topic in short steps, and a readiness checkpoint shows where you stand\./
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/objective|covers all of it/)).toBeNull();
+  });
+
   it("lists the free labs past the chooser's three under the stage, and opens one with a free account", () => {
     render(
       lab([...LABS, { scenario: CABLES, tier: "Core", minutes: 3 }, { scenario: PORTS, tier: "Introductory", minutes: 1 }])

@@ -68,14 +68,13 @@ export function verifyShare(token: string): SharePayload | null {
   const body = token.slice(0, dot);
   const sig = token.slice(dot + 1);
 
-  const expected = sign(body);
-  // Constant-time compare; unequal lengths can't be equal.
-  if (
-    sig.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
-  ) {
-    return null;
-  }
+  // A comparison that takes the same time whatever differs. It needs two
+  // buffers of one length IN BYTES, and throws otherwise: a signature with a
+  // character outside ASCII has the right number of characters and more
+  // bytes, so the lengths compared are the buffers' own.
+  const given = Buffer.from(sig);
+  const expected = Buffer.from(sign(body));
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
 
   try {
     const parsed = JSON.parse(b64urlDecode(body)) as SharePayload;

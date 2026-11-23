@@ -25,6 +25,29 @@ describe("story tokens", () => {
     expect(verifyStoryToken(`${body}.${sig.slice(0, -2)}xx`, NOW)).toBeNull();
   });
 
+  // The comparison in constant time throws when its two inputs differ in byte
+  // length. A signature with the right number of characters, one of them
+  // outside ASCII, is longer in bytes: it used to crash the request (a 500 on
+  // the public story page and endpoint) instead of being refused.
+  it("refuse, and do not throw on, a signature of the right length that holds a character outside ASCII", () => {
+    const token = signStoryToken("user-1", "cert-1", NOW);
+    const [body, sig] = token.split(".");
+    const forged = [
+      `${sig.slice(0, -1)}${String.fromCharCode(0xe9)}`, // two bytes
+      `${String.fromCharCode(0x20ac)}${sig.slice(1)}`, // three bytes
+      `${sig.slice(0, -2)}${String.fromCodePoint(0x1f600)}`, // four bytes, counted as two characters
+      String.fromCharCode(0xe9).repeat(sig.length),
+    ];
+    for (const signature of forged) {
+      expect(signature).toHaveLength(sig.length);
+      expect(Buffer.byteLength(signature)).toBeGreaterThan(Buffer.byteLength(sig));
+      expect(() => verifyStoryToken(`${body}.${signature}`, NOW)).not.toThrow();
+      expect(verifyStoryToken(`${body}.${signature}`, NOW)).toBeNull();
+    }
+    // The genuine token still verifies.
+    expect(verifyStoryToken(token, NOW)).not.toBeNull();
+  });
+
   it("expire after their window", () => {
     const token = signStoryToken("user-1", "cert-1", NOW);
     expect(verifyStoryToken(token, NOW + STORY_TOKEN_TTL_MS - 1)).not.toBeNull();

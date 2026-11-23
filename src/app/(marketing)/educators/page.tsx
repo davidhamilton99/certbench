@@ -10,7 +10,7 @@ import { longDate } from "@/core/path/versions";
 import { keepCodes } from "@/lib/keep-codes";
 import { PRO_PRICE_REGION_NOTE, PRO_PRICE_SHORT } from "@/lib/pricing/terms";
 import { READINESS_TARGET } from "@/lib/readiness/band";
-import { practicePageFor } from "@/lib/seo/cert-pages";
+import { EXAMS_WITH_FREE_LABS, practicePageFor } from "@/lib/seo/cert-pages";
 import { EXAM_FACTS_CHECKED, SECURITY_PLUS_CERT } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { ABOUT_PAGES_UPDATED_ISO } from "@/lib/seo/page-dates";
@@ -104,7 +104,7 @@ export default async function EducatorsPage() {
               <p>
                 Each exam has hands-on labs that work like CompTIA&apos;s performance-based questions. They include
                 simulations, network diagrams, and ordering and matching tasks, and they are graded with partial
-                credit. For each exam, {FREE_LAB_COUNT} labs are free.
+                credit. For each of {keepCodes(EXAMS_WITH_FREE_LABS)}, {FREE_LAB_COUNT} labs are free.
               </p>
             </ArticleRow>
             <ArticleRow term="Study in short steps">
@@ -163,7 +163,10 @@ export default async function EducatorsPage() {
             <li>
               One full-length practice exam of {FULL.questions} questions for each exam, scored with a free account.
             </li>
-            <li>For each exam, {FREE_LAB_COUNT} hands-on labs, the first three without an account.</li>
+            <li>
+              For each of {keepCodes(EXAMS_WITH_FREE_LABS)}, {FREE_LAB_COUNT} hands-on labs, the first three without
+              an account.
+            </li>
             <li>The first study step and the readiness checkpoint, with a free account.</li>
             <li>Practice drills for subnetting, port numbers and acronyms.</li>
             <li>The practice pages for the exam objectives.</li>

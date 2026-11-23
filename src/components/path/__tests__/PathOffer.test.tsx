@@ -207,6 +207,51 @@ describe("PathOffer", () => {
     expect(h.calls.filter((c) => c.contract.startsWith("POST"))).toEqual([]);
   });
 
+  it("moves the focus to its title when the account answers after Try again, and the plans take the button's place", async () => {
+    const onRetry = vi.fn(async () => {});
+    const { rerender } = render(offer({ certId: null, onRetry }));
+    const again = screen.getByRole("button", { name: "Try again" });
+    again.focus();
+    fireEvent.click(again);
+    await waitFor(() => expect(onRetry).toHaveBeenCalledTimes(1));
+    // Still no account: the button is still there, and keeps the focus.
+    expect(document.activeElement).toBe(again);
+
+    // The account answers. The button has gone, and the focus that it held is on the offer's title.
+    rerender(offer({ certId: "cert-1", onRetry }));
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(await screen.findByRole("button", { name: "Continue to payment" })).toBeInTheDocument();
+    const title = screen.getByRole("heading", { level: 2, name: "Continue your study path with Pro" });
+    expect(document.activeElement).toBe(title);
+    // The title takes the focus so that it is read; it is not a stop for the Tab key.
+    expect(title).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("leaves the focus alone when the account answers without Try again having been pressed, or when something else holds the focus", async () => {
+    // Nobody asked: the page reached the account by itself.
+    const first = render(offer({ certId: null, onRetry: async () => {} }));
+    first.rerender(offer({ certId: "cert-1" }));
+    await screen.findByRole("button", { name: "Continue to payment" });
+    expect(document.activeElement).toBe(document.body);
+    first.unmount();
+
+    // Asked, and then the learner moved to another control before the account answered.
+    const elsewhere = document.createElement("button");
+    document.body.appendChild(elsewhere);
+    try {
+      const onRetry = vi.fn(async () => {});
+      const second = render(offer({ certId: null, onRetry }));
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      await waitFor(() => expect(onRetry).toHaveBeenCalled());
+      elsewhere.focus();
+      second.rerender(offer({ certId: "cert-1", onRetry }));
+      await screen.findByRole("button", { name: "Continue to payment" });
+      expect(document.activeElement).toBe(elsewhere);
+    } finally {
+      elsewhere.remove();
+    }
+  });
+
   it("says what Pro includes for this exam", () => {
     render(offer({ labCount: 31, questionCount: 1008 }));
     expect(screen.getByText("All 22 remaining steps of your Security+ study path")).toBeInTheDocument();

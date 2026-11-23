@@ -3,6 +3,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeSrsUpdate } from "@/core/srs/compute-srs";
 import { SRS_DEFAULT_EASE_FACTOR } from "@/core/constants";
+import { afterResponse } from "@/server/api/after-response";
+import { reportServerError } from "@/server/api/report-error";
 import { allRows } from "@/server/data/paging";
 import {
   computeReadinessScore,
@@ -35,9 +37,11 @@ export interface GradableQuestion {
  * to false because a missing row there would be a bug (the card was picked
  * from the user's existing performance).
  *
- * Returns nothing; relies on RLS ("Users manage own performance") for
- * authorization. Callers should ensure `certificationId` matches the
- * questions' certification.
+ * Returns true when the history was updated, and false when the member's
+ * existing history could not be read, in which case NOTHING is written (see
+ * below). Relies on RLS ("Users manage own performance") for authorization.
+ * Callers should ensure `certificationId` matches the questions'
+ * certification.
  */
 export async function updateQuestionPerformanceForAnswers(
   supabase: SupabaseClient,
@@ -48,21 +52,35 @@ export async function updateQuestionPerformanceForAnswers(
     questions: GradableQuestion[];
     upsertNew: boolean;
   }
-): Promise<void> {
+): Promise<boolean> {
   const { userId, certificationId, answers, questions, upsertNew } = opts;
-  if (answers.length === 0) return;
+  if (answers.length === 0) return true;
 
   const now = new Date().toISOString();
   const correctIndexMap = new Map(questions.map((q) => [q.id, q.correct_index]));
   const questionIds = answers.map((a) => a.questionId);
 
-  const { data: existingPerf } = await supabase
+  const { data: existingPerf, error: readError } = await supabase
     .from("question_performance")
     .select(
       "id, question_id, times_seen, times_correct, streak, srs_interval_days, srs_ease_factor"
     )
     .eq("user_id", userId)
     .in("question_id", questionIds);
+
+  // A read that failed is not "no history". Taken as one, every answered
+  // question would be written below as if seen for the first time, and the
+  // upsert would replace the member's counts, streak and review schedule for
+  // it. So nothing is written, the failure is logged and reported, and the
+  // caller is told (false): an exam's result is still shown, because the
+  // attempt itself is already saved.
+  if (readError || !existingPerf) {
+    console.error("[answers] the member's history could not be read; nothing was written:", readError?.message);
+    afterResponse(() =>
+      reportServerError(new Error("Answer history could not be read"), { route: "service:submit-exam", kind: "service" })
+    );
+    return false;
+  }
 
   const perfMap = new Map(
     (existingPerf || []).map((p: { question_id: string }) => [p.question_id, p])
@@ -135,7 +153,18 @@ export async function updateQuestionPerformanceForAnswers(
     })
     .filter(Boolean);
 
-  await Promise.all(ops);
+  // A write that fails answers with an error and does not throw. The writes
+  // are not repeatable (each adds one to a count), so a partial failure is
+  // not sent again: it is logged and reported, with a count and no content.
+  const results = await Promise.all(ops);
+  const failed = results.filter((result) => result && (result as { error?: unknown }).error).length;
+  if (failed > 0) {
+    console.error(`[answers] ${failed} of ${results.length} history writes failed`);
+    afterResponse(() =>
+      reportServerError(new Error("Answer history writes failed"), { route: "service:submit-exam", kind: "service" })
+    );
+  }
+  return true;
 }
 
 /**

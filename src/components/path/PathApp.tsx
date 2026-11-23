@@ -47,6 +47,7 @@ import type {
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { preloadLab } from "@/components/workspace/pbq-host";
 import {
   ExamMap,
   labTileKey,
@@ -76,8 +77,14 @@ import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { usePathProgress } from "./usePathProgress";
 import { mayTakeExam, readExamMark, writeExamMark } from "./local-path";
 import { pathUnlockedKey } from "./storage-key";
+import { takeOwedStartEvent } from "./path-start";
 
 // The lab players are big and only Pro reaches a lab: load them when one opens.
+// A simulation, a topology and a threat hunt each have a large player of their
+// own, which this one fetches when it first shows such a lab. So that the two
+// are fetched side by side and not one after the other, the page starts the
+// large player's fetch itself (`preloadLab`): when a lab's row is hovered or
+// takes the focus, and as a lab is about to open.
 const PbqPlayer = dynamic(() => import("@/components/workspace/PbqPlayer").then((m) => m.PbqPlayer), {
   ssr: false,
   loading: () => (
@@ -625,8 +632,24 @@ export function PathApp({
     };
   }, [askingForPro, refreshAccess]);
 
+  /**
+   * Start fetching the player for a lab of this exam before the lab is opened
+   * (see `PbqPlayer` above). The exam's list of labs says what kind each one
+   * is; a drill needs no fetch, and a lab that the list does not hold is left
+   * to be fetched when it opens.
+   */
+  const preloadLabById = useCallback(
+    (labId: string) => {
+      const type = library.find((l) => l.id === labId)?.type;
+      if (type) preloadLab(type);
+    },
+    [library]
+  );
+
   const openLab = useCallback(
     (stop: PathStop, scenario: PbqScenario) => {
+      // Beside the lab's own screen, which is fetched as it is first shown.
+      preloadLab(scenario.type);
       track("path_lab_started", { cert, stop: stop.id, scenario: scenario.id, from: "path" });
       setView({ kind: "lab", stop, scenario, from: "path", graded: false });
       window.scrollTo({ top: 0 });
@@ -773,6 +796,12 @@ export function PathApp({
         return;
       }
 
+      // A lab is about to open: its player is fetched while the server is asked for the lab.
+      if (stop.kind === "lab") {
+        const lab = structure.domains.find((d) => d.number === stop.domain)?.lab;
+        if (lab) preloadLabById(lab.id);
+      }
+
       const got = fetchStop(index, stop, p.progress);
       // The loading line is shown only when there is something to wait for.
       if (!("built" in got)) setView({ kind: "loading" });
@@ -837,6 +866,7 @@ export function PathApp({
       setPlay,
       setView,
       openLab,
+      preloadLabById,
       runInProgress,
       resumedPlay,
       resumeWarmup,
@@ -886,6 +916,8 @@ export function PathApp({
 
   /** Open any lab from the library, in the path's own lab stage. */
   async function openLibraryLab(info: PathLabInfo) {
+    // Its player is fetched while the server is asked for the lab.
+    preloadLab(info.type);
     setView({ kind: "loading", label: "The lab is opening." });
     const asked = moves.current;
     try {
@@ -920,7 +952,14 @@ export function PathApp({
       const cur = playRef.current;
       const rep = cur.reps[cur.i];
       if (!rep || cur.results[cur.i] !== null) return;
-      if (!hasStarted(peek().progress)) track("path_started", { cert });
+      // `path_started` counts a first answer on this page. The home page's
+      // sample questions begin the device's copy of the study path, so a
+      // visitor who answered one there arrives with a copy that has started:
+      // the home page leaves a mark for that copy, and the event is recorded
+      // once here (path-start.ts). The mark is taken first, whatever the copy
+      // holds, so that it never outlives the answer it was left for.
+      const owed = takeOwedStartEvent(cert);
+      if (!hasStarted(peek().progress) || owed) track("path_started", { cert });
       record(rep.id, answer.correct);
       const results = [...cur.results];
       results[cur.i] = answer.correct;
@@ -1041,6 +1080,27 @@ export function PathApp({
     if (SELF_FOCUSING.has(view.kind) || view.kind === "loading" || awaitingPro) return;
     stageBody.current?.querySelector<HTMLElement>("[data-screen-title], h1")?.focus({ preventScroll: true });
   }, [screenKey, view.kind, awaitingPro]);
+
+  // The learner asks for the account again with a "Try again" (the notice's
+  // above the screen, or the offer's in place of its plans). When the account
+  // then answers, the button that was pressed has gone: the notice goes, and
+  // the offer shows its plans or gives way to the way on. The focus, which the
+  // button held, would be left on nothing, so it moves to the title of the
+  // screen, as it does when a screen changes. An offer that is still there has
+  // already taken it for its own title (PathOffer), and anything else that has
+  // taken the focus meanwhile keeps it.
+  const askedAgain = useRef(false);
+  const askAgain = useCallback(() => {
+    askedAgain.current = true;
+    return refreshAccess();
+  }, [refreshAccess]);
+  const { unreached } = p;
+  useEffect(() => {
+    if (unreached || !askedAgain.current) return;
+    askedAgain.current = false;
+    if (document.activeElement && document.activeElement !== document.body) return;
+    stageBody.current?.querySelector<HTMLElement>("[data-screen-title], h1")?.focus({ preventScroll: true });
+  }, [unreached]);
 
   // Where the learner belongs, decided each time the page learns who is here
   // or what their account holds: when it opens, when a slow sign-in service
@@ -1211,6 +1271,13 @@ export function PathApp({
   // ─── Screens ──────────────────────────────────────────────────────────────
 
   let screen: React.ReactNode;
+  // Whether the screen that is showing offers to try again itself. The screen
+  // of a step that could not be loaded does. So does the offer (under the
+  // checkpoint's result, or on the home screen) while the account has not been
+  // reached: it says so in place of its plans, and offers to try again there.
+  // The notice above the screen then leaves its own button out, so that the
+  // page shows one way to try again and not two (PathNotices).
+  let screenRetries = false;
 
   if (awaitingPro) {
     screen = paidSignedOut ? (
@@ -1303,20 +1370,31 @@ export function PathApp({
         role="status"
         className="glass grid min-h-80 place-items-center rounded-lg p-5 text-small text-muted-foreground sm:p-8"
       >
-        <span className="inline-flex items-center gap-2">
+        {/* The sentence is this screen's title for as long as the wait lasts. */}
+        <h1 className="inline-flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" aria-hidden />
           {view.label ?? "Your next step is being prepared."}
-        </span>
+        </h1>
       </div>
     );
   } else if (view.kind === "error") {
+    screenRetries = true;
     screen = (
       <div className="glass grid min-h-80 place-content-center justify-items-center gap-4 rounded-lg p-5 text-center sm:p-8">
-        {/* It takes the focus when it replaces the loading line, so that it is read. */}
-        <p data-screen-title tabIndex={-1} className="cb-measure-xs text-small">
+        {/* The screen's title: what went wrong, in a sentence. It takes the focus
+            when it replaces the loading line, so that it is read. */}
+        <h1 data-screen-title tabIndex={-1} className="cb-measure-xs text-small">
           {view.message}
-        </p>
-        <Button onClick={view.retry}>
+        </h1>
+        <Button
+          onClick={() => {
+            // The one "Try again" on this screen. While the account has not
+            // been reached either, it is asked again as well: both most often
+            // fail for the one reason, and come back together.
+            if (p.unreached) void refreshAccess();
+            view.retry();
+          }}
+        >
           <RotateCcw aria-hidden />
           Try again
         </Button>
@@ -1341,6 +1419,8 @@ export function PathApp({
         key={runInProgress.startedAt}
         run={runInProgress}
         examCode={structure.examCode}
+        // The line that names the exam is this screen's title.
+        titleAs="h1"
         onChange={saveRun}
         onFinish={finishRehearsal}
         onLeave={() => {
@@ -1353,7 +1433,8 @@ export function PathApp({
     // Wrong and blank alike: both counted against the score.
     const missedHere = run.reps.filter((rep, i) => run.picks[i] !== rep.answer).map((rep) => rep.id);
     screen = (
-      <RehearsalResult run={{ ...run, done: run.done }} structure={structure}>
+      // The result is this screen's title.
+      <RehearsalResult run={{ ...run, done: run.done }} structure={structure} headlineAs="h1">
         {missedHere.length > 0 && (
           <ReviewMissesCard count={missedHere.length} onReview={() => void startReview("rehearsal", missedHere)} />
         )}
@@ -1488,6 +1569,9 @@ export function PathApp({
     );
   } else if (view.kind === "reveal") {
     const result = p.progress.checkpoint;
+    // The offer stands under the result; without a result this is the home
+    // screen, which draws the offer by its own rule.
+    screenRetries = (result ? shut : offerOnHome) && !p.certId;
     screen = result ? (
       <PathReveal
         result={result}
@@ -1514,7 +1598,7 @@ export function PathApp({
               labCount={library.length}
               // The server has refused a step, but the account itself may still
               // be out of reach: the offer then asks for it again from here.
-              onRetry={refreshAccess}
+              onRetry={askAgain}
             />
             <button
               type="button"
@@ -1607,6 +1691,7 @@ export function PathApp({
       </div>
     );
   } else {
+    screenRetries = offerOnHome && !p.certId;
     screen = renderHome();
   }
 
@@ -1641,9 +1726,12 @@ export function PathApp({
         */}
         <div className="path-stage" data-ready={p.ready ? "true" : "false"}>
           {!p.ready && (
-            <p className="path-wait mb-6 text-body text-muted-foreground" role="status">
-              Your study path is loading.
-            </p>
+            // A status, so that it is announced. Its sentence is the title of
+            // the held stage: while it is shown, nothing else is on the screen.
+            // (On a first visit it is never shown, and the question's own title stands.)
+            <div className="path-wait mb-6" role="status">
+              <h1 className="text-body text-muted-foreground">Your study path is loading.</h1>
+            </div>
           )}
           {/* Always in the page, and empty until there is something to say, so
               that a sentence arriving in it is announced. */}
@@ -1651,7 +1739,8 @@ export function PathApp({
             unreached={p.ready && p.signedIn && p.unreached}
             saveFailed={p.ready && p.signedIn ? p.saveFailed : null}
             storageRefused={p.ready && !p.signedIn && !p.deviceSaves}
-            onRetry={refreshAccess}
+            retryOnScreen={screenRetries}
+            onRetry={askAgain}
           />
           <div ref={stageBody} className="path-stage-body">
             {screen}
@@ -2187,7 +2276,7 @@ export function PathApp({
                 examDate={p.progress.goal?.examDate ?? null}
                 context="home"
                 labCount={library.length}
-                onRetry={refreshAccess}
+                onRetry={askAgain}
               />
             </div>
           ) : (
@@ -2288,6 +2377,9 @@ export function PathApp({
             rehearsal={mapRehearsal}
             selected={tile}
             onSelect={pickTile}
+            // Only where a lab's row leads to the lab on this page: for an
+            // account without Pro the row leads to a public page or to the offer.
+            onLabIntent={shut ? undefined : preloadLabById}
             detail={tile ? renderTileDetail(tile) : null}
           />
           {freeNote}
@@ -2378,10 +2470,18 @@ function PathNotices({
   unreached,
   saveFailed,
   storageRefused,
+  retryOnScreen,
   onRetry,
 }: {
   /** Signed in, and the account has not answered. */
   unreached: boolean;
+  /**
+   * The screen below offers to try again itself: the offer does while it has
+   * no account to sell to, and so does the screen of a step that could not be
+   * loaded. The sentence here stays and its button is left out, so that the
+   * page shows one way to try again, not two.
+   */
+  retryOnScreen: boolean;
   /** The error code of the latest save to the account, when it failed. */
   saveFailed: ApiErrorCode | null;
   /** Nobody is signed in, and the browser refuses to keep the progress. */
@@ -2407,9 +2507,11 @@ function PathNotices({
               <span className="min-w-0 flex-1 basis-64">
                 Your account could not be reached. The progress saved on this device is shown.
               </span>
-              <Button variant="outline" size="sm" loading={asking} onClick={() => void retry()}>
-                Try again
-              </Button>
+              {!retryOnScreen && (
+                <Button variant="outline" size="sm" loading={asking} onClick={() => void retry()}>
+                  Try again
+                </Button>
+              )}
             </p>
           )}
           {saveFailed && (

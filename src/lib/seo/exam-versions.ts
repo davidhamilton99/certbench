@@ -1,7 +1,7 @@
 /**
  * What CompTIA says about exam versions, in one place so pages can't drift.
  * All five of CompTIA's exam pages (the five addresses in COMPTIA_URLS that
- * are not the blog post) were read on the date below. Each page gave its
+ * are not blog posts) were read on the date below. Each page gave its
  * exam's launch date, question limit (a maximum of 90), time limit (90
  * minutes), passing score and domain weights.
  *
@@ -13,6 +13,12 @@
  * both Security+ versions and 720 for Network+, each on a scale of 100 to 900;
  * 675 for A+ Core 1 and 700 for A+ Core 2, which CompTIA states on a scale of
  * 900. Re-check these when a date passes.
+ *
+ * The retirement of the previous A+ series (V14: 220-1101 and 220-1102) on
+ * September 25, 2025, and the rule that both A+ exams must come from one
+ * series, are not on the exam pages. CompTIA states both in the blog post at
+ * COMPTIA_URLS.aPlusSeries, read on the same date: a sentence that gives that
+ * date cites that post, and not an exam page.
  */
 export const EXAM_FACTS_CHECKED = "November 22, 2026";
 export const EXAM_FACTS_CHECKED_ISO = "2026-11-22";
@@ -25,6 +31,8 @@ export const COMPTIA_URLS = {
   networkPlus: "https://www.comptia.org/en-us/certifications/network/",
   aPlusCore1: "https://www.comptia.org/en-us/certifications/a/core-1-v15/",
   aPlusCore2: "https://www.comptia.org/en-us/certifications/a/core-2-v15/",
+  /** "CompTIA A+ Has Two Exams": when the V14 series retired, and that both exams must come from one series. */
+  aPlusSeries: "https://www.comptia.org/en-us/blog/comptia-a-has-two-exams-what-you-need-to-know/",
 };
 
 export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";

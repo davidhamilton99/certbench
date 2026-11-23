@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const windowsTools: ReferenceTable = {
   id: "windows-tools",
-  title: "Windows Management Tools",
+  title: "Windows management tools",
   description: "Built-in Windows administrative tools, access methods, and key features for the CompTIA A+ 220-1202 exam.",
   columnHeaders: [
     { key: "tool", label: "Tool" },

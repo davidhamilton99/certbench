@@ -48,6 +48,20 @@ describe("share token", () => {
       expect(verifyShare(t)).toBeNull();
     }
   });
+
+  // The comparison that takes constant time throws when its two buffers differ
+  // in BYTES. A signature of the right number of characters with one character
+  // outside ASCII has more bytes, and made the public page answer with a 500.
+  it("refuses, and does not throw on, a signature with a character outside ASCII", () => {
+    const [body, sig] = signShare(payload).split(".");
+    for (const code of [0xe9, 0x20ac, 0x1f600]) {
+      const forged = `${body}.${sig.slice(0, -1)}${String.fromCodePoint(code)}`;
+      expect(() => verifyShare(forged)).not.toThrow();
+      expect(verifyShare(forged)).toBeNull();
+    }
+    const allOutside = `${body}.${String.fromCodePoint(0xe9).repeat(sig.length)}`;
+    expect(verifyShare(allOutside)).toBeNull();
+  });
 });
 
 describe("shareName", () => {

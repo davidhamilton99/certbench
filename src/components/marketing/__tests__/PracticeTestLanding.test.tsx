@@ -20,7 +20,7 @@ vi.mock("@/components/path/QuickRound", () => ({
 }));
 
 import { PracticeTestLanding, type ObjectiveLink, type PracticeTestLandingData } from "../PracticeTestLanding";
-import { PRACTICE_TEST_PAGES } from "@/lib/seo/cert-pages";
+import { CERT_PAGES_UPDATED_ISO, PRACTICE_TEST_PAGES } from "@/lib/seo/cert-pages";
 
 const pageFor = (path: string) => PRACTICE_TEST_PAGES.find((p) => p.path === path)!;
 
@@ -174,6 +174,23 @@ describe("a practice-test page for one exam", () => {
     expect(text(section?.querySelector("h3"))).toBe("90 questions in 90 minutes");
   });
 
+  it("dates its structured data with the day the page's words last changed", () => {
+    const { html } = render();
+    const resource = [...new DOMParser().parseFromString(html, "text/html").querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent ?? "{}") as Record<string, unknown>)
+      .find((d) => d["@type"] === "LearningResource");
+    // The same day as the sitemap gives for the page: both read the date kept beside the page's words.
+    expect(resource?.dateModified).toBe(CERT_PAGES_UPDATED_ISO);
+    expect(CERT_PAGES_UPDATED_ISO).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("says that the study path covers every exam objective, where the objectives are CompTIA's own", () => {
+    const { doc } = render();
+    expect(text(doc.body)).toContain(
+      "The study path covers every exam objective in short sets of questions like these. A readiness checkpoint then shows where you stand."
+    );
+  });
+
   it("serves every question of the exam with its answer, folded, and each of them once", () => {
     const { doc, html } = render();
     const section = doc.getElementById("practice-test")!;
@@ -202,6 +219,21 @@ describe("a practice-test page whose objective numbers are not CompTIA's", () =>
     const first = doc.getElementById("practice-test")!.querySelector("details ol > li");
     expect(text(first)).toContain("Compare the first things");
     expect(text(first)).not.toContain("1.1 Compare the first things");
+  });
+
+  it("says topic, and never that the study path covers every exam objective", () => {
+    const page = pageFor("network-plus-practice-test");
+    const { data, round, test, objectives } = fixture("network-plus-n10-009", "Network+", "N10-009", "CompTIA Network+");
+    const { doc } = served(
+      <PracticeTestLanding page={page} data={data} objectives={objectives} round={round} test={test} />
+    );
+    const body = text(doc.body);
+    expect(body).toContain(
+      "The study path covers every topic in short sets of questions like these. A readiness checkpoint then shows where you stand."
+    );
+    // Its topics are CertBench's own grouping, so the page claims no mapping to CompTIA's numbered objectives.
+    expect(body).not.toMatch(/every (?:exam )?objective|mapped to the same|written against the N10-009 objectives/);
+    expect(body).toContain("They are original questions written for the N10-009 exam at exam-level difficulty.");
   });
 });
 

@@ -117,6 +117,19 @@ describe("the checkpoint result", () => {
     expect(container.innerHTML).not.toContain("rounded-full");
   });
 
+  it("draws the icons of its notes in ink: the pressable colour is kept for what can be pressed", () => {
+    const { container } = render(reveal(50, { result: result(50, 5, 1) }));
+    // The note on where to gain the most, and the note on the pace.
+    expect(screen.getByText("The area to focus on next")).toBeInTheDocument();
+    expect(screen.getByText(/^At 20 minutes a day, you will finish the study path by /)).toBeInTheDocument();
+    const icons = [...container.querySelectorAll("svg.lucide")];
+    expect(icons.length).toBeGreaterThanOrEqual(2);
+    for (const icon of icons) {
+      expect(icon.getAttribute("class")).not.toMatch(/text-primary/);
+      expect(icon.getAttribute("aria-hidden")).toBe("true");
+    }
+  });
+
   it("says when the study path will be finished at the learner's pace", () => {
     render(reveal(50, { goal: { examDate: null, target: null, minutes: 30, at: 1 } }));
     expect(screen.getByText(/^At 30 minutes a day, you will finish the study path by [A-Z][a-z]+ \d{1,2}\.$/)).toBeInTheDocument();

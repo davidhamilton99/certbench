@@ -8,6 +8,7 @@ import {
   type ApiErrorEnvelope,
   type EndpointContract,
 } from "@/contracts/common";
+import { isSentence } from "@/lib/errors/user-message";
 import { afterResponse } from "@/server/api/after-response";
 import { reportServerError } from "@/server/api/report-error";
 import { getOptionalUser, requireAdmin, requirePro, requireUser } from "@/server/auth";
@@ -20,6 +21,13 @@ interface HandlerContext<I> {
   input: I;
   /** Non-null unless auth: "public". */
   user: User | null;
+  /**
+   * False only on a public endpoint, when the session could not be checked
+   * (the sign-in service did not answer). `user` is then null without meaning
+   * that nobody is signed in: a handler that would refuse a visitor must
+   * answer "the account could not be checked" instead (accountNotChecked).
+   */
+  sessionChecked: boolean;
   /** RLS-scoped Supabase client bound to the requester's session. */
   db: Db;
   request: NextRequest;
@@ -31,6 +39,21 @@ interface EndpointOptions<C extends EndpointContract> {
   handler: (
     ctx: HandlerContext<z.output<C["input"]>>
   ) => Promise<z.input<C["output"]>>;
+}
+
+/** What a caller is told when the fault's own words are not for them. */
+const INTERNAL_ERROR = "The request could not be completed. Please try again.";
+
+/** Marks of a database's or a network layer's own text: names in quotes or with underscores, and its usual words. */
+const NOT_FOR_PEOPLE =
+  /["`_<>{}=]|\b(?:relation|constraint|violates|column|schema|syntax|row-level|statement|json|sql|fetch|econn\w*|timeout|aborted|undefined|null)\b/i;
+
+/**
+ * Whether an internal error's message was written for the person who made the
+ * request: a sentence that begins with a capital and holds none of those marks.
+ */
+function writtenForPeople(message: string): boolean {
+  return isSentence(message) && /^[A-Z]/.test(message.trim()) && !NOT_FOR_PEOPLE.test(message);
 }
 
 function errorResponse(error: ApiError): NextResponse<ApiErrorEnvelope> {
@@ -61,8 +84,11 @@ export function defineEndpoint<C extends EndpointContract>(
       // 1. Auth
       let user: User | null = null;
       let db: Db;
+      let sessionChecked = true;
       if (options.auth === "public") {
-        ({ db, user } = await getOptionalUser());
+        const session = await getOptionalUser();
+        ({ db, user } = session);
+        sessionChecked = session.checked !== false;
       } else if (options.auth === "admin") {
         ({ db, user } = await requireAdmin());
       } else if (options.auth === "pro") {
@@ -102,6 +128,7 @@ export function defineEndpoint<C extends EndpointContract>(
         // safeParse on a generic ZodType loses the inferred type — safe cast.
         input: parsed.data as z.output<C["input"]>,
         user,
+        sessionChecked,
         db,
         request,
       });
@@ -123,11 +150,15 @@ export function defineEndpoint<C extends EndpointContract>(
       console.error(`[${contract.method} ${contract.path}]`, err);
       const place = { route: contract.path, path: contract.path, method: contract.method, kind: "route" };
       afterResponse(() => reportServerError(err, place));
-      // An ApiError keeps the message it was thrown with, as it always has
-      // (the account checks throw a sentence written for the member). Anything
-      // else is answered without its own words, which can hold what must not
-      // be shown.
-      return errorResponse(err instanceof ApiError ? err : new ApiError("internal", "Something went wrong"));
+      // An internal error keeps its message only when the message is a sentence
+      // written for the member (the account checks throw one: "Your account
+      // could not be checked. Please try again."). Many data functions throw
+      // the database's or the network layer's own text instead, which names
+      // tables, columns and policies and never ends as a sentence does. That
+      // text is in the log above; it does not go to the caller.
+      return errorResponse(
+        err instanceof ApiError && writtenForPeople(err.message) ? err : new ApiError("internal", INTERNAL_ERROR)
+      );
     }
   };
 }

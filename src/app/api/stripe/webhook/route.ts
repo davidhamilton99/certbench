@@ -48,7 +48,7 @@ function captureAfterResponse(
  * when asked for the subscription, say). Every write here is an upsert or an
  * update, so recording the same event twice is safe.
  *
- * Two rules keep a late or stray event from changing what a member has:
+ * Three rules keep a late or stray event from changing what a member has:
  *
  *  1. A row is changed only by events about the subscription it holds. Stripe
  *     can hold more than one subscription for a customer (a first attempt whose
@@ -58,6 +58,23 @@ function captureAfterResponse(
  *  2. A completed checkout grants Pro only while its subscription is alive.
  *     Stripe may deliver the event again days later, after a failed write; by
  *     then the buyer may have canceled, and the retry must not bring Pro back.
+ *  3. A change to a subscription, or a failed payment, is a reason to ask
+ *     Stripe and not a fact to write. What those two events write is the
+ *     subscription as Stripe holds it now, never the copy inside the event.
+ *     Stripe does not deliver events in the order it made them, and it
+ *     delivers one again for up to three days after a failure, so a copy can
+ *     be older than what the row already says. Written as it stood, a copy
+ *     that says "active" brought Pro back after the subscription had been
+ *     deleted (the deletion clears the subscription from the row, and rule 1
+ *     lets a row that holds none accept any), and a copy that says "past due"
+ *     shut out a member who had since paid. Only the end of a subscription is
+ *     taken from the event itself: an ended subscription cannot come back, so
+ *     that copy cannot be out of date.
+ *
+ * What rule 3 leaves open: two events for one customer handled at the same
+ * moment each ask Stripe and then write, and the one that asked first can
+ * write last. That takes a change of the subscription between two requests a
+ * moment apart, and the next event puts the row right.
  */
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -133,6 +150,19 @@ const ENDED: ReadonlySet<string> = new Set(["canceled", "incomplete_expired"]);
  */
 function concerns(row: CustomerRow, subscriptionId: string | null | undefined): boolean {
   return !row.stripe_subscription_id || !subscriptionId || row.stripe_subscription_id === subscriptionId;
+}
+
+/**
+ * The subscription as Stripe holds it now (rule 3). An event that says the
+ * subscription has ended is taken at its word, because nothing comes after
+ * the end. Anything else is asked of Stripe: the copy in the event was made
+ * when the event was, and the subscription may have been paid for, fallen
+ * past due or ended since. When Stripe does not answer, this throws, the event
+ * is answered with 500 and Stripe delivers it again.
+ */
+async function asStripeHoldsIt(sent: Stripe.Subscription): Promise<Stripe.Subscription> {
+  if (ENDED.has(sent.status)) return sent;
+  return getStripe().subscriptions.retrieve(sent.id);
 }
 
 /** The subscription an invoice belongs to, in the older and the newer shape of Stripe's API. */
@@ -222,8 +252,8 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
     }
 
     case "customer.subscription.updated": {
-      const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
+      const sent = event.data.object as Stripe.Subscription;
+      const customerId = sent.customer as string;
 
       // maybeSingle, so that "no such customer here" (nothing to do) can be
       // told apart from a read that failed (Stripe must send the event again).
@@ -236,7 +266,15 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
 
       if (!sub) return null;
       // About another subscription of the same customer: not this row's business.
-      if (!concerns(sub as CustomerRow, subscription.id)) return null;
+      if (!concerns(sub as CustomerRow, sent.id)) return null;
+
+      // Rule 3: the subscription as it stands now, not as the event copied it.
+      const subscription = await asStripeHoldsIt(sent);
+      // A subscription that has ended ends the plan of the row that holds it.
+      // A row that holds none has nothing of this subscription's left to end:
+      // either its deletion has already been recorded (and this is a late
+      // event about it), or it was never this row's plan.
+      if (ENDED.has(subscription.status) && !(sub as CustomerRow).stripe_subscription_id) return null;
 
       const isActive =
         subscription.status === "active" || subscription.status === "trialing";
@@ -308,8 +346,16 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // A payment is "past due" only for a plan the row holds. A first payment
       // that failed before any plan was recorded leaves nothing to keep, and an
       // invoice for another subscription is not this row's business.
-      if (!sub || !(sub as CustomerRow).stripe_subscription_id) return null;
+      const held = (sub as CustomerRow | null)?.stripe_subscription_id;
+      if (!sub || !held) return null;
       if (!concerns(sub as CustomerRow, invoiceSubscriptionId(invoice))) return null;
+
+      // Rule 3: the payment failed when the event was made. Whether it is still
+      // owed is for Stripe to say. A member who has paid since is not marked
+      // past due (that would shut them out until their next renewal), and a
+      // plan that has ended since is recorded by its own event.
+      const subscription = await getStripe().subscriptions.retrieve(held);
+      if (subscription.status !== "past_due") return null;
 
       // Mark the subscription as past due so the app can show a billing warning.
       const { error } = await supabase

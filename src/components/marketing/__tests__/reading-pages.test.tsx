@@ -109,6 +109,7 @@ import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { SY0_801_AI_QUESTIONS, SY0_801_AI_TOPICS, SY0_801_DOMAINS } from "@/data/security-plus-v8";
 import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
 import { PRO_PRICE_REGION_NOTE, PRO_PRICE_SHORT, PRO_PRICE_TERMS, PRO_PRICES, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
+import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { COMPARISON_PAGES_UPDATED_ISO, VS_PAGES } from "@/lib/seo/comparison-pages";
 import {
   COMPTIA_URLS,
@@ -164,9 +165,12 @@ describe("/about", () => {
 
   it("states the price itself, with the free plan before it", () => {
     const row = [...doc.querySelectorAll("dt")].find((dt) => text(dt) === "What it costs")!.parentElement!;
+    // The practice exam is free for each exam. The labs are free for the exams that
+    // have a public page of labs, which the sentence names: Security+ SY0-801 has none.
     expect(text(row)).toContain(
-      `A free account also includes one full-length practice exam and ${FREE_LAB_COUNT} hands-on labs for each exam.`
+      `A free account also includes one full-length practice exam for each exam, and ${FREE_LAB_COUNT} hands-on labs for each of ${EXAMS_WITH_FREE_LABS}.`
     );
+    expect(text(row)).not.toMatch(/hands-on labs for each exam/);
     expect(text(row)).toContain(PRO_PRICE_TERMS);
     expect(linkNamed(doc, "pricing page")?.getAttribute("href")).toBe("/pricing");
   });
@@ -335,12 +339,17 @@ describe("/help", () => {
     expect(source).not.toMatch(/\$\d/);
   });
 
-  it("describes the free plan as it is: a full practice exam, and 12 labs for each exam with a free account", () => {
+  it("describes the free plan as it is: a full practice exam, and 12 labs with a free account for the exams that have a page of labs", () => {
     const answer = answerTo("Is CertBench free?");
     expect(answer).toContain("take a full-length practice exam (90 questions in 90 minutes, or a half-length exam of 45 questions)");
     expect(answer).toContain("try the first three hands-on labs");
     expect(answer).toContain(
-      `A free account shows your practice exam score, opens nine more hands-on labs so that ${FREE_LAB_COUNT} are free for each exam`
+      `A free account shows your practice exam score, opens nine more hands-on labs so that ${FREE_LAB_COUNT} are free for each of ${EXAMS_WITH_FREE_LABS}`
+    );
+    // Security+ SY0-801 has no free lab, so neither answer says "for each exam" of the labs.
+    expect(answer).not.toMatch(/free for each exam/);
+    expect(answerTo("What are PBQs, and how do the labs work?")).toContain(
+      `${EXAMS_WITH_FREE_LABS} each have a PBQ page with ${FREE_LAB_COUNT} labs that are free: three with no account, and the rest with a free account.`
     );
   });
 

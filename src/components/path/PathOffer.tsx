@@ -75,6 +75,20 @@ export function PathOffer({
     track("path_offer_viewed", { cert, context });
   }, [cert, context]);
 
+  // The learner pressed "Try again" here, where the plans would be. When the
+  // account then answers, the plans take the place of that button, which held
+  // the keyboard's focus: the focus moves to the offer's title, so that the
+  // offer is read from its top and is not lost to the top of the page. It is
+  // moved only when nothing else has taken it meanwhile.
+  const title = useRef<HTMLHeadingElement>(null);
+  const askedHere = useRef(false);
+  useEffect(() => {
+    if (!certId || !askedHere.current) return;
+    askedHere.current = false;
+    if (document.activeElement && document.activeElement !== document.body) return;
+    title.current?.focus({ preventScroll: true });
+  }, [certId]);
+
   const labs = labCount
     ? `All ${labCount} hands-on labs, which work like the exam's performance-based questions`
     : "A hands-on lab at the end of every domain";
@@ -98,7 +112,10 @@ export function PathOffer({
     <div className="glass rounded-lg rounded-t-none border-t-[3px] border-t-primary p-6 sm:p-9">
       <div className="grid gap-5">
         <div className="grid gap-1.5">
-          <h2 className="cb-subsection">{proPlan ? `Add ${examName} to your plan` : "Continue your study path with Pro"}</h2>
+          {/* It can take the focus (see above); it is not a control. */}
+          <h2 ref={title} tabIndex={-1} className="cb-subsection">
+            {proPlan ? `Add ${examName} to your plan` : "Continue your study path with Pro"}
+          </h2>
           <p className="text-body text-muted-foreground">
             {proPlan
               ? `One payment adds ${examName} to the Pro plan that you already have. It includes:`
@@ -116,7 +133,15 @@ export function PathOffer({
         </ul>
 
         {!certId ? (
-          <AccountNotReached onRetry={onRetry} />
+          <AccountNotReached
+            onRetry={
+              onRetry &&
+              (() => {
+                askedHere.current = true;
+                return onRetry();
+              })
+            }
+          />
         ) : proPlan ? (
           <AddExam cert={cert} certId={certId} examName={examName} context={context} initialPricing={initialPricing} />
         ) : (

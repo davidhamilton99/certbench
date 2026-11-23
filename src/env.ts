@@ -62,9 +62,13 @@ export function serverEnv(key: ServerKey): string {
   return value;
 }
 
-/** Optional server config (no throw). */
+/**
+ * Optional server config (no throw). EMAIL_POSTAL_ADDRESS is the sender's
+ * postal address: the owner supplies it, and every email prints it in its
+ * footer once it is set (src/server/email/templates.ts).
+ */
 export function serverEnvOptional(
-  key: "SENTRY_DSN" | "EMAIL_FROM"
+  key: "SENTRY_DSN" | "EMAIL_FROM" | "EMAIL_POSTAL_ADDRESS"
 ): string | undefined {
   return process.env[key];
 }

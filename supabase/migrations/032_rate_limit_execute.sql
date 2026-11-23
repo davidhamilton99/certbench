@@ -1,0 +1,106 @@
+-- Only the server may call the function that counts requests.
+--
+-- THIS FILE HAS NOT BEEN RUN. The owner runs it by hand in the Supabase SQL
+-- editor, once the first read-only query below has shown that it is needed.
+-- The migration files and the live database have differed before, so the
+-- query comes first.
+--
+-- What the migration files allow today:
+--
+--   check_rate_limit(text, integer, integer) is made by 020_rate_limits.sql as
+--   a SECURITY DEFINER function. It runs with its owner's rights whoever calls
+--   it, which is how it writes rate_limit_buckets, a table that no account can
+--   touch for itself. PostgreSQL gives EXECUTE on every new function to PUBLIC,
+--   and PUBLIC is every role. Migration 020 revoked EXECUTE from anon and
+--   authenticated by name. That takes away only what those two roles held by
+--   name: PUBLIC keeps EXECUTE, and both roles still have it through PUBLIC.
+--
+--   The public schema is served by the API. So anyone with the site's public
+--   key (it is sent to every browser) can call the function directly, signed
+--   in or not, and choose the key, the limit and the window:
+--
+--     1. Called with a window of 0 seconds, the function takes the window to be
+--        over and starts the count again. A caller can clear the limit that
+--        has just stopped them (five payment pages an hour, or the limit on
+--        any endpoint) and carry on.
+--     2. Called with the key of another account or address, it adds to that
+--        count. A caller can use up a limit that belongs to someone else, and
+--        the site then turns that person away until the window ends.
+--     3. Every key that is new adds a row, so the table can be filled.
+--
+-- What this migration does:
+--
+--   It revokes EXECUTE on the function from PUBLIC, and from anon and
+--   authenticated again in case the live database differs from the files. It
+--   grants EXECUTE to service_role by name. That grant is needed: until now
+--   the role may have held EXECUTE only through PUBLIC.
+--
+-- The application calls the function with the service role and with nothing
+-- else (src/server/rate-limit.ts, the only caller), in the version that is
+-- live and in the one that follows it. No code depends on what is removed, so
+-- the migration can be run before or after a deployment.
+--
+-- Run this read-only query first. It changes nothing.
+--
+-- Query 1: who may call the function. The answer counts what a role holds
+-- through PUBLIC as well as what it holds by name.
+--
+--   select r.rolname as role_name,
+--          has_function_privilege(
+--            r.rolname,
+--            'public.check_rate_limit(text, integer, integer)',
+--            'EXECUTE'
+--          ) as may_execute
+--   from pg_roles r
+--   where r.rolname in ('anon', 'authenticated', 'service_role')
+--   order by r.rolname;
+--
+-- If may_execute is true for anon or for authenticated, the migration is
+-- needed. If both are already false and service_role is true, it is not. If
+-- the query fails because the function does not exist, stop: migration 020 has
+-- not been run on this database, and no request is being limited.
+--
+-- Afterwards, run it again. It should answer false for anon, false for
+-- authenticated and true for service_role.
+--
+-- The limiter lets every request through when its own call fails, so a mistake
+-- here would not show on the site. It would show in the server log, where each
+-- limited request would write a line that begins "rate limiter error:". If
+-- that line appears after this migration, undo it with one statement, which
+-- returns the function to where the migration files left it:
+--
+--   grant execute on function public.check_rate_limit(text, integer, integer) to public;
+--
+-- This file changes permissions only: no table, column, row or function body
+-- is altered.
+--
+-- Query 2 (also read-only, for the owner's information): every SECURITY
+-- DEFINER function in the public schema, and whether a visitor or a signed-in
+-- account may call it.
+--
+--   select p.oid::regprocedure as function_name,
+--          has_function_privilege('anon', p.oid, 'EXECUTE') as anon_may_execute,
+--          has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_may_execute
+--   from pg_proc p
+--   join pg_namespace n on n.oid = p.pronamespace
+--   where n.nspname = 'public'
+--     and p.prosecdef
+--   order by p.proname;
+--
+-- The migration files make three such functions. check_rate_limit is the one
+-- this file closes. handle_new_user() (001) is the trigger that makes a
+-- profile at sign-up: EXECUTE on it was never revoked, and that is harmless,
+-- because PostgreSQL refuses to run a trigger function that is called directly.
+-- is_admin() (017) answers only whether the caller is an administrator, and
+-- the row policies on question_flags call it, so it is meant to be callable.
+-- If the query lists any other function with true in either column, that
+-- function is not in the migration files and this file does not change it:
+-- have it looked at.
+
+begin;
+
+-- The request counter is called by the server only.
+revoke execute on function public.check_rate_limit(text, integer, integer) from public, anon, authenticated;
+grant execute on function public.check_rate_limit(text, integer, integer) to service_role;
+
+commit;

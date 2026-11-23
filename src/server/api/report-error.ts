@@ -34,6 +34,18 @@ export interface ErrorPlace {
 }
 
 /**
+ * Whether the address that was asked for may be reported. Only for a page or
+ * a route handler whose every parameter names an exam, an objective or a
+ * page. A failure anywhere else (the proxy above all, whose route has no
+ * parameters and which sees every address, tokens included) reports its
+ * route alone.
+ */
+function addressIsPublic(place: ErrorPlace, params: string[]): boolean {
+  if (place.kind !== "render" && place.kind !== "route") return false;
+  return params.every((param) => PUBLIC_PARAMS.has(param));
+}
+
+/**
  * What a `server_error` event carries: where it happened, the kind of error
  * and the digest that finds its full report in the host's logs. No message,
  * no headers, no query string and no account: an error's own words can hold
@@ -48,7 +60,7 @@ export function serverErrorEvent(error: unknown, place: ErrorPlace): Record<stri
       : undefined;
   return {
     route: place.route,
-    path: pathname && params.every((param) => PUBLIC_PARAMS.has(param)) ? pathname : place.route,
+    path: pathname && addressIsPublic(place, params) ? pathname : place.route,
     method: place.method,
     kind: place.kind,
     digest,

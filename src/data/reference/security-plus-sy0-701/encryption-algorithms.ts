@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const encryptionAlgorithms: ReferenceTable = {
   id: "encryption-algorithms",
-  title: "Encryption & Hashing",
+  title: "Encryption and hashing",
   description: "Symmetric, asymmetric, and hashing algorithms with key sizes and use cases.",
   columnHeaders: [
     { key: "algorithm", label: "Algorithm" },

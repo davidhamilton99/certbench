@@ -1,6 +1,6 @@
 import "server-only";
 
-import { publicEnv } from "@/env";
+import { publicEnv, serverEnvOptional } from "@/env";
 import type { ToolSource } from "@/contracts/tools";
 import { CHECKPOINT_SIZE, MINUTES_PER_STOP, PRACTICE_SIZE } from "@/core/path/plan";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
@@ -16,8 +16,12 @@ import { EMAIL_BAND_COLORS, EMAIL_COLORS as C } from "./colors";
  * Hand-rolled HTML email templates. Inline styles only (email clients strip
  * stylesheets), 560px column, system font stack. The colours are the site's
  * own (./colors.ts): its ink on a sheet of paper, on the desk-coloured ground.
- * Every lifecycle email carries an unsubscribe link; the welcome email is
- * transactional and doesn't need one.
+ *
+ * Every email names its sender in its footer ("Sent by CertBench.", followed
+ * by the postal address once the owner has supplied one) and carries the
+ * address that stops these emails, in the footer and at the end of its text
+ * part. The welcome email does too: it goes to an address that nobody has
+ * confirmed, so the person who reads it may never have asked for an account.
  */
 
 export interface EmailContent {
@@ -29,10 +33,99 @@ export interface EmailContent {
 const APP = () => publicEnv.NEXT_PUBLIC_APP_URL;
 
 /**
+ * Every value that is not written in this file passes through this on its way
+ * into email HTML: a name, an exam's name, an objective's title, a figure, a
+ * link's address. It covers text between tags and a value inside a quoted
+ * attribute. A sentence is built as plain text, which is also what the text
+ * part of the email prints, and is escaped where it enters the HTML.
+ */
+const esc = (value: string | number) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+/** The longest display name that a greeting uses. */
+export const GREETING_NAME_MAX = 40;
+
+/** A control character (a line break and a tab are two of them) or a Unicode line or paragraph separator. */
+function hasLineBreak(text: string): boolean {
+  for (const char of text) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code < 0x20 || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether text holds something that a mail client turns into a link: a scheme
+ * ("https://") or a full stop inside a word ("example.com", "www.example").
+ */
+const hasWebAddress = (plain: string) => plain.includes("://") || /\S\.\S/.test(plain);
+
+/**
+ * The first name for a greeting, or null for the greeting without a name.
+ *
+ * A display name is whatever was typed when the account was created. Sign-up
+ * does not bound it, and the welcome email goes to an address that nobody has
+ * confirmed, so a name printed as it stands would let a stranger have
+ * CertBench send words and a link of their own choosing to any address. A name
+ * is therefore used only when it is at most GREETING_NAME_MAX characters long
+ * and holds no angle bracket, no line break and no web address. It is read in
+ * its plain form (NFKC) for this, so that a full-width letter or full stop
+ * counts as the character it stands for. Any other name gets the greeting
+ * without a name. Only the first word of a name is ever printed, and no
+ * subject line carries a name at all.
+ */
+export function greetingName(displayName: string | null | undefined): string | null {
+  const name = (displayName ?? "").trim();
+  // The length is counted in characters, so a name in a script that takes two
+  // code units for each character is not counted double. The first test turns
+  // a very long value away before it is split into characters.
+  if (!name || name.length > GREETING_NAME_MAX * 2 || Array.from(name).length > GREETING_NAME_MAX) return null;
+  const plain = name.normalize("NFKC").toLowerCase();
+  if (/[<>]/.test(plain) || hasLineBreak(name) || hasWebAddress(plain)) return null;
+  return name.split(/\s+/)[0];
+}
+
+/** A heading that speaks to someone: their first name after a comma, or the heading alone. */
+const addressed = (heading: string, name: string | null) => (name ? `${heading}, ${name}` : heading);
+
+/** The sentence in every footer that names the sender. */
+export const SENT_BY = "Sent by CertBench.";
+
+/**
+ * The sender's postal address on one line, or null until the owner has
+ * supplied one (EMAIL_POSTAL_ADDRESS in src/env.ts). It is printed as it was
+ * supplied: a line break becomes a comma, and a full stop at the end is
+ * dropped because the footer adds its own.
+ */
+function postalAddress(): string | null {
+  const address = (serverEnvOptional("EMAIL_POSTAL_ADDRESS") ?? "")
+    .split(/\r?\n|\\n/)
+    .map((line) => line.trim().replace(/,$/, ""))
+    .filter(Boolean)
+    .join(", ")
+    .replace(/\.$/, "");
+  return address || null;
+}
+
+/** Who sent the email, and the postal address they can be written to once the owner has supplied it. */
+export function senderLine(): string {
+  const address = postalAddress();
+  return address ? `${SENT_BY} Postal address: ${address}.` : SENT_BY;
+}
+
+/** The last lines of every text part: who sent the email, and the address that stops these emails. */
+const textFooter = (unsubscribeUrl: string) => `${senderLine()}\nUnsubscribe: ${unsubscribeUrl}`;
+
+/**
  * `preheader` is the inbox preview line. Without one, clients preview the
  * first text they find, which is the "CB CertBench" logo.
  */
-function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): string {
+function layout(bodyHtml: string, unsubscribeUrl: string, preheader?: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -40,7 +133,7 @@ function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0;padding:0;background:${C.ground};">
-  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>` : ""}
+  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>` : ""}
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink};">
     <div style="margin-bottom:24px;">
       <img src="https://certbench.dev/icon-192.png" width="24" height="24" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:5px;" />
@@ -50,8 +143,9 @@ function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): 
       ${bodyHtml}
     </div>
     <p style="font-size:12px;color:${C.muted};margin-top:20px;line-height:1.6;">
+      ${esc(senderLine())}<br>
       CertBench is an independent study program for CompTIA exams.
-      ${unsubscribeUrl ? `<a href="${esc(unsubscribeUrl)}" style="color:${C.muted};">Unsubscribe from these emails</a>.` : ""}
+      <a href="${esc(unsubscribeUrl)}" style="color:${C.muted};">Unsubscribe from these emails</a>.
     </p>
   </div>
 </body>
@@ -59,12 +153,8 @@ function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): 
 }
 
 function button(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;background:${C.primary};color:${C.onPrimary};text-decoration:none;border-radius:6px;padding:11px 20px;font-size:14px;font-weight:600;margin-top:8px;">${label}</a>`;
+  return `<a href="${esc(href)}" style="display:inline-block;background:${C.primary};color:${C.onPrimary};text-decoration:none;border-radius:6px;padding:11px 20px;font-size:14px;font-weight:600;margin-top:8px;">${esc(label)}</a>`;
 }
-
-/** For names and titles going into email HTML. */
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const stopCount = (n: number) => `${n} step${n === 1 ? "" : "s"}`;
 
@@ -117,15 +207,17 @@ function pathStrip(stretch: PathNudge["stretch"]): string {
 export function welcomeEmail(input: {
   displayName: string;
   certName: string;
+  unsubscribeUrl: string;
 }): EmailContent {
-  const { displayName, certName } = input;
-  const first = displayName.split(" ")[0] || displayName;
+  const { certName } = input;
+  const greeting = addressed("Welcome to CertBench", greetingName(input.displayName));
   return {
     subject: `Your ${certName} study path is saved`,
-    html: layout(`
-      <h1 style="font-size:20px;margin:0 0 12px;">Welcome to CertBench, ${first}</h1>
+    html: layout(
+      `
+      <h1 style="font-size:20px;margin:0 0 12px;">${esc(greeting)}</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        Your account is set up for <strong>${certName}</strong>. This is how CertBench works.
+        Your account is set up for <strong>${esc(certName)}</strong>. This is how CertBench works.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
         <li><strong>Follow your study path.</strong> Every exam objective is a short step, and the steps are in order, so you do not have to decide what to study next.</li>
@@ -133,8 +225,10 @@ export function welcomeEmail(input: {
         <li><strong>Take the readiness checkpoint.</strong> Exam-style questions from every domain show where you stand.</li>
       </ol>
       ${button(`${APP()}/start`, "Continue the study path")}
-    `),
-    text: `Welcome to CertBench, ${first}.\n\nYour account is set up for ${certName}. Follow your study path one short step at a time. A question that you answer incorrectly returns in a later step until you answer it correctly, and the readiness checkpoint shows where you stand.\n\nContinue your study path: ${APP()}/start`,
+    `,
+      input.unsubscribeUrl
+    ),
+    text: `${greeting}.\n\nYour account is set up for ${certName}. Follow your study path one short step at a time. A question that you answer incorrectly returns in a later step until you answer it correctly, and the readiness checkpoint shows where you stand.\n\nContinue your study path: ${APP()}/start\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 
@@ -146,9 +240,9 @@ const TOOL_INTRO: Record<ToolSource, string> = {
 };
 
 /**
- * Sent when an anonymous free-tool user hands over their email for a study
- * plan. Delivers a genuinely useful next-steps plan, then routes to building
- * a plan — the whole point of capturing the lead.
+ * Sent when a visitor to a free tool gives an email address for a study plan.
+ * It sets out the plan and leads to the study path. The plan's own points are
+ * not called steps: in this product a step is one stop on the study path.
  */
 export function studyPlanEmail(input: {
   source: ToolSource;
@@ -162,11 +256,11 @@ export function studyPlanEmail(input: {
       `
       <h1 style="font-size:18px;margin:0 0 12px;">Your study plan</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        ${intro}. Drills of that kind cover the facts. These three steps cover the rest of the exam.
+        ${esc(intro)}. Drills of that kind cover the facts. The plan below covers the rest of the exam.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
         <li><strong>Choose your exam.</strong> CertBench sets out every objective as a study path of short steps, so you do not have to decide what to study next.</li>
-        <li><strong>Complete one step or more each day.</strong> Each step is about three minutes of short questions on one objective. A question that you miss returns until you answer it correctly.</li>
+        <li><strong>Complete one step or more each day.</strong> Each step is about ${MINUTES_PER_STOP} minutes of short questions on one objective. A question that you miss returns until you answer it correctly.</li>
         <li><strong>Take the readiness checkpoint.</strong> It has exam-style questions from every domain, weighted in the same way as the real exam.</li>
       </ol>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
@@ -176,7 +270,7 @@ export function studyPlanEmail(input: {
     `,
       input.unsubscribeUrl
     ),
-    text: `This is your CompTIA study plan.\n\n${intro}. Drills of that kind cover the facts. These three steps cover the rest of the exam.\n1. Choose your exam. Every objective is set out as a study path of short steps.\n2. Complete one step or more each day. Each step takes about three minutes, and a question that you miss returns until you answer it correctly.\n3. Take the readiness checkpoint to see where you stand in every domain.\n\nStart the study path (you do not need an account): ${app}/start\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `This is your CompTIA study plan.\n\n${intro}. Drills of that kind cover the facts. The plan below covers the rest of the exam.\n1. Choose your exam. Every objective is set out as a study path of short steps.\n2. Complete one step or more each day. Each step takes about ${MINUTES_PER_STOP} minutes, and a question that you miss returns until you answer it correctly.\n3. Take the readiness checkpoint to see where you stand in every domain.\n\nStart the study path (you do not need an account): ${app}/start\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 
@@ -188,14 +282,14 @@ export function postExamEmail(input: {
   passHref: string;
   failHref: string;
 }): EmailContent {
-  const first = input.displayName.split(" ")[0] || input.displayName;
+  const question = `${addressed("How did your exam go", greetingName(input.displayName))}?`;
   return {
     subject: `How did your ${input.certName} exam go?`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">How did your exam go, ${first}?</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">${esc(question)}</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 16px;">
-        The date of your ${input.certName} exam has passed, and we hope that it went well.
+        The date of your ${esc(input.certName)} exam has passed, and we hope that it went well.
         Please let us know the result.
       </p>
       <div style="margin:0 0 8px;">
@@ -208,7 +302,7 @@ export function postExamEmail(input: {
     `,
       input.unsubscribeUrl
     ),
-    text: `How did your ${input.certName} exam go?\n\nIf you passed, please tell us: ${input.passHref}\nIf you did not pass this time, CertBench can help you prepare for a retake: ${input.failHref}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `How did your ${input.certName} exam go?\n\nIf you passed, please tell us: ${input.passHref}\nIf you did not pass this time, CertBench can help you prepare for a retake: ${input.failHref}\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 
@@ -232,7 +326,7 @@ export function pathCountdownEmail(input: {
   unsubscribeUrl: string;
 }): EmailContent {
   const { examName, daysUntilExam: days, standing, href } = input;
-  const first = input.displayName.split(" ")[0] || input.displayName;
+  const heading = addressed(countdownHeading(days), greetingName(input.displayName));
   const left = standing.total - standing.done;
   const where =
     standing.done === 0
@@ -249,20 +343,20 @@ export function pathCountdownEmail(input: {
         ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
         : days <= 7
           ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
-          : `With two weeks remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
+          : `With ${days} days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
   const label = standing.done === 0 ? "Start the study path" : "Continue the study path";
   return {
     subject: countdownSubject(days, examName),
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">${countdownHeading(days)}, ${esc(first)}</h1>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">${where}</p>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">${advice}</p>
+      <h1 style="font-size:18px;margin:0 0 12px;">${esc(heading)}</h1>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">${esc(where)}</p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">${esc(advice)}</p>
       ${button(href, label)}
     `,
       input.unsubscribeUrl
     ),
-    text: `${countdownHeading(days)}, ${first}.\n\n${where}\n${advice}\n\n${label}: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `${heading}.\n\n${where}\n${advice}\n\n${label}: ${href}\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 
@@ -279,30 +373,30 @@ export function pathNudgeEmail(input: {
   unsubscribeUrl: string;
 }): EmailContent {
   const { examName, nudge, href } = input;
-  const first = input.displayName.split(" ")[0] || input.displayName;
+  const name = greetingName(input.displayName);
 
   if (nudge.next.kind === "checkpoint") {
-    const what = `Your next step is the readiness checkpoint. It has ${CHECKPOINT_SIZE} exam-style questions from every domain, weighted in the same way as the real exam.`;
+    const heading = addressed("Your readiness checkpoint is next", name);
+    const what = `You have completed ${stopCount(nudge.done)} of your ${examName} study path. Your next step is the readiness checkpoint. It has ${CHECKPOINT_SIZE} exam-style questions from every domain, weighted in the same way as the real exam.`;
     const then =
       "When you finish, you will see a first measure of your readiness, your result in each domain, and the date by which you would finish the rest of your study path.";
     return {
       subject: `Your ${examName} readiness checkpoint is next`,
       html: layout(
         `
-        <h1 style="font-size:18px;margin:0 0 12px;">Your readiness checkpoint is next, ${esc(first)}</h1>
+        <h1 style="font-size:18px;margin:0 0 12px;">${esc(heading)}</h1>
         ${pathStrip(nudge.stretch)}
-        <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
-          You have completed ${stopCount(nudge.done)} of your ${examName} study path. ${what}
-        </p>
-        <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${then}</p>
+        <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">${esc(what)}</p>
+        <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${esc(then)}</p>
         ${button(href, "Take the checkpoint")}
       `,
         input.unsubscribeUrl
       ),
-      text: `Your readiness checkpoint is next, ${first}.\n\nYou have completed ${stopCount(nudge.done)} of your ${examName} study path. ${what}\n${then}\n\nTake the checkpoint: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+      text: `${heading}.\n\n${what}\n${then}\n\nTake the checkpoint: ${href}\n\n${textFooter(input.unsubscribeUrl)}`,
     };
   }
 
+  const heading = addressed("Continue your study path", name);
   const where =
     nudge.done > 0
       ? `You have completed ${stopCount(nudge.done)} of your ${examName} study path.`
@@ -319,17 +413,17 @@ export function pathNudgeEmail(input: {
     subject: `Your next ${examName} step: ${nudge.next.title}`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">Continue your study path, ${esc(first)}</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">${esc(heading)}</h1>
       ${pathStrip(nudge.stretch)}
       <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
-        ${where} Your next step is <strong>${esc(nudge.next.title)}</strong>. ${length}.
+        ${esc(where)} Your next step is <strong>${esc(nudge.next.title)}</strong>. ${esc(length)}.
       </p>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${after}</p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${esc(after)}</p>
       ${button(href, "Go to the next step")}
     `,
       input.unsubscribeUrl
     ),
-    text: `Continue your study path, ${first}.\n\n${where} Your next step is ${nudge.next.title}. ${length}.\n${after}\n\nGo to the next step: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `${heading}.\n\n${where} Your next step is ${nudge.next.title}. ${length}.\n${after}\n\nGo to the next step: ${href}\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 
@@ -364,7 +458,7 @@ export function checkpointResultEmail(input: {
 }): EmailContent {
   const { examName, domains, href } = input;
   const { result, remaining, opportunity } = input.followUp;
-  const first = input.displayName.split(" ")[0] || input.displayName;
+  const heading = addressed("Your checkpoint result", greetingName(input.displayName));
   const score = result.score;
   const asked = result.domains.reduce((s, d) => s + d.total, 0);
   const band = emailBand(score);
@@ -400,19 +494,19 @@ export function checkpointResultEmail(input: {
     subject: `Your ${examName} checkpoint: ${score}%`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 16px;">Your checkpoint result, ${esc(first)}</h1>
+      <h1 style="font-size:18px;margin:0 0 16px;">${esc(heading)}</h1>
       <div style="padding:0 0 18px;">
-        <div style="font-size:13px;color:${C.muted};">${examName} readiness checkpoint</div>
-        <div style="font-size:44px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${C.ink};margin-top:6px;">${score}%</div>
-        <div style="font-size:13px;font-weight:600;color:${band.ink};">${band.label}</div>
+        <div style="font-size:13px;color:${C.muted};">${esc(examName)} readiness checkpoint</div>
+        <div style="font-size:44px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${C.ink};margin-top:6px;">${esc(score)}%</div>
+        <div style="font-size:13px;font-weight:600;color:${band.ink};">${esc(band.label)}</div>
       </div>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 6px;">${read}</p>
+      <p style="font-size:14px;line-height:1.7;margin:0 0 6px;">${esc(read)}</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 14px;">
         ${rows
           .map(
             (r) => `<tr>
-          <td style="padding:10px 0 5px;font-size:13px;"><span style="color:${C.muted};margin-right:6px;">${r.n}</span>${esc(r.title)}</td>
-          <td style="padding:10px 0 5px;font-size:12px;text-align:right;color:${C.muted};font-variant-numeric:tabular-nums;white-space:nowrap;">${r.tally}</td>
+          <td style="padding:10px 0 5px;font-size:13px;"><span style="color:${C.muted};margin-right:6px;">${esc(r.n)}</span>${esc(r.title)}</td>
+          <td style="padding:10px 0 5px;font-size:12px;text-align:right;color:${C.muted};font-variant-numeric:tabular-nums;white-space:nowrap;">${esc(r.tally)}</td>
         </tr>
         <tr><td colspan="2" style="padding:0;">${bar(r.pct, emailBand(r.pct).fill)}</td></tr>`
           )
@@ -420,11 +514,11 @@ export function checkpointResultEmail(input: {
       </table>
       ${
         opportunity
-          ? `<p style="font-size:14px;line-height:1.7;margin:0;">The area to focus on next is <strong>${esc(opportunity.title)}</strong>, which accounts for ${opportunity.weight}% of the exam.</p>`
+          ? `<p style="font-size:14px;line-height:1.7;margin:0;">The area to focus on next is <strong>${esc(opportunity.title)}</strong>, which accounts for ${esc(opportunity.weight)}% of the exam.</p>`
           : ""
       }
       <div style="border:1px solid ${C.rule};border-top:3px solid ${C.navy};background:${C.ground};border-radius:0 0 6px 6px;padding:18px;margin:18px 0 0;">
-        <div style="font-size:16px;font-weight:700;margin:0 0 4px;">The rest of your ${examName} study path</div>
+        <div style="font-size:16px;font-weight:700;margin:0 0 4px;">The rest of your ${esc(examName)} study path</div>
         <div style="font-size:13px;color:${C.muted};margin:0 0 10px;">CertBench Pro includes:</div>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;line-height:1.6;">
           ${includes
@@ -435,22 +529,22 @@ export function checkpointResultEmail(input: {
             .join("")}
         </table>
         <p style="font-size:14px;line-height:1.7;margin:14px 0 0;">${esc(PRO_PRICE_TERMS)}</p>
-        <p style="font-size:12px;line-height:1.6;color:${C.muted};margin:2px 0 6px;">${terms}</p>
+        <p style="font-size:12px;line-height:1.6;color:${C.muted};margin:2px 0 6px;">${esc(terms)}</p>
         ${button(href, "Continue with Pro")}
-        <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:${C.muted};"><span style="color:${C.ink};font-weight:600;">Pass guarantee.</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${guarantee}" style="color:${C.muted};">Read the terms</a>.</div>
+        <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:${C.muted};"><span style="color:${C.ink};font-weight:600;">Pass guarantee.</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${esc(guarantee)}" style="color:${C.muted};">Read the terms</a>.</div>
       </div>
     `,
       input.unsubscribeUrl,
       "Your result in each domain, and what the rest of your study path covers."
     ),
     text: [
-      `Your checkpoint result, ${first}.`,
+      `${heading}.`,
       read,
       rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
       gain,
       `The rest of your ${examName} study path. CertBench Pro includes:\n${includes.map((l) => `- ${l}`).join("\n")}\n${PRO_PRICE_TERMS} ${terms}\nPass guarantee. ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
       `Continue with Pro: ${href}`,
-      `Unsubscribe: ${input.unsubscribeUrl}`,
+      textFooter(input.unsubscribeUrl),
     ]
       .filter(Boolean)
       .join("\n\n"),

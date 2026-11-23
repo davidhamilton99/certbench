@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const cableTypes: ReferenceTable = {
   id: "cable-types",
-  title: "Cables & Connectors",
+  title: "Cables and connectors",
   description: "Cable categories, speeds, distances, and connector types for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "cable", label: "Cable / Standard" },
@@ -18,14 +18,14 @@ export const cableTypes: ReferenceTable = {
     { columns: { cable: "Cat 6a", category: "Twisted pair (copper)", maxSpeed: "10 Gbps", maxDistance: "100 m", connector: "RJ-45" } },
     // Fiber optic
     { columns: { cable: "Single-mode fiber (SMF)", category: "Fiber optic", maxSpeed: "100+ Gbps", maxDistance: "40+ km", connector: "LC, SC" } },
-    { columns: { cable: "Multimode fiber (MMF)", category: "Fiber optic", maxSpeed: "10 Gbps", maxDistance: "550 m (OM3/OM4)", connector: "LC, SC, ST" } },
+    { columns: { cable: "Multimode fiber (MMF)", category: "Fiber optic", maxSpeed: "10 Gbps", maxDistance: "300 m (OM3)", connector: "LC, SC, ST" } },
     // Coaxial
     { columns: { cable: "Coax RG-6", category: "Coaxial", maxSpeed: "N/A (analog/digital TV)", maxDistance: "~300 m", connector: "F-type" } },
     // USB
     { columns: { cable: "USB 2.0", category: "USB", maxSpeed: "480 Mbps", maxDistance: "5 m", connector: "Type-A, Type-B, Mini, Micro" } },
     { columns: { cable: "USB 3.0 (3.2 Gen 1)", category: "USB", maxSpeed: "5 Gbps", maxDistance: "3 m", connector: "Type-A, Type-B, Micro-B" } },
-    { columns: { cable: "USB 3.1 (3.2 Gen 2)", category: "USB", maxSpeed: "10 Gbps", maxDistance: "3 m", connector: "Type-A, Type-C" } },
-    { columns: { cable: "USB Type-C", category: "USB", maxSpeed: "Up to 40 Gbps (TB4)", maxDistance: "2 m (passive)", connector: "USB-C (reversible)" } },
+    { columns: { cable: "USB 3.1 (3.2 Gen 2)", category: "USB", maxSpeed: "10 Gbps", maxDistance: "1 m", connector: "Type-A, Type-C" } },
+    { columns: { cable: "USB Type-C", category: "USB", maxSpeed: "Up to 40 Gbps (TB4)", maxDistance: "0.8 m (passive) / 2 m (active)", connector: "USB-C (reversible)" } },
     // Thunderbolt
     { columns: { cable: "Thunderbolt 3", category: "Thunderbolt", maxSpeed: "40 Gbps", maxDistance: "0.5 m (passive) / 2 m (active)", connector: "USB-C" } },
     { columns: { cable: "Thunderbolt 4", category: "Thunderbolt", maxSpeed: "40 Gbps", maxDistance: "0.8 m (passive) / 2 m (active)", connector: "USB-C" } },

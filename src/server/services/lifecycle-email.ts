@@ -193,7 +193,13 @@ async function sentBefore(admin: Db, userId: string, emailType: string): Promise
  * The welcome email, sent once for an account, ever. The enrollment route
  * calls this each time a learner without Pro confirms an exam, which happens
  * again before every checkout, so today's claim alone would welcome the same
- * person on each later day. Transactional: no opt-out check.
+ * person on each later day.
+ *
+ * It carries the unsubscribe address and both unsubscribe headers, as every
+ * other email does. It goes to an address that nobody has confirmed, so the
+ * person who reads it may not be the person who created the account, and the
+ * study emails that follow are sent to the same address. For the same reason
+ * it is not sent to an account that has already unsubscribed.
  * Never throws: enrollment must not fail because email is down.
  */
 export async function sendWelcome(
@@ -205,18 +211,22 @@ export async function sendWelcome(
     if (isTestAccount(email)) return;
     const admin = createAdminClient();
     if (await sentBefore(admin, userId, "welcome")) return;
-    const [profile, cert] = await Promise.all([
+    const [profile, cert, prefs] = await Promise.all([
       getProfile(admin, userId),
       getCertification(admin, certId),
+      getPrefs(admin, userId),
     ]);
-    if (!cert) return;
+    if (!cert || !prefs.digestEnabled) return;
     const claim = await claimSend(admin, userId, "welcome");
     if (claim === null) return;
     await deliverClaimed(admin, claim, userId, "welcome", {
       to: email,
+      headers: unsubscribeHeaders(prefs.unsubscribeUrl),
       ...welcomeEmail({
-        displayName: profile?.displayName ?? "there",
+        // Without a profile the greeting has no name (see greetingName).
+        displayName: profile?.displayName ?? "",
         certName: cert.name,
+        unsubscribeUrl: prefs.unsubscribeUrl,
       }),
     });
   } catch (err) {
@@ -411,7 +421,8 @@ async function processUser(
   if (!prefs.digestEnabled) return;
 
   const profile = await getProfile(admin, userId);
-  const displayName = profile?.displayName ?? "there";
+  // Without a profile the greeting has no name (see greetingName in the templates).
+  const displayName = profile?.displayName ?? "";
   // Every lifecycle email can be stopped from the mail client's own button.
   const headers = unsubscribeHeaders(prefs.unsubscribeUrl);
 

@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const wirelessStandards: ReferenceTable = {
   id: "wireless-standards",
-  title: "Wireless Standards",
+  title: "Wireless standards",
   description: "Wi-Fi, Bluetooth, NFC, RFID, and cellular wireless standards for the CompTIA A+ 220-1201 exam.",
   columnHeaders: [
     { key: "standard", label: "Standard", mono: true },

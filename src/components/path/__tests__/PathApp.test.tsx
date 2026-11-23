@@ -93,6 +93,14 @@ vi.mock("@/components/workspace/PbqPlayer", () => ({
   ),
 }));
 
+// The early fetch of a lab's large player is watched here; the rest of the
+// module stays real. (Nothing is fetched: the player above stands in for all of them.)
+const preloadLab = vi.hoisted(() => vi.fn());
+vi.mock("@/components/workspace/pbq-host", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/workspace/pbq-host")>()),
+  preloadLab,
+}));
+
 /** The API, answered per endpoint path. Tests swap handlers as needed. */
 const server = vi.hoisted(() => ({
   progress: null as null | object,
@@ -172,6 +180,7 @@ vi.mock("@/lib/api-client", async () => {
 import { ContinueCard, PathApp } from "../PathApp";
 import { ApiError } from "@/contracts/common";
 import { pathRehearsalKey } from "../storage-key";
+import { oweStartEvent } from "../path-start";
 
 // Node's own experimental `localStorage` global shadows jsdom's — use a plain
 // in-memory Storage so the path's persistence is exercised for real.
@@ -315,6 +324,7 @@ beforeEach(() => {
   server.calls = [];
   track.mockClear();
   identifyUser.mockClear();
+  preloadLab.mockClear();
   storage.refuses = false;
   localStorage.clear();
   window.history.replaceState(null, "", "/path/security-plus-sy0-701");
@@ -1250,7 +1260,11 @@ describe("practice exams", () => {
 
   /** Answer the three drawn questions (right, right, wrong) and score them. */
   async function sitIt() {
-    expect(await screen.findByRole("heading", { name: `Prompt q|1.1|${uuid(1)}` })).toBeInTheDocument();
+    // On the study path the exam is a screen of its own: the line that names it
+    // is the screen's title, and the question is the heading under it.
+    expect(await screen.findByRole("heading", { level: 2, name: `Prompt q|1.1|${uuid(1)}` })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "SY0-701 practice exam" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     fireEvent.click(screen.getByRole("radio", { name: /Right answer/ }));
     fireEvent.click(screen.getByRole("button", { name: /Next/ }));
     fireEvent.click(screen.getByRole("radio", { name: /Right answer/ }));
@@ -1274,7 +1288,9 @@ describe("practice exams", () => {
     expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Start: Practice exam" }));
 
-    expect(await screen.findByRole("heading", { name: "Take a full-length practice exam." })).toBeInTheDocument();
+    // The screen before the exam has its own title.
+    expect(await screen.findByRole("heading", { level: 1, name: "Take a full-length practice exam." })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByText(/with your checkpoint result of 58%/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Start the full practice exam/ }));
     await sitIt();
@@ -1292,9 +1308,24 @@ describe("practice exams", () => {
     // Domain 1 half right, domain 2 all right, weighted evenly: 75.
     expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
     expect(screen.getByTestId("score")).toHaveTextContent("75%");
-    expect(screen.getByRole("heading", { name: "You met the readiness target, 17 points above your checkpoint." })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Missed (1)" })).toHaveAttribute("aria-selected", "true");
+    // The result is the title of its screen on the study path, and the list of answers is the heading under it.
+    expect(
+      screen.getByRole("heading", { level: 1, name: "You met the readiness target, 17 points above your checkpoint." })
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 2, name: "Your answers" })).toBeInTheDocument();
+    // The filter of the list is two buttons in a named group, of which one is pressed: they are not tabs.
+    const filter = screen.getByRole("group", { name: "Which answers to show" });
+    expect(within(filter).getByRole("button", { name: "Missed (1)" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(filter).getByRole("button", { name: "All (3)" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(screen.queryByRole("tablist")).toBeNull();
     expect(screen.getByText(`Prompt q|1.2|${uuid(3)}`)).toBeInTheDocument();
+    expect(screen.queryByText(`Prompt q|1.1|${uuid(1)}`)).toBeNull();
+    fireEvent.click(within(filter).getByRole("button", { name: "All (3)" }));
+    expect(within(filter).getByRole("button", { name: "All (3)" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(filter).getByRole("button", { name: "Missed (1)" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText(`Prompt q|1.1|${uuid(1)}`)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith(
       "path_rehearsal_completed",
       expect.objectContaining({ score: 75, answered: 3, total: 3, timed_out: false })
@@ -1319,7 +1350,7 @@ describe("practice exams", () => {
     fireEvent.click(headerLink());
     expect(await screen.findByText(/Your last practice exam result was 75%/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Review its answers" }));
-    expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Missed (1)" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("tells a free account that one practice exam is free, and leads to it on the exam's public page", async () => {
@@ -1659,6 +1690,94 @@ describe("the lab library", () => {
     fireEvent.click(screen.getByRole("button", { name: /Port matching/ }));
     expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
+  });
+
+  // A simulation, a topology and a threat hunt each have a large player. It is
+  // fetched beside the lab's own screen, not after it: the page starts the fetch
+  // when a lab's row is hovered or takes the focus, and as a lab is about to open.
+  describe("fetching a lab's player early", () => {
+    it("starts when a lab's row in the list is hovered or takes the focus, with the lab's kind", async () => {
+      server.progress = done(["warmup"], { goal });
+      renderLibrary();
+      await openLibrary();
+      expect(preloadLab).not.toHaveBeenCalled();
+
+      fireEvent.pointerEnter(screen.getByRole("button", { name: /Lab for domain 1\.0/ }));
+      expect(preloadLab).toHaveBeenLastCalledWith("simulation");
+      fireEvent.focus(screen.getByRole("button", { name: /Lab for domain 2\.0/ }));
+      expect(preloadLab).toHaveBeenLastCalledWith("topology");
+      // A drill's kind is passed on in the same way: the loader itself knows that a drill needs no fetch.
+      fireEvent.pointerEnter(screen.getByRole("button", { name: /Port matching/ }));
+      expect(preloadLab).toHaveBeenLastCalledWith("matching");
+      expect(preloadLab).toHaveBeenCalledTimes(3);
+    });
+
+    it("starts as a lab from the list is about to open, before the server has answered with the lab", async () => {
+      server.progress = done(["warmup"], { goal });
+      let send: () => void = () => {};
+      server.labHandler = (input) =>
+        new Promise((resolve) => {
+          send = () => resolve({ lab: { type: "topology", id: input.id, title: "Lab for domain 2.0", domain_number: "2.0" } });
+        });
+      renderLibrary();
+      await openLibrary();
+      fireEvent.click(screen.getByRole("button", { name: /Lab for domain 2\.0/ }));
+      // The lab has been asked for and has not arrived; its player is on the way already.
+      expect(await screen.findByText("The lab is opening.")).toBeInTheDocument();
+      expect(preloadLab).toHaveBeenCalledWith("topology");
+      await act(async () => send());
+      expect(await screen.findByRole("heading", { level: 2, name: "Lab for domain 2.0" })).toBeInTheDocument();
+    });
+
+    it("starts from a lab's row in the course outline, for a learner whom the row leads to the lab", async () => {
+      server.progress = done(["warmup"], { goal });
+      renderLibrary();
+      await screen.findByRole("button", { name: "Open: Hands-on labs" });
+      fireEvent.pointerEnter(within(outlineRow("Lab, Lab for domain 1.0")).getByRole("button"));
+      expect(preloadLab).toHaveBeenLastCalledWith("simulation");
+      fireEvent.focus(within(outlineRow("Lab, Lab for domain 2.0")).getByRole("button"));
+      expect(preloadLab).toHaveBeenLastCalledWith("topology");
+      // An objective's row opens no lab.
+      fireEvent.pointerEnter(within(outlineRow("1.2")).getByRole("button"));
+      expect(preloadLab).toHaveBeenCalledTimes(2);
+    });
+
+    it("fetches nothing from the outline for an account without Pro, whose lab rows lead to a public page or to the offer", async () => {
+      server.access = "free";
+      server.progress = done(["warmup"], { goal });
+      renderLibrary();
+      await screen.findByRole("button", { name: /^Continue/ });
+      fireEvent.pointerEnter(within(outlineRow("Lab, Lab for domain 1.0")).getByRole("button"));
+      fireEvent.focus(within(outlineRow("Lab, Lab for domain 2.0")).getByRole("button"));
+      expect(preloadLab).not.toHaveBeenCalled();
+    });
+
+    it("starts as the lab that is the next step is about to open, before the server has answered", async () => {
+      const lab1 = libPlan.stops.findIndex((s) => s.id === "lab1");
+      server.progress = done(libPlan.stops.slice(0, lab1).map((s) => s.id), { goal });
+      let send: () => void = () => {};
+      server.stopHandler = (input) =>
+        new Promise((resolve) => {
+          send = () =>
+            resolve({
+              stop: libPlan.stops[input.index],
+              reps: [],
+              lab: { type: "simulation", id: "lab-1.0", title: "Lab for domain 1.0", domain_number: "1.0" },
+            });
+        });
+      renderLibrary();
+      expect(await screen.findByText(/Your next step is a hands-on lab/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+      // The exam's list of labs says what kind the domain's lab is, so nothing waits for the server.
+      expect(await screen.findByText("Your next step is being prepared.")).toBeInTheDocument();
+      expect(preloadLab).toHaveBeenCalledWith("simulation");
+      expect(preloadLab).toHaveBeenCalledTimes(1);
+
+      // When the lab arrives, the fetch is asked for again by the lab's own kind. It is the same fetch.
+      await act(async () => send());
+      expect(await screen.findByRole("heading", { level: 2, name: "Lab for domain 1.0" })).toBeInTheDocument();
+      expect(preloadLab).toHaveBeenLastCalledWith("simulation");
+    });
   });
 
   it("keeps the library for Pro, and names every lab in a free account's offer", async () => {
@@ -2081,6 +2200,67 @@ describe("coming back during the introductory questions", () => {
   });
 });
 
+describe("recording that a visitor has started the study path", () => {
+  const CERT = "security-plus-sy0-701";
+  const key = `cb_path_${CERT}`;
+  /** Every `path_started` that the page has recorded. */
+  const starts = () => track.mock.calls.filter(([name]) => name === "path_started");
+
+  it("records it once on a fresh device, at the first answer, as before", async () => {
+    renderPath();
+    await act(async () => {});
+    // Opening the page is not a start: the first answer is.
+    expect(starts()).toHaveLength(0);
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: CERT }]]);
+    await answer(false);
+    expect(starts()).toHaveLength(1);
+  });
+
+  it("records it once for a copy that the home page's sample questions began: at the first answer here, and not at the second", async () => {
+    // The home page kept a sample question's answer as the first answer of the
+    // device's copy of the study path, and left its mark (SampleQuestions).
+    localStorage.setItem(
+      key,
+      JSON.stringify({ v: 1, owner: null, progress: recordRep(EMPTY_PATH_PROGRESS, "a|2.1|w2", true, 1) })
+    );
+    oweStartEvent(CERT);
+    renderPath();
+    expect(await screen.findByText("Prompt a|1.1|w1")).toBeInTheDocument();
+    await act(async () => {});
+    // The copy has started already, and opening the page records nothing.
+    expect(starts()).toHaveLength(0);
+
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: CERT }]]);
+    // The mark is taken with the answer it was left for.
+    expect(localStorage.getItem(`cb_path_start_owed_${CERT}`)).toBeNull();
+
+    // The second answer on this page (the question that the home page asked is passed over).
+    expect(await screen.findByText("Prompt a|1.2|w3")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+    expect(await screen.findByText(/^Correct\./)).toBeInTheDocument();
+    expect(starts()).toHaveLength(1);
+  });
+
+  it("records nothing more for a copy that was begun on this page on an earlier visit", async () => {
+    const first = renderPath();
+    await act(async () => {});
+    await answer(true);
+    expect(starts()).toHaveLength(1);
+    // The visitor leaves, and returns another day.
+    first.unmount();
+    track.mockClear();
+
+    renderPath();
+    expect(await screen.findByText("Prompt a|2.1|w2")).toBeInTheDocument();
+    await answer(true);
+    await answer(true);
+    expect(await screen.findByText(/You have completed the introductory questions/i)).toBeInTheDocument();
+    expect(starts()).toHaveLength(0);
+  });
+});
+
 describe("the held stage", () => {
   const key = "cb_path_security-plus-sy0-701";
   const html = document.documentElement;
@@ -2094,7 +2274,12 @@ describe("the held stage", () => {
     expect(document.querySelector(".path-stage")).toHaveAttribute("data-ready", "false");
     expect(body()).toHaveAttribute("inert");
     // The two sentences are in the page; the style rules decide when each is seen.
-    expect(screen.getByText("Your study path is loading.")).toHaveAttribute("role", "status");
+    // The first is a status, so that it is announced, and the title of the held
+    // stage: while it is shown there is nothing else on the screen.
+    const loading = screen.getByText("Your study path is loading.");
+    expect(loading.tagName).toBe("H1");
+    expect(loading.parentElement).toHaveAttribute("role", "status");
+    expect(loading.parentElement).toHaveClass("path-wait");
     expect(screen.getByText(/^Your study path could not be loaded\. Please check your connection and/)).toHaveAttribute(
       "role",
       "alert"
@@ -2177,11 +2362,20 @@ describe("when the account cannot be reached", () => {
     server.readError = new ApiError("internal", "The connection was lost. Please check your connection and try again.");
   });
 
+  /**
+   * The screen of a learner whose account was not reached: the notice, and
+   * their own home screen under it. The notice arrives a moment before the home
+   * screen takes the place of the first visit's question, so both are waited for.
+   */
+  async function unreachedHome() {
+    expect(await screen.findByText(NOT_REACHED)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+  }
+
   it("offers nothing and locks nothing, says what is shown, and asks again on request", async () => {
     pastCheckpoint();
     renderPath();
-    expect(await screen.findByText(NOT_REACHED)).toBeInTheDocument();
-    expect(screen.getByText("Your Security+ study path")).toBeInTheDocument();
+    await unreachedHome();
     // A member must not be asked to buy what they have: no offer and no lock,
     // and the way on is a plain Continue that asks the server.
     expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
@@ -2192,21 +2386,150 @@ describe("when the account cannot be reached", () => {
     server.readError = null;
     server.access = "pro";
     localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    const again = screen.getByRole("button", { name: "Try again" });
+    again.focus();
+    fireEvent.click(again);
     await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
     expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
     expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
+    // The notice has gone, and the button that was pressed with it. The focus
+    // that it held is not left on nothing: it is on the title of the screen.
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 1, name: "Your Security+ study path" }));
+  });
+
+  it("leaves the focus where it is when the account answers by itself, with nobody having asked for it", async () => {
+    pastCheckpoint();
+    renderPath();
+    await unreachedHome();
+    // Nobody pressed "Try again": the page asks again by itself when the connection returns.
+    server.readError = null;
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    expect(document.activeElement).toBe(document.body);
   });
 
   it("makes the offer once the server has said that the account does not have Pro", async () => {
     pastCheckpoint();
     server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
     renderPath();
-    await screen.findByText(NOT_REACHED);
+    await unreachedHome();
     fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
     expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
     // The account itself has still not been read, and the page still says so.
     expect(screen.getByText(NOT_REACHED)).toBeInTheDocument();
+  });
+
+  it("shows one way to try again, in the offer, when the offer has no account to sell to", async () => {
+    pastCheckpoint();
+    server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
+    renderPath();
+    await unreachedHome();
+    // On the home screen there is no offer yet, and the notice carries the button.
+    const notice = screen.getByText(NOT_REACHED).closest("p")!;
+    expect(within(notice).getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Try again" })).toHaveLength(1);
+
+    // The server refuses the step: the checkpoint's result is shown with the offer under it.
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    const heading = await screen.findByRole("heading", { name: "Continue your study path with Pro" });
+    const offer = heading.closest<HTMLElement>(".glass")!;
+    // The offer says that the account could not be reached and offers to try
+    // again in place of its plans. The notice keeps its sentence and gives up
+    // its button: one "Try again" on the screen, not two.
+    expect(within(offer).getByText("Your account could not be reached.")).toBeInTheDocument();
+    expect(screen.getByText(NOT_REACHED)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Try again" })).toHaveLength(1);
+    expect(within(offer).getByRole("button", { name: "Try again" })).toBeInTheDocument();
+
+    // The same on the home screen, where the offer now stands in place of the way on.
+    fireEvent.click(screen.getByRole("button", { name: "Return to the study path" }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Continue your study path with Pro" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Try again" })).toHaveLength(1);
+
+    // That one button asks for the account again. It answers: a free account,
+    // so the notice goes and the offer shows its plans.
+    server.readError = null;
+    const again = screen.getByRole("button", { name: "Try again" });
+    again.focus();
+    fireEvent.click(again);
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    expect(await screen.findByRole("button", { name: "Continue to payment" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    // The plans stand where the button was. The focus that it held moves to
+    // the offer's title, so that the offer is read from its top.
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Continue your study path with Pro" }));
+  });
+
+  it("moves the focus to the title of the screen when the account answers that the learner has Pro, and the offer gives way to the way on", async () => {
+    pastCheckpoint();
+    server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
+    renderPath();
+    await unreachedHome();
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    await screen.findByRole("heading", { name: "Continue your study path with Pro" });
+
+    // The account answers after all: a member, on a device that has shown what Pro opened already.
+    server.readError = null;
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    const again = screen.getByRole("button", { name: "Try again" });
+    again.focus();
+    fireEvent.click(again);
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    // Nothing is sold to a member: the offer has gone, and the way on stands in its place.
+    await waitFor(() => expect(screen.queryByText("Continue your study path with Pro")).toBeNull());
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title).toHaveTextContent("You are making good progress.");
+    expect(document.activeElement).toBe(title);
+  });
+
+  it("shows one way to try again on the screen of a step that could not be loaded, and it asks for the account again as well", async () => {
+    const LOST = "The connection was lost. Please check your connection and try again.";
+    /** How many times the page asked for this account's progress and access. */
+    const accountReads = () =>
+      server.calls.filter((c) => c.path === "/api/path/progress" && !("progress" in (c.input as object))).length;
+    pastCheckpoint();
+    // The connection is down: neither the account nor the next step can be had.
+    server.stopHandler = () => new ApiError("internal", LOST);
+    renderPath();
+    await unreachedHome();
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    expect(await screen.findByRole("heading", { level: 1, name: LOST })).toBeInTheDocument();
+    // The notice keeps its sentence. The screen's own button is the one "Try again".
+    expect(screen.getByText(NOT_REACHED)).toBeInTheDocument();
+    const again = screen.getAllByRole("button", { name: "Try again" });
+    expect(again).toHaveLength(1);
+    expect(again[0].closest(".path-stage-body")).not.toBeNull();
+
+    // The connection is back. One press asks for the account again and loads the step again.
+    server.readError = null;
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.stopHandler = (input) => stopReply(input.index);
+    const before = accountReads();
+    fireEvent.click(again[0]);
+    await waitFor(() => expect(accountReads()).toBe(before + 1));
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    expect(await screen.findByText(/^Prompt a\|/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+  });
+
+  it("asks only for the step again when the account was reached and a step could not be loaded", async () => {
+    server.readError = null;
+    server.progress = done(["warmup"]);
+    server.stopHandler = () => new ApiError("internal", "Request failed (502)");
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByText("Your next step could not be loaded. Please try again.");
+    const reads = server.calls.filter((c) => c.path === "/api/path/progress" && !("progress" in (c.input as object))).length;
+    server.stopHandler = (input) => stopReply(input.index);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
+    expect(server.calls.filter((c) => c.path === "/api/path/progress" && !("progress" in (c.input as object)))).toHaveLength(reads);
   });
 
   it("offers Pro to a free account as before once the account has answered", async () => {
@@ -2287,6 +2610,9 @@ describe("moving the focus with the screen", () => {
     fireEvent.click(onward);
     const waiting = await screen.findByText("Your next step is being prepared.");
     expect(waiting.closest('[role="status"]')).not.toBeNull();
+    // For as long as the wait lasts, the sentence is the screen's title. It is announced, and does not take the focus.
+    expect(screen.getAllByRole("heading", { level: 1 })).toEqual([waiting]);
+    expect(document.activeElement).not.toBe(waiting);
     // A full sentence, with no ellipsis.
     expect(screen.queryByText(/…/)).toBeNull();
 
@@ -2421,6 +2747,8 @@ describe("requests that are answered late or fail", () => {
     const said = await screen.findByText("Your next step could not be loaded. Please try again.");
     // It replaces the loading line, and takes the focus so that it is read.
     expect(document.activeElement).toBe(said);
+    // The sentence is the title of this screen, which has no other heading.
+    expect(screen.getAllByRole("heading", { level: 1 })).toEqual([said]);
     expect(screen.queryByText(/502/)).toBeNull();
 
     // A bare code from the server is never shown either: it has a sentence.

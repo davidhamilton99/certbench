@@ -18,7 +18,8 @@ import { explainRow, type ResolvedDeck } from "../recall-deck";
  * "Cat 6: 10 Gbps (55 m (10G) / 100 m (1G))", "format: CMD", "dig: dig [name]
  * [type]". They are the first explanations a visitor to the Network+ and A+
  * study paths reads, because those exams' introductory questions are drawn
- * from these decks.
+ * from these decks. The Security+ decks, which the Recall page, the public
+ * acronym quiz and the public port quiz draw on, explain in sentences too.
  *
  * Every row of every deck that has a template is held to the rule here, so a
  * row added to a table later is held to it too. The written introductory
@@ -137,6 +138,11 @@ function faults(text: string, { row, answers, told }: Subject): string[] {
     const missing = figuresOf(row[key] ?? "").filter((figure) => !said.includes(figure));
     if (missing.length > 0) found.push(`does not carry ${missing.join(" and ")} from the ${key}, "${row[key]}"`);
   }
+  // The other way round: a figure the explanation states is written in its row
+  // (a port, a key size, "TLS 1.3"). A figure from anywhere else is either
+  // invented or left behind when a cell was corrected.
+  const foreign = figuresOf(text).filter((figure) => !cells.some((cell) => cell.includes(figure)));
+  if (foreign.length > 0) found.push(`states a figure that its row does not have: ${foreign.join(" and ")}`);
   return found;
 }
 
@@ -164,8 +170,31 @@ describe("explanations of recall facts", () => {
     expect(EXPLAINED.map(({ deck }) => deck.config.id).sort()).toEqual(
       expect.arrayContaining(["a1-cables", "a1-ports", "a2-linux", "a2-windows", "net-osi", "net-ports"])
     );
-    // 26 ports and 7 layers, 14 ports and 22 cables, 23 Windows and 27 Linux commands.
-    expect(EXPLAINED.reduce((rows, { deck }) => rows + deck.rows.length, 0)).toBeGreaterThanOrEqual(119);
+  });
+
+  it("covers every Security+ deck, with no row left out", () => {
+    const security = EXPLAINED.filter(({ cert }) => cert === "security-plus-sy0-701");
+    expect(security.map(({ deck }) => deck.config.id).sort()).toEqual([
+      "sec-acronyms",
+      "sec-attacks",
+      "sec-auth",
+      "sec-crypto",
+      "sec-osi",
+      "sec-ports",
+    ]);
+    // A deck asks every row of its table: none is dropped on the way to the rule below.
+    for (const { deck, table } of security) expect(deck.rows.length, deck.config.id).toBe(table.entries.length);
+    // The algorithms, the attacks and the authentication methods have sentences of their own, row by row.
+    for (const id of ["sec-crypto", "sec-attacks", "sec-auth"]) {
+      const { deck } = security.find((entry) => entry.deck.config.id === id)!;
+      expect(Object.keys(deck.config.explain!.rows ?? {}).length, id).toBe(deck.rows.length);
+    }
+  });
+
+  it("holds every row of the twelve decks to the rule", () => {
+    // Network+ and A+: 26 ports and 7 layers, 14 ports and 22 cables, 23 Windows and 27 Linux commands (119).
+    // Security+: 307 acronyms, 34 ports, 20 algorithms, 30 attacks, 17 authentication methods and 7 layers (415).
+    expect(EXPLAINED.reduce((rows, { deck }) => rows + deck.rows.length, 0)).toBeGreaterThanOrEqual(534);
   });
 
   it("gives a template to every deck that an exam's introductory questions draw on", () => {
@@ -232,7 +261,7 @@ describe("explanations of recall facts", () => {
       told: ["cable", "maxSpeed", "maxDistance"],
     });
     const cat6 = cable("Cat 6", "10 Gbps", "55 m (10G) / 100 m (1G)");
-    const usbC = cable("USB Type-C", "Up to 40 Gbps (TB4)", "2 m (passive)");
+    const usbC = cable("USB Type-C", "Up to 40 Gbps (TB4)", "0.8 m (passive) / 2 m (active)");
     const dvi = cable("DVI-D", "~9.9 Gbps", "5 m");
     const command = (name: string, purpose: string): Subject => ({
       row: { command: name, purpose, syntax: `${name} [name] [type]` },
@@ -257,7 +286,7 @@ describe("explanations of recall facts", () => {
         ["NetBIOS/NetBT uses ports 137 to 139. NetBIOS over TCP/IP provides name, datagram and session services.", netbios],
         ["SMB uses port 445. Server Message Block (CIFS) provides Windows file and printer sharing.", smb],
         ["Cat 6 has a maximum speed of 10 Gbps. That speed reaches 55 m, and 1 Gbps reaches 100 m.", cat6],
-        ["USB Type-C carries up to 40 Gbps with Thunderbolt 4 (TB4). Its maximum distance is 2 m with a passive cable.", usbC],
+        ["USB Type-C carries up to 40 Gbps with Thunderbolt 4 (TB4). Passive cables reach 0.8 m and active cables reach 2 m.", usbC],
         ["DVI-D has a maximum speed of about 9.9 Gbps. Its maximum distance is 5 m.", dvi],
         ["The dig command is used to query DNS servers for a name's records.", dig],
         ["The rmdir command is used to remove a directory. The directory must be empty unless the /s switch is used.", rmdir],
@@ -306,6 +335,7 @@ describe("explanations of recall facts", () => {
         cat6,
         /does not carry 55 from the maxDistance/,
       ],
+      ["a figure that is not the row's", "IMAP uses port 143. It replaced the protocol on port 110.", imap, /states a figure that its row does not have: 110/],
       ["three sentences", "IMAP uses port 143. POP3 uses port 110. SMTP uses port 25.", imap, /has 3 sentences/],
       [
         "an explanation that runs on",

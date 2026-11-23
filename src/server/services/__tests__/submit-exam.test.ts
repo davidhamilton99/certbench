@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { recomputeAndSnapshotReadiness } from "../submit-exam";
+
+// The report of a fault, watched: nothing is sent anywhere from a test.
+const report = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/server/api/report-error", () => ({ reportServerError: report }));
+
+import { recomputeAndSnapshotReadiness, updateQuestionPerformanceForAnswers } from "../submit-exam";
 
 type Row = Record<string, unknown>;
 interface Call {
@@ -157,5 +162,133 @@ describe("recomputeAndSnapshotReadiness", () => {
       total_questions: 7,
       attempted: 8,
     });
+  });
+});
+
+describe("updateQuestionPerformanceForAnswers", () => {
+  interface Write {
+    op: "update" | "upsert";
+    values: Row;
+    id?: unknown;
+  }
+
+  /**
+   * A stand-in for the member's history table: one select of the existing
+   * rows, then an update or an upsert for each answer. `read` is what the
+   * select answers; `failWrites` makes every write answer with an error, as
+   * the real client does (it does not throw).
+   */
+  function historyDb(read: { data: Row[] | null; error: { message: string } | null }, failWrites = false) {
+    const writes: Write[] = [];
+    const written = () => Promise.resolve({ data: null, error: failWrites ? { message: "permission denied" } : null });
+    const from = () => {
+      const select: Record<string, unknown> = {};
+      select.eq = () => select;
+      select.in = () => Promise.resolve(read);
+      return {
+        select: () => select,
+        update: (values: Row) => ({
+          eq: (_column: string, id: unknown) => {
+            writes.push({ op: "update", values, id });
+            return written();
+          },
+        }),
+        upsert: (values: Row) => {
+          writes.push({ op: "upsert", values });
+          return written();
+        },
+      };
+    };
+    return { db: { from } as unknown as SupabaseClient, writes };
+  }
+
+  const QUESTIONS = [
+    { id: "q-1", correct_index: 0 },
+    { id: "q-2", correct_index: 1 },
+  ];
+  const ANSWERS = [
+    { questionId: "q-1", selectedIndex: 0 },
+    { questionId: "q-2", selectedIndex: 3 },
+  ];
+  const record = (db: SupabaseClient, upsertNew = true) =>
+    updateQuestionPerformanceForAnswers(db, {
+      userId: USER,
+      certificationId: CERT,
+      answers: ANSWERS,
+      questions: QUESTIONS,
+      upsertNew,
+    });
+
+  beforeEach(() => {
+    report.mockClear();
+  });
+
+  it("adds to a question's existing history and begins one for a question that is new", async () => {
+    const { db, writes } = historyDb({
+      data: [{ id: "row-1", question_id: "q-1", times_seen: 4, times_correct: 3, streak: 2, srs_interval_days: 6, srs_ease_factor: 2.5 }],
+      error: null,
+    });
+
+    await expect(record(db)).resolves.toBe(true);
+
+    expect(writes).toHaveLength(2);
+    expect(writes[0]).toMatchObject({ op: "update", id: "row-1", values: { times_seen: 5, times_correct: 4 } });
+    expect(writes[1]).toMatchObject({
+      op: "upsert",
+      values: { user_id: USER, question_id: "q-2", certification_id: CERT, times_seen: 1, times_correct: 0 },
+    });
+    expect(report).not.toHaveBeenCalled();
+  });
+
+  // The defect: a read that failed (a refusal, or the eight second limit) was
+  // taken as "no history", and the upsert then replaced the member's counts,
+  // streak and review schedule for every question answered.
+  it("writes nothing when the member's history cannot be read, and says so", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { db, writes } = historyDb({ data: null, error: { message: "canceling statement due to statement timeout" } });
+
+    await expect(record(db)).resolves.toBe(false);
+
+    expect(writes).toEqual([]);
+    expect(report).toHaveBeenCalledOnce();
+    // The report names the service and carries none of the database's words.
+    const [fault, place] = report.mock.calls[0] as unknown as [Error, { route: string }];
+    expect(fault.message).toBe("Answer history could not be read");
+    expect(place.route).toBe("service:submit-exam");
+    consoleError.mockRestore();
+  });
+
+  it("writes nothing when the read answers with neither rows nor an error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { db, writes } = historyDb({ data: null, error: null });
+    await expect(record(db)).resolves.toBe(false);
+    expect(writes).toEqual([]);
+    consoleError.mockRestore();
+  });
+
+  it("does not begin a history for a review answer whose question has none", async () => {
+    const { db, writes } = historyDb({ data: [], error: null });
+    await expect(record(db, false)).resolves.toBe(true);
+    expect(writes).toEqual([]);
+  });
+
+  it("reports writes that failed, by their number, and does not send them again", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { db, writes } = historyDb({ data: [], error: null }, true);
+
+    await expect(record(db)).resolves.toBe(true);
+
+    expect(writes).toHaveLength(2);
+    expect(consoleError).toHaveBeenCalledWith("[answers] 2 of 2 history writes failed");
+    expect(report).toHaveBeenCalledOnce();
+    consoleError.mockRestore();
+  });
+
+  it("does nothing at all when there are no answers", async () => {
+    const { db, writes } = historyDb({ data: [], error: null });
+    await expect(
+      updateQuestionPerformanceForAnswers(db, { userId: USER, certificationId: CERT, answers: [], questions: [], upsertNew: true })
+    ).resolves.toBe(true);
+    expect(writes).toEqual([]);
   });
 });

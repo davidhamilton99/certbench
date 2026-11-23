@@ -2,29 +2,36 @@ import { expect, test } from "@playwright/test";
 import { registerOnboardPro } from "./helpers";
 
 /**
- * Threat Hunt PBQ: register -> onboard -> PBQ lab -> open the threat hunt,
- * flag the real malicious lines, identify the attack, and confirm the
- * per-line reveal grades it 100%. Also confirms it opens with NO anxiety
- * confirm-dialog (the whole point of the redesign).
+ * The threat hunt: register, choose the exam, open "Hands-on labs" and the
+ * threat hunt, flag the lines that are evidence, identify the attack, and
+ * confirm that the hunt is scored 100%. It also confirms that the hunt is
+ * analyzed at one press, with no dialog that asks whether to go on.
+ *
+ * The words the spec looks for are the components' own. Where one changes,
+ * copy it from the component named beside it.
  */
 test("threat hunt: flag evidence, identify attack, perfect score", async ({
   page,
 }) => {
   await registerOnboardPro(page, { tag: "threathunt", cert: /Security\+/ });
 
-  // Into the PBQ lab.
-  await page.getByRole("link", { name: "PBQ lab" }).first().click();
+  // The side bar's link to the labs (WorkspaceShell.tsx).
+  await page.getByRole("link", { name: "Hands-on labs", exact: true }).first().click();
   await page.waitForURL("**/pbq");
 
-  // The threat hunt is a hands-on scenario (Exam Simulations tab, default).
+  // The threat hunt is in the list that is shown first, under the tab
+  // "Exam-style labs" (PbqScenarios.tsx). Its row is a button named by the
+  // lab's title, its kind and its first sentence.
   await page.getByRole("button", { name: /Compromised SSH server/ }).click();
   await expect(
     page.getByRole("heading", { name: "Compromised SSH server" })
   ).toBeVisible();
 
-  // Flag exactly the malicious lines. They're the ones whose text contains
-  // these fragments (the failed-login burst, the successful root login, the
-  // payload wget, and the attacker disconnect) — all from 203.0.113.77.
+  // Flag exactly the lines that are evidence (ThreatHuntPlayer.tsx: each line of
+  // the log is a button named by its text). They are the lines that contain
+  // these fragments: the burst of failed logins, the successful root login, the
+  // download of the payload and the attacker's disconnect, all from 203.0.113.77
+  // (src/data/pbq/security-plus-sy0-701/threat-hunts.ts).
   const maliciousFragments = [
     "Failed password for root from 203.0.113.77 port 40122",
     "Failed password for root from 203.0.113.77 port 40124",
@@ -45,10 +52,11 @@ test("threat hunt: flag evidence, identify attack, perfect score", async ({
     .getByRole("radio", { name: /brute-force attack that succeeded/i })
     .click();
 
-  // Analyze — note: a plain button, no "are you sure" confirm dialog.
+  // Analyze: one press on a plain button, with no dialog to confirm it.
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
 
-  // Perfect hunt.
+  // A perfect hunt: the score, its verdict (the hunt's word for the top band)
+  // and the heading over the explanation.
   await expect(page.getByText("100%")).toBeVisible();
   await expect(page.getByText("Threat identified")).toBeVisible();
   await expect(

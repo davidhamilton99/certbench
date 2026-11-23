@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { PbqScenario } from "@/data/pbq/types";
+import { LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 import { preloadLab } from "@/components/workspace/pbq-host";
 import { domainLabel, LAB_TYPES, labMeta } from "@/components/path/lab-types";
@@ -26,8 +27,12 @@ export interface FreeLab {
 /** Analytics context for the way on to the study path once a lab is graded. */
 const CONTEXT = "public_pbq";
 
-/** The labs the chooser leads with: an introductory lab, a core lab and one at exam level. Anyone can play these. */
-const FEATURED = 3;
+/**
+ * The labs the chooser leads with: an introductory lab, a core lab and one at
+ * exam level. Anyone can play these. The number is the product's one figure
+ * for it, which the page's summary and the help page print as well.
+ */
+const FEATURED = LABS_WITHOUT_ACCOUNT;
 
 /** On the page's address after a Google sign-in from a lab's ask: open that lab. */
 const OPEN_LAB = "lab";
@@ -76,6 +81,7 @@ export function PbqLab({
   examName,
   pathHref,
   labCount,
+  officialObjectives = true,
 }: {
   /** Every free lab: the first three lead the chooser, the rest are listed under the stage. */
   labs: FreeLab[];
@@ -84,6 +90,13 @@ export function PbqLab({
   pathHref: string;
   /** Every lab the exam has on the study path. */
   labCount: number;
+  /**
+   * False for an exam whose study path is set out by CertBench's own topics and
+   * not by CompTIA's objectives (Network+ today, see usesOfficialObjectiveNumbers):
+   * the way on then says "topic", and does not say that the study path covers
+   * every objective of the exam.
+   */
+  officialObjectives?: boolean;
 }) {
   const [selected, setSelected] = useState(0);
   // Raised to mount a new player when its scenario changes.
@@ -264,6 +277,7 @@ export function PbqLab({
           examName={examName}
           pathHref={pathHref}
           labCount={labCount}
+          officialObjectives={officialObjectives}
           signedIn={Boolean(userId)}
           next={next}
           onNext={() => pick(nextIndex, true)}
@@ -381,6 +395,7 @@ function NextOnPath({
   examName,
   pathHref,
   labCount,
+  officialObjectives,
   signedIn,
   next,
   onNext,
@@ -388,6 +403,7 @@ function NextOnPath({
   examName: string;
   pathHref: string;
   labCount: number;
+  officialObjectives: boolean;
   signedIn: boolean;
   next: FreeLab | null;
   onNext: () => void;
@@ -400,11 +416,13 @@ function NextOnPath({
     <div className="glass path-rise grid gap-5 rounded-lg p-5 sm:p-6">
       <div className="grid gap-2">
         <h2 className="cb-statement">
-          PBQs are one part of the {examName} exam. The study path covers all of it.
+          PBQs are one part of the {examName} exam. The study path covers{" "}
+          {officialObjectives ? "all of it" : "every domain"}.
         </h2>
         <p className="cb-measure text-small text-muted-foreground">
-          The study path covers every {examName} objective in short steps, and a readiness checkpoint shows where you
-          stand. Pro adds all {labCount} {examName} labs to it, with one at the end of each domain.
+          The study path covers every {examName} {officialObjectives ? "objective" : "topic"} in short steps, and a
+          readiness checkpoint shows where you stand. Pro adds all {labCount} {examName} labs to it, with one at the end
+          of each domain.
         </p>
       </div>
       <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">

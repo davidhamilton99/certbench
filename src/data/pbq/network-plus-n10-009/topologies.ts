@@ -156,7 +156,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
     briefing:
       "Crestview Media's new branch office has intermittent connectivity issues. Some workstations cannot reach the internet while others work fine. The ISP has assigned the WAN block 203.0.113.0/30 and the branch uses 10.20.1.0/24 internally. Review each device's IP configuration, identify the errors, and fix only the misconfigured devices.",
     domain_number: "1.0",
-    domain_title: "Networking Fundamentals",
+    domain_title: "Networking Concepts",
     diagramTitle: "Crestview Media: Branch Office",
     estimatedMinutes: 10,
     devices: [

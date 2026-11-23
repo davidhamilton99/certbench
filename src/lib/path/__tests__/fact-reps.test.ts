@@ -163,24 +163,73 @@ describe("recallToRep: every curated and derived deck", () => {
     ...(deck.typeable ? [recallToRep(deck, item, "1.1", rngFrom(BACK), true)] : []),
   ];
 
+  /**
+   * The row a card asked. A cue stands for one row in nearly every deck, and
+   * for two where the table has them (RADIUS has a pair of ports and a pair of
+   * legacy ports): the card's other cell, its answer or its prompt, says which.
+   */
+  const rowAsked = (deck: ResolvedDeck, item: string, rep: Rep) =>
+    deck.rows.filter(
+      (row) => row[deck.config.ask.key] === item && [rep.prompt, rightAnswer(rep)].includes(row[deck.config.answer.key])
+    );
+
   it("gives the deck's sentences on every card of a deck that has a template", () => {
     const explained = DECKS.filter(({ deck }) => deck.config.explain);
-    expect(explained.length).toBeGreaterThanOrEqual(6);
+    // Six decks of Network+ and A+, and the six of Security+.
+    expect(explained.length).toBeGreaterThanOrEqual(12);
     let cards = 0;
     for (const { cert, deck } of explained) {
       for (const item of itemsOf(deck)) {
-        // A cue stands for one row in each of these decks, so the row's sentences are the card's.
-        const rows = deck.rows.filter((row) => row[deck.config.ask.key] === item);
-        expect(rows, `${cert}/${deck.config.id}: ${item}`).toHaveLength(1);
-        const sentences = explainRow(deck.config, rows[0]);
-        expect(sentences, `${cert}/${deck.config.id}: ${item}`).not.toBeNull();
         for (const rep of cardsFor(deck, item)) {
-          expect(rep.takeaway, `${cert}/${deck.config.id}: ${item}`).toBe(sentences);
+          const at = `${cert}/${deck.config.id}: ${item}`;
+          const rows = rowAsked(deck, item, rep);
+          expect(rows, at).toHaveLength(1);
+          const sentences = explainRow(deck.config, rows[0]);
+          expect(sentences, at).not.toBeNull();
+          expect(rep.takeaway, at).toBe(sentences);
           cards++;
         }
       }
     }
-    expect(cards).toBeGreaterThan(300);
+    expect(cards).toBeGreaterThan(1100);
+  });
+
+  it("explains the row that was asked when a cue stands for two rows", () => {
+    const ports = getRecallDecks("security-plus-sy0-701").find((deck) => deck.config.id === "sec-ports")!;
+    const legacy = "RADIUS uses ports 1645 and 1646. These are its legacy ports.";
+    const current = "RADIUS uses ports 1812 and 1813. Port 1812 is for authentication and port 1813 is for accounting.";
+    const dealt = new Map<string, string>();
+    // The second number decides which of the two rows is dealt.
+    for (const second of [0.1, 0.9]) {
+      for (const first of [FORWARD, BACK]) {
+        for (const typed of [false, true]) {
+          let n = 0;
+          const rep = recallToRep(ports, "RADIUS", "1.1", () => (n++ === 0 ? first : second), typed);
+          const [row] = rowAsked(ports, "RADIUS", rep);
+          dealt.set(row.port, rep.takeaway);
+          // The verdict names the pair of ports that the sentences are about.
+          if (typed || first === FORWARD) expect(verdicts(rep)[1]).toBe(`Incorrect. The correct answer is ${row.port}. ${rep.takeaway}`);
+          else expect(rep.prompt).toBe(row.port);
+        }
+      }
+    }
+    expect(Object.fromEntries(dealt)).toEqual({ "1645/1646": legacy, "1812/1813": current });
+  });
+
+  it("prints the sentence the public acronym quiz shows, whichever way round it asks", () => {
+    const acronyms = getRecallDecks("security-plus-sy0-701").find((deck) => deck.config.id === "sec-acronyms")!;
+    const forward = recallToRep(acronyms, "MFA", "", rngFrom(FORWARD), false);
+    expect(forward.prompt).toBe("MFA");
+    expect(verdicts(forward)).toEqual([
+      "Correct. MFA stands for Multifactor Authentication.",
+      "Incorrect. The correct answer is Multifactor Authentication. MFA stands for Multifactor Authentication.",
+    ]);
+    const back = recallToRep(acronyms, "MFA", "", rngFrom(BACK), false);
+    expect(back.prompt).toBe("Multifactor Authentication");
+    expect(verdicts(back)).toEqual([
+      "Correct. MFA stands for Multifactor Authentication.",
+      "Incorrect. The correct answer is MFA. MFA stands for Multifactor Authentication.",
+    ]);
   });
 
   it("keeps the note on every card of a deck that has none", () => {

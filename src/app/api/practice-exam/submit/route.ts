@@ -5,6 +5,7 @@ import type { DomainBreakdown, GradedResponse } from "@/contracts/quiz";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { listDomains } from "@/server/data/certifications";
 import { completeAttempt, getAttempt } from "@/server/data/practice-exams";
+import { requireCertAccess } from "@/server/data/enrollments";
 import {
   recomputeAndSnapshotReadiness,
   updateQuestionPerformanceForAnswers,
@@ -18,6 +19,9 @@ export const POST = defineEndpoint(submitPracticeExam, {
 
     const attempt = await getAttempt(db, user.id, input.attemptId);
     if (!attempt) throw new ApiError("not_found", "Attempt not found");
+    // The attempt's exam must be in the member's plan: nothing is graded, and
+    // no answer or explanation is returned, for an exam that is not.
+    await requireCertAccess(db, user.id, attempt.certificationId);
     if (attempt.isComplete)
       throw new ApiError("conflict", "Attempt already submitted");
 

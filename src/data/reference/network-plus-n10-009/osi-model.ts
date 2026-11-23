@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const osiModel: ReferenceTable = {
   id: "osi-model",
-  title: "OSI Model",
+  title: "OSI model",
   description: "The 7-layer OSI model with networking devices, protocols, and troubleshooting focus for Network+ N10-009.",
   columnHeaders: [
     { key: "layer", label: "Layer", mono: true },

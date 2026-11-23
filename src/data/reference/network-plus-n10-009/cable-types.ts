@@ -2,7 +2,7 @@ import type { ReferenceTable } from "../types";
 
 export const cableTypes: ReferenceTable = {
   id: "cable-types",
-  title: "Cable Types",
+  title: "Cable types",
   description: "Copper, fiber, and coaxial cabling specifications and wiring standards for Network+ N10-009.",
   columnHeaders: [
     { key: "cable", label: "Cable", mono: true },
