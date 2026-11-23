@@ -1,10 +1,13 @@
 -- Accounts that unsubscribed before this version are not sent the study plan
 -- email either.
 --
--- THIS FILE HAS NOT BEEN RUN. The owner runs it by hand in the Supabase SQL
--- editor, once the read-only query below has shown that it is needed. The
--- migration files and the live database have differed before, so the query
--- comes first.
+-- RUN on the live database on 23 November 2026, at the owner's request, right
+-- after the version that writes the 'account-unsubscribe' row was deployed
+-- (pull request #156). The read-only query below returned 0, 0 before the run
+-- (no account had unsubscribed), the statement wrote no row, and the same
+-- query returned 0, 0 afterwards. It is safe to repeat. The migration files
+-- and the live database have differed before, so for any later run the query
+-- still comes first.
 --
 -- Why it is needed:
 --
@@ -50,10 +53,9 @@
 -- done and this file need not be run. Otherwise it is the number of rows the
 -- statement below writes.
 --
--- Checked on the live database on 23 November 2026: no account had
--- unsubscribed (both numbers 0), so the file was not run. Run it once, right
--- after the version that writes the 'account-unsubscribe' row is deployed,
--- to cover any account that unsubscribes before then.
+-- Checked on the live database on 23 November 2026, overnight: no account had
+-- unsubscribed (both numbers 0), so the file was held back until the version
+-- that writes the 'account-unsubscribe' row was deployed, and run then (above).
 --
 -- When it is safe to run: at any time after the version that writes the
 -- 'account-unsubscribe' row is live. Before that, it is still correct, but
