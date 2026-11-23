@@ -214,7 +214,7 @@ export function PlanChooser<P extends BillingInterval>({
           <Link href={BILLING_HELP_HREF} className="cb-link">
             billing page
           </Link>
-          .
+          , and you keep Pro until the end of the period that you have paid for.
         </p>
         <p className="text-note text-muted-foreground">
           {pricing && pricing.discountPercent !== null ? REGIONAL_PRICE_NOTE : PRO_PRICE_REGION_NOTE}

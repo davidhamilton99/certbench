@@ -4,7 +4,7 @@
  * as their lastmod, so a reader and a crawler are told the same day. Change it
  * in the commit that changes either page's words, and only then.
  */
-export const ABOUT_PAGES_UPDATED_ISO = "2026-11-22";
+export const ABOUT_PAGES_UPDATED_ISO = "2026-11-23";
 
 /**
  * The day the words of /pricing last changed, in ISO form. The page prints it
@@ -15,4 +15,4 @@ export const ABOUT_PAGES_UPDATED_ISO = "2026-11-22";
  * that changes the page's words, or a figure in src/lib/pricing that the page
  * prints, and only then.
  */
-export const PRICING_PAGE_UPDATED_ISO = "2026-11-22";
+export const PRICING_PAGE_UPDATED_ISO = "2026-11-23";

@@ -60,7 +60,9 @@ describe("the pricing page", () => {
     expect(pro).toContain("$19 a month, or $39 every three months, or $99 a year.");
     expect(pro).toContain("Prices are in US dollars and are adjusted by region.");
     expect(pro).toContain("Pro covers one exam.");
-    expect(pro).toContain("You can cancel at any time from your billing page.");
+    expect(pro).toContain(
+      "You can cancel at any time from your billing page, and you keep Pro until the end of the period that you have paid for."
+    );
   });
 
   it("says in its description what the body says: three prices, in US dollars, adjusted by region", () => {
@@ -73,9 +75,7 @@ describe("the pricing page", () => {
   });
 
   it("names the exams whose labs are free, because Security+ SY0-801 has no free lab", async () => {
-    const free = [...(await page(null)).querySelectorAll("h2")]
-      .find((h) => h.textContent === "Free")
-      ?.closest("[data-slot='card']");
+    const free = planCard(await page(null), "Free");
     expect(text(free)).toContain(
       "12 hands-on labs (PBQs) for each of Security+ SY0-701, Network+, A+ Core 1 and A+ Core 2, the first three with no account"
     );
@@ -175,7 +175,7 @@ describe("the pricing page", () => {
     const pro = proCard(root);
     expect(pro?.className).toContain("border-t-[3px]");
     expect(pro?.className).toContain("rounded-t-none");
-    const free = [...root.querySelectorAll("h2")].find((h) => h.textContent === "Free")?.closest("[data-slot='card']");
+    const free = planCard(root, "Free");
     // The free plan keeps a visible edge all round; its title is set two pixels lower to share the Pro title's line.
     expect(free?.className).not.toContain("border-t-transparent");
     expect(free?.className).toContain("pt-[calc(2rem+2px)]");

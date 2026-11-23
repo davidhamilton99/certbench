@@ -105,7 +105,7 @@ export default function AboutPage() {
                 <a href="mailto:support@certbench.dev" className="cb-link">
                   support@certbench.dev
                 </a>
-                . Every report is read by our team, and a question that is wrong is corrected or withdrawn.
+                . Every report is read by the CertBench team, and a question that is wrong is corrected or withdrawn.
               </p>
             </ArticleRow>
           </dl>

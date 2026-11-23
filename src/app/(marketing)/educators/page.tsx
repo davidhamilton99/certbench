@@ -148,7 +148,7 @@ export default async function EducatorsPage() {
             </ArticleRow>
             <ArticleRow term="Corrections">
               <p>
-                Reports of errors are read by our team, and a question that is wrong is corrected or withdrawn. You and
+                Reports of errors are read by the CertBench team, and a question that is wrong is corrected or withdrawn. You and
                 your students can send reports to{" "}
                 <a href="mailto:support@certbench.dev" className="cb-link">
                   support@certbench.dev

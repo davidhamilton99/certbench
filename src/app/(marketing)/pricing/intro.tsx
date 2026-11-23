@@ -18,6 +18,7 @@ export const PRICING_PLANS = "grid max-w-5xl gap-5 md:grid-cols-2 md:items-start
  * plan: no payment card for the free plan, and in the Pro plan its prices, the
  * currency and the regional adjustment, what one plan covers, and how to cancel.
  */
-export function PricingIntro() {
-  return <h1 className="cb-title mb-10 sm:mb-12">Plans and pricing</h1>;
+export function PricingTitle() {
+  // The kit's space between a page's opening and what to do under it (LanderStage).
+  return <h1 className="cb-title mb-8 sm:mb-10">Plans and pricing</h1>;
 }

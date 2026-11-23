@@ -1,4 +1,4 @@
-import { PRICING_COLUMN, PricingIntro } from "./intro";
+import { PRICING_COLUMN, PricingTitle } from "./intro";
 
 /**
  * The pricing page's ground, its column and its title, drawn once. They are
@@ -12,7 +12,7 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
   return (
     <div className="flex-1 aurora-bg">
       <div className={PRICING_COLUMN}>
-        <PricingIntro />
+        <PricingTitle />
         {children}
       </div>
     </div>
