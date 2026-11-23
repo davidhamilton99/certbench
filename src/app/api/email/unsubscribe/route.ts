@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { afterResponse } from "@/server/api/after-response";
+import { reportServerError } from "@/server/api/report-error";
 import { createAdminClient } from "@/server/supabase/admin";
 import {
   UNSUBSCRIBE_PAGE_PATH,
@@ -60,6 +62,17 @@ export async function POST(req: NextRequest) {
       console.error("unsubscribe failed:", err);
       outcome = "failed";
     }
+  }
+  // An unsubscribe that could not be saved is reported as a server error: after
+  // the response, once, and with neither the token nor the address asked for.
+  if (outcome === "failed") {
+    afterResponse(() =>
+      reportServerError(new Error("An unsubscribe could not be saved"), {
+        route: "/api/email/unsubscribe",
+        method: "POST",
+        kind: "route",
+      })
+    );
   }
 
   if (fromPage) {

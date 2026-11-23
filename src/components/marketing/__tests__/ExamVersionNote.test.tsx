@@ -49,15 +49,43 @@ describe("ExamVersionNote", () => {
     }
   });
 
-  it("names both A+ exam pages for a page about both cores, and one for a page about one", () => {
-    const { unmount } = render(<ExamVersionNote certSlugs={[A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT]} />);
+  it("names both A+ exam pages for a page about both cores", () => {
+    const { container } = render(<ExamVersionNote certSlugs={[A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT]} />);
+    expect(text(container)).toContain("These questions are written to 220-1201 and 220-1202, the current A+ exams.");
     expect(screen.getByRole("link", { name: "Core 1 exam page" })).toHaveAttribute("href", COMPTIA_URLS.aPlusCore1);
     expect(screen.getByRole("link", { name: "Core 2 exam page" })).toHaveAttribute("href", COMPTIA_URLS.aPlusCore2);
-    unmount();
+  });
 
-    const { container } = render(<ExamVersionNote certSlugs={[A_PLUS_CORE2_CERT]} />);
-    expect(text(container)).toContain("These questions are written to 220-1202, the current A+ Core 2 exam.");
-    expect(screen.getByRole("link", { name: "CompTIA" })).toHaveAttribute("href", COMPTIA_URLS.aPlusCore2);
+  // CompTIA's Core 1 and Core 2 exam pages do not mention 220-1101, 220-1102 or
+  // their retirement. CompTIA gave the date in its article about the two A+
+  // exams, so that article is the source beside the date in every A+ note.
+  it("cites CompTIA's article about the two A+ exams for the day the older A+ exams retired, and not an exam page", () => {
+    expect(COMPTIA_URLS.aPlusSeries).toBe("https://www.comptia.org/en-us/blog/comptia-a-has-two-exams-what-you-need-to-know/");
+    const examPages = [COMPTIA_URLS.aPlusCore1, COMPTIA_URLS.aPlusCore2];
+
+    const one = [
+      [A_PLUS_CORE1_CERT, "These questions are written to 220-1201, the current A+ Core 1 exam. It replaced 220-1101, which CompTIA retired on September 25, 2025."],
+      [A_PLUS_CORE2_CERT, "These questions are written to 220-1202, the current A+ Core 2 exam. It replaced 220-1102, which CompTIA retired on September 25, 2025."],
+    ] as const;
+    for (const [cert, sentence] of one) {
+      const { container, unmount } = render(<ExamVersionNote certSlugs={[cert]} />);
+      expect(text(container)).toBe(sentence);
+      // The one link of the note is on the clause about the retirement, and it leads to the article.
+      const links = screen.getAllByRole("link");
+      expect(links.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([["CompTIA", COMPTIA_URLS.aPlusSeries]]);
+      expect(links.filter((a) => examPages.includes(a.getAttribute("href") ?? ""))).toEqual([]);
+      unmount();
+    }
+
+    const { container } = render(<ExamVersionNote certSlugs={[A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT]} />);
+    expect(text(container)).toContain(
+      "CompTIA launched them on March 25, 2025 and retired 220-1101 and 220-1102 on September 25, 2025. CompTIA describes them on its Core 1 exam page and Core 2 exam page, and gave the date of the retirement in its article about the two A+ exams."
+    );
+    const article = screen.getByRole("link", { name: "article about the two A+ exams" });
+    expect(article).toHaveAttribute("href", COMPTIA_URLS.aPlusSeries);
+    expect(article).toHaveClass("cb-link");
+    expect(article).toHaveAttribute("target", "_blank");
+    expect(article.getAttribute("rel")).toContain("noopener");
   });
 
   it("says nothing for an exam with nothing to flag", () => {

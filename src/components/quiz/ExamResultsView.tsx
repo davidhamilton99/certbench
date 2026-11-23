@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Check, X } from "lucide-react";
 import type { ExamResult } from "@/contracts/quiz";
 import { Button } from "@/components/ui/button";
+import { answerOrder } from "./answer-order";
 import { QuestionFlagButton } from "./QuestionFlagButton";
+import { ReviewedAnswers } from "./ReviewedAnswers";
 import { ReadinessReveal } from "@/components/instrument/ReadinessReveal";
 import { ScoreReport } from "@/components/instrument/ScoreReport";
 import { FULL_EXAM_QUESTION_COUNT } from "@/core/constants";
@@ -22,6 +24,8 @@ export function ExamResultsView({
   examCode,
   domainWeights,
   fullExam = false,
+  seed,
+  keepOrder,
 }: {
   /** The result as a sentence: "You have completed the practice exam." */
   title: string;
@@ -39,11 +43,22 @@ export function ExamResultsView({
   certName?: string;
   examCode?: string;
   domainWeights?: Record<string, number>;
+  /**
+   * How the attempt showed its answers: the seed of its shuffle, and the ids
+   * of the questions that kept their stored order because their explanation
+   * names an answer by its letter. The review lists each question's answers in
+   * the order, and under the letters, that the attempt showed them. Without a
+   * seed the answers are listed in their stored order.
+   */
+  seed?: string;
+  keepOrder?: readonly string[];
 }) {
   const isDiagnostic = Boolean(diagnosticCertId && certName && examCode);
   // A full practice exam that was served short (a small bank) is not drawn
   // against the readiness target either.
   const measuresReadiness = fullExam && result.totalQuestions >= FULL_EXAM_QUESTION_COUNT;
+  /** The questions that the attempt showed in their stored order. */
+  const stored = new Set(keepOrder);
 
   // The result follows a press on the submit button: the focus goes to its
   // heading, so the page that replaced the questions is read from its top.
@@ -77,7 +92,8 @@ export function ExamResultsView({
             }
             summary={
               <>
-                You answered {result.correctCount} of {result.totalQuestions} questions correctly.
+                You answered {result.correctCount} of {result.totalQuestions}{" "}
+                {result.totalQuestions === 1 ? "question" : "questions"} correctly.
                 {result.readiness && (
                   <>
                     {" "}
@@ -123,24 +139,16 @@ export function ExamResultsView({
               </span>
             </summary>
             <div className="mt-3 grid gap-1.5 border-t pt-3 text-small">
-              {r.options.map((option, oi) => {
-                const correct = oi === r.correctIndex;
-                const wrongPick = oi === r.selectedIndex && !correct;
-                return (
-                  <p
-                    key={oi}
-                    className={cn(
-                      "rounded-xs px-2 py-1",
-                      correct && "bg-success/10",
-                      wrongPick && "bg-destructive/10"
-                    )}
-                  >
-                    {correct && <span className="font-semibold text-success">Correct answer: </span>}
-                    {wrongPick && <span className="font-semibold text-destructive">Your answer: </span>}
-                    {option}
-                  </p>
-                );
-              })}
+              <ReviewedAnswers
+                options={r.options}
+                correctIndex={r.correctIndex}
+                selectedIndex={r.selectedIndex}
+                order={
+                  seed === undefined
+                    ? undefined
+                    : answerOrder(seed, r.questionId, r.options.length, stored.has(r.questionId))
+                }
+              />
               {r.explanation && <p className="mt-1 text-muted-foreground">{r.explanation}</p>}
               <div className="mt-1">
                 <QuestionFlagButton questionId={r.questionId} />

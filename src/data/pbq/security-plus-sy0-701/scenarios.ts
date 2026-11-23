@@ -22,7 +22,7 @@ export const securityPlusScenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "The NIST incident response lifecycle follows: Preparation → Detection & Analysis → Containment → Eradication → Recovery → Post-Incident Activity (Lessons Learned). Preparation is always first as it involves establishing the response capability before incidents occur.",
+      "The NIST incident response lifecycle runs in this order: Preparation, Detection and Analysis, Containment, Eradication, Recovery, and Post-Incident Activity (Lessons Learned). Preparation is always first as it involves establishing the response capability before incidents occur.",
   },
   {
     type: "ordering",

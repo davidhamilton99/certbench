@@ -8,8 +8,8 @@ import {
 } from "@/server/data/certifications";
 import { listMissedQuestions } from "@/server/data/review";
 import { QuestionFlagButton } from "@/components/quiz/QuestionFlagButton";
+import { ReviewedAnswers } from "@/components/quiz/ReviewedAnswers";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Review",
@@ -73,15 +73,13 @@ export default async function ReviewPage({
                   </span>
                 </summary>
                 <div className="mt-3 grid gap-1.5 border-t border-border pt-3 text-small">
-                  {m.question.options.map((option, oi) => {
-                    const correct = oi === m.question.correct_index;
-                    return (
-                      <p key={oi} className={cn("rounded-xs px-2 py-1", correct && "bg-success/10")}>
-                        {correct && <span className="font-semibold text-success">Correct answer: </span>}
-                        {option.text}
-                      </p>
-                    );
-                  })}
+                  {/* The answers in their stored order, each under its letter: an explanation that
+                      names an answer by its letter ("option B") names the answer lettered B here,
+                      as it did where the question was answered. */}
+                  <ReviewedAnswers
+                    options={m.question.options.map((option) => option.text)}
+                    correctIndex={m.question.correct_index}
+                  />
                   {m.question.explanation && (
                     <p className="mt-1 text-muted-foreground">{m.question.explanation}</p>
                   )}

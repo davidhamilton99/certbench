@@ -107,6 +107,13 @@ describe("QuizShell", () => {
     expect(prompt()).toHaveFocus();
   });
 
+  it("counts a set of one question as one question", () => {
+    render(<QuizShell questions={QUESTIONS.slice(0, 1)} config={CONFIG} seed={SEED} onSubmit={vi.fn()} />);
+    fireEvent.keyDown(prompt(), { key: "a" });
+    fireEvent.click(screen.getByRole("button", { name: "Review your answers" }));
+    expect(screen.getByText(/You have answered 1 of 1 question\. Choose a question number to return to it\./)).toBeInTheDocument();
+  });
+
   it("keeps one name on the flag button and says its state", () => {
     shell();
     const flag = screen.getByRole("button", { name: "Flag for review" });
@@ -133,5 +140,49 @@ describe("QuizShell", () => {
 
     fireEvent.click(retry);
     expect(answered(1)).toBeInTheDocument();
+  });
+});
+
+describe("QuizShell, a question whose explanation names an answer by its letter", () => {
+  // The explanation of the first question says "Nessus (option C)". It is printed
+  // with the result, so the question is shown in its stored order here.
+  const KEPT: ExamQuestion[] = [
+    {
+      id: "q1",
+      question_text: "Which tool scans a host for known vulnerabilities?",
+      options: ["Wireshark", "Nmap", "Nessus", "Netcat"],
+      domain_id: "d1",
+      keepOrder: true,
+    },
+    { id: "q2", question_text: "Which port does HTTPS use?", options: ["22", "23", "80", "443"], domain_id: "d1" },
+  ];
+
+  it("shows it in its stored order, and a letter key records the answer under that letter", async () => {
+    // Shuffled with this seed, neither question would be in its stored order.
+    expect(seededPermutation(SEED, "q1", 4)).not.toEqual([0, 1, 2, 3]);
+    expect(seededPermutation(SEED, "q2", 4)).not.toEqual([0, 1, 2, 3]);
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<QuizShell questions={KEPT} config={CONFIG} seed={SEED} onSubmit={onSubmit} />);
+
+    const answers = screen.getAllByRole("radio");
+    expect(answers.map((a) => a.querySelector("[aria-hidden]")?.textContent)).toEqual(["A", "B", "C", "D"]);
+    // (The test's DOM library drops the space at the edge of an inline span; a browser keeps it.)
+    expect(answers[2]).toHaveAccessibleName(/^C\. ?Nessus$/);
+
+    fireEvent.keyDown(prompt(), { key: "c" });
+    expect(screen.getAllByRole("radio")[2]).toBeChecked();
+
+    // The next question is shuffled as before: the same key records the stored answer at that place.
+    fireEvent.keyDown(prompt(), { key: "ArrowRight" });
+    expect(screen.getAllByRole("radio")[0]).toHaveAccessibleName(KEPT[1].options[seededPermutation(SEED, "q2", 4)[0]]);
+    fireEvent.keyDown(prompt(), { key: "c" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review your answers" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit your answers" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toEqual([
+      { questionId: "q1", selectedIndex: 2 },
+      { questionId: "q2", selectedIndex: seededPermutation(SEED, "q2", 4)[2] },
+    ]);
   });
 });

@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import { getRecallDecks } from "@/data/recall";
 import { referenceRegistry } from "@/data/reference";
 import type { ReferenceTable } from "@/data/reference/types";
-import { buildDeck, explainRow, type RecallDeckConfig, type ResolvedDeck } from "@/lib/recall/recall-deck";
+import {
+  buildDeck,
+  explainRow,
+  otherAnswers,
+  otherAnswersSentence,
+  type RecallDeckConfig,
+  type ResolvedDeck,
+} from "@/lib/recall/recall-deck";
 import type { Rep } from "@/core/path/types";
 import type { DrillMode } from "@/lib/tools/subnetting";
 import { recallToRep, subnetToRep } from "../fact-reps";
@@ -186,7 +193,9 @@ describe("recallToRep: every curated and derived deck", () => {
           expect(rows, at).toHaveLength(1);
           const sentences = explainRow(deck.config, rows[0]);
           expect(sentences, at).not.toBeNull();
-          expect(rep.takeaway, at).toBe(sentences);
+          // Where the cue names another row too, the card also says which answer it asked for.
+          const also = otherAnswersSentence(rep.prompt, rightAnswer(rep), otherAnswers(deck, rep.prompt, rightAnswer(rep)));
+          expect(rep.takeaway, at).toBe([sentences, also].filter(Boolean).join(" "));
           cards++;
         }
       }
@@ -198,7 +207,9 @@ describe("recallToRep: every curated and derived deck", () => {
     const ports = getRecallDecks("security-plus-sy0-701").find((deck) => deck.config.id === "sec-ports")!;
     const legacy = "RADIUS uses ports 1645 and 1646. These are its legacy ports.";
     const current = "RADIUS uses ports 1812 and 1813. Port 1812 is for authentication and port 1813 is for accounting.";
-    const dealt = new Map<string, string>();
+    // What the card says where RADIUS is the cue, and where one of its pairs of ports is.
+    const own = new Map<string, string>();
+    const back = new Map<string, string>();
     // The second number decides which of the two rows is dealt.
     for (const second of [0.1, 0.9]) {
       for (const first of [FORWARD, BACK]) {
@@ -206,14 +217,20 @@ describe("recallToRep: every curated and derived deck", () => {
           let n = 0;
           const rep = recallToRep(ports, "RADIUS", "1.1", () => (n++ === 0 ? first : second), typed);
           const [row] = rowAsked(ports, "RADIUS", rep);
-          dealt.set(row.port, rep.takeaway);
+          (rep.prompt === "RADIUS" ? own : back).set(row.port, rep.takeaway);
           // The verdict names the pair of ports that the sentences are about.
           if (typed || first === FORWARD) expect(verdicts(rep)[1]).toBe(`Incorrect. The correct answer is ${row.port}. ${rep.takeaway}`);
           else expect(rep.prompt).toBe(row.port);
         }
       }
     }
-    expect(Object.fromEntries(dealt)).toEqual({ "1645/1646": legacy, "1812/1813": current });
+    // A pair of ports is one row's: the card says that row's sentences and no more.
+    expect(Object.fromEntries(back)).toEqual({ "1645/1646": legacy, "1812/1813": current });
+    // RADIUS names both rows: the card adds which answer it asked for, and the other one.
+    expect(Object.fromEntries(own)).toEqual({
+      "1645/1646": `${legacy} This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813.`,
+      "1812/1813": `${current} This question asked for 1812/1813. Another correct answer for RADIUS is 1645/1646.`,
+    });
   });
 
   it("prints the sentence the public acronym quiz shows, whichever way round it asks", () => {

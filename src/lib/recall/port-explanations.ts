@@ -15,14 +15,16 @@ import { explainRow, type RecallDeckConfig } from "./recall-deck";
  * prints on the study path and on the Recall page, and a port reads the same
  * in all three places.
  *
- * The quiz is a client component, so whatever is imported here is sent to the
- * browser. That is why the tables and the decks are imported by name and not
- * through the registries, and why only the tables that give the merged list a
- * port are here: every port of the Security+ table, and the ports that only
- * the Network+ table lists. The A+ Core 1 table lists no port that those two
- * do not. A test (port-explanations.test.ts) fails when the merged list holds
- * a port that these do not explain as its own exam's deck does, which is what
- * a new ports table, or a new port in the A+ table, would cause.
+ * The list is built on the server and carries each port's sentences with it
+ * (`explanation` on an entry), so nothing here is sent to the browser. The
+ * quiz itself is a client component and must not import this module: a test
+ * (PortQuiz.browser-code.test.ts) fails if it does. The tables and the decks
+ * are imported by name, and only those that give the merged list a port:
+ * every port of the Security+ table, and the ports that only the Network+
+ * table lists. The A+ Core 1 table lists no port that those two do not. A test
+ * (port-explanations.test.ts) fails when the merged list holds a port that
+ * these do not explain as its own exam's deck does, which is what a new ports
+ * table, or a new port in the A+ table, would cause.
  */
 const SOURCES: { table: ReferenceTable; deck: RecallDeckConfig | undefined }[] = [
   { table: securityPlusPorts, deck: securityPlusPortsDeck },

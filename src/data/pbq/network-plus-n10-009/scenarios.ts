@@ -23,7 +23,7 @@ export const networkPlusScenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5, 6],
     explanation:
-      "The OSI model layers from bottom to top are: Physical (Layer 1) → Data Link (Layer 2) → Network (Layer 3) → Transport (Layer 4) → Session (Layer 5) → Presentation (Layer 6) → Application (Layer 7). A common mnemonic is 'Please Do Not Throw Sausage Pizza Away'. Data encapsulation adds headers at each layer going down; decapsulation removes them going up.",
+      "The OSI model layers from bottom to top are Physical (Layer 1), Data Link (Layer 2), Network (Layer 3), Transport (Layer 4), Session (Layer 5), Presentation (Layer 6) and Application (Layer 7). A common mnemonic is 'Please Do Not Throw Sausage Pizza Away'. Data encapsulation adds headers at each layer going down; decapsulation removes them going up.",
   },
   {
     type: "ordering",
@@ -66,7 +66,7 @@ export const networkPlusScenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5, 6, 7],
     explanation:
-      "T568B pin order (1–8): White/Orange, Orange, White/Green, Blue, White/Blue, Green, White/Brown, Brown. Pins 1 & 2 (Orange pair) carry TX+ and TX−; Pins 3 & 6 (Green pair) carry RX+ and RX−. T568B is the most common standard used in North America. T568A swaps the orange and green pairs, and a crossover cable uses T568A on one end and T568B on the other.",
+      "T568B pin order (1–8): White/Orange, Orange, White/Green, Blue, White/Blue, Green, White/Brown, Brown. Pins 1 and 2 (the orange pair) carry TX+ and TX−, and pins 3 and 6 (the green pair) carry RX+ and RX−. T568B is the most common standard used in North America. T568A swaps the orange and green pairs, and a crossover cable uses T568A on one end and T568B on the other.",
   },
   {
     type: "ordering",
@@ -129,15 +129,15 @@ export const networkPlusScenarios: PbqScenario[] = [
     ],
     right: [
       "1 Gbps (up to 100 m)",
-      "1 Gbps (up to 55 m) / 10 Gbps (up to 55 m)",
+      "1 Gbps (up to 100 m) / 10 Gbps (up to 55 m)",
       "10 Gbps (up to 100 m)",
       "10 Gbps (up to 100 m, fully shielded)",
       "100 Gbps+ over long distances (kilometers)",
-      "10 Gbps (up to ~550 m at OM4)",
+      "10 Gbps (up to 300 m on OM3)",
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 1 Gbps to 100 m and 10 Gbps to 55 m. Cat 6a extends 10 Gbps to the full 100 m run. Cat 7 also achieves 10 Gbps to 100 m but uses GG45 or TERA connectors and full shielding. Single-mode fiber (8.3 µm core) supports 100 Gbps+ over kilometers. Multimode fiber (50/62.5 µm core) is lower cost and used within buildings up to ~550 m (OM4).",
+      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 1 Gbps to 100 m and 10 Gbps to 55 m. Cat 6a extends 10 Gbps to the full 100 m run. Cat 7 also achieves 10 Gbps to 100 m but uses GG45 or TERA connectors and full shielding. Single-mode fiber (8.3 µm core) supports 100 Gbps+ over kilometers. Multimode fiber (50/62.5 µm core) is lower cost and used within buildings, up to 300 m at 10 Gbps on OM3.",
   },
   {
     type: "matching",

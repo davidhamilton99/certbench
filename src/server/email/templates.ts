@@ -7,6 +7,7 @@ import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
 import type { PathDomain } from "@/core/path/types";
+import { SUPPORT_EMAIL } from "@/lib/errors/user-message";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
 import { READINESS_TARGET, bandFor } from "@/lib/readiness/band";
@@ -18,9 +19,9 @@ import { EMAIL_BAND_COLORS, EMAIL_COLORS as C } from "./colors";
  * own (./colors.ts): its ink on a sheet of paper, on the desk-coloured ground.
  *
  * Every email names its sender in its footer ("Sent by CertBench.", followed
- * by the postal address once the owner has supplied one) and carries the
- * address that stops these emails, in the footer and at the end of its text
- * part. The welcome email does too: it goes to an address that nobody has
+ * by the support address at which the sender can be reached, and by the postal
+ * address once the owner has supplied one) and carries the address that stops
+ * these emails, in the footer and at the end of its text part. The welcome email does too: it goes to an address that nobody has
  * confirmed, so the person who reads it may never have asked for an account.
  */
 
@@ -97,6 +98,17 @@ const addressed = (heading: string, name: string | null) => (name ? `${heading},
 export const SENT_BY = "Sent by CertBench.";
 
 /**
+ * The words that lead to the address at which the sender can be reached. The
+ * address is the support address that the site itself publishes
+ * (SUPPORT_EMAIL): a footer that names a sender and gives no way to write to
+ * it is of little use to the person who received the email.
+ */
+const CONTACT_LEAD = "To contact CertBench, write to";
+
+/** How to reach the sender, as the text part of an email prints it. */
+export const CONTACT = `${CONTACT_LEAD} ${SUPPORT_EMAIL}.`;
+
+/**
  * The sender's postal address on one line, or null until the owner has
  * supplied one (EMAIL_POSTAL_ADDRESS in src/env.ts). It is printed as it was
  * supplied: a line break becomes a comma, and a full stop at the end is
@@ -112,13 +124,30 @@ function postalAddress(): string | null {
   return address || null;
 }
 
-/** Who sent the email, and the postal address they can be written to once the owner has supplied it. */
-export function senderLine(): string {
+/** The postal address as the footer prints it, or nothing until the owner has supplied one. */
+const postalSentence = () => {
   const address = postalAddress();
-  return address ? `${SENT_BY} Postal address: ${address}.` : SENT_BY;
+  return address ? ` Postal address: ${address}.` : "";
+};
+
+/**
+ * Who sent the email, the address at which they can be reached, and the postal
+ * address they can be written to once the owner has supplied it.
+ */
+export function senderLine(): string {
+  return `${SENT_BY} ${CONTACT}${postalSentence()}`;
 }
 
-/** The last lines of every text part: who sent the email, and the address that stops these emails. */
+/**
+ * The same line for the HTML part. The address is a link there, so that one
+ * press starts a message to it.
+ */
+function senderLineHtml(): string {
+  const address = `<a href="mailto:${esc(SUPPORT_EMAIL)}" style="color:${C.muted};">${esc(SUPPORT_EMAIL)}</a>`;
+  return `${esc(SENT_BY)} ${esc(CONTACT_LEAD)} ${address}.${esc(postalSentence())}`;
+}
+
+/** The last lines of every text part: who sent the email, how to reach them, and the address that stops these emails. */
 const textFooter = (unsubscribeUrl: string) => `${senderLine()}\nUnsubscribe: ${unsubscribeUrl}`;
 
 /**
@@ -143,7 +172,7 @@ function layout(bodyHtml: string, unsubscribeUrl: string, preheader?: string): s
       ${bodyHtml}
     </div>
     <p style="font-size:12px;color:${C.muted};margin-top:20px;line-height:1.6;">
-      ${esc(senderLine())}<br>
+      ${senderLineHtml()}<br>
       CertBench is an independent study program for CompTIA exams.
       <a href="${esc(unsubscribeUrl)}" style="color:${C.muted};">Unsubscribe from these emails</a>.
     </p>
@@ -220,7 +249,7 @@ export function welcomeEmail(input: {
         Your account is set up for <strong>${esc(certName)}</strong>. This is how CertBench works.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Follow your study path.</strong> Every exam objective is a short step, and the steps are in order, so you do not have to decide what to study next.</li>
+        <li><strong>Follow your study path.</strong> It works through your exam topic by topic, in short steps, and the steps are in order, so you do not have to decide what to study next.</li>
         <li><strong>Review what you miss.</strong> A question that you answer incorrectly returns in a later step until you answer it correctly.</li>
         <li><strong>Take the readiness checkpoint.</strong> Exam-style questions from every domain show where you stand.</li>
       </ol>
@@ -259,7 +288,7 @@ export function studyPlanEmail(input: {
         ${esc(intro)}. Drills of that kind cover the facts. The plan below covers the rest of the exam.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Choose your exam.</strong> CertBench sets out every objective as a study path of short steps, so you do not have to decide what to study next.</li>
+        <li><strong>Choose your exam.</strong> Its study path works through the exam topic by topic, in short steps, so you do not have to decide what to study next.</li>
         <li><strong>Complete one step or more each day.</strong> Each step is about ${MINUTES_PER_STOP} minutes of short questions on one objective. A question that you miss returns until you answer it correctly.</li>
         <li><strong>Take the readiness checkpoint.</strong> It has exam-style questions from every domain, weighted in the same way as the real exam.</li>
       </ol>
@@ -270,7 +299,7 @@ export function studyPlanEmail(input: {
     `,
       input.unsubscribeUrl
     ),
-    text: `This is your CompTIA study plan.\n\n${intro}. Drills of that kind cover the facts. The plan below covers the rest of the exam.\n1. Choose your exam. Every objective is set out as a study path of short steps.\n2. Complete one step or more each day. Each step takes about ${MINUTES_PER_STOP} minutes, and a question that you miss returns until you answer it correctly.\n3. Take the readiness checkpoint to see where you stand in every domain.\n\nStart the study path (you do not need an account): ${app}/start\n\n${textFooter(input.unsubscribeUrl)}`,
+    text: `This is your CompTIA study plan.\n\n${intro}. Drills of that kind cover the facts. The plan below covers the rest of the exam.\n1. Choose your exam. Its study path works through the exam topic by topic, in short steps.\n2. Complete one step or more each day. Each step takes about ${MINUTES_PER_STOP} minutes, and a question that you miss returns until you answer it correctly.\n3. Take the readiness checkpoint to see where you stand in every domain.\n\nStart the study path (you do not need an account): ${app}/start\n\n${textFooter(input.unsubscribeUrl)}`,
   };
 }
 

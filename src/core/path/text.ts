@@ -34,8 +34,21 @@ const LEAD = /^\s*why\s+(?:option\s+)?[a-d]\s+is\s+(?:the\s+)?correct(?:\s+answe
 /** Sentence breaks: end punctuation, then whitespace, then a capital or digit. */
 const SENTENCE = /(?<=[.!?])\s+(?=[A-Z0-9\u201c"(])/;
 
+/**
+ * An explanation without the lead that names the answer by its letter ("Why B
+ * is correct:"). The letter is the answer's place in the stored order. Most
+ * screens show the answers in another order, or with no letters at all, and
+ * there the lead points at the wrong answer or at nothing. So the bank's
+ * readers drop it as they read (src/server/data/questions.ts and
+ * src/server/path/bank.ts), and no screen prints it. Text that does not open
+ * with such a lead is returned exactly as it is.
+ */
+export function withoutAnswerLead(text: string): string {
+  return text.replace(LEAD, "");
+}
+
 export function splitExplanation(explanation: string): { takeaway: string; rest: string } {
-  const text = plainDashes(americanSpelling(fixEncoding(explanation)).replace(LEAD, "").trim());
+  const text = plainDashes(withoutAnswerLead(americanSpelling(fixEncoding(explanation))).trim());
   if (!text) return { takeaway: "", rest: "" };
   const [first, ...more] = text.split(SENTENCE);
   return { takeaway: first.trim(), rest: more.join(" ").trim() };

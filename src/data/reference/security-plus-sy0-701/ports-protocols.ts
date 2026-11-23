@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const portsProtocols: ReferenceTable = {
   id: "ports-protocols",
   title: "Ports and protocols",
-  description: "Common ports and their associated protocols, services, and transport layers.",
+  description: "This table lists common ports for the Security+ SY0-701 exam with the protocol, the service and the transport of each.",
   columnHeaders: [
     { key: "port", label: "Port", mono: true },
     { key: "protocol", label: "Protocol" },

@@ -51,3 +51,27 @@ export const getDrillProgress = lazyContract("/api/tools/progress", "GET", () =>
 export const saveDrillProgress = lazyContract("/api/tools/progress", "POST", () =>
   import("./tools").then((m) => m.saveDrillProgress)
 );
+
+// A study set opened from a shared link (/share/[setId]). The player and the
+// component that counts the visit are shared with the signed-in pages, so
+// every endpoint those two components call is named here, the member's own
+// (the bookmark, the report) included: one contract imported as a value would
+// bring the schema library back into the public page.
+export const saveSetProgress = lazyContract("/api/study-sets/progress", "POST", () =>
+  import("./study-sets").then((m) => m.saveSetProgress)
+);
+export const clearSetProgress = lazyContract("/api/study-sets/progress/clear", "POST", () =>
+  import("./study-sets").then((m) => m.clearSetProgress)
+);
+export const recordCommunityAttempt = lazyContract("/api/community/attempt", "POST", () =>
+  import("./community").then((m) => m.recordCommunityAttempt)
+);
+export const toggleBookmark = lazyContract("/api/community/bookmark", "POST", () =>
+  import("./community").then((m) => m.toggleBookmark)
+);
+export const reportCommunitySet = lazyContract("/api/community/report", "POST", () =>
+  import("./community").then((m) => m.reportCommunitySet)
+);
+
+// The answer to "How did your exam go?" (/story), reached from the post-exam email.
+export const submitStory = lazyContract("/api/story", "POST", () => import("./story").then((m) => m.submitStory));

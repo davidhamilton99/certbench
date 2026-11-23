@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/server/supabase/server";
 import { ApiError } from "@/contracts/common";
 import type { CertQuestion, QuestionOption } from "@/core/question-selection/types";
-import { repairText } from "@/core/path/text";
+import { repairText, withoutAnswerLead } from "@/core/path/text";
 import { allRows } from "@/server/data/paging";
 
 /** Runtime guard for the options JSONB column. */
@@ -42,7 +42,10 @@ function mapQuestion(row: QuestionRow): CertQuestion {
     question_text: repairText(row.question_text),
     options: parsed.data.map((o) => ({ ...o, text: repairText(o.text) })) as QuestionOption[],
     correct_index: row.correct_index,
-    explanation: repairText(row.explanation ?? ""),
+    // Without the lead that names the answer by its letter ("Why B is
+    // correct:"): the screens that print a whole explanation show the answers
+    // in another order, or with no letters, and the lead would point wrongly.
+    explanation: withoutAnswerLead(repairText(row.explanation ?? "")),
     difficulty: row.difficulty,
   };
 }
@@ -50,7 +53,10 @@ function mapQuestion(row: QuestionRow): CertQuestion {
 /*
  * The selects below that take every question of an exam are read a page at a
  * time (allRows), in id order: one select answers with at most 1,000 rows, and
- * a bank can hold more. src/__tests__/whole-exam-selects.test.ts keeps it so.
+ * a bank can hold more. Each asks for the exact count with its page, which is
+ * how allRows knows that it has every row without asking once more.
+ * src/__tests__/whole-exam-selects.test.ts keeps it so, and reads the count
+ * where it is written: beside the columns, never through a constant.
  */
 
 /** All active questions for a cert, which feed the selection algorithms. */
@@ -61,7 +67,7 @@ export async function listActiveQuestions(
   const rows = await allRows<QuestionRow>((from, to) =>
     db
       .from("cert_questions")
-      .select(QUESTION_COLUMNS)
+      .select(QUESTION_COLUMNS, { count: "exact" })
       .eq("certification_id", certId)
       .eq("is_active", true)
       .order("id")
@@ -78,7 +84,7 @@ export async function listDiagnosticQuestions(
   const rows = await allRows<QuestionRow>((from, to) =>
     db
       .from("cert_questions")
-      .select(QUESTION_COLUMNS)
+      .select(QUESTION_COLUMNS, { count: "exact" })
       .eq("certification_id", certId)
       .eq("is_active", true)
       .eq("is_diagnostic_eligible", true)
@@ -136,7 +142,7 @@ export async function listQuestionDomains(
   return allRows<{ id: string; domain_id: string; is_active: boolean }>((from, to) =>
     db
       .from("cert_questions")
-      .select("id, domain_id, is_active")
+      .select("id, domain_id, is_active", { count: "exact" })
       .eq("certification_id", certId)
       .order("id")
       .range(from, to)
@@ -151,7 +157,7 @@ export async function getQuestionSubObjectiveMap(
   const rows = await allRows<{ id: string; sub_objective_id: string | null }>((from, to) =>
     db
       .from("cert_questions")
-      .select("id, sub_objective_id")
+      .select("id, sub_objective_id", { count: "exact" })
       .eq("certification_id", certId)
       .not("sub_objective_id", "is", null)
       .order("id")
@@ -215,7 +221,7 @@ export async function countQuestionsBySubObjective(
   const rows = await allRows<{ sub_objective_id: string | null }>((from, to) =>
     db
       .from("cert_questions")
-      .select("sub_objective_id")
+      .select("sub_objective_id", { count: "exact" })
       .eq("certification_id", certId)
       .eq("is_active", true)
       .not("sub_objective_id", "is", null)

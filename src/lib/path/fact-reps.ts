@@ -1,4 +1,4 @@
-import { generateRecallQuestion, type ResolvedDeck } from "@/lib/recall/recall-deck";
+import { generateRecallQuestion, otherAnswers, otherAnswersSentence, type ResolvedDeck } from "@/lib/recall/recall-deck";
 import { generateQuestion, MODES as SUBNET_MODES, type Difficulty, type DrillMode } from "@/lib/tools/subnetting";
 import type { Rng } from "@/core/path/compose";
 import { recallRepId } from "@/core/path/rep-id";
@@ -39,7 +39,11 @@ export function recallToRep(deck: ResolvedDeck, itemId: string, objective: strin
         ? `${q.answer}: ${detail}`
         : q.answer
       : `${q.promptValue}: ${q.answer}${detail ? ` (${detail})` : ""}`;
-  const takeaway = q.explanation ?? note;
+  // A cue can name more than one row (RADIUS has a row for its ports and a row
+  // for its legacy ports). A typed answer from any of them is accepted, so the
+  // card says which answer it asked for and that the other is correct too.
+  const also = otherAnswersSentence(q.promptValue, q.answer, otherAnswers(deck, q.promptValue, q.answer));
+  const takeaway = [q.explanation ?? note, also].filter(Boolean).join(" ");
   if (typed) {
     return {
       id,

@@ -78,6 +78,17 @@ describe("the pricing page", () => {
     );
   });
 
+  // The page sells Pro for every exam at once. The Security+ and A+ steps follow
+  // CompTIA's objectives and the Network+ steps follow CertBench's own topics,
+  // so the list does not say that the study path covers every exam objective.
+  it("says of the study path what is true of every exam: it works through the exam topic by topic", async () => {
+    const root = await page(null);
+    const included = [...(proCard(root)?.querySelectorAll("li") ?? [])].map(text);
+    expect(included[0]).toBe("The whole study path, which works through your exam topic by topic");
+    expect(text(root)).not.toMatch(/every (?:exam )?objective/i);
+    expect(metadata.description).not.toMatch(/every (?:exam )?objective/i);
+  });
+
   it("names its two plans in headings under the page's one title", async () => {
     const root = await page(null);
     expect([...root.querySelectorAll("h1")].map((h) => h.textContent)).toEqual(["Plans and pricing"]);

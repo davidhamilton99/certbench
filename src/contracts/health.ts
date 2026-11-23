@@ -24,6 +24,7 @@ export const health = {
       webhook: z.boolean(),
       posthog: z.boolean(),
       serviceRole: z.boolean(),
+      postalAddress: z.boolean(),
     }),
   }),
 } as const satisfies EndpointContract;

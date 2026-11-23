@@ -55,7 +55,13 @@ type ClientState =
       questions: ExamQuestion[];
       resume: ProgressSnapshot;
     }
-  | { phase: "done"; result: ExamResult };
+  | {
+      phase: "done";
+      result: ExamResult;
+      /** How the attempt showed its answers, so that its review shows them the same way. */
+      seed: string;
+      keepOrder: string[];
+    };
 
 /**
  * Shared client for server-graded attempts (diagnostic + practice exams):
@@ -166,6 +172,8 @@ export function ExamClient({
         examCode={examCode}
         domainWeights={domainWeights}
         fullExam={fullExam}
+        seed={state.seed}
+        keepOrder={state.keepOrder}
       />
     );
   }
@@ -189,7 +197,12 @@ export function ExamClient({
       }}
       onSubmit={async (answers, flagged) => {
         const result = await submit(attemptId, answers, flagged);
-        setState({ phase: "done", result });
+        setState({
+          phase: "done",
+          result,
+          seed: resume.seed,
+          keepOrder: questions.filter((q) => q.keepOrder).map((q) => q.id),
+        });
       }}
       submitLabel={submitLabel}
     />

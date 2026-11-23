@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const subnettingChart: ReferenceTable = {
   id: "subnetting-chart",
   title: "Subnetting and CIDR chart",
-  description: "CIDR notation reference from /8 to /30 showing subnet mask, usable hosts, and address class for Network+ N10-009.",
+  description: "This chart gives the subnet mask, the number of usable hosts and the network bits of each CIDR prefix from /8 to /30 for the Network+ N10-009 exam.",
   columnHeaders: [
     { key: "cidr", label: "CIDR", mono: true },
     { key: "subnetMask", label: "Subnet Mask", mono: true },

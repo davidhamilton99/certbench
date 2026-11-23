@@ -155,9 +155,12 @@ describe("captureLead", () => {
     });
     expect(email.html).toContain(`href="${address.replace(/&/g, "&amp;")}"`);
     expect(email.text).toContain(`Unsubscribe: ${address}`);
-    // The email names its sender, in the footer and at the end of the text part.
-    expect(email.html).toContain("Sent by CertBench.<br>");
-    expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${address}`)).toBe(true);
+    // The email names its sender and the address at which the sender can be
+    // reached, in the footer and at the end of the text part.
+    expect(email.html).toContain('Sent by CertBench. To contact CertBench, write to <a href="mailto:support@certbench.dev"');
+    expect(
+      email.text.endsWith(`\n\nSent by CertBench. To contact CertBench, write to support@certbench.dev.\nUnsubscribe: ${address}`)
+    ).toBe(true);
   });
 
   // The form is public. Before, every accepted request sent the email again.

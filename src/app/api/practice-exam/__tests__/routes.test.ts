@@ -97,6 +97,7 @@ vi.mock("@/core/question-selection/select-questions", () => ({
 
 import { POST as start } from "../start/route";
 import { POST as submit } from "../submit/route";
+import { startPracticeExam } from "@/contracts/practice-exam";
 import { EXAM_NOT_IN_PLAN } from "@/server/data/enrollments";
 import { ACCOUNT_NOT_CHECKED } from "@/server/data/account-errors";
 
@@ -219,6 +220,60 @@ describe("POST /api/practice-exam/start", () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: { code: "internal", message: ACCOUNT_NOT_CHECKED } });
     expect(h.createAttempt).not.toHaveBeenCalled();
+  });
+
+  // The result prints each explanation whole beside the answers. An explanation
+  // that says "option B" is right only if the exam showed the stored order.
+  describe("a question whose explanation names an answer by its letter", () => {
+    const lettered = (n: number, certId: string) => ({
+      ...question(n, certId),
+      explanation: "A router forwards packets between networks (option B). A switch (option A) forwards frames.",
+    });
+
+    it("is sent with keepOrder in a new attempt, and no other question is", async () => {
+      h.listActiveQuestions.mockResolvedValue([question(1, SEC_701), lettered(2, SEC_701)]);
+      const res = await call(SEC_701);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.questions).toEqual([
+        { id: id(1), question_text: "Question 1", options: ["First", "Second"], domain_id: DOMAIN },
+        { id: id(2), question_text: "Question 2", options: ["First", "Second"], domain_id: DOMAIN, keepOrder: true },
+      ]);
+      // The page reads the answer through the contract, which keeps the flag.
+      const read = startPracticeExam.output.parse(body);
+      expect(read.questions.map((q) => q.keepOrder)).toEqual([undefined, true]);
+    });
+
+    it("is sent with keepOrder again when the attempt is resumed", async () => {
+      h.getInFlightAttempt.mockResolvedValue({
+        id: ATTEMPT,
+        certificationId: SEC_701,
+        examType: "full",
+        domainId: null,
+        totalQuestions: 2,
+        isComplete: false,
+        progressState: {
+          index: 1,
+          responses: {},
+          flagged: [],
+          revealed: [],
+          startedAt: "2026-11-22T12:00:00.000Z",
+          seed: "s",
+          questionIds: [id(2), id(1)],
+        },
+      });
+      h.getQuestionsByIds.mockResolvedValue([question(1, SEC_701), lettered(2, SEC_701)]);
+
+      const res = await call(SEC_701);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      // In the attempt's own order.
+      expect(body.questions).toEqual([
+        { id: id(2), question_text: "Question 2", options: ["First", "Second"], domain_id: DOMAIN, keepOrder: true },
+        { id: id(1), question_text: "Question 1", options: ["First", "Second"], domain_id: DOMAIN },
+      ]);
+      expect(h.createAttempt).not.toHaveBeenCalled();
+    });
   });
 });
 

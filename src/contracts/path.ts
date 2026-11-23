@@ -189,6 +189,10 @@ export const getPathRehearsal = {
  * Load the signed-in user's saved path for one exam, plus how much of it they
  * can open: `pro` (the whole path) or `free` (through the checkpoint).
  * `proPlan` marks a Pro subscriber on an exam they haven't added yet.
+ *
+ * A read that failed is answered with an internal error, never with an empty
+ * path. `stored: false` means one thing: saving is not available in this
+ * database yet (the table does not exist), and the path works from the device.
  */
 export const getPathProgress = {
   path: "/api/path/progress",
@@ -206,7 +210,10 @@ export const getPathProgress = {
 /**
  * Save path progress. The server merges it into what's stored (see
  * mergePathProgress), so a stale tab or second device can't erase newer work.
- * `stored: false` means saving isn't available yet; progress stays on the device.
+ * A save that the database refused, or did not answer, is an internal error:
+ * the page keeps the progress on the device, says so and sends it again.
+ * `stored: false` means one thing: saving is not available in this database
+ * yet (the table does not exist). Nothing failed, and nothing is sent again.
  */
 export const savePathProgress = {
   path: "/api/path/progress",

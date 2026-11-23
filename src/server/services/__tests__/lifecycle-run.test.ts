@@ -396,9 +396,14 @@ describe("runLifecycleEmails", () => {
       });
       expect(email.html).toContain(`href="${address}"`);
       expect(email.text).toContain(`Unsubscribe: ${address}`);
-      // Every email names its sender, in the footer and at the end of the text part.
-      expect(email.html).toContain("Sent by CertBench.<br>");
-      expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${address}`)).toBe(true);
+      // Every email names its sender and the address at which the sender can be
+      // reached, in the footer and at the end of the text part.
+      expect(email.html).toContain('Sent by CertBench. To contact CertBench, write to <a href="mailto:support@certbench.dev"');
+      expect(
+        email.text.endsWith(
+          `\n\nSent by CertBench. To contact CertBench, write to support@certbench.dev.\nUnsubscribe: ${address}`
+        )
+      ).toBe(true);
     }
   });
 
@@ -664,7 +669,9 @@ describe("sendWelcome", () => {
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     });
     expect(email.html).toContain(`href="${address}"`);
-    expect(email.text).toContain(`Sent by CertBench.\nUnsubscribe: ${address}`);
+    expect(email.text).toContain(
+      `Sent by CertBench. To contact CertBench, write to support@certbench.dev.\nUnsubscribe: ${address}`
+    );
     // The preferences row that holds the token is created with the welcome.
     expect(h.tables.email_preferences).toMatchObject([{ user_id: "new", digest_enabled: true, unsubscribe_token: "tok-new" }]);
   });

@@ -117,8 +117,8 @@ export default function PortQuizPage() {
         label="Start the study path for my exam"
         context="port_quiz_page"
       >
-        Most of the exam consists of scenarios. Choose your exam, and its study path covers every objective in short
-        sets of questions like this one, up to a readiness checkpoint that shows where you stand.
+        Most of the exam consists of scenarios. Choose your exam, and its study path works through the exam topic by
+        topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.
       </PathCard>
 
       <LanderBlock className="mt-12 sm:mt-16">

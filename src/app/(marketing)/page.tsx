@@ -19,7 +19,7 @@ import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { warmup } from "@/data/path/security-plus-sy0-701/domains-1-2";
 import { keepCodes } from "@/lib/keep-codes";
 import { PRO_PRICES, PRO_PRICE_TERMS } from "@/lib/pricing/terms";
-import { practicePageFor } from "@/lib/seo/cert-pages";
+import { EXAMS_WITH_FREE_LABS, practicePageFor } from "@/lib/seo/cert-pages";
 import { EXAM_FACTS_CHECKED } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
@@ -102,9 +102,9 @@ export default async function LandingPage() {
             <div className="grid gap-4 sm:gap-5">
               <h1 className="cb-title">Prepare for your CompTIA certification exam.</h1>
               <p className="text-body text-muted-foreground sm:text-xl">
-                CertBench is a study program for CompTIA Security+, Network+ and A+. It teaches every exam
-                objective in short steps, gives you practice in hands-on labs, and finishes with a full-length
-                timed practice exam.
+                CertBench is a study program for CompTIA Security+, Network+ and A+. It works through your exam
+                topic by topic in short steps, gives you practice in hands-on labs, and finishes with a
+                full-length timed practice exam.
               </p>
               <p className="text-body sm:text-xl">It is free to start, and you do not need a payment card.</p>
             </div>
@@ -123,9 +123,10 @@ export default async function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:gap-12 sm:px-6">
           <div className="grid gap-3">
             <h2 className="cb-section">What each exam includes</h2>
+            {/* The free labs are named with their exams, because Security+ SY0-801 has no free lab. */}
             <p className="cb-measure text-body text-muted-foreground">
               CertBench holds a question bank, hands-on labs and a full-length practice exam for each exam in this
-              table. One practice exam is free for each exam. For Security+, Network+, A+ Core 1 and A+ Core 2,{" "}
+              table. One practice exam is free for each exam. For each of {keepCodes(EXAMS_WITH_FREE_LABS)},{" "}
               {FREE_LAB_COUNT} labs are free.
             </p>
           </div>
@@ -240,7 +241,7 @@ export default async function LandingPage() {
               lead="The free plan includes:"
               items={[
                 `One full-length practice exam of ${FULL.questions} questions in ${FULL.minutes} minutes`,
-                `${FREE_LAB_COUNT} hands-on labs for each exam`,
+                `${FREE_LAB_COUNT} hands-on labs for each of ${EXAMS_WITH_FREE_LABS}`,
                 `The introductory questions, ${LEARN_BEFORE_CHECKPOINT === 1 ? "your first objective" : `your first ${LEARN_BEFORE_CHECKPOINT} objectives`} and the readiness checkpoint`,
               ]}
             />
@@ -250,7 +251,7 @@ export default async function LandingPage() {
               note={`Each month. The price is ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year.`}
               lead="Pro includes:"
               items={[
-                "The whole study path, covering every exam objective",
+                "The whole study path, which works through your exam topic by topic",
                 "Every hands-on lab, and new timed practice exams",
                 "Review of the questions that you answered incorrectly",
               ]}

@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const linuxCommands: ReferenceTable = {
   id: "linux-commands",
   title: "Linux CLI reference",
-  description: "The Linux command-line tools on the CompTIA A+ 220-1202 exam.",
+  description: "This table lists Linux command-line tools for the CompTIA A+ 220-1202 exam with the purpose and the syntax of each and an example.",
   columnHeaders: [
     { key: "command", label: "Command", mono: true },
     { key: "purpose", label: "Purpose" },

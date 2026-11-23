@@ -25,6 +25,7 @@ const NAMES = [
   "STRIPE_WEBHOOK_SECRET",
   "NEXT_PUBLIC_POSTHOG_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "EMAIL_POSTAL_ADDRESS",
 ];
 
 const call = () => GET(new NextRequest("https://certbench.dev/api/health"));
@@ -56,6 +57,7 @@ describe("GET /api/health", () => {
       webhook: false,
       posthog: false,
       serviceRole: false,
+      postalAddress: false,
     });
 
     vi.stubEnv("RESEND_API_KEY", "re_SECRET_value");
@@ -68,7 +70,21 @@ describe("GET /api/health", () => {
       webhook: false,
       posthog: false,
       serviceRole: true,
+      postalAddress: false,
     });
+  });
+
+  it("says whether the emails have a postal address to print, and never the address", async () => {
+    vi.stubEnv("EMAIL_POSTAL_ADDRESS", "1 SECRET Street, Example Town, EX 00000, Canada");
+    const res = await call();
+    const text = await res.text();
+    const body = JSON.parse(text);
+    expect(body.settings.postalAddress).toBe(true);
+    // The answer still has the shape the contract promises, with the new flag in it.
+    expect(health.output.safeParse(body).success).toBe(true);
+    expect(health.output.shape.settings.shape).toHaveProperty("postalAddress");
+    expect(text).not.toContain("SECRET");
+    expect(text).not.toContain("Example Town");
   });
 
   it("never returns a value", async () => {

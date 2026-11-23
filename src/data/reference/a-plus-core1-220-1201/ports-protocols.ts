@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const portsProtocols: ReferenceTable = {
   id: "ports-protocols",
   title: "Ports and protocols",
-  description: "The ports and protocols on the CompTIA A+ 220-1201 exam.",
+  description: "This table lists common ports for the CompTIA A+ 220-1201 exam with the protocol, the service and the transport of each.",
   columnHeaders: [
     { key: "port", label: "Port", mono: true },
     { key: "protocol", label: "Protocol" },

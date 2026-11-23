@@ -29,8 +29,11 @@ interface Call {
  * A stand-in for the Supabase client over a list of rows. It applies the
  * filters, the order, the range and the limit of each select, answers a head
  * count with a count and no rows, and keeps every chain it was asked for.
+ * Like the real service it gives one answer at most `cap` rows, whatever range
+ * was asked for, and sends the number of rows the whole select matches when
+ * the select asked for the exact count.
  */
-function fakeDb(rows: Row[], failure?: { message: string; fromRow?: number }) {
+function fakeDb(rows: Row[], failure?: { message: string; fromRow?: number }, cap = 1000) {
   const queries: Call[][] = [];
   const answer = (calls: Call[]) => {
     const args = (name: string) => calls.filter((c) => c.name === name).map((c) => c.args);
@@ -48,10 +51,12 @@ function fakeDb(rows: Row[], failure?: { message: string; fromRow?: number }) {
     if (options?.head) return { data: null, count: found.length, error: failure ?? null };
     const [range] = args("range");
     if (failure && (failure.fromRow ?? 0) <= ((range?.[0] as number) ?? 0)) return { data: null, error: failure };
+    // The count is of every row the select matches, whichever page was asked for.
+    const count = options?.count === "exact" ? found.length : null;
     if (range) found = found.slice(range[0] as number, (range[1] as number) + 1);
     const [limit] = args("limit");
     if (limit) found = found.slice(0, limit[0] as number);
-    return { data: found, error: null };
+    return { data: found.slice(0, cap), count, error: null };
   };
   const from = (table: string) => {
     const calls: Call[] = [{ name: "from", args: [table] }];
@@ -166,6 +171,55 @@ describe("a question read from the bank", () => {
     expect(question.question_text).toContain("well-known");
   });
 
+  // The defect: 168 questions open their explanation with "Why B is correct:".
+  // The letter is the answer's place in the stored order, and the signed-in
+  // review, the results screens and the printed lists showed the whole
+  // explanation beside answers in another order, or with no letters at all.
+  describe("whose explanation opens by naming the answer's letter", () => {
+    const led = row(7, {
+      explanation: "Why B is correct: Red marks a blocked port. Option A is the logging protocol.",
+      is_diagnostic_eligible: true,
+    });
+    const shown = "Red marks a blocked port. Option A is the logging protocol.";
+
+    it("is given without that lead by every read that returns a question", async () => {
+      const { db } = fakeDb([led]);
+      const reads = await Promise.all([
+        listActiveQuestions(db, CERT),
+        listDiagnosticQuestions(db, CERT),
+        getQuestionsByIds(db, ["q-00007"]),
+        listSampleQuestions(db, CERT, 5),
+        listQuestionsBySubObjective(db, "sub-2", 5),
+      ]);
+      expect(reads.map((questions) => questions.map((q) => q.explanation))).toEqual(Array.from({ length: 5 }, () => [shown]));
+    });
+
+    it("loses the lead in each form it is stored in, and nothing else", async () => {
+      const forms = [
+        "Why B is correct: Red marks a blocked port.",
+        "Why option B is the correct answer. Red marks a blocked port.",
+        `Why B is correct ${EM} Red marks a blocked port.`,
+        "  why b is correct:   Red marks a blocked port.",
+      ];
+      for (const explanation of forms) {
+        const [question] = await listActiveQuestions(fakeDb([row(7, { explanation })]).db, CERT);
+        expect(question.explanation, explanation).toBe("Red marks a blocked port.");
+      }
+    });
+
+    it("keeps the answer where it is stored: only the words of the explanation change", async () => {
+      const [question] = await listActiveQuestions(fakeDb([row(7, { ...led, correct_index: 1 })]).db, CERT);
+      expect(question.correct_index).toBe(1);
+      expect(question.options.map((o) => o.text)).toEqual(["Right", "Wrong one", "Wrong two", "Wrong three"]);
+    });
+  });
+
+  it("keeps an explanation that has no such lead as it is stored, a letter named inside it included", async () => {
+    const inside = "Red marks a blocked port, which is why B is correct. Option A is the logging protocol.";
+    const [question] = await listActiveQuestions(fakeDb([row(8, { explanation: inside })]).db, CERT);
+    expect(question.explanation).toBe(inside);
+  });
+
   it("has an empty explanation when none is stored", async () => {
     const [question] = await listActiveQuestions(fakeDb([row(3, { explanation: null })]).db, CERT);
     expect(question.explanation).toBe("");
@@ -238,6 +292,64 @@ describe("reads that take every question of an exam", () => {
     expect(counts.get("sub-1")).toBe(336);
     expect(counts.get("sub-2")).toBe(336);
     expect(counts.get("sub-3")).toBe(336);
+  });
+
+  /** Every read that takes a whole exam, each run once. */
+  const wholeExamReads = (db: Db) =>
+    Promise.all([
+      listActiveQuestions(db, CERT),
+      listDiagnosticQuestions(db, CERT),
+      listQuestionDomains(db, CERT),
+      getQuestionSubObjectiveMap(db, CERT),
+      countQuestionsBySubObjective(db, CERT),
+    ]);
+  const total = (counts: Map<string, number>) => [...counts.values()].reduce((a, b) => a + b, 0);
+
+  it("asks for the exact count with each page, so that a bank that fits in one page is one request", async () => {
+    const { db, queries, ranges } = fakeDb(rows(617));
+
+    const [active, eligible, domains, objectives, counts] = await wholeExamReads(db);
+
+    expect(active).toHaveLength(617);
+    expect(eligible).toHaveLength(309);
+    expect(domains).toHaveLength(617);
+    expect(objectives.size).toBe(617);
+    expect(total(counts)).toBe(617);
+    // One request for each read: without the count, each would ask once more to find the end.
+    expect(queries).toHaveLength(5);
+    expect(ranges()).toEqual(Array.from({ length: 5 }, () => [0, 999]));
+    for (const calls of queries) {
+      expect(calls.find((c) => c.name === "select")?.args[1]).toEqual({ count: "exact" });
+    }
+  });
+
+  it("does not ask again for a bank of exactly 1,000 questions", async () => {
+    const { db, ranges } = fakeDb(rows(1000));
+    expect(await listActiveQuestions(db, CERT)).toHaveLength(1000);
+    expect(ranges()).toEqual([[0, 999]]);
+  });
+
+  // A page asks for 1,000 rows, and the database decides how many it gives.
+  // A read that took a short page for the last one stopped here at 400.
+  it("reads every question when the database gives fewer rows to one answer than a page asks for", async () => {
+    const { db, ranges } = fakeDb(rows(1008), undefined, 400);
+
+    const questions = await listActiveQuestions(db, CERT);
+
+    expect(questions).toHaveLength(1008);
+    expect(new Set(questions.map((q) => q.id)).size).toBe(1008);
+    expect(questions.at(-1)?.id).toBe("q-01007");
+    expect(ranges()).toEqual([
+      [0, 999],
+      [400, 1399],
+      [800, 1799],
+    ]);
+
+    const [, eligible, domains, objectives, counts] = await wholeExamReads(fakeDb(rows(1008), undefined, 400).db);
+    expect(eligible).toHaveLength(504);
+    expect(domains).toHaveLength(1008);
+    expect(objectives.size).toBe(1008);
+    expect(total(counts)).toBe(1008);
   });
 
   it("fails when a later page fails, so part of a bank is never taken for all of it", async () => {

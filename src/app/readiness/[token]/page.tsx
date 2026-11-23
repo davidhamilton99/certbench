@@ -65,7 +65,7 @@ export default async function ReadinessSharePage({
         <section className="mt-10 grid w-full justify-items-center gap-4 text-center">
           <h1 className="cb-title">How ready are you?</h1>
           <p className="cb-measure-xs text-body text-muted-foreground">
-            CertBench covers every objective of your CompTIA exam in short steps, and a readiness checkpoint then
+            CertBench works through your CompTIA exam topic by topic, in short steps, and a readiness checkpoint then
             shows where you stand.
           </p>
           <Button asChild size="lg" className="mt-1">

@@ -109,8 +109,9 @@ export default async function EducatorsPage() {
             </ArticleRow>
             <ArticleRow term="Study in short steps">
               <p>
-                The study path sets out every objective in steps of about {MINUTES_PER_STOP} minutes. Questions that a
-                student answers incorrectly are brought back in later steps.
+                The study path works through each exam topic by topic, in steps of about {MINUTES_PER_STOP} minutes.
+                For Security+ and A+, each topic is one of CompTIA&apos;s exam objectives. Questions that a student
+                answers incorrectly are brought back in later steps.
               </p>
             </ArticleRow>
             <ArticleRow term="Results by domain">

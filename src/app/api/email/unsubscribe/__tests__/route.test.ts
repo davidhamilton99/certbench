@@ -16,6 +16,17 @@ vi.mock("@/server/email/unsubscribe", async (importOriginal) => ({
   unsubscribe,
 }));
 
+// Work left for after the response, run by the test when it chooses, and the
+// report of a fault, watched: nothing is sent anywhere from a test.
+const later = vi.hoisted(() => ({ work: [] as (() => unknown)[] }));
+vi.mock("@/server/api/after-response", () => ({
+  afterResponse: (work: () => unknown) => {
+    later.work.push(work);
+  },
+}));
+const report = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/server/api/report-error", () => ({ reportServerError: report }));
+
 import { GET, POST } from "../route";
 
 const TOKEN = "3f2b8c1e-7a4d-4e9b-9c55-0d1e2f3a4b5c";
@@ -47,6 +58,8 @@ beforeEach(() => {
   createAdminClient.mockClear();
   unsubscribe.mockReset();
   unsubscribe.mockResolvedValue("done");
+  later.work = [];
+  report.mockClear();
 });
 
 describe("GET /api/email/unsubscribe (the link in an email)", () => {
@@ -140,5 +153,70 @@ describe("POST /api/email/unsubscribe", () => {
     expect(res.status).toBe(500);
     expect(consoleError).toHaveBeenCalledWith("unsubscribe failed:", expect.any(Error));
     consoleError.mockRestore();
+  });
+
+  // The defect: an unsubscribe that failed left one line in the log. A person
+  // who cannot unsubscribe has no other way to say so, and nothing told the owner.
+  describe("an unsubscribe that could not be saved is reported as a server error", () => {
+    const PLACE = { route: "/api/email/unsubscribe", method: "POST", kind: "route" };
+
+    /** Runs what was left for after the response. */
+    const runLater = async () => {
+      for (const work of later.work.splice(0)) await work();
+    };
+
+    it("once, after the response, when the change could not be saved", async () => {
+      unsubscribe.mockResolvedValue("failed");
+      const res = await oneClick(`?token=${TOKEN}&scope=lead`);
+      expect(res.status).toBe(500);
+      // The answer does not wait for the report.
+      expect(report).not.toHaveBeenCalled();
+      expect(later.work).toHaveLength(1);
+
+      await runLater();
+      expect(report).toHaveBeenCalledTimes(1);
+      const [fault, place] = report.mock.calls[0] as unknown as [Error, typeof PLACE];
+      expect(fault.message).toBe("An unsubscribe could not be saved");
+      expect(place).toEqual(PLACE);
+    });
+
+    it("once when unsubscribing threw, with none of the fault's words", async () => {
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      unsubscribe.mockRejectedValue(new Error("update on tool_leads refused for sam@example.com"));
+      await oneClick(`?token=${TOKEN}`);
+      await runLater();
+      expect(report).toHaveBeenCalledTimes(1);
+      const [fault, place] = report.mock.calls[0] as unknown as [Error, typeof PLACE];
+      expect(JSON.stringify([fault.message, place])).not.toContain("sam@example.com");
+      consoleError.mockRestore();
+    });
+
+    it("when the page's button was the one pressed, too", async () => {
+      unsubscribe.mockResolvedValue("failed");
+      const res = await fromPage(`?token=${TOKEN}`);
+      expect(res.status).toBe(303);
+      await runLater();
+      expect(report).toHaveBeenCalledTimes(1);
+    });
+
+    it("without the token: the report holds the route and never the address that was asked for", async () => {
+      unsubscribe.mockResolvedValue("failed");
+      await oneClick(`?token=${TOKEN}&scope=lead`);
+      await runLater();
+      const [fault, place] = report.mock.calls[0] as unknown as [Error, Record<string, unknown>];
+      expect(JSON.stringify([fault.message, place])).not.toContain(TOKEN);
+      expect(place).not.toHaveProperty("path");
+    });
+
+    it("and nothing is reported when it worked, or when the link was simply not valid", async () => {
+      await oneClick(`?token=${TOKEN}`);
+      await fromPage(`?token=${TOKEN}`);
+      unsubscribe.mockResolvedValue("invalid");
+      await oneClick(`?token=${TOKEN}`);
+      await oneClick("?token=not-a-token");
+      await get(`?token=${TOKEN}`);
+      expect(later.work).toHaveLength(0);
+      expect(report).not.toHaveBeenCalled();
+    });
   });
 });

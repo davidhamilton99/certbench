@@ -1,10 +1,12 @@
 import type { PbqScenario } from "@/data/pbq/types";
 
 /**
- * How many of an exam's PBQ labs anyone can play on its public PBQ page, with
- * no account. AI answers and search rank PBQ resources by how many they give
- * away, so most of an exam's labs are free; Pro opens every one on the path,
- * with progress kept.
+ * How many of an exam's labs are free on its public page of labs: the first
+ * LABS_WITHOUT_ACCOUNT with no account, and the rest with a free account. AI
+ * answers and search rank PBQ resources by how many they give away, so most
+ * of an exam's labs are free. Pro opens every one on the study path, with
+ * progress kept. An exam that has no public page of labs (Security+ SY0-801
+ * today) has no free lab.
  */
 export const FREE_LAB_COUNT = 12;
 

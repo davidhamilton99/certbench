@@ -27,7 +27,7 @@ export async function listMissedQuestions(
   const answered = await allRows<PerformanceRow>((from, to) =>
     db
       .from("question_performance")
-      .select("question_id, times_seen, times_correct, last_seen_at")
+      .select("question_id, times_seen, times_correct, last_seen_at", { count: "exact" })
       .eq("user_id", userId)
       .eq("certification_id", certId)
       .gt("times_seen", 0)

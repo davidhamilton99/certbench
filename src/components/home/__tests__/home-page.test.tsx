@@ -50,6 +50,7 @@ import { labLibrary } from "@/core/path/labs";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
 import { pbqRegistry } from "@/data/pbq";
 import { PRO_PRICES, PRO_PRICE_TERMS } from "@/lib/pricing/terms";
+import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { EXAM_FACTS_CHECKED, SECURITY_PLUS_DOMAIN_CHANGES } from "@/lib/seo/exam-versions";
 
 const CERT = "security-plus-sy0-701";
@@ -165,6 +166,17 @@ describe("the home page below its first section", () => {
     ]);
   });
 
+  // The page speaks for every exam at once. The Security+ and A+ steps follow
+  // CompTIA's objectives and the Network+ steps follow CertBench's own topics,
+  // so it does not say that the study path covers every exam objective.
+  it("says under its title what is true of every exam: the study path works through the exam topic by topic", async () => {
+    const { body, text } = await served();
+    expect(flat(body.querySelector("h1")?.nextElementSibling)).toBe(
+      "CertBench is a study program for CompTIA Security+, Network+ and A+. It works through your exam topic by topic in short steps, gives you practice in hands-on labs, and finishes with a full-length timed practice exam."
+    );
+    expect(text).not.toMatch(/every (?:exam )?objective/i);
+  });
+
   it("takes its examples from Security+ SY0-701 and names that version with every count", async () => {
     const { text } = await served();
     expect(data.structureFor).toEqual([CERT]);
@@ -180,9 +192,12 @@ describe("the home page below its first section", () => {
   it("says how to read the table: what is free, and that the two Security+ rows overlap", async () => {
     const { body } = await served();
     const part = section(body, "What each exam includes");
+    // The free labs are named with their exams, Security+ with its version:
+    // Security+ SY0-801 has no public page of labs, so none of its labs is free.
+    expect(EXAMS_WITH_FREE_LABS).toBe("Security+ SY0-701, Network+, A+ Core 1 and A+ Core 2");
     expect(flat(part.querySelector("p"))).toBe(
       "CertBench holds a question bank, hands-on labs and a full-length practice exam for each exam in this table. " +
-        `One practice exam is free for each exam. For Security+, Network+, A+ Core 1 and A+ Core 2, ${FREE_LAB_COUNT} labs are free.`
+        `One practice exam is free for each exam. For each of ${EXAMS_WITH_FREE_LABS}, ${FREE_LAB_COUNT} labs are free.`
     );
     expect(part.querySelectorAll("table")).toHaveLength(1);
     // The caution is read with the figures: it stands directly under the table.
@@ -227,12 +242,14 @@ describe("the home page below its first section", () => {
     expect(flat(free)).toContain("$0No payment card is required.");
     expect([...free.querySelectorAll("li")].map((li) => flat(li))).toEqual([
       "One full-length practice exam of 90 questions in 90 minutes",
-      `${FREE_LAB_COUNT} hands-on labs for each exam`,
+      `${FREE_LAB_COUNT} hands-on labs for each of ${EXAMS_WITH_FREE_LABS}`,
       "The introductory questions, your first objective and the readiness checkpoint",
     ]);
+    // The practice exam is free for every exam. The labs are not: neither sentence says "for each exam" of them.
+    expect(flat(body)).not.toMatch(/labs for each exam|labs are free for each exam/);
     expect(flat(pro)).toContain(PRO_PRICES.monthly);
     expect([...pro.querySelectorAll("li")].map((li) => flat(li))).toEqual([
-      "The whole study path, covering every exam objective",
+      "The whole study path, which works through your exam topic by topic",
       "Every hands-on lab, and new timed practice exams",
       "Review of the questions that you answered incorrectly",
     ]);

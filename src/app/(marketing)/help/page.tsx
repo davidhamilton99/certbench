@@ -51,6 +51,10 @@ function count(n: number): string {
 // from the constant the product itself uses. The price and what one plan
 // covers are worded once, in src/lib/pricing/terms.ts. A guard test keeps the
 // old workspace's claims off this page: src/lib/seo/__tests__/public-copy.test.ts.
+// These answers are for every exam at once, so they say that the study path
+// works through the exam topic by topic. None says that it covers every
+// objective: the Network+ steps follow CertBench's own topics and not CompTIA's
+// objectives (src/lib/seo/__tests__/coverage-claims.test.ts).
 const sections: Section[] = [
   {
     id: "getting-started",
@@ -59,11 +63,11 @@ const sections: Section[] = [
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is a study program for CompTIA exams, set out as a study path. You choose your exam, and each objective becomes a short step. A step begins with short questions and then moves to questions in the wording of the real exam. A readiness checkpoint shows where you stand, and a timed practice exam completes the study path. CertBench covers Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ Core 1 and Core 2. The A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
+        a: "CertBench is a study program for CompTIA exams, set out as a study path. You choose your exam, and the study path works through it topic by topic, in short steps. A step begins with short questions and then moves to questions in the wording of the real exam. A readiness checkpoint shows where you stand, and a timed practice exam completes the study path. CertBench covers Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ Core 1 and Core 2. The A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
       },
       {
         q: "Is CertBench free?",
-        a: `The first part is free. Without an account you can try the introductory questions for each exam, take the three-minute readiness check, take a full-length practice exam (${FULL.questions} questions in ${FULL.minutes} minutes, or a half-length exam of ${HALF.questions} questions), try the first ${count(LABS_WITHOUT_ACCOUNT)} hands-on labs, use the subnet calculator, and try a first round of the port, subnetting and acronym drills. A free account shows your practice exam score, opens ${count(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT)} more hands-on labs so that ${FREE_LAB_COUNT} are free for each of ${EXAMS_WITH_FREE_LABS}, saves your progress, opens your study path up to the readiness checkpoint, and removes the limit on the drills. Pro opens the rest of your study path, covering every objective, with domain practice, every hands-on lab, new timed practice exams that begin with questions you have not seen, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS}`,
+        a: `The first part is free. Without an account you can try the introductory questions for each exam, take the three-minute readiness check, take a full-length practice exam (${FULL.questions} questions in ${FULL.minutes} minutes, or a half-length exam of ${HALF.questions} questions), try the first ${count(LABS_WITHOUT_ACCOUNT)} hands-on labs, use the subnet calculator, and try a first round of the port, subnetting and acronym drills. A free account shows your practice exam score, opens ${count(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT)} more hands-on labs so that ${FREE_LAB_COUNT} are free for each of ${EXAMS_WITH_FREE_LABS}, saves your progress, opens your study path up to the readiness checkpoint, and removes the limit on the drills. Pro opens the rest of your study path, which works through your exam topic by topic, with domain practice, every hands-on lab, new timed practice exams that begin with questions you have not seen, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS}`,
         link: { href: "/pricing", label: "View plans and prices" },
       },
       {
@@ -89,7 +93,7 @@ const sections: Section[] = [
     items: [
       {
         q: "How does the study path work?",
-        a: `The study path goes through the exam objectives in order, one domain at a time. Most steps cover one objective, beginning with short questions and ending with one in the wording of the real exam. At the end of each domain, a practice step asks ${PRACTICE_SIZE} exam-style questions from that domain, and with Pro a hands-on lab completes it. The readiness checkpoint follows your first objective, and a timed practice exam is the last step. The course outline on your study path shows the status of each objective, such as “Complete” or “To review”.`,
+        a: `The study path works through the exam topic by topic, one domain at a time. For Security+ and A+, each topic is one of CompTIA’s exam objectives. Most steps cover one objective, beginning with short questions and ending with one in the wording of the real exam. At the end of each domain, a practice step asks ${PRACTICE_SIZE} exam-style questions from that domain, and with Pro a hands-on lab completes it. The readiness checkpoint follows your first objective, and a timed practice exam is the last step. The course outline on your study path shows the status of each objective, such as “Complete” or “To review”.`,
       },
       {
         q: "Do I have to follow the steps in order?",
@@ -177,7 +181,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: `${PRO_PRICE_TERMS} ${PRO_SCOPE_TERMS} Pro includes the rest of the study path for your exam, covering every objective, with domain practice, every hands-on lab, timed practice exams that are scored against the readiness target, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS} The full terms of the guarantee are in the terms of service. You can cancel at any time.`,
+        a: `${PRO_PRICE_TERMS} ${PRO_SCOPE_TERMS} Pro includes the rest of the study path, which works through your exam topic by topic, with domain practice, every hands-on lab, timed practice exams that are scored against the readiness target, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS} The full terms of the guarantee are in the terms of service. You can cancel at any time.`,
         link: { href: PASS_GUARANTEE_HREF, label: "Read the guarantee terms" },
       },
       {

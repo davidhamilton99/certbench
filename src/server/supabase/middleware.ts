@@ -4,6 +4,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "@/env";
+import { afterResponse } from "@/server/api/after-response";
+import { reportServerError, type ErrorPlace } from "@/server/api/report-error";
 import { fetchWithTimeLimit, SESSION_CHECK_LIMIT_MS, withDeadline } from "./time-limit";
 
 /** Route prefixes that require an authenticated session. */
@@ -63,6 +65,27 @@ const SESSION_COOKIE = /^sb-.+-auth-token(?:\.\d+)?$/;
 
 function hasSessionCookie(request: NextRequest): boolean {
   return request.cookies.getAll().some(({ name }) => SESSION_COOKIE.test(name));
+}
+
+/**
+ * The gate in front of the Pro pages, as an error report names it. The place
+ * and nothing else: the proxy sees every address, those that hold a token
+ * included, and the report is about the server, not about a visitor.
+ */
+const PRO_GATE: ErrorPlace = { route: "proxy:pro-gate", kind: "proxy" };
+
+/**
+ * Tells the owner that a request was let into the Pro pages without its plan
+ * or its role having been read. A gate that stands open looks from outside
+ * like one that is working, so a line in the log is not enough. The report is
+ * a `server_error` in words of its own: the database's words stay in the log.
+ * It is sent once the response has gone, or beside the response where nothing
+ * can be scheduled after one, so the visitor never waits for it.
+ */
+function reportOpenGate(what: "plan" | "role"): void {
+  afterResponse(() =>
+    reportServerError(new Error(`The Pro gate let a request through: the ${what} could not be read.`), PRO_GATE)
+  );
 }
 
 /** A page fetched ahead of a press, by Next's router or by the browser itself. */
@@ -203,9 +226,11 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle();
     // Fail open on a transient read error: never wall a paying user over our
     // own infra blip. The leak (a free user slipping through during an outage)
-    // is rare and still bounded by the data-layer quotas.
+    // is rare and still bounded by the data-layer quotas. It is reported, once
+    // for the request: this return and the one below never both run.
     if (subErr) {
       console.warn("[proxy] subscription read failed; allowing through", subErr);
+      reportOpenGate("plan");
       return response;
     }
     const isPro =
@@ -220,6 +245,7 @@ export async function updateSession(request: NextRequest) {
         .maybeSingle();
       if (profErr) {
         console.warn("[proxy] profile read failed; allowing through", profErr);
+        reportOpenGate("role");
         return response;
       }
       if (profile?.role !== "admin") {

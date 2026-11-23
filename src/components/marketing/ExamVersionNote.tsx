@@ -28,7 +28,9 @@ function Source({ href, children }: { href: string; children: ReactNode }) {
  *
  * Every date in the note has its source beside it: the Security+ note names
  * CompTIA's two Security+ pages and the day they were last read, as the A+
- * notes name the A+ pages.
+ * notes name the A+ pages. The day on which 220-1101 and 220-1102 retired is
+ * not on CompTIA's exam pages: CompTIA gave it in its article about the two A+
+ * exams (COMPTIA_URLS.aPlusSeries), so that article is the link beside it.
  */
 export function ExamVersionNote({
   certSlugs,
@@ -77,7 +79,8 @@ export function ExamVersionNote({
         </strong>{" "}
         CompTIA launched them on March 25, 2025 and retired 220-1101 and 220-1102 on September 25, 2025. CompTIA
         describes them on its <Source href={COMPTIA_URLS.aPlusCore1}>Core 1 exam page</Source> and{" "}
-        <Source href={COMPTIA_URLS.aPlusCore2}>Core 2 exam page</Source>.
+        <Source href={COMPTIA_URLS.aPlusCore2}>Core 2 exam page</Source>, and gave the date of the retirement in its{" "}
+        <Source href={COMPTIA_URLS.aPlusSeries}>article about the two A+ exams</Source>.
       </>
     );
   } else if (core1) {
@@ -86,7 +89,7 @@ export function ExamVersionNote({
         <strong className="font-medium text-foreground">
           These questions are written to 220-1201, the current A+ Core 1 exam.
         </strong>{" "}
-        It replaced 220-1101, which <Source href={COMPTIA_URLS.aPlusCore1}>CompTIA</Source> retired on September 25,
+        It replaced 220-1101, which <Source href={COMPTIA_URLS.aPlusSeries}>CompTIA</Source> retired on September 25,
         2025.
       </>
     );
@@ -96,7 +99,7 @@ export function ExamVersionNote({
         <strong className="font-medium text-foreground">
           These questions are written to 220-1202, the current A+ Core 2 exam.
         </strong>{" "}
-        It replaced 220-1102, which <Source href={COMPTIA_URLS.aPlusCore2}>CompTIA</Source> retired on September 25,
+        It replaced 220-1102, which <Source href={COMPTIA_URLS.aPlusSeries}>CompTIA</Source> retired on September 25,
         2025.
       </>
     );

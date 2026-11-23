@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { freeLabs } from "@/core/path/free-labs";
 import { longDate } from "@/core/path/versions";
 import { pbqRegistry } from "@/data/pbq";
 import { READINESS_TARGET } from "@/lib/readiness/band";
@@ -176,6 +177,67 @@ describe("what the PBQ pages say about the exam's own PBQs", () => {
       expect(copyOf(p), p.path).not.toMatch(
         /worth more|carry more weight|partial credit is awarded|award partial credit|find most difficult/i
       );
+    }
+  });
+
+  // CompTIA's exam pages state that an exam has performance-based questions as
+  // well as multiple-choice questions. They do not say what the questions ask
+  // or how long they take, so no page gives an example of one or compares the
+  // two for time. Each page's first paragraph says what its own labs ask.
+  it("opens with what CompTIA states about the exam, and then with what the labs on the page ask", () => {
+    const exams: Record<string, string> = {
+      "security-plus-pbq-examples": "Security+",
+      "network-plus-pbq-examples": "Network+",
+      "a-plus-core-1-pbq-examples": "A+ Core 1",
+      "a-plus-core-2-pbq-examples": "A+ Core 2",
+    };
+    expect(PBQ_EXAMPLE_PAGES.map((p) => p.path).sort()).toEqual(Object.keys(exams).sort());
+    for (const p of PBQ_EXAMPLE_PAGES) {
+      const [first] = p.intro;
+      expect(first.startsWith(
+        `The ${exams[p.path]} exam has performance-based questions (PBQs) as well as multiple-choice questions, and the hands-on labs on this page are CertBench's practice for them. A lab asks you to carry out a task instead of choosing A, B, C or D. In a simulation you work through a scenario task by task: one on this page is `
+      ), p.path).toBe(true);
+      expect(first, p.path).toMatch(/ The drills ask you to put steps in order, to match items and to sort them into categories\.$/);
+      // Nothing about how long the exam's questions take, and no account of what they ask.
+      expect(copyOf(p), p.path).not.toMatch(
+        /takes? longer|PBQs give you|are the hands-on part of|Performance-based questions ask you|you configure firewall rules/i
+      );
+    }
+  });
+
+  it("names in that paragraph only what a free lab on the page asks", () => {
+    // The lab behind each phrase, by its title. The labs are read here, so a
+    // sentence cannot outlive the lab that it describes.
+    const asks: Record<string, [lab: string, kind: string, words: string][]> = {
+      "security-plus-pbq-examples": [
+        ["Vulnerability Assessment and Remediation", "simulation", "a vulnerability scan whose findings you classify and choose how to remediate"],
+        ["Network Segmentation and Firewall Rules", "topology", "In a network diagram you correct the devices that are misconfigured"],
+        ["Compromised SSH server", "threat-hunt", "in a threat hunt you flag the lines of a server log that are evidence of an attack"],
+      ],
+      "network-plus-pbq-examples": [
+        ["Network Troubleshooting with Commands", "simulation", "a connectivity fault that you trace from the output of commands"],
+        ["VLAN Configuration and Inter-Switch Trunking", "topology", "In a network diagram you correct the devices that are misconfigured"],
+      ],
+      "a-plus-core-1-pbq-examples": [
+        ["Laptop Display Troubleshooting", "simulation", "a laptop display that has gone dim, which you diagnose before you plan its repair"],
+      ],
+      "a-plus-core-2-pbq-examples": [
+        ["Mobile Device Security Setup", "simulation", "a security policy that you set for a company's new phones, one of which is then reported lost"],
+      ],
+    };
+    for (const p of PBQ_EXAMPLE_PAGES) {
+      const free = freeLabs(pbqRegistry[p.certSlug]);
+      const kinds = new Set<string>(free.map((lab) => lab.type));
+      for (const [title, kind, words] of asks[p.path]) {
+        expect(p.intro[0], `${p.path}: ${title}`).toContain(words);
+        expect(free.find((lab) => lab.title === title)?.type, `${p.path}: ${title}`).toBe(kind);
+      }
+      // A page speaks of a kind of lab only if the exam has a free one of that kind.
+      expect(p.intro[0].includes("network diagram"), p.path).toBe(kinds.has("topology"));
+      expect(p.intro[0].includes("threat hunt"), p.path).toBe(kinds.has("threat-hunt"));
+      expect(kinds.has("simulation"), p.path).toBe(true);
+      // The drills: every page has free labs that are put in order, matched and sorted.
+      for (const kind of ["ordering", "matching", "categorization"]) expect(kinds.has(kind), `${p.path}: ${kind}`).toBe(true);
     }
   });
 });

@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const cableTypes: ReferenceTable = {
   id: "cable-types",
   title: "Cables and connectors",
-  description: "Cable categories, speeds, distances, and connector types for the CompTIA A+ 220-1201 exam.",
+  description: "This table lists cables for the CompTIA A+ 220-1201 exam with the category, the maximum speed, the maximum distance and the connectors of each.",
   columnHeaders: [
     { key: "cable", label: "Cable / Standard" },
     { key: "category", label: "Category" },
@@ -18,7 +18,7 @@ export const cableTypes: ReferenceTable = {
     { columns: { cable: "Cat 6a", category: "Twisted pair (copper)", maxSpeed: "10 Gbps", maxDistance: "100 m", connector: "RJ-45" } },
     // Fiber optic
     { columns: { cable: "Single-mode fiber (SMF)", category: "Fiber optic", maxSpeed: "100+ Gbps", maxDistance: "40+ km", connector: "LC, SC" } },
-    { columns: { cable: "Multimode fiber (MMF)", category: "Fiber optic", maxSpeed: "10 Gbps", maxDistance: "300 m (OM3)", connector: "LC, SC, ST" } },
+    { columns: { cable: "Multimode fiber (MMF)", category: "Fiber optic", maxSpeed: "10 Gbps", maxDistance: "300 m (OM3) / 400 m (OM4)", connector: "LC, SC, ST" } },
     // Coaxial
     { columns: { cable: "Coax RG-6", category: "Coaxial", maxSpeed: "N/A (analog/digital TV)", maxDistance: "~300 m", connector: "F-type" } },
     // USB

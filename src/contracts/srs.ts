@@ -16,6 +16,14 @@ export const srsCard = z.object({
   domainId: z.uuid(),
   /** Days overdue (>= 0), for display. */
   overdueDays: z.number().int().min(0),
+  /**
+   * Sent, and true, only with a card whose explanation names an answer by its
+   * letter ("option A is the only one that ..."). Its answers are shown in
+   * their stored order, so that the letter in the explanation, which is printed
+   * under them once the card is answered, names the answer shown under that
+   * letter. Every other card is shuffled.
+   */
+  keepOrder: z.boolean().optional(),
 });
 export type SrsCard = z.infer<typeof srsCard>;
 

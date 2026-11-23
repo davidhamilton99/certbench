@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const encryptionAlgorithms: ReferenceTable = {
   id: "encryption-algorithms",
   title: "Encryption and hashing",
-  description: "Symmetric, asymmetric, and hashing algorithms with key sizes and use cases.",
+  description: "This table lists symmetric, asymmetric and hashing algorithms for the Security+ SY0-701 exam with the key size, the status and the common use of each.",
   columnHeaders: [
     { key: "algorithm", label: "Algorithm" },
     { key: "type", label: "Type" },

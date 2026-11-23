@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from "react";
 import type { PortEntry } from "@/lib/tools/port-quiz-data";
 import { makeQuestion, type QuizQuestion } from "@/lib/tools/port-quiz";
-import { portExplanation } from "@/lib/recall/port-explanations";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import type { ChoiceRep } from "@/core/path/types";
 import { useDrillRounds } from "./useDrillRounds";
@@ -16,12 +15,15 @@ const LABEL = "Port numbers";
  * A port question as the study path asks a recall fact: the cue big, the ask
  * under it, and ports set in mono.
  *
- * After the verdict the card prints the sentences that the exam's own ports
- * deck gives the row, the same ones the study path and the Recall page print
- * ("FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data
- * and port 21 for control."). A port that no deck explains gets one plain
- * sentence. The table's "Service / Use" cell is a note and is never printed
- * as if it were a sentence.
+ * After the verdict the card prints the entry's explanation: the sentences
+ * that the exam's own ports deck gives the row, the same ones the study path
+ * and the Recall page print ("FTP uses ports 20 and 21. The File Transfer
+ * Protocol uses port 20 for data and port 21 for control."). The server works
+ * them out with the list (src/lib/tools/port-quiz-data.ts) and hands them over
+ * as data, so this file, which runs in the browser, loads no deck and no
+ * table. A port that no deck explains gets one plain sentence. The table's
+ * "Service / Use" cell is a note and is never printed as if it were a
+ * sentence.
  */
 export function portRep(q: QuizQuestion): ChoiceRep {
   const { answer, options } = q;
@@ -38,7 +40,7 @@ export function portRep(q: QuizQuestion): ChoiceRep {
     cue: asksPort ? "Which port?" : "Which protocol?",
     options: options.map((o) => (asksPort ? o.port : o.protocol)),
     answer: options.indexOf(answer),
-    takeaway: portExplanation(answer.port, answer.protocol) ?? plain,
+    takeaway: answer.explanation ?? plain,
     mono: asksPort,
   };
 }
@@ -82,7 +84,10 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
         mapTitle="Your ports"
         lead={{
           title: "Port numbers are a small part of the exam.",
-          body: "The rest of the exam decides whether you pass. Your study path covers every exam objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
+          // The card names three exams, Network+ among them, whose topics are
+          // CertBench's own and not CompTIA's objectives. So it says what is
+          // true of every exam, in the words the page under it uses.
+          body: "The rest of the exam decides whether you pass. Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />

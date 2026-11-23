@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const authenticationTypes: ReferenceTable = {
   id: "authentication-types",
   title: "Authentication and AAA",
-  description: "Authentication protocols, methods, and identity frameworks.",
+  description: "This table lists authentication protocols, methods and identity frameworks for the Security+ SY0-701 exam with a description of each, and its port where it has one.",
   columnHeaders: [
     { key: "method", label: "Method / Protocol" },
     { key: "category", label: "Category" },

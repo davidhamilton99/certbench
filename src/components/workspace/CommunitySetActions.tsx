@@ -4,11 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
-import {
-  recordCommunityAttempt,
-  reportCommunitySet,
-  toggleBookmark,
-} from "@/contracts/community";
+import { recordCommunityAttempt, reportCommunitySet, toggleBookmark } from "@/contracts/client";
 import { userMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

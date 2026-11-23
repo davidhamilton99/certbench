@@ -7,9 +7,11 @@ import { explainRow } from "../recall-deck";
 
 /**
  * The public port quiz prints, after an answer, the sentences that the row's
- * own exam's ports deck gives it. The quiz loads only the decks and tables it
- * needs (it is a client component), so this test ties that short list to the
- * merged list of ports that the quiz really asks.
+ * own exam's ports deck gives it. The server works them out with the merged
+ * list of ports and hands each entry its sentences (`explanation`), from the
+ * short list of decks and tables in port-explanations.ts. This test ties that
+ * short list, and what each entry carries, to the merged list of ports that
+ * the quiz really asks.
  */
 describe("the sentences the public port quiz prints", () => {
   const PORTS = "ports-protocols";
@@ -31,6 +33,8 @@ describe("the sentences the public port quiz prints", () => {
       const sentences = explainRow(deck.config, row);
       expect(sentences, at).not.toBeNull();
       expect(portExplanation(entry.port, entry.protocol), at).toBe(sentences);
+      // The entry that the page hands to the quiz carries those sentences: the quiz looks nothing up.
+      expect(entry.explanation, at).toBe(sentences);
       taken[cert] = (taken[cert] ?? 0) + 1;
     }
     // Every port of the Security+ table, and the one port that only the Network+ table lists.
@@ -39,8 +43,8 @@ describe("the sentences the public port quiz prints", () => {
   });
 
   it("prints a deck's sentences as that deck has them", () => {
-    // A row the template serves, a pair of ports with sentences of its own, and both rows of RADIUS.
-    expect(portExplanation("443", "HTTPS")).toBe("HTTPS uses port 443.");
+    // A row with one port, a pair of ports that says which port is which, and both rows of RADIUS.
+    expect(portExplanation("443", "HTTPS")).toBe("HTTPS uses port 443. It is HTTP Secure, which uses TLS over TCP.");
     expect(portExplanation("20/21", "FTP")).toBe(
       "FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data and port 21 for control."
     );

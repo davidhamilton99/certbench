@@ -11,7 +11,7 @@ describe("a plan in the home page's summary of prices", () => {
         price="$19"
         note="Each month. The price is $39 every three months, or $99 a year."
         lead="Pro includes:"
-        items={["The whole study path, covering every exam objective", "Every hands-on lab, and new timed practice exams"]}
+        items={["The whole study path, which works through your exam topic by topic", "Every hands-on lab, and new timed practice exams"]}
       />
     );
     expect(screen.getByRole("heading", { level: 3, name: "Pro" })).toBeTruthy();
@@ -22,7 +22,7 @@ describe("a plan in the home page's summary of prices", () => {
     const list = screen.getByRole("list");
     expect(list.previousElementSibling?.textContent).toBe("Pro includes:");
     expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "The whole study path, covering every exam objective",
+      "The whole study path, which works through your exam topic by topic",
       "Every hands-on lab, and new timed practice exams",
     ]);
     // The ticks are marks beside the words and are not read out.

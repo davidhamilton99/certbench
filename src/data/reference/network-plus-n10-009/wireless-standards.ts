@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const wirelessStandards: ReferenceTable = {
   id: "wireless-standards",
   title: "Wireless standards",
-  description: "IEEE 802.11 Wi-Fi generations and short-range wireless technologies tested on Network+ N10-009.",
+  description: "This table lists the IEEE 802.11 Wi-Fi standards and short-range wireless technologies for the Network+ N10-009 exam with the frequency, the maximum speed and the typical range of each.",
   columnHeaders: [
     { key: "standard", label: "Standard", mono: true },
     { key: "name", label: "Name / Gen" },

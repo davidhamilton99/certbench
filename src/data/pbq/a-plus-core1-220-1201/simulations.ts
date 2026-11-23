@@ -566,7 +566,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
     id: "aplus-core1-sim-laptop-display",
     title: "Laptop Display Troubleshooting",
     briefing:
-      "A user reports that their laptop screen is very dim and barely visible. They can see content on the screen if they hold a torch close to it. The laptop is a 15-inch model running Windows 11. When connected to an external HDMI monitor, the external display works perfectly at full brightness.",
+      "A user reports that their laptop screen is very dim and barely visible. They can see content on the screen if they hold a flashlight close to it. The laptop is a 15-inch model running Windows 11. When connected to an external HDMI monitor, the external display works perfectly at full brightness.",
     domain_number: "5.0",
     domain_title: "Hardware and Network Troubleshooting",
     estimatedMinutes: 8,
@@ -597,7 +597,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
           {
             type: "dropdown",
             id: "aplus-core1-sim-laptop-display-t1-f1",
-            label: "The fact that content is visible by torch light but not visible under normal conditions indicates which component is faulty?",
+            label: "The fact that content is visible by flashlight but not visible under normal conditions indicates which component is faulty?",
             options: [
               "LCD panel: the liquid crystal matrix has failed",
               "GPU: the video processor is not sending a signal to the internal panel",
@@ -635,7 +635,7 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
           },
         ],
         explanation:
-          "If content is visible by torch light, the LCD panel itself is producing an image: the backlight has failed, not the LCD matrix. Because the external monitor works, the GPU and its drivers are confirmed functional; the fault is in the internal display backlight circuit. On CCFL-backlit laptops, the inverter board converts low-voltage DC to the high-voltage AC required by the CCFL tube: a failed inverter is the most common cause of dim or dark laptop screens on older hardware. On modern laptops, the LED backlight driver circuit on the motherboard or the LED strip itself is the equivalent failure point.",
+          "If content is visible by flashlight, the LCD panel itself is producing an image: the backlight has failed, not the LCD matrix. Because the external monitor works, the GPU and its drivers are confirmed functional; the fault is in the internal display backlight circuit. On CCFL-backlit laptops, the inverter board converts low-voltage DC to the high-voltage AC required by the CCFL tube: a failed inverter is the most common cause of dim or dark laptop screens on older hardware. On modern laptops, the LED backlight driver circuit on the motherboard or the LED strip itself is the equivalent failure point.",
       },
 
       /* ── Task 2 ── */
@@ -695,6 +695,6 @@ export const aPlusCore1Simulations: SimulationScenario[] = [
       },
     ],
     explanation:
-      "Laptop display troubleshooting is a dedicated A+ Core 1 competency. The key diagnostic insight is: image visible by torch = backlight failure, not LCD failure. Working external monitor = GPU is functional. The repair path then depends on whether the laptop uses CCFL (inverter board) or LED (driver IC or LED strip) backlighting. Safe disassembly ESD practices (battery removal, grounding, plastic tools) are tested alongside the hardware diagnosis.",
+      "Laptop display troubleshooting is a dedicated A+ Core 1 competency. The key diagnostic insight is: image visible by flashlight = backlight failure, not LCD failure. Working external monitor = GPU is functional. The repair path then depends on whether the laptop uses CCFL (inverter board) or LED (driver IC or LED strip) backlighting. Safe disassembly ESD practices (battery removal, grounding, plastic tools) are tested alongside the hardware diagnosis.",
   },
 ];

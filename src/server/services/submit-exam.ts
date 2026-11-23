@@ -195,7 +195,7 @@ export async function recomputeAndSnapshotReadiness(
     allRows<{ question_id: string; times_seen: number; times_correct: number }>((from, to) =>
       supabase
         .from("question_performance")
-        .select("question_id, times_seen, times_correct")
+        .select("question_id, times_seen, times_correct", { count: "exact" })
         .eq("user_id", userId)
         .eq("certification_id", certificationId)
         .order("question_id")
@@ -204,7 +204,7 @@ export async function recomputeAndSnapshotReadiness(
     allRows<{ id: string; domain_id: string; is_active: boolean }>((from, to) =>
       supabase
         .from("cert_questions")
-        .select("id, domain_id, is_active")
+        .select("id, domain_id, is_active", { count: "exact" })
         .eq("certification_id", certificationId)
         .order("id")
         .range(from, to)

@@ -589,7 +589,9 @@ describe("the Stripe webhook: an event about a subscription the row does not hol
 
   // A row with no subscription on it (a checkout not yet confirmed, or a plan
   // that has ended) takes the change: events do not always arrive in order,
-  // and the subscription's own event may come before the checkout's.
+  // and the subscription's own event may come before the checkout's. Pro is
+  // written together with the subscription it comes from, so that the row is
+  // from then on changed only by events about that subscription.
   it("still records a change for a row that holds no subscription yet", async () => {
     holds(null);
     h.event = about("customer.subscription.updated", "active", "sub_new");
@@ -599,7 +601,12 @@ describe("the Stripe webhook: an event about a subscription the row does not hol
       {
         table: "user_subscriptions",
         op: "update",
-        values: { plan: "pro", status: "active", current_period_end: "2026-01-01T00:00:00.000Z" },
+        values: {
+          plan: "pro",
+          status: "active",
+          current_period_end: "2026-01-01T00:00:00.000Z",
+          stripe_subscription_id: "sub_new",
+        },
         filters: [["stripe_customer_id", "cus_1"]],
       },
     ]);
@@ -621,6 +628,91 @@ describe("the Stripe webhook: a checkout delivered again after its subscription 
       expect(h.capture).not.toHaveBeenCalled();
     }
   );
+});
+
+// Until November 2026 a completed checkout wrote plan pro, status active for
+// any subscription that had not ended. The event says that the payment page
+// was completed, not that the plan is paid for at this moment: Stripe delivers
+// it again for up to three days after a failed write, it can be sent again by
+// hand from the Dashboard, and a first payment can still be pending. What is
+// written is the subscription as Stripe holds it, by the mapping a change uses.
+describe("the Stripe webhook: a completed checkout writes the subscription as Stripe holds it", () => {
+  /** The one write a checkout makes, with this plan and status. */
+  const written = (plan: string, status: string) => [
+    {
+      table: "user_subscriptions",
+      op: "upsert",
+      values: {
+        user_id: "user-1",
+        stripe_customer_id: "cus_1",
+        stripe_subscription_id: "sub_1",
+        plan,
+        status,
+        current_period_end: "2026-01-01T00:00:00.000Z",
+      },
+      options: { onConflict: "user_id" },
+      filters: [],
+    },
+  ];
+
+  it.each([
+    ["active", "active"],
+    ["trialing", "trialing"],
+  ])("grants Pro and reports one conversion when the subscription is %s", async (stripeStatus, status) => {
+    stripeHolds(stripeStatus);
+    h.event = checkoutCompleted();
+
+    expect((await deliver()).status).toBe(200);
+    expect(h.calls).toEqual(written("pro", status));
+
+    await runAfterTasks();
+    expect(h.capture).toHaveBeenCalledOnce();
+    expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", {
+      stripe_subscription_id: "sub_1",
+      plan: "pro",
+    });
+  });
+
+  it.each([
+    ["past_due", "past_due"],
+    ["incomplete", "canceled"],
+    ["unpaid", "canceled"],
+    ["paused", "canceled"],
+  ])("grants nothing and reports no conversion when the subscription is %s", async (stripeStatus, status) => {
+    stripeHolds(stripeStatus);
+    h.event = checkoutCompleted();
+
+    expect((await deliver()).status).toBe(200);
+    // The row still takes the subscription, with its standing and without Pro.
+    expect(h.calls).toEqual(written("free", status));
+
+    // Nothing was left to send after the response either.
+    expect(h.afterTasks).toEqual([]);
+    expect(h.capture).not.toHaveBeenCalled();
+  });
+
+  it.each(["canceled", "incomplete_expired"])(
+    "writes nothing and reports nothing when the subscription has ended (%s)",
+    async (stripeStatus) => {
+      stripeHolds(stripeStatus);
+      h.event = checkoutCompleted();
+
+      expect((await deliver()).status).toBe(200);
+      expect(h.calls).toEqual([]);
+      expect(h.afterTasks).toEqual([]);
+      expect(h.capture).not.toHaveBeenCalled();
+    }
+  );
+
+  it("still answers 500 when a standing without Pro cannot be written, so that Stripe sends the event again", async () => {
+    stripeHolds("past_due");
+    h.event = checkoutCompleted();
+    h.answers["user_subscriptions.upsert"] = { error: { message: "TypeError: fetch failed", code: "" } };
+
+    expect((await deliver()).status).toBe(500);
+    await runAfterTasks();
+    expect(h.capture).not.toHaveBeenCalledWith("user-1", "subscription_activated", expect.anything());
+  });
 });
 
 // Stripe does not deliver events in the order it made them, and it delivers
@@ -784,6 +876,21 @@ describe("the Stripe webhook: events that arrive late or out of order", () => {
     }
   );
 
+  // Both events of a new plan grant Pro, and only the checkout reports the conversion.
+  it.each(titled([["the subscription's own event", () => changed("active")], ["the checkout", checkout]]))(
+    "reports one conversion for a new plan, in either order: $title",
+    async ({ order }) => {
+      h.row = buyer();
+      for (const [, event] of order) await send(event());
+      await runAfterTasks();
+      expect(h.capture).toHaveBeenCalledOnce();
+      expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", {
+        stripe_subscription_id: "sub_1",
+        plan: "pro",
+      });
+    }
+  );
+
   describe("a plan that was bought and has ended", () => {
     const events: Named[] = [
       ["the checkout", checkout],
@@ -849,6 +956,91 @@ describe("the Stripe webhook: events that arrive late or out of order", () => {
     expect(h.retrieve).not.toHaveBeenCalled();
     expect(writes()).toEqual([]);
     expect(row().plan).toBe("pro");
+  });
+
+  // The new plan's own event has arrived before its checkout and granted Pro
+  // to a row that held no subscription. Until November 2026 the row went on
+  // holding none, and a row that holds none accepts any event: the end of an
+  // older subscription of the same customer, arriving in those seconds, ended
+  // the plan that had just been paid for.
+  it("keeps a new plan when an older subscription of the customer ends before the checkout is recorded", async () => {
+    h.row = buyer();
+    await send(changed("active", "sub_new"));
+    expect(row()).toMatchObject({ plan: "pro", status: "active", stripe_subscription_id: "sub_new" });
+
+    h.calls = [];
+    await send({
+      id: "evt_old",
+      type: "customer.subscription.deleted",
+      data: { object: { id: "sub_old", customer: "cus_1", status: "canceled" } },
+    });
+    expect(writes()).toEqual([]);
+    expect(row()).toMatchObject({ plan: "pro", status: "active", stripe_subscription_id: "sub_new" });
+  });
+
+  // Only Pro brings the subscription onto the row. A change that grants
+  // nothing leaves a row that holds none holding none, as it always has.
+  it("takes no subscription onto the row for a change that grants nothing", async () => {
+    h.row = buyer();
+    now = "past_due";
+    await send(changed("past_due", "sub_new"));
+    expect(row()).toMatchObject({ plan: "free", status: "past_due", stripe_subscription_id: null });
+  });
+
+  describe("a checkout that arrives while its subscription is not paid for", () => {
+    /** A member whose renewal has failed, as the row records it. */
+    const owing = (): Row => ({ ...member(), plan: "free", status: "past_due" });
+
+    // An old event sent again from the Dashboard, after a renewal has failed.
+    it("does not bring Pro back to a member whose payment is past due", async () => {
+      h.row = owing();
+      now = "past_due";
+      await send(checkout());
+      expect(row()).toEqual(owing());
+      expect(h.afterTasks).toEqual([]);
+    });
+
+    it("records the failed payment when the row has not heard of it yet", async () => {
+      h.row = member();
+      now = "past_due";
+      await send(checkout());
+      expect(row()).toEqual(owing());
+      expect(h.afterTasks).toEqual([]);
+    });
+
+    // The payment page was completed and the first payment has not gone through yet.
+    it("grants nothing while the first payment is pending, and Pro when the change says it was paid", async () => {
+      h.row = buyer();
+      now = "incomplete";
+      await send(checkout());
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: "sub_1" });
+
+      now = "active";
+      await send(changed("active"));
+      expect(row()).toEqual(member());
+    });
+
+    it("grants nothing when the pending payment is never made", async () => {
+      h.row = buyer();
+      now = "incomplete";
+      await send(checkout());
+      now = "incomplete_expired";
+      await send(changed("incomplete_expired"));
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: "sub_1" });
+      expect(h.afterTasks).toEqual([]);
+    });
+
+    it.each(["canceled", "incomplete_expired"])(
+      "leaves the row as it is when the subscription has ended (%s)",
+      async (status) => {
+        h.row = buyer();
+        now = status;
+        await send(checkout());
+        expect(writes()).toEqual([]);
+        expect(row()).toEqual(buyer());
+        expect(h.afterTasks).toEqual([]);
+      }
+    );
   });
 
   it("does not ask Stripe about a customer it has no row for, or about another subscription", async () => {

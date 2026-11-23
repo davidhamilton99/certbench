@@ -13,7 +13,7 @@ export const acronyms: ReferenceTable = {
   id: "acronyms",
   title: "Acronyms",
   description:
-    "The Security+ SY0-701 acronym list: expand each one from memory. The single most-tested block of pure recall on the exam.",
+    "This table lists acronyms for the Security+ SY0-701 exam with the expansion of each and the study grouping it is filed under.",
   columnHeaders: [
     { key: "acronym", label: "Acronym", mono: true },
     { key: "expansion", label: "Expansion" },

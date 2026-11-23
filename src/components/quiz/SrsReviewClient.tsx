@@ -12,9 +12,9 @@ import {
   type SrsCard,
 } from "@/contracts/srs";
 import { userMessage } from "@/lib/errors/user-message";
-import { seededPermutation } from "@/core/quiz-engine/shuffle";
 import type { ResponseValue } from "@/core/quiz-engine/types";
 import { OPTION_LETTERS } from "@/components/quiz/AnswerOption";
+import { answerOrder } from "@/components/quiz/answer-order";
 import { MultipleChoice } from "./renderers/MultipleChoice";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -222,8 +222,9 @@ export function SrsReviewClient({ certId }: { certId: string }) {
         : (OPTION_LETTERS as readonly string[]).indexOf(e.key.toUpperCase());
     if (place < 0 || place >= card.options.length) return;
     e.preventDefault();
-    const permutation = seededPermutation(seed, card.questionId, card.options.length);
-    void answer({ kind: "single", selectedIndex: permutation[place] });
+    // The order the answers are drawn in, whether the card is shuffled or keeps its stored order.
+    const order = answerOrder(seed, card.questionId, card.options.length, card.keepOrder);
+    void answer({ kind: "single", selectedIndex: order[place] });
   }
 
   const lastKey = OPTION_LETTERS[Math.min(card.options.length, OPTION_LETTERS.length) - 1];
@@ -262,6 +263,8 @@ export function SrsReviewClient({ certId }: { certId: string }) {
           questionId={card.questionId}
           options={card.options}
           seed={seed}
+          // The explanation printed under the answers names one of them by its letter.
+          keepOrder={card.keepOrder}
           value={selection}
           onChange={answer}
           revealed={!!grade}

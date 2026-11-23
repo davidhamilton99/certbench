@@ -10,7 +10,6 @@ import {
   toSnapshot,
   unansweredIndexes,
 } from "@/core/quiz-engine/machine";
-import { seededPermutation } from "@/core/quiz-engine/shuffle";
 import type {
   QuizConfig,
   QuizEvent,
@@ -20,6 +19,7 @@ import type {
 import type { AnswerInput, ExamQuestion } from "@/contracts/quiz";
 import { userMessage } from "@/lib/errors/user-message";
 import { OPTION_LETTERS } from "@/components/quiz/AnswerOption";
+import { answerOrder } from "@/components/quiz/answer-order";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { MultipleChoice } from "./renderers/MultipleChoice";
@@ -169,7 +169,8 @@ export function QuizShell({
     const question = questions[current.index];
     if (!question) return;
     // The keys name an answer by its place on screen; the answer recorded is
-    // the stored one at that place.
+    // the stored one at that place. The order is the one the answers are drawn
+    // in, whether the question is shuffled or keeps its stored order.
     const digit = Number(e.key);
     const place =
       e.key.length === 1 && Number.isInteger(digit) && digit >= 1
@@ -177,11 +178,11 @@ export function QuizShell({
         : (OPTION_LETTERS as readonly string[]).indexOf(e.key.toUpperCase());
     if (place < 0 || place >= question.options.length) return;
     e.preventDefault();
-    const permutation = seededPermutation(seed, question.id, question.options.length);
+    const order = answerOrder(seed, question.id, question.options.length, question.keepOrder);
     dispatch({
       type: "ANSWER",
       questionId: question.id,
-      value: { kind: "single", selectedIndex: permutation[place] },
+      value: { kind: "single", selectedIndex: order[place] },
     });
   }
 
@@ -217,7 +218,7 @@ export function QuizShell({
           Review your answers before you submit
         </h2>
         <p className="cb-measure text-small text-muted-foreground">
-          You have answered {answered} of {total} questions.
+          You have answered {answered} of {total} {total === 1 ? "question" : "questions"}.
           {unanswered > 0 && ` ${unanswered} ${unanswered === 1 ? "question is" : "questions are"} not answered.`}
           {flaggedCount > 0 &&
             ` ${flaggedCount} ${flaggedCount === 1 ? "question is" : "questions are"} flagged for review.`}{" "}
@@ -341,6 +342,7 @@ export function QuizShell({
             questionId={question.id}
             options={question.options}
             seed={seed}
+            keepOrder={question.keepOrder}
             value={response?.value}
             labelledBy={promptId}
             onChange={(value) => dispatch({ type: "ANSWER", questionId: question.id, value })}

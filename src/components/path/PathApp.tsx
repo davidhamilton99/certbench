@@ -1286,6 +1286,10 @@ export function PathApp({
         onContinue={() => {
           // Someone who will sign in later, or who did not pay: the visit goes on as any other.
           dropUpgradedFlag();
+          // What takes this screen's place follows a press. A question takes
+          // the focus itself when it is told to (the one that the page loaded
+          // with was not); any other screen is given it at its title.
+          setPlay({ ...playRef.current, takeFocus: true });
           setLanding({ done: true });
         }}
       />

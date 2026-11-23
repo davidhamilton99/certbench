@@ -62,6 +62,19 @@ describe("the free PBQs in public copy", () => {
     expect(comparisons.match(/opens (\d+) labs in all/)?.[1]).toBe(String(FREE_LAB_COUNT));
   });
 
+  // The note on the constant said that anyone can play the free labs with no
+  // account. That stopped being true when a free account was asked for from
+  // the fourth lab, and the next person to read the constant would repeat it.
+  it("describes the free labs beside their constant as the pages do", () => {
+    const source = readFileSync(join(root, "src/core/path/free-labs.ts"), "utf8");
+    const note = source
+      .slice(source.indexOf("/**"), source.indexOf("export const FREE_LAB_COUNT"))
+      .replace(/\s*\n\s*\*\s?/g, " ");
+    expect(note).toContain("the first LABS_WITHOUT_ACCOUNT with no account, and the rest with a free account");
+    expect(note).not.toMatch(/anyone can play/);
+    expect(LABS_WITHOUT_ACCOUNT).toBeLessThan(FREE_LAB_COUNT);
+  });
+
   it("names the exams that have free labs, and Security+ SY0-801 is not one of them", () => {
     // SY0-801 has labs on its study path and no public page of labs, so none of
     // its labs is free. A sentence about the free labs names these exams.
@@ -76,5 +89,11 @@ describe("the free PBQs in public copy", () => {
       expect(source).not.toMatch(/labs(?: \(PBQs\))? for each exam|free for each exam|For each exam, \{FREE_LAB_COUNT\}|PBQ page for each exam/);
       expect(source).toContain("EXAMS_WITH_FREE_LABS");
     }
+    // The home page says it twice, under the table of exams and in the free
+    // plan's list, and takes the names from the same place both times. Its one
+    // practice exam is free for each exam, which is true; its labs are not.
+    const home = readFileSync(join(root, "src/app/(marketing)/page.tsx"), "utf8").replace(/\s+/g, " ");
+    expect(home).not.toMatch(/labs(?: \(PBQs\))? for each exam|For Security\+, Network\+/);
+    expect(home.match(/EXAMS_WITH_FREE_LABS\b/g)).toHaveLength(3);
   });
 });

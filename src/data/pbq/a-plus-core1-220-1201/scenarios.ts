@@ -109,7 +109,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       "10 Gbps up to 55 m",
       "10 Gbps up to 100 m",
       "100 Gbps+ over many kilometers",
-      "10 Gbps up to 550 m (OM4)",
+      "10 Gbps up to 300 m (OM3)",
       "Used for cable TV and broadband up to ~1 Gbps",
     ],
     correct_map: [0, 1, 2, 3, 4, 5],

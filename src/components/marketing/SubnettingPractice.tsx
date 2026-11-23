@@ -141,7 +141,7 @@ export function SubnettingPractice() {
         }
         lead={{
           title: "Subnetting is one skill in one domain.",
-          body: "The exam is decided by scenarios from every domain. Your study path covers every objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
+          body: "The exam is decided by scenarios from every domain. Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />

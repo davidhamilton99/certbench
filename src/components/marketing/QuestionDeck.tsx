@@ -11,6 +11,7 @@ import { useKeyboardTurn } from "@/components/path/keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "@/components/path/RepCard";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 
 // The question types live with the list, which is not a client module; they
 // are exported from here as before for the pages and data files that use them.
@@ -26,6 +27,26 @@ export interface DeckNext {
 
 /** Room for the public pages' sticky header when the score scrolls into view. */
 const HEADER_CLEARANCE = 72;
+
+/** The exam whose study path an address opens ("/path/network-plus-n10-009"), or null for the list of exams. */
+function examOf(path: string): string | null {
+  const match = /^\/path\/([a-z0-9-]+)/.exec(path);
+  return match ? match[1] : null;
+}
+
+/**
+ * What the score says the study path does. Where the deck leads to one exam's
+ * study path, it covers every objective if that exam's steps follow CompTIA's
+ * objectives, and every topic if the exam is set out by CertBench's own topics
+ * (Network+). Where the deck leads to the list of exams, the sentence is the
+ * one that is true of every exam.
+ */
+function pathCovers(path: string): string {
+  const cert = examOf(path);
+  return cert
+    ? `covers every ${usesOfficialObjectiveNumbers(cert) ? "objective" : "topic"}`
+    : "works through your exam topic by topic,";
+}
 
 /** The questions as the study path's own: lettered like the exam, the explanation's first line as the takeaway. */
 function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
@@ -129,7 +150,7 @@ export function QuestionDeck({
   const signedIn = Boolean(userId);
   const cta: DeckNext = next ?? {
     title: `${examName} study path`,
-    body: "The study path covers every objective in short steps like these, up to a readiness checkpoint that shows where you stand.",
+    body: `The study path ${pathCovers(path)} in short steps like these, up to a readiness checkpoint that shows where you stand.`,
     href: path,
     label: signedIn ? "Continue the study path" : "Start the study path",
   };

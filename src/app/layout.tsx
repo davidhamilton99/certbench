@@ -18,7 +18,7 @@ const SITE_JSONLD = {
       logo: "https://certbench.dev/icon-512.png",
       email: "support@certbench.dev",
       description:
-        "An independent study program for the CompTIA Security+, Network+ and A+ exams. Every exam objective is set out as a study path of short, interactive steps, with a readiness checkpoint, hands-on labs and a full-length practice exam.",
+        "An independent study program for the CompTIA Security+, Network+ and A+ exams. The study path works through each exam topic by topic, in short, interactive steps, with a readiness checkpoint, hands-on labs and a full-length practice exam.",
     },
     {
       "@type": "WebSite",
@@ -85,7 +85,7 @@ export const metadata: Metadata = {
     template: "%s | CertBench",
   },
   description:
-    "CertBench is a study program for CompTIA Security+, Network+ and A+. It teaches every exam objective in short steps, with hands-on labs, a readiness checkpoint and a full-length timed practice exam. It is free to start.",
+    "CertBench is a study program for CompTIA Security+, Network+ and A+. It works through your exam topic by topic in short steps, with hands-on labs, a readiness checkpoint and a full-length timed practice exam. It is free to start.",
   keywords: [
     "CompTIA Security+",
     "CompTIA Network+",
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CertBench | Study program for CompTIA Security+, Network+ and A+",
     description:
-      "Every exam objective is set out as a study path of short, interactive steps, with a readiness checkpoint that shows where you stand.",
+      "The study path works through your exam topic by topic, in short, interactive steps, with a readiness checkpoint that shows where you stand.",
     url: "https://certbench.dev",
     siteName: "CertBench",
     type: "website",
@@ -118,7 +118,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CertBench | Study program for CompTIA Security+, Network+ and A+",
     description:
-      "Every exam objective is set out as a study path of short, interactive steps, with a readiness checkpoint that shows where you stand.",
+      "The study path works through your exam topic by topic, in short, interactive steps, with a readiness checkpoint that shows where you stand.",
   },
   robots: {
     index: true,

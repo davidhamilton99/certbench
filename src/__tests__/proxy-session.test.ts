@@ -5,7 +5,8 @@ import { NextRequest } from "next/server";
  * The proxy with its real session code, against a stand-in for the Supabase
  * client. proxy.test.ts covers the proxy's own two redirects with the session
  * code replaced; this file covers what the session code decides: who may open
- * a guarded page, and which requests never reach the sign-in service at all.
+ * a guarded page, which requests never reach the sign-in service at all, and
+ * what the owner is told when the gate had to be left open.
  */
 
 type CookieToSet = { name: string; value: string; options?: Record<string, unknown> };
@@ -24,10 +25,28 @@ const supabase = vi.hoisted(() => ({
   profile: { data: null, error: null } as ReadResult,
 }));
 
+const reports = vi.hoisted(() => ({
+  /** The report of a fault as a `server_error`. */
+  send: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}),
+  /**
+   * Work scheduled for after the response. Null stands for a server that
+   * cannot schedule any: `after` then refuses, as it does outside a request.
+   */
+  afterTasks: null as (() => unknown)[] | null,
+}));
+
 vi.mock("@/env", () => ({
   publicEnv: {
     NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
     NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon",
+  },
+}));
+vi.mock("@/server/api/report-error", () => ({ reportServerError: reports.send }));
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: (task: () => unknown) => {
+    if (!reports.afterTasks) throw new Error("`after` was called outside a request scope.");
+    reports.afterTasks.push(task);
   },
 }));
 vi.mock("@supabase/ssr", () => ({
@@ -86,6 +105,8 @@ beforeEach(() => {
   supabase.rotated = [];
   supabase.subscription = { data: null, error: null };
   supabase.profile = { data: null, error: null };
+  reports.send.mockReset().mockImplementation(async () => {});
+  reports.afterTasks = null;
 });
 
 afterEach(() => {
@@ -152,6 +173,98 @@ describe("guarded pages: who may open them is decided as before", () => {
     supabase.subscription = { data: null, error: { message: "connection refused" } };
     const res = await visit("/dashboard", { cookie: SESSION });
     expect(wentThrough(res)).toBe(true);
+  });
+});
+
+// The gate fails open when it cannot read the plan or the role, so that a
+// paying member is never walled by a fault of the server's own. A gate that
+// stands open looks from outside like one that works, and until November 2026
+// the only trace was a line in the log.
+describe("a Pro gate that was left open is reported to the owner", () => {
+  const PLACE = { route: "proxy:pro-gate", kind: "proxy" };
+  /** An address with what a report must never carry: an id and a query. */
+  const ADDRESS = "/certifications/2b1f3c9e-1111-4222-8333-444455556666/domain/7?email=member@example.com";
+
+  /** The one report that was sent: the fault and the place. */
+  const sent = () => {
+    expect(reports.send).toHaveBeenCalledOnce();
+    return reports.send.mock.calls[0] as [Error, unknown];
+  };
+
+  beforeEach(() => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    signedIn();
+  });
+
+  it("reports once, with the place alone, when the plan cannot be read", async () => {
+    supabase.subscription = { data: null, error: { message: "connection refused while reading user-1" } };
+
+    const res = await visit(ADDRESS, { cookie: SESSION });
+    expect(wentThrough(res)).toBe(true);
+
+    const [fault, place] = sent();
+    expect(place).toEqual(PLACE);
+    expect(fault).toBeInstanceOf(Error);
+    expect(fault.message).toBe("The Pro gate let a request through: the plan could not be read.");
+    // Not the address, the account, the session or the database's own words.
+    expect(fault.cause).toBeUndefined();
+    const carried = JSON.stringify([fault.message, place]);
+    for (const secret of ["2b1f3c9e", "member@example.com", "user-1", "connection refused", "eyJhY2Nlc3NfdG9rZW4"]) {
+      expect(carried, secret).not.toContain(secret);
+    }
+  });
+
+  it("reports once when the role cannot be read", async () => {
+    supabase.subscription = { data: { plan: "free", status: "active" }, error: null };
+    supabase.profile = { data: null, error: { message: "statement timeout" } };
+
+    const res = await visit("/dashboard", { cookie: SESSION });
+    expect(wentThrough(res)).toBe(true);
+
+    const [fault, place] = sent();
+    expect(place).toEqual(PLACE);
+    expect(fault.message).toBe("The Pro gate let a request through: the role could not be read.");
+  });
+
+  it("reports nothing when the gate could decide", async () => {
+    withPro();
+    expect(wentThrough(await visit("/dashboard", { cookie: SESSION }))).toBe(true);
+
+    withoutPro();
+    expect((await visit("/dashboard", { cookie: SESSION })).headers.get("location")).toBe(`${SITE}/start`);
+    expect(wentThrough(await visit("/upgrade", { cookie: SESSION }))).toBe(true);
+
+    supabase.subscription = { data: null, error: null };
+    supabase.profile = { data: { role: "admin", onboarding_completed: true }, error: null };
+    expect(wentThrough(await visit("/admin/testimonials", { cookie: SESSION }))).toBe(true);
+
+    supabase.getUser = async () => ({ data: { user: null } });
+    expect((await visit("/dashboard", { cookie: SESSION })).status).toBe(307);
+
+    expect(reports.send).not.toHaveBeenCalled();
+  });
+
+  it("does not hold the response for a report that is slow to send", async () => {
+    supabase.subscription = { data: null, error: { message: "connection refused" } };
+    reports.send.mockImplementation(() => new Promise(() => {}));
+
+    const res = await visit("/dashboard", { cookie: SESSION });
+    expect(wentThrough(res)).toBe(true);
+    expect(reports.send).toHaveBeenCalledOnce();
+  });
+
+  it("leaves the report until the response has gone, where the server can schedule that", async () => {
+    reports.afterTasks = [];
+    supabase.subscription = { data: null, error: { message: "connection refused" } };
+
+    const res = await visit("/dashboard", { cookie: SESSION });
+    expect(wentThrough(res)).toBe(true);
+    // The request has gone on to its page and nothing has been sent yet.
+    expect(reports.send).not.toHaveBeenCalled();
+    expect(reports.afterTasks).toHaveLength(1);
+
+    for (const task of reports.afterTasks) await task();
+    expect(reports.send).toHaveBeenCalledOnce();
   });
 });
 

@@ -186,6 +186,23 @@ describe("QuestionDeck", () => {
     expect(screen.getByRole("link", { name: /Take the exam/ }).getAttribute("href")).toBe("/sy0-801-test");
   });
 
+  // The Security+ and A+ steps follow CompTIA's objectives. The Network+ steps
+  // follow CertBench's own topics, and a deck that leads to the list of exams
+  // could be followed by any of them.
+  it.each([
+    ["/path/security-plus-sy0-701", "The study path covers every objective in short steps like these, up to a readiness checkpoint that shows where you stand."],
+    ["/path/a-plus-core2-220-1202", "The study path covers every objective in short steps like these, up to a readiness checkpoint that shows where you stand."],
+    ["/path/network-plus-n10-009", "The study path covers every topic in short steps like these, up to a readiness checkpoint that shows where you stand."],
+    ["/start", "The study path works through your exam topic by topic, in short steps like these, up to a readiness checkpoint that shows where you stand."],
+  ])("says what the study path covers in words that are true of the exam it leads to: %s", (path, sentence) => {
+    render(deck({ questions: QUESTIONS.slice(0, 1), path }));
+    fireEvent.click(tiles()[1]);
+    fireEvent.click(screen.getByRole("button", { name: /^View my score/ }));
+    const score = screen.getByRole("group", { name: `${LABEL}: your score` });
+    expect(within(score).getByText(sentence)).toBeInTheDocument();
+    if (!sentence.includes("every objective")) expect(score).not.toHaveTextContent(/every (?:exam )?objective/i);
+  });
+
   it("says above a question what it belongs to, where the page tags it", () => {
     render(deck({ questions: [{ ...QUESTIONS[0], tag: "2.6 Threats of AI" }, QUESTIONS[1]] }));
     const card = screen.getByRole("group", { name: QUESTIONS[0].questionText }).parentElement!;

@@ -104,6 +104,111 @@ describe("RecallPlayer, a typed answer", () => {
   });
 });
 
+describe("RecallPlayer, a fact with two rows", () => {
+  // RADIUS has a row for its legacy ports and a row for its ports, as the
+  // Security+ ports table has, and a question deals one of them.
+  const radiusTable: ReferenceTable = {
+    ...table,
+    entries: [
+      { columns: { protocol: "RADIUS", port: "1645/1646" } },
+      { columns: { protocol: "RADIUS", port: "1812/1813" } },
+      { columns: { protocol: "SSH", port: "22" } },
+      { columns: { protocol: "HTTPS", port: "443" } },
+      { columns: { protocol: "TACACS+", port: "49" } },
+    ],
+  };
+  const LEGACY = "RADIUS uses ports 1645 and 1646. These are its legacy ports.";
+  const CURRENT = "RADIUS uses ports 1812 and 1813. Port 1812 is for authentication and port 1813 is for accounting.";
+  const radiusDeck = buildDeck(
+    {
+      id: "ports",
+      label: "Ports",
+      tableId: "ports-protocols",
+      mode: "choice",
+      ask: { key: "protocol", label: "protocol" },
+      answer: { key: "port", label: "port" },
+      bidirectional: true,
+      accept: "numeric-parts",
+      explain: {
+        template: "{protocol} uses port {port}.",
+        by: "port",
+        rows: { "1645/1646": LEGACY, "1812/1813": CURRENT },
+      },
+    },
+    radiusTable
+  );
+
+  /** The verdict and what follows it, as one line of text. */
+  const verdict = () => screen.getByText(/^(?:Correct|Incorrect)\./).parentElement?.textContent;
+
+  /** Deals RADIUS: the first row of the deck, then the row of RADIUS that `second` picks. */
+  function dealRadius(second: number, typed: boolean) {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    // The numbers are used in this order: the fact, (for a choice) the direction, then which of its rows.
+    random.mockReturnValueOnce(0);
+    if (!typed) random.mockReturnValueOnce(0.9);
+    random.mockReturnValueOnce(second);
+    const onAnswer = vi.fn();
+    render(<RecallPlayer decks={[radiusDeck]} deckKey="ports-protocols" typed={typed} onAnswer={onAnswer} />);
+    expect(cue()).toBe("RADIUS");
+    return onAnswer;
+  }
+
+  function type(answer: string) {
+    const input = screen.getByLabelText("Type the port");
+    fireEvent.change(input, { target: { value: answer } });
+    fireEvent.submit(input.closest("form")!);
+  }
+
+  it("marks the port of the other row correct, and says which row the question asked for", () => {
+    // The legacy row is dealt; the learner types the port that every candidate learns.
+    const onAnswer = dealRadius(0, true);
+    type("1812");
+    expect(onAnswer).toHaveBeenCalledWith("ports-protocols", "RADIUS", true);
+    expect(verdict()).toBe(
+      `Correct. ${LEGACY} This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813.`
+    );
+  });
+
+  it("does the same when the other row is dealt and the legacy port is typed", () => {
+    const onAnswer = dealRadius(0.9, true);
+    type("1645");
+    expect(onAnswer).toHaveBeenCalledWith("ports-protocols", "RADIUS", true);
+    expect(verdict()).toBe(
+      `Correct. ${CURRENT} This question asked for 1812/1813. Another correct answer for RADIUS is 1645/1646.`
+    );
+  });
+
+  it("still marks a port that belongs to neither row incorrect, and names both answers", () => {
+    const onAnswer = dealRadius(0, true);
+    type("49");
+    expect(onAnswer).toHaveBeenCalledWith("ports-protocols", "RADIUS", false);
+    expect(verdict()).toBe(
+      `Incorrect. The correct answer is 1645/1646. ${LEGACY} This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813.`
+    );
+  });
+
+  it("says so after a choice of answers too, where only the dealt row's ports are offered", () => {
+    dealRadius(0, false);
+    const offered = screen.getAllByRole("button").map((b) => b.textContent ?? "");
+    expect(offered.filter((text) => text.endsWith("1645/1646"))).toHaveLength(1);
+    expect(offered.filter((text) => text.endsWith("1812/1813"))).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "1645/1646" }));
+    expect(verdict()).toBe(
+      `Correct. ${LEGACY} This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813.`
+    );
+  });
+
+  it("adds nothing to a fact that has one row", () => {
+    // The third row of the deck: SSH.
+    vi.spyOn(Math, "random").mockReturnValue(0).mockReturnValueOnce(0.5);
+    render(<RecallPlayer decks={[radiusDeck]} deckKey="ports-protocols" typed />);
+    expect(cue()).toBe("SSH");
+    type("22");
+    expect(verdict()).toBe("Correct. SSH uses port 22.");
+  });
+});
+
 describe("RecallPlayer, a choice of answers", () => {
   it("draws the answers as buttons in a group named by the question", () => {
     render(<RecallPlayer decks={[deck]} deckKey="ports-protocols" />);

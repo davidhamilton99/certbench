@@ -44,6 +44,14 @@ const CERTMASTER_PRICE = "Typically more than $150 for each exam";
 const CERTBENCH_FREE =
   "A full-length practice exam of 90 questions, the introductory questions, a readiness check and three hands-on labs need no account. A free account shows the exam score, opens 12 labs in all, and opens the study path up to its readiness checkpoint";
 
+/**
+ * The "Study path" row of a comparison that is not about one exam. It is true
+ * of every exam: the Network+ steps follow CertBench's own topics and not
+ * CompTIA's objectives, so only a page about Security+ or A+ alone says "every
+ * objective" (src/lib/seo/__tests__/coverage-claims.test.ts).
+ */
+const STUDY_PATH_ANY_EXAM = "Yes: it works through your exam topic by topic, in short steps";
+
 /** Said first on a comparison page, so that every judgment on it has an owner. */
 const VS_DISCLOSURE = "CertBench publishes this comparison, and the assessments in it are its own.";
 
@@ -131,7 +139,7 @@ export const VS_PAGES: VsPage[] = [
     h1: "CertBench and CertMaster compared",
     intro: [
       `${VS_DISCLOSURE} CertMaster is CompTIA's own product, and that brings real advantages: alignment with the objectives by the organization that writes them, integration with the official courseware, and the credibility of the exam vendor itself. If your employer or school provides it, you should use it.`,
-      "If you are paying for it yourself, the calculation is different. CertMaster Practice typically costs more than $150 for each exam, and it is built around practice tests and objective assessments with mastery scores, whereas CertBench is a study path through every objective. The comparison below sets out what each one offers for its price.",
+      "If you are paying for it yourself, the calculation is different. CertMaster Practice typically costs more than $150 for each exam, and it is built around practice tests and objective assessments with mastery scores, whereas CertBench is a study path that works through your exam topic by topic. The comparison below sets out what each one offers for its price.",
     ],
     chooseThem: [
       "Your employer, school or bootcamp already provides CertMaster, so the official content costs you nothing",
@@ -140,12 +148,12 @@ export const VS_PAGES: VsPage[] = [
     ],
     chooseUs: [
       "You are paying for it yourself, and the price matters to you",
-      "You want a study path through every objective, which brings back the questions that you missed until you can answer them",
+      "You want a study path that works through your exam topic by topic, and brings back the questions that you missed until you can answer them",
       "You want a readiness score from exam-style questions, weighted the way the real exam weights its domains",
     ],
     rows: [
       { feature: "Official CompTIA alignment", certbench: "Written independently to the exam objectives", competitor: "The exam vendor's own content" },
-      { feature: "Study path", certbench: "Yes: a short step for every objective, in order", competitor: "Practice tests and objective assessments that find gaps by domain" },
+      { feature: "Study path", certbench: STUDY_PATH_ANY_EXAM, competitor: "Practice tests and objective assessments that find gaps by domain" },
       { feature: "Spaced repetition", certbench: "Built in for every question that you miss", competitor: "No scheduled spaced repetition" },
       { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed practice exams", competitor: "Progress and topic mastery indicators" },
       { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "In CertMaster Labs (sold separately)" },
@@ -194,7 +202,7 @@ export const VS_PAGES: VsPage[] = [
     rows: [
       { feature: "Mobile experience", certbench: "A responsive web app that works well on a phone. There is no native app", competitor: "Polished native apps with offline mode" },
       { feature: "Full-length weighted exams", certbench: "Yes, weighted like the real exam", competitor: "Mock Exam mode (premium), at the real exam's length and time limit" },
-      { feature: "Study path", certbench: "Yes: a short step for every objective, in order", competitor: "Level Up mode (premium): each subject in levels that get harder" },
+      { feature: "Study path", certbench: STUDY_PATH_ANY_EXAM, competitor: "Level Up mode (premium): each subject in levels that get harder" },
       { feature: "Spaced repetition", certbench: "Built in for every question that you miss", competitor: "A review of missed questions, without scheduled repetition" },
       { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "No" },
       { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed practice exams", competitor: "Average-score tracking" },

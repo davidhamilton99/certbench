@@ -135,7 +135,13 @@ export interface RecallQuestion {
   answerLabel: string;
   /** Canonical answer, for display on reveal. */
   answer: string;
-  /** Normalized accepted forms — grades both typed answers and chosen options. */
+  /**
+   * Normalized accepted forms, which grade both typed answers and chosen options.
+   * Where the cue names more than one row (RADIUS has a row for its ports and a
+   * row for its legacy ports), the forms of every such row are accepted, with
+   * those of the row that was dealt first: a typed "1812" is a correct port
+   * for RADIUS whichever row the question drew.
+   */
   acceptable: string[];
   /** Up to four shuffled options (the answer plus distractors). */
   options: string[];
@@ -374,6 +380,43 @@ export function explainRow(
 }
 
 /**
+ * The other answers to a cue that names more than one row, in the table's
+ * order. A cue stands for one row in nearly every deck, and for two where the
+ * table has them: RADIUS has a row for its ports and a row for its legacy
+ * ports. `cue` and `answer` are the two cells a question showed, whichever way
+ * round it was asked, so a card can ask this of the question it holds. Empty
+ * when the cue has one row, and when the two cells are not a row of the deck.
+ */
+export function otherAnswers(deck: ResolvedDeck, cue: string, answer: string): string[] {
+  const { ask, answer: recalled, bidirectional } = deck.config;
+  const ways = [[ask.key, recalled.key], ...(bidirectional ? [[recalled.key, ask.key]] : [])];
+  for (const [cueKey, answerKey] of ways) {
+    const sameCue = deck.rows.filter((row) => row[cueKey] === cue);
+    if (sameCue.some((row) => row[answerKey] === answer)) {
+      return distinctValues(sameCue, answerKey).filter((value) => value !== answer);
+    }
+  }
+  return [];
+}
+
+/**
+ * What a card says after the explanation of the row it dealt, when its cue
+ * names other rows too: which answer the question asked for, and that the
+ * other is correct as well. A typed answer from any of the cue's rows is
+ * accepted, so without this a learner who types 1812 for RADIUS could be told
+ * "Correct." above two sentences about ports 1645 and 1646 and nothing else.
+ * Null when the cue has no other answer.
+ */
+export function otherAnswersSentence(cue: string, answer: string, others: readonly string[]): string | null {
+  if (others.length === 0) return null;
+  const also =
+    others.length === 1
+      ? `Another correct answer for ${cue} is ${others[0]}.`
+      : `Other correct answers for ${cue} are ${others.slice(0, -1).join(", ")} and ${others[others.length - 1]}.`;
+  return `This question asked for ${answer}. ${also}`;
+}
+
+/**
  * Generate one question. `rng` defaults to `Math.random` for the live drill.
  * Every question carries both multiple-choice `options` and the accepted typed
  * `acceptable` forms, so the UI can render it either way. Pass `noSwap` (used by
@@ -409,6 +452,12 @@ export function generateRecallQuestion(
       .filter((r) => r[askField.key] === promptValue)
       .map((r) => r[ansField.key])
   );
+  // A typed answer has no options to keep apart: an answer from any of the
+  // cue's rows is a correct answer to it, and is accepted. The dealt row's
+  // forms come first.
+  const acceptable = [
+    ...new Set([answer, ...alsoValid].flatMap((valid) => acceptableAnswers(valid, config.accept))),
+  ];
   const pool = distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v));
   // Prefer confusable distractors — same category as the answer — so the right
   // option can't be found by elimination ("the only crypto term"). Fall back to
@@ -450,7 +499,7 @@ export function generateRecallQuestion(
     askLabel: askField.label,
     answerLabel: ansField.label,
     answer,
-    acceptable: acceptableAnswers(answer, config.accept),
+    acceptable,
     options,
     details,
     ...(explanation ? { explanation } : {}),

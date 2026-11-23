@@ -54,10 +54,18 @@ function captureAfterResponse(
  *     can hold more than one subscription for a customer (a first attempt whose
  *     payment was never completed, beside the plan that was then paid for). The
  *     unfinished one expires about a day later, and that event must not end
- *     the paid plan. A row that holds no subscription yet accepts any.
- *  2. A completed checkout grants Pro only while its subscription is alive.
- *     Stripe may deliver the event again days later, after a failed write; by
- *     then the buyer may have canceled, and the retry must not bring Pro back.
+ *     the paid plan. A row that holds no subscription yet accepts any, and it
+ *     takes the subscription of the event that grants it Pro.
+ *  2. A completed checkout writes its subscription as Stripe holds it now, by
+ *     the mapping a change uses (standingOf): Pro while the subscription is
+ *     active or in a trial, and otherwise its standing with no Pro. The event
+ *     says only that the payment page was completed. Stripe may deliver it
+ *     again days later, after a failed write, and it can be sent again by hand
+ *     from the Dashboard; by then the payment may be past due or the buyer may
+ *     have canceled, and the event must not bring Pro back. A first payment
+ *     that is still pending grants nothing yet either: Pro arrives with the
+ *     change that says it was paid. A subscription that has ended writes
+ *     nothing. The conversion is reported only when Pro is granted.
  *  3. A change to a subscription, or a failed payment, is a reason to ask
  *     Stripe and not a fact to write. What those two events write is the
  *     subscription as Stripe holds it now, never the copy inside the event.
@@ -70,6 +78,10 @@ function captureAfterResponse(
  *     shut out a member who had since paid. Only the end of a subscription is
  *     taken from the event itself: an ended subscription cannot come back, so
  *     that copy cannot be out of date.
+ *
+ * What rule 2 leaves open: the conversion is reported by the checkout alone.
+ * A plan whose first payment was still pending when its checkout arrived gets
+ * Pro from the change that follows, and no conversion is reported for it.
  *
  * What rule 3 leaves open: two events for one customer handled at the same
  * moment each ask Stripe and then write, and the one that asked first can
@@ -142,6 +154,35 @@ interface CustomerRow {
 
 /** A subscription in one of these states has ended and gives nobody Pro. */
 const ENDED: ReadonlySet<string> = new Set(["canceled", "incomplete_expired"]);
+
+/** What a subscription means for the row: the three values every such write sets. */
+interface Standing {
+  plan: "free" | "pro";
+  status: "active" | "trialing" | "past_due" | "canceled";
+  current_period_end: string | null;
+}
+
+/**
+ * The standing of a subscription as Stripe holds it: Pro only while it is
+ * active or in a trial, and otherwise where it stands, with no Pro. The status
+ * column knows four words, so a subscription that is neither running nor past
+ * due (unpaid, incomplete, paused, ended) is written as "canceled". A
+ * completed checkout and a change both write through this one mapping, so the
+ * two can never disagree about the same subscription.
+ */
+function standingOf(subscription: Stripe.Subscription): Standing {
+  const { status } = subscription;
+  // Handle both old and new Stripe API versions
+  const periodEnd =
+    (subscription as unknown as Record<string, number>).current_period_end ??
+    subscription.items?.data?.[0]?.current_period_end;
+  return {
+    plan: status === "active" || status === "trialing" ? "pro" : "free",
+    status:
+      status === "active" || status === "trialing" || status === "past_due" ? status : "canceled",
+    current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+  };
+}
 
 /**
  * Whether an event about `subscriptionId` concerns the subscription a row
@@ -220,25 +261,28 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // nothing, and no conversion is reported for it.
       if (ENDED.has(subscription.status)) return null;
 
-      // Handle both old and new Stripe API versions
-      const periodEnd =
-        (subscription as unknown as Record<string, number>).current_period_end ??
-        subscription.items?.data?.[0]?.current_period_end;
+      // Rule 2: what Stripe holds now. A completed payment page is not a paid
+      // plan. By the time this event arrives the subscription may be past due
+      // (a late delivery, or an old event sent again from the Dashboard), and
+      // a first payment may still be pending. The row is written all the same,
+      // with the subscription, its standing and no Pro: the change that says
+      // it was paid then finds a row that holds this subscription and grants
+      // Pro.
+      const standing = standingOf(subscription);
 
       const { error } = await supabase.from("user_subscriptions").upsert(
         {
           user_id: userId,
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: subscription.id,
-          plan: "pro",
-          status: "active",
-          current_period_end: periodEnd
-            ? new Date(periodEnd * 1000).toISOString()
-            : null,
+          ...standing,
         },
         { onConflict: "user_id" }
       );
       if (error) return failure("subscription upsert", error);
+
+      // Without Pro there is no conversion to report.
+      if (standing.plan !== "pro") return null;
 
       // The conversion event, fired server-side (reliable source of truth,
       // unlike a success-redirect the user may never reach) and only once the
@@ -276,29 +320,19 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // event about it), or it was never this row's plan.
       if (ENDED.has(subscription.status) && !(sub as CustomerRow).stripe_subscription_id) return null;
 
-      const isActive =
-        subscription.status === "active" || subscription.status === "trialing";
-
-      const periodEnd =
-        (subscription as unknown as Record<string, number>).current_period_end ??
-        subscription.items?.data?.[0]?.current_period_end;
+      const standing = standingOf(subscription);
+      // Pro granted to a row that holds no subscription (the plan's own event
+      // has arrived before its checkout) is recorded together with the
+      // subscription it comes from. A row that holds none accepts any event
+      // (rule 1), so the late end of an older subscription of the same
+      // customer, arriving in the seconds before the checkout is recorded,
+      // would otherwise end the plan that has just been paid for.
+      const takesSubscription =
+        standing.plan === "pro" && !(sub as CustomerRow).stripe_subscription_id;
 
       const { error } = await supabase
         .from("user_subscriptions")
-        .update({
-          plan: isActive ? "pro" : "free",
-          status:
-            subscription.status === "active"
-              ? "active"
-              : subscription.status === "trialing"
-                ? "trialing"
-                : subscription.status === "past_due"
-                  ? "past_due"
-                  : "canceled",
-          current_period_end: periodEnd
-            ? new Date(periodEnd * 1000).toISOString()
-            : null,
-        })
+        .update(takesSubscription ? { ...standing, stripe_subscription_id: sent.id } : standing)
         .eq("stripe_customer_id", customerId);
       if (error) return failure("subscription update", error);
       return null;

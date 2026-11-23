@@ -13,6 +13,9 @@ const h = vi.hoisted(() => ({
   deleteUser: vi.fn(),
   list: vi.fn(),
   cancel: vi.fn(),
+  /** The list of the customer's payment pages, and the expiry of one. */
+  pages: vi.fn(),
+  expire: vi.fn(),
   /** When set, building the Stripe client fails, as it does without its key. */
   noStripe: null as Error | null,
 }));
@@ -38,7 +41,10 @@ vi.mock("@/server/stripe", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/server/stripe")>()),
   getStripe: () => {
     if (h.noStripe) throw h.noStripe;
-    return { subscriptions: { list: h.list, cancel: h.cancel } };
+    return {
+      subscriptions: { list: h.list, cancel: h.cancel },
+      checkout: { sessions: { list: h.pages, expire: h.expire } },
+    };
   },
 }));
 
@@ -51,6 +57,10 @@ import {
 
 const subscriptions = (...subs: { id: string; status: string }[]) =>
   h.list.mockResolvedValue({ data: subs, has_more: false });
+
+/** The customer's payment pages that are still open. A test that names none has none. */
+const openPaymentPages = (...ids: string[]) =>
+  h.pages.mockResolvedValue({ data: ids.map((id) => ({ id })), has_more: false });
 
 /** Runs the deletion and returns the error it ends with. */
 async function failure(): Promise<ApiError> {
@@ -71,6 +81,9 @@ beforeEach(() => {
   h.deleteUser.mockReset().mockResolvedValue({ data: {}, error: null });
   h.list.mockReset();
   h.cancel.mockReset().mockResolvedValue({ status: "canceled" });
+  h.pages.mockReset();
+  openPaymentPages();
+  h.expire.mockReset().mockResolvedValue({ status: "expired" });
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -183,5 +196,97 @@ describe("deleteAccount", () => {
     );
     await deleteAccount("user-1");
     expect(h.deleteUser).toHaveBeenCalledWith("user-1");
+  });
+});
+
+// An open payment page can still be paid. Until November 2026 it outlived the
+// account, and one that was paid afterwards started a subscription that no
+// account held and that nobody could cancel from the site.
+describe("deleteAccount: payment pages that are still open", () => {
+  it("expires them before the subscriptions are canceled and the account is deleted", async () => {
+    h.row.data = { stripe_customer_id: "cus_9" };
+    openPaymentPages("cs_plan", "cs_added_exam");
+    subscriptions({ id: "sub_paid", status: "active" });
+
+    await deleteAccount("user-1");
+
+    expect(h.pages).toHaveBeenCalledExactlyOnceWith({ customer: "cus_9", status: "open", limit: 100 });
+    expect(h.expire.mock.calls.map(([id]) => id)).toEqual(["cs_plan", "cs_added_exam"]);
+    expect(h.cancel.mock.calls.map(([id]) => id)).toEqual(["sub_paid"]);
+    expect(h.deleteUser).toHaveBeenCalledWith("user-1");
+    // The last page had expired before the subscriptions were read: a page
+    // that was paid a moment earlier has its subscription in that list.
+    expect(h.expire.mock.invocationCallOrder[1]).toBeLessThan(h.list.mock.invocationCallOrder[0]);
+    expect(h.cancel.mock.invocationCallOrder[0]).toBeLessThan(h.deleteUser.mock.invocationCallOrder[0]);
+  });
+
+  it("expires them for an account that never had a subscription", async () => {
+    h.row.data = { stripe_customer_id: "cus_9" };
+    openPaymentPages("cs_abandoned");
+    subscriptions();
+
+    await deleteAccount("user-1");
+
+    expect(h.expire).toHaveBeenCalledExactlyOnceWith("cs_abandoned");
+    expect(h.cancel).not.toHaveBeenCalled();
+    expect(h.expire.mock.invocationCallOrder[0]).toBeLessThan(h.deleteUser.mock.invocationCallOrder[0]);
+  });
+
+  it("keeps the account, and cancels nothing, when a payment page cannot be expired", async () => {
+    h.row.data = { stripe_customer_id: "cus_9" };
+    openPaymentPages("cs_1", "cs_2");
+    subscriptions({ id: "sub_paid", status: "active" });
+    h.expire.mockResolvedValueOnce({ status: "expired" }).mockRejectedValueOnce(new Error("The Checkout Session is not open."));
+
+    const err = await failure();
+    // The same answer as for a subscription that could not be canceled.
+    expect(err.message).toBe(SUBSCRIPTION_NOT_CANCELED);
+    expect(err.code).toBe("conflict");
+    expect(h.list).not.toHaveBeenCalled();
+    expect(h.cancel).not.toHaveBeenCalled();
+    expect(h.deleteUser).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it("keeps the account when the payment pages cannot be read", async () => {
+    h.row.data = { stripe_customer_id: "cus_9" };
+    subscriptions({ id: "sub_paid", status: "active" });
+    h.pages.mockRejectedValue(new Error("An error occurred with our connection to Stripe."));
+
+    expect((await failure()).message).toBe(SUBSCRIPTION_NOT_CANCELED);
+    expect(h.expire).not.toHaveBeenCalled();
+    expect(h.cancel).not.toHaveBeenCalled();
+    expect(h.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("does not ask Stripe for them when the account has no Stripe customer", async () => {
+    h.row.data = { stripe_customer_id: null };
+    await deleteAccount("user-1");
+    expect(h.pages).not.toHaveBeenCalled();
+    expect(h.deleteUser).toHaveBeenCalledWith("user-1");
+  });
+
+  it("has none to expire for a customer that Stripe no longer has", async () => {
+    h.row.data = { stripe_customer_id: "cus_gone" };
+    const gone = () =>
+      Object.assign(new Error("No such customer: 'cus_gone'"), { code: "resource_missing", param: "customer" });
+    h.pages.mockRejectedValue(gone());
+    h.list.mockRejectedValue(gone());
+
+    await deleteAccount("user-1");
+    expect(h.expire).not.toHaveBeenCalled();
+    expect(h.deleteUser).toHaveBeenCalledWith("user-1");
+  });
+
+  // An expired payment page is not a canceled subscription: the member is not told that one was canceled.
+  it("says only that the account was not deleted when the deletion fails after a page has expired", async () => {
+    h.row.data = { stripe_customer_id: "cus_9" };
+    openPaymentPages("cs_abandoned");
+    subscriptions();
+    h.deleteUser.mockResolvedValue({ data: null, error: { message: "Database error deleting user" } });
+
+    const err = await failure();
+    expect(err.message).toBe(ACCOUNT_NOT_DELETED);
+    expect(err.code).toBe("internal");
   });
 });

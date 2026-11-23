@@ -20,6 +20,8 @@ const USER = "user-1";
  * A stand-in for the Supabase client over three tables. Like the real service
  * it answers one select with at most 1,000 rows and says nothing about the
  * rest, so a read that is not paged loses rows here exactly as it does there.
+ * It sends the number of rows the whole select matches only when the select
+ * asked for the exact count.
  */
 function fakeDb(tables: Record<string, Row[]>, failFrom?: { table: string; fromRow: number }) {
   const queries: Call[][] = [];
@@ -36,8 +38,10 @@ function fakeDb(tables: Record<string, Row[]>, failFrom?: { table: string; fromR
     if (failFrom && failFrom.table === table && first >= failFrom.fromRow) {
       return { data: null, error: { message: "canceling statement due to statement timeout" } };
     }
+    const [select] = args("select");
+    const count = (select?.[1] as { count?: string } | undefined)?.count === "exact" ? found.length : null;
     found = range ? found.slice(first, (range[1] as number) + 1) : found;
-    return { data: found.slice(0, 1000), error: null };
+    return { data: found.slice(0, 1000), error: null, count };
   };
   const from = (table: string) => {
     const calls: Call[] = [{ name: "from", args: [table] }];
@@ -57,11 +61,15 @@ function fakeDb(tables: Record<string, Row[]>, failFrom?: { table: string; fromR
       Promise.resolve(answer(table, calls)).then(resolve, reject);
     return builder;
   };
-  /** What was chained to each select on one table, as "name(first argument)". */
+  /** What was chained to each select on one table, as "name(first argument)"; a range with both its ends, a select with its options. */
+  const shown = (c: Call) => {
+    if (c.name === "range") return c.args.join(",");
+    return c.name === "select" && c.args[1] ? `${c.args[0]}; ${JSON.stringify(c.args[1])}` : c.args[0];
+  };
   const chains = (table: string) =>
     queries
       .filter((calls) => calls[0].args[0] === table && calls.some((c) => c.name === "select"))
-      .map((calls) => calls.slice(1).map((c) => `${c.name}(${c.name === "range" ? c.args.join(",") : c.args[0]})`));
+      .map((calls) => calls.slice(1).map((c) => `${c.name}(${shown(c)})`));
   return { db: { from } as unknown as SupabaseClient, inserted, chains };
 }
 
@@ -106,19 +114,35 @@ describe("recomputeAndSnapshotReadiness", () => {
     expect(readiness?.total_questions_seen).toBe(1008);
   });
 
-  it("reads both tables a page at a time, in a fixed order", async () => {
+  it("reads both tables a page at a time, in a fixed order, asking for the count with each page", async () => {
     const { db, chains } = fakeDb(exam());
 
     await recomputeAndSnapshotReadiness(db, { userId: USER, certificationId: CERT });
 
+    const questions = 'select(id, domain_id, is_active; {"count":"exact"})';
+    const history = 'select(question_id, times_seen, times_correct; {"count":"exact"})';
+    // Two pages for 1,008 rows, and no third request to find the end: the count says where it is.
     expect(chains("cert_questions")).toEqual([
-      ["select(id, domain_id, is_active)", `eq(certification_id)`, "order(id)", "range(0,999)"],
-      ["select(id, domain_id, is_active)", `eq(certification_id)`, "order(id)", "range(1000,1999)"],
+      [questions, `eq(certification_id)`, "order(id)", "range(0,999)"],
+      [questions, `eq(certification_id)`, "order(id)", "range(1000,1999)"],
     ]);
     expect(chains("question_performance")).toEqual([
-      ["select(question_id, times_seen, times_correct)", "eq(user_id)", "eq(certification_id)", "order(question_id)", "range(0,999)"],
-      ["select(question_id, times_seen, times_correct)", "eq(user_id)", "eq(certification_id)", "order(question_id)", "range(1000,1999)"],
+      [history, "eq(user_id)", "eq(certification_id)", "order(question_id)", "range(0,999)"],
+      [history, "eq(user_id)", "eq(certification_id)", "order(question_id)", "range(1000,1999)"],
     ]);
+  });
+
+  it("reads an exam and a history that fit in one page with one request each", async () => {
+    const tables = exam();
+    tables.cert_questions = tables.cert_questions.slice(0, 300);
+    tables.question_performance = tables.question_performance.slice(0, 120);
+    const { db, chains } = fakeDb(tables);
+
+    const readiness = await recomputeAndSnapshotReadiness(db, { userId: USER, certificationId: CERT });
+
+    expect(readiness?.total_questions_seen).toBe(120);
+    expect(chains("cert_questions").map((chain) => chain.at(-1))).toEqual(["range(0,999)"]);
+    expect(chains("question_performance").map((chain) => chain.at(-1))).toEqual(["range(0,999)"]);
   });
 
   it("writes the snapshot it returns", async () => {

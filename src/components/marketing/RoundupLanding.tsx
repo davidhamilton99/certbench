@@ -14,6 +14,19 @@ import { LanderBlock, LanderPage } from "@/components/marketing/lander/Lander";
 import { ArticleBody, ArticleHero, ArticleSection, TickWell } from "@/components/marketing/lander/Article";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { keepCodes } from "@/lib/keep-codes";
+import { PRACTICE_TEST_PAGES } from "@/lib/seo/cert-pages";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+
+/**
+ * Whether every step of the guide's study path follows one of CompTIA's
+ * objectives. The guide's exams are those of the practice-test page that it
+ * leads to. Network+ is set out by CertBench's own topics, so its guide says
+ * "topic", and so does a guide whose exams are not known.
+ */
+function followsOfficialObjectives(data: RoundupData): boolean {
+  const certs = PRACTICE_TEST_PAGES.find((page) => page.path === data.practiceTestPath)?.certSlugs ?? [];
+  return certs.length > 0 && certs.every(usesOfficialObjectiveNumbers);
+}
 
 /** "CompTIA A+" from "best-a-plus-practice-tests". */
 function certLabel(path: string): string {
@@ -128,6 +141,7 @@ function ToolEntry({ tool }: { tool: Tool }) {
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
   const exam = certLabel(data.path);
+  const official = followsOfficialObjectives(data);
   const tools: Tool[] = data.tools;
 
   // The products as a list, for search and for AI answers. The list is marked
@@ -213,8 +227,8 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
         context="roundup_page"
         note="You do not need a payment card or an account to start."
       >
-        The study path covers every exam objective in short steps, and its readiness checkpoint shows where you
-        stand. The first steps are free.
+        The study path covers every {official ? "exam objective" : "topic"} in short steps, and its readiness
+        checkpoint shows where you stand. The first steps are free.
       </PathCard>
 
       <LanderBlock>

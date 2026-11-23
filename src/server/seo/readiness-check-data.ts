@@ -84,10 +84,13 @@ export const loadReadinessCheck = cache(async (
       );
     for (const q of domainPool.slice(0, slots[i])) {
       // The stored order puts the answer at B far more often than chance, so
-      // shuffle — stably per question, keeping the page static — unless the
-      // explanation names options by letter.
+      // the answers are shuffled, the same way every time for one question
+      // (the page stays static), unless the explanation names an answer by
+      // its letter. That is looked for in everything the page shows of the
+      // explanation: its first sentence, printed as the reason, and the rest.
       const stored = q.options.map((o) => o.text);
-      const order = mentionsOptionLetter(splitExplanation(q.explanation).rest)
+      const { takeaway, rest } = splitExplanation(q.explanation);
+      const order = mentionsOptionLetter(`${takeaway} ${rest}`)
         ? stored.map((_, k) => k)
         : shuffle(stored.map((_, k) => k), seededRng(seedFrom(q.id)));
       questions.push({

@@ -5,6 +5,7 @@ import { ApiError } from "@/contracts/common";
 import type { ProgressSnapshot } from "@/contracts/quiz";
 import { selectDiagnosticQuestions } from "@/core/question-selection/select-diagnostic";
 import type { CertQuestion } from "@/core/question-selection/types";
+import { mentionsOptionLetter } from "@/core/path/text";
 import {
   getQuestionsByIds,
   listDiagnosticQuestions,
@@ -19,6 +20,11 @@ function toExamQuestion(q: CertQuestion) {
     question_text: q.question_text,
     options: q.options.map((o) => o.text),
     domain_id: q.domain_id,
+    // The explanation stays on the server until the attempt is submitted, and
+    // is then printed whole beside the answers. Where it names an answer by
+    // its letter, the answers keep their stored order, as they do on the
+    // study path, so that the letter names the answer that was shown under it.
+    ...(mentionsOptionLetter(q.explanation) ? { keepOrder: true } : {}),
   };
 }
 

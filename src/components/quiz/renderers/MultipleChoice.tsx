@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { AnswerOption, OPTION_LETTERS, type AnswerState } from "@/components/quiz/AnswerOption";
-import { seededPermutation } from "@/core/quiz-engine/shuffle";
+import { answerOrder } from "@/components/quiz/answer-order";
 import type { ResponseValue } from "@/core/quiz-engine/types";
 
 /**
@@ -11,6 +11,12 @@ import type { ResponseValue } from "@/core/quiz-engine/types";
  * answers are shown in a seeded shuffle (stable across a resume); the index
  * reported through onChange is always the ORIGINAL index, so grading never
  * depends on the order on screen.
+ *
+ * A question whose explanation names an answer by its letter (`keepOrder`) is
+ * shown in its stored order instead, so that the letter in the text names the
+ * answer under that letter. Its letters are then part of what is said about
+ * the question, so each answer's letter is also in its name for a screen
+ * reader ("A. Wireshark"): the key box that prints it is hidden from one.
  *
  * Each answer is the shared AnswerOption, so it looks and marks as it does on
  * the study path. How the set behaves depends on what a choice means:
@@ -33,10 +39,13 @@ export function MultipleChoice({
   labelledBy,
   commit = false,
   disabled = false,
+  keepOrder = false,
 }: {
   questionId: string;
   options: string[];
   seed: string;
+  /** The question's explanation names an answer by its letter: show the stored order. */
+  keepOrder?: boolean;
   value: ResponseValue | undefined;
   onChange: (value: ResponseValue) => void;
   /** When true, the answers are marked correct and incorrect and can no longer be changed. */
@@ -51,8 +60,8 @@ export function MultipleChoice({
   disabled?: boolean;
 }) {
   const permutation = useMemo(
-    () => seededPermutation(seed, questionId, options.length),
-    [seed, questionId, options.length]
+    () => answerOrder(seed, questionId, options.length, keepOrder),
+    [seed, questionId, options.length, keepOrder]
   );
 
   const selectedOriginal = value?.kind === "single" ? value.selectedIndex : undefined;
@@ -66,16 +75,25 @@ export function MultipleChoice({
   }
 
   /** The mark in words, for a screen reader. */
-  function srPrefixOf(originalIndex: number): string | undefined {
-    if (!revealed) return undefined;
+  function markOf(originalIndex: number): string {
+    if (!revealed) return "";
     const isSelected = selectedOriginal === originalIndex;
     if (originalIndex === correctIndex) return isSelected ? "Your answer, which is correct: " : "Correct answer: ";
     if (isSelected) return "Your answer, which is incorrect: ";
-    return undefined;
+    return "";
   }
 
   const name = labelledBy ? { "aria-labelledby": labelledBy } : { "aria-label": "Answers" };
   const markerAt = (displayPos: number) => OPTION_LETTERS[displayPos] ?? String(displayPos + 1);
+
+  /**
+   * What a screen reader hears before an answer's words: its mark once the
+   * answers are revealed and, for a question that keeps its stored order, its
+   * letter ("Correct answer: A. ").
+   */
+  function srPrefixOf(originalIndex: number, displayPos: number): string | undefined {
+    return `${markOf(originalIndex)}${keepOrder ? `${markerAt(displayPos)}. ` : ""}` || undefined;
+  }
 
   if (commit) {
     return (
@@ -85,7 +103,7 @@ export function MultipleChoice({
             key={originalIndex}
             marker={markerAt(displayPos)}
             state={stateOf(originalIndex)}
-            srPrefix={srPrefixOf(originalIndex)}
+            srPrefix={srPrefixOf(originalIndex, displayPos)}
             dense
             disabled={revealed || disabled}
             onClick={() => onChange({ kind: "single", selectedIndex: originalIndex })}
@@ -111,7 +129,7 @@ export function MultipleChoice({
           <AnswerOption
             marker={markerAt(displayPos)}
             state={stateOf(originalIndex)}
-            srPrefix={srPrefixOf(originalIndex)}
+            srPrefix={srPrefixOf(originalIndex, displayPos)}
             dense
           >
             {options[originalIndex]}

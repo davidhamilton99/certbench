@@ -191,6 +191,33 @@ describe("explanations of recall facts", () => {
     }
   });
 
+  it("gives every Security+ port a second sentence that adds what its row says", () => {
+    // "HTTPS uses port 443." after "Correct." only restates the answer. Each
+    // row has sentences of its own: the second says what the row's "Service /
+    // Use" and "Transport" cells say, as the Network+ and A+ ports decks do.
+    const { deck } = EXPLAINED.find((entry) => entry.deck.config.id === "sec-ports")!;
+    expect(Object.keys(deck.config.explain!.rows ?? {}).length).toBe(deck.rows.length);
+    const wordsOf = (cell: string) => cell.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+    for (const row of deck.rows) {
+      const text = explainRow(deck.config, row)!;
+      const at = `${row.protocol} ${row.port}: ${text}`;
+      const sentences = text.split(/(?<=\.)\s+/);
+      expect(sentences, at).toHaveLength(2);
+      const second = sentences[1];
+      // What the second sentence adds is in the row: a word of its service cell, or its transport.
+      const fromItsRow = [...wordsOf(row.service), ...wordsOf(row.transport)].filter((word) =>
+        second.toLowerCase().includes(word)
+      );
+      expect(fromItsRow.length, at).toBeGreaterThan(0);
+      // A transport is named as the row has it: both of "TCP/UDP", and never one the row does not have.
+      const transports = row.transport.split("/");
+      const named = ["TCP", "UDP"].filter((transport) => new RegExp(`\\b${transport}\\b`).test(text));
+      for (const transport of named) expect(transports, at).toContain(transport);
+      // A second sentence that does not say which port is which carries the transport.
+      if (!/\bports?\b/i.test(second)) expect(named, at).toEqual(transports);
+    }
+  });
+
   it("holds every row of the twelve decks to the rule", () => {
     // Network+ and A+: 26 ports and 7 layers, 14 ports and 22 cables, 23 Windows and 27 Linux commands (119).
     // Security+: 307 acronyms, 34 ports, 20 algorithms, 30 attacks, 17 authentication methods and 7 layers (415).

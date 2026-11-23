@@ -657,7 +657,7 @@ tcp    0       0       172.16.10.20:80       10.0.0.1:54321        ESTABLISHED  
           },
         ],
         explanation:
-          "SPF (Sender Policy Framework) uses a TXT record at the domain apex listing authorized sending IPs or hostnames. The '-all' qualifier instructs receiving MTAs to reject mail from unlisted servers. DKIM uses RSA key pairs: 2048 bits is the current minimum recommended size (1024-bit keys are deprecated). The DMARC record is placed at _dmarc.acme-corp.com and specifies policy (none/quarantine/reject) and reporting addresses. The correct deployment sequence is: SPF → DKIM → DMARC with p=none (monitoring) → p=quarantine → p=reject, reviewing aggregate reports at each stage to prevent blocking legitimate mail flows.",
+          "SPF (Sender Policy Framework) uses a TXT record at the domain apex listing authorized sending IPs or hostnames. The '-all' qualifier instructs receiving MTAs to reject mail from unlisted servers. DKIM uses RSA key pairs: 2048 bits is the current minimum recommended size (1024-bit keys are deprecated). The DMARC record is placed at _dmarc.acme-corp.com and specifies policy (none/quarantine/reject) and reporting addresses. The correct deployment sequence is SPF, then DKIM, then DMARC with p=none (monitoring), then p=quarantine and then p=reject, reviewing aggregate reports at each stage to prevent blocking legitimate mail flows.",
       },
       {
         id: "email-task-phishing",
@@ -714,7 +714,7 @@ Body excerpt:
       },
     ],
     explanation:
-      "Security+ tests email authentication protocols. SPF authorizes sending IPs at the DNS level. DKIM cryptographically signs message content using a private key; receivers verify with the public key published in DNS. DMARC ties SPF and DKIM together and specifies a policy for handling failures: critically, DMARC also requires domain alignment (the From: header domain must match the SPF/DKIM authenticated domain), which defeats lookalike domain spoofing. Deploy in none→quarantine→reject order with aggregate report monitoring at each stage.",
+      "Security+ tests email authentication protocols. SPF authorizes sending IPs at the DNS level. DKIM cryptographically signs message content using a private key; receivers verify with the public key published in DNS. DMARC ties SPF and DKIM together and specifies a policy for handling failures: critically, DMARC also requires domain alignment (the From: header domain must match the SPF/DKIM authenticated domain), which defeats lookalike domain spoofing. Deploy the DMARC policy as none, then quarantine and then reject, with aggregate report monitoring at each stage.",
     estimatedMinutes: 8,
   },
 

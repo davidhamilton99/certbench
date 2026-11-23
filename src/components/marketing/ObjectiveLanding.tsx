@@ -45,8 +45,13 @@ export interface ObjectiveLandingData {
   siblings: { code: string; title: string; topic: string; slug: string }[];
 }
 
-/** A link in the breadcrumb: quiet, and underlined so it is not told apart by colour alone. */
-const CRUMB = "underline decoration-foreground/30 underline-offset-4 hover:text-foreground hover:decoration-current";
+/**
+ * A link in the breadcrumb: quiet, and underlined so it is not told apart by
+ * colour alone. It stands by itself, not inside a sentence, so it is given the
+ * height that a target should have (28 pixels, and 44 on a touch screen).
+ */
+const CRUMB =
+  "cb-tap inline-block py-1 underline decoration-foreground/30 underline-offset-4 hover:text-foreground hover:decoration-current";
 
 /** "1" from "1.0": a domain is named by its number alone. */
 const domainLabel = (n: string) => n.replace(/\.0$/, "");
@@ -165,13 +170,13 @@ export function ObjectiveLanding({
       <PathCard
         className="mt-20 sm:mt-28"
         kicker={`${data.shortCertName} study path`}
-        title={official ? `Study ${data.code} and every other objective` : "Study this and every other objective"}
+        title={official ? `Study ${data.code} and every other objective` : "Study this and every other topic"}
         href={`/path/${data.certSlug}`}
         label={`Start the ${data.shortCertName} study path`}
         context="objective_page"
         note="You do not need an account to start."
       >
-        The {data.shortCertName} study path covers the whole exam in short steps, one objective at a time, and shows
+        The {data.shortCertName} study path covers the whole exam in short steps, one {official ? "objective" : "topic"} at a time, and shows
         where you stand as you progress.
       </PathCard>
 
@@ -225,7 +230,8 @@ export function ObjectiveLanding({
       )}
 
       <LanderBlock className="mt-10 text-small">
-        <Link href={objectiveHub ?? hub} className="cb-link">
+        {/* A link that stands alone: tall enough to press (see CRUMB). */}
+        <Link href={objectiveHub ?? hub} className="cb-link cb-tap inline-block py-1">
           View all {data.shortCertName} {objectiveHub ? `${data.examCode} objectives` : "practice questions"}
         </Link>
       </LanderBlock>

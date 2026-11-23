@@ -10,11 +10,19 @@ import { FaqSection } from "@/components/marketing/FaqSection";
 import { SubnetCalculator } from "@/components/marketing/SubnetCalculator";
 import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { NETWORK_PLUS_CERT, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { calculateSubnet } from "@/lib/tools/subnet-calculator";
 
 const TITLE = "Free subnet calculator (IPv4 and CIDR)";
+
+/**
+ * What the Network+ study path is said to cover. Network+ is set out by
+ * CertBench's own topics, so the page says "topic" until its steps follow
+ * CompTIA's objectives.
+ */
+const COVERED = usesOfficialObjectiveNumbers(NETWORK_PLUS_CERT) ? "objective" : "topic";
 
 export const metadata = pageMetadata({
   title: TITLE,
@@ -177,7 +185,7 @@ export default function SubnetCalculatorPage() {
         label="Start the Network+ study path"
         context="subnet_calculator_page"
       >
-        The N10-009 exam has five domains. The Network+ study path covers every objective in short steps, up to a
+        The N10-009 exam has five domains. The Network+ study path covers every {COVERED} in short steps, up to a
         readiness checkpoint that shows where you stand.
       </PathCard>
 

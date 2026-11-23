@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 import { userMessage } from "@/lib/errors/user-message";
-import { submitStory } from "@/contracts/story";
+import { submitStory } from "@/contracts/client";
 import { ApiError } from "@/contracts/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

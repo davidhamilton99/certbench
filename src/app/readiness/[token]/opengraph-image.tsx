@@ -58,7 +58,7 @@ function Card({ payload }: { payload: SharePayload | null }) {
             One short step at a time
           </div>
           <div style={{ display: "flex", color: CARD.sub, fontSize: 28 }}>
-            Every objective of CompTIA Security+, Network+, and A+, as a study path.
+            A study path for CompTIA Security+, Network+ and A+, topic by topic.
           </div>
         </div>
         <div style={{ display: "flex", color: CARD.muted, fontSize: 22 }}>certbench.dev</div>

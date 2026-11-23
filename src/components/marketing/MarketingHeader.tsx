@@ -91,7 +91,10 @@ export function MarketingHeader() {
                 className={cn(
                   // The page you are on is said by colour and an underline
                   // only, so no link changes width from one page to the next.
-                  "py-2 text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8",
+                  // The padding with its matching negative margin widens what
+                  // can be pressed without moving a letter: "A+" alone is 19
+                  // pixels wide, under the 24 that a target should have.
+                  "-mx-1 px-1 py-2 text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8",
                   item.bar === "lg" && "hidden lg:inline"
                 )}
               >

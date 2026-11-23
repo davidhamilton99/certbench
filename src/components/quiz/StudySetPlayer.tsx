@@ -4,11 +4,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
-import {
-  clearSetProgress,
-  saveSetProgress,
-  type StudyQuestion,
-} from "@/contracts/study-sets";
+import { clearSetProgress, saveSetProgress } from "@/contracts/client";
+import type { StudyQuestion } from "@/contracts/study-sets";
 import { userMessage } from "@/lib/errors/user-message";
 import { gradeStudyAnswer } from "@/core/study-materials/grade";
 import type { MCTFOption } from "@/core/study-materials/types";

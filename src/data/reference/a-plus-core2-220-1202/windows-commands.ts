@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const windowsCommands: ReferenceTable = {
   id: "windows-commands",
   title: "Windows commands",
-  description: "The Windows command-line tools on the CompTIA A+ 220-1202 exam.",
+  description: "This table lists Windows command-line tools for the CompTIA A+ 220-1202 exam with the purpose of each and an example.",
   columnHeaders: [
     { key: "command", label: "Command", mono: true },
     { key: "type", label: "Shell" },

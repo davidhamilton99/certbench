@@ -12,6 +12,7 @@ import { SubnettingPractice } from "@/components/marketing/SubnettingPractice";
 import { PathCard } from "@/components/marketing/PathCard";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { NETWORK_PLUS_CERT, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { MODES, type DrillMode } from "@/lib/tools/subnetting";
 import { MIXED_MODE_NAME, modeName } from "@/lib/tools/subnet-mode-names";
@@ -23,6 +24,13 @@ export const metadata = pageMetadata({
     "Practice subnetting in timed drills, one skill at a time: binary, CIDR prefixes and masks, network addresses, broadcast addresses and host counts. Each answer is marked at once, and an incorrect answer shows the worked steps. The first round is free and needs no account.",
   path: "/tools/subnetting-practice",
 });
+
+/**
+ * What the Network+ study path is said to cover. Network+ is set out by
+ * CertBench's own topics, so the page says "topic" until its steps follow
+ * CompTIA's objectives.
+ */
+const COVERED = usesOfficialObjectiveNumbers(NETWORK_PLUS_CERT) ? "objective" : "topic";
 
 /** What each mode asks, in a sentence. The modes' names are the ones the drill prints, so the two always agree. */
 const MODE_TASKS: Record<DrillMode, string> = {
@@ -143,7 +151,7 @@ export default function SubnettingPracticePage() {
         label="Start the Network+ study path"
         context="subnetting_page"
       >
-        The N10-009 exam has five domains. The Network+ study path covers every objective in short sets of questions
+        The N10-009 exam has five domains. The Network+ study path covers every {COVERED} in short sets of questions
         like these, up to a readiness checkpoint that shows where you stand.
       </PathCard>
 

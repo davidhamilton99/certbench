@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const motherboardComponents: ReferenceTable = {
   id: "motherboard-components",
   title: "Motherboard and form factors",
-  description: "Motherboard form factors, CPU sockets, expansion slots, and key components for the CompTIA A+ 220-1201 exam.",
+  description: "This table lists motherboard form factors, CPU sockets, expansion slots and other key components for the CompTIA A+ 220-1201 exam with a description of each.",
   columnHeaders: [
     { key: "component", label: "Component" },
     { key: "description", label: "Description" },

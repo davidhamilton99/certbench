@@ -38,8 +38,8 @@ describe.each(CERTS)("Recall for %s", (cert) => {
     "opens the %s deck on a question",
     (label, tableId) => {
       render(<RecallSurface decks={decks} certSlug={cert} initialDeckKey={tableId} />);
-      // The tab says "and" where the deck's label in the data has an ampersand.
-      expect(selectedTab()).toHaveTextContent(label.replace(/\s*&\s*/g, " and "));
+      // The tab prints the deck's name as the data has it, and the data writes "and" out.
+      expect(selectedTab()).toHaveTextContent(label);
       expect(selectedTab()).not.toHaveTextContent("&");
       // The first question of the deck is on its card.
       expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();

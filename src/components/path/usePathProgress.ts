@@ -158,7 +158,10 @@ interface Person {
 /** What the account answered when it was asked for this path. */
 type Account =
   | { reached: true; access: "free" | "pro"; proPlan: boolean; certId: string; stored: boolean }
-  /** `signedOut`: the account answered that this session has ended. */
+  /**
+   * `signedOut`: the server answered that nobody is signed in, and the
+   * browser's own sign-in client says so as well (see `browserSaysSignedOut`).
+   */
   | { reached: false; signedOut: boolean };
 
 async function readSession(): Promise<Person | null> {
@@ -172,6 +175,50 @@ async function readSession(): Promise<Person | null> {
   } catch {
     // The sign-in service could not be read: the visit carries on as a visitor's.
     return null;
+  }
+}
+
+/**
+ * True for an answer of the sign-in service that says nothing about who is
+ * signed in: it could not be reached, or it failed on its own side. The same
+ * rule as the server's (src/server/auth.ts).
+ */
+function unsettled(error: { name?: string; status?: number } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.name === "AuthRetryableFetchError" || error.name === "AuthUnknownError") return true;
+  return typeof error.status === "number" && (error.status === 0 || error.status >= 500);
+}
+
+/**
+ * Whether the browser's own sign-in client agrees that nobody is signed in.
+ * It is asked when the server has answered "signed out" to a page that holds
+ * a session: the second lock on that answer. The first is the server's own,
+ * which answers "the account could not be checked", and not "signed out",
+ * when its session check failed or ran out of time.
+ *
+ * A wrong "signed out" shows a member the visitor's screen, with their
+ * progress put away and nothing asked again, so it is believed only when the
+ * client says the same. The client asks the sign-in service itself, and does
+ * not only read its cookie: a session that was ended on another device still
+ * has its cookie here, and such a learner is to be shown the way to sign in
+ * again, not a notice that their account cannot be reached.
+ *
+ *   - It names the user: the session is good and the server's answer is not
+ *     believed. The account is "not reached", and it is asked again.
+ *   - The sign-in service answers that there is no such session: signed out.
+ *   - It cannot be asked: nothing is known, so the account is "not reached".
+ *
+ * The client is in memory already whenever the browser holds a session
+ * cookie (`readSession`), so nothing is fetched to ask it.
+ */
+async function browserSaysSignedOut(): Promise<boolean> {
+  if (!hasSessionCookie()) return true;
+  try {
+    const { data, error } = await (await loadBrowserClient()).auth.getUser();
+    if (data.user) return false;
+    return !unsettled(error);
+  } catch {
+    return false;
   }
 }
 
@@ -264,8 +311,11 @@ export function usePathProgress(cert: PathCert) {
       } catch (err) {
         // The account was not reached: what it holds and what it may open stay
         // unknown (never "free"), and the page carries on with this device's
-        // progress.
-        account = { reached: false, signedOut: err instanceof ApiError && err.code === "unauthorized" };
+        // progress. "Signed out" is believed only when the browser's own
+        // sign-in client says so as well; otherwise the account was simply not
+        // reached, and it is asked again.
+        const refused = err instanceof ApiError && err.code === "unauthorized";
+        account = { reached: false, signedOut: refused && (await browserSaysSignedOut()) };
       }
       // Only progress that is anonymous or already this account's is folded
       // in: never another account's from a shared device.

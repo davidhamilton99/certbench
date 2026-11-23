@@ -18,6 +18,14 @@ import { describe, expect, it } from "vitest";
  *   - it counts and returns no rows (`{ count, head: true }`).
  *
  * This reads every source file and finds the selects that do none of those.
+ *
+ * Two more things are held here. A select that is read a page at a time asks
+ * for the exact count with each page (`{ count: "exact" }`, written beside the
+ * columns): the count is how the read knows that it has every row, whatever
+ * number of rows the database gives to one answer, and without it every read
+ * costs a request more. And a query on these tables is written as one chain
+ * from `.from(table)`: one that is kept in a variable and finished elsewhere
+ * cannot be read here, so it is refused.
  */
 const ROOT = process.cwd();
 const TABLES = new Set(["cert_questions", "question_performance"]);
@@ -109,8 +117,34 @@ function countsOnly(select: Select["chain"][number]): boolean {
   );
 }
 
+/** True for `.select(columns, { count: "exact" })`: the answer carries the number of rows the whole select matches. */
+function asksForCount(select: Select["chain"][number]): boolean {
+  const options = select.args[1];
+  return (
+    !!options &&
+    ts.isObjectLiteralExpression(options) &&
+    options.properties.some(
+      (p) => ts.isPropertyAssignment(p) && p.name.getText() === "count" && stringOf(p.initializer) === "exact"
+    )
+  );
+}
+
 const names = (read: Select) => read.chain.map((c) => c.name);
 const isSelect = (read: Select) => names(read).includes("select") && !names(read).some((n) => WRITES.has(n));
+const isPaged = (read: Select) => isSelect(read) && names(read).includes("range");
+
+/**
+ * True for a `.from(table)` with nothing chained to it: the query is kept in
+ * a variable, or handed on, and finished where this check cannot follow it.
+ */
+const bare = (read: Select) => read.chain.length === 0;
+
+/** True for a select read a page at a time that does not ask for the exact count beside its columns. */
+function pagedWithoutCount(read: Select): boolean {
+  if (!isPaged(read)) return false;
+  const select = read.chain.find((c) => c.name === "select");
+  return !select || !asksForCount(select) || countsOnly(select);
+}
 
 /** True when nothing in the chain says how many rows the select is prepared for. */
 function unbounded(read: Select): boolean {
@@ -173,6 +207,45 @@ describe("the check itself", () => {
     ].join("\n");
     expect(verdict(text)).toEqual([true]);
   });
+
+  /** Everything the check objects to in each query of some source text. */
+  const faults = (text: string) =>
+    tableReads(join(ROOT, "src", "made-up.ts"), text).map((read) =>
+      [unbounded(read) && "unbounded", pagedWithoutCount(read) && "no count", bare(read) && "bare"].filter(Boolean)
+    );
+
+  it("objects to a paged select that does not ask for the exact count", () => {
+    const paged = (select: string) =>
+      `db.from("cert_questions").select(${select}).eq("certification_id", certId).order("id").range(from, to);`;
+    expect(faults(paged('"id"'))).toEqual([["no count"]]);
+    // A planned or estimated count is not the number of rows, and a head count returns no rows to page through.
+    expect(faults(paged('"id", { count: "planned" }'))).toEqual([["no count"]]);
+    expect(faults(paged('"id", { count: "exact", head: true }'))).toEqual([["no count"]]);
+    // The count is read where it is written: options held in a constant cannot be checked.
+    expect(faults(paged('"id", COUNTED'))).toEqual([["no count"]]);
+
+    expect(faults(paged('"id", { count: "exact" }'))).toEqual([[]]);
+    expect(faults(paged('COLUMNS, { count: "exact" }'))).toEqual([[]]);
+    // A select that is not paged owes no count.
+    expect(faults('db.from("cert_questions").select("id").eq("certification_id", certId).limit(10);')).toEqual([[]]);
+    expect(faults('db.from("question_performance").select("id").eq("user_id", userId).in("question_id", ids);')).toEqual([[]]);
+  });
+
+  it("objects to a query that is kept in a variable and finished elsewhere", () => {
+    const text = [
+      'const table = db.from("cert_questions");',
+      'const { data } = await table.select("id").eq("certification_id", certId);',
+    ].join("\n");
+    expect(faults(text)).toEqual([["bare"]]);
+    expect(faults('const history = () => db.from("question_performance");')).toEqual([["bare"]]);
+    expect(faults('run(db.from("cert_questions"));')).toEqual([["bare"]]);
+    // A select that is kept in a variable before its range is judged as far as it is written.
+    expect(faults('const query = db.from("cert_questions").select("id").eq("certification_id", certId);')).toEqual([
+      ["unbounded"],
+    ]);
+    // Other tables are not this guard's business, however they are written.
+    expect(faults('const table = db.from("cert_domains");')).toEqual([]);
+  });
 });
 
 describe("selects that can take a whole exam's questions, or a member's whole history", () => {
@@ -183,6 +256,8 @@ describe("selects that can take a whole exam's questions, or a member's whole hi
     expect(where).toContain("src/server/data/questions.ts");
     expect(where).toContain("src/server/path/bank.ts");
     expect(reads.filter(isSelect).length).toBeGreaterThanOrEqual(15);
+    // The same for the selects read a page at a time, which the count is asked of.
+    expect(reads.filter(isPaged).length).toBeGreaterThanOrEqual(11);
   });
 
   it("says, in every one, how many rows it is prepared for", () => {
@@ -203,15 +278,31 @@ describe("selects that can take a whole exam's questions, or a member's whole hi
   it("puts the rows of every paged select in a fixed order", () => {
     // Without an order, two pages can overlap or skip a row.
     const unordered = reads
-      .filter((read) => isSelect(read) && names(read).includes("range") && !names(read).includes("order"))
+      .filter((read) => isPaged(read) && !names(read).includes("order"))
       .map((read) => `${read.where}:${read.line}: .range() without .order() on ${read.table}`);
     expect(unordered).toEqual([]);
+  });
+
+  it("asks for the exact count in every paged select", () => {
+    // The count is how allRows knows that it has every row. Without it the
+    // read goes on until a page comes back empty: one request more each time.
+    const uncounted = reads
+      .filter(pagedWithoutCount)
+      .map((read) => `${read.where}:${read.line}: .range() without { count: "exact" } beside the columns, on ${read.table}`);
+    expect(uncounted).toEqual([]);
+  });
+
+  it("can read every query on these tables: none is kept in a variable and finished elsewhere", () => {
+    const hidden = reads
+      .filter(bare)
+      .map((read) => `${read.where}:${read.line}: .from("${read.table}") with nothing chained to it`);
+    expect(hidden).toEqual([]);
   });
 
   it("pages the selects that feed the study path, the practice exams and the readiness check", () => {
     // The whole-exam reads that exist today, each a page at a time.
     const paged = reads
-      .filter((read) => isSelect(read) && names(read).includes("range"))
+      .filter(isPaged)
       .map(label);
     expect(new Set(paged)).toEqual(
       new Set([

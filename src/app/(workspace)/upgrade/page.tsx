@@ -25,7 +25,7 @@ export const metadata = {
 
 // The same list as the pricing page and the path's own offer: what Pro holds today.
 const PRO_FEATURES = [
-  "The whole study path, covering every exam objective",
+  "The whole study path, which works through your exam topic by topic",
   "Every hands-on lab (PBQ)",
   `New timed practice exams of ${REHEARSAL_FORMATS.full.questions} questions, scored by domain`,
   "Every question for your exam, with review of the questions you answered incorrectly",

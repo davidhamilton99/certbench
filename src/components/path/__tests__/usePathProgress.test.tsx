@@ -37,6 +37,8 @@ const server = vi.hoisted(() => ({
   read: "ok" as "ok" | "hang" | Error,
   /** Saving to the account: it works, or it fails with this error. */
   save: "ok" as "ok" | Error,
+  /** False where the database has no table for saved progress: saving is not available there. */
+  stored: true,
   calls: [] as { method: string; path: string; input: unknown; options: { timeoutMs?: number; keepalive?: boolean } }[],
 }));
 vi.mock("@/lib/api-client", () => ({
@@ -51,14 +53,14 @@ vi.mock("@/lib/api-client", () => ({
       if (server.read instanceof Error) throw server.read;
       return {
         progress: server.progress ?? { items: {}, stops: {}, checkpoint: null, goal: null },
-        stored: true,
+        stored: server.stored,
         access: server.access,
         proPlan: server.proPlan,
         certId: "11111111-1111-4111-8111-111111111111",
       };
     }
     if (server.save instanceof Error) throw server.save;
-    return { ok: true, stored: true };
+    return { ok: true, stored: server.stored };
   },
 }));
 
@@ -125,6 +127,7 @@ beforeEach(() => {
   server.proPlan = false;
   server.read = "ok";
   server.save = "ok";
+  server.stored = true;
   server.calls = [];
   track.mockClear();
   Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
@@ -267,6 +270,26 @@ describe("an account that cannot be reached", () => {
     expect(result.current.certId).toBe("11111111-1111-4111-8111-111111111111");
   });
 
+  // The server's own answer when the database did not give it the saved
+  // progress (src/app/api/path/progress/route.ts). It used to answer with
+  // status 200 and an empty study path, which the page then showed to a member
+  // in place of their own, with no notice and nothing asked again.
+  it("takes a read that the server could not make for 'not reached': the device's copy stays, and the account is asked again", async () => {
+    server.read = new ApiError("internal", "Your study path could not be read. Please try again.");
+    const { result } = open();
+    await pass();
+    expect(result.current).toMatchObject({ ready: true, signedIn: true, access: "unknown", unreached: true, stored: null });
+    expect(items(result.current.progress)).toEqual(["a|1.1|device"]);
+    expect(saves()).toHaveLength(0);
+
+    // It is asked again by itself, and its answer is merged with what the device kept.
+    server.read = "ok";
+    server.progress = answered("a|1.2|account");
+    await pass(1000);
+    expect(result.current).toMatchObject({ unreached: false, stored: true });
+    expect(items(result.current.progress)).toEqual(["a|1.1|device", "a|1.2|account"]);
+  });
+
   it("is a signed-out visit when the account answers that the session has ended", async () => {
     server.read = new ApiError("unauthorized");
     const { result } = open();
@@ -401,6 +424,48 @@ describe("saving to the account", () => {
     server.save = "ok";
     await pass(8000);
     expect(result.current.saveFailed).toBeNull();
+  });
+
+  // The server's own answer when the database refused the write or did not
+  // answer (src/app/api/path/progress/route.ts). It used to answer with status
+  // 200 and `stored: false`, and the page counted the save as saved.
+  it("counts a save that the server could not store as not saved, and sends it again as the tab is hidden", async () => {
+    const { result } = open();
+    await pass();
+    server.save = new ApiError("internal", "Your study path could not be saved. Please try again.");
+    await act(async () => {
+      result.current.finish("warmup", 3, 3);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current.saveFailed).toBe("internal");
+    expect(track).toHaveBeenCalledWith("path_save_failed", { cert: CERT, code: "internal" });
+
+    // Nothing has been answered since, and the save is still owed: leaving the page sends it again.
+    server.save = "ok";
+    const sent = saves().length;
+    await act(async () => {
+      setVisibility("hidden");
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(saves().length).toBe(sent + 1);
+    expect(saves().at(-1)?.progress.stops).toHaveProperty("warmup");
+    expect(result.current.saveFailed).toBeNull();
+  });
+
+  it("does not take 'saving is not available here' for a failure: nothing is said, and nothing is sent again", async () => {
+    // The one meaning that `stored: false` keeps: this database has no table for saved progress.
+    server.stored = false;
+    const { result } = open();
+    await pass();
+    await act(async () => {
+      result.current.finish("warmup", 3, 3);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current).toMatchObject({ saveFailed: null, stored: false });
+    const sent = saves().length;
+    await pass(8000);
+    expect(saves().length).toBe(sent);
+    expect(track).not.toHaveBeenCalledWith("path_save_failed", expect.anything());
   });
 
   it("lets the last save outlive the tab when it is small enough", async () => {

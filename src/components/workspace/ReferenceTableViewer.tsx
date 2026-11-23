@@ -49,8 +49,6 @@ export function ReferenceTableViewer({
   if (!activeTable) return null;
 
   const total = activeTable.entries.length;
-  /** A table's title is written with an ampersand in the data; the page says "and". */
-  const plain = (title: string) => title.replace(/\s*&\s*/g, " and ");
 
   return (
     <Tabs.Root
@@ -72,7 +70,7 @@ export function ReferenceTableViewer({
               "data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             )}
           >
-            {plain(table.title)}
+            {table.title}
           </Tabs.Trigger>
         ))}
       </Tabs.List>
@@ -105,11 +103,11 @@ export function ReferenceTableViewer({
             // The frame scrolls sideways on a narrow screen: it takes the keyboard so that it can be scrolled.
             tabIndex={0}
             role="region"
-            aria-label={`${plain(activeTable.title)}, table`}
+            aria-label={`${activeTable.title}, table`}
             className="overflow-x-auto focus-visible:-outline-offset-2"
           >
             <table className="w-full text-small">
-              <caption className="sr-only">{plain(activeTable.title)}</caption>
+              <caption className="sr-only">{activeTable.title}</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
                   {activeTable.columnHeaders.map((col) => (

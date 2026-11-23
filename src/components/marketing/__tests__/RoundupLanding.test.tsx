@@ -223,4 +223,28 @@ describe.each(ROUNDUPS.map((guide) => [guide.path, guide] as const))("%s", (_, g
     expect(own).toHaveLength(1);
     expect(text(entry(doc, own[0].name))).toContain("CertBench publishes this guide, and this is its own product.");
   });
+
+  // The Security+ and A+ steps follow CompTIA's objectives. The Network+ steps
+  // follow CertBench's own topics, so its guide does not say "every exam objective".
+  it("says what the study path covers in words that are true of the guide's exam", () => {
+    const said: Record<string, string> = {
+      "best-security-plus-practice-tests": "every exam objective",
+      "best-a-plus-practice-tests": "every exam objective",
+      "best-network-plus-practice-tests": "every topic",
+    };
+    const covers = said[guide.path];
+    expect(covers, guide.path).toBeDefined();
+    const card = text(doc.querySelector("section.cb-sheet"));
+    expect(card).toContain(
+      `The study path covers ${covers} in short steps, and its readiness checkpoint shows where you stand. The first steps are free.`
+    );
+    if (covers === "every topic") expect(text(doc.body)).not.toMatch(/every (?:exam )?objective/i);
+  });
+});
+
+describe("a guide whose exams are not known", () => {
+  it("says topic, which is true of every exam", () => {
+    const doc = served({ ...GUIDE, practiceTestPath: "no-such-practice-test" });
+    expect(text(doc.querySelector("section.cb-sheet"))).toContain("The study path covers every topic in short steps");
+  });
 });

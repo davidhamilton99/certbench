@@ -4,7 +4,8 @@ import "server-only";
  * Which optional and required settings this deployment has, as true or false.
  *
  * A missing setting does not stop the site: it quietly switches a feature
- * off (no email, no daily job, no payment confirmation, no analytics). These
+ * off (no email, no daily job, no payment confirmation, no analytics, no
+ * postal address in the emails). These
  * flags make that visible, in one line when a server instance starts and in
  * the health endpoint's answer. They say only whether each setting is present.
  * A value is never read out, logged or returned.
@@ -26,6 +27,12 @@ export interface SettingFlags {
    * email preferences, account deletion).
    */
   serviceRole: boolean;
+  /**
+   * EMAIL_POSTAL_ADDRESS: the sender's postal address, which the owner
+   * supplies. Without it every email is sent with no postal address in its
+   * footer (src/server/email/templates.ts).
+   */
+  postalAddress: boolean;
 }
 
 /** What stops working when a setting is absent, for the line a server instance logs as it starts. */
@@ -37,6 +44,7 @@ const WHEN_MISSING: Record<keyof SettingFlags, string> = {
   posthog: "NEXT_PUBLIC_POSTHOG_KEY is not set: no event is recorded, server errors included.",
   serviceRole:
     "SUPABASE_SERVICE_ROLE_KEY is not set: nothing is rate-limited, and every write the server makes for an account fails.",
+  postalAddress: "EMAIL_POSTAL_ADDRESS is not set: emails print no postal address.",
 };
 
 const isSet = (name: string) => Boolean(process.env[name]);
@@ -54,6 +62,8 @@ export function settingFlags(): SettingFlags {
     // Written out in full: Next puts a NEXT_PUBLIC_ value into the code only where it is named literally.
     posthog: Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY),
     serviceRole: isSet("SUPABASE_SERVICE_ROLE_KEY"),
+    // A value of spaces alone prints no address (the templates trim it), so it counts as absent.
+    postalAddress: Boolean(process.env.EMAIL_POSTAL_ADDRESS?.trim()),
   };
 }
 

@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const cableTypes: ReferenceTable = {
   id: "cable-types",
   title: "Cable types",
-  description: "Copper, fiber, and coaxial cabling specifications and wiring standards for Network+ N10-009.",
+  description: "This table lists copper, fiber and coaxial cables for the Network+ N10-009 exam with the maximum speed, the maximum distance and the connector of each, and the T568A and T568B wiring standards.",
   columnHeaders: [
     { key: "cable", label: "Cable", mono: true },
     { key: "category", label: "Category / Type" },
@@ -19,7 +19,7 @@ export const cableTypes: ReferenceTable = {
     { columns: { cable: "Cat 7", category: "SSTP / SFTP copper", maxSpeed: "10 Gbps", maxDistance: "100 m", connector: "GG45 / TERA / RJ-45", use: "Individually shielded pairs plus overall shield; not officially TIA/EIA recognized" } },
     { columns: { cable: "Cat 8", category: "SFTP copper", maxSpeed: "40 Gbps", maxDistance: "30 m", connector: "RJ-45", use: "Data center top-of-rack switch connections; very short high-bandwidth runs" } },
     { columns: { cable: "Single-mode fiber", category: "Optical fiber (SMF)", maxSpeed: "100+ Gbps", maxDistance: "40–80 km+", connector: "LC, SC, ST, MTP/MPO", use: "Long-haul WAN and campus backbone; 9 µm core; laser light source; yellow jacket" } },
-    { columns: { cable: "Multimode fiber", category: "Optical fiber (MMF)", maxSpeed: "100 Gbps", maxDistance: "500 m (OM4) / 400 m (OM3)", connector: "LC, SC, ST, MTP/MPO", use: "Short-range data center and campus runs; 50/62.5 µm core; LED/VCSEL; orange/aqua jacket" } },
+    { columns: { cable: "Multimode fiber", category: "Optical fiber (MMF)", maxSpeed: "100 Gbps", maxDistance: "150 m (OM4) / 100 m (OM3)", connector: "LC, SC, ST, MTP/MPO", use: "Short-range data center and campus runs; 50/62.5 µm core; LED/VCSEL; orange/aqua jacket" } },
     { columns: { cable: "Coaxial RG-6", category: "Coaxial copper", maxSpeed: "~1 Gbps (DOCSIS 3.1)", maxDistance: "~300 m", connector: "F-type", use: "Cable TV (CATV) and broadband internet; thicker dielectric than RG-59" } },
     { columns: { cable: "Coaxial RG-59", category: "Coaxial copper", maxSpeed: "N/A (analog video, ~350 MHz)", maxDistance: "~230 m", connector: "F-type / BNC", use: "Analog CCTV and composite video; thinner than RG-6; higher signal loss at high frequency" } },
     { columns: { cable: "Direct Attach Copper", category: "Twinaxial copper (DAC)", maxSpeed: "10–100 Gbps", maxDistance: "7–15 m", connector: "SFP+ / QSFP", use: "Ultra-low latency data center rack connections; cheaper than optical transceiver + fiber" } },

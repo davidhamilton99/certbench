@@ -19,7 +19,9 @@ export interface PerformanceWithDomain {
  * A member's history for one exam is a row for each question answered, so it
  * can run past the 1,000 rows one select answers with. Every select here that
  * takes the whole history is read a page at a time (allRows), in question
- * order. src/__tests__/whole-exam-selects.test.ts keeps it so.
+ * order, and asks for the exact count with each page, so that a history that
+ * fits in one page is one request. src/__tests__/whole-exam-selects.test.ts
+ * keeps it so.
  */
 
 /**
@@ -36,7 +38,8 @@ export async function listPerformanceWithDomains(
       db
         .from("question_performance")
         .select(
-          "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at, suspended_at"
+          "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at, suspended_at",
+          { count: "exact" }
         )
         .eq("user_id", userId)
         .eq("certification_id", certId)
@@ -82,7 +85,7 @@ export async function listPerformance(
   return allRows<PerformanceRow>((from, to) =>
     db
       .from("question_performance")
-      .select("question_id, times_seen, times_correct, last_seen_at")
+      .select("question_id, times_seen, times_correct, last_seen_at", { count: "exact" })
       .eq("user_id", userId)
       .eq("certification_id", certId)
       .order("question_id")

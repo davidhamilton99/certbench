@@ -107,3 +107,46 @@ export async function cancelLiveSubscriptions(
   }
   return live.length;
 }
+
+/**
+ * Expires every payment page of a customer that is still open, and returns
+ * how many were expired. Used before an account is deleted: an open Checkout
+ * Session can still be paid, and one that is paid after the account has gone
+ * starts a subscription that belongs to no account and that nobody can cancel
+ * from the site. Once a page has expired it can no longer be completed.
+ *
+ * Throws what Stripe throws, so that the caller can stop. That includes a page
+ * that was completed in the moment between the list and its expiry: Stripe
+ * refuses to expire it. A second try no longer finds that page open, and the
+ * subscription it started, if it started one, is then among the live ones.
+ * The one exception is a customer that Stripe does not have: it has no
+ * payment pages to expire.
+ */
+export async function expireOpenCheckouts(
+  stripe: Pick<Stripe, "checkout">,
+  customerId: string
+): Promise<number> {
+  // Read every page of the list first, then expire: expiring changes what the list holds.
+  const open: string[] = [];
+  let startingAfter: string | undefined;
+  try {
+    do {
+      const page = await stripe.checkout.sessions.list({
+        customer: customerId,
+        status: "open",
+        limit: 100,
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      });
+      for (const session of page.data) open.push(session.id);
+      startingAfter = page.has_more ? page.data.at(-1)?.id : undefined;
+    } while (startingAfter);
+  } catch (err) {
+    if (isUnknownCustomer(err)) return 0;
+    throw err;
+  }
+
+  for (const id of open) {
+    await stripe.checkout.sessions.expire(id);
+  }
+  return open.length;
+}

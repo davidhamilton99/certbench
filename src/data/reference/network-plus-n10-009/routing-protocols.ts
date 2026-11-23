@@ -3,7 +3,7 @@ import type { ReferenceTable } from "../types";
 export const routingProtocols: ReferenceTable = {
   id: "routing-protocols",
   title: "Routing protocols",
-  description: "Comparison of dynamic and static routing protocols tested on Network+ N10-009.",
+  description: "This table compares static routes and dynamic routing protocols for the Network+ N10-009 exam by type, algorithm, metric and administrative distance.",
   columnHeaders: [
     { key: "protocol", label: "Protocol", mono: true },
     { key: "type", label: "Type" },

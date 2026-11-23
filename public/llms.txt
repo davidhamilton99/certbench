@@ -1,6 +1,6 @@
 # CertBench
 
-> CertBench is an independent study program for the CompTIA Security+ (SY0-701 and SY0-801), Network+ (N10-009) and A+ (Core 1 and Core 2) exams. It sets out every exam objective as a study path of short, interactive steps, with a readiness checkpoint that shows where you stand, hands-on labs that work like performance-based questions, and full-length timed practice exams. Every question is original, and every answer is explained. CertBench does not use braindumps or leaked exam content.
+> CertBench is an independent study program for the CompTIA Security+ (SY0-701 and SY0-801), Network+ (N10-009) and A+ (Core 1 and Core 2) exams. Its study path works through each exam topic by topic, in short, interactive steps, with a readiness checkpoint that shows where you stand, hands-on labs that work like performance-based questions, and full-length timed practice exams. Every question is original, and every answer is explained. CertBench does not use braindumps or leaked exam content.
 
 Exam versions covered:
 

@@ -11,6 +11,7 @@ vi.mock("@/env", () => ({
 }));
 
 import {
+  CONTACT,
   GREETING_NAME_MAX,
   SENT_BY,
   checkpointResultEmail,
@@ -29,9 +30,13 @@ import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge } from "@/core/path/nudge";
 import { MINUTES_PER_STOP } from "@/core/path/plan";
 import type { PathDomain } from "@/core/path/types";
+import { SUPPORT_EMAIL } from "@/lib/errors/user-message";
 import { OG } from "@/lib/og/mark";
 import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
 import { bandFor } from "@/lib/readiness/band";
+
+/** The first words of every footer and of the last lines of every text part: who sent the email, and where to write to them. */
+const SENDER = "Sent by CertBench. To contact CertBench, write to support@certbench.dev.";
 
 const base = {
   displayName: "Sam Lee",
@@ -181,57 +186,83 @@ describe("welcomeEmail", () => {
     expect(email.html).toContain('href="https://certbench.dev/start"');
   });
 
+  // The email is sent for every exam. The Security+ and A+ steps follow CompTIA's
+  // objectives and the Network+ steps follow CertBench's own topics, so the
+  // email does not say that every exam objective is a step.
+  it("says of the study path what is true of every exam: it works through the exam topic by topic", () => {
+    const email = welcome("Sam Lee", "CompTIA Network+");
+    expect(email.html).toContain(
+      "<strong>Follow your study path.</strong> It works through your exam topic by topic, in short steps, and the steps are in order, so you do not have to decide what to study next."
+    );
+    for (const sent of everyEmail()) expect(sent.html + sent.text).not.toMatch(/every (?:exam )?objective/i);
+  });
+
   // It used to carry no unsubscribe link, as a transactional email. It goes to
   // an address that nobody has confirmed, so the person who reads it may never
   // have asked for an account: it now carries the link as every other email does.
   it("carries the unsubscribe address, in its footer and at the end of its text part", () => {
     const email = welcome();
     expect(email.html).toContain(`<a href="${base.unsubscribeUrl}" style="color:${EMAIL_COLORS.muted};">Unsubscribe from these emails</a>.`);
-    expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+    expect(email.text.endsWith(`\n\n${SENDER}\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
   });
 });
 
 describe("the footer of every email", () => {
   const ADDRESS = "1 Example Street, Example Town, EX 00000, Canada";
 
-  it("names the sender, says what CertBench is, and has the unsubscribe link", () => {
+  // The footer named the sender and gave no way to reach it. It now gives the
+  // support address that the site itself publishes, in both parts of every email.
+  it("names the sender, gives the address at which the sender can be reached, says what CertBench is, and has the unsubscribe link", () => {
     expect(SENT_BY).toBe("Sent by CertBench.");
-    for (const email of everyEmail()) {
+    expect(SUPPORT_EMAIL).toBe("support@certbench.dev");
+    expect(CONTACT).toBe(`To contact CertBench, write to ${SUPPORT_EMAIL}.`);
+    const emails = everyEmail();
+    expect(emails).toHaveLength(9);
+    for (const email of emails) {
       expect(email.html).toMatch(
-        /<p style="font-size:12px;[^"]*">\s*Sent by CertBench\.<br>\s*CertBench is an independent study program for CompTIA exams\.\s*<a href="https:\/\/certbench\.dev\/api\/email\/unsubscribe\?token=t" style="[^"]*">Unsubscribe from these emails<\/a>\.\s*<\/p>/
+        /<p style="font-size:12px;[^"]*">\s*Sent by CertBench\. To contact CertBench, write to <a href="mailto:support@certbench\.dev" style="[^"]*">support@certbench\.dev<\/a>\.<br>\s*CertBench is an independent study program for CompTIA exams\.\s*<a href="https:\/\/certbench\.dev\/api\/email\/unsubscribe\?token=t" style="[^"]*">Unsubscribe from these emails<\/a>\.\s*<\/p>/
       );
-      expect(email.text.endsWith(`\n\nSent by CertBench.\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+      expect(email.text.endsWith(`\n\n${SENDER}\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
+      // Once in each part. In the HTML the address is a link, in the footer's own colour, so that one press starts a message.
+      expect(email.text.split(SUPPORT_EMAIL)).toHaveLength(2);
+      expect(email.html.split(`<a href="mailto:${SUPPORT_EMAIL}" style="color:${EMAIL_COLORS.muted};">${SUPPORT_EMAIL}</a>`)).toHaveLength(2);
     }
+  });
+
+  it("takes the support address from the one place the site keeps it", () => {
+    const source = readFileSync(join(process.cwd(), "src/server/email/templates.ts"), "utf8");
+    expect(source).not.toContain("support@");
+    expect(source).toContain('import { SUPPORT_EMAIL } from "@/lib/errors/user-message";');
   });
 
   // The address is the owner's to supply. Until it is set, no email prints one.
   it("prints no postal address until the owner has supplied one", () => {
-    expect(senderLine()).toBe("Sent by CertBench.");
+    expect(senderLine()).toBe(SENDER);
     for (const blank of ["", "   ", "\n"]) {
       settings.EMAIL_POSTAL_ADDRESS = blank;
-      expect(senderLine()).toBe("Sent by CertBench.");
+      expect(senderLine()).toBe(SENDER);
     }
     for (const email of everyEmail()) expect(email.html + email.text).not.toContain("Postal address");
   });
 
-  it("prints the postal address after the sender's name in every email, once it is set", () => {
+  it("prints the postal address after the sender's name and address in every email, once it is set", () => {
     settings.EMAIL_POSTAL_ADDRESS = ADDRESS;
-    const line = `Sent by CertBench. Postal address: ${ADDRESS}.`;
+    const line = `${SENDER} Postal address: ${ADDRESS}.`;
     expect(senderLine()).toBe(line);
     const emails = everyEmail();
     expect(emails).toHaveLength(9);
     for (const email of emails) {
-      expect(email.html).toContain(`${line}<br>`);
+      expect(email.html).toContain(`${SUPPORT_EMAIL}</a>. Postal address: ${ADDRESS}.<br>`);
       expect(email.text.endsWith(`\n\n${line}\nUnsubscribe: ${base.unsubscribeUrl}`)).toBe(true);
     }
   });
 
   it("sets an address that was supplied on several lines, or with a full stop, as one sentence", () => {
     settings.EMAIL_POSTAL_ADDRESS = " 1 Example Street,\r\nExample Town\n\nEX 00000, Canada. ";
-    expect(senderLine()).toBe("Sent by CertBench. Postal address: 1 Example Street, Example Town, EX 00000, Canada.");
+    expect(senderLine()).toBe(`${SENDER} Postal address: 1 Example Street, Example Town, EX 00000, Canada.`);
     // A setting typed with the two characters of an escaped line break reads the same.
     settings.EMAIL_POSTAL_ADDRESS = ["1 Example Street", "Example Town", "EX 00000, Canada"].join(String.fromCharCode(92) + "n");
-    expect(senderLine()).toBe("Sent by CertBench. Postal address: 1 Example Street, Example Town, EX 00000, Canada.");
+    expect(senderLine()).toBe(`${SENDER} Postal address: 1 Example Street, Example Town, EX 00000, Canada.`);
   });
 
   it("escapes the postal address in the HTML", () => {
@@ -251,6 +282,19 @@ describe("studyPlanEmail", () => {
     expect(email.text).toContain("Start the study path (you do not need an account): https://certbench.dev/start");
     expect(email.text).toContain(`Unsubscribe: ${address}`);
     expect(email.html).toContain(`href="${address.replace(/&/g, "&amp;")}"`);
+  });
+
+  // The plan is sent from the port quiz and the subnetting drill, to people who
+  // may be studying for any exam, so it says what is true of every exam.
+  it("says that the study path works through the exam topic by topic, in both parts", () => {
+    const email = studyPlanEmail({ source: "subnetting-practice", unsubscribeUrl: base.unsubscribeUrl });
+    expect(email.html).toContain(
+      "<strong>Choose your exam.</strong> Its study path works through the exam topic by topic, in short steps, so you do not have to decide what to study next."
+    );
+    expect(email.text).toContain(
+      "\n1. Choose your exam. Its study path works through the exam topic by topic, in short steps.\n2. Complete one step or more each day."
+    );
+    expect(email.html + email.text).not.toMatch(/every (?:exam )?objective/i);
   });
 
   // The email said "about three minutes", typed by hand, while every page

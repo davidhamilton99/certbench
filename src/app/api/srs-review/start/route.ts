@@ -5,6 +5,7 @@ import { listDueCards } from "@/server/data/srs";
 import { requireCertAccess } from "@/server/data/enrollments";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { SRS_MAX_CARDS_PER_SESSION } from "@/core/constants";
+import { mentionsOptionLetter } from "@/core/path/text";
 
 const DAY_MS = 86_400_000;
 
@@ -43,6 +44,10 @@ export const POST = defineEndpoint(startSrsReview, {
               0,
               Math.floor((now - new Date(c.srs_next_review_at).getTime()) / DAY_MS)
             ),
+            // The explanation is printed whole under the answers once the card
+            // is answered. Where it names an answer by its letter, the answers
+            // keep their stored order, as they do on the study path.
+            ...(mentionsOptionLetter(q.explanation) ? { keepOrder: true } : {}),
           },
         ];
       }),

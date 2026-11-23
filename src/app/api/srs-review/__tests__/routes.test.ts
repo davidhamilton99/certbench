@@ -75,6 +75,7 @@ vi.mock("@/server/services/submit-exam", () => ({ updateQuestionPerformanceForAn
 
 import { POST as start } from "../start/route";
 import { POST as submit } from "../submit/route";
+import { startSrsReview } from "@/contracts/srs";
 import { EXAM_NOT_IN_PLAN } from "@/server/data/enrollments";
 import { ACCOUNT_NOT_CHECKED } from "@/server/data/account-errors";
 
@@ -171,6 +172,35 @@ describe("POST /api/srs-review/start", () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: { code: "internal", message: ACCOUNT_NOT_CHECKED } });
     expect(h.listDueCards).not.toHaveBeenCalled();
+  });
+
+  // The review prints the whole explanation under answers that it letters. An
+  // explanation that says "option B" is right only beside the stored order.
+  it("sends keepOrder with a card whose explanation names an answer by its letter, and with no other card", async () => {
+    h.listDueCards.mockResolvedValue({
+      cards: [
+        { question_id: id(1), srs_next_review_at: "2026-11-20T00:00:00.000Z" },
+        { question_id: id(2), srs_next_review_at: "2026-11-20T00:00:00.000Z" },
+      ],
+      totalDue: 2,
+    });
+    h.getQuestionsByIds.mockResolvedValue([
+      question(1, SEC_701),
+      { ...question(2, SEC_701), explanation: "A router forwards packets between networks (option B). A switch (option A) forwards frames." },
+    ]);
+
+    const res = await call(SEC_701);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.cards[0]).not.toHaveProperty("keepOrder");
+    expect(body.cards[1]).toMatchObject({ questionId: id(2), keepOrder: true, options: ["First", "Second"] });
+    // The flag is all that the explanation gives away before the card is answered.
+    expect(body.cards[1]).not.toHaveProperty("explanation");
+    expect(body.cards[1]).not.toHaveProperty("correctIndex");
+
+    // The page reads the answer through the contract, which keeps the flag.
+    const read = startSrsReview.output.parse(body);
+    expect(read.cards.map((card) => card.keepOrder)).toEqual([undefined, true]);
   });
 });
 

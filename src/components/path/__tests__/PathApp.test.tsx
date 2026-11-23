@@ -890,10 +890,30 @@ describe("back from paying", () => {
     auth.session = null;
     server.progress = null;
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Continue without signing in" }));
+    const onward = await screen.findByRole("button", { name: "Continue without signing in" });
+    onward.focus();
+    fireEvent.click(onward);
     expect(await screen.findByRole("button", { name: /Right answer/ })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Your payment was received." })).toBeNull();
     expect(window.location.search).toBe("");
+    // The button that was pressed has gone with its screen. The question that
+    // takes its place follows a press, so it takes the focus and is read.
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "Prompt a|1.1|w1" }));
+  });
+
+  it("gives the focus to the title of the home screen when a visitor who has finished the introductory questions carries on without signing in", async () => {
+    auth.session = null;
+    server.progress = null;
+    localStorage.setItem(
+      "cb_path_security-plus-sy0-701",
+      JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) })
+    );
+    renderPath();
+    const onward = await screen.findByRole("button", { name: "Continue without signing in" });
+    onward.focus();
+    fireEvent.click(onward);
+    const title = await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" });
+    await waitFor(() => expect(document.activeElement).toBe(title));
   });
 
   it("takes the flag off the address for someone who is signed in, so that a reload is an ordinary visit", async () => {

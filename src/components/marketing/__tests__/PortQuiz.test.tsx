@@ -26,7 +26,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { PortQuiz, portRep } from "../PortQuiz";
-import type { PortEntry } from "@/lib/tools/port-quiz-data";
+import { PORT_ENTRIES, type PortEntry } from "@/lib/tools/port-quiz-data";
 
 // Node's own experimental `localStorage` global shadows jsdom's.
 const store = new Map<string, string>();
@@ -40,27 +40,52 @@ Object.defineProperty(window, "localStorage", {
   },
 });
 
+/**
+ * Entries as the page hands them to the quiz. Each carries its explanation:
+ * the sentences that the server took from the exam's own ports deck, which is
+ * what a visitor reads after the verdict. None of them is the note in
+ * `service`.
+ */
 const ENTRIES: PortEntry[] = [
-  { port: "22", protocol: "SSH", service: "Secure Shell", transport: "TCP" },
-  { port: "53", protocol: "DNS", service: "Name resolution", transport: "TCP/UDP" },
-  { port: "80", protocol: "HTTP", service: "Unencrypted web", transport: "TCP" },
-  { port: "443", protocol: "HTTPS", service: "HTTP over TLS", transport: "TCP" },
-  { port: "3389", protocol: "RDP", service: "Remote Desktop", transport: "TCP" },
+  {
+    port: "22",
+    protocol: "SSH",
+    service: "Secure Shell",
+    transport: "TCP",
+    explanation: "SSH uses port 22. Secure Shell is used for encrypted remote access, SCP and SFTP.",
+  },
+  {
+    port: "53",
+    protocol: "DNS",
+    service: "Name resolution",
+    transport: "TCP/UDP",
+    explanation: "DNS uses port 53. The Domain Name System runs over both TCP and UDP.",
+  },
+  {
+    port: "80",
+    protocol: "HTTP",
+    service: "Unencrypted web",
+    transport: "TCP",
+    explanation: "HTTP uses port 80. The Hypertext Transfer Protocol runs over TCP.",
+  },
+  {
+    port: "443",
+    protocol: "HTTPS",
+    service: "HTTP over TLS",
+    transport: "TCP",
+    explanation: "HTTPS uses port 443. It is HTTP Secure, which uses TLS over TCP.",
+  },
+  {
+    port: "3389",
+    protocol: "RDP",
+    service: "Remote Desktop",
+    transport: "TCP",
+    explanation: "RDP uses port 3389. The Remote Desktop Protocol runs over TCP.",
+  },
 ];
 
-/**
- * What the ports decks say about each of these, which is what a visitor reads
- * after the verdict. Four are rows of the Security+ table, whose deck gives a
- * port one sentence. "SSH" by that name is a row of the Network+ table, whose
- * deck adds what the protocol is for. None of them is the note in `service`.
- */
-const SENTENCES: Record<string, string> = {
-  "22": "SSH uses port 22. Secure Shell is used for encrypted remote access, SCP and SFTP.",
-  "53": "DNS uses port 53.",
-  "80": "HTTP uses port 80.",
-  "443": "HTTPS uses port 443.",
-  "3389": "RDP uses port 3389.",
-};
+/** Each entry's sentences, by its port. */
+const SENTENCES: Record<string, string> = Object.fromEntries(ENTRIES.map((e) => [e.port, e.explanation!]));
 
 /** The card's answers: a group named by the question, each answer a plain button. */
 const answerGroup = () => screen.getByRole("group");
@@ -136,21 +161,50 @@ describe("portRep", () => {
     });
   });
 
-  it("prints the sentences of the row's own ports deck, the same whichever way it is asked", () => {
-    const ftp: PortEntry = { port: "20/21", protocol: "FTP", service: "File Transfer Protocol (data/control)", transport: "TCP" };
-    const sentences = "FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data and port 21 for control.";
-    expect(portRep({ direction: "port", answer: ftp, options: [ftp, ...options] }).takeaway).toBe(sentences);
-    expect(portRep({ direction: "protocol", answer: ftp, options: [ftp, ...options] }).takeaway).toBe(sentences);
-    // Each fixture reads as its deck has it, and none ends on its note ("... over TCP. Secure Shell.").
+  it("prints the sentences an entry carries, the same whichever way it is asked", () => {
     for (const entry of ENTRIES) {
-      const { takeaway } = portRep({ direction: "port", answer: entry, options: ENTRIES });
-      expect(takeaway).toBe(SENTENCES[entry.port]);
-      expect(takeaway.endsWith(entry.service + ".")).toBe(false);
+      for (const direction of ["port", "protocol"] as const) {
+        const { takeaway } = portRep({ direction, answer: entry, options: ENTRIES });
+        expect(takeaway).toBe(SENTENCES[entry.port]);
+        // None ends on its note ("... over TCP. Secure Shell.").
+        expect(takeaway.endsWith(entry.service + ".")).toBe(false);
+      }
     }
   });
 
+  it("prints its own exam's deck sentences for every port of the list the page really hands over", () => {
+    expect(PORT_ENTRIES.length).toBeGreaterThanOrEqual(30);
+    for (const entry of PORT_ENTRIES) {
+      // Worked out on the server and carried by the entry: the quiz looks nothing up.
+      expect(entry.explanation, entry.port).not.toBeNull();
+      const others = PORT_ENTRIES.filter((e) => e.protocol !== entry.protocol).slice(0, 3);
+      for (const direction of ["port", "protocol"] as const) {
+        const { takeaway } = portRep({ direction, answer: entry, options: [entry, ...others] });
+        expect(takeaway, entry.port).toBe(entry.explanation);
+        // Two sentences: the port, and then what the protocol is and what it runs over.
+        expect(takeaway.split(/(?<=\.)\s+/), takeaway).toHaveLength(2);
+        // Neither sentence is the table's note with a full stop after it.
+        expect(takeaway.split(/(?<=\.)\s+/), takeaway).not.toContain(entry.service + ".");
+      }
+    }
+    const ftp = PORT_ENTRIES.find((e) => e.protocol === "FTP")!;
+    expect(portRep({ direction: "port", answer: ftp, options: [ftp, ...options] }).takeaway).toBe(
+      "FTP uses ports 20 and 21. The File Transfer Protocol uses port 20 for data and port 21 for control."
+    );
+    const https = PORT_ENTRIES.find((e) => e.protocol === "HTTPS")!;
+    expect(portRep({ direction: "protocol", answer: https, options: [https, ...options] }).takeaway).toBe(
+      "HTTPS uses port 443. It is HTTP Secure, which uses TLS over TCP."
+    );
+  });
+
   it("gives a port that no deck explains one plain sentence, and never the table's note", () => {
-    const other: PortEntry = { port: "9999", protocol: "Example", service: "A note: not a sentence", transport: "TCP" };
+    const other: PortEntry = {
+      port: "9999",
+      protocol: "Example",
+      service: "A note: not a sentence",
+      transport: "TCP",
+      explanation: null,
+    };
     expect(portRep({ direction: "port", answer: other, options: [other, ...options] }).takeaway).toBe("Example uses port 9999 over TCP.");
     const bare = { ...other, transport: "" };
     expect(portRep({ direction: "protocol", answer: bare, options: [bare, ...options] }).takeaway).toBe("Example uses port 9999.");
@@ -192,6 +246,12 @@ describe("PortQuiz", () => {
 
     const result = await screen.findByRole("group", { name: "Port numbers: round 1 result" });
     expect(result).toHaveTextContent("18 of 20");
+    // The card names Security+, Network+ and A+ Core 1. Network+ is set out by CertBench's own
+    // topics, so the card does not say that the study path covers every exam objective.
+    expect(result).toHaveTextContent(
+      "Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand."
+    );
+    expect(result).not.toHaveTextContent(/every (?:exam )?objective/i);
     // The way on is the exam's path, one tap per exam, ahead of the account ask.
     // (The account form below it links its own two documents, the terms and the privacy policy.)
     const links = within(result)

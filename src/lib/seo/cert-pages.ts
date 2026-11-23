@@ -88,6 +88,23 @@ const PBQ_TOPICS_UNPUBLISHED = "CompTIA's exam questions are confidential, so it
  */
 const LAB_ON_THE_PAGE = "Each lab is graded with partial credit on this page.";
 
+/**
+ * Opens each PBQ page. Of the exam itself it says only what CompTIA's exam
+ * page states: that the exam has performance-based questions as well as
+ * multiple-choice questions. CompTIA does not publish what its PBQs ask or how
+ * long they take, so the paragraph gives no example of them and compares them
+ * with nothing. The rest says what the labs on the page ask. `handsOn` is
+ * written from the page's own labs (src/data/pbq), and a test holds each lab
+ * it names to one that is free on the page.
+ */
+const labsIntro = (exam: string, handsOn: string) =>
+  `The ${exam} exam has performance-based questions (PBQs) as well as multiple-choice questions, and the hands-on labs on this page are CertBench's practice for them. A lab asks you to carry out a task instead of choosing A, B, C or D. ${handsOn} The drills ask you to put steps in order, to match items and to sort them into categories.`;
+
+/** What a simulation asks, on every PBQ page: its tasks are worked in order. */
+const SIMULATION_ASKS = "In a simulation you work through a scenario task by task";
+/** What a network diagram asks, on the pages of the exams that have one. */
+const DIAGRAM_ASKS = "In a network diagram you correct the devices that are misconfigured";
+
 export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
   {
     path: "security-plus-practice-test",
@@ -551,7 +568,10 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     metaDescription: `${FREE_PBQS} free interactive Security+ SY0-701 PBQs in your browser: firewall rules, a threat hunt, a vulnerability simulation and drag-and-drop drills. No account is needed to start.`,
     h1: `${FREE_PBQS} free Security+ PBQs to try in your browser`,
     intro: [
-      "Performance-based questions (PBQs) are the hands-on part of Security+. Instead of choosing A, B, C or D, you configure firewall rules, analyze logs or put incident-response steps in order in an interactive console. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
+      labsIntro(
+        "Security+",
+        `${SIMULATION_ASKS}: one on this page is a vulnerability scan whose findings you classify and choose how to remediate. ${DIAGRAM_ASKS}, and in a threat hunt you flag the lines of a server log that are evidence of an attack.`
+      ),
       `${FREE_PBQS} of the labs on this page are free: a vulnerability simulation, network segmentation and firewall rules, a threat hunt on a compromised server, and a drill for every drag-and-drop format. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
@@ -599,7 +619,10 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     metaDescription: `${FREE_PBQS} free interactive Network+ N10-009 PBQs in your browser: troubleshooting commands, VLAN trunking, ports, cabling and more. No account is needed to start.`,
     h1: `${FREE_PBQS} free Network+ PBQs to try in your browser`,
     intro: [
-      "Network+ PBQs give you a scenario (a topology to complete, a switch to configure, a connectivity issue to trace) instead of a multiple-choice list. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
+      labsIntro(
+        "Network+",
+        `${SIMULATION_ASKS}: one on this page is a connectivity fault that you trace from the output of commands. ${DIAGRAM_ASKS}.`
+      ),
       `${FREE_PBQS} of the labs on this page are free: troubleshooting with real commands, VLAN configuration and trunking, and drills on ports, cabling, the OSI model and DHCP. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
@@ -647,7 +670,10 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     metaDescription: `${FREE_PBQS} free interactive A+ Core 1 (220-1201) PBQs in your browser: laptop display troubleshooting, ports, connectors, printers and more. No account is needed to start.`,
     h1: `${FREE_PBQS} free A+ Core 1 PBQs to try in your browser`,
     intro: [
-      "Performance-based questions ask you to carry out a task instead of choosing A, B, C or D: put a process in order, match ports to services, or work through a hardware fault step by step. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
+      labsIntro(
+        "A+ Core 1",
+        `${SIMULATION_ASKS}: one on this page is a laptop display that has gone dim, which you diagnose before you plan its repair.`
+      ),
       `${FREE_PBQS} of the labs on this page are free: a laptop display troubleshooting simulation, and drills on ports, cables, connectors, Wi-Fi, the laser printer and the boot sequence. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [
@@ -700,7 +726,10 @@ export const PBQ_EXAMPLE_PAGES: PbqExamplePage[] = [
     metaDescription: `${FREE_PBQS} free interactive A+ Core 2 (220-1202) PBQs in your browser: mobile device security, malware removal, Windows tools, Linux commands and more. No account is needed to start.`,
     h1: `${FREE_PBQS} free A+ Core 2 PBQs to try in your browser`,
     intro: [
-      "Performance-based questions ask you to carry out a task instead of choosing A, B, C or D: put the malware removal steps in order, match Windows tools to their purpose, or set up a security policy from a brief. They take longer than multiple-choice questions, so they are worth practicing before exam day.",
+      labsIntro(
+        "A+ Core 2",
+        `${SIMULATION_ASKS}: one on this page is a security policy that you set for a company's new phones, one of which is then reported lost.`
+      ),
       `${FREE_PBQS} of the labs on this page are free: a mobile device security simulation, and drills on malware removal, Windows tools, Linux commands, social engineering and change management. The first three need no account, and a free account opens the rest. ${LAB_ON_THE_PAGE}`,
     ],
     faqs: [

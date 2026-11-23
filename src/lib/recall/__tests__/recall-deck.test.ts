@@ -10,6 +10,8 @@ import {
   generateRecallQuestion,
   gradeRecall,
   isDataRate,
+  otherAnswers,
+  otherAnswersSentence,
   type RecallDeckConfig,
   type Rng,
 } from "../recall-deck";
@@ -481,6 +483,155 @@ describe("duplicate-cue safety", () => {
       expect(validInOptions).toEqual([q.answer]);
     }
     expect(sawRadius).toBe(true);
+  });
+});
+
+describe("a cue that names more than one row", () => {
+  // RADIUS has a row for its ports and a row for its legacy ports, as the
+  // Security+ ports table has. The question deals one of the two.
+  const table: ReferenceTable = {
+    id: "two-rows",
+    title: "Two rows",
+    description: "",
+    columnHeaders: [
+      { key: "protocol", label: "Protocol" },
+      { key: "port", label: "Port" },
+    ],
+    entries: [
+      { columns: { protocol: "RADIUS", port: "1645/1646" } },
+      { columns: { protocol: "RADIUS", port: "1812/1813" } },
+      { columns: { protocol: "SSH", port: "22" } },
+      { columns: { protocol: "HTTPS", port: "443" } },
+      { columns: { protocol: "TACACS+", port: "49" } },
+    ],
+  };
+  const config: RecallDeckConfig = {
+    id: "two",
+    label: "Two",
+    tableId: "two-rows",
+    mode: "choice",
+    ask: { key: "protocol", label: "protocol" },
+    answer: { key: "port", label: "port" },
+    bidirectional: true,
+    accept: "numeric-parts",
+  };
+  const deck = buildDeck(config, table);
+
+  /** One typed question about RADIUS for each of its rows (a typed answer is asked the deck's own way). */
+  function radiusQuestions() {
+    const dealt = new Map<string, ReturnType<typeof generateRecallQuestion>>();
+    for (let seed = 0; seed < 60; seed++) {
+      const q = generateRecallQuestion(deck, seeded(seed), { itemId: "RADIUS", noSwap: true });
+      dealt.set(q.answer, q);
+    }
+    return dealt;
+  }
+
+  it("accepts a typed answer from any of the cue's rows, whichever row was dealt", () => {
+    const dealt = radiusQuestions();
+    expect([...dealt.keys()].sort()).toEqual(["1645/1646", "1812/1813"]);
+    for (const [answer, q] of dealt) {
+      // The port that every candidate learns, and the legacy one, whole or as one of the pair.
+      for (const typed of ["1812", "1813", "1812/1813", "1645", "1646", "1645/1646", " 1812 "]) {
+        expect(gradeRecall(q, typed), `dealt ${answer}, typed ${typed}`).toBe(true);
+      }
+      for (const typed of ["49", "22", "1814", ""]) {
+        expect(gradeRecall(q, typed), `dealt ${answer}, typed ${typed}`).toBe(false);
+      }
+      // The row that was dealt is still the one the question shows as its answer.
+      expect(q.acceptable[0]).toBe(answer);
+    }
+  });
+
+  it("accepts nothing more for a cue that names one row", () => {
+    const q = generateRecallQuestion(deck, seeded(1), { itemId: "SSH", noSwap: true });
+    expect(q.acceptable).toEqual(["22"]);
+    expect(gradeRecall(q, "1812")).toBe(false);
+  });
+
+  it("accepts only the whole answers of the cue's rows where the deck grades exactly", () => {
+    const exact = buildDeck({ ...config, id: "exact", accept: "exact" }, table);
+    const q = generateRecallQuestion(exact, seeded(1), { itemId: "RADIUS", noSwap: true });
+    expect([...q.acceptable].sort()).toEqual(["1645/1646", "1812/1813"]);
+  });
+
+  it("names the other answers of a cue from the two cells a question showed", () => {
+    expect(otherAnswers(deck, "RADIUS", "1645/1646")).toEqual(["1812/1813"]);
+    expect(otherAnswers(deck, "RADIUS", "1812/1813")).toEqual(["1645/1646"]);
+    // One row for the cue: nothing else is correct.
+    expect(otherAnswers(deck, "SSH", "22")).toEqual([]);
+    // Asked the other way round, the port is the cue, and one protocol has it.
+    expect(otherAnswers(deck, "1645/1646", "RADIUS")).toEqual([]);
+    // Two cells that are not a row of the deck.
+    expect(otherAnswers(deck, "RADIUS", "22")).toEqual([]);
+    expect(otherAnswers(deck, "LDAP", "389")).toEqual([]);
+  });
+
+  it("reads the other way round only where the deck asks both ways", () => {
+    const shared: ReferenceTable = {
+      ...table,
+      entries: [
+        { columns: { protocol: "SSH", port: "22" } },
+        { columns: { protocol: "SFTP", port: "22" } },
+        { columns: { protocol: "HTTPS", port: "443" } },
+      ],
+    };
+    expect(otherAnswers(buildDeck(config, shared), "22", "SSH")).toEqual(["SFTP"]);
+    expect(otherAnswers(buildDeck({ ...config, bidirectional: false }, shared), "22", "SSH")).toEqual([]);
+  });
+
+  it("says which answer the question asked for, and that the other is correct too", () => {
+    expect(otherAnswersSentence("RADIUS", "1645/1646", ["1812/1813"])).toBe(
+      "This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813."
+    );
+    expect(otherAnswersSentence("22", "SSH", ["SCP", "SFTP"])).toBe(
+      "This question asked for SSH. Other correct answers for 22 are SCP and SFTP."
+    );
+    expect(otherAnswersSentence("22", "SSH", ["SCP", "SFTP", "Telnet"])).toBe(
+      "This question asked for SSH. Other correct answers for 22 are SCP, SFTP and Telnet."
+    );
+    expect(otherAnswersSentence("SSH", "22", [])).toBeNull();
+  });
+
+  it("holds for every such cue in every deck of every exam, RADIUS in the Security+ ports among them", () => {
+    const slugs = ["security-plus-sy0-701", "network-plus-n10-009", "a-plus-core1-220-1201", "a-plus-core2-220-1202"];
+    const found: string[] = [];
+    for (const slug of slugs) {
+      for (const real of getRecallDecks(slug)) {
+        const { ask, answer } = real.config;
+        for (const cue of new Set(real.rows.map((row) => row[ask.key]))) {
+          const answers = [...new Set(real.rows.filter((row) => row[ask.key] === cue).map((row) => row[answer.key]))];
+          if (answers.length < 2) continue;
+          found.push(`${slug}/${real.config.id}: ${cue}`);
+          for (const dealt of answers) {
+            const others = otherAnswers(real, cue, dealt);
+            expect([dealt, ...others].sort(), `${cue}: ${dealt}`).toEqual([...answers].sort());
+            expect(otherAnswersSentence(cue, dealt, others), `${cue}: ${dealt}`).toMatch(
+              /^This question asked for .+\. (?:Another correct answer for .+ is|Other correct answers for .+ are) .+\.$/
+            );
+          }
+          // Whichever row a typed question deals, the answer of every row is accepted.
+          for (let seed = 0; seed < 40; seed++) {
+            const q = generateRecallQuestion(real, seeded(seed), { itemId: cue, noSwap: true });
+            for (const valid of answers) expect(gradeRecall(q, valid), `${cue}: dealt ${q.answer}, typed ${valid}`).toBe(true);
+          }
+        }
+      }
+    }
+    expect(found).toContain("security-plus-sy0-701/sec-ports: RADIUS");
+  });
+
+  it("marks a typed 1812 correct for RADIUS on the real Security+ ports deck, whichever row is dealt", () => {
+    const ports = getRecallDecks("security-plus-sy0-701").find((d) => d.config.id === "sec-ports")!;
+    const dealt = new Set<string>();
+    for (let seed = 0; seed < 60; seed++) {
+      const q = generateRecallQuestion(ports, seeded(seed), { itemId: "RADIUS", noSwap: true });
+      dealt.add(q.answer);
+      expect(gradeRecall(q, "1812"), `dealt ${q.answer}`).toBe(true);
+      expect(gradeRecall(q, "1645"), `dealt ${q.answer}`).toBe(true);
+      expect(gradeRecall(q, "49"), `dealt ${q.answer}`).toBe(false);
+    }
+    expect([...dealt].sort()).toEqual(["1645/1646", "1812/1813"]);
   });
 });
 

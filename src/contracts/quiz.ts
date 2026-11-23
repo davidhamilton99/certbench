@@ -16,6 +16,19 @@ export const examQuestion = z.object({
    * applies the seeded permutation so resumes are deterministic. */
   options: z.array(z.string()).min(2),
   domain_id: z.uuid(),
+  /**
+   * Sent, and true, only with a question whose explanation names an answer by
+   * its letter ("option A is the only one that ..."). Such a question is shown
+   * in its stored order, in the attempt and in its review, so that the letter
+   * in the text names the answer shown under that letter. Every other question
+   * is shuffled.
+   *
+   * The flag does not say which answer is correct, and the explanation itself
+   * still stays on the server. What it costs is the shuffle: the bank's stored
+   * order puts the correct answer second more often than chance. The study
+   * path makes the same trade for the same questions (bankToRep).
+   */
+  keepOrder: z.boolean().optional(),
 });
 export type ExamQuestion = z.infer<typeof examQuestion>;
 

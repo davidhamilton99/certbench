@@ -86,8 +86,7 @@ export function RecallSurface({
   const typedMode = typed && canType;
 
   const tabs: { key: string; label: string }[] = [
-    // A deck's label is written with an ampersand in the data; a tab says "and".
-    ...decks.map((d) => ({ key: d.config.tableId, label: d.config.label.replace(/\s*&\s*/g, " and ") })),
+    ...decks.map((d) => ({ key: d.config.tableId, label: d.config.label })),
     ...(canMix ? [{ key: MIXED_DECK_KEY, label: "Mixed" }] : []),
     { key: SUBNETTING_KEY, label: "Subnetting" },
   ];

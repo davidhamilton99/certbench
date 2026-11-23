@@ -16,9 +16,10 @@ vi.mock("stripe", () => ({
   },
 }));
 
-import { cancelLiveSubscriptions, getStripe, subscriptionStanding } from "../stripe";
+import { cancelLiveSubscriptions, expireOpenCheckouts, getStripe, subscriptionStanding } from "../stripe";
 
 type Client = Parameters<typeof subscriptionStanding>[0];
+type CheckoutClient = Parameters<typeof expireOpenCheckouts>[0];
 
 describe("getStripe", () => {
   // The library's own limits are 80 seconds for an answer and two more
@@ -183,5 +184,84 @@ describe("cancelLiveSubscriptions", () => {
     const { client, cancel } = stripeWithPages([{ id: "sub_1", status: "active" }]);
     cancel.mockRejectedValueOnce(missing);
     await expect(cancelLiveSubscriptions(client, "cus_7")).rejects.toThrow("No such subscription");
+  });
+});
+
+// An open Checkout Session can still be paid. Until November 2026 deleting an
+// account left them open, and one that was paid afterwards started a
+// subscription for a customer with no account.
+describe("expireOpenCheckouts", () => {
+  /** A Stripe client that serves these pages of open payment pages, one page of the list for each call. */
+  const stripeWithOpenPages = (...pages: { id: string }[][]) => {
+    const list = vi.fn();
+    pages.forEach((data, i) => list.mockResolvedValueOnce({ data, has_more: i < pages.length - 1 }));
+    const expire = vi.fn(async (id: string) => ({ id, status: "expired" }));
+    return { client: { checkout: { sessions: { list, expire } } } as unknown as CheckoutClient, list, expire };
+  };
+
+  it("expires every payment page of the customer that is still open", async () => {
+    const { client, list, expire } = stripeWithOpenPages([{ id: "cs_plan" }, { id: "cs_added_exam" }]);
+
+    expect(await expireOpenCheckouts(client, "cus_7")).toBe(2);
+    // Only this customer's pages, and only the open ones: a completed or expired page is left alone.
+    expect(list).toHaveBeenCalledExactlyOnceWith({ customer: "cus_7", status: "open", limit: 100 });
+    expect(expire.mock.calls.map(([id]) => id)).toEqual(["cs_plan", "cs_added_exam"]);
+  });
+
+  it("does nothing for a customer without an open payment page", async () => {
+    const { client, expire } = stripeWithOpenPages([]);
+    expect(await expireOpenCheckouts(client, "cus_7")).toBe(0);
+    expect(expire).not.toHaveBeenCalled();
+  });
+
+  it("reads every page of the list before it expires anything", async () => {
+    const { client, list, expire } = stripeWithOpenPages([{ id: "cs_1" }, { id: "cs_2" }], [{ id: "cs_3" }]);
+
+    expect(await expireOpenCheckouts(client, "cus_7")).toBe(3);
+    expect(list).toHaveBeenNthCalledWith(1, { customer: "cus_7", status: "open", limit: 100 });
+    expect(list).toHaveBeenNthCalledWith(2, { customer: "cus_7", status: "open", limit: 100, starting_after: "cs_2" });
+    expect(expire.mock.calls.map(([id]) => id)).toEqual(["cs_1", "cs_2", "cs_3"]);
+    // Both pages of the list were read before the first expiry.
+    expect(list.mock.invocationCallOrder[1]).toBeLessThan(expire.mock.invocationCallOrder[0]);
+  });
+
+  it("fails when Stripe cannot be reached, so that the caller stops", async () => {
+    const list = vi.fn().mockRejectedValue(new Error("An error occurred with our connection to Stripe."));
+    const expire = vi.fn();
+    const client = { checkout: { sessions: { list, expire } } } as unknown as CheckoutClient;
+    await expect(expireOpenCheckouts(client, "cus_7")).rejects.toThrow("connection to Stripe");
+    expect(expire).not.toHaveBeenCalled();
+  });
+
+  // A page that was paid in the moment between the list and its expiry: Stripe
+  // refuses to expire it. The caller must stop, because that page has just
+  // started a subscription.
+  it("fails when one payment page cannot be expired", async () => {
+    const { client, expire } = stripeWithOpenPages([{ id: "cs_1" }, { id: "cs_2" }]);
+    expire.mockRejectedValueOnce(new Error("The Checkout Session is not open."));
+    await expect(expireOpenCheckouts(client, "cus_7")).rejects.toThrow("is not open");
+    expect(expire).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats a customer that Stripe does not have as having nothing to expire", async () => {
+    const missing = Object.assign(new Error("No such customer: 'cus_old'"), {
+      code: "resource_missing",
+      param: "customer",
+    });
+    const list = vi.fn().mockRejectedValue(missing);
+    const expire = vi.fn();
+    const client = { checkout: { sessions: { list, expire } } } as unknown as CheckoutClient;
+    expect(await expireOpenCheckouts(client, "cus_old")).toBe(0);
+    expect(expire).not.toHaveBeenCalled();
+  });
+
+  it("does not mistake another missing object for a missing customer", async () => {
+    const missing = Object.assign(new Error("No such checkout session: 'cs_1'"), {
+      code: "resource_missing",
+      param: "id",
+    });
+    const { client, expire } = stripeWithOpenPages([{ id: "cs_1" }]);
+    expire.mockRejectedValueOnce(missing);
+    await expect(expireOpenCheckouts(client, "cus_7")).rejects.toThrow("No such checkout session");
   });
 });

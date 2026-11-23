@@ -1,10 +1,23 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { seededPermutation } from "@/core/quiz-engine/shuffle";
+
+const DEFAULT_EXPLANATION = "SSH replaced Telnet for remote administration.";
 
 const server = vi.hoisted(() => ({
-  cards: [] as { questionId: string; questionText: string; options: string[]; domainId: string; overdueDays: number }[],
+  cards: [] as {
+    questionId: string;
+    questionText: string;
+    options: string[];
+    domainId: string;
+    overdueDays: number;
+    keepOrder?: boolean;
+  }[],
   correctIndex: 0,
+  explanation: "",
+  /** The stored index of each answer that was sent to be marked. */
+  submitted: [] as (number | undefined)[],
   failStart: false,
 }));
 
@@ -15,10 +28,11 @@ vi.mock("@/lib/api-client", () => ({
       return { cards: server.cards, totalDue: server.cards.length };
     }
     if (contract.path === "/api/srs-review/submit") {
+      server.submitted.push(input.selectedIndex);
       return {
         isCorrect: input.selectedIndex === server.correctIndex,
         correctIndex: server.correctIndex,
-        explanation: "SSH replaced Telnet for remote administration.",
+        explanation: server.explanation,
         nextReviewAt: "2026-11-25T00:00:00Z",
         intervalDays: 3,
         streak: 4,
@@ -49,11 +63,14 @@ const prompt = () => screen.getByRole("heading", { level: 2 });
 beforeEach(() => {
   server.cards = CARDS;
   server.correctIndex = 0;
+  server.explanation = DEFAULT_EXPLANATION;
+  server.submitted = [];
   server.failStart = false;
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe("SrsReviewClient", () => {
@@ -139,5 +156,80 @@ describe("SrsReviewClient", () => {
     render(<SrsReviewClient certId="cert" />);
     await settle();
     expect(screen.getByText(/No questions are due for review\./)).toBeInTheDocument();
+  });
+});
+
+describe("SrsReviewClient, a card whose explanation names an answer by its letter", () => {
+  /** The session's shuffle seed, fixed. With it the card below would be shuffled out of its stored order. */
+  const SEED = "00000000-0000-4000-8000-00000000cafe";
+  const KEPT = {
+    questionId: "q1",
+    questionText: "Which tool scans a host for known vulnerabilities?",
+    options: ["Wireshark", "Nmap", "Nessus", "Netcat"],
+    domainId: "d1",
+    overdueDays: 0,
+    keepOrder: true,
+  };
+  const EXPLANATION =
+    "A vulnerability scanner compares a host with a list of known weaknesses. Nessus (option C) is one, and Wireshark (option A) captures packets.";
+  const shuffled = seededPermutation(SEED, KEPT.questionId, KEPT.options.length);
+
+  const answers = () => within(screen.getByRole("group", { name: KEPT.questionText })).getAllByRole("button");
+  const keyBox = (answer: HTMLElement) => answer.querySelector("[aria-hidden]")?.textContent;
+
+  beforeEach(() => {
+    vi.spyOn(crypto, "randomUUID").mockReturnValue(SEED);
+    server.explanation = EXPLANATION;
+    server.correctIndex = 2;
+  });
+
+  it("would not be in its stored order if it were shuffled", () => {
+    expect(shuffled).not.toEqual([0, 1, 2, 3]);
+    expect(shuffled[2]).not.toBe(2);
+  });
+
+  it("shows the card in its stored order, so that the letter in the explanation names the answer under that letter", async () => {
+    server.cards = [KEPT];
+    render(<SrsReviewClient certId="cert" />);
+    await settle();
+
+    expect(answers().map(keyBox)).toEqual(["A", "B", "C", "D"]);
+    // The letter is in each answer's name too. (The test's DOM library drops the space at the edge of an inline span.)
+    expect(answers()[0]).toHaveAccessibleName(/^A\. ?Wireshark$/);
+    expect(answers()[2]).toHaveAccessibleName(/^C\. ?Nessus$/);
+
+    // The key C answers with the answer lettered C.
+    fireEvent.keyDown(prompt(), { key: "c" });
+    await settle();
+    expect(server.submitted).toEqual([2]);
+    expect(screen.getByText("Correct.")).toBeInTheDocument();
+
+    // The explanation is printed under answers that have not moved: "option C" is Nessus and "option A" is Wireshark.
+    expect(screen.getByText(/Nessus \(option C\) is one, and Wireshark \(option A\) captures packets\./)).toBeInTheDocument();
+    expect(answers()[2]).toHaveAccessibleName(/^Your answer, which is correct: ?C\. ?Nessus$/);
+    expect(answers()[0]).toHaveAccessibleName(/^A\. ?Wireshark$/);
+    expect([answers()[1], answers()[3]].map(keyBox)).toEqual(["B", "D"]);
+  });
+
+  it("answers with the stored answer when the answer lettered A is pressed", async () => {
+    server.cards = [KEPT];
+    render(<SrsReviewClient certId="cert" />);
+    await settle();
+    fireEvent.click(answers()[0]);
+    await settle();
+    expect(server.submitted).toEqual([0]);
+    expect(screen.getByText("Incorrect. The correct answer is Nessus.")).toBeInTheDocument();
+  });
+
+  it("still shuffles a card whose explanation names no letter", async () => {
+    server.cards = [{ ...KEPT, keepOrder: undefined }];
+    server.explanation = DEFAULT_EXPLANATION;
+    render(<SrsReviewClient certId="cert" />);
+    await settle();
+
+    expect(answers().map((a) => a.textContent?.slice(1))).toEqual(shuffled.map((i) => KEPT.options[i]));
+    fireEvent.keyDown(prompt(), { key: "c" });
+    await settle();
+    expect(server.submitted).toEqual([shuffled[2]]);
   });
 });

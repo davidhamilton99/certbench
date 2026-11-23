@@ -31,6 +31,17 @@ const KIND: Record<string, string | null> = {
   "Exam style": "Exam-style question",
 };
 
+/**
+ * The words for a question's kind, or null where the kind is not shown. For a
+ * page that prints a line of its own above the card (the study path's
+ * objective line) and wants the kind on that same line: it prints this there
+ * and gives the card `showKind={false}`, so the two never stand as two lines.
+ */
+export function kindOf(rep: Rep): string | null {
+  if (rep.tier === "exam") return "Exam-style question";
+  return rep.label in KIND ? KIND[rep.label] : rep.label;
+}
+
 export interface RepAnswer {
   correct: boolean;
   /** Option index chosen (choice reps), or -1 for typed reps. */
@@ -212,7 +223,7 @@ export function RepCard({
   // preface (a tag, a domain, the reason a question is back), that line stands
   // alone and the kind is not printed under it. Nor is it printed where the
   // page asks for none.
-  const kind = preface || !showKind ? null : isExam ? "Exam-style question" : rep.label in KIND ? KIND[rep.label] : rep.label;
+  const kind = preface || !showKind ? null : kindOf(rep);
 
   function stateOf(i: number): AnswerState {
     if (rep.type !== "choice" || !answered) return "idle";

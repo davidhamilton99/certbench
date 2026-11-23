@@ -34,9 +34,11 @@ const FREE_TOOLS = [
   "Study guides for the exam objectives",
 ];
 
-// Pro in the same terms as the path's own offer (PathOffer).
+// Pro in the same terms as the path's own offer (PathOffer). The first line is
+// worded to be true of every exam: the Network+ steps follow CertBench's own
+// topics and not CompTIA's objectives (usesOfficialObjectiveNumbers).
 const PRO_FEATURES = [
-  "The whole study path, covering every exam objective",
+  "The whole study path, which works through your exam topic by topic",
   "Every hands-on lab (PBQ)",
   `New timed practice exams of ${REHEARSAL_FORMATS.full.questions} questions, scored by domain`,
   "Every question for your exam, with review of the questions you answered incorrectly",

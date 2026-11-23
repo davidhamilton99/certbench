@@ -8,6 +8,7 @@ const NAMES = [
   "STRIPE_WEBHOOK_SECRET",
   "NEXT_PUBLIC_POSTHOG_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "EMAIL_POSTAL_ADDRESS",
 ];
 
 /** Values that would be recognized at once if one were ever printed. */
@@ -18,6 +19,8 @@ const SECRETS: Record<string, string> = {
   STRIPE_WEBHOOK_SECRET: "whsec_SECRET_webhook",
   NEXT_PUBLIC_POSTHOG_KEY: "phc_SECRET_posthog",
   SUPABASE_SERVICE_ROLE_KEY: "SECRET_service_role",
+  // Not a secret, but the owner's own address: it is never printed here either.
+  EMAIL_POSTAL_ADDRESS: "1 SECRET Street, Example Town, EX 00000, Canada",
 };
 
 function setAll() {
@@ -44,6 +47,7 @@ describe("settingFlags", () => {
       webhook: true,
       posthog: true,
       serviceRole: true,
+      postalAddress: true,
     });
   });
 
@@ -55,13 +59,23 @@ describe("settingFlags", () => {
       webhook: false,
       posthog: false,
       serviceRole: false,
+      postalAddress: false,
     });
   });
 
   it("answers for each setting by itself", () => {
     vi.stubEnv("CRON_SECRET", SECRETS.CRON_SECRET);
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", SECRETS.STRIPE_WEBHOOK_SECRET);
-    expect(settingFlags()).toMatchObject({ cron: true, webhook: true, resend: false, stripe: false });
+    expect(settingFlags()).toMatchObject({ cron: true, webhook: true, resend: false, stripe: false, postalAddress: false });
+    vi.stubEnv("EMAIL_POSTAL_ADDRESS", SECRETS.EMAIL_POSTAL_ADDRESS);
+    expect(settingFlags()).toMatchObject({ postalAddress: true, resend: false });
+  });
+
+  it("counts a postal address of spaces alone as absent, because no email would print one", () => {
+    for (const blank of ["   ", "\n", " \r\n "]) {
+      vi.stubEnv("EMAIL_POSTAL_ADDRESS", blank);
+      expect(settingFlags().postalAddress, JSON.stringify(blank)).toBe(false);
+    }
   });
 
   it("holds true and false only, never a value", () => {
@@ -77,7 +91,7 @@ describe("bootLines", () => {
     setAll();
     const { summary, warnings } = bootLines();
     expect(summary).toBe(
-      "[boot] settings: resend=true cron=true stripe=true webhook=true posthog=true serviceRole=true"
+      "[boot] settings: resend=true cron=true stripe=true webhook=true posthog=true serviceRole=true postalAddress=true"
     );
     expect(warnings).toEqual([]);
   });
@@ -92,6 +106,14 @@ describe("bootLines", () => {
       "[boot] RESEND_API_KEY is not set: no email is sent.",
       "[boot] CRON_SECRET is not set: the daily email job fails before it starts.",
     ]);
+  });
+
+  it("says that emails print no postal address until the owner has supplied one", () => {
+    setAll();
+    vi.stubEnv("EMAIL_POSTAL_ADDRESS", "");
+    const { summary, warnings } = bootLines();
+    expect(summary).toContain("serviceRole=true postalAddress=false");
+    expect(warnings).toEqual(["[boot] EMAIL_POSTAL_ADDRESS is not set: emails print no postal address."]);
   });
 
   it("warns when ADDON_CERTS is on, because it lets any account add an exam without paying", () => {

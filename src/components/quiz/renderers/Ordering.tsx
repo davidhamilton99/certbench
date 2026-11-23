@@ -67,7 +67,9 @@ export function Ordering({
                   <X aria-hidden className="size-4 shrink-0 text-destructive" />
                 )}
                 {/* The mark in words, for a reader who does not see the colour or the icon. */}
-                <span className="sr-only">{isRight ? "In the correct position." : "Not in the correct position."}</span>
+                <span className="sr-only">
+                  {isRight ? "This item is in the correct position." : "This item is not in the correct position."}
+                </span>
               </>
             ) : (
               <span className="flex shrink-0 gap-1">
