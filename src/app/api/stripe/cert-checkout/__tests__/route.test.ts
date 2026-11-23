@@ -286,3 +286,48 @@ describe("POST /api/stripe/cert-checkout: one open payment page for each custome
     expect(h.stripe.checkout.sessions.list).not.toHaveBeenCalled();
   });
 });
+
+// The purchase is recorded by the webhook, from Stripe, after this page has
+// gone. The payment page carries the browser it was opened from, so that the
+// record can join that visit and that person in PostHog.
+describe("POST /api/stripe/cert-checkout: the visit the payment page is opened from", () => {
+  const AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
+  const addExamFrom = (analytics: unknown, headers: Record<string, string> = {}) =>
+    POST(
+      new NextRequest("https://certbench.dev/api/stripe/cert-checkout", {
+        method: "POST",
+        body: JSON.stringify({ certId: CERT_ID, analytics }),
+        headers: { "Content-Type": "application/json", ...headers },
+      })
+    );
+
+  it("keeps the browser's ids and user agent on the payment page", async () => {
+    const res = await addExamFrom(
+      { distinctId: "019a8f2e-0b1c-7d2e-9f30-4a5b6c7d8e9f", sessionId: "019a8f2e-1111-7222-8333-444455556666" },
+      { "user-agent": AGENT }
+    );
+
+    expect(res.status).toBe(200);
+    const page = h.stripe.checkout.sessions.create.mock.calls[0][0];
+    expect(page.metadata).toEqual({
+      supabase_user_id: "user-1",
+      cert_id: CERT_ID,
+      kind: "cert_addon",
+      posthog_distinct_id: "019a8f2e-0b1c-7d2e-9f30-4a5b6c7d8e9f",
+      posthog_session_id: "019a8f2e-1111-7222-8333-444455556666",
+      posthog_user_agent: AGENT,
+    });
+    // A single payment starts no plan.
+    expect(page).not.toHaveProperty("subscription_data");
+  });
+
+  it("never refuses a payment over ids that are not ids: it drops them and opens the page", async () => {
+    const res = await addExamFrom({ distinctId: "not an id!", sessionId: ["019a"] });
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.create.mock.calls[0][0].metadata).toEqual({
+      supabase_user_id: "user-1",
+      cert_id: CERT_ID,
+      kind: "cert_addon",
+    });
+  });
+});

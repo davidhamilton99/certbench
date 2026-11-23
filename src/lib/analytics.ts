@@ -16,6 +16,9 @@ declare global {
       identify: (id: string, props?: Record<string, unknown>) => void;
       reset: () => void;
       captureException?: (error: unknown, props?: Record<string, unknown>) => void;
+      // Before the library has loaded, the page's stub answers these with nothing.
+      get_distinct_id?: () => unknown;
+      get_session_id?: () => unknown;
     };
   }
 }
@@ -196,6 +199,30 @@ export function captureError(error: unknown, props?: Record<string, unknown>): v
     window.posthog?.captureException?.(error, props);
   } catch {
     /* no-op */
+  }
+}
+
+/**
+ * The ids PostHog knows this browser by: the distinct id its events are
+ * recorded under, and the session they belong to. They are sent with a
+ * request to open a payment page. The purchase is recorded by the server once
+ * Stripe reports it, after this page has gone, and these let that record join
+ * this visit (its landing page, its source) and this person.
+ *
+ * Empty when PostHog has not loaded (an ad blocker, a slow network): the
+ * payment page opens all the same.
+ */
+export function analyticsIds(): { distinctId?: string; sessionId?: string } {
+  if (typeof window === "undefined") return {};
+  try {
+    const distinctId = window.posthog?.get_distinct_id?.();
+    const sessionId = window.posthog?.get_session_id?.();
+    return {
+      ...(typeof distinctId === "string" && distinctId ? { distinctId } : {}),
+      ...(typeof sessionId === "string" && sessionId ? { sessionId } : {}),
+    };
+  } catch {
+    return {};
   }
 }
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { api } from "@/lib/api-client";
-import { track } from "@/lib/analytics";
+import { analyticsIds, track } from "@/lib/analytics";
 import { addCertCheckout, enrollInPath } from "@/contracts/client";
 import type { BillingInterval } from "@/contracts/billing";
 import { ApiError } from "@/contracts/errors";
@@ -261,7 +261,7 @@ function AddExam({
     setError("");
     track("path_offer_clicked", { cert, context, offer: "add_exam" });
     try {
-      const { url } = await api(addCertCheckout, { certId });
+      const { url } = await api(addCertCheckout, { certId, analytics: analyticsIds() });
       // Counted only once there is a payment page to go to.
       track("checkout_started", { interval: "cert_addon" });
       leaveFor(url);

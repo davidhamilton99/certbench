@@ -6,6 +6,8 @@ import { regionPricing } from "@/lib/pricing/ppp";
 import { PRO_PRICE_REGION_NOTE } from "@/lib/pricing/terms";
 
 const h = vi.hoisted(() => ({
+  /** The PostHog ids the browser holds, as analyticsIds() reads them. */
+  ids: { distinctId: "019a-anonymous", sessionId: "019a-session" } as { distinctId?: string; sessionId?: string },
   calls: [] as { key: string; input: unknown }[],
   track: vi.fn(),
   leaveFor: vi.fn(),
@@ -13,7 +15,7 @@ const h = vi.hoisted(() => ({
   checkout: (() => Promise.resolve({ url: "https://checkout.example/session" })) as () => Promise<{ url: string }>,
 }));
 
-vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args) }));
+vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args), analyticsIds: () => h.ids }));
 vi.mock("../leave", () => ({ leaveFor: (url: string) => h.leaveFor(url) }));
 vi.mock("@/lib/api-client", () => ({
   api: async (contract: { method: string; path: string }, input: unknown) => {
@@ -59,6 +61,7 @@ const pay = () => fireEvent.click(screen.getByRole("button", { name: "Continue t
 
 beforeEach(() => {
   h.calls = [];
+  h.ids = { distinctId: "019a-anonymous", sessionId: "019a-session" };
   h.track.mockClear();
   h.leaveFor.mockClear();
   h.region = () => Promise.resolve(LIST);
@@ -184,7 +187,12 @@ describe("opening the payment page", () => {
     pay();
 
     await waitFor(() => expect(h.calls.map((c) => c.key)).toContain("POST /api/stripe/checkout"));
-    expect(h.calls.at(-1)?.input).toEqual({ interval: "annual", returnTo: "pricing" });
+    // With the browser's PostHog ids, so that the purchase can be recorded on this visit.
+    expect(h.calls.at(-1)?.input).toEqual({
+      interval: "annual",
+      returnTo: "pricing",
+      analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" },
+    });
     expect(onPress).toHaveBeenCalledWith("annual");
     // While it opens: the button is busy, the choice cannot be changed, and it is said in words.
     const button = screen.getByRole("button", { name: "Continue to payment" });
@@ -197,6 +205,15 @@ describe("opening the payment page", () => {
     await act(async () => session.resolve({ url: "https://checkout.example/annual" }));
     expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "annual" });
     expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/annual");
+  });
+
+  // An ad blocker, or a page pressed before PostHog loaded: the payment page opens all the same.
+  it("opens the payment page when the browser holds no PostHog ids", async () => {
+    h.ids = {};
+    render(chooser());
+    pay();
+    await waitFor(() => expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/session"));
+    expect(h.calls.at(-1)?.input).toEqual({ interval: "quarterly", returnTo: "pricing", analytics: {} });
   });
 
   it("opens only one payment page when the button is pressed twice", async () => {

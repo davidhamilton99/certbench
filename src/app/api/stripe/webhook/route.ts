@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/server/stripe";
 import { createAdminClient } from "@/server/supabase/admin";
-import { captureServerEvent } from "@/server/analytics";
+import { capturePurchase, captureServerEvent, type Purchase } from "@/server/analytics";
+import { visitOf } from "@/server/purchase-visit";
 import { afterResponse } from "@/server/api/after-response";
 import { reportServerError, type ErrorPlace } from "@/server/api/report-error";
 import { serverEnv } from "@/env";
@@ -33,6 +34,16 @@ function captureAfterResponse(
   properties?: Record<string, unknown>
 ): void {
   afterResponse(() => captureServerEvent(distinctId, event, properties));
+}
+
+/**
+ * Records a purchase in PostHog once the answer to Stripe has gone, on the
+ * buyer and on the visit that opened its payment page (`capturePurchase`).
+ * A purchase whose cost has to be asked of Stripe is given as a function, and
+ * that question is asked after the answer too.
+ */
+function reportPurchase(purchase: Purchase | (() => Promise<Purchase>)): void {
+  afterResponse(async () => capturePurchase(typeof purchase === "function" ? await purchase() : purchase));
 }
 
 /**
@@ -85,6 +96,12 @@ function captureAfterResponse(
  *     did not have Pro before the write, so the second of a plan's two events,
  *     a checkout delivered again and a renewal paid after it fell past due
  *     (a payment recovered, not a new buyer) report nothing.
+ *
+ * A purchase is reported on the buyer and on the browser visit that opened its
+ * payment page, which the page carries in its metadata (and a plan in its
+ * subscription's): see `capturePurchase`. It says what was paid, in what
+ * currency and, for a plan, for which billing period. A renewal is not a new
+ * purchase and reports nothing here.
  *
  * An added exam, a one-time payment, is granted only when its money has
  * arrived: at once for a card, and for a delayed method (a bank debit) by
@@ -259,6 +276,59 @@ function isPaid(session: Stripe.Checkout.Session): boolean {
 }
 
 /**
+ * A plan's billing period, in the words the app sells it by and the browser's
+ * `checkout_started` reports ("monthly", "quarterly", "annual"). Read from the
+ * plan's price, so it is right for plans bought before this was recorded too.
+ */
+function planOf(subscription: Stripe.Subscription): { interval?: string } {
+  const recurring = subscription.items?.data?.[0]?.price?.recurring;
+  if (!recurring) return {};
+  const months =
+    recurring.interval === "month"
+      ? recurring.interval_count
+      : recurring.interval === "year"
+        ? recurring.interval_count * 12
+        : null;
+  if (months === 1) return { interval: "monthly" };
+  if (months === 3) return { interval: "quarterly" };
+  if (months === 12) return { interval: "annual" };
+  return { interval: `${recurring.interval_count} ${recurring.interval}` };
+}
+
+/**
+ * What a purchase brought in, as PostHog's revenue analytics reads it: the
+ * amount charged, after any regional discount, in whole units of its currency
+ * (19, not Stripe's 1900 cents), and the currency's code. Every price here is
+ * in US dollars, which Stripe counts in cents.
+ */
+function revenueOf(
+  amount: number | null | undefined,
+  currency: string | null | undefined
+): { revenue?: number; currency?: string } {
+  if (typeof amount !== "number" || !currency) return {};
+  return { revenue: amount / 100, currency: currency.toUpperCase() };
+}
+
+/**
+ * What the latest invoice of a plan was paid: for a buyer whose first payment
+ * has just gone through, that payment. A change to a subscription does not
+ * say, so Stripe is asked, after the answer to the webhook has gone. When
+ * Stripe cannot say, the purchase is recorded without it.
+ */
+async function latestPayment(subscription: Stripe.Subscription): Promise<{ revenue?: number; currency?: string }> {
+  const latest = subscription.latest_invoice;
+  const id = typeof latest === "string" ? latest : latest?.id;
+  if (!id) return {};
+  try {
+    const invoice = await getStripe().invoices.retrieve(id);
+    return revenueOf(invoice.amount_paid, invoice.currency);
+  } catch (err) {
+    console.error("[stripe webhook] what a purchase cost could not be read:", err);
+    return {};
+  }
+}
+
+/**
  * Writes what an event means to the database. Returns the first database
  * call that failed, or null once everything the event asks for is recorded
  * (which includes an event that asks for nothing).
@@ -287,8 +357,13 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
         );
         if (error) return failure("cert add-on enrollment", error);
 
-        captureAfterResponse(userId, "cert_added", {
-          certification_id: certId,
+        reportPurchase({
+          userId,
+          event: "cert_added",
+          properties: { certification_id: certId, ...revenueOf(session.amount_total, session.currency) },
+          visit: visitOf(session.metadata),
+          checkoutAt: session.created,
+          paidAt: event.created,
         });
         return null;
       }
@@ -339,12 +414,23 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
 
       // The conversion event, fired server-side (reliable source of truth,
       // unlike a success-redirect the user may never reach) and only once the
-      // row is written: a conversion is a buyer who has Pro. distinct_id is the
-      // Supabase user id, so it joins the funnel this person built in-browser.
+      // row is written: a conversion is a buyer who has Pro. It is the
+      // buyer's, under their Supabase user id, and it is placed on the visit
+      // that opened the payment page, so it joins the funnel this person built
+      // in the browser.
       if (becomesPro(before as PriorStanding | null, standing)) {
-        captureAfterResponse(userId, "subscription_activated", {
-          stripe_subscription_id: subscription.id,
-          plan: "pro",
+        reportPurchase({
+          userId,
+          event: "subscription_activated",
+          properties: {
+            stripe_subscription_id: subscription.id,
+            plan: "pro",
+            ...planOf(subscription),
+            ...revenueOf(session.amount_total, session.currency),
+          },
+          visit: visitOf(session.metadata),
+          checkoutAt: session.created,
+          paidAt: event.created,
         });
       }
       return null;
@@ -393,12 +479,24 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
 
       // A first payment that was still pending when its checkout completed is
       // granted here, and so is a plan whose own event arrives before its
-      // checkout: either way this is the buyer's conversion (rule 4).
+      // checkout: either way this is the buyer's conversion (rule 4). This
+      // event has no payment page: the plan itself carries the browser it was
+      // bought from, and the time it was made, at the end of that page.
       if (becomesPro(sub as PriorStanding, standing)) {
-        captureAfterResponse((sub as CustomerRow).user_id, "subscription_activated", {
-          stripe_subscription_id: sent.id,
-          plan: "pro",
-        });
+        const userId = (sub as CustomerRow).user_id;
+        reportPurchase(async () => ({
+          userId,
+          event: "subscription_activated",
+          properties: {
+            stripe_subscription_id: sent.id,
+            plan: "pro",
+            ...planOf(subscription),
+            ...(await latestPayment(subscription)),
+          },
+          visit: visitOf(subscription.metadata),
+          checkoutAt: subscription.created,
+          paidAt: event.created,
+        }));
       }
       return null;
     }

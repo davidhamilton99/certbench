@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import type { Purchase } from "@/server/analytics";
 
 interface DbCall {
   table: string;
@@ -14,7 +15,11 @@ const h = vi.hoisted(() => ({
   /** The event the signature check hands back, or null for a signature that does not verify. */
   event: null as unknown,
   retrieve: vi.fn(),
+  /** Stripe's answer when asked for an invoice. */
+  invoice: vi.fn(),
   capture: vi.fn(async () => {}),
+  /** A purchase reported to PostHog, on the buyer and the visit it came from. */
+  purchase: vi.fn<(purchase: Purchase) => Promise<void>>(async () => {}),
   /** The report of a fault as a `server_error`. */
   report: vi.fn(async () => {}),
   /** Every database call the handler made, in order. */
@@ -35,7 +40,7 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@/env", () => ({ serverEnv: () => "whsec_test" }));
-vi.mock("@/server/analytics", () => ({ captureServerEvent: h.capture }));
+vi.mock("@/server/analytics", () => ({ captureServerEvent: h.capture, capturePurchase: h.purchase }));
 vi.mock("@/server/api/report-error", () => ({ reportServerError: h.report }));
 vi.mock("@/server/stripe", () => ({
   getStripe: () => ({
@@ -46,6 +51,7 @@ vi.mock("@/server/stripe", () => ({
       },
     },
     subscriptions: { retrieve: h.retrieve },
+    invoices: { retrieve: h.invoice },
   }),
 }));
 vi.mock("@/server/supabase/admin", () => ({
@@ -113,6 +119,9 @@ const runAfterTasks = async () => {
   for (const task of h.afterTasks.splice(0)) await task();
 };
 
+/** The purchases reported to PostHog, as [user, event, properties]. */
+const purchases = () => h.purchase.mock.calls.map(([p]) => [p.userId, p.event, p.properties]);
+
 const writes = () => h.calls.filter((c) => c.op !== "select");
 
 /** 1 January 2026, 00:00 UTC, as Stripe sends a time. */
@@ -156,7 +165,9 @@ beforeEach(() => {
   h.afterTasks = [];
   h.afterRefuses = false;
   h.capture.mockClear();
+  h.purchase.mockClear();
   h.report.mockClear();
+  h.invoice.mockReset();
   h.retrieve.mockReset().mockResolvedValue({
     id: "sub_1",
     status: "active",
@@ -240,15 +251,13 @@ describe("the Stripe webhook: a completed checkout", () => {
 
     expect(res.status).toBe(200);
     // Nothing was sent while Stripe was waiting for its answer.
+    expect(h.purchase).not.toHaveBeenCalled();
     expect(h.capture).not.toHaveBeenCalled();
     expect(h.afterTasks).toHaveLength(1);
 
     await runAfterTasks();
-    expect(h.capture).toHaveBeenCalledOnce();
-    expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", {
-      stripe_subscription_id: "sub_1",
-      plan: "pro",
-    });
+    expect(purchases()).toEqual([["user-1", "subscription_activated", { stripe_subscription_id: "sub_1", plan: "pro" }]]);
+    expect(h.capture).not.toHaveBeenCalled();
   });
 
   // Production until November 2026: the result of this write was never read,
@@ -270,7 +279,7 @@ describe("the Stripe webhook: a completed checkout", () => {
 
     // No conversion is counted for a buyer who does not have Pro.
     await runAfterTasks();
-    expect(h.capture).not.toHaveBeenCalledWith("user-1", "subscription_activated", expect.anything());
+    expect(h.purchase).not.toHaveBeenCalled();
     // The failure is reported on the job, with no personal data.
     expect(h.capture).toHaveBeenCalledOnce();
     expect(h.capture).toHaveBeenCalledWith("system:stripe-webhook", "stripe_webhook_failed", {
@@ -291,13 +300,12 @@ describe("the Stripe webhook: a completed checkout", () => {
     h.answers["user_subscriptions.upsert"] = { error: { message: "connection reset", code: "08006" } };
     expect((await deliver()).status).toBe(500);
     await runAfterTasks();
-    h.capture.mockClear();
+    expect(h.purchase).not.toHaveBeenCalled();
 
     h.answers = {};
     expect((await deliver()).status).toBe(200);
     await runAfterTasks();
-    expect(h.capture).toHaveBeenCalledOnce();
-    expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", expect.anything());
+    expect(purchases()).toEqual([["user-1", "subscription_activated", expect.anything()]]);
   });
 
   // A step that throws is a failure like any other: without this the answer
@@ -338,7 +346,7 @@ describe("the Stripe webhook: a completed checkout", () => {
     const res = await deliver();
     expect(res.status).toBe(200);
     expect(writes()).toHaveLength(1);
-    expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", expect.anything());
+    expect(purchases()).toEqual([["user-1", "subscription_activated", expect.anything()]]);
   });
 
   it("does nothing for a session that carries no account", async () => {
@@ -383,7 +391,7 @@ describe("the Stripe webhook: an added exam", () => {
     expect(res.status).toBe(200);
     expect(h.calls).toEqual([]);
     await runAfterTasks();
-    expect(h.capture).not.toHaveBeenCalledWith("user-1", "cert_added", expect.anything());
+    expect(h.purchase).not.toHaveBeenCalled();
   });
 
   it("adds the exam when Stripe says that the delayed payment has arrived", async () => {
@@ -393,7 +401,7 @@ describe("the Stripe webhook: an added exam", () => {
     expect(res.status).toBe(200);
     expect(h.calls).toEqual([enrollment]);
     await runAfterTasks();
-    expect(h.capture).toHaveBeenCalledWith("user-1", "cert_added", { certification_id: "cert-9" });
+    expect(purchases()).toEqual([["user-1", "cert_added", { certification_id: "cert-9" }]]);
   });
 
   it("treats a page that needed no payment as paid", async () => {
@@ -426,9 +434,9 @@ describe("the Stripe webhook: an added exam", () => {
         filters: [],
       },
     ]);
-    expect(h.capture).not.toHaveBeenCalled();
+    expect(h.purchase).not.toHaveBeenCalled();
     await runAfterTasks();
-    expect(h.capture).toHaveBeenCalledWith("user-1", "cert_added", { certification_id: "cert-9" });
+    expect(purchases()).toEqual([["user-1", "cert_added", { certification_id: "cert-9" }]]);
   });
 
   // This write's error used to be logged and then acknowledged with 200.
@@ -439,12 +447,168 @@ describe("the Stripe webhook: an added exam", () => {
     const res = await deliver();
     expect(res.status).toBe(500);
     await runAfterTasks();
-    expect(h.capture).not.toHaveBeenCalledWith("user-1", "cert_added", expect.anything());
+    expect(h.purchase).not.toHaveBeenCalled();
     expect(h.capture).toHaveBeenCalledWith(
       "system:stripe-webhook",
       "stripe_webhook_failed",
       expect.objectContaining({ step: "cert add-on enrollment", code: "42501" })
     );
+  });
+});
+
+// Until November 2026 a purchase reached PostHog with the user id alone: no
+// session, no browser and no amount. Every one of them was classed as a bot's,
+// and none could be broken down by the page or source it came from.
+describe("the Stripe webhook: what a purchase reports, and the visit it came from", () => {
+  /** When the payment page was opened, and when it was paid: a minute later. */
+  const OPENED = 1_763_900_000;
+  const PAID = OPENED + 60;
+  const AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
+  /** The browser, as the payment page keeps it. */
+  const kept = {
+    posthog_distinct_id: "019a8f2e-anonymous",
+    posthog_session_id: "019a8f2e-session",
+    posthog_user_agent: AGENT,
+  };
+  const visit = { distinctId: "019a8f2e-anonymous", sessionId: "019a8f2e-session", userAgent: AGENT };
+  /** The plan as Stripe holds it, with its price's billing period. */
+  const plan =(recurring: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({
+    id: "sub_1",
+    status: "active",
+    created: PAID - 2,
+    items: { data: [{ current_period_end: PERIOD_END, price: { recurring } }] },
+    ...extra,
+  });
+  const MONTHLY = { interval: "month", interval_count: 1 };
+  const paidPage = (session: Record<string, unknown> = {}) => ({
+    ...checkoutCompleted({
+      created: OPENED,
+      amount_total: 1900,
+      currency: "usd",
+      metadata: { supabase_user_id: "user-1", ...kept },
+      ...session,
+    }),
+    created: PAID,
+  });
+
+  it("reports a plan on the buyer, with its period and price, and on the visit that opened its payment page", async () => {
+    h.retrieve.mockResolvedValue(plan(MONTHLY));
+    h.event = paidPage();
+
+    expect((await deliver()).status).toBe(200);
+    await runAfterTasks();
+    expect(h.purchase).toHaveBeenCalledExactlyOnceWith({
+      userId: "user-1",
+      event: "subscription_activated",
+      properties: { stripe_subscription_id: "sub_1", plan: "pro", interval: "monthly", revenue: 19, currency: "USD" },
+      visit,
+      checkoutAt: OPENED,
+      paidAt: PAID,
+    });
+  });
+
+  it.each([
+    [{ interval: "month", interval_count: 3 }, "quarterly"],
+    [{ interval: "year", interval_count: 1 }, "annual"],
+    [{ interval: "month", interval_count: 12 }, "annual"],
+    [{ interval: "week", interval_count: 2 }, "2 week"],
+  ])("names a plan billed every %o by its period: %s", async (recurring, interval) => {
+    h.retrieve.mockResolvedValue(plan(recurring));
+    h.event = paidPage();
+    await deliver();
+    await runAfterTasks();
+    expect(h.purchase.mock.calls[0][0].properties).toMatchObject({ interval });
+  });
+
+  it("reports what was charged after a regional discount, not the list price", async () => {
+    h.retrieve.mockResolvedValue(plan(MONTHLY));
+    h.event = paidPage({ amount_total: 760 });
+    await deliver();
+    await runAfterTasks();
+    expect(h.purchase.mock.calls[0][0].properties).toMatchObject({ revenue: 7.6, currency: "USD" });
+  });
+
+  it("reports a payment page opened without PostHog on the buyer alone", async () => {
+    h.retrieve.mockResolvedValue(plan(MONTHLY));
+    h.event = paidPage({ metadata: { supabase_user_id: "user-1" } });
+    await deliver();
+    await runAfterTasks();
+    expect(h.purchase.mock.calls[0][0].userId).toBe("user-1");
+    expect(h.purchase.mock.calls[0][0].visit).toEqual({});
+  });
+
+  it("reports an added exam with what it cost and the visit it came from", async () => {
+    h.event = paidPage({
+      subscription: null,
+      mode: "payment",
+      payment_status: "paid",
+      amount_total: 3900,
+      metadata: { supabase_user_id: "user-1", kind: "cert_addon", cert_id: "cert-9", ...kept },
+    });
+
+    expect((await deliver()).status).toBe(200);
+    await runAfterTasks();
+    expect(h.purchase).toHaveBeenCalledExactlyOnceWith({
+      userId: "user-1",
+      event: "cert_added",
+      properties: { certification_id: "cert-9", revenue: 39, currency: "USD" },
+      visit,
+      checkoutAt: OPENED,
+      paidAt: PAID,
+    });
+  });
+
+  describe("a plan granted by the change that says its first payment was made", () => {
+    /** A buyer whose payment page is done and whose plan is not yet Pro. */
+    const waiting = () => {
+      h.answers["user_subscriptions.select"] = {
+        data: { user_id: "user-1", stripe_subscription_id: null, plan: "free", status: "active" },
+        error: null,
+      };
+    };
+    const change = () => ({
+      id: "evt_sub",
+      type: "customer.subscription.updated",
+      created: PAID,
+      data: { object: { id: "sub_1", customer: "cus_1", status: "active" } },
+    });
+
+    it("reports it on the visit the plan keeps, with what its invoice was paid", async () => {
+      waiting();
+      h.retrieve.mockResolvedValue(
+        plan({ interval: "month", interval_count: 3 }, { created: OPENED, latest_invoice: "in_1", metadata: kept })
+      );
+      h.invoice.mockResolvedValue({ amount_paid: 3900, currency: "usd" });
+      h.event = change();
+
+      expect((await deliver()).status).toBe(200);
+      // Stripe is asked what it cost only once the answer has gone.
+      expect(h.invoice).not.toHaveBeenCalled();
+      await runAfterTasks();
+      expect(h.invoice).toHaveBeenCalledExactlyOnceWith("in_1");
+      expect(h.purchase).toHaveBeenCalledExactlyOnceWith({
+        userId: "user-1",
+        event: "subscription_activated",
+        properties: { stripe_subscription_id: "sub_1", plan: "pro", interval: "quarterly", revenue: 39, currency: "USD" },
+        visit,
+        checkoutAt: OPENED,
+        paidAt: PAID,
+      });
+    });
+
+    it("still reports it when Stripe cannot say what the invoice was paid", async () => {
+      waiting();
+      h.retrieve.mockResolvedValue(plan(MONTHLY, { latest_invoice: "in_1", metadata: kept }));
+      h.invoice.mockRejectedValue(new Error("An error occurred with our connection to Stripe."));
+      h.event = change();
+
+      expect((await deliver()).status).toBe(200);
+      await runAfterTasks();
+      expect(purchases()).toEqual([
+        ["user-1", "subscription_activated", { stripe_subscription_id: "sub_1", plan: "pro", interval: "monthly" }],
+      ]);
+      expect(h.report).not.toHaveBeenCalled();
+    });
   });
 });
 
@@ -679,6 +843,7 @@ describe("the Stripe webhook: a checkout delivered again after its subscription 
       expect(res.status).toBe(200);
       expect(writes()).toEqual([]);
       await runAfterTasks();
+      expect(h.purchase).not.toHaveBeenCalled();
       expect(h.capture).not.toHaveBeenCalled();
     }
   );
@@ -720,11 +885,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
     expect(writes()).toEqual(written("pro", status));
 
     await runAfterTasks();
-    expect(h.capture).toHaveBeenCalledOnce();
-    expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", {
-      stripe_subscription_id: "sub_1",
-      plan: "pro",
-    });
+    expect(purchases()).toEqual([["user-1", "subscription_activated", { stripe_subscription_id: "sub_1", plan: "pro" }]]);
   });
 
   it.each([
@@ -742,6 +903,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
 
     // Nothing was left to send after the response either.
     expect(h.afterTasks).toEqual([]);
+    expect(h.purchase).not.toHaveBeenCalled();
     expect(h.capture).not.toHaveBeenCalled();
   });
 
@@ -754,6 +916,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
       expect((await deliver()).status).toBe(200);
       expect(h.calls).toEqual([]);
       expect(h.afterTasks).toEqual([]);
+      expect(h.purchase).not.toHaveBeenCalled();
       expect(h.capture).not.toHaveBeenCalled();
     }
   );
@@ -765,7 +928,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
 
     expect((await deliver()).status).toBe(500);
     await runAfterTasks();
-    expect(h.capture).not.toHaveBeenCalledWith("user-1", "subscription_activated", expect.anything());
+    expect(h.purchase).not.toHaveBeenCalled();
   });
 });
 
@@ -937,18 +1100,13 @@ describe("the Stripe webhook: events that arrive late or out of order", () => {
       h.row = buyer();
       for (const [, event] of order) await send(event());
       await runAfterTasks();
-      expect(h.capture).toHaveBeenCalledOnce();
-      expect(h.capture).toHaveBeenCalledWith("user-1", "subscription_activated", {
-        stripe_subscription_id: "sub_1",
-        plan: "pro",
-      });
+      expect(purchases()).toEqual([["user-1", "subscription_activated", { stripe_subscription_id: "sub_1", plan: "pro" }]]);
     }
   );
 
   // Rule 4: a conversion is reported once, by whichever event grants Pro first.
   describe("the conversion event", () => {
-    const conversions = () =>
-      (h.capture.mock.calls as unknown as unknown[][]).filter(([, name]) => name === "subscription_activated");
+    const conversions = () => purchases().filter(([, name]) => name === "subscription_activated");
 
     it("is reported when a first payment that was pending at checkout is then made", async () => {
       h.row = buyer();
