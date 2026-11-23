@@ -32,6 +32,7 @@ export default async function AdminTestimonialsPage() {
       <AdminTestimonialsList
         items={pending.map((t) => ({
           id: t.id,
+          passed: t.passed,
           quote: t.quote,
           displayName: t.displayName,
           certName: t.certName,

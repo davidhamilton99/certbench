@@ -26,15 +26,23 @@ export const POST = defineEndpoint(submitPracticeExam, {
       throw new ApiError("conflict", "Attempt already submitted");
 
     const allowedIds = new Set(attempt.progressState?.questionIds ?? []);
-    const answers = input.answers.filter((a) => allowedIds.has(a.questionId));
+    const offered = input.answers.filter((a) => allowedIds.has(a.questionId));
+
+    // The snapshot's ids were sent by the member's own browser (the progress
+    // route stores the snapshot as sent), so they do not prove that a question
+    // belongs to this attempt. Only questions of the attempt's own exam are
+    // graded: no other exam's answers or explanations are returned, and no
+    // answer is filed under the wrong exam.
+    const questions = (
+      await getQuestionsByIds(
+        db,
+        offered.map((a) => a.questionId)
+      )
+    ).filter((q) => q.certification_id === attempt.certificationId);
+    const questionById = new Map(questions.map((q) => [q.id, q]));
+    const answers = offered.filter((a) => questionById.has(a.questionId));
     if (answers.length === 0)
       throw new ApiError("validation_failed", "No valid answers for this attempt");
-
-    const questions = await getQuestionsByIds(
-      db,
-      answers.map((a) => a.questionId)
-    );
-    const questionById = new Map(questions.map((q) => [q.id, q]));
     const flaggedSet = new Set(input.flaggedQuestionIds);
 
     const graded: GradedResponse[] = answers.flatMap((a) => {

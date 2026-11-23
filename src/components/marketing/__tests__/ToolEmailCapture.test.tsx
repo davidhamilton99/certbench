@@ -38,6 +38,18 @@ describe("ToolEmailCapture", () => {
     expect(field).not.toHaveAttribute("aria-invalid");
   });
 
+  // "Three steps" counted the plan by hand, with the word the study path keeps
+  // for its own unit; the email itself was changed to avoid both.
+  it("describes the plan without a count and without the study path's word for its unit", () => {
+    form();
+    expect(
+      screen.getByText(
+        "The plan sets out how to cover the rest of the exam, with a link to start the study path for your exam. You do not need an account."
+      )
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/three steps|\bsteps?\b/);
+  });
+
   it("confirms the email only when the mail service accepted it, and says where it went", async () => {
     api.mockResolvedValue({ ok: true, delivery: "sent" });
     form();

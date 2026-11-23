@@ -26,6 +26,7 @@ const NAMES = [
   "NEXT_PUBLIC_POSTHOG_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
   "EMAIL_POSTAL_ADDRESS",
+  "LINK_SIGNING_SECRET",
 ];
 
 const call = () => GET(new NextRequest("https://certbench.dev/api/health"));
@@ -58,6 +59,7 @@ describe("GET /api/health", () => {
       posthog: false,
       serviceRole: false,
       postalAddress: false,
+      linkSigning: false,
     });
 
     vi.stubEnv("RESEND_API_KEY", "re_SECRET_value");
@@ -71,6 +73,7 @@ describe("GET /api/health", () => {
       posthog: false,
       serviceRole: true,
       postalAddress: false,
+      linkSigning: false,
     });
   });
 

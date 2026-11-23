@@ -10,12 +10,19 @@ import { Button } from "@/components/ui/button";
 
 interface Item {
   id: string;
+  /** Whether the person passed. A comment from someone who did not pass is never published. */
+  passed: boolean;
   quote: string;
   displayName: string;
   certName: string | null;
 }
 
-/** The owner's queue of stories that members have sent after their exam. */
+/**
+ * The owner's queue of stories that members have sent after their exam. Each
+ * row says whether the person passed. A comment from someone who did not pass
+ * (what they found difficult) can only be hidden: it is never published, and
+ * the server refuses to approve it.
+ */
 export function AdminTestimonialsList({ items }: { items: Item[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<{ id: string; status: "approved" | "hidden" } | null>(null);
@@ -46,19 +53,22 @@ export function AdminTestimonialsList({ items }: { items: Item[] }) {
     <ul className="grid gap-3">
       {items.map((t) => (
         <li key={t.id} className="glass grid gap-3 rounded-lg p-5 text-small">
+          <p className="text-note font-medium">{t.passed ? "Passed" : "Did not pass"}</p>
           <blockquote className="cb-measure">{t.quote}</blockquote>
           <p className="text-note text-muted-foreground">
             {t.displayName}
             {t.certName && <>, {t.certName}</>}
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              loading={busy?.id === t.id && busy.status === "approved"}
-              onClick={() => moderate(t.id, "approved")}
-            >
-              Approve<span className="sr-only">: the testimonial from {t.displayName}</span>
-            </Button>
+            {t.passed && (
+              <Button
+                size="sm"
+                loading={busy?.id === t.id && busy.status === "approved"}
+                onClick={() => moderate(t.id, "approved")}
+              >
+                Approve<span className="sr-only">: the testimonial from {t.displayName}</span>
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"

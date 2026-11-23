@@ -1,7 +1,7 @@
 import { defineEndpoint } from "@/server/api/define-endpoint";
 import { createCheckout, type BillingInterval } from "@/contracts/billing";
 import { ApiError } from "@/contracts/common";
-import { getStripe, subscriptionStanding } from "@/server/stripe";
+import { expireOpenCheckouts, getStripe, subscriptionStanding } from "@/server/stripe";
 import { rateLimiter } from "@/server/rate-limit";
 import { createAdminClient } from "@/server/supabase/admin";
 import { pppForCountry } from "@/lib/pricing/ppp";
@@ -99,9 +99,25 @@ export const POST = defineEndpoint(createCheckout, {
     // subscription, and a plan whose payment failed is put right in the
     // billing portal, not by buying another.
     if (customerId) {
-      const standing = await subscriptionStanding(getStripe(), customerId);
+      const stripe = getStripe();
+      // An earlier payment page that is still open (the Back button, a second
+      // tab) could be paid as well as the new one, and that would start two
+      // subscriptions. Every open page is expired first and the standing is
+      // read after that, so that a page paid a moment earlier has its
+      // subscription in what is read: such a page refuses to expire, and the
+      // buyer is answered as a member who has Pro. If a page could not be
+      // expired for any other reason, no new page is made either.
+      let pagesExpired = true;
+      try {
+        await expireOpenCheckouts(stripe, customerId);
+      } catch (err) {
+        console.error("[checkout] an open payment page was not expired:", err);
+        pagesExpired = false;
+      }
+      const standing = await subscriptionStanding(stripe, customerId);
       if (standing === "paid") throw new ApiError("conflict", ALREADY_PRO);
       if (standing === "payment_due") throw new ApiError("conflict", PAYMENT_DUE);
+      if (!pagesExpired) throw new ApiError("internal", PAYMENT_PAGE_FAILED);
     }
     if (!customerId) {
       const customer = await getStripe().customers.create(

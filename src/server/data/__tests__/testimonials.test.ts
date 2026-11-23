@@ -1,13 +1,17 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/contracts/common";
 import type { Db } from "@/server/supabase/server";
 import {
   COMMENT_NOT_SAVED,
+  NOT_A_PASS_STORY,
   TESTIMONIALS_NOT_READ,
   TESTIMONIAL_NOT_UPDATED,
   insertTestimonial,
   listApprovedTestimonials,
   listPendingTestimonials,
+  replaceWithPassStory,
   setTestimonialStatus,
 } from "../testimonials";
 
@@ -36,6 +40,15 @@ function fakeDb(tables: Record<string, Row[]>, opts: { mayUpdate?: boolean; erro
         update: (p: Row) => ((patch = p), q),
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
         in: (c: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[c])), q),
+        // "a.eq.x,b.eq.y" as the REST layer reads it: either equality holds. true and false are booleans.
+        or: (expression: string) => {
+          const terms = expression.split(",").map((term) => {
+            const [column, , raw] = term.split(".");
+            return { column, value: raw === "true" ? true : raw === "false" ? false : raw };
+          });
+          filters.push((r) => terms.some(({ column, value }) => r[column] === value));
+          return q;
+        },
         order: (column: string, { ascending }: { ascending: boolean }) => ((sort = { column, ascending }), q),
         limit: (n: number) => ((max = n), q),
         then: (ok: (v: unknown) => unknown, fail?: (e: unknown) => unknown) => {
@@ -124,6 +137,22 @@ describe("setTestimonialStatus", () => {
     });
   });
 
+  // A "did not pass" comment waits in the same queue. Approved, it would be
+  // readable by anyone with the site's public key, with the name and the result.
+  it("refuses to approve a comment from someone who did not pass, and still hides one", async () => {
+    const rows = [{ ...story("a", "pending", "2026-11-01"), passed: false }];
+    const approving = setTestimonialStatus(fakeDb({ testimonials: rows }), "a", "approved");
+    await expect(approving).rejects.toBeInstanceOf(ApiError);
+    await expect(approving).rejects.toMatchObject({ code: "conflict", message: NOT_A_PASS_STORY });
+    expect(rows[0].status).toBe("pending");
+    expect(NOT_A_PASS_STORY).toBe(
+      "This comment is from someone who did not pass the exam, so it cannot be approved. It can be hidden."
+    );
+
+    await setTestimonialStatus(fakeDb({ testimonials: rows }), "a", "hidden");
+    expect(rows[0].status).toBe("hidden");
+  });
+
   // The error used to carry the database's own text, which the endpoint returned.
   it("reports a database error as an internal error with a sentence, and logs the database's text", async () => {
     await expectKeptOnServer(
@@ -170,6 +199,88 @@ describe("insertTestimonial", () => {
       `[testimonials] the insert of a testimonial failed (42501): ${DATABASE_TEXT}`
     );
     expect(COMMENT_NOT_SAVED).toBe("The comment could not be saved. Please try again.");
+  });
+});
+
+// Migration 036 (written for the owner to run, not run): the public read
+// policy asked only for the status, so an approved comment from someone who
+// did not pass could be read with the site's public key.
+describe("migration 036, the public read policy", () => {
+  const sql = readFileSync(join(process.cwd(), "supabase/migrations/036_testimonials_read_policy.sql"), "utf8");
+  const statements = sql
+    .split(/\r?\n/)
+    .filter((line) => !line.startsWith("--"))
+    .join("\n");
+
+  it("recreates the one read policy for approved pass stories only, in one transaction", () => {
+    expect(statements).toMatch(/begin;\s+[\s\S]*commit;/);
+    expect(statements).toContain('drop policy "Anyone reads approved testimonials" on public.testimonials;');
+    expect(statements.replace(/\s+/g, " ")).toContain(
+      'create policy "Anyone reads approved testimonials" on public.testimonials for select using (status = \'approved\' and passed);'
+    );
+    // Nothing else: no other policy, table or row is touched.
+    expect(statements.match(/\b(?:drop|create|alter|insert|update|delete|grant|revoke)\b/gi)).toEqual(["drop", "create"]);
+  });
+
+  it("says first that it has not been run, gives the read-only query, and how to undo it", () => {
+    expect(sql).toContain("THIS FILE HAS NOT BEEN RUN.");
+    expect(sql).toContain("from pg_policies");
+    expect(sql).toContain(
+      "--   create policy \"Anyone reads approved testimonials\" on public.testimonials for select using (status = 'approved');"
+    );
+  });
+});
+
+// One row for an account and an exam. A pass story sent after a "did not pass"
+// comment met the unique index, and the form thanked the person for a story
+// that was never stored.
+describe("replaceWithPassStory", () => {
+  const input = { certId: "sec", quote: "I passed. The checkpoint showed me what to study.", displayName: "Sam K." };
+  const own = (status: string, passed: boolean, over: Row = {}) => ({
+    ...story("mine", status, "2026-11-01"),
+    user_id: "user-1",
+    passed,
+    quote: "Subnetting was hard for me.",
+    ...over,
+  });
+
+  it.each([
+    ["a did not pass comment waiting for review", "pending", false],
+    ["a did not pass comment that was hidden", "hidden", false],
+    ["a did not pass comment that was approved", "approved", false],
+    ["a pass story still waiting for review", "pending", true],
+  ])("takes the place of %s, to wait for review again", async (_, status, passed) => {
+    const rows = [own(status, passed), own("pending", false, { id: "someone-else", user_id: "user-2" })];
+    expect(await replaceWithPassStory(fakeDb({ testimonials: rows }), "user-1", input)).toBe(true);
+    expect(rows[0]).toMatchObject({
+      passed: true,
+      quote: input.quote,
+      display_name: "Sam K.",
+      status: "pending",
+      certification_id: "sec",
+    });
+    // Another account's row is not touched.
+    expect(rows[1]).toMatchObject({ user_id: "user-2", passed: false, quote: "Subnetting was hard for me." });
+  });
+
+  it.each(["approved", "hidden"])("leaves a pass story that was %s as it is, and answers false", async (status) => {
+    const rows = [own(status, true, { quote: "The first story." })];
+    expect(await replaceWithPassStory(fakeDb({ testimonials: rows }), "user-1", input)).toBe(false);
+    expect(rows[0]).toMatchObject({ quote: "The first story.", status });
+  });
+
+  it("leaves the comment for another exam alone", async () => {
+    const rows = [own("pending", false, { certification_id: "net" })];
+    expect(await replaceWithPassStory(fakeDb({ testimonials: rows }), "user-1", input)).toBe(false);
+    expect(rows[0].passed).toBe(false);
+  });
+
+  it("answers a database fault with a sentence, and keeps the database's text in the server log", async () => {
+    await expectKeptOnServer(
+      replaceWithPassStory(fakeDb({}, { error: DATABASE_TEXT, code: "42501" }), "user-1", input),
+      COMMENT_NOT_SAVED,
+      `[testimonials] the replacement of a testimonial failed (42501): ${DATABASE_TEXT}`
+    );
   });
 });
 

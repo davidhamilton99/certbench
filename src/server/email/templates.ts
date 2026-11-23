@@ -7,6 +7,7 @@ import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
 import type { PathDomain } from "@/core/path/types";
+import { longDate } from "@/core/path/versions";
 import { SUPPORT_EMAIL } from "@/lib/errors/user-message";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
@@ -35,8 +36,8 @@ const APP = () => publicEnv.NEXT_PUBLIC_APP_URL;
 
 /**
  * Every value that is not written in this file passes through this on its way
- * into email HTML: a name, an exam's name, an objective's title, a figure, a
- * link's address. It covers text between tags and a value inside a quoted
+ * into email HTML: an exam's name, an objective's title, a figure, a link's
+ * address. It covers text between tags and a value inside a quoted
  * attribute. A sentence is built as plain text, which is also what the text
  * part of the email prints, and is escaped where it enters the HTML.
  */
@@ -48,51 +49,14 @@ const esc = (value: string | number) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-/** The longest display name that a greeting uses. */
-export const GREETING_NAME_MAX = 40;
-
-/** A control character (a line break and a tab are two of them) or a Unicode line or paragraph separator. */
-function hasLineBreak(text: string): boolean {
-  for (const char of text) {
-    const code = char.codePointAt(0) ?? 0;
-    if (code < 0x20 || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029) return true;
-  }
-  return false;
-}
-
-/**
- * Whether text holds something that a mail client turns into a link: a scheme
- * ("https://") or a full stop inside a word ("example.com", "www.example").
+/*
+ * No email greets its reader by name, and no template takes a name. A display
+ * name is whatever was typed when the account was created, or the first part
+ * of the address when nothing was typed: its first word was often a title
+ * ("Welcome to CertBench, Dr.") or a mailbox name, and sign-up does not bound
+ * it, while the welcome email goes to an address that nobody has confirmed. A
+ * name that is never printed cannot carry a stranger's words or link either.
  */
-const hasWebAddress = (plain: string) => plain.includes("://") || /\S\.\S/.test(plain);
-
-/**
- * The first name for a greeting, or null for the greeting without a name.
- *
- * A display name is whatever was typed when the account was created. Sign-up
- * does not bound it, and the welcome email goes to an address that nobody has
- * confirmed, so a name printed as it stands would let a stranger have
- * CertBench send words and a link of their own choosing to any address. A name
- * is therefore used only when it is at most GREETING_NAME_MAX characters long
- * and holds no angle bracket, no line break and no web address. It is read in
- * its plain form (NFKC) for this, so that a full-width letter or full stop
- * counts as the character it stands for. Any other name gets the greeting
- * without a name. Only the first word of a name is ever printed, and no
- * subject line carries a name at all.
- */
-export function greetingName(displayName: string | null | undefined): string | null {
-  const name = (displayName ?? "").trim();
-  // The length is counted in characters, so a name in a script that takes two
-  // code units for each character is not counted double. The first test turns
-  // a very long value away before it is split into characters.
-  if (!name || name.length > GREETING_NAME_MAX * 2 || Array.from(name).length > GREETING_NAME_MAX) return null;
-  const plain = name.normalize("NFKC").toLowerCase();
-  if (/[<>]/.test(plain) || hasLineBreak(name) || hasWebAddress(plain)) return null;
-  return name.split(/\s+/)[0];
-}
-
-/** A heading that speaks to someone: their first name after a comma, or the heading alone. */
-const addressed = (heading: string, name: string | null) => (name ? `${heading}, ${name}` : heading);
 
 /** The sentence in every footer that names the sender. */
 export const SENT_BY = "Sent by CertBench.";
@@ -188,6 +152,17 @@ function button(href: string, label: string): string {
 const stopCount = (n: number) => `${n} step${n === 1 ? "" : "s"}`;
 
 /**
+ * What an account without Pro can still open for nothing, in the words of the
+ * study path's own outline ("One practice exam is free."): one practice exam,
+ * on the exam's public page, and the hands-on labs that are free on its public
+ * page of labs. `freeLabs` is how many those are for the exam, as the job works
+ * it out (none for an exam that has no public page of labs). This is the end
+ * of the sentence, after "one practice exam is free".
+ */
+const andFreeLabs = (freeLabs: number) =>
+  freeLabs < 1 ? "" : `, and so ${freeLabs === 1 ? "is one hands-on lab" : `are ${freeLabs} hands-on labs`}`;
+
+/**
  * A link into someone's path from an email. It goes through sign-in so it
  * works on any device: signed in, /login forwards straight to the path; signed
  * out, they sign in and land on it with their saved progress.
@@ -233,13 +208,9 @@ function pathStrip(stretch: PathNudge["stretch"]): string {
       </tr></table>`;
 }
 
-export function welcomeEmail(input: {
-  displayName: string;
-  certName: string;
-  unsubscribeUrl: string;
-}): EmailContent {
+export function welcomeEmail(input: { certName: string; unsubscribeUrl: string }): EmailContent {
   const { certName } = input;
-  const greeting = addressed("Welcome to CertBench", greetingName(input.displayName));
+  const greeting = "Welcome to CertBench";
   return {
     subject: `Your ${certName} study path is saved`,
     html: layout(
@@ -289,7 +260,7 @@ export function studyPlanEmail(input: {
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
         <li><strong>Choose your exam.</strong> Its study path works through the exam topic by topic, in short steps, so you do not have to decide what to study next.</li>
-        <li><strong>Complete one step or more each day.</strong> Each step is about ${MINUTES_PER_STOP} minutes of short questions on one objective. A question that you miss returns until you answer it correctly.</li>
+        <li><strong>Complete one step or more each day.</strong> Each step is about ${MINUTES_PER_STOP} minutes of short questions on one topic. A question that you miss returns until you answer it correctly.</li>
         <li><strong>Take the readiness checkpoint.</strong> It has exam-style questions from every domain, weighted in the same way as the real exam.</li>
       </ol>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
@@ -304,14 +275,13 @@ export function studyPlanEmail(input: {
 }
 
 export function postExamEmail(input: {
-  displayName: string;
   certName: string;
   unsubscribeUrl: string;
   /** The signed /story links: no sign-in between the button and the form. */
   passHref: string;
   failHref: string;
 }): EmailContent {
-  const question = `${addressed("How did your exam go", greetingName(input.displayName))}?`;
+  const question = "How did your exam go?";
   return {
     subject: `How did your ${input.certName} exam go?`,
     html: layout(
@@ -335,47 +305,68 @@ export function postExamEmail(input: {
   };
 }
 
-const countdownSubject = (days: number, name: string) =>
-  days <= 1 ? `Your ${name} exam is tomorrow` : `${days} days until your ${name} exam`;
+/**
+ * The last countdown names the date of the exam and never says "tomorrow" or
+ * "tonight". The job runs once a day on the UTC calendar and an account has no
+ * time zone, so in eastern Australia and New Zealand "Your exam is tomorrow"
+ * arrived after midnight on the day of the exam. A date is right everywhere.
+ */
+const countdownSubject = (days: number, name: string, examDate: string) =>
+  days <= 1 ? `Your ${name} exam is on ${longDate(examDate)}` : `${days} days until your ${name} exam`;
 
-const countdownHeading = (days: number) =>
-  days <= 1 ? "Your exam is tomorrow" : `Your exam is in ${days} days`;
+const countdownHeading = (days: number, examDate: string) =>
+  days <= 1 ? `Your exam is on ${longDate(examDate)}` : `Your exam is in ${days} days`;
 
 /**
  * The exam countdown: where they are on their path and the way back to it.
- * Pro gets the whole path counted, with no talk of free stops.
+ * Pro gets the whole path counted, with no talk of free stops. An account
+ * without Pro that has completed the steps a free account opens is told that
+ * the rest are included with Pro, and also what is still free: it used to be
+ * told that it had completed "every free step", as if nothing free were left.
  */
 export function pathCountdownEmail(input: {
-  displayName: string;
   examName: string;
   daysUntilExam: number;
+  /** The exam's date as it is stored, yyyy-mm-dd. */
+  examDate: string;
   standing: PathStanding;
   pro: boolean;
+  /** How many hands-on labs are free for this exam (see andFreeLabs). */
+  freeLabs: number;
   href: string;
   unsubscribeUrl: string;
 }): EmailContent {
   const { examName, daysUntilExam: days, standing, href } = input;
-  const heading = addressed(countdownHeading(days), greetingName(input.displayName));
+  const heading = countdownHeading(days, input.examDate);
   const left = standing.total - standing.done;
+  // The number of steps alone: a length for each step (MINUTES_PER_STOP)
+  // counted the practice exam, the domain practice and the labs as short steps.
   const where =
     standing.done === 0
-      ? `Your ${examName} study path is ready. It has ${stopCount(standing.total)} of about ${MINUTES_PER_STOP} minutes each.`
+      ? `Your ${examName} study path is ready. It has ${stopCount(standing.total)}.`
       : left === 0
         ? `You have completed every step of your ${examName} study path.`
         : standing.freeLeft === 0 && !input.pro
-          ? `You have completed every free step of your ${examName} study path, including the readiness checkpoint. ${left === 1 ? "One more step remains" : `${left} more steps remain`}.`
+          ? `You have completed ${stopCount(standing.done)} of your ${examName} study path, including the readiness checkpoint. ${left === 1 ? "The remaining step is" : `The remaining ${left} steps are`} included with Pro. One practice exam is free${andFreeLabs(input.freeLabs)}.`
           : `You have completed ${standing.done} of the ${standing.total} steps in your ${examName} study path.`;
+  // The advice follows where they stand as well as the day: an account that has
+  // not begun was told the day before its exam that it had done the work, and
+  // one that has completed every step was advised to complete more.
   const advice =
     days <= 1
-      ? "Do not study late tonight. Rest well: you have done the work."
-      : days <= 3
-        ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
-        : days <= 7
-          ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
-          : `With ${days} days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
+      ? standing.done === 0
+        ? "Rest well before your exam."
+        : "Do not study late on the night before your exam. Rest well: you have done the work."
+      : left === 0
+        ? "A review on your study path each day will keep the material fresh until your exam."
+        : days <= 3
+          ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
+          : days <= 7
+            ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
+            : `With ${days} days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
   const label = standing.done === 0 ? "Start the study path" : "Continue the study path";
   return {
-    subject: countdownSubject(days, examName),
+    subject: countdownSubject(days, examName, input.examDate),
     html: layout(
       `
       <h1 style="font-size:18px;margin:0 0 12px;">${esc(heading)}</h1>
@@ -395,17 +386,15 @@ export function pathCountdownEmail(input: {
  * it is, and how close the checkpoint is.
  */
 export function pathNudgeEmail(input: {
-  displayName: string;
   examName: string;
   nudge: PathNudge;
   href: string;
   unsubscribeUrl: string;
 }): EmailContent {
   const { examName, nudge, href } = input;
-  const name = greetingName(input.displayName);
 
   if (nudge.next.kind === "checkpoint") {
-    const heading = addressed("Your readiness checkpoint is next", name);
+    const heading = "Your readiness checkpoint is next";
     const what = `You have completed ${stopCount(nudge.done)} of your ${examName} study path. Your next step is the readiness checkpoint. It has ${CHECKPOINT_SIZE} exam-style questions from every domain, weighted in the same way as the real exam.`;
     const then =
       "When you finish, you will see a first measure of your readiness, your result in each domain, and the date by which you would finish the rest of your study path.";
@@ -425,7 +414,7 @@ export function pathNudgeEmail(input: {
     };
   }
 
-  const heading = addressed("Continue your study path", name);
+  const heading = "Continue your study path";
   const where =
     nudge.done > 0
       ? `You have completed ${stopCount(nudge.done)} of your ${examName} study path.`
@@ -477,17 +466,18 @@ const emailBand = (score: number) => {
  * what the rest of the path holds, with the price stated plainly.
  */
 export function checkpointResultEmail(input: {
-  displayName: string;
   examName: string;
   domains: PathDomain[];
   followUp: CheckpointFollowUp;
   questionCount: number;
+  /** How many hands-on labs are free for this exam (see andFreeLabs). */
+  freeLabs: number;
   href: string;
   unsubscribeUrl: string;
 }): EmailContent {
   const { examName, domains, href } = input;
   const { result, remaining, opportunity } = input.followUp;
-  const heading = addressed("Your checkpoint result", greetingName(input.displayName));
+  const heading = "Your checkpoint result";
   const score = result.score;
   const asked = result.domains.reduce((s, d) => s + d.total, 0);
   const band = emailBand(score);
@@ -510,14 +500,23 @@ export function checkpointResultEmail(input: {
   const gain = opportunity
     ? `The area to focus on next is ${opportunity.title}, which accounts for ${opportunity.weight}% of the exam.`
     : "";
+  // What Pro adds, in the words of the pricing page. Beside it, what is free:
+  // the list used to name practice exams and hands-on labs as Pro's alone,
+  // while one practice exam and the free labs are open with a free account.
   const includes = [
     ...(remaining > 0 ? [`All ${remaining} remaining ${remaining === 1 ? "step" : "steps"} of your ${examName} study path`] : []),
-    `Practice across all ${input.questionCount.toLocaleString("en-US")} ${examName} questions`,
-    "Timed practice exams, hands-on labs and spaced review",
+    "Every hands-on lab",
+    `New timed practice exams of ${REHEARSAL_FORMATS.full.questions} questions, scored by domain`,
+    `All ${input.questionCount.toLocaleString("en-US")} ${examName} questions, with review of the questions you answered incorrectly`,
   ];
+  const free = `Without Pro, one practice exam is free${andFreeLabs(input.freeLabs)}.`;
   // The price itself is worded once for the whole site (src/lib/pricing/terms.ts):
   // the three plans, the currency and the regional adjustment.
   const terms = "Each plan renews automatically. You can cancel at any time.";
+  // The price names every plan, and the offer on the study path, where the
+  // button leads, sells two of them: the pricing page sells every plan.
+  const pricing = `${APP()}/pricing?utm_source=email&utm_medium=lifecycle&utm_campaign=path_offer`;
+  const pricingLead = "You can choose any of these plans on the";
 
   return {
     subject: `Your ${examName} checkpoint: ${score}%`,
@@ -557,7 +556,8 @@ export function checkpointResultEmail(input: {
             )
             .join("")}
         </table>
-        <p style="font-size:14px;line-height:1.7;margin:14px 0 0;">${esc(PRO_PRICE_TERMS)}</p>
+        <p style="font-size:13px;line-height:1.6;color:${C.muted};margin:10px 0 0;">${esc(free)}</p>
+        <p style="font-size:14px;line-height:1.7;margin:14px 0 0;">${esc(PRO_PRICE_TERMS)} ${esc(pricingLead)} <a href="${esc(pricing)}" style="color:${C.primary};">pricing page</a>.</p>
         <p style="font-size:12px;line-height:1.6;color:${C.muted};margin:2px 0 6px;">${esc(terms)}</p>
         ${button(href, "Continue with Pro")}
         <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:${C.muted};"><span style="color:${C.ink};font-weight:600;">Pass guarantee.</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${esc(guarantee)}" style="color:${C.muted};">Read the terms</a>.</div>
@@ -571,7 +571,7 @@ export function checkpointResultEmail(input: {
       read,
       rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
       gain,
-      `The rest of your ${examName} study path. CertBench Pro includes:\n${includes.map((l) => `- ${l}`).join("\n")}\n${PRO_PRICE_TERMS} ${terms}\nPass guarantee. ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
+      `The rest of your ${examName} study path. CertBench Pro includes:\n${includes.map((l) => `- ${l}`).join("\n")}\n${free}\n${PRO_PRICE_TERMS} ${terms}\n${pricingLead} pricing page: ${pricing}\nPass guarantee. ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
       `Continue with Pro: ${href}`,
       textFooter(input.unsubscribeUrl),
     ]

@@ -40,7 +40,7 @@ export function ToolEmailCapture({
   source,
   context,
   heading = "Receive a free study plan by email",
-  blurb = "The plan sets out three steps that cover the rest of the exam, with a link to start the study path for your exam. You do not need an account.",
+  blurb = "The plan sets out how to cover the rest of the exam, with a link to start the study path for your exam. You do not need an account.",
 }: {
   source: ToolSource;
   context?: Record<string, string | number>;

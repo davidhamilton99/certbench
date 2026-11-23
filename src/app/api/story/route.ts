@@ -2,7 +2,7 @@ import { defineEndpoint } from "@/server/api/define-endpoint";
 import { submitStory } from "@/contracts/story";
 import { ApiError } from "@/contracts/common";
 import { verifyStoryToken } from "@/server/story/story-token";
-import { insertTestimonial } from "@/server/data/testimonials";
+import { insertTestimonial, replaceWithPassStory } from "@/server/data/testimonials";
 import { createAdminClient } from "@/server/supabase/admin";
 import { captureServerEvent } from "@/server/analytics";
 
@@ -26,12 +26,24 @@ export const POST = defineEndpoint(submitStory, {
       throw new ApiError("validation_failed", `Please write at least ${MIN_STORY} characters.`);
     }
     if (quote.length >= MIN_STORY) {
-      await insertTestimonial(createAdminClient(), claim.userId, {
-        certId: claim.certId,
-        passed: input.passed,
-        quote,
-        displayName: input.displayName,
-      });
+      const db = createAdminClient();
+      try {
+        await insertTestimonial(db, claim.userId, {
+          certId: claim.certId,
+          passed: input.passed,
+          quote,
+          displayName: input.displayName,
+        });
+      } catch (err) {
+        // One row for an account and an exam. A pass story takes the place of
+        // a "did not pass" comment, or of a comment still waiting for review;
+        // otherwise the conflict stands.
+        const replaced =
+          err instanceof ApiError && err.code === "conflict" && input.passed
+            ? await replaceWithPassStory(db, claim.userId, { certId: claim.certId, quote, displayName: input.displayName })
+            : false;
+        if (!replaced) throw err;
+      }
     }
     await captureServerEvent(claim.userId, "story_submitted", {
       passed: input.passed,

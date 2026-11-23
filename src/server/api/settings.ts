@@ -5,7 +5,8 @@ import "server-only";
  *
  * A missing setting does not stop the site: it quietly switches a feature
  * off (no email, no daily job, no payment confirmation, no analytics, no
- * postal address in the emails). These
+ * postal address in the emails) or leaves a weaker default in place (links
+ * signed with the service role key). These
  * flags make that visible, in one line when a server instance starts and in
  * the health endpoint's answer. They say only whether each setting is present.
  * A value is never read out, logged or returned.
@@ -33,6 +34,13 @@ export interface SettingFlags {
    * footer (src/server/email/templates.ts).
    */
   postalAddress: boolean;
+  /**
+   * LINK_SIGNING_SECRET: the key that signs the shared readiness links and the
+   * story links in the post-exam email. Without it they are signed with
+   * SUPABASE_SERVICE_ROLE_KEY, so rotating that key breaks every one of them
+   * (src/server/share/readiness-token.ts, src/server/story/story-token.ts).
+   */
+  linkSigning: boolean;
 }
 
 /** What stops working when a setting is absent, for the line a server instance logs as it starts. */
@@ -45,6 +53,8 @@ const WHEN_MISSING: Record<keyof SettingFlags, string> = {
   serviceRole:
     "SUPABASE_SERVICE_ROLE_KEY is not set: nothing is rate-limited, and every write the server makes for an account fails.",
   postalAddress: "EMAIL_POSTAL_ADDRESS is not set: emails print no postal address.",
+  linkSigning:
+    "LINK_SIGNING_SECRET is not set: shared readiness links and story links are signed with SUPABASE_SERVICE_ROLE_KEY, and rotating that key breaks them.",
 };
 
 const isSet = (name: string) => Boolean(process.env[name]);
@@ -64,6 +74,8 @@ export function settingFlags(): SettingFlags {
     serviceRole: isSet("SUPABASE_SERVICE_ROLE_KEY"),
     // A value of spaces alone prints no address (the templates trim it), so it counts as absent.
     postalAddress: Boolean(process.env.EMAIL_POSTAL_ADDRESS?.trim()),
+    // As the two token modules read it: any value that is not empty is the key.
+    linkSigning: isSet("LINK_SIGNING_SECRET"),
   };
 }
 

@@ -8,11 +8,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 type Row = Record<string, unknown>;
-type Sent = { to: string; subject: string; html: string; text: string; headers?: Record<string, string> };
+type Sent = {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  headers?: Record<string, string>;
+  idempotencyKey?: string;
+};
 type Step = "read" | "insert" | "claim" | "release";
 
 const h = vi.hoisted(() => ({
   leads: [] as Record<string, unknown>[],
+  /** Accounts' email preferences, for an account's own unsubscribe. */
+  prefs: [] as Record<string, unknown>[],
+  /** The sign-in service's accounts: id to address. */
+  accounts: {} as Record<string, string>,
   nextId: 1,
   /** Steps that the database refuses. */
   failing: new Set<string>(),
@@ -31,17 +42,43 @@ vi.mock("@/server/email/resend", () => ({ sendEmail: h.sendEmail }));
 vi.mock("@/server/supabase/admin", () => ({ createAdminClient: h.createAdminClient }));
 
 import { RESEND_AFTER_MS, captureLead } from "../tool-leads";
+import { unsubscribe } from "@/server/email/unsubscribe";
 import { ilike } from "@/server/email/__tests__/ilike";
+import type { Db } from "@/server/supabase/server";
 
 const refused = (step: Step) => ({ data: null, error: { code: "XX000", message: `${step} refused` } });
 
-/** Just enough of the Supabase query builder for the leads table. */
+/**
+ * Just enough of the Supabase query builder for the leads table, and for an
+ * account's own unsubscribe (its email preferences and its address), which
+ * records the address among the leads.
+ */
 function fakeAdmin() {
   return {
+    auth: {
+      admin: {
+        getUserById: async (id: string) => ({ data: { user: { id, email: h.accounts[id] } }, error: null }),
+      },
+    },
     from(table: string) {
+      if (table === "email_preferences") {
+        let patch: Row = {};
+        const filters: ((r: Row) => boolean)[] = [];
+        const prefs = {
+          update: (p: Row) => ((patch = p), prefs),
+          eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), prefs),
+          select: () => prefs,
+          then: (ok: (v: unknown) => unknown) => {
+            const hit = h.prefs.filter((r) => filters.every((f) => f(r)));
+            for (const row of hit) Object.assign(row, patch);
+            return Promise.resolve({ data: hit.map((row) => ({ ...row })), error: null }).then(ok);
+          },
+        };
+        return prefs;
+      }
       if (table !== "tool_leads") throw new Error(`unexpected table ${table}`);
       const filters: ((r: Row) => boolean)[] = [];
-      let mode: "select" | "insert" | "update" | "delete" = "select";
+      let mode: "select" | "insert" | "update" | "delete" | "upsert" = "select";
       let payload: Row = {};
       const matching = () => h.leads.filter((r) => filters.every((f) => f(r)));
       // The database answers with copies: a row read earlier does not change when the table does.
@@ -49,6 +86,12 @@ function fakeAdmin() {
 
       const settle = () => {
         if (mode === "select") return h.failing.has("read") ? refused("read") : { data: copies(matching()), error: null };
+        if (mode === "upsert") {
+          const hit = h.leads.find((r) => r.email === payload.email && r.source === payload.source);
+          if (hit) Object.assign(hit, payload);
+          else h.leads.push({ id: `lead-${h.nextId}`, unsubscribe_token: `00000000-0000-4000-8000-00000000000${h.nextId++}`, context: {}, ...payload });
+          return { data: null, error: null };
+        }
         if (mode === "insert") {
           if (h.failing.has("insert")) return refused("insert");
           const taken = h.leads.some((r) => r.email === payload.email && r.source === payload.source);
@@ -81,6 +124,7 @@ function fakeAdmin() {
       const q = {
         select: () => q,
         insert: (row: Row) => ((mode = "insert"), (payload = row), q),
+        upsert: (row: Row) => ((mode = "upsert"), (payload = row), q),
         update: (patch: Row) => ((mode = "update"), (payload = patch), q),
         delete: () => ((mode = "delete"), q),
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
@@ -123,6 +167,8 @@ function stored(email: string, source: string, sentHoursAgo: number, unsubscribe
 
 beforeEach(() => {
   h.leads = [];
+  h.prefs = [];
+  h.accounts = {};
   h.nextId = 1;
   h.failing = new Set();
   h.raceOnInsert = false;
@@ -161,6 +207,8 @@ describe("captureLead", () => {
     expect(
       email.text.endsWith(`\n\nSent by CertBench. To contact CertBench, write to support@certbench.dev.\nUnsubscribe: ${address}`)
     ).toBe(true);
+    // The mail service is given a name for this one email, built from the claim: the lead and the time of the send.
+    expect(email.idempotencyKey).toBe(`study-plan/${h.leads[0].id}/${NOON.toISOString()}`);
   });
 
   // The form is public. Before, every accepted request sent the email again.
@@ -204,6 +252,23 @@ describe("captureLead", () => {
     expect(h.sendEmail).not.toHaveBeenCalled();
     // No lead is stored for the other tools either: nothing is kept about a request that was not served.
     expect(h.leads).toEqual([row]);
+  });
+
+  // The unsubscribe page tells an account "You will no longer receive study
+  // emails from CertBench." The form is public, so anyone could still have the
+  // study plan sent to that account's address from a tool's page.
+  it("never sends the study plan to the address of an account that unsubscribed from study emails", async () => {
+    const token = "3f2b8c1e-7a4d-4e9b-9c55-0d1e2f3a4b5c";
+    h.prefs = [{ user_id: "u1", unsubscribe_token: token, digest_enabled: true }];
+    h.accounts = { u1: "Sam@Example.com" };
+    expect(await unsubscribe(fakeAdmin() as unknown as Db, token, null)).toBe("done");
+
+    for (const source of ["port-numbers-quiz", "subnetting-practice", "security-plus-acronyms-quiz"] as const) {
+      expect(await captureLead("sam@example.com", source, {}, NOON)).toBe("skipped");
+    }
+    expect(h.sendEmail).not.toHaveBeenCalled();
+    // Another address is sent the plan as before.
+    expect(await captureLead("lee@example.com", "port-numbers-quiz", {}, NOON)).toBe("sent");
   });
 
   it("holds an unsubscribe that was recorded under other capitals, for every tool", async () => {
@@ -298,6 +363,14 @@ describe("captureLead", () => {
     expect(await captureLead("Someone+RB2@example.com", "port-numbers-quiz", {}, NOON)).toBe("skipped");
     expect(h.createAdminClient).not.toHaveBeenCalled();
     expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  // "Contains +rb" used to take this address for a test one: it was never sent
+  // the plan, and the form told its owner the plan had gone in the last 24 hours.
+  it("sends the plan to a real address whose tag only begins with the letters of a test tag", async () => {
+    expect(await captureLead("anna+rbc@example.com", "port-numbers-quiz", {}, NOON)).toBe("sent");
+    expect(await captureLead("sam+e2ex@example.com", "port-numbers-quiz", {}, NOON)).toBe("sent");
+    expect(h.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["anna+rbc@example.com", "sam+e2ex@example.com"]);
   });
 
   it("never throws: a fault is logged and answered as failed", async () => {

@@ -41,20 +41,38 @@
 --
 -- Run these two read-only queries first. Neither changes anything.
 --
--- Query 1: the policies on the two tables.
+-- Query 1: the policies on the three tables that decide what an account may
+-- open, and whether row level security is on for each. It has two lines.
 --
 --   select tablename, policyname, cmd
 --   from pg_policies
 --   where schemaname = 'public'
---     and tablename in ('user_subscriptions', 'profiles')
+--     and tablename in ('user_subscriptions', 'profiles', 'user_enrollments')
 --   order by tablename, policyname;
+--
+--   select relname, relrowsecurity
+--   from pg_class
+--   where relnamespace = 'public'::regnamespace
+--     and relname in ('profiles', 'user_subscriptions', 'user_enrollments')
+--   order by relname;
 --
 -- If "Users insert own subscription" is listed, part 1 is needed. The migration
 -- files expect three other rows: "Users read own subscription" (SELECT) on
 -- user_subscriptions, and "Users read own profile" (SELECT) and "Users update
--- own profile" (UPDATE) on profiles. If any further policy is listed with the
--- cmd INSERT, UPDATE, DELETE or ALL, it is not in the migration files and this
--- file does not remove it: have it looked at before going on.
+-- own profile" (UPDATE) on profiles. On user_enrollments they expect one row:
+-- "Users read own enrollments" (SELECT), which migration 027 made. If
+-- user_enrollments lists "Users manage own enrollments" instead, 027 has not
+-- been run, and any account can add every exam to its plan: run 027 as well
+-- (the code it waits for, which writes enrollments with the service role, is
+-- live). This file does not change user_enrollments. If any further policy is
+-- listed with the cmd INSERT, UPDATE, DELETE or ALL, it is not in the
+-- migration files and this file does not remove it: have it looked at before
+-- going on.
+--
+-- The second line should answer true in relrowsecurity for all three tables.
+-- A table that answers false has row level security switched off: none of its
+-- policies is applied, whatever the first line lists. Stop and have it looked
+-- at.
 --
 -- Query 2: who may update which column of profiles.
 --

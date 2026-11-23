@@ -29,8 +29,12 @@ const h = vi.hoisted(() => ({
   failingPage: 0,
   /** The pages of accounts the run asked for, in order. */
   pagesAsked: [] as number[],
-  /** The display name on every profile, or null for an account that has no profile. */
-  displayName: "Sam Lee" as string | null,
+  /**
+   * The most rows the database gives one select, by table (1,000 for a table
+   * not named). Production answers with at most 1,000 and says nothing of the
+   * rest; a test sets it lower to show what a read that does not page loses.
+   */
+  maxRows: {} as Record<string, number>,
   sendEmail: vi.fn<(email: Sent) => Promise<boolean>>(async () => true),
   structure: {
     certSlug: "security-plus-sy0-701",
@@ -75,9 +79,10 @@ vi.mock("@/server/data/enrollments", () => ({
     return (h.enrollments[userId] ?? []).map((e, i) => ({ id: `${userId}-${i}`, enrolledAt: "", ...e }));
   },
 }));
-vi.mock("@/server/data/profiles", () => ({
-  getProfile: async () => (h.displayName === null ? null : { displayName: h.displayName }),
-}));
+// The run reads no profile: no email greets its reader by name. The stand-in
+// is here to show that, with a name that would be noticed if it were printed.
+const getProfile = vi.hoisted(() => vi.fn(async () => ({ displayName: "Zebedee Quux" })));
+vi.mock("@/server/data/profiles", () => ({ getProfile }));
 vi.mock("@/server/data/certifications", () => ({
   getCertification: async (_db: unknown, id: string) => ({
     id,
@@ -135,23 +140,41 @@ function fakeAdmin() {
     from(table: string) {
       const rows = (h.tables[table] ??= []);
       const filters: ((r: Row) => boolean)[] = [];
+      const orders: string[] = [];
       let written: Row[] | null = null;
       let deleting = false;
       let max = Infinity;
+      let range: [number, number] | null = null;
+      let counted = false;
       const matching = () => rows.filter((r) => filters.every((f) => f(r)));
       const settle = () => {
         if (deleting) {
           for (const row of matching()) rows.splice(rows.indexOf(row), 1);
           return { data: null, error: null };
         }
-        return { data: (written ?? matching()).slice(0, max), error: null };
+        if (written) return { data: written.slice(0, max), error: null };
+        const all = matching().sort((a, b) => {
+          for (const column of orders) {
+            const [x, y] = [String(a[column]), String(b[column])];
+            if (x !== y) return x < y ? -1 : 1;
+          }
+          return 0;
+        });
+        const asked = range ? all.slice(range[0], range[1] + 1) : all;
+        return {
+          data: asked.slice(0, Math.min(max, h.maxRows[table] ?? 1000)),
+          error: null,
+          ...(counted ? { count: all.length } : {}),
+        };
       };
       const q = {
-        select: () => q,
+        select: (_columns?: string, options?: { count?: string }) => ((counted = options?.count === "exact"), q),
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
         in: (c: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[c])), q),
         gte: (c: string, v: string) => (filters.push((r) => String(r[c]) >= v), q),
         lte: (c: string, v: string) => (filters.push((r) => String(r[c]) <= v), q),
+        order: (c: string) => (orders.push(c), q),
+        range: (from: number, to: number) => ((range = [from, to]), q),
         limit: (n: number) => ((max = n), q),
         delete: () => ((deleting = true), q),
         upsert: (row: Row, opts: { onConflict: string; ignoreDuplicates?: boolean }) => {
@@ -253,7 +276,8 @@ beforeEach(() => {
   h.ignoresPage = false;
   h.failingPage = 0;
   h.pagesAsked = [];
-  h.displayName = "Sam Lee";
+  h.maxRows = {};
+  getProfile.mockClear();
   h.sendEmail.mockReset();
   h.sendEmail.mockImplementation(async () => true);
   capture.mockClear();
@@ -338,6 +362,25 @@ describe("runLifecycleEmails", () => {
       `decided: ${pathOfferType("security-plus-sy0-701")}`,
       `free: ${pathNudgeType("security-plus-sy0-701")}`,
     ]);
+  });
+
+  // A send that got no answer may still have been accepted. Each attempt at the
+  // same email on the same day now carries the same key, built from the claim
+  // (the type, the account and the day), and the mail service sends it once.
+  it("names each email to the mail service by its claim: the type, the account and the day", async () => {
+    account("dated", { examDate: "2026-11-09" });
+    account("free", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
+    h.sendEmail.mockImplementation(async () => false);
+    const keys = async (date: Date) =>
+      (await run(date)).emails.map((email) => (email as Sent & { idempotencyKey?: string }).idempotencyKey).sort();
+
+    const expected = ["countdown_7/dated/2026-11-02", `${pathNudgeType("security-plus-sy0-701")}/free/2026-11-02`];
+    expect(await keys(MONDAY)).toEqual(expected);
+    // Both sends failed and gave their claims back. A second run on the same day
+    // tries the same two emails, with the same two keys.
+    expect(await keys(MONDAY)).toEqual(expected);
+    // The next day is another claim: the nudge, which was never sent, has a key of that day.
+    expect(await keys(TUESDAY)).toEqual([`${pathNudgeType("security-plus-sy0-701")}/free/2026-11-03`]);
   });
 
   it("counts a send that throws as a send failure, gives the claim back, and goes on to the next account", async () => {
@@ -452,11 +495,20 @@ describe("runLifecycleEmails", () => {
     expect(tuesday.sent).toEqual(["free: 7 days until your Security+ exam", "pro: 7 days until your Security+ exam"]);
     expect(tuesday.result).toMatchObject({ countdowns: 2, pathOffers: 0 });
     const text = (who: string) => tuesday.emails.find((e) => e.to === `${who}@example.com`)!.text;
+    // What is still free comes from the exam's own public page of labs: 12 for Security+ SY0-701.
     expect(text("free")).toContain(
-      "You have completed every free step of your Security+ study path, including the readiness checkpoint. 5 more steps remain."
+      "You have completed 6 steps of your Security+ study path, including the readiness checkpoint. The remaining 5 steps are included with Pro. One practice exam is free, and so are 12 hands-on labs."
     );
+    expect(text("pro")).not.toContain("is free");
     expect(text("pro")).toContain("You have completed 6 of the 11 steps in your Security+ study path.");
     expect(text("pro")).toContain("utm_campaign%3Dcountdown");
+  });
+
+  it("names the date of the exam in the last countdown, the day before it", async () => {
+    account("eve", { examDate: "2026-11-03", path: { progress: played("warmup", "1.1"), savedDaysAgo: 3 } });
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["eve: Your Security+ exam is on November 3, 2026"]);
+    expect(monday.emails[0].text).toMatch(/^Your exam is on November 3, 2026\.\n/);
   });
 
   it("starts Pro's path in its countdown when it has not begun", async () => {
@@ -465,6 +517,21 @@ describe("runLifecycleEmails", () => {
     expect(tuesday.sent).toEqual(["pro: 7 days until your Security+ exam"]);
     expect(tuesday.emails[0].text).toContain("Your Security+ study path is ready. It has 11 steps");
     expect(tuesday.emails[0].text).toContain("Start the study path: https://certbench.dev/login?next=");
+  });
+
+  // Every account with an exam used to cost a read of its preferences (and, the
+  // first time, a new row) on every run, whether or not anything was due.
+  it("reads nothing more for an account with nothing due today, and still sends what is due", async () => {
+    account("later", { examDate: "2026-11-20" });
+    account("undated", {});
+    account("dated", { examDate: "2026-11-09" });
+    account("sat", { examDate: "2026-10-31" });
+
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["dated: 7 days until your Security+ exam", "sat: How did your CompTIA Security+ exam go?"]);
+    expect(monday.result).toMatchObject({ users: 4, countdowns: 1, postExam: 1 });
+    // Only the two accounts that had an email due had their preferences read, and so made.
+    expect(h.tables.email_preferences.map((row) => row.user_id).sort()).toEqual(["dated", "sat"]);
   });
 
   it("sends nothing to the unsubscribed, the recently active, or anyone gone a week", async () => {
@@ -488,6 +555,7 @@ describe("runLifecycleEmails", () => {
     expect(followUp.html).toContain(encodeURIComponent("utm_campaign=path_offer"));
     // Warm-up, four learn stops and the checkpoint done; five of eleven left.
     expect(followUp.text).toContain("- All 5 remaining steps of your Security+ study path");
+    expect(followUp.text).toContain("\nWithout Pro, one practice exam is free, and so are 12 hands-on labs.\n");
     expect(followUp.text).toContain(
       "The area to focus on next is Threats, Vulnerabilities, and Mitigations, which accounts for 22% of the exam."
     );
@@ -510,6 +578,20 @@ describe("runLifecycleEmails", () => {
     expect((await run(TUESDAY)).sent).toEqual(["dated: Your Security+ checkpoint: 64%"]);
   });
 
+  // A second run on the same day (by hand, after a run that ran out of time,
+  // or a cron call delivered twice) found the countdown already claimed and
+  // went on to send the offer: two study emails in one day.
+  it("sends no second study email when the day's run is repeated after a countdown", async () => {
+    account("dated", { examDate: "2026-11-09", path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+    expect((await run(MONDAY)).sent).toEqual(["dated: 7 days until your Security+ exam"]);
+    const again = await run(MONDAY);
+    expect(again.sent).toEqual([]);
+    expect(again.result).toMatchObject({ countdowns: 0, pathOffers: 0 });
+    expect(logged()).toEqual(["dated: countdown_7"]);
+    // The offer waits for the next day, as it does after a countdown sent in the same run.
+    expect((await run(TUESDAY)).sent).toEqual(["dated: Your Security+ checkpoint: 64%"]);
+  });
+
   it("counts an account whose pass fails, and still reaches everyone after it", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     account("broken", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
@@ -529,10 +611,10 @@ describe("runLifecycleEmails", () => {
     expect(monday.sent).toEqual(["close: Your Security+ readiness checkpoint is next"]);
   });
 
-  // A display name is whatever was typed at sign-up. One that is a link or
-  // markup is not printed, escaped or otherwise, in any part of any email.
-  it("leaves a display name that is not a name out of every lifecycle email", async () => {
-    h.displayName = '<a href="https://evil.example/claim">Claim</a>';
+  // The greeting printed the first word of the display name, which was often a
+  // title ("Dr.") or a mailbox name, and needed a filter against a stranger's
+  // markup and links. No email greets its reader by name now.
+  it("greets nobody by name in any lifecycle email, and reads no profile for a greeting", async () => {
     account("sat", { examDate: "2026-10-31" });
     account("dated", { examDate: "2026-11-09" });
     account("free", { path: { progress: played("warmup"), savedDaysAgo: 3 } });
@@ -541,10 +623,7 @@ describe("runLifecycleEmails", () => {
     const monday = await run(MONDAY);
     expect(monday.emails).toHaveLength(4);
     for (const email of monday.emails) {
-      for (const part of [email.subject, email.html, email.text]) {
-        expect(part).not.toContain("evil.example");
-        expect(part).not.toContain("Claim");
-      }
+      for (const part of [email.subject, email.html, email.text]) expect(part).not.toMatch(/Zebedee|Quux/);
     }
     expect(monday.emails.map((e) => /<h1[^>]*>([^<]*)<\/h1>/.exec(e.html)?.[1]).sort()).toEqual([
       "Continue your study path",
@@ -552,13 +631,7 @@ describe("runLifecycleEmails", () => {
       "Your checkpoint result",
       "Your exam is in 7 days",
     ]);
-  });
-
-  it("greets an account that has no profile without a name", async () => {
-    h.displayName = null;
-    account("dated", { examDate: "2026-11-09" });
-    const monday = await run(MONDAY);
-    expect(monday.emails[0].text).toMatch(/^Your exam is in 7 days\.\n/);
+    expect(getProfile).not.toHaveBeenCalled();
   });
 });
 
@@ -603,6 +676,40 @@ describe("runLifecycleEmails, beyond one page of accounts", () => {
     const again = await run(MONDAY);
     expect(again.sent.map((s) => s.split(":")[0])).toEqual(["c", "d", "e"]);
     expect(logged()).toHaveLength(5);
+  });
+
+  // The database answers one select with at most 1,000 rows and says nothing
+  // of the rest. The Pro list was read with one select: past 1,000
+  // subscriptions, a member who had paid could be sent the offer to buy Pro.
+  it("reads every Pro member past the most rows one select gives, and offers Pro to none of them", async () => {
+    h.maxRows = { user_subscriptions: 2 };
+    for (const id of ["pro-a", "pro-b", "pro-c"]) {
+      account(id, { pro: true, path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+    }
+    account("free", { path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+
+    const monday = await run(MONDAY);
+    expect(monday.sent).toEqual(["free: Your Security+ checkpoint: 64%"]);
+    expect(monday.result).toMatchObject({ users: 4, pathOffers: 1 });
+  });
+
+  it("reads every recently saved study path past the most rows one select gives", async () => {
+    h.maxRows = { path_progress: 2 };
+    five();
+
+    const monday = await run(MONDAY);
+    expect(monday.result).toMatchObject({ recentPaths: 5, pathNudges: 5 });
+    expect(monday.sent).toHaveLength(5);
+  });
+
+  it("stops before anyone is emailed when the Pro list cannot be read whole", async () => {
+    five();
+    h.maxRows = { user_subscriptions: 0 };
+    account("pro", { pro: true, path: { progress: tookCheckpoint(30), savedDaysAgo: 30 / 24 } });
+
+    h.today = "2026-11-02";
+    await expect(runLifecycleEmails(MONDAY)).rejects.toThrow("pro lookup failed: A paged read ended after 0 of 1 rows");
+    expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
   // Vercel ends the function at 300 seconds, and a run that is ended there
@@ -685,24 +792,14 @@ describe("sendWelcome", () => {
   });
 
   // The welcome goes to an address that nobody has confirmed, and the display
-  // name is whatever was typed at sign-up. Printed as it stood, a stranger
-  // could have CertBench send their own markup and link to any address.
-  it("sends nobody a stranger's markup or link: a name that is not a name is left out of the greeting", async () => {
-    h.displayName = '<a href="https://evil.example/claim">Claim your prize</a>';
+  // name is whatever was typed at sign-up. It is no longer printed at all.
+  it("welcomes by no name, and reads no profile for a greeting", async () => {
     expect(await welcome(MONDAY)).toEqual([SUBJECT]);
     const email = h.sendEmail.mock.calls[0][0];
     expect(email.html).toContain(">Welcome to CertBench</h1>");
     expect(email.text).toMatch(/^Welcome to CertBench\.\n/);
-    for (const part of [email.subject, email.html, email.text]) {
-      expect(part).not.toContain("evil.example");
-      expect(part).not.toContain("Claim");
-    }
-  });
-
-  it("welcomes an account that has no profile without a name", async () => {
-    h.displayName = null;
-    expect(await welcome(MONDAY)).toEqual([SUBJECT]);
-    expect(h.sendEmail.mock.calls[0][0].text).toMatch(/^Welcome to CertBench\.\n/);
+    for (const part of [email.subject, email.html, email.text]) expect(part).not.toMatch(/Zebedee|Quux/);
+    expect(getProfile).not.toHaveBeenCalled();
   });
 
   it("never welcomes a test account, and never throws when the email cannot be prepared", async () => {

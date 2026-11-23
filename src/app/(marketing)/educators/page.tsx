@@ -23,8 +23,11 @@ export const metadata = pageMetadata({
   path: "/educators",
 });
 
-// The table is counted from the question bank, which changes rarely.
-export const revalidate = 3600;
+// The table is counted from the question bank, which changes only when
+// questions are added or withdrawn, and every deployment builds the page again.
+// Counts that are at most a day old are close enough, so the page is rebuilt
+// once a day and not once an hour.
+export const revalidate = 86400;
 
 const FULL = REHEARSAL_FORMATS.full;
 

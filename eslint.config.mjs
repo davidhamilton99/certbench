@@ -62,7 +62,7 @@ const eslintConfig = defineConfig([
   },
   // client code must never touch the server layer directly.
   {
-    files: ["src/components/**/*.{ts,tsx}", "src/lib/**/*.ts"],
+    files: ["src/components/**/*.{ts,tsx}", "src/lib/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",

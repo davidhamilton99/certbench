@@ -66,9 +66,16 @@ export function serverEnv(key: ServerKey): string {
  * Optional server config (no throw). EMAIL_POSTAL_ADDRESS is the sender's
  * postal address: the owner supplies it, and every email prints it in its
  * footer once it is set (src/server/email/templates.ts).
+ *
+ * LINK_SIGNING_SECRET signs the shared readiness links and the story links in
+ * the post-exam email (src/server/share/readiness-token.ts,
+ * src/server/story/story-token.ts). Until it is set, SUPABASE_SERVICE_ROLE_KEY
+ * signs them, as it signed every link made before; once it is set, the links
+ * made before stop working, and the service role key can be rotated without
+ * breaking the links made after.
  */
 export function serverEnvOptional(
-  key: "SENTRY_DSN" | "EMAIL_FROM" | "EMAIL_POSTAL_ADDRESS"
+  key: "SENTRY_DSN" | "EMAIL_FROM" | "EMAIL_POSTAL_ADDRESS" | "LINK_SIGNING_SECRET"
 ): string | undefined {
   return process.env[key];
 }

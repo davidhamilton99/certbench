@@ -12,10 +12,8 @@ vi.mock("@/env", () => ({
 
 import {
   CONTACT,
-  GREETING_NAME_MAX,
   SENT_BY,
   checkpointResultEmail,
-  greetingName,
   pathCountdownEmail,
   pathEmailLink,
   pathNudgeEmail,
@@ -39,7 +37,6 @@ import { bandFor } from "@/lib/readiness/band";
 const SENDER = "Sent by CertBench. To contact CertBench, write to support@certbench.dev.";
 
 const base = {
-  displayName: "Sam Lee",
   examName: "Security+",
   href: "https://certbench.dev/login?next=%2Fpath%2Fsecurity-plus-sy0-701",
   unsubscribeUrl: "https://certbench.dev/api/email/unsubscribe?token=t",
@@ -82,11 +79,18 @@ const followUp = (score: number, over: Partial<CheckpointFollowUp> = {}): Checkp
   ...over,
 });
 
-const checkpoint = (f: CheckpointFollowUp, displayName = "Sam Lee") =>
-  checkpointResultEmail({ ...base, displayName, examName: "Network+", domains, followUp: f, questionCount: 617 });
+const checkpoint = (f: CheckpointFollowUp, freeLabs = 12) =>
+  checkpointResultEmail({ ...base, examName: "Network+", domains, followUp: f, questionCount: 617, freeLabs });
 
-const welcome = (displayName = "Sam Lee", certName = "CompTIA Security+") =>
-  welcomeEmail({ displayName, certName, unsubscribeUrl: base.unsubscribeUrl });
+const welcome = (certName = "CompTIA Security+") => welcomeEmail({ certName, unsubscribeUrl: base.unsubscribeUrl });
+
+const postExam = () =>
+  postExamEmail({
+    certName: "CompTIA Security+",
+    unsubscribeUrl: base.unsubscribeUrl,
+    passHref: "https://certbench.dev/story?t=x&r=pass",
+    failHref: "https://certbench.dev/story?t=x&r=fail",
+  });
 
 afterEach(() => {
   settings.EMAIL_POSTAL_ADDRESS = undefined;
@@ -96,14 +100,8 @@ afterEach(() => {
 const everyEmail = () => [
   welcome(),
   studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: base.unsubscribeUrl }),
-  postExamEmail({
-    displayName: "Sam Lee",
-    certName: "CompTIA Security+",
-    unsubscribeUrl: base.unsubscribeUrl,
-    passHref: "https://certbench.dev/story?t=x&r=pass",
-    failHref: "https://certbench.dev/story?t=x&r=fail",
-  }),
-  pathCountdownEmail({ ...base, daysUntilExam: 7, standing: { done: 3, total: 35, freeLeft: 3 }, pro: false }),
+  postExam(),
+  pathCountdownEmail({ ...base, daysUntilExam: 7, examDate: "2026-11-09", standing: { done: 3, total: 35, freeLeft: 3 }, pro: false, freeLabs: 12 }),
   pathNudgeEmail({ ...base, nudge: nudge() }),
   pathNudgeEmail({
     ...base,
@@ -181,7 +179,7 @@ describe("welcomeEmail", () => {
   it("says the study path is saved, how CertBench works, and where to continue", () => {
     const email = welcome();
     expect(email.subject).toBe("Your CompTIA Security+ study path is saved");
-    expect(email.text).toContain("Welcome to CertBench, Sam.");
+    expect(email.text).toMatch(/^Welcome to CertBench\.\n\n/);
     expect(email.text).toContain("Continue your study path: https://certbench.dev/start");
     expect(email.html).toContain('href="https://certbench.dev/start"');
   });
@@ -190,7 +188,7 @@ describe("welcomeEmail", () => {
   // objectives and the Network+ steps follow CertBench's own topics, so the
   // email does not say that every exam objective is a step.
   it("says of the study path what is true of every exam: it works through the exam topic by topic", () => {
-    const email = welcome("Sam Lee", "CompTIA Network+");
+    const email = welcome("CompTIA Network+");
     expect(email.html).toContain(
       "<strong>Follow your study path.</strong> It works through your exam topic by topic, in short steps, and the steps are in order, so you do not have to decide what to study next."
     );
@@ -301,7 +299,9 @@ describe("studyPlanEmail", () => {
   // states the product's own figure (MINUTES_PER_STOP).
   it("states the length of a step from the product's own figure", () => {
     const email = studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: base.unsubscribeUrl });
-    expect(email.html).toContain(`Each step is about ${MINUTES_PER_STOP} minutes of short questions on one objective.`);
+    // "On one objective" was said for every exam, while the Network+ steps follow CertBench's own topics.
+    expect(email.html).toContain(`Each step is about ${MINUTES_PER_STOP} minutes of short questions on one topic.`);
+    expect(email.html + email.text).not.toMatch(/objective/i);
     expect(email.text).toContain(
       `Each step takes about ${MINUTES_PER_STOP} minutes, and a question that you miss returns until you answer it correctly.`
     );
@@ -333,13 +333,7 @@ describe("studyPlanEmail", () => {
 
 describe("postExamEmail", () => {
   it("asks for the result with one button, and offers help with a retake", () => {
-    const email = postExamEmail({
-      displayName: "Sam Lee",
-      certName: "CompTIA Security+",
-      unsubscribeUrl: base.unsubscribeUrl,
-      passHref: "https://certbench.dev/story?t=x&r=pass",
-      failHref: "https://certbench.dev/story?t=x&r=fail",
-    });
+    const email = postExam();
     expect(email.subject).toBe("How did your CompTIA Security+ exam go?");
     expect(email.html).toContain("I passed the exam");
     expect(email.html).toContain('href="https://certbench.dev/story?t=x&amp;r=fail"');
@@ -413,27 +407,25 @@ describe("pathNudgeEmail", () => {
     expect(email.text).toContain("You have started your Security+ study path. Your next step is Introductory questions");
   });
 
-  // A name with markup in it used to be escaped and printed. It is now left out
-  // of the greeting altogether (see "a display name that is not a name").
-  it("escapes a name and a title in the HTML, and leaves out a name that holds markup", () => {
-    const email = pathNudgeEmail({
-      ...base,
-      displayName: "D'Arcy Lee",
-      nudge: nudge({ next: { title: "Ports & protocols", kind: "learn" } }),
-    });
-    expect(email.html).toContain(">Continue your study path, D&#39;Arcy</h1>");
-    expect(email.text).toContain("Continue your study path, D'Arcy.");
+  it("escapes a step's title in the HTML", () => {
+    const email = pathNudgeEmail({ ...base, nudge: nudge({ next: { title: "Ports & protocols", kind: "learn" } }) });
+    expect(email.html).toContain(">Continue your study path</h1>");
     expect(email.html).toContain("Ports &amp; protocols");
-
-    const marked = pathNudgeEmail({ ...base, displayName: "<b>Zed</b>", nudge: nudge() });
-    expect(marked.html).toContain(">Continue your study path</h1>");
-    expect(marked.html + marked.text).not.toContain("Zed");
+    expect(email.text).toContain("Your next step is Ports & protocols.");
   });
 });
 
 describe("pathCountdownEmail", () => {
-  const countdown = (days: number, standing: { done: number; total: number; freeLeft: number }, pro = false) =>
-    pathCountdownEmail({ ...base, daysUntilExam: days, standing, pro });
+  /** A countdown sent on November 23, 2026, for an exam `days` later. */
+  const countdown = (days: number, standing: { done: number; total: number; freeLeft: number }, pro = false, freeLabs = 12) =>
+    pathCountdownEmail({
+      ...base,
+      daysUntilExam: days,
+      examDate: new Date(Date.UTC(2026, 10, 23 + days)).toISOString().slice(0, 10),
+      standing,
+      pro,
+      freeLabs,
+    });
 
   it("shows where they are on the path and links back to it", () => {
     const email = countdown(7, { done: 3, total: 35, freeLeft: 3 });
@@ -444,10 +436,31 @@ describe("pathCountdownEmail", () => {
     expect(email.text).not.toContain("Readiness");
   });
 
-  it("invites a first step when they have not played one", () => {
+  // "35 steps of about 4 minutes each" counted the practice exam, the domain
+  // practice and the labs as steps of a few minutes: the number stands alone.
+  it("invites a first step when they have not played one, and counts the steps without a length", () => {
     const email = countdown(14, { done: 0, total: 35, freeLeft: 6 });
-    expect(email.text).toContain("Your Security+ study path is ready. It has 35 steps of about 4 minutes each.");
+    expect(email.text).toContain("Your Security+ study path is ready. It has 35 steps.\n");
+    expect(email.html + email.text).not.toContain("minutes each");
     expect(email.html).toContain("Start the study path");
+  });
+
+  // The advice used to follow the day alone.
+  it("does not tell an account that has not begun, the day before its exam, that it has done the work", () => {
+    const email = countdown(1, { done: 0, total: 35, freeLeft: 3 });
+    expect(email.text).toContain("Your Security+ study path is ready. It has 35 steps.\nRest well before your exam.\n");
+    expect(email.html + email.text).not.toContain("done the work");
+    expect(countdown(1, { done: 4, total: 35, freeLeft: 0 }, true).text).toContain("Rest well: you have done the work.");
+  });
+
+  it("advises no more steps to an account that has completed every one", () => {
+    for (const days of [14, 7, 3]) {
+      const email = countdown(days, { done: 35, total: 35, freeLeft: 0 }, true);
+      expect(email.text).toContain(
+        "You have completed every step of your Security+ study path.\nA review on your study path each day will keep the material fresh until your exam.\n"
+      );
+      expect(email.html + email.text).not.toMatch(/few steps/);
+    }
   });
 
   // "With two weeks remaining" was typed by hand for every countdown of more
@@ -465,10 +478,27 @@ describe("pathCountdownEmail", () => {
     );
   });
 
-  it("is straight about the free steps being done", () => {
+  // "You have completed every free step" told an account without Pro that
+  // nothing free was left, while one practice exam and the free labs are open
+  // to it. The email now says what is still free, from the exam's own figure.
+  it("tells an account without Pro that has completed its free steps what is still free", () => {
     const email = countdown(3, { done: 6, total: 35, freeLeft: 0 });
     expect(email.text).toContain(
-      "You have completed every free step of your Security+ study path, including the readiness checkpoint. 29 more steps remain."
+      "You have completed 6 steps of your Security+ study path, including the readiness checkpoint. The remaining 29 steps are included with Pro. One practice exam is free, and so are 12 hands-on labs."
+    );
+    expect(email.html).toContain("One practice exam is free, and so are 12 hands-on labs.");
+    expect(email.html + email.text).not.toContain("every free step");
+    expect(countdown(3, { done: 34, total: 35, freeLeft: 0 }).text).toContain(
+      "The remaining step is included with Pro. One practice exam is free, and so are 12 hands-on labs."
+    );
+  });
+
+  it("names no free lab for an exam that has none, and counts one lab as one", () => {
+    const none = countdown(3, { done: 3, total: 35, freeLeft: 0 }, false, 0);
+    expect(none.text).toContain("The remaining 32 steps are included with Pro. One practice exam is free.");
+    expect(none.html + none.text).not.toMatch(/free hands-on lab|hands-on labs? (?:is|are) free|so (?:is|are) \d/);
+    expect(countdown(3, { done: 3, total: 35, freeLeft: 0 }, false, 1).text).toContain(
+      "One practice exam is free, and so is one hands-on lab."
     );
   });
 
@@ -484,10 +514,22 @@ describe("pathCountdownEmail", () => {
     expect(email.text).toContain("You have completed every step of your Security+ study path.");
   });
 
-  it("keeps the night before calm", () => {
-    const email = countdown(1, { done: 12, total: 35, freeLeft: 0 });
-    expect(email.subject).toBe("Your Security+ exam is tomorrow");
-    expect(email.text).toContain("Do not study late tonight.");
+  // The job runs on the UTC calendar and an account has no time zone: in
+  // eastern Australia "Your exam is tomorrow" arrived on the day of the exam.
+  it("names the date of the exam the day before it, and never says tomorrow or tonight", () => {
+    const email = countdown(1, { done: 12, total: 35, freeLeft: 0 }, true);
+    expect(email.subject).toBe("Your Security+ exam is on November 24, 2026");
+    expect(email.html).toContain(">Your exam is on November 24, 2026</h1>");
+    expect(email.text).toMatch(/^Your exam is on November 24, 2026\.\n/);
+    expect(email.text).toContain("Do not study late on the night before your exam. Rest well: you have done the work.");
+    for (const standing of [
+      { done: 0, total: 35, freeLeft: 3 },
+      { done: 3, total: 35, freeLeft: 0 },
+      { done: 35, total: 35, freeLeft: 0 },
+    ]) {
+      const sent = countdown(1, standing);
+      expect(sent.subject + sent.html + sent.text).not.toMatch(/tomorrow|tonight/i);
+    }
   });
 });
 
@@ -536,7 +578,14 @@ describe("checkpointResultEmail", () => {
   it("says what the rest of the path holds and what it costs, plainly", () => {
     const e = checkpoint(followUp(74));
     expect(e.text).toContain("- All 28 remaining steps of your Network+ study path");
-    expect(e.text).toContain("- Practice across all 617 Network+ questions");
+    // What Pro adds, in the words of the pricing page, and then what is free.
+    // The list used to name practice exams and hands-on labs as Pro's alone.
+    expect(e.text).toContain(
+      "CertBench Pro includes:\n- All 28 remaining steps of your Network+ study path\n- Every hands-on lab\n- New timed practice exams of 90 questions, scored by domain\n- All 617 Network+ questions, with review of the questions you answered incorrectly\nWithout Pro, one practice exam is free, and so are 12 hands-on labs.\n"
+    );
+    expect(e.html).toContain(">Every hands-on lab</td>");
+    expect(e.html).toContain(">Without Pro, one practice exam is free, and so are 12 hands-on labs.</p>");
+    expect(e.html + e.text).not.toContain("Timed practice exams, hands-on labs and spaced review");
     // The price is worded once for the whole site: every plan, the currency and
     // the regional adjustment. The email used to leave out the annual plan.
     expect(e.text).toContain(`${PRO_PRICE_TERMS} Each plan renews automatically. You can cancel at any time.`);
@@ -554,6 +603,27 @@ describe("checkpointResultEmail", () => {
     expect(e.text).toContain(`Continue with Pro: ${base.href}`);
     expect(e.html).toContain(`href="${base.href}"`);
     expect(e.html).toContain(base.unsubscribeUrl);
+  });
+
+  // The price names the yearly plan, and the button leads to the study path's
+  // offer, which sells the monthly and the three-month plans only.
+  it("says where every plan in the price can be chosen, with a link to the pricing page", () => {
+    const e = checkpoint(followUp(74));
+    const pricing = "https://certbench.dev/pricing?utm_source=email&utm_medium=lifecycle&utm_campaign=path_offer";
+    expect(e.html).toContain(
+      `${PRO_PRICE_TERMS} You can choose any of these plans on the <a href="${pricing.replace(/&/g, "&amp;")}" style="color:${EMAIL_COLORS.primary};">pricing page</a>.</p>`
+    );
+    expect(e.text).toContain(
+      `${PRO_PRICE_TERMS} Each plan renews automatically. You can cancel at any time.\nYou can choose any of these plans on the pricing page: ${pricing}\n`
+    );
+    // The button still leads to the study path.
+    expect(e.text).toContain(`Continue with Pro: ${base.href}`);
+  });
+
+  it("names no free lab for an exam that has none", () => {
+    const e = checkpoint(followUp(74), 0);
+    expect(e.text).toContain("\nWithout Pro, one practice exam is free.\n");
+    expect(e.html).toContain(">Without Pro, one practice exam is free.</p>");
   });
 
   it("states every plan, the currency and the regional adjustment", () => {
@@ -587,20 +657,17 @@ describe("checkpointResultEmail", () => {
     expect(e.text).not.toContain("remaining step");
   });
 
-  // A name with markup in it used to be escaped and printed. It is now left out
-  // of the greeting altogether (see "a display name that is not a name").
-  it("escapes titles in the HTML, and leaves out a name that holds markup", () => {
+  it("escapes titles in the HTML", () => {
     const tricky = { ...domains[1], title: "Implementation & <ops>" };
     const e = checkpointResultEmail({
       ...base,
-      displayName: "<b>Zed</b>",
       examName: "Network+",
       domains: [domains[0], tricky],
       followUp: followUp(60, { opportunity: tricky }),
       questionCount: 617,
+      freeLabs: 12,
     });
     expect(e.html).toContain(">Your checkpoint result</h1>");
-    expect(e.html + e.text).not.toContain("Zed");
     expect(e.html).toContain("Implementation &amp; &lt;ops&gt;");
     expect(e.html).not.toContain("<ops>");
   });
@@ -609,151 +676,40 @@ describe("checkpointResultEmail", () => {
 /** The text of an email's one heading. */
 const heading = (email: EmailContent) => /<h1[^>]*>([^<]*)<\/h1>/.exec(email.html)?.[1];
 
-/**
- * Every email that greets someone, built for one display name, with the
- * heading it has when the name is left out.
- */
-const GREETED: [string, (displayName: string) => EmailContent, string][] = [
-  ["the welcome email", (displayName) => welcome(displayName), "Welcome to CertBench"],
-  [
-    "the question after the exam",
-    (displayName) =>
-      postExamEmail({
-        displayName,
-        certName: "CompTIA Security+",
-        unsubscribeUrl: base.unsubscribeUrl,
-        passHref: "https://certbench.dev/story?t=x&r=pass",
-        failHref: "https://certbench.dev/story?t=x&r=fail",
-      }),
-    "How did your exam go?",
-  ],
-  [
-    "the countdown",
-    (displayName) =>
-      pathCountdownEmail({ ...base, displayName, daysUntilExam: 7, standing: { done: 3, total: 35, freeLeft: 3 }, pro: false }),
-    "Your exam is in 7 days",
-  ],
-  ["the reminder to continue", (displayName) => pathNudgeEmail({ ...base, displayName, nudge: nudge() }), "Continue your study path"],
-  [
-    "the reminder that the checkpoint is next",
-    (displayName) =>
-      pathNudgeEmail({
-        ...base,
-        displayName,
-        nudge: nudge({ done: 5, freeLeft: 1, toCheckpoint: 0, next: { title: "Readiness checkpoint", kind: "checkpoint" } }),
-      }),
-    "Your readiness checkpoint is next",
-  ],
-  ["the checkpoint result", (displayName) => checkpoint(followUp(60), displayName), "Your checkpoint result"],
-];
-
-/** A heading with a first name in it: after a comma, and before the question mark of a question. */
-const named = (bare: string, name: string) => (bare.endsWith("?") ? `${bare.slice(0, -1)}, ${name}?` : `${bare}, ${name}`);
-
-const LINE_SEPARATOR = String.fromCharCode(0x2028);
-
-/**
- * Display names that are not names, each with the words that must not be sent.
- * The display name comes from sign-up, where nothing bounds it, and the welcome
- * email goes to an address that nobody has confirmed.
- */
-const NOT_A_NAME: [string, string, string[]][] = [
-  ["an image tag that runs a script", "<img src=x onerror=alert(1)>", ["onerror", "&lt;img", "alert(1)"]],
-  ["a link", '<a href="https://evil.example/claim">Claim</a>', ["evil.example", "Claim", "&lt;a"]],
-  ["markup after a first name", "Zed <script>alert(1)</script>", ["Zed", "alert(1)", "&lt;script"]],
-  ["a closing bracket alone", "Zed>Quux", ["Zed", "Quux"]],
-  ["a web address with a scheme", "https://evil.example/login", ["evil.example"]],
-  ["a web address that starts with www", "www.evil.example", ["evil.example"]],
-  ["a bare domain", "evil.example", ["evil.example"]],
-  ["a web address after a first name", "Zed visit evil.example", ["Zed", "evil.example"]],
-  ["a web address in full-width letters", "ｅｖｉｌ．ｅｘａｍｐｌｅ", ["ｅｖｉｌ"]],
-  ["a scheme with no dot", "Zed://Quux", ["Zed", "Quux"]],
-  ["a line break", "Zed\nBcc: victim@example.org", ["Zed", "Bcc"]],
-  ["a carriage return and a header", "Zed\r\nX-Injected: 1", ["Zed", "X-Injected"]],
-  ["a Unicode line separator", `Zed${LINE_SEPARATOR}Quux`, ["Zed", "Quux"]],
-  ["a tab", "Zed\tQuux", ["Zed", "Quux"]],
-  ["one character more than a greeting uses", "Z".repeat(GREETING_NAME_MAX + 1), ["ZZZZ"]],
-];
-
-describe("greetingName", () => {
-  it("is the first word of an ordinary name, as it was typed", () => {
-    expect(greetingName("Sam Lee")).toBe("Sam");
-    expect(greetingName("  Sam   Lee ")).toBe("Sam");
-    expect(greetingName("Anne-Marie Dupont")).toBe("Anne-Marie");
-    expect(greetingName("D'Arcy")).toBe("D'Arcy");
-    expect(greetingName("José Núñez")).toBe("José");
-    expect(greetingName("李雷")).toBe("李雷");
-    expect(greetingName("Dr. Lee")).toBe("Dr.");
-    expect(greetingName("R&D Team")).toBe("R&D");
-    expect(greetingName("sam_lee99")).toBe("sam_lee99");
+// Every email used to greet its reader by the first word of the display name:
+// "Welcome to CertBench, Dr." for "Dr. Jane Smith", a mailbox name for an
+// account named from its address, and a filter that kept a stranger's markup
+// and links out of the greeting. No template takes a name now.
+describe("the greeting", () => {
+  it("names nobody: every email opens with its heading alone, in both parts", () => {
+    const emails = everyEmail();
+    expect(emails.map((email) => email.text.split("\n")[0])).toEqual([
+      "Welcome to CertBench.",
+      "This is your CompTIA study plan.",
+      "How did your CompTIA Security+ exam go?",
+      "Your exam is in 7 days.",
+      "Continue your study path.",
+      "Your readiness checkpoint is next.",
+      "Your checkpoint result.",
+      "Your checkpoint result.",
+      "Your checkpoint result.",
+    ]);
+    expect(emails.map(heading)).toEqual([
+      "Welcome to CertBench",
+      "Your study plan",
+      "How did your exam go?",
+      "Your exam is in 7 days",
+      "Continue your study path",
+      "Your readiness checkpoint is next",
+      "Your checkpoint result",
+      "Your checkpoint result",
+      "Your checkpoint result",
+    ]);
   });
 
-  it("uses a name of 40 characters and no longer one", () => {
-    const longest = `${"Z".repeat(GREETING_NAME_MAX - 4)} Lee`;
-    expect(longest).toHaveLength(40);
-    expect(greetingName(longest)).toBe("Z".repeat(36));
-    expect(greetingName(`${longest}s`)).toBeNull();
-    // Characters are counted, not code units: 40 characters that each take two units are still 40.
-    const outsideTheBasicPlane = String.fromCodePoint(0x10400).repeat(GREETING_NAME_MAX);
-    expect(outsideTheBasicPlane).toHaveLength(GREETING_NAME_MAX * 2);
-    expect(greetingName(outsideTheBasicPlane)).toBe(outsideTheBasicPlane);
-    expect(greetingName(`${outsideTheBasicPlane}${String.fromCodePoint(0x10400)}`)).toBeNull();
-    expect(greetingName("Z".repeat(100_000))).toBeNull();
-  });
-
-  it("is null when there is no name", () => {
-    for (const none of ["", "   ", "\n", null, undefined]) expect(greetingName(none)).toBeNull();
-  });
-
-  it.each(NOT_A_NAME)("is null for %s", (_, displayName) => {
-    expect(greetingName(displayName)).toBeNull();
-  });
-
-  // The profile of an account that gave no name is named from its email
-  // address, which often has a full stop in it. That is not a first name.
-  it("is null for the first part of an email address with a full stop in it", () => {
-    expect(greetingName("sam.lee")).toBeNull();
-  });
-});
-
-describe("a display name that is not a name", () => {
-  it.each(GREETED)("is left out of %s: the heading has no name, and none of its words are sent", (_, build, bare) => {
-    for (const [, displayName, words] of NOT_A_NAME) {
-      const email = build(displayName);
-      expect(heading(email)).toBe(bare);
-      for (const part of [email.subject, email.html, email.text]) {
-        expect(part).not.toContain(displayName);
-        for (const word of words) expect(part).not.toContain(word);
-      }
-    }
-  });
-
-  it.each(GREETED)("%s greets an ordinary name by its first word, escaped in the HTML", (_, build, bare) => {
-    expect(heading(build("Zebedee Quux"))).toBe(named(bare, "Zebedee"));
-    const email = build("D'Arcy & Co");
-    expect(heading(email)).toBe(named(bare, "D&#39;Arcy"));
-    expect(email.html).not.toContain("D'Arcy");
-  });
-
-  it.each(GREETED)("%s greets nobody by name when the account has no name", (_, build, bare) => {
-    expect(heading(build(""))).toBe(bare);
-    expect(heading(build("   "))).toBe(bare);
-  });
-
-  it("opens the text part with the same greeting, with or without a name", () => {
-    expect(welcome("Zebedee Quux").text).toMatch(/^Welcome to CertBench, Zebedee\.\n/);
-    expect(welcome("evil.example").text).toMatch(/^Welcome to CertBench\.\n/);
-    expect(pathCountdownEmail({ ...base, displayName: "", daysUntilExam: 7, standing: { done: 3, total: 35, freeLeft: 3 }, pro: false }).text).toMatch(
-      /^Your exam is in 7 days\.\n/
-    );
-    expect(pathNudgeEmail({ ...base, displayName: "<b>Zed</b>", nudge: nudge() }).text).toMatch(/^Continue your study path\.\n/);
-    expect(checkpoint(followUp(60), "www.evil.example").text).toMatch(/^Your checkpoint result\.\n/);
-  });
-
-  // A subject is the one line a mail client shows before the email is opened.
-  it.each(GREETED)("%s has no name in its subject", (_, build) => {
-    expect(build("Zebedee Quux").subject).not.toContain("Zebedee");
-    expect(build("Zebedee Quux").subject).not.toContain("Quux");
+  it("is built from no display name: no template reads one", () => {
+    const source = readFileSync(join(process.cwd(), "src/server/email/templates.ts"), "utf8");
+    expect(source).not.toMatch(/displayName|greetingName/);
   });
 });
 
@@ -772,14 +728,13 @@ describe("a value that comes from outside the templates", () => {
   const marked = (): [string, EmailContent, string[]][] => [
     [
       "welcome",
-      welcomeEmail({ displayName: "Sam Lee", certName: `Security+ ${MARK}`, unsubscribeUrl: link("unsubscribe") }),
+      welcomeEmail({ certName: `Security+ ${MARK}`, unsubscribeUrl: link("unsubscribe") }),
       [`<strong>Security+ ${ESCAPED}</strong>`, escapedLink("unsubscribe")],
     ],
     ["study plan", studyPlanEmail({ source: "port-numbers-quiz", unsubscribeUrl: link("unsubscribe") }), [escapedLink("unsubscribe")]],
     [
       "post-exam",
       postExamEmail({
-        displayName: "Sam Lee",
         certName: `Security+ ${MARK}`,
         unsubscribeUrl: link("unsubscribe"),
         passHref: link("pass"),
@@ -790,11 +745,12 @@ describe("a value that comes from outside the templates", () => {
     [
       "countdown",
       pathCountdownEmail({
-        displayName: "Sam Lee",
         examName: `Security+ ${MARK}`,
         daysUntilExam: 7,
+        examDate: "2026-11-09",
         standing: { done: 3, total: 35, freeLeft: 3 },
         pro: false,
+        freeLabs: 12,
         href: link("path"),
         unsubscribeUrl: link("unsubscribe"),
       }),
@@ -803,7 +759,6 @@ describe("a value that comes from outside the templates", () => {
     [
       "reminder",
       pathNudgeEmail({
-        displayName: "Sam Lee",
         examName: `Security+ ${MARK}`,
         nudge: nudge({ next: { title, kind: "learn" } }),
         href: link("path"),
@@ -814,7 +769,6 @@ describe("a value that comes from outside the templates", () => {
     [
       "checkpoint next",
       pathNudgeEmail({
-        displayName: "Sam Lee",
         examName: `Security+ ${MARK}`,
         nudge: nudge({ done: 5, freeLeft: 1, toCheckpoint: 0, next: { title: "Readiness checkpoint", kind: "checkpoint" } }),
         href: link("path"),
@@ -825,11 +779,11 @@ describe("a value that comes from outside the templates", () => {
     [
       "checkpoint result",
       checkpointResultEmail({
-        displayName: "Sam Lee",
         examName: `Network+ ${MARK}`,
         domains: markedDomains,
         followUp: followUp(60, { opportunity: markedDomains[1] }),
         questionCount: 617,
+        freeLabs: 12,
         href: link("path"),
         unsubscribeUrl: link("unsubscribe"),
       }),
@@ -840,7 +794,7 @@ describe("a value that comes from outside the templates", () => {
         `<strong>Implementation ${ESCAPED}</strong>`,
         `The rest of your Network+ ${ESCAPED} study path</div>`,
         `remaining steps of your Network+ ${ESCAPED} study path</td>`,
-        `Network+ ${ESCAPED} questions</td>`,
+        `All 617 Network+ ${ESCAPED} questions, with review`,
         escapedLink("path"),
         escapedLink("unsubscribe"),
       ],

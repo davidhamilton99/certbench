@@ -1,6 +1,7 @@
 import "server-only";
 
 import { serverEnvOptional } from "@/env";
+import { SUPPORT_EMAIL } from "@/lib/errors/user-message";
 
 const DEFAULT_FROM = "CertBench <hello@certbench.dev>";
 
@@ -17,6 +18,16 @@ export interface SendEmailInput {
   text: string;
   /** Extra headers, e.g. List-Unsubscribe for lifecycle mail. */
   headers?: Record<string, string>;
+  /**
+   * Names this one email to the mail service (its Idempotency-Key header),
+   * built by the caller from the claim it made for the email. Resend keeps a
+   * key for 24 hours: a request sent again with the same key and the same
+   * email is answered as the first was, without a second send, and one with
+   * the same key and another email is refused (409). So the second attempt
+   * after a fault at the service, and a later attempt on the same day after a
+   * request that received no answer, cannot deliver the email twice.
+   */
+  idempotencyKey?: string;
 }
 
 /**
@@ -40,28 +51,35 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
   const body = JSON.stringify({
     from: serverEnvOptional("EMAIL_FROM") ?? DEFAULT_FROM,
     to: [input.to],
+    // A reply, a question or a "stop", goes to the address that every footer
+    // and every page names. Without it, replies went to the sending address,
+    // which the site names nowhere.
+    reply_to: SUPPORT_EMAIL,
     subject: input.subject,
     html: input.html,
     text: input.text,
     headers: input.headers,
   });
 
-  const first = await attempt(apiKey, body);
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}),
+  };
+
+  const first = await attempt(headers, body);
   if (first !== "retry") return first === "sent";
   await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS));
-  return (await attempt(apiKey, body)) === "sent";
+  return (await attempt(headers, body)) === "sent";
 }
 
 /** One request. "retry" means the service answered that it could not take the email just now. */
-async function attempt(apiKey: string, body: string): Promise<"sent" | "retry" | "failed"> {
+async function attempt(headers: Record<string, string>, body: string): Promise<"sent" | "retry" | "failed"> {
   let res: Response;
   try {
     res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body,
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });

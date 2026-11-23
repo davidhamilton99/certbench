@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { serverEnv } from "@/env";
+import { serverEnv, serverEnvOptional } from "@/env";
 
 /**
  * Stateless, signed share tokens for the public readiness card. The payload
@@ -9,8 +9,10 @@ import { serverEnv } from "@/env";
  * is needed and only CertBench-generated cards render (a tampered or forged
  * token fails verification — this prevents fake, brand-damaging cards).
  *
- * The HMAC key reuses the service-role secret: it's always present and never
- * leaves the server, and HMAC output doesn't expose it.
+ * The HMAC key is LINK_SIGNING_SECRET. Until the owner sets it, the
+ * service-role secret signs the cards, as it signed every card made before
+ * the secret existed: those keep working until it is set, and stop once it
+ * is. Neither leaves the server, and HMAC output does not expose either.
  */
 
 export interface SharePayload {
@@ -28,8 +30,12 @@ export interface SharePayload {
   d: [string, number][];
 }
 
+/**
+ * The key that signs and checks a card. Throws when neither secret is set:
+ * signing a card then fails, and verifyShare answers null.
+ */
 function key(): Buffer {
-  return Buffer.from(serverEnv("SUPABASE_SERVICE_ROLE_KEY"));
+  return Buffer.from(serverEnvOptional("LINK_SIGNING_SECRET") || serverEnv("SUPABASE_SERVICE_ROLE_KEY"));
 }
 
 function b64urlEncode(input: string): string {
@@ -73,7 +79,14 @@ export function verifyShare(token: string): SharePayload | null {
   // character outside ASCII has the right number of characters and more
   // bytes, so the lengths compared are the buffers' own.
   const given = Buffer.from(sig);
-  const expected = Buffer.from(sign(body));
+  let expected: Buffer;
+  try {
+    expected = Buffer.from(sign(body));
+  } catch {
+    // No key is set, so no card can be checked: the public page says the card
+    // is not available instead of failing with a 500.
+    return null;
+  }
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
 
   try {

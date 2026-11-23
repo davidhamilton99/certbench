@@ -48,7 +48,8 @@ function captureAfterResponse(
  * when asked for the subscription, say). Every write here is an upsert or an
  * update, so recording the same event twice is safe.
  *
- * Three rules keep a late or stray event from changing what a member has:
+ * Three rules keep a late or stray event from changing what a member has, and
+ * a fourth says when a buyer is counted:
  *
  *  1. A row is changed only by events about the subscription it holds. Stripe
  *     can hold more than one subscription for a customer (a first attempt whose
@@ -78,10 +79,12 @@ function captureAfterResponse(
  *     shut out a member who had since paid. Only the end of a subscription is
  *     taken from the event itself: an ended subscription cannot come back, so
  *     that copy cannot be out of date.
- *
- * What rule 2 leaves open: the conversion is reported by the checkout alone.
- * A plan whose first payment was still pending when its checkout arrived gets
- * Pro from the change that follows, and no conversion is reported for it.
+ *  4. The conversion (`subscription_activated`) is reported once, by whichever
+ *     event grants Pro first: the checkout, or the change that follows a
+ *     first payment that was still pending. It is reported only when the row
+ *     did not have Pro before the write, so the second of a plan's two events,
+ *     a checkout delivered again and a renewal paid after it fell past due
+ *     (a payment recovered, not a new buyer) report nothing.
  *
  * What rule 3 leaves open: two events for one customer handled at the same
  * moment each ask Stripe and then write, and the one that asked first can
@@ -184,6 +187,29 @@ function standingOf(subscription: Stripe.Subscription): Standing {
   };
 }
 
+/** What a row held before an event's write: enough to tell a conversion from a repeat. */
+interface PriorStanding {
+  plan?: string | null;
+  status?: string | null;
+}
+
+/**
+ * Rule 4: whether a write is a conversion, which is reported once, as
+ * `subscription_activated`, by whichever event grants it first. A conversion
+ * is an account that did not have Pro and now has it. Not one:
+ *  - an account that already had Pro (the second of a plan's two events, a
+ *    checkout event that Stripe delivers again, or one sent again from the
+ *    Dashboard);
+ *  - a member whose renewal had failed and who has now paid it (past due back
+ *    to active): that is a payment recovered, not a new buyer.
+ */
+function becomesPro(before: PriorStanding | null, after: Standing): boolean {
+  if (after.plan !== "pro") return false;
+  if (!before) return true;
+  if (before.plan === "pro") return false;
+  return before.status !== "past_due";
+}
+
 /**
  * Whether an event about `subscriptionId` concerns the subscription a row
  * holds. A row that holds none (a checkout not yet confirmed, or a plan that
@@ -270,6 +296,16 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // Pro.
       const standing = standingOf(subscription);
 
+      // What the row held before this write decides whether this is a
+      // conversion (rule 4). Read first; a read that fails leaves the event
+      // for Stripe to send again, before anything has been written.
+      const { data: before, error: beforeError } = await supabase
+        .from("user_subscriptions")
+        .select("plan, status")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (beforeError) return failure("subscription lookup", beforeError);
+
       const { error } = await supabase.from("user_subscriptions").upsert(
         {
           user_id: userId,
@@ -281,17 +317,16 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       );
       if (error) return failure("subscription upsert", error);
 
-      // Without Pro there is no conversion to report.
-      if (standing.plan !== "pro") return null;
-
       // The conversion event, fired server-side (reliable source of truth,
       // unlike a success-redirect the user may never reach) and only once the
       // row is written: a conversion is a buyer who has Pro. distinct_id is the
       // Supabase user id, so it joins the funnel this person built in-browser.
-      captureAfterResponse(userId, "subscription_activated", {
-        stripe_subscription_id: subscription.id,
-        plan: "pro",
-      });
+      if (becomesPro(before as PriorStanding | null, standing)) {
+        captureAfterResponse(userId, "subscription_activated", {
+          stripe_subscription_id: subscription.id,
+          plan: "pro",
+        });
+      }
       return null;
     }
 
@@ -303,7 +338,7 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // told apart from a read that failed (Stripe must send the event again).
       const { data: sub, error: readError } = await supabase
         .from("user_subscriptions")
-        .select("user_id, stripe_subscription_id")
+        .select("user_id, stripe_subscription_id, plan, status")
         .eq("stripe_customer_id", customerId)
         .maybeSingle();
       if (readError) return failure("subscription lookup", readError);
@@ -335,6 +370,16 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
         .update(takesSubscription ? { ...standing, stripe_subscription_id: sent.id } : standing)
         .eq("stripe_customer_id", customerId);
       if (error) return failure("subscription update", error);
+
+      // A first payment that was still pending when its checkout completed is
+      // granted here, and so is a plan whose own event arrives before its
+      // checkout: either way this is the buyer's conversion (rule 4).
+      if (becomesPro(sub as PriorStanding, standing)) {
+        captureAfterResponse((sub as CustomerRow).user_id, "subscription_activated", {
+          stripe_subscription_id: sent.id,
+          plan: "pro",
+        });
+      }
       return null;
     }
 

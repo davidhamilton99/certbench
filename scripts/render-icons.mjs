@@ -4,7 +4,17 @@
 //   public/apple-touch-icon.png                  180px, full-bleed (iOS rounds it)
 //   public/icon.svg                              the same tile as a vector
 //   src/app/favicon.ico                          16, 32 and 48px PNGs in one .ico
-// Run after changing the mark:  node scripts/render-icons.mjs
+//
+// It needs the image library sharp, which package.json does not list. Next.js
+// installs sharp as one of its own optional dependencies (see "node_modules/next"
+// in package-lock.json), so `npm install` brings it in unless optional
+// dependencies are left out. If the import of sharp fails, install it without
+// changing package.json or the lockfile, and run the script again:
+//   npm install --no-save sharp
+//
+// Run it from the repository's root after changing the mark:
+//   node scripts/render-icons.mjs
+// It overwrites the seven files above, which are committed with the change.
 import { writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

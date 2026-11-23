@@ -47,6 +47,8 @@ describe("sendEmail", () => {
     expect(JSON.parse(String(init.body))).toEqual({
       from: "CertBench <hello@certbench.dev>",
       to: ["sam@example.com"],
+      // Replies go to the address that the footer and the site name, not to the sending address.
+      reply_to: "support@certbench.dev",
       subject: EMAIL.subject,
       html: EMAIL.html,
       text: EMAIL.text,
@@ -85,6 +87,30 @@ describe("sendEmail", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     // The second request is the same email.
     expect(fetchMock.mock.calls[1][1].body).toBe(fetchMock.mock.calls[0][1].body);
+  });
+
+  // Resend keeps a key for 24 hours and answers a request sent again with the
+  // same key and the same email as it answered the first, without a second
+  // send. A fault after the email was accepted no longer delivers it twice.
+  it("sends the caller's key as the Idempotency-Key header, the same on the second attempt", async () => {
+    fetchMock.mockResolvedValueOnce(answer(503, "busy")).mockResolvedValueOnce(answer(200));
+
+    const sending = sendEmail({ ...EMAIL, idempotencyKey: "countdown_7/u1/2026-11-23" });
+    await vi.advanceTimersByTimeAsync(RETRY_AFTER_MS);
+    expect(await sending).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    for (const [, init] of fetchMock.mock.calls) {
+      expect(init.headers).toMatchObject({ "Idempotency-Key": "countdown_7/u1/2026-11-23" });
+    }
+    expect(fetchMock.mock.calls[1][1].body).toBe(fetchMock.mock.calls[0][1].body);
+    // The key is a header of the request, not of the email.
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1].body))).not.toHaveProperty("idempotencyKey");
+  });
+
+  it("sends no Idempotency-Key header when the caller gives no key", async () => {
+    fetchMock.mockResolvedValue(answer(200));
+    await sendEmail(EMAIL);
+    expect(Object.keys(fetchMock.mock.calls[0][1].headers as Record<string, string>)).not.toContain("Idempotency-Key");
   });
 
   it("gives up after the second attempt", async () => {

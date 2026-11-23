@@ -13,8 +13,26 @@ import {
   COUNTDOWN_DAYS,
   POST_EXAM_DAY,
   daysUntil,
-  isTestAccount,
+  freeLabCount,
 } from "../lifecycle-email";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { PATH_CERTS } from "@/core/path/types";
+
+// The emails say how many hands-on labs are free for an exam. The number is
+// the one the exam's public page of labs offers: 12 for each of the four exams
+// that have such a page, and none for Security+ SY0-801, which has no page.
+describe("freeLabCount", () => {
+  it("is the number of labs free on the exam's public page of labs, and none without a page", () => {
+    expect(Object.fromEntries(PATH_CERTS.map((cert) => [cert, freeLabCount(cert)]))).toEqual({
+      "security-plus-sy0-701": FREE_LAB_COUNT,
+      "security-plus-sy0-801": 0,
+      "network-plus-n10-009": FREE_LAB_COUNT,
+      "a-plus-core1-220-1201": FREE_LAB_COUNT,
+      "a-plus-core2-220-1202": FREE_LAB_COUNT,
+    });
+    expect(FREE_LAB_COUNT).toBe(12);
+  });
+});
 
 describe("daysUntil", () => {
   const now = new Date("2026-07-05T14:00:00Z");
@@ -52,14 +70,5 @@ describe("daysUntil", () => {
   });
 });
 
-describe("isTestAccount", () => {
-  it("blocks the e2e and rebuild test conventions", () => {
-    expect(isTestAccount("david.nash.hamilton+e2e-x-1@gmail.com")).toBe(true);
-    expect(isTestAccount("david.nash.hamilton+rb1@gmail.com")).toBe(true);
-  });
-
-  it("allows real addresses", () => {
-    expect(isTestAccount("student@example.com")).toBe(false);
-    expect(isTestAccount("david.nash.hamilton@gmail.com")).toBe(false);
-  });
-});
+// The test addresses are told apart by one shared function, tested in
+// src/server/email/__tests__/test-address.test.ts.

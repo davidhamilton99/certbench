@@ -7,6 +7,8 @@ type DbAnswer = { data?: unknown; error: { message: string } | null };
 
 const CERT_ID = "5b1f6f0e-3c1a-4a59-9d55-0d2f6f0f8a11";
 const OTHER_VERSION_ID = "9a0e4c62-7f1b-4f0a-8a46-2b7f1f4c1d22";
+/** The exam the member's plan already covers, unless a test says otherwise. */
+const PLAN_EXAM_ID = "3c2d1e0f-4a5b-4c6d-8e7f-90a1b2c3d4e5";
 
 const h = vi.hoisted(() => ({
   /** Whether the signed-in account has Pro. */
@@ -20,7 +22,7 @@ const h = vi.hoisted(() => ({
   saved: [] as unknown[],
   stripe: {
     customers: { create: vi.fn() },
-    checkout: { sessions: { create: vi.fn() } },
+    checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   },
 }));
 
@@ -59,7 +61,11 @@ vi.mock("@/server/supabase/admin", () => ({
     }),
   }),
 }));
-vi.mock("@/server/stripe", () => ({ getStripe: () => h.stripe }));
+// The real expiry of open payment pages, on a Stripe client that never leaves the test.
+vi.mock("@/server/stripe", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/stripe")>()),
+  getStripe: () => h.stripe,
+}));
 
 import { POST } from "../route";
 
@@ -83,7 +89,7 @@ let consoleError: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   h.pro = true;
   h.cert = { id: CERT_ID, name: "CompTIA Network+", examCode: "N10-009" };
-  h.enrollments = [];
+  h.enrollments = [{ certificationId: PLAN_EXAM_ID }];
   h.otherVersions = [];
   h.row = { data: { stripe_customer_id: "cus_1" }, error: null };
   h.save = { error: null };
@@ -91,6 +97,9 @@ beforeEach(() => {
   h.limit.mockReset().mockResolvedValue(true);
   h.stripe.customers.create.mockReset().mockResolvedValue({ id: "cus_new" });
   h.stripe.checkout.sessions.create.mockReset().mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_1" });
+  // No earlier payment page is open unless a test opens one.
+  h.stripe.checkout.sessions.list.mockReset().mockResolvedValue({ data: [], has_more: false });
+  h.stripe.checkout.sessions.expire.mockReset().mockResolvedValue({ status: "expired" });
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -189,6 +198,20 @@ describe("POST /api/stripe/cert-checkout: what a member is told when it refuses"
     expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
   });
 
+  // Until November 2026 a member who bought Pro before choosing an exam was
+  // offered, and sold, the exam their plan includes, whenever the study path's
+  // claim of it had not answered yet or had failed.
+  it("does not charge a member whose plan covers no exam yet, and says the exam is included", async () => {
+    h.enrollments = [];
+
+    const res = await addExam();
+    expect(res.status).toBe(409);
+    expect(await shown(res)).toBe("This exam is included in your plan. Please reload the study path to open it.");
+    expect(h.stripe.customers.create).not.toHaveBeenCalled();
+    expect(h.stripe.checkout.sessions.list).not.toHaveBeenCalled();
+    expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
   it("does not charge for another version of an exam the plan covers", async () => {
     h.cert = { id: CERT_ID, name: "CompTIA Security+", examCode: "SY0-801" };
     h.enrollments = [{ certificationId: OTHER_VERSION_ID }];
@@ -224,5 +247,42 @@ describe("POST /api/stripe/cert-checkout: what a member is told when it refuses"
     const res = await addExam();
     expect(res.status).toBe(500);
     expect((await res.json()).error.message).toBe("The payment page could not be opened. Please try again.");
+  });
+});
+
+// Until November 2026 two payment pages for one exam could be open at once,
+// from the Back button or a second tab, and both could be paid.
+describe("POST /api/stripe/cert-checkout: one open payment page for each customer", () => {
+  it("expires an earlier payment page before it makes a new one", async () => {
+    h.stripe.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_earlier" }], has_more: false });
+
+    const res = await addExam();
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.list).toHaveBeenCalledExactlyOnceWith({ customer: "cus_1", status: "open", limit: 100 });
+    expect(h.stripe.checkout.sessions.expire).toHaveBeenCalledExactlyOnceWith("cs_earlier");
+    expect(h.stripe.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(
+      h.stripe.checkout.sessions.create.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("answers as for a member who has Pro, and makes no new page, when an earlier page refuses to expire", async () => {
+    h.stripe.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_paid" }], has_more: false });
+    // Stripe refuses to expire a page that was paid a moment ago.
+    h.stripe.checkout.sessions.expire.mockRejectedValue(new Error("The Checkout Session is not open."));
+
+    const res = await addExam();
+    expect(res.status).toBe(409);
+    expect(await shown(res)).toBe(
+      "This account already has CertBench Pro. If you have just paid, your study path opens as soon as the payment is confirmed. Please reload the page."
+    );
+    expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it("has no earlier page to expire for a member who is given a Stripe customer here", async () => {
+    h.row = { data: null, error: null };
+    const res = await addExam();
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.list).not.toHaveBeenCalled();
   });
 });

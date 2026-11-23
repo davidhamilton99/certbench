@@ -3,6 +3,7 @@ import "server-only";
 import type { Db } from "@/server/supabase/server";
 import { createAdminClient } from "@/server/supabase/admin";
 import { sendEmail } from "@/server/email/resend";
+import { isTestAddress } from "@/server/email/test-address";
 import { studyPlanEmail } from "@/server/email/templates";
 import { leadsForAddress, unsubscribeHeaders, unsubscribeUrl } from "@/server/email/unsubscribe";
 import type { LeadDelivery, ToolSource } from "@/contracts/tools";
@@ -14,17 +15,18 @@ import type { LeadDelivery, ToolSource } from "@/contracts/tools";
  */
 export const RESEND_AFTER_MS = 24 * 60 * 60 * 1000;
 
-/** Test-convention addresses never get lead mail (mirrors lifecycle email). */
-function isTestAccount(email: string): boolean {
-  return email.includes("+e2e") || email.includes("+rb");
-}
-
 /** A lead that has been claimed for one send, and how to give the claim back. */
 interface ClaimedLead {
   id: string;
   token: string;
   /** The row's earlier `updated_at`, or null for a row this request created. */
   restore: string | null;
+  /**
+   * The lead and the time of the claim: the name the mail service is given for
+   * this one email (its Idempotency-Key), so that the second attempt after a
+   * fault at the service cannot deliver it twice.
+   */
+  key: string;
 }
 
 /**
@@ -54,7 +56,8 @@ export async function captureLead(
     // form. Otherwise the same person could be sent the email once for each
     // way of writing the capitals.
     const address = email.trim().toLowerCase();
-    if (isTestAccount(address)) return "skipped";
+    // An address that CertBench's own tests use: nothing is stored or sent.
+    if (isTestAddress(address)) return "skipped";
     const admin = createAdminClient();
 
     const lead = await claimLead(admin, address, source, context, now);
@@ -64,6 +67,7 @@ export async function captureLead(
     const sent = await sendEmail({
       to: address,
       headers: unsubscribeHeaders(url),
+      idempotencyKey: lead.key,
       ...studyPlanEmail({ source, unsubscribeUrl: url }),
     });
     if (sent) return "sent";
@@ -120,7 +124,7 @@ async function claimLead(
       console.error("tool lead insert failed:", error.message);
       return "failed";
     }
-    return { id: created.id, token: created.unsubscribe_token, restore: null };
+    return { id: created.id, token: created.unsubscribe_token, restore: null, key: `study-plan/${created.id}/${sentAt}` };
   }
 
   // The claim: only a row whose last send is more than 24 hours old is moved
@@ -138,7 +142,12 @@ async function claimLead(
     return "failed";
   }
   if (!claimed || claimed.length === 0) return "skipped";
-  return { id: existing.id, token: existing.unsubscribe_token, restore: existing.updated_at };
+  return {
+    id: existing.id,
+    token: existing.unsubscribe_token,
+    restore: existing.updated_at,
+    key: `study-plan/${existing.id}/${sentAt}`,
+  };
 }
 
 /** Gives a claim back after a send that failed, so that the next attempt is not skipped. */

@@ -9,6 +9,7 @@ const NAMES = [
   "NEXT_PUBLIC_POSTHOG_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
   "EMAIL_POSTAL_ADDRESS",
+  "LINK_SIGNING_SECRET",
 ];
 
 /** Values that would be recognized at once if one were ever printed. */
@@ -21,6 +22,7 @@ const SECRETS: Record<string, string> = {
   SUPABASE_SERVICE_ROLE_KEY: "SECRET_service_role",
   // Not a secret, but the owner's own address: it is never printed here either.
   EMAIL_POSTAL_ADDRESS: "1 SECRET Street, Example Town, EX 00000, Canada",
+  LINK_SIGNING_SECRET: "SECRET_link_signing",
 };
 
 function setAll() {
@@ -48,6 +50,7 @@ describe("settingFlags", () => {
       posthog: true,
       serviceRole: true,
       postalAddress: true,
+      linkSigning: true,
     });
   });
 
@@ -60,6 +63,7 @@ describe("settingFlags", () => {
       posthog: false,
       serviceRole: false,
       postalAddress: false,
+      linkSigning: false,
     });
   });
 
@@ -69,6 +73,8 @@ describe("settingFlags", () => {
     expect(settingFlags()).toMatchObject({ cron: true, webhook: true, resend: false, stripe: false, postalAddress: false });
     vi.stubEnv("EMAIL_POSTAL_ADDRESS", SECRETS.EMAIL_POSTAL_ADDRESS);
     expect(settingFlags()).toMatchObject({ postalAddress: true, resend: false });
+    vi.stubEnv("LINK_SIGNING_SECRET", SECRETS.LINK_SIGNING_SECRET);
+    expect(settingFlags()).toMatchObject({ linkSigning: true, serviceRole: false });
   });
 
   it("counts a postal address of spaces alone as absent, because no email would print one", () => {
@@ -91,7 +97,7 @@ describe("bootLines", () => {
     setAll();
     const { summary, warnings } = bootLines();
     expect(summary).toBe(
-      "[boot] settings: resend=true cron=true stripe=true webhook=true posthog=true serviceRole=true postalAddress=true"
+      "[boot] settings: resend=true cron=true stripe=true webhook=true posthog=true serviceRole=true postalAddress=true linkSigning=true"
     );
     expect(warnings).toEqual([]);
   });
@@ -114,6 +120,18 @@ describe("bootLines", () => {
     const { summary, warnings } = bootLines();
     expect(summary).toContain("serviceRole=true postalAddress=false");
     expect(warnings).toEqual(["[boot] EMAIL_POSTAL_ADDRESS is not set: emails print no postal address."]);
+  });
+
+  // Rotating the service role key, which a leak calls for, voided every shared
+  // readiness link and every story link already sent, and nothing said so.
+  it("says that the links are signed with the service role key until LINK_SIGNING_SECRET is set", () => {
+    setAll();
+    vi.stubEnv("LINK_SIGNING_SECRET", "");
+    const { summary, warnings } = bootLines();
+    expect(summary).toContain("postalAddress=true linkSigning=false");
+    expect(warnings).toEqual([
+      "[boot] LINK_SIGNING_SECRET is not set: shared readiness links and story links are signed with SUPABASE_SERVICE_ROLE_KEY, and rotating that key breaks them.",
+    ]);
   });
 
   it("warns when ADDON_CERTS is on, because it lets any account add an exam without paying", () => {

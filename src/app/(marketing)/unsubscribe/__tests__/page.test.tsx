@@ -74,6 +74,31 @@ describe("the unsubscribe page", () => {
     expect(text(lead)).toContain("You will no longer receive this study plan email from CertBench.");
   });
 
+  // Nothing in the product turns these emails back on, and the result did not
+  // say so: a member who unsubscribed by mistake lost the countdowns for good.
+  it("says how to receive the emails again, with the support address as a link", async () => {
+    /** The result's sentences, one paragraph each. */
+    const sentences = (doc: Document) => [...doc.querySelectorAll("h1 ~ div p")].map((p) => (p.textContent ?? "").trim());
+
+    const doc = await served({ status: "done" });
+    expect(sentences(doc)).toEqual([
+      "You will no longer receive study emails from CertBench.",
+      "To receive them again, write to support@certbench.dev.",
+      "Return to the home page",
+    ]);
+    expect(doc.querySelector("a[href='mailto:support@certbench.dev']")?.className).toContain("cb-link");
+
+    const lead = await served({ status: "done", scope: "lead" });
+    expect(sentences(lead).slice(0, 2)).toEqual([
+      "You will no longer receive this study plan email from CertBench.",
+      "To receive it again, write to support@certbench.dev.",
+    ]);
+
+    // The daily reminder is no longer sent to anyone: there is no way back to offer.
+    const daily = await served({ status: "done", scope: "daily" });
+    expect(sentences(daily)).toEqual(["You will no longer receive the daily study reminder from CertBench.", "Return to the home page"]);
+  });
+
   it("says so, announced as an alert, when the change could not be saved, and offers the button again", async () => {
     const doc = await served({ status: "failed", token: TOKEN });
     const alert = doc.querySelector('[role="alert"]');

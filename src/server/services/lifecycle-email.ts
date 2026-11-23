@@ -3,12 +3,13 @@ import "server-only";
 import { serverEnv } from "@/env";
 import type { Db } from "@/server/supabase/server";
 import { createAdminClient } from "@/server/supabase/admin";
-import { getProfile } from "@/server/data/profiles";
 import { listEnrollments } from "@/server/data/enrollments";
 import { getCertification } from "@/server/data/certifications";
 import { getPathProgress } from "@/server/data/path-progress";
+import { allRows } from "@/server/data/paging";
 import { loadPathBank } from "@/server/path/bank";
 import { sendEmail, type SendEmailInput } from "@/server/email/resend";
+import { isTestAddress } from "@/server/email/test-address";
 import { unsubscribeHeaders, unsubscribeUrl } from "@/server/email/unsubscribe";
 import { captureServerEvent } from "@/server/analytics";
 import { signStoryToken } from "@/server/story/story-token";
@@ -24,15 +25,22 @@ import {
 } from "@/server/email/templates";
 import { buildPlan } from "@/core/path/plan";
 import { checkpointFollowUp, FOLLOW_UP_MAX_HOURS, FOLLOW_UP_MIN_HOURS } from "@/core/path/follow-up";
+import { freeLabs } from "@/core/path/free-labs";
 import { NUDGE_MAX_HOURS, NUDGE_MIN_HOURS, pathNudge, pathStanding } from "@/core/path/nudge";
 import { sanitizePathProgress } from "@/core/path/progress";
 import { isPathCert, type PathCert, type PathProgress } from "@/core/path/types";
+import { pbqRegistry } from "@/data/pbq";
+import { PBQ_EXAMPLE_PAGES } from "@/lib/seo/cert-pages";
 
 /** Exam-countdown days that trigger an email. */
 export const COUNTDOWN_DAYS = [14, 7, 3, 1] as const;
 
 /** Days AFTER the exam date to send the "how did it go?" story request. */
 export const POST_EXAM_DAY = 2;
+
+/** Whether an exam `days` away (negative once it has passed) has an email today: a countdown, or the question after it. */
+const isEmailDay = (days: number) =>
+  days === -POST_EXAM_DAY || (COUNTDOWN_DAYS as readonly number[]).includes(days);
 
 /**
  * How long a run may work before it stops taking new accounts. Vercel ends the
@@ -55,9 +63,16 @@ export function daysUntil(examDate: string, now: Date): number {
   return Math.round((exam - today) / 86_400_000);
 }
 
-/** Accounts that must never receive lifecycle mail (test conventions). */
-export function isTestAccount(email: string): boolean {
-  return email.includes("+e2e") || email.includes("+rb");
+/**
+ * How many hands-on labs are free for an exam: the ones its public page of
+ * labs offers, and none for an exam without such a page (Security+ SY0-801
+ * today). It is worked out with the same calls as the study path's own page
+ * (freeOnPublicPages in src/app/(path)/path/[cert]/free-parts.ts, which this
+ * layer may not import), so that an email never says another number than the
+ * outline the email leads to.
+ */
+export function freeLabCount(cert: PathCert): number {
+  return PBQ_EXAMPLE_PAGES.some((page) => page.certSlug === cert) ? freeLabs(pbqRegistry[cert] ?? []).length : 0;
 }
 
 /** email_log type for the one-time path nudge: one per exam, ever. */
@@ -122,29 +137,38 @@ async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
   };
 }
 
+/** A claim on one email: its row in email_log, and the name the mail service is given for the email. */
+interface Claim {
+  id: number;
+  /**
+   * The account, the type and the day of the claim, which is what makes the
+   * email one email (the log's unique key). It is sent as the request's
+   * Idempotency-Key (see SendEmailInput), so that every attempt on the same
+   * day at the same email, in this run or in another, carries the same key.
+   */
+  key: string;
+}
+
 /**
  * Idempotency gate: claims (user, type, today) in email_log and answers with
- * the claim's row id. Answers null when today's row already exists: the email
- * was (or is being) sent.
+ * the claim. Answers null when today's row already exists: the email was (or
+ * is being) sent.
  */
-async function claimSend(
-  admin: Db,
-  userId: string,
-  emailType: string
-): Promise<number | null> {
+async function claimSend(admin: Db, userId: string, emailType: string): Promise<Claim | null> {
   const { data, error } = await admin
     .from("email_log")
     .upsert(
       { user_id: userId, email_type: emailType },
       { onConflict: "user_id,email_type,sent_on", ignoreDuplicates: true }
     )
-    .select("id");
+    .select("id, sent_on");
   if (error) {
     // Missing migration or transient failure: skip rather than double-send.
     console.error("email_log claim failed:", error.message);
     return null;
   }
-  return data?.[0]?.id ?? null;
+  const row = data?.[0];
+  return row ? { id: row.id, key: `${emailType}/${userId}/${row.sent_on}` } : null;
 }
 
 /**
@@ -155,7 +179,7 @@ async function claimSend(
  */
 async function deliverClaimed(
   admin: Db,
-  claimId: number,
+  claim: Claim,
   userId: string,
   emailType: string,
   input: SendEmailInput,
@@ -163,10 +187,10 @@ async function deliverClaimed(
 ): Promise<boolean> {
   let sent = false;
   try {
-    sent = await deliver(userId, emailType, input, result);
+    sent = await deliver(userId, emailType, { ...input, idempotencyKey: claim.key }, result);
   } finally {
     if (!sent) {
-      const { error } = await admin.from("email_log").delete().eq("id", claimId);
+      const { error } = await admin.from("email_log").delete().eq("id", claim.id);
       if (error) console.error("email_log release failed:", error.message);
     }
   }
@@ -208,26 +232,18 @@ export async function sendWelcome(
   certId: string
 ): Promise<void> {
   try {
-    if (isTestAccount(email)) return;
+    if (isTestAddress(email)) return;
     const admin = createAdminClient();
     if (await sentBefore(admin, userId, "welcome")) return;
-    const [profile, cert, prefs] = await Promise.all([
-      getProfile(admin, userId),
-      getCertification(admin, certId),
-      getPrefs(admin, userId),
-    ]);
+    const [cert, prefs] = await Promise.all([getCertification(admin, certId), getPrefs(admin, userId)]);
     if (!cert || !prefs.digestEnabled) return;
     const claim = await claimSend(admin, userId, "welcome");
     if (claim === null) return;
     await deliverClaimed(admin, claim, userId, "welcome", {
       to: email,
       headers: unsubscribeHeaders(prefs.unsubscribeUrl),
-      ...welcomeEmail({
-        // Without a profile the greeting has no name (see greetingName).
-        displayName: profile?.displayName ?? "",
-        certName: cert.name,
-        unsubscribeUrl: prefs.unsubscribeUrl,
-      }),
+      // No email greets its reader by name (see the templates).
+      ...welcomeEmail({ certName: cert.name, unsubscribeUrl: prefs.unsubscribeUrl }),
     });
   } catch (err) {
     console.error("welcome email failed:", err);
@@ -335,7 +351,7 @@ export async function runLifecycleEmails(
     for (const user of fresh) {
       seen.add(user.id);
       if (!user.email || !user.email_confirmed_at) continue;
-      if (isTestAccount(user.email)) continue;
+      if (isTestAddress(user.email)) continue;
       if (clock() >= deadline) {
         result.stoppedEarly = true;
         break accounts;
@@ -357,42 +373,62 @@ export async function runLifecycleEmails(
 }
 
 /**
- * Who has Pro: an active subscription, or the owner's admin role — the same
+ * Who has Pro: an active subscription, or the owner's admin role, the same
  * test as the app's paywall. If this can't be read, the run stops: better no
  * email today than an offer to someone who already bought.
+ *
+ * Each list is read a page at a time with the exact count (allRows). The
+ * database answers one select with at most 1,000 rows and says nothing of the
+ * rest, so past 1,000 subscriptions a member who had paid was missing from the
+ * set and could be sent the offer to buy Pro.
  */
 async function loadProUsers(admin: Db): Promise<Set<string>> {
-  const [subs, admins] = await Promise.all([
-    admin
-      .from("user_subscriptions")
-      .select("user_id")
-      .eq("plan", "pro")
-      .in("status", ["active", "trialing"]),
-    admin.from("profiles").select("id").eq("role", "admin"),
-  ]);
-  const error = subs.error ?? admins.error;
-  if (error) throw new Error(`pro lookup failed: ${error.message}`);
-  return new Set([
-    ...(subs.data ?? []).map((s) => s.user_id),
-    ...(admins.data ?? []).map((p) => p.id),
-  ]);
+  try {
+    const [subs, admins] = await Promise.all([
+      allRows((from, to) =>
+        admin
+          .from("user_subscriptions")
+          .select("user_id", { count: "exact" })
+          .eq("plan", "pro")
+          .in("status", ["active", "trialing"])
+          .order("user_id")
+          .range(from, to)
+      ),
+      allRows((from, to) =>
+        admin.from("profiles").select("id", { count: "exact" }).eq("role", "admin").order("id").range(from, to)
+      ),
+    ]);
+    return new Set([...subs.map((s) => s.user_id), ...admins.map((p) => p.id)]);
+  } catch (err) {
+    throw new Error(`pro lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
-/** Path progress last saved inside either path email's window, by user. */
+/**
+ * Path progress last saved inside either path email's window, by user. It is
+ * read a page at a time with the exact count, for the same reason as the Pro
+ * list: past 1,000 saved study paths in the window, some learners were never
+ * reached by the reminder or the offer.
+ */
 async function loadRecentPaths(admin: Db, now: Date): Promise<Map<string, SavedPath[]>> {
   const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
-  const { data, error } = await admin
-    .from("path_progress")
-    .select("user_id, cert_slug, progress, updated_at")
-    .gte("updated_at", hoursAgo(Math.max(NUDGE_MAX_HOURS, FOLLOW_UP_MAX_HOURS)))
-    .lte("updated_at", hoursAgo(Math.min(NUDGE_MIN_HOURS, FOLLOW_UP_MIN_HOURS)));
-  if (error) {
+  const data = await allRows((from, to) =>
+    admin
+      .from("path_progress")
+      .select("user_id, cert_slug, progress, updated_at", { count: "exact" })
+      .gte("updated_at", hoursAgo(Math.max(NUDGE_MAX_HOURS, FOLLOW_UP_MAX_HOURS)))
+      .lte("updated_at", hoursAgo(Math.min(NUDGE_MIN_HOURS, FOLLOW_UP_MIN_HOURS)))
+      .order("user_id")
+      .order("cert_slug")
+      .range(from, to)
+  ).catch((err: unknown) => {
     // The path emails are the optional part; the rest of the run goes ahead.
-    console.error("path_progress read failed:", error.message);
-    return new Map();
-  }
+    console.error("path_progress read failed:", err instanceof Error ? err.message : err);
+    return null;
+  });
+  if (!data) return new Map<string, SavedPath[]>();
   const out = new Map<string, SavedPath[]>();
-  for (const row of data ?? []) {
+  for (const row of data) {
     if (!isPathCert(row.cert_slug)) continue;
     const list = out.get(row.user_id) ?? [];
     list.push({
@@ -415,14 +451,16 @@ async function processUser(
   const pro = ctx.pro.has(userId);
   const enrollments = await listEnrollments(admin, userId);
   const recent = pro ? [] : (ctx.recent.get(userId) ?? []);
-  if (enrollments.length === 0 && recent.length === 0) return;
+  // What is due is decided before anything else is read. An account whose
+  // exam dates fall on no day that sends an email, and that has no study path
+  // saved inside the path emails' window, is sent nothing today: its
+  // preferences used to be read (and its row made) on every run all the same.
+  const dateDue = enrollments.some((e) => (e.examDate ? isEmailDay(daysUntil(e.examDate, ctx.now)) : false));
+  if (!dateDue && recent.length === 0) return;
 
   const prefs = await getPrefs(admin, userId);
   if (!prefs.digestEnabled) return;
 
-  const profile = await getProfile(admin, userId);
-  // Without a profile the greeting has no name (see greetingName in the templates).
-  const displayName = profile?.displayName ?? "";
   // Every lifecycle email can be stopped from the mail client's own button.
   const headers = unsubscribeHeaders(prefs.unsubscribeUrl);
 
@@ -446,7 +484,6 @@ async function processUser(
           to: email,
           headers,
           ...postExamEmail({
-            displayName,
             certName: cert.name,
             unsubscribeUrl: prefs.unsubscribeUrl,
             passHref: storyEmailLink(signStoryToken(userId, cert.id), "pass"),
@@ -463,10 +500,16 @@ async function processUser(
     }
     const cert = await getCertification(admin, enrollment.certificationId);
     if (!cert) continue;
-    const content = await pathCountdown(admin, userId, cert.slug, days, displayName, pro, prefs.unsubscribeUrl);
+    const content = await pathCountdown(admin, userId, cert.slug, days, enrollment.examDate, pro, prefs.unsubscribeUrl);
     if (!content) continue;
     const claim = await claimSend(admin, userId, `countdown_${days}`);
-    if (claim === null) continue;
+    if (claim === null) {
+      // Claimed by an earlier run today (a run repeated by hand, or after its
+      // time ran out, or a cron call delivered twice): it went today, so the
+      // path email waits for another day, as it does after a countdown sent now.
+      sentStudyEmailToday = true;
+      continue;
+    }
     const sent = await deliverClaimed(
       admin,
       claim,
@@ -483,7 +526,7 @@ async function processUser(
 
   // ---- without Pro: their path, at a stall or after the checkpoint ----
   if (!pro && !sentStudyEmailToday) {
-    const sent = await sendPathEmail(admin, userId, email, displayName, prefs.unsubscribeUrl, recent, ctx.now, result);
+    const sent = await sendPathEmail(admin, userId, email, prefs.unsubscribeUrl, recent, ctx.now, result);
     if (sent === "nudge") result.pathNudges += 1;
     if (sent === "offer") result.pathOffers += 1;
   }
@@ -495,7 +538,7 @@ async function pathCountdown(
   userId: string,
   slug: string,
   days: number,
-  displayName: string,
+  examDate: string,
   pro: boolean,
   unsubscribeUrl: string
 ): Promise<EmailContent | null> {
@@ -504,11 +547,12 @@ async function pathCountdown(
   if (!bank) return null;
   const { progress } = await getPathProgress(admin, userId, slug);
   return pathCountdownEmail({
-    displayName,
     examName: bank.structure.examName,
     daysUntilExam: days,
+    examDate,
     standing: pathStanding(buildPlan(bank.structure), progress),
     pro,
+    freeLabs: freeLabCount(slug),
     href: pathEmailLink(slug, "countdown"),
     unsubscribeUrl,
   });
@@ -524,7 +568,6 @@ async function sendPathEmail(
   admin: Db,
   userId: string,
   email: string,
-  displayName: string,
   unsubscribeUrl: string,
   recent: SavedPath[],
   now: Date,
@@ -542,18 +585,17 @@ async function sendPathEmail(
     if (followUp) {
       kind = "offer";
       content = checkpointResultEmail({
-        displayName,
         examName,
         domains,
         followUp,
         questionCount: bank.questions.length,
+        freeLabs: freeLabCount(saved.cert),
         href: pathEmailLink(saved.cert, "path_offer"),
         unsubscribeUrl,
       });
     } else if (nudge) {
       kind = "nudge";
       content = pathNudgeEmail({
-        displayName,
         examName,
         nudge,
         href: pathEmailLink(saved.cert, "path_nudge"),

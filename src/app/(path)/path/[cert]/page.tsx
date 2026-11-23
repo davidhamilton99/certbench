@@ -13,8 +13,13 @@ import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { freeOnPublicPages } from "./free-parts";
 
-// The introductory questions are the same for every first-time visitor; they are rebuilt each hour.
-export const revalidate = 3600;
+// The page holds what every first-time visitor is given: the introductory
+// questions and the course outline. They change only with a deployment, which
+// builds the page again, or when the question bank changes. Every later step is
+// built by the server from its own copy of the bank, which it refreshes every
+// hour (src/server/path/bank.ts). So the page is rebuilt once a day; a
+// correction that must show at once is published by deploying again.
+export const revalidate = 86400;
 
 // Only the exams listed below have a study path. Any other address under
 // /path/ is answered as not found at once, without running the page for it.

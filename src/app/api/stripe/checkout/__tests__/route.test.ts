@@ -18,7 +18,7 @@ const h = vi.hoisted(() => ({
     subscriptions: { list: vi.fn() },
     customers: { create: vi.fn() },
     prices: { list: vi.fn() },
-    checkout: { sessions: { create: vi.fn() } },
+    checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   },
 }));
 
@@ -97,6 +97,9 @@ beforeEach(async () => {
     .mockReset()
     .mockImplementation(async ({ lookup_keys }: { lookup_keys: string[] }) => ({ data: [{ id: `price_${lookup_keys[0]}` }] }));
   h.stripe.checkout.sessions.create.mockReset().mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_1" });
+  // No earlier payment page is open unless a test opens one.
+  h.stripe.checkout.sessions.list.mockReset().mockResolvedValue({ data: [], has_more: false });
+  h.stripe.checkout.sessions.expire.mockReset().mockResolvedValue({ status: "expired" });
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -120,6 +123,7 @@ describe("POST /api/stripe/checkout", () => {
     expect(await res.json()).toEqual({ url: "https://checkout.stripe.com/c/pay/cs_1" });
     // No customer yet, so there is nothing to ask Stripe about.
     expect(h.stripe.subscriptions.list).not.toHaveBeenCalled();
+    expect(h.stripe.checkout.sessions.list).not.toHaveBeenCalled();
     expect(h.stripe.customers.create).toHaveBeenCalledWith(
       { email: "buyer@example.com", metadata: { supabase_user_id: "user-1" } },
       { idempotencyKey: "create-customer-user-1" }
@@ -194,6 +198,55 @@ describe("POST /api/stripe/checkout: one plan for each customer", () => {
       expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
     }
   );
+});
+
+// Until November 2026 a buyer who went Back from Stripe, or used a second tab,
+// held two payment pages that could both be paid, which started two
+// subscriptions for one account.
+describe("POST /api/stripe/checkout: one open payment page for each customer", () => {
+  it("expires an earlier payment page before it reads the standing and makes a new one", async () => {
+    h.row.data = { stripe_customer_id: "cus_old" };
+    h.stripe.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_earlier" }], has_more: false });
+    subscriptions();
+
+    const res = await checkout({ interval: "monthly" });
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.list).toHaveBeenCalledExactlyOnceWith({ customer: "cus_old", status: "open", limit: 100 });
+    expect(h.stripe.checkout.sessions.expire).toHaveBeenCalledExactlyOnceWith("cs_earlier");
+    // The page had expired before the standing was read, and that before the new page was made.
+    const expired = h.stripe.checkout.sessions.expire.mock.invocationCallOrder[0];
+    const standing = h.stripe.subscriptions.list.mock.invocationCallOrder[0];
+    expect(expired).toBeLessThan(standing);
+    expect(standing).toBeLessThan(h.stripe.checkout.sessions.create.mock.invocationCallOrder[0]);
+  });
+
+  it("answers as for a member who has Pro when an earlier page was paid a moment ago", async () => {
+    h.row.data = { stripe_customer_id: "cus_old" };
+    h.stripe.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_paid" }], has_more: false });
+    // Stripe refuses to expire a page that has been completed, and the plan it started is running.
+    h.stripe.checkout.sessions.expire.mockRejectedValue(new Error("The Checkout Session is not open."));
+    subscriptions("active");
+
+    const res = await checkout({ interval: "monthly" });
+    expect(res.status).toBe(409);
+    expect(await shown(res)).toBe(
+      "This account already has CertBench Pro. If you have just paid, your study path opens as soon as the payment is confirmed. Please reload the page."
+    );
+    expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it("makes no new page while an earlier one could not be expired", async () => {
+    h.row.data = { stripe_customer_id: "cus_old" };
+    h.stripe.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_earlier" }], has_more: false });
+    h.stripe.checkout.sessions.expire.mockRejectedValue(new Error("An error occurred with our connection to Stripe."));
+    subscriptions();
+
+    const res = await checkout({ interval: "monthly" });
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.message).toBe("The payment page could not be opened. Please try again.");
+    expect(h.stripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/stripe/checkout: what a visitor is told when it fails", () => {

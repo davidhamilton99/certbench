@@ -86,6 +86,15 @@ export async function leadsForAddress(admin: Db, address: string) {
   return { rows: (data ?? []).filter((row) => row.email.toLowerCase() === wanted), error: null };
 }
 
+/**
+ * The source under which an account's own unsubscribe is kept among the study
+ * plan leads. It is not a tool: no form sends it and no email is sent for it.
+ * The row is there so that the check before a study plan email
+ * (claimLead in src/server/services/tool-leads.ts, which skips an address that
+ * has any unsubscribed lead) holds for an account that unsubscribed.
+ */
+export const ACCOUNT_UNSUBSCRIBE_SOURCE = "account-unsubscribe";
+
 /** "invalid": no row holds this token. "failed": the change could not be saved. */
 export type UnsubscribeOutcome = "done" | "invalid" | "failed";
 
@@ -135,7 +144,40 @@ export async function unsubscribe(
     .eq("unsubscribe_token", token)
     .select("user_id");
   if (error) return failed("email_preferences", error.message);
-  return data && data.length > 0 ? "done" : "invalid";
+  if (!data || data.length === 0) return "invalid";
+
+  // The page tells an account that it will no longer receive study emails
+  // from CertBench. The study plan email is one, and anyone can ask for it
+  // for any address on a tool's page, so the account's address is recorded
+  // as unsubscribed from it too. Until that is saved the sentence would not
+  // be true, so the answer is "failed", and pressing the button again (which
+  // is safe to repeat) finishes the change.
+  if (scope === null && !(await recordAccountAddress(admin, data[0].user_id, updatedAt))) return "failed";
+  return "done";
+}
+
+/** Records an account's address as unsubscribed from the study plan email. Answers whether that was saved. */
+async function recordAccountAddress(admin: Db, userId: string, updatedAt: string): Promise<boolean> {
+  const { data, error } = await admin.auth.admin.getUserById(userId);
+  if (error) {
+    failed("auth.users", error.message);
+    return false;
+  }
+  // The same form of the address as a lead's: lower case, without spaces.
+  const address = data.user?.email?.trim().toLowerCase();
+  // An account without an address is sent no email at all.
+  if (!address) return true;
+  const { error: writeError } = await admin
+    .from("tool_leads")
+    .upsert(
+      { email: address, source: ACCOUNT_UNSUBSCRIBE_SOURCE, unsubscribed: true, updated_at: updatedAt },
+      { onConflict: "email,source" }
+    );
+  if (writeError) {
+    failed("tool_leads", writeError.message);
+    return false;
+  }
+  return true;
 }
 
 function failed(table: string, message: string): "failed" {

@@ -33,6 +33,10 @@ export const TESTIMONIALS_NOT_READ = "The testimonials could not be read. Please
 /** What the admin is told when a testimonial's status could not be changed. */
 export const TESTIMONIAL_NOT_UPDATED = "The testimonial could not be updated. Please try again.";
 
+/** What the admin is told when asked to approve a comment from someone who did not pass. */
+export const NOT_A_PASS_STORY =
+  "This comment is from someone who did not pass the exam, so it cannot be approved. It can be hidden.";
+
 /**
  * The error for a fault that the database reports on this table.
  *
@@ -133,6 +137,34 @@ export async function insertTestimonial(
 }
 
 /**
+ * A pass story that takes the place of the account's earlier comment for the
+ * same exam, when that comment says the person did not pass, or is still
+ * waiting for review. The table holds one row for an account and an exam
+ * (migration 022), so a pass story sent after a "did not pass" comment used to
+ * meet the unique index, and the form thanked the person for a story that was
+ * never stored. The row now holds the story, waiting for review again.
+ *
+ * Answers whether a row was replaced: an approved or hidden pass story stays
+ * as it is. `db` must be the service client: the table has no update policy
+ * for accounts.
+ */
+export async function replaceWithPassStory(
+  db: Db,
+  userId: string,
+  input: { certId: string; quote: string; displayName: string }
+): Promise<boolean> {
+  const { data, error } = await db
+    .from("testimonials")
+    .update({ passed: true, quote: input.quote, display_name: input.displayName, status: "pending" })
+    .eq("user_id", userId)
+    .eq("certification_id", input.certId)
+    .or("passed.eq.false,status.eq.pending")
+    .select("id");
+  if (error) throw databaseFault("the replacement of a testimonial", error, COMMENT_NOT_SAVED);
+  return (data ?? []).length > 0;
+}
+
+/**
  * Moderation: sets a testimonial's status.
  *
  * `db` must be the service client (createAdminClient), and the caller must
@@ -141,19 +173,28 @@ export async function insertTestimonial(
  * client"), so an update made with an account's own client changes no row and
  * reports no error. For that reason an update that changed no row is an error
  * here: an approval must never appear to succeed when nothing was approved.
+ *
+ * Only a pass story can be approved. A comment from someone who did not pass
+ * is sent from the same link ("What you found difficult") and waits in the
+ * same queue, but it is never published: approved, it would still be readable
+ * by anyone who holds the site's public key, with the name and the result
+ * (the read policy of migration 022 asks only for the status; migration 036
+ * adds the result). So an approval changes only a row whose result is a pass,
+ * and is refused for any other.
  */
 export async function setTestimonialStatus(
   db: Db,
   id: string,
   status: "approved" | "hidden"
 ): Promise<void> {
-  const { data, error } = await db
-    .from("testimonials")
-    .update({ status })
-    .eq("id", id)
-    .select("id");
+  const update = db.from("testimonials").update({ status }).eq("id", id);
+  const { data, error } = await (status === "approved" ? update.eq("passed", true) : update).select("id");
   if (error) throw databaseFault("the update of a testimonial's status", error, TESTIMONIAL_NOT_UPDATED);
-  if (!data || data.length === 0) {
-    throw new ApiError("not_found", "This testimonial could not be found, so nothing was changed.");
+  if (data && data.length > 0) return;
+  if (status === "approved") {
+    const { data: rows, error: readError } = await db.from("testimonials").select("passed").eq("id", id);
+    if (readError) throw databaseFault("the read of a testimonial's result", readError, TESTIMONIAL_NOT_UPDATED);
+    if (rows?.[0]?.passed === false) throw new ApiError("conflict", NOT_A_PASS_STORY);
   }
+  throw new ApiError("not_found", "This testimonial could not be found, so nothing was changed.");
 }

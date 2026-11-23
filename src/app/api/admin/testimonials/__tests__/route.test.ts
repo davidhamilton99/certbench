@@ -90,6 +90,15 @@ describe("POST /api/admin/testimonials", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("answers 409 with the sentence when asked to approve a comment from someone who did not pass", async () => {
+    const sentence = "This comment is from someone who did not pass the exam, so it cannot be approved. It can be hidden.";
+    setTestimonialStatus.mockRejectedValue(new ApiError("conflict", sentence));
+    const res = await post({ id: ID, status: "approved" });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: { code: "conflict", message: sentence } });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["a status that is not a moderation decision", { id: ID, status: "pending" }],
     ["an id that is not a UUID", { id: "abc", status: "approved" }],

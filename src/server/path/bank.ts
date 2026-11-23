@@ -133,8 +133,8 @@ async function fetchBank(slug: PathCert): Promise<PathBank | null> {
  * in Next's data cache, small enough to keep in memory.
  *
  * A held bank is what a request is given, at once. When it is more than an
- * hour old (the study path page's own lifetime) a fresh copy is read after
- * the response has gone, and takes its place when it arrives. So on an
+ * hour old a fresh copy is read after the response has gone, and takes its
+ * place when it arrives. So on an
  * instance that is in use only its first request waits for the download, and
  * a database fault during a refresh costs nothing: the bank already held
  * stays.

@@ -87,6 +87,44 @@ describe("the daily lifecycle cron", () => {
     );
   });
 
+  // A revoked key or a sending domain that is not verified: every send of the
+  // day refused, and the run used to be recorded as a success (200, no
+  // server_error), so neither alert would notice.
+  it("answers 500 and reports a server error when the mail service refused every email of the run", async () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    run.mockResolvedValue({ users: 3, failed: 0, countdowns: 0, postExam: 0, pathNudges: 0, pathOffers: 0, sendFailures: 3 });
+
+    const res = await call("Bearer s3cret");
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: { code: "internal", message: "Lifecycle run failed" } });
+    // The numbers are recorded, then the failure.
+    expect(events()).toEqual(["lifecycle_run_started", "lifecycle_run", "lifecycle_run_failed"]);
+    expect(capture).toHaveBeenCalledWith("system:lifecycle-cron", "lifecycle_run", expect.objectContaining({ sendFailures: 3 }));
+    expect(capture).toHaveBeenCalledWith("system:lifecycle-cron", "lifecycle_run_failed", {
+      message: "The mail service refused every email of the run (3 refused)",
+    });
+    expect(report).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ message: "The mail service refused every email of the run (3 refused)" }),
+      PLACE
+    );
+    consoleError.mockRestore();
+  });
+
+  it("answers 200 when some emails went and some were refused, and when there was nothing to send", async () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    for (const counts of [
+      { countdowns: 1, postExam: 0, pathNudges: 0, pathOffers: 0, sendFailures: 2 },
+      { countdowns: 0, postExam: 0, pathNudges: 0, pathOffers: 0, sendFailures: 0 },
+    ]) {
+      run.mockResolvedValue({ users: 3, failed: 0, ...counts });
+      const res = await call("Bearer s3cret");
+      expect(res.status).toBe(200);
+    }
+    expect(report).not.toHaveBeenCalled();
+    expect(events()).not.toContain("lifecycle_run_failed");
+  });
+
   it.each([undefined, "Bearer wrong", "s3cret", "Basic s3cret"])("turns away %s with a 401, and never runs", async (auth) => {
     vi.stubEnv("CRON_SECRET", "s3cret");
     const res = await call(auth);

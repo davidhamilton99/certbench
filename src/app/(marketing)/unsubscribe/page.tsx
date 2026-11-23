@@ -37,8 +37,16 @@ function viewOf(query: Query): View {
   return { kind: "ask", scope, token, failed: status === "failed" };
 }
 
-/** What each kind of link stops, in the words the page and its title use. */
-const COPY: Record<"account" | "lead" | "daily", { title: string; stops: string; keeps: string | null; done: string }> = {
+/**
+ * What each kind of link stops, in the words the page and its title use.
+ * `again` leads to the support address: nothing in the product turns these
+ * emails back on, so the result says how to receive them again. The daily
+ * reminder is no longer sent to anyone, so its result offers no way back.
+ */
+const COPY: Record<
+  "account" | "lead" | "daily",
+  { title: string; stops: string; keeps: string | null; done: string; again: string | null }
+> = {
   account: {
     title: "Unsubscribe from study emails",
     stops:
@@ -46,18 +54,21 @@ const COPY: Record<"account" | "lead" | "daily", { title: string; stops: string;
     keeps:
       "Emails that you request, such as a password reset, will still be sent. Your account and your progress are not affected.",
     done: "You will no longer receive study emails from CertBench.",
+    again: "To receive them again, write to",
   },
   lead: {
     title: "Unsubscribe from the study plan email",
     stops: "If you unsubscribe, CertBench will not send this study plan email to your address again.",
     keeps: null,
     done: "You will no longer receive this study plan email from CertBench.",
+    again: "To receive it again, write to",
   },
   daily: {
     title: "Unsubscribe from the daily study reminder",
     stops: "If you unsubscribe, CertBench will not send you the daily study reminder.",
     keeps: "Your other study emails, such as the reminders before your exam date, are not affected.",
     done: "You will no longer receive the daily study reminder from CertBench.",
+    again: null,
   },
 };
 
@@ -119,6 +130,11 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
         <ArticleBody>
           <ArticleHero title={DONE_TITLE}>
             <p>{copy.done}</p>
+            {copy.again && (
+              <p>
+                {copy.again} <SupportLink />.
+              </p>
+            )}
             <p>
               <Link href="/" className="cb-link">
                 Return to the home page

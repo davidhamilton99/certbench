@@ -1,13 +1,14 @@
 import { defineEndpoint } from "@/server/api/define-endpoint";
 import { addCertCheckout } from "@/contracts/billing";
 import { ApiError } from "@/contracts/common";
-import { getStripe } from "@/server/stripe";
+import { expireOpenCheckouts, getStripe } from "@/server/stripe";
 import { rateLimiter } from "@/server/rate-limit";
 import { createAdminClient } from "@/server/supabase/admin";
 import { getCertification } from "@/server/data/certifications";
 import { listEnrollments, otherVersionIds } from "@/server/data/enrollments";
 import { BASE_PRICES_CENTS, pppForCountry } from "@/lib/pricing/ppp";
 import {
+  ALREADY_PRO,
   CERTIFICATION_IN_PLAN,
   CERTIFICATION_NOT_FOUND,
   PAYMENT_PAGE_FAILED,
@@ -17,6 +18,9 @@ import { publicEnv } from "@/env";
 
 /** Five payment pages an hour for each account. */
 const LIMIT = { limit: 5, windowSeconds: 3600 };
+
+/** A plan that covers no exam yet: the first exam is part of the plan, not an addition. */
+const EXAM_INCLUDED = "This exam is included in your plan. Please reload the study path to open it.";
 
 /**
  * One-time checkout to add a certification to an active Pro plan. Access is
@@ -42,6 +46,12 @@ export const POST = defineEndpoint(addCertCheckout, {
     if (!cert) throw new ApiError("not_found", CERTIFICATION_NOT_FOUND);
 
     const enrollments = await listEnrollments(db, user.id);
+    // Pro covers one exam. A plan bought before an exam was chosen covers none
+    // yet, and the study path claims the exam it shows (/api/path/enroll) with
+    // one request as the page loads. Until that has answered, or if it failed,
+    // the page offers to add the exam: such a member is never charged for the
+    // exam their plan includes, and is told to reload.
+    if (enrollments.length === 0) throw new ApiError("conflict", EXAM_INCLUDED);
     if (enrollments.some((e) => e.certificationId === cert.id)) {
       throw new ApiError("conflict", CERTIFICATION_IN_PLAN);
     }
@@ -71,6 +81,20 @@ export const POST = defineEndpoint(addCertCheckout, {
       throw new ApiError("internal", PAYMENT_PAGE_FAILED);
     }
     let customerId = sub?.stripe_customer_id;
+    if (customerId) {
+      // An earlier payment page that is still open (the Back button, a second
+      // tab) could be paid as well as the new one, so the exam would be paid
+      // for twice. Every open page of the customer is expired before a new one
+      // is made. A page paid a moment earlier refuses to expire, and the
+      // member is then answered as a member who has Pro, which asks for a
+      // reload; no new page is made while an earlier one could not be expired.
+      try {
+        await expireOpenCheckouts(getStripe(), customerId);
+      } catch (err) {
+        console.error("[cert checkout] an open payment page was not expired:", err);
+        throw new ApiError("conflict", ALREADY_PRO);
+      }
+    }
     if (!customerId) {
       const customer = await getStripe().customers.create(
         { email: user.email, metadata: { supabase_user_id: user.id } },

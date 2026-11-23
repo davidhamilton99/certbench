@@ -63,6 +63,14 @@ export const domainBreakdown = z.object({
 export type DomainBreakdown = z.infer<typeof domainBreakdown>;
 
 /**
+ * The most question ids a stored snapshot may hold. An attempt is started with
+ * at most 120 questions (startPracticeExam's questionCount), so a real
+ * snapshot is always within it; the progress routes store what the browser
+ * sends, and the submit routes grade only ids found here.
+ */
+export const MAX_SNAPSHOT_QUESTIONS = 200;
+
+/**
  * Serialized quiz-engine snapshot persisted in progress_state. Carries the
  * selected question ids so a resumed attempt serves the identical question
  * set, and the seed so option order reproduces exactly.
@@ -74,7 +82,7 @@ export const progressSnapshot = z.object({
   revealed: z.array(z.string()),
   startedAt: z.string(),
   seed: z.string(),
-  questionIds: z.array(z.uuid()),
+  questionIds: z.array(z.uuid()).max(MAX_SNAPSHOT_QUESTIONS),
 });
 export type ProgressSnapshot = z.infer<typeof progressSnapshot>;
 

@@ -201,8 +201,15 @@ describe("the Stripe webhook: a completed checkout", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
     expect(h.retrieve).toHaveBeenCalledWith("sub_1");
-    // Exactly what this event has always written.
-    expect(h.calls).toEqual([
+    // First a read of what the row held, which decides whether this is a conversion (rule 4).
+    expect(h.calls[0]).toMatchObject({
+      table: "user_subscriptions",
+      op: "select",
+      values: "plan, status",
+      filters: [["user_id", "user-1"]],
+    });
+    // Then exactly what this event has always written.
+    expect(writes()).toEqual([
       {
         table: "user_subscriptions",
         op: "upsert",
@@ -224,7 +231,7 @@ describe("the Stripe webhook: a completed checkout", () => {
     h.event = checkoutCompleted();
     h.retrieve.mockResolvedValue({ id: "sub_1", status: "active", current_period_end: PERIOD_END + 86400 });
     await deliver();
-    expect(h.calls[0].values).toMatchObject({ current_period_end: "2026-01-02T00:00:00.000Z" });
+    expect(writes()[0].values).toMatchObject({ current_period_end: "2026-01-02T00:00:00.000Z" });
   });
 
   it("records the conversion once the response has gone, not before", async () => {
@@ -663,7 +670,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
     h.event = checkoutCompleted();
 
     expect((await deliver()).status).toBe(200);
-    expect(h.calls).toEqual(written("pro", status));
+    expect(writes()).toEqual(written("pro", status));
 
     await runAfterTasks();
     expect(h.capture).toHaveBeenCalledOnce();
@@ -684,7 +691,7 @@ describe("the Stripe webhook: a completed checkout writes the subscription as St
 
     expect((await deliver()).status).toBe(200);
     // The row still takes the subscription, with its standing and without Pro.
-    expect(h.calls).toEqual(written("free", status));
+    expect(writes()).toEqual(written("free", status));
 
     // Nothing was left to send after the response either.
     expect(h.afterTasks).toEqual([]);
@@ -890,6 +897,70 @@ describe("the Stripe webhook: events that arrive late or out of order", () => {
       });
     }
   );
+
+  // Rule 4: a conversion is reported once, by whichever event grants Pro first.
+  describe("the conversion event", () => {
+    const conversions = () =>
+      (h.capture.mock.calls as unknown as unknown[][]).filter(([, name]) => name === "subscription_activated");
+
+    it("is reported when a first payment that was pending at checkout is then made", async () => {
+      h.row = buyer();
+      now = "incomplete";
+      await send(checkout());
+      await runAfterTasks();
+      expect(row()).toMatchObject({ plan: "free", stripe_subscription_id: "sub_1" });
+      expect(conversions()).toEqual([]);
+
+      now = "active";
+      await send(changed("active"));
+      await runAfterTasks();
+      expect(row()).toMatchObject({ plan: "pro", status: "active" });
+      expect(conversions()).toEqual([["user-1", "subscription_activated", { stripe_subscription_id: "sub_1", plan: "pro" }]]);
+    });
+
+    it("is not reported again when Stripe delivers the checkout a second time", async () => {
+      h.row = buyer();
+      await send(checkout());
+      await send(checkout());
+      await runAfterTasks();
+      expect(conversions()).toHaveLength(1);
+    });
+
+    it("is not reported when a renewal that failed is paid", async () => {
+      h.row = member();
+      now = "past_due";
+      await send(changed("past_due"));
+      expect(row()).toMatchObject({ plan: "free", status: "past_due" });
+
+      now = "active";
+      await send(changed("active"));
+      await runAfterTasks();
+      expect(row()).toMatchObject({ plan: "pro", status: "active" });
+      expect(conversions()).toEqual([]);
+    });
+
+    it("is reported for a member whose plan had ended and who subscribes again", async () => {
+      h.row = member();
+      now = "canceled";
+      await send(deleted());
+      expect(row()).toMatchObject({ plan: "free", status: "canceled", stripe_subscription_id: null });
+
+      now = "active";
+      await send(checkoutCompleted({ subscription: "sub_2" }));
+      await runAfterTasks();
+      expect(conversions()).toEqual([["user-1", "subscription_activated", { stripe_subscription_id: "sub_2", plan: "pro" }]]);
+    });
+
+    it("leaves the checkout for Stripe to send again when what the row held cannot be read, and writes nothing", async () => {
+      h.row = buyer();
+      h.answers["user_subscriptions.select"] = { data: null, error: { message: "canceling statement due to statement timeout" } };
+      h.event = checkout();
+      expect((await deliver()).status).toBe(500);
+      expect(writes()).toEqual([]);
+      await runAfterTasks();
+      expect(conversions()).toEqual([]);
+    });
+  });
 
   describe("a plan that was bought and has ended", () => {
     const events: Named[] = [

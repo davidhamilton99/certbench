@@ -24,6 +24,7 @@ const h = vi.hoisted(() => ({
   getAttempt: vi.fn(),
   createAttempt: vi.fn(),
   completeAttempt: vi.fn(),
+  saveProgress: vi.fn(),
   listActiveQuestions: vi.fn(),
   getQuestionsByIds: vi.fn(),
   listDomains: vi.fn(),
@@ -76,7 +77,7 @@ vi.mock("@/server/data/practice-exams", () => ({
   getAttempt: h.getAttempt,
   createAttempt: h.createAttempt,
   completeAttempt: h.completeAttempt,
-  saveProgress: vi.fn(),
+  saveProgress: h.saveProgress,
 }));
 vi.mock("@/server/data/questions", () => ({
   listActiveQuestions: h.listActiveQuestions,
@@ -97,6 +98,7 @@ vi.mock("@/core/question-selection/select-questions", () => ({
 
 import { POST as start } from "../start/route";
 import { POST as submit } from "../submit/route";
+import { POST as saveProgress } from "../progress/route";
 import { startPracticeExam } from "@/contracts/practice-exam";
 import { EXAM_NOT_IN_PLAN } from "@/server/data/enrollments";
 import { ACCOUNT_NOT_CHECKED } from "@/server/data/account-errors";
@@ -322,5 +324,88 @@ describe("POST /api/practice-exam/submit", () => {
   it("still answers 404 for an attempt that is not the member's", async () => {
     h.getAttempt.mockResolvedValue(null);
     expect((await call()).status).toBe(404);
+  });
+
+  // The progress route stores the snapshot as the browser sends it. Until
+  // November 2026 an attempt on one exam could carry another exam's question
+  // ids, and those questions were graded, with their answers and explanations
+  // returned and the answers filed under the attempt's exam.
+  describe("questions of another exam in the stored snapshot", () => {
+    const attemptWith = (questionIds: string[]) =>
+      h.getAttempt.mockResolvedValue({
+        id: ATTEMPT,
+        certificationId: SEC_701,
+        examType: "full",
+        domainId: null,
+        totalQuestions: questionIds.length,
+        isComplete: false,
+        progressState: { index: 0, responses: {}, flagged: [], revealed: [], startedAt: "", seed: "s", questionIds },
+      });
+    const answering = (...ns: number[]) =>
+      submit(
+        post("submit", {
+          attemptId: ATTEMPT,
+          answers: ns.map((n) => ({ questionId: id(n), selectedIndex: 1 })),
+          flaggedQuestionIds: ns.map(id),
+        })
+      );
+
+    it("grades only the questions of the attempt's own exam", async () => {
+      attemptWith([id(1), id(2)]);
+      h.getQuestionsByIds.mockResolvedValue([question(1, SEC_701), question(2, NETWORK)]);
+
+      const res = await answering(1, 2);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.totalQuestions).toBe(1);
+      expect(body.responses.map((r: { questionId: string }) => r.questionId)).toEqual([id(1)]);
+      expect(JSON.stringify(body)).not.toContain("Explanation 2");
+      expect(h.completeAttempt.mock.calls[0][3].map((r: { questionId: string }) => r.questionId)).toEqual([id(1)]);
+      const written = h.updatePerformance.mock.calls[0][1];
+      expect(written.certificationId).toBe(SEC_701);
+      expect(written.answers.map((a: { questionId: string }) => a.questionId)).toEqual([id(1)]);
+      expect(written.questions.map((q: { id: string }) => q.id)).toEqual([id(1)]);
+    });
+
+    it("grades nothing, and writes nothing, when every question belongs to another exam", async () => {
+      attemptWith([id(2)]);
+      h.getQuestionsByIds.mockResolvedValue([question(2, NETWORK)]);
+
+      const res = await answering(2);
+      expect(res.status).toBe(400);
+      expect((await res.json()).error.code).toBe("validation_failed");
+      expect(h.completeAttempt).not.toHaveBeenCalled();
+      expect(h.updatePerformance).not.toHaveBeenCalled();
+      expect(h.recompute).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("POST /api/practice-exam/progress", () => {
+  const snapshotOf = (count: number) => ({
+    index: 0,
+    responses: {},
+    flagged: [],
+    revealed: [],
+    startedAt: "2026-11-22T12:00:00.000Z",
+    seed: "s",
+    questionIds: Array.from({ length: count }, (_, n) => id(1000 + n)),
+  });
+  const call = (count: number) => saveProgress(post("progress", { attemptId: ATTEMPT, snapshot: snapshotOf(count) }));
+
+  it("stores the snapshot of the longest practice exam that can be started (120 questions)", async () => {
+    const res = await call(120);
+    expect(res.status).toBe(200);
+    expect(h.saveProgress).toHaveBeenCalledOnce();
+  });
+
+  it("refuses a snapshot that names more than 200 questions, and stores nothing", async () => {
+    expect((await call(200)).status).toBe(200);
+    h.saveProgress.mockClear();
+
+    const res = await call(201);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("validation_failed");
+    expect(h.saveProgress).not.toHaveBeenCalled();
   });
 });

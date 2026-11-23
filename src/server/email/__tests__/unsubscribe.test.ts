@@ -5,6 +5,7 @@ vi.mock("@/env", () => ({
 }));
 
 import {
+  ACCOUNT_UNSUBSCRIBE_SOURCE,
   isUnsubscribeToken,
   leadsForAddress,
   parseUnsubscribeScope,
@@ -25,15 +26,33 @@ type Row = Record<string, unknown>;
  * back what it changed. `failing` is the number of the request that the
  * database refuses (1 is the first), or true for every request.
  */
-function fakeAdmin(tables: Record<string, Row[]>, failing: boolean | number = false) {
-  /** Every request made, in order: the table, and the change when it was an update. */
+function fakeAdmin(
+  tables: Record<string, Row[]>,
+  failing: boolean | number = false,
+  /** The sign-in service's accounts: id to address. */
+  users: Record<string, string | null> = {}
+) {
+  /** Every request made, in order: the table, and the change when it was an update or an upsert. */
   const requests: { table: string; patch: Row | null }[] = [];
   const admin = {
+    auth: {
+      admin: {
+        getUserById: async (id: string) => {
+          requests.push({ table: "auth.users", patch: null });
+          if (failing === true || failing === requests.length) return { data: { user: null }, error: { message: "connection lost" } };
+          return id in users
+            ? { data: { user: { id, email: users[id] ?? undefined } }, error: null }
+            : { data: { user: null }, error: { message: "User not found" } };
+        },
+      },
+    },
     from(table: string) {
       let patch: Row | null = null;
+      let upsert: { row: Row; keys: string[] } | null = null;
       const filters: ((r: Row) => boolean)[] = [];
       const q = {
         update: (p: Row) => ((patch = p), q),
+        upsert: (row: Row, opts: { onConflict: string }) => ((upsert = { row, keys: opts.onConflict.split(",") }), q),
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
         in: (c: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[c])), q),
         ilike: (c: string, pattern: string) => {
@@ -43,9 +62,17 @@ function fakeAdmin(tables: Record<string, Row[]>, failing: boolean | number = fa
         },
         select: () => q,
         then: (ok: (v: unknown) => unknown, fail?: (e: unknown) => unknown) => {
-          requests.push({ table, patch });
+          requests.push({ table, patch: patch ?? upsert?.row ?? null });
           if (failing === true || failing === requests.length) {
             return Promise.resolve({ data: null, error: { message: "connection lost" } }).then(ok, fail);
+          }
+          if (upsert) {
+            const { row, keys } = upsert;
+            const rows = (tables[table] ??= []);
+            const hit = rows.find((r) => keys.every((key) => r[key] === row[key]));
+            if (hit) Object.assign(hit, row);
+            else rows.push({ id: `row-${rows.length + 1}`, ...row });
+            return Promise.resolve({ data: null, error: null }).then(ok, fail);
           }
           const hit = (tables[table] ?? []).filter((r) => filters.every((f) => f(r)));
           if (patch) for (const row of hit) Object.assign(row, patch);
@@ -114,16 +141,56 @@ describe("the unsubscribe address", () => {
 describe("unsubscribe", () => {
   it("stops every study email to an account, and leaves the daily reminder setting alone", async () => {
     const row = { user_id: "u1", unsubscribe_token: TOKEN, digest_enabled: true, daily_reminder_enabled: true };
-    const { admin } = fakeAdmin({ email_preferences: [row] });
+    const { admin } = fakeAdmin({ email_preferences: [row] }, false, { u1: "sam@example.com" });
     expect(await unsubscribe(admin, TOKEN, null)).toBe("done");
     expect(row).toMatchObject({ digest_enabled: false, daily_reminder_enabled: true });
   });
 
+  // The page tells an account that it will no longer receive study emails from
+  // CertBench, and the study plan email, which anyone can request for any
+  // address on a tool's page, used to be sent to it all the same.
+  it("records an account's address as unsubscribed from the study plan email as well", async () => {
+    const row = { user_id: "u1", unsubscribe_token: TOKEN, digest_enabled: true };
+    const tables: Record<string, Row[]> = { email_preferences: [row], tool_leads: [] };
+    const { admin } = fakeAdmin(tables, false, { u1: " Sam@Example.com " });
+    expect(await unsubscribe(admin, TOKEN, null)).toBe("done");
+    expect(tables.tool_leads).toEqual([
+      expect.objectContaining({ email: "sam@example.com", source: ACCOUNT_UNSUBSCRIBE_SOURCE, unsubscribed: true }),
+    ]);
+    // The row is found by the read that every study plan email is checked against.
+    const { rows } = await leadsForAddress(admin, "SAM@example.com");
+    expect(rows?.map((lead) => [lead.source, lead.unsubscribed])).toEqual([[ACCOUNT_UNSUBSCRIBE_SOURCE, true]]);
+
+    // Safe to repeat: the same row, not a second one.
+    expect(await unsubscribe(admin, TOKEN, null)).toBe("done");
+    expect(tables.tool_leads).toHaveLength(1);
+  });
+
+  it("answers failed when the account's address cannot be read or recorded, so that pressing again finishes it", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const [refused, table] of [
+      [2, "auth.users"],
+      [3, "tool_leads"],
+    ] as const) {
+      const row = { user_id: "u1", unsubscribe_token: TOKEN, digest_enabled: true };
+      const tables: Record<string, Row[]> = { email_preferences: [row], tool_leads: [] };
+      expect(await unsubscribe(fakeAdmin(tables, refused, { u1: "sam@example.com" }).admin, TOKEN, null)).toBe("failed");
+      expect(tables.tool_leads).toEqual([]);
+      expect(consoleError).toHaveBeenCalledWith(`unsubscribe failed (${table}):`, "connection lost");
+      // The next press, with the service answering, records it.
+      expect(await unsubscribe(fakeAdmin(tables, false, { u1: "sam@example.com" }).admin, TOKEN, null)).toBe("done");
+      expect(tables.tool_leads).toHaveLength(1);
+    }
+    consoleError.mockRestore();
+  });
+
   it("stops only the daily reminder for a link of that scope", async () => {
     const row = { user_id: "u1", unsubscribe_token: TOKEN, digest_enabled: true, daily_reminder_enabled: true };
-    const { admin } = fakeAdmin({ email_preferences: [row] });
+    const tables: Record<string, Row[]> = { email_preferences: [row], tool_leads: [] };
+    const { admin } = fakeAdmin(tables, false, { u1: "sam@example.com" });
     expect(await unsubscribe(admin, TOKEN, "daily")).toBe("done");
     expect(row).toMatchObject({ digest_enabled: true, daily_reminder_enabled: false });
+    expect(tables.tool_leads).toEqual([]);
   });
 
   it("stops the study plan email for a lead, in the leads table only", async () => {
@@ -184,7 +251,7 @@ describe("unsubscribe", () => {
 
   it("is safe to repeat: the second call finds the row and answers the same", async () => {
     const row = { user_id: "u1", unsubscribe_token: TOKEN, digest_enabled: true };
-    const { admin } = fakeAdmin({ email_preferences: [row] });
+    const { admin } = fakeAdmin({ email_preferences: [row] }, false, { u1: "sam@example.com" });
     expect(await unsubscribe(admin, TOKEN, null)).toBe("done");
     expect(await unsubscribe(admin, TOKEN, null)).toBe("done");
     expect(row.digest_enabled).toBe(false);

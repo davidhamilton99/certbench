@@ -25,6 +25,7 @@ export const health = {
       posthog: z.boolean(),
       serviceRole: z.boolean(),
       postalAddress: z.boolean(),
+      linkSigning: z.boolean(),
     }),
   }),
 } as const satisfies EndpointContract;
