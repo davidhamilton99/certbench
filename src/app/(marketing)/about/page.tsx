@@ -92,8 +92,8 @@ export default function AboutPage() {
             </ArticleRow>
             <ArticleRow term="By automated checks">
               <p>
-                The newest question sets, which were written for Security+ SY0-801, must pass a set of automated
-                checks before they are published. Each question must have four distinct options and an explanation,
+                The newest question sets, which were written for Security+ SY0-801 and for Network+, must pass a set
+                of automated checks before they are published. Each question must have four distinct options and an explanation,
                 and must not use &ldquo;all of the above&rdquo;. Across a set, the correct answers must be spread
                 evenly from A to D, the correct answer must not be identifiable as the longest option, and no question
                 may be repeated.
