@@ -307,7 +307,7 @@ describe("PbqLab", () => {
     expect(screen.getByRole("heading", { level: 2, name: "2 more free labs" })).toBeInTheDocument();
     // One domain at a time, in exam order, and each heading reads as words.
     const domains = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-    expect(domains).toEqual(["Domain 1: Networking Concepts", "Domain 2: Network Implementation"]);
+    expect(domains).toEqual(["Domain 1: Networking concepts", "Domain 2: Network implementation"]);
 
     expect(screen.getByText(/^These labs are free with an account\./)).toBeInTheDocument();
 

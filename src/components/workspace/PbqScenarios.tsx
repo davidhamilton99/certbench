@@ -10,6 +10,7 @@ import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
 import { preloadLab } from "@/components/workspace/pbq-host";
 import { domainLabel, HANDS_ON_TYPES, LAB_TYPES } from "@/components/path/lab-types";
 import { track } from "@/lib/analytics";
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 
 /** Where Pro is described and bought. */
@@ -100,7 +101,7 @@ function ScenarioList({
       {domains.map((domain) => (
         <section key={domain.number} aria-labelledby={`pbq-domain-${domain.number}`} className="grid gap-2.5">
           <h2 id={`pbq-domain-${domain.number}`} className="text-small font-semibold leading-snug">
-            Domain {domainLabel(domain.number)}: {domain.title}
+            Domain {domainLabel(domain.number)}: {domainName(domain.title)}
           </h2>
           <ul className="grid gap-2">
             {domain.labs.map((scenario) => {

@@ -203,6 +203,20 @@ describe("QuestionDeck", () => {
     if (!sentence.includes("every objective")) expect(score).not.toHaveTextContent(/every (?:exam )?objective/i);
   });
 
+  // A link to the list of exams has one name on every page: "Choose your exam".
+  it("names its link to the list of exams as every page does, signed in or not", () => {
+    for (const who of [null, "user-1"]) {
+      signedInAs = who;
+      const { unmount } = render(deck({ questions: QUESTIONS.slice(0, 1), path: "/start" }));
+      fireEvent.click(tiles()[1]);
+      fireEvent.click(screen.getByRole("button", { name: /^View my score/ }));
+      const link = screen.getByRole("link", { name: /^Choose your exam/ });
+      expect(link).toHaveAttribute("href", "/start");
+      expect(screen.queryByRole("link", { name: /study path/ })).toBeNull();
+      unmount();
+    }
+  });
+
   it("says above a question what it belongs to, where the page tags it", () => {
     render(deck({ questions: [{ ...QUESTIONS[0], tag: "2.6 Threats of AI" }, QUESTIONS[1]] }));
     const card = screen.getByRole("group", { name: QUESTIONS[0].questionText }).parentElement!;
@@ -240,6 +254,32 @@ describe("QuestionDeck", () => {
     fireEvent.focusIn(tiles(first)[0]);
     fireEvent.keyDown(tiles(first)[0], { key: "b" });
     expect(verdict(first)).toHaveTextContent(/^Correct\./);
+  });
+
+  // The deck shows the answers in their stored order. An explanation that names
+  // them by their letters ("Option A, port 21") must still find A once the
+  // answers are marked: the check or the cross goes to the end of the answer.
+  it("keeps every letter once a question whose explanation names one is marked", () => {
+    const lettered: DeckQuestion = {
+      ...QUESTIONS[0],
+      explanation: "SSH listens on port 22. Option A, port 21, is used by FTP.",
+    };
+    render(deck({ questions: [lettered] }));
+    fireEvent.click(tiles()[1]);
+    const [a, b] = tiles();
+    expect(a.querySelector("span[aria-hidden]")).toHaveTextContent(/^A$/);
+    expect(b.querySelector("span[aria-hidden]")).toHaveTextContent(/^B$/);
+    // The check is still drawn, at the end of the correct answer.
+    expect(b.lastElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(b.lastElementChild?.getAttribute("class")).toMatch(/lucide-check\b/);
+  });
+
+  it("draws the check in place of the letter where the explanation names no letter", () => {
+    render(deck({ questions: QUESTIONS.slice(0, 1) }));
+    fireEvent.click(tiles()[1]);
+    const box = tiles()[1].querySelector("span[aria-hidden]")!;
+    expect(box).not.toHaveTextContent("B");
+    expect(box.querySelector("svg")?.getAttribute("class")).toMatch(/lucide-check\b/);
   });
 
   // The keys act on the card where they are pressed, and no page-wide turn

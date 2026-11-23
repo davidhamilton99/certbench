@@ -125,6 +125,18 @@ describe("a practice exam's result", () => {
     expect(screen.getByText("Question text 3?")).toBeInTheDocument();
   });
 
+  // One name for a domain: in sentence case, as the reading card and the course outline print it.
+  it("names each answer's domain in sentence case, in the reading card and beside the answer", () => {
+    const { container } = render(
+      <RehearsalResult run={run()} structure={structure}>
+        <p>What comes next</p>
+      </RehearsalResult>
+    );
+    expect(screen.getByText("Question 3, Domain 2")).toHaveAttribute("title", "Threats, vulnerabilities, and mitigations");
+    expect(container.textContent).toContain("General security concepts");
+    expect(container.textContent).not.toMatch(/General Security Concepts|Threats, Vulnerabilities/);
+  });
+
   it("opens on every answer, with that button pressed, when nothing was missed", () => {
     const perfect = run();
     perfect.picks = [0, 0, 0];

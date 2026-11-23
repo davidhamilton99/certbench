@@ -4,11 +4,13 @@ import { useState, type ReactNode } from "react";
 import { CalendarClock, Target } from "lucide-react";
 import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { bandFor, bandVars, type BandKey } from "@/lib/readiness/band";
+import { bandFor, type BandKey } from "@/lib/readiness/band";
 import { biggestOpportunity, daysUntil, projectFinish } from "@/core/path/checkpoint";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointResult, PathDomain, PathGoal, PathStructure } from "@/core/path/types";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+// In sentence case, as the objective pages, the readiness check and the practice-test outline name a domain.
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 
 /**
@@ -188,7 +190,7 @@ export function ReadingCard({
   return (
     // A score report: the result on top, then every domain on the same scale,
     // so each one sits against the same line as the whole.
-    <div className="glass overflow-hidden rounded-lg" style={bandVars(band)}>
+    <div className="glass overflow-hidden rounded-lg">
       <div className="grid gap-5 p-5 sm:p-8">
         <div className="grid gap-2">
           <span className="cb-label text-muted-foreground">{kicker}</span>
@@ -222,7 +224,7 @@ export function ReadingCard({
                 <span className="min-w-0">
                   <span className="sr-only">Domain </span>
                   <span className="mr-1 text-note tabular-nums text-muted-foreground">{d.number.replace(/\.0$/, "")}</span>{" "}
-                  {d.title}
+                  {domainName(d.title)}
                 </span>{" "}
                 <span className="shrink-0 text-note tabular-nums text-muted-foreground">
                   {r ? `${r.correct} of ${r.total}` : "Not asked"}
@@ -246,7 +248,7 @@ export function OpportunityNote({ domain }: { domain: PathDomain }) {
       <div className="grid content-start gap-0.5 text-small">
         <span className="font-medium">The area to focus on next</span>{" "}
         <span className="text-muted-foreground">
-          {domain.title} accounts for {domain.weight}% of the exam, and it is where you can gain the most.
+          {domainName(domain.title)} accounts for {domain.weight}% of the exam, and it is where you can gain the most.
         </span>
       </div>
     </div>

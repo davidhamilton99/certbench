@@ -191,10 +191,7 @@ const namesNetworkPlus = (piece: Piece) => /Network\+|\bN10-\d{3}\b/.test(piece.
  * (23 November 2026). When a file is changed, delete its line: a check below
  * fails until the line is gone.
  */
-const COUNT_WAITING: Record<string, string> = {
-  "src/components/home/SampleQuestions.tsx":
-    "shown only on the home page, which passes Security+ SY0-701, so its 'all {n} exam objectives' is true there today",
-};
+const COUNT_WAITING: Record<string, string> = {};
 
 /** Each sentence a file prints whole: a JSX element's text, or a template, with every expression in it written as {n}. */
 function sentences(rel: string, source: string): Piece[] {

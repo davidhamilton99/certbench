@@ -7,6 +7,7 @@ import { CreditCard, LogOut, UserRound } from "lucide-react";
 import { loadBrowserClient } from "@/lib/supabase-lazy";
 import { resetAnalytics } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
+import { IntentLink } from "@/components/marketing/IntentLink";
 import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 import { Logo } from "@/components/brand/Logo";
 
@@ -97,9 +98,10 @@ export function PathHeader({
             ) : signedIn ? (
               <AccountPanel email={email ?? null} />
             ) : (
-              // Its words end on the stage's right edge: the button's own padding hangs outside it.
+              // Its words end on the stage's right edge: the button's own padding hangs outside it. The
+              // sign-in page carries the sign-in client, so it is fetched only once the link is reached.
               <Button asChild variant="ghost" size="sm" className="-mr-3">
-                <Link href={`/login?next=/path/${cert}`}>Sign in</Link>
+                <IntentLink href={`/login?next=/path/${cert}`}>Sign in</IntentLink>
               </Button>
             )}
           </div>

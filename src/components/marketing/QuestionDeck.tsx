@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
-import { splitExplanation } from "@/core/path/text";
+import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import type { ChoiceRep } from "@/core/path/types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { QuestionList, type DeckQuestion } from "@/components/marketing/QuestionList";
@@ -47,7 +47,13 @@ function pathCovers(path: string): string {
     : "works through your exam topic by topic,";
 }
 
-/** The questions as the study path's own: lettered like the exam, the explanation's first line as the takeaway. */
+/**
+ * The questions as the study path's own: lettered like the exam, the
+ * explanation's first line as the takeaway. The answers come in their stored
+ * order, so an explanation that names them by their letters ("Option A
+ * describes") names the answer under that letter, and such a question keeps
+ * its letters once it is marked, as it does on the study path.
+ */
 function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
   return questions.map((q, k) => {
     const { takeaway, rest } = splitExplanation(q.explanation);
@@ -63,6 +69,7 @@ function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
       takeaway,
       ...(rest ? { explanation: rest } : {}),
       lettered: true,
+      ...(mentionsOptionLetter(`${takeaway} ${rest}`) ? { keepsLetters: true } : {}),
     };
   });
 }
@@ -148,7 +155,8 @@ export function QuestionDeck({
     title: `${examName} study path`,
     body: `The study path ${pathCovers(path)} in short steps like these, up to a readiness checkpoint that shows where you stand.`,
     href: path,
-    label: signedIn ? "Continue the study path" : "Start the study path",
+    // The list of exams has one name wherever a page links to it.
+    label: path === "/start" ? "Choose your exam" : signedIn ? "Continue the study path" : "Start the study path",
   };
 
   return (

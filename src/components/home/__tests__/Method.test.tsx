@@ -126,7 +126,7 @@ describe("how CertBench works, on the home page", () => {
   it("shows a domain of the course outline in the words the course outline itself prints", () => {
     render(<Method {...PROPS} />);
     const figure = part("Study one objective at a time.").querySelector("figure")!;
-    expect(flat(figure.querySelector("p"))).toBe("Domain 1: General Security Concepts");
+    expect(flat(figure.querySelector("p"))).toBe("Domain 1: General security concepts");
     expect(flat(figure)).toContain("12% of the exam. 1 of 4 complete.");
     // What is drawn in each row: the code, the title, and where the objective stands.
     const drawn = (li: Element) => [...li.children].filter((c) => !c.classList.contains("sr-only")).map((c) => flat(c));
@@ -206,7 +206,7 @@ describe("how CertBench works, on the home page", () => {
     expect([...figure.querySelectorAll("li")].map((li) => [...li.children].map((c) => flat(c)))).toEqual([
       ["Firewall ACL Configuration", "Simulation, 12 minutes"],
       ["Wireless Access Point Configuration for a Branch Office", "Simulation, 10 minutes"],
-      ["Network Segmentation and Firewall Rules", "Topology, 12 minutes"],
+      ["Network Segmentation and Firewall Rules", "Network diagram, 12 minutes"],
       ["Suspicious Sign-in Hunt", "Threat hunt, 1 minute"],
       ["Incident Response Order", "Ordering drill, 3 minutes"],
     ]);
@@ -273,11 +273,11 @@ describe("how CertBench works, on the home page", () => {
     const figure = part("Take a full-length practice exam.").querySelector("figure")!;
     const rows = [...figure.querySelectorAll("li")];
     expect(rows.map((li) => flat(li))).toEqual([
-      "Domain 1: General Security Concepts 88%",
-      "Domain 2: Threats, Vulnerabilities, and Mitigations 79%",
-      "Domain 3: Security Architecture 74%",
-      "Domain 4: Security Operations 83%",
-      "Domain 5: Security Program Management and Oversight 86%",
+      "Domain 1: General security concepts 88%",
+      "Domain 2: Threats, vulnerabilities, and mitigations 79%",
+      "Domain 3: Security architecture 74%",
+      "Domain 4: Security operations 83%",
+      "Domain 5: Security program management and oversight 86%",
     ]);
     const lengths = rows.map((li) => li.querySelector("[style*='scaleX']")?.getAttribute("style") ?? "");
     expect(lengths.map((s) => s.match(/scaleX\(([\d.]+)\)/)?.[1])).toEqual(["0.88", "0.79", "0.74", "0.83", "0.86"]);

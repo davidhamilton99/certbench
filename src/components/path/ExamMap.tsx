@@ -3,6 +3,8 @@ import { Check, ChevronDown } from "lucide-react";
 import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import type { ObjectiveStatus, PathStructure } from "@/core/path/types";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+// In sentence case, as the objective pages, the readiness check and the practice-test outline name a domain.
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 
 /** The practice exam at the end of the outline: its state, format and latest score. */
@@ -156,7 +158,7 @@ export function ExamMap({
           <section key={d.number} className="grid gap-0">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-foreground/70 pb-2">
               <h3 id={headingId} className="min-w-0 text-small font-semibold">
-                Domain {label(d.number)}: {d.title}
+                Domain {label(d.number)}: {domainName(d.title)}
               </h3>
               <p className="shrink-0 text-note tabular-nums text-muted-foreground">
                 {d.weight}% of the exam. {done} of {d.objectives.length} complete.
@@ -365,10 +367,10 @@ function Row({
 
 /**
  * A sentence under the outline saying what is free and what Pro adds. The rows
- * state their own status, so no key to colours is needed.
+ * state their own status, so no key to colours is needed. The study path draws
+ * it only for a learner without Pro, on an exam with its free labs.
  */
-export function MapLegend({ className, labs }: { className?: string; labs?: "open" | "locked" }) {
-  if (labs !== "locked") return null;
+export function MapLegend({ className }: { className?: string }) {
   return (
     <p className={cn("text-small text-muted-foreground", className)}>
       One practice exam and {FREE_LAB_COUNT} labs are free. Further labs and practice exams are included with Pro.

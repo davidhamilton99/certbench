@@ -35,6 +35,12 @@ describe("the helpers the study path shares", () => {
     expect(domainOf("4")).toBe("4");
   });
 
+  // A type exported for nobody is a half-made change: the next writer has to
+  // find out that nothing reads it.
+  it("export no type of the progress hook that nothing imports", () => {
+    expect(source(join(PATH_DIR, "usePathProgress.ts"))).not.toMatch(/\bPathProgressState\b/);
+  });
+
   // Each player's keys act only while the focus is inside it, so one key
   // press can reach one player only, and a page-wide turn decided nothing.
   it("include no page-wide turn for the keyboard", () => {
@@ -58,6 +64,12 @@ describe("the study path's files and the page's own rules", () => {
   // element's own was added to that, and a jump landed far below the bar.
   it("set no scroll margin of their own", () => {
     expect(named(DRAWN.filter((file) => /(?<![\w-])scroll-mt-/.test(source(file))))).toEqual([]);
+  });
+
+  // An icon's tile is tinted with the token that every selected thing uses
+  // (bg-tint-selected), so that one change to the tint reaches all of them.
+  it("tint an icon's tile with the tint token, never with a tint of the pressable colour of their own", () => {
+    expect(named(DRAWN.filter((file) => /(?<![\w-])bg-primary\/(?:10|\[0\.08\])(?![\w])/.test(source(file))))).toEqual([]);
   });
 
   // `cb-measure` is the measure for 17px text. Small text set at it runs to

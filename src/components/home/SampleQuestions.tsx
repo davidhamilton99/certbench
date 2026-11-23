@@ -12,6 +12,7 @@ import { useWhenKnown } from "@/components/path/useWhenKnown";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
 import { track } from "@/lib/analytics";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
 const SURFACE = "home_demo";
@@ -61,6 +62,8 @@ export function SampleQuestions({
   const correct = first.filter((a) => a?.correct).length;
   const missed = first.some((a) => a && !a.correct);
   const objectives = structure.domains.reduce((n, d) => n + d.objectives.length, 0);
+  // Security+ and A+ are set out by CompTIA's objectives; Network+ by CertBench's own topics.
+  const units = usesOfficialObjectiveNumbers(structure.certSlug) ? "exam objectives" : "topics";
   const exam = `${structure.examName} ${structure.examCode}`;
 
   const objectiveTitle = useMemo(() => {
@@ -213,14 +216,14 @@ export function SampleQuestions({
 
             <p className="text-small leading-relaxed text-muted-foreground">
               {missed
-                ? `The ${exam} study path asks questions like these on all ${objectives} exam objectives, and repeats each question that you answer incorrectly until you answer it correctly.`
-                : `The ${exam} study path asks questions like these on all ${objectives} exam objectives, in ${steps} short steps.`}
+                ? `The ${exam} study path asks questions like these on all ${objectives} ${units}, and repeats each question that you answer incorrectly until you answer it correctly.`
+                : `The ${exam} study path asks questions like these on all ${objectives} ${units}, in ${steps} short steps.`}
             </p>
 
             <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-border pt-4">
               <Button asChild size="lg">
                 <Link href="/start" onClick={() => track("upsell_clicked", { context: SURFACE, href: "/start" })}>
-                  Start the study path
+                  Choose your exam
                   <LinkArrow />
                 </Link>
               </Button>

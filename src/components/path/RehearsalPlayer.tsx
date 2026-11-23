@@ -440,9 +440,12 @@ export function RehearsalPlayer({
                     className={cn(
                       "relative flex h-10 w-full items-center justify-center rounded-md border text-note font-semibold tabular-nums transition-colors duration-100",
                       // Answered is a filled cell and not answered an outlined
-                      // one: told apart by light and dark, not by hue.
+                      // one: told apart by light and dark, not by hue. A
+                      // contrast theme removes fills, so there the answered
+                      // cell is filled with the theme's highlight colour, which
+                      // it keeps.
                       done
-                        ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                        ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90 forced-colors:forced-color-adjust-none forced-colors:border-[Highlight] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]"
                         : "border-input bg-card text-foreground hover:border-primary hover:bg-tint-hover"
                     )}
                   >
@@ -456,7 +459,7 @@ export function RehearsalPlayer({
                     {flag && (
                       <span
                         aria-hidden
-                        className="absolute right-1 top-1 size-2 rounded-xs bg-warning-ink ring-2 ring-background"
+                        className="absolute right-1 top-1 size-2 rounded-xs bg-warning-ink ring-2 ring-background forced-colors:forced-color-adjust-none forced-colors:bg-[CanvasText] forced-colors:ring-[Canvas]"
                       />
                     )}
                     {/* The question in hand: a rule under its number, which a
@@ -467,9 +470,13 @@ export function RehearsalPlayer({
               );
             })}
           </ol>
+          {/* Each swatch is drawn as its cell is under a contrast theme too, so the key still matches the grid. */}
           <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-note text-muted-foreground">
             <li className="inline-flex items-center gap-1.5">
-              <span aria-hidden className="size-3 rounded-xs border border-primary bg-primary" />
+              <span
+                aria-hidden
+                className="size-3 rounded-xs border border-primary bg-primary forced-colors:forced-color-adjust-none forced-colors:border-[Highlight] forced-colors:bg-[Highlight]"
+              />
               Answered
             </li>
             <li className="inline-flex items-center gap-1.5">
@@ -477,11 +484,17 @@ export function RehearsalPlayer({
               Not answered
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span aria-hidden className="size-2 rounded-xs bg-warning-ink" />
+              <span
+                aria-hidden
+                className="size-2 rounded-xs bg-warning-ink forced-colors:forced-color-adjust-none forced-colors:bg-[CanvasText]"
+              />
               Flagged
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span aria-hidden className="h-0.5 w-3 bg-foreground" />
+              <span
+                aria-hidden
+                className="h-0.5 w-3 bg-foreground forced-colors:forced-color-adjust-none forced-colors:bg-[Highlight]"
+              />
               Current question
             </li>
           </ul>
@@ -507,7 +520,7 @@ export function RehearsalPlayer({
           </Heading>
           <p className="cb-measure-xs text-muted-foreground">
             {unanswered > 0
-              ? `In the exam, an unanswered question counts as incorrect, and it does here as well. You have ${clock(left)} remaining.`
+              ? `An unanswered question is counted as incorrect. You have ${clock(left)} remaining.`
               : flaggedCount > 0
                 ? `You have flagged ${flaggedCount} ${flaggedCount === 1 ? "question" : "questions"} to review. You have ${clock(left)} remaining.`
                 : scoreNeedsAccount

@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { READINESS_THRESHOLDS } from "@/core/constants";
 import { getScoreColor } from "@/core/readiness/compute-score";
 
@@ -27,17 +26,11 @@ export interface Band {
   accent: string;
   /** The same colour as text on the page (the amber fill is too pale to read). */
   ink: string;
-  accent2: string;
-  soft: string;
-  dim: string;
 }
 
-const tone = (name: string, ink = name): Pick<Band, "accent" | "ink" | "accent2" | "soft" | "dim"> => ({
+const tone = (name: string, ink = name): Pick<Band, "accent" | "ink"> => ({
   accent: `var(--${name})`,
   ink: `var(--${ink})`,
-  accent2: `var(--${name})`,
-  soft: `color-mix(in oklab, var(--${name}) 45%, transparent)`,
-  dim: `color-mix(in oklab, var(--${name}) 14%, transparent)`,
 });
 
 /**
@@ -79,15 +72,4 @@ const COLOR_TO_BAND: Record<
  */
 export function bandFor(score: number): Band {
   return BANDS[COLOR_TO_BAND[getScoreColor(score)]];
-}
-
-/** CSS custom properties to spread onto a score report's root. */
-export function bandVars(band: Band): CSSProperties {
-  return {
-    "--rv-accent": band.accent,
-    "--rv-accent-ink": band.ink,
-    "--rv-accent-2": band.accent2,
-    "--rv-accent-soft": band.soft,
-    "--rv-accent-dim": band.dim,
-  } as CSSProperties;
 }

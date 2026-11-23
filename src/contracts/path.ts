@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EndpointContract } from "@/contracts/common";
+import { getRegionPricing } from "./billing";
 import { PATH_CERTS } from "@/core/path/types";
 import type { PbqScenario } from "@/data/pbq/types";
 import {
@@ -33,6 +34,8 @@ export const repSchema = z.discriminatedUnion("type", [
     answer: count,
     explanation: z.string().optional(),
     lettered: z.boolean().optional(),
+    /** The explanation names options by letter: once marked, the key box keeps its letter. */
+    keepsLetters: z.boolean().optional(),
     order: z.array(count).optional(),
     mono: z.boolean().optional(),
   }),
@@ -210,6 +213,8 @@ export const getPathProgress = {
     proPlan: z.boolean(),
     certId: z.string(),
     paymentPastDue: z.boolean().default(false),
+    /** The offer's prices for the learner's region, sent with every answer. */
+    pricing: getRegionPricing.output.optional(),
   }),
 } as const satisfies EndpointContract;
 

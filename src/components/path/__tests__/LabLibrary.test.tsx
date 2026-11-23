@@ -82,6 +82,55 @@ describe("NextLabCard", () => {
 });
 
 describe("LabLibrary", () => {
+  // The labs are CertBench's own practice. Nothing CertBench can show says how
+  // like the exam's performance-based questions they are.
+  it("says what the labs are, in CertBench's own terms, with every count from the list", () => {
+    const { rerender } = render(<LabLibrary structure={structure} results={new Map()} onOpen={() => {}} onBack={() => {}} />);
+    expect(
+      screen.getByText(
+        "The 1 simulation is CertBench's practice for the exam's performance-based questions. There is also 1 short drill. You have completed 0 of 2."
+      )
+    ).toBeInTheDocument();
+
+    const more = [...LABS, lab("hunt", "threat-hunt", 15), lab("match", "matching", 4)];
+    rerender(
+      <LabLibrary
+        structure={{ ...structure, library: more }}
+        results={new Map([["acl", { n: 1, c: 4, t: 5, at: 1 }]])}
+        onOpen={() => {}}
+        onBack={() => {}}
+      />
+    );
+    expect(
+      screen.getByText(
+        "The 2 simulations and threat hunts are CertBench's practice for the exam's performance-based questions. There are also 2 short drills. You have completed 1 of 4."
+      )
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/work like/);
+  });
+
+  // One name for the topology lab: the public lab pages, help and the
+  // educators' page call it a network diagram.
+  it("calls a topology lab a network diagram, in the count and on its row", () => {
+    render(
+      <LabLibrary
+        structure={{ ...structure, library: [...LABS, lab("seg", "topology", 12)] }}
+        results={new Map()}
+        onOpen={() => {}}
+        onBack={() => {}}
+      />
+    );
+    expect(screen.getByText(/^The 2 simulations and network diagrams are CertBench's practice/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Lab seg/ })).toHaveTextContent("Lab seg. Network diagram, 12 minutes.");
+    expect(document.body.textContent).not.toMatch(/topolog/i);
+  });
+
+  it("names each domain as the course outline does, in sentence case", () => {
+    render(<LabLibrary structure={structure} results={new Map()} onOpen={() => {}} onBack={() => {}} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Domain 1: General security concepts" })).toBeInTheDocument();
+    expect(screen.queryByText(/General Security Concepts/)).toBeNull();
+  });
+
   it("keeps the pressable colour on a row's tile, because the whole row is pressed", () => {
     const results = new Map<string, StopRecord>();
     render(<LabLibrary structure={structure} results={results} onOpen={() => {}} onBack={() => {}} />);
@@ -90,6 +139,9 @@ describe("LabLibrary", () => {
     // The tile is part of the button: the colour marks something that can be pressed.
     expect(tile.closest("button")).toBe(row);
     expect(PRESSABLE.test(classOf(tile))).toBe(true);
+    // Its ground is the tint token that every selected thing uses, not a tint of its own.
+    expect(classOf(tile)).toContain("bg-tint-selected");
+    expect(classOf(tile)).not.toMatch(/bg-primary\//);
     // Outside the rows and the link back, nothing is drawn in that colour.
     const list = row.closest(".path-rise")!;
     expect(notPressed(list).filter((el) => PRESSABLE.test(classOf(el))).map(classOf)).toEqual([]);

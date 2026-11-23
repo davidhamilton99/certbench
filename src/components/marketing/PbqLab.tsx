@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import type { PbqScenario } from "@/data/pbq/types";
 import { LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
+import { domainName } from "@/lib/seo/objective-meta";
 import { PbqPlayer } from "@/components/workspace/PbqPlayer";
 import { preloadLab } from "@/components/workspace/pbq-host";
 import { domainLabel, LAB_TYPES, labMeta } from "@/components/path/lab-types";
@@ -307,7 +308,7 @@ export function PbqLab({
           {moreDomains.map(([number, title]) => (
             <div key={number} className="grid gap-2.5">
               <h3 className="border-b border-foreground/70 pb-2 text-small font-semibold">
-                Domain {domainLabel(number)}: {title}
+                Domain {domainLabel(number)}: {domainName(title)}
               </h3>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {more

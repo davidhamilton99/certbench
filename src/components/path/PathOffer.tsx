@@ -12,7 +12,7 @@ import { userMessage } from "@/lib/errors/user-message";
 import { PAYMENT_PAGE_FAILED } from "@/lib/billing/messages";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
 import type { RegionPricing } from "@/lib/pricing/ppp";
-import { PRO_PRICE_REGION_NOTE } from "@/lib/pricing/terms";
+import { PRO_PRICE_REGION_NOTE, proAddonTerms } from "@/lib/pricing/terms";
 import { Button } from "@/components/ui/button";
 import { PlanChooser, REGIONAL_PRICE_NOTE } from "@/components/billing/PlanChooser";
 import { leaveFor } from "@/components/billing/leave";
@@ -90,8 +90,9 @@ export function PathOffer({
     title.current?.focus({ preventScroll: true });
   }, [certId]);
 
+  // What the labs are, in CertBench's own terms: nothing is claimed of how the exam's questions work.
   const labs = labCount
-    ? `All ${labCount} hands-on labs, which work like the exam's performance-based questions`
+    ? `All ${labCount} hands-on labs, CertBench's practice for the exam's performance-based questions`
     : "A hands-on lab at the end of every domain";
   const rehearsals = `Timed practice exams of ${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, as often as you wish`;
   const includes = proPlan
@@ -281,6 +282,11 @@ function AddExam({
         <span className="cb-display block h-12 text-5xl leading-[3rem]">{pricing?.prices.quarterly.discounted}</span>{" "}
         <span className="text-small text-muted-foreground">as a single payment</span>
       </p>
+      {/* What the payment buys and for how long, in the words of the pricing page and the billing page: the
+          exam is open only while the Pro plan is active. The study path sends the price with the account. */}
+      {pricing && (
+        <p className="text-small text-muted-foreground">{proAddonTerms(pricing.prices.quarterly.discounted)}</p>
+      )}
       <div className="grid gap-2">
         <Button size="lg" className="w-full" loading={busy} onClick={add}>
           Add {examName}

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
@@ -15,6 +16,19 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));
+// The link as an anchor that shows what it was told about fetching its page early.
+vi.mock("next/link", () => ({
+  default: ({
+    prefetch,
+    children,
+    href,
+    ...rest
+  }: { prefetch?: boolean | null; children?: ReactNode; href: string } & AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a data-prefetch={String(prefetch)} href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock("@/lib/analytics", () => ({ resetAnalytics: () => h.resetAnalytics() }));
 vi.mock("@/lib/supabase-lazy", () => ({
   loadBrowserClient: async () => {
@@ -85,6 +99,17 @@ describe("the study path's header", () => {
     expect(screen.getByText("Security+", { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sign in" }).getAttribute("href")).toBe("/login?next=/path/security-plus-sy0-801");
     expect(screen.queryByRole("button", { name: "Account" })).toBeNull();
+  });
+
+  // The sign-in page carries the sign-in client. Fetched early from every view
+  // of the study path, it cost every signed-out visitor about 220 KB of script.
+  it("fetches the sign-in page only once the visitor shows that they mean to open it", () => {
+    render(header({ signedIn: false, email: null }));
+    const signIn = screen.getByRole("link", { name: "Sign in" });
+    expect(signIn).toHaveAttribute("data-prefetch", "false");
+    fireEvent.pointerEnter(signIn);
+    // `null` is the framework's own behaviour: fetch now.
+    expect(signIn).toHaveAttribute("data-prefetch", "null");
   });
 
   it("keeps the account's place the same width before and after the account is known", () => {

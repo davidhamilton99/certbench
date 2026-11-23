@@ -61,6 +61,9 @@ describe("MultipleChoice", () => {
 
 /** The letter printed in an answer's key box. */
 const keyBox = (answer: HTMLElement) => answer.querySelector("[aria-hidden]")?.textContent;
+/** The marks drawn in an element, by kind: "check" or "x". */
+const marks = (el: Element | null) =>
+  [...(el?.querySelectorAll("svg") ?? [])].map((svg) => (/lucide-check\b/.test(svg.getAttribute("class") ?? "") ? "check" : "x"));
 
 describe("MultipleChoice, a question whose explanation names an answer by its letter", () => {
   // With this seed the shuffle moves every answer, so stored order here is not chance.
@@ -107,6 +110,30 @@ describe("MultipleChoice, a question whose explanation names an answer by its le
     expect(answers[1]).toHaveAccessibleName(/^B\. ?Asymmetric$/);
     expect(answers[2]).toHaveAccessibleName(/^Correct answer: ?C\. ?Hashing$/);
     expect(answers[3]).toHaveAccessibleName(/^Your answer, which is incorrect: ?D\. ?Steganography$/);
+    // The explanation printed under the answers speaks of C and D: each still shows its letter,
+    // and the check and the cross are drawn at the end of the answer instead.
+    expect(answers.map(keyBox)).toEqual(["A", "B", "C", "D"]);
+    expect(answers.map(marks)).toEqual([[], [], ["check"], ["x"]]);
+    expect(answers[2].lastElementChild?.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("draws the check in place of the letter for a question that is shuffled, as before", () => {
+    render(
+      <MultipleChoice
+        commit
+        questionId="q1"
+        options={OPTIONS}
+        seed={SEED}
+        value={{ kind: "single", selectedIndex: 3 }}
+        onChange={() => {}}
+        revealed
+        correctIndex={2}
+      />
+    );
+    const correct = screen.getByRole("button", { name: /^Correct answer: ?Hashing$/ });
+    expect(keyBox(correct)).toBe("");
+    expect(marks(correct.querySelector("span[aria-hidden]"))).toEqual(["check"]);
+    expect(marks(correct)).toEqual(["check"]);
   });
 
   it("does the same in a radio group, where the choice can still be changed", () => {

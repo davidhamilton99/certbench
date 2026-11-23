@@ -296,6 +296,8 @@ export function RepCard({
               srPrefix={srPrefixOf(i)}
               mono={rep.mono}
               dense={isExam}
+              // The explanation names the answers by their letters: each keeps its letter once marked.
+              keepMarker={rep.keepsLetters}
               disabled={answered}
               onClick={() => choose(i)}
             >

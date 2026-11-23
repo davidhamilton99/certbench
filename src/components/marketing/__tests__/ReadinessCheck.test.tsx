@@ -49,6 +49,22 @@ describe("ReadinessCheck", () => {
     expect(document.body).toHaveFocus();
   });
 
+  // The data keeps such a question in its stored order; the letter in the key
+  // box used to give way to a check, so "option A" pointed at nothing.
+  it("keeps an answer's letter once marked when the explanation names options by letter", () => {
+    render(
+      <ReadinessCheck
+        cert="network-plus-n10-009"
+        questions={[{ ...QUESTIONS[0], explanation: "DNS uses port 53, so option A is right and option B is not." }, QUESTIONS[1]]}
+        shortCertName="Network+"
+        objectiveCount={5}
+      />
+    );
+    fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "80" }));
+    const correct = answers("Which port does DNS use?").getByRole("button", { name: /^Correct answer: ?53$/ });
+    expect(correct.querySelector("[aria-hidden]")?.textContent).toBe("A");
+  });
+
   it("says in words that an answer was incorrect, and what the correct answer is", () => {
     check();
     fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "80" }));

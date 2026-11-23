@@ -123,7 +123,16 @@ describe("buildStop — Security+", () => {
       const bank = { ...secPlus, questions: [lettered], byId: new Map([[q.id, lettered]]) };
       const closer = build(bank, secPlan, 1).reps.at(-1)!;
       expect(closer.type === "choice" && closer.order, explanation).toEqual([0, 1, 2, 3]);
+      // And once it is marked, each answer keeps its letter, so "option A" can still be found.
+      expect(closer.type === "choice" && closer.keepsLetters, explanation).toBe(true);
     }
+  });
+
+  it("marks no other bank question to keep its letters: only the stored lead named one, and it is not shown", () => {
+    const { reps } = build(secPlus, secPlan, secPlan.freeThrough);
+    const bankReps = reps.filter((r) => r.type === "choice" && r.id.startsWith("q|"));
+    expect(bankReps.length).toBeGreaterThan(0);
+    for (const r of bankReps) expect(r.type === "choice" && "keepsLetters" in r, r.id).toBe(false);
   });
 
   it("still shuffles when letters are only names, like USB-C or an A record", () => {
@@ -135,6 +144,8 @@ describe("buildStop — Security+", () => {
       return closer.type === "choice" ? closer.order!.join() : "";
     });
     expect(orders.some((o) => o !== "0,1,2,3")).toBe(true);
+    const closer = build(bank, secPlan, 1).reps.at(-1)!;
+    expect(closer.type === "choice" && closer.keepsLetters).toBeFalsy();
   });
 
   it("brings earlier misses back first, from any source", () => {

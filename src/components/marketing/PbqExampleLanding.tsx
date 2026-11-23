@@ -8,6 +8,7 @@ import { EXAM_CODES } from "@/core/path/versions";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { CERT_PAGES_UPDATED_ISO, type PbqExamplePage } from "@/lib/seo/cert-pages";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PbqLab, type FreeLab, type LabTier } from "@/components/marketing/PbqLab";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -131,7 +132,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
                 return (
                   <section key={number} aria-labelledby={`labs-${number}`}>
                     <h3 id={`labs-${number}`} className="border-b border-foreground/70 pb-2 text-small font-semibold">
-                      Domain {domainLabel(number)}: {title}
+                      Domain {domainLabel(number)}: {domainName(title)}
                     </h3>
                     {/* A ruled list: these rows are read, not pressed, so they have no boxes. */}
                     <ul className="divide-y divide-border border-b border-border">

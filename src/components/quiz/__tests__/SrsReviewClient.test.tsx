@@ -208,7 +208,9 @@ describe("SrsReviewClient, a card whose explanation names an answer by its lette
     expect(screen.getByText(/Nessus \(option C\) is one, and Wireshark \(option A\) captures packets\./)).toBeInTheDocument();
     expect(answers()[2]).toHaveAccessibleName(/^Your answer, which is correct: ?C\. ?Nessus$/);
     expect(answers()[0]).toHaveAccessibleName(/^A\. ?Wireshark$/);
-    expect([answers()[1], answers()[3]].map(keyBox)).toEqual(["B", "D"]);
+    // Marked, C still shows its letter beside the explanation that names it, with the check at its end.
+    expect(answers().map(keyBox)).toEqual(["A", "B", "C", "D"]);
+    expect(answers()[2].lastElementChild?.getAttribute("class")).toMatch(/lucide-check\b/);
   });
 
   it("answers with the stored answer when the answer lettered A is pressed", async () => {
@@ -219,6 +221,10 @@ describe("SrsReviewClient, a card whose explanation names an answer by its lette
     await settle();
     expect(server.submitted).toEqual([0]);
     expect(screen.getByText("Incorrect. The correct answer is Nessus.")).toBeInTheDocument();
+    // The wrong answer keeps A, with the cross at its end; the correct one keeps C, with the check.
+    expect(answers().map(keyBox)).toEqual(["A", "B", "C", "D"]);
+    expect(answers()[0].lastElementChild?.getAttribute("class")).toMatch(/lucide-x\b/);
+    expect(answers()[2].lastElementChild?.getAttribute("class")).toMatch(/lucide-check\b/);
   });
 
   it("still shuffles a card whose explanation names no letter", async () => {

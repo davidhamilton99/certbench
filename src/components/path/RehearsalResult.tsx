@@ -7,6 +7,7 @@ import { biggestOpportunity } from "@/core/path/checkpoint";
 import { domainOf } from "@/core/path/rehearsal";
 import type { PathStructure } from "@/core/path/types";
 import { READINESS_TARGET } from "@/lib/readiness/band";
+import { domainName } from "@/lib/seo/objective-meta";
 import type { RehearsalRun } from "./rehearsal-run";
 import { OpportunityNote, ReadingCard } from "./PathReveal";
 import { cn } from "@/lib/utils";
@@ -142,7 +143,7 @@ function RehearsalAnswers({
   const missed = items.filter((x) => !x.right);
   const [show, setShow] = useState<"missed" | "all">(missed.length > 0 ? "missed" : "all");
   const list = show === "missed" ? missed : items;
-  const domainName = new Map(structure.domains.map((d) => [d.number, d.title]));
+  const domainTitle = new Map(structure.domains.map((d) => [d.number, domainName(d.title)]));
 
   return (
     <section className="glass grid gap-5 rounded-lg p-5 sm:p-6" aria-labelledby="rehearsal-answers">
@@ -186,7 +187,7 @@ function RehearsalAnswers({
               className="grid grid-cols-[minmax(0,1fr)] gap-3 rounded-md border border-border bg-card p-4 [overflow-wrap:anywhere] sm:p-5"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-small">
-                <span className="min-w-0 text-muted-foreground" title={domainName.get(domainOf(rep.objective))}>
+                <span className="min-w-0 text-muted-foreground" title={domainTitle.get(domainOf(rep.objective))}>
                   Question {i + 1}, Domain {domainOf(rep.objective).replace(/\.0$/, "")}
                 </span>
                 <span className={cn("shrink-0 font-medium", right ? "text-success" : "text-destructive")}>

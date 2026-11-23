@@ -102,3 +102,67 @@ describe("RepCard — a recall fact asked as a bare term", () => {
     expect(screen.getByRole("heading", { name: "Which port does SMTP use?" })).not.toHaveAttribute("aria-describedby");
   });
 });
+
+// A bank question whose explanation names its answers by their letters keeps
+// its stored order (bankToRep). Once it is marked, the check or the cross used
+// to take the place of the letter in the key box, so the learner could not
+// tell which answer was B while the explanation spoke of B.
+describe("RepCard — a question whose explanation names its answers by letter", () => {
+  const letteredRep: ChoiceRep = {
+    id: "q|2.4|00000000-0000-4000-8000-000000000001",
+    type: "choice",
+    label: "Exam style",
+    tier: "exam",
+    objective: "2.4",
+    prompt: "Which attack sends a flood of SYN packets?",
+    options: ["Smurf attack", "SYN flood", "Teardrop attack", "Ping of death"],
+    answer: 1,
+    takeaway: "A SYN flood leaves half-open connections.",
+    explanation: "Option A describes an ICMP amplification attack.",
+    lettered: true,
+    keepsLetters: true,
+    order: [0, 1, 2, 3],
+  };
+  /** The key box: the square that prints the answer's letter, which a screen reader does not read. */
+  const keyBox = (name: RegExp) => screen.getByRole("button", { name }).querySelector("span[aria-hidden]")!;
+  /** The marks drawn in an answer, by kind ("check" or "x"). */
+  const marks = (el: Element) =>
+    [...el.querySelectorAll("svg")].map((svg) => /lucide-check\b/.test(svg.getAttribute("class") ?? "") ? "check" : "x");
+
+  it("keeps B in its key box once marked, and still draws the check, at the end of the answer", () => {
+    render(<RepCard rep={letteredRep} onAnswer={() => {}} onNext={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: /SYN flood/ }));
+    const right = screen.getByRole("button", { name: /^Your answer, which is correct: ?SYN flood$/ });
+    const box = keyBox(/SYN flood/);
+    expect(box).toHaveTextContent(/^B$/);
+    expect(box.querySelector("svg")).toBeNull();
+    // Still in the mark's colours: the letter does not replace the colour, it joins it.
+    expect(box.className).toContain("bg-success");
+    // The mark is never colour alone: the check is drawn at the end of the answer.
+    expect(marks(right)).toEqual(["check"]);
+    expect(right.lastElementChild?.tagName.toLowerCase()).toBe("svg");
+    // The other answers keep their letters too.
+    expect(keyBox(/Smurf attack/)).toHaveTextContent(/^A$/);
+    expect(marks(screen.getByRole("button", { name: /Smurf attack/ }))).toEqual([]);
+  });
+
+  it("keeps the letter of a wrong answer, with the cross at its end, beside the correct one's check", () => {
+    render(<RepCard rep={letteredRep} onAnswer={() => {}} onNext={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: /Smurf attack/ }));
+    const wrong = screen.getByRole("button", { name: /^Your answer, which is incorrect: ?Smurf attack$/ });
+    expect(keyBox(/Smurf attack/)).toHaveTextContent(/^A$/);
+    expect(marks(wrong)).toEqual(["x"]);
+    expect(keyBox(/SYN flood/)).toHaveTextContent(/^B$/);
+    expect(marks(screen.getByRole("button", { name: /^Correct answer: ?SYN flood$/ }))).toEqual(["check"]);
+  });
+
+  it("is unchanged for a question whose explanation names no letter: the check takes the letter's place", () => {
+    render(<RepCard rep={{ ...letteredRep, keepsLetters: undefined }} onAnswer={() => {}} onNext={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: /SYN flood/ }));
+    const box = keyBox(/SYN flood/);
+    expect(box).not.toHaveTextContent("B");
+    expect(marks(box)).toEqual(["check"]);
+    // One mark only, in the key box.
+    expect(marks(screen.getByRole("button", { name: /^Your answer, which is correct: ?SYN flood$/ }))).toEqual(["check"]);
+  });
+});

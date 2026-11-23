@@ -142,6 +142,39 @@ describe("RehearsalPlayer", () => {
     expect(question(3)).toBeInTheDocument();
   });
 
+  // A Windows contrast theme replaces every fill with the page's own colour, so
+  // an answered cell looked like an unanswered one and the flag disappeared.
+  // Their fills are drawn in the theme's own colours, which it keeps.
+  it("keeps the answered cells, the flag and the key apart under a Windows contrast theme", () => {
+    setup(makeRun({ picks: [0, null, null], flagged: [0, 2] }));
+    fireEvent.click(gridButton(1));
+    const answered = screen.getByRole("button", { name: "Question 1: answered, flagged" });
+    for (const cls of [
+      "forced-colors:forced-color-adjust-none",
+      "forced-colors:border-[Highlight]",
+      "forced-colors:bg-[Highlight]",
+      "forced-colors:text-[HighlightText]",
+    ]) {
+      expect(answered.className, cls).toContain(cls);
+    }
+    // An unanswered cell keeps the theme's own colours: only the answered one is filled.
+    const blank = screen.getByRole("button", { name: "Question 3: not answered, flagged" });
+    expect(blank.className).not.toContain("forced-colors:");
+    // The flag is drawn in the theme's text colour, ringed by its background, in either cell.
+    for (const cell of [answered, blank]) {
+      const flag = cell.querySelector("span[aria-hidden]")!;
+      expect(flag.className).toContain("forced-colors:bg-[CanvasText]");
+      expect(flag.className).toContain("forced-colors:ring-[Canvas]");
+      expect(flag.className).toContain("forced-colors:forced-color-adjust-none");
+    }
+    // The key matches the grid.
+    const swatch = (state: string) => screen.getByText(state).closest("li")!.querySelector("span[aria-hidden]")!.className;
+    expect(swatch("Answered")).toContain("forced-colors:bg-[Highlight]");
+    expect(swatch("Flagged")).toContain("forced-colors:bg-[CanvasText]");
+    expect(swatch("Current question")).toContain("forced-colors:bg-[Highlight]");
+    expect(swatch("Not answered")).not.toContain("forced-colors:");
+  });
+
   it("says how many are blank before scoring, and can send them back to answer them", () => {
     const { onFinish } = setup(makeRun({ picks: [0, null, null], i: 2 }));
     fireEvent.click(screen.getByRole("button", { name: /^Finish/ }));

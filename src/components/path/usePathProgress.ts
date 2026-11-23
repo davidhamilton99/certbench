@@ -207,18 +207,6 @@ const KEEPALIVE_MAX_BYTES = 60_000;
  */
 const isOutOfDate = (err: unknown) => err instanceof ApiError && err.message === PAGE_OUT_OF_DATE;
 
-/**
- * The offer's prices for the learner's region, from the account's answer
- * (GET /api/path/progress sends them beside the progress). The answer is read
- * through its contract, which lists `pricing` once src/contracts/path.ts does;
- * until then the field is left out of what is read, and the offer asks for its
- * prices itself, as it always has.
- */
-function pricingOf(answer: object): RegionPricing | null {
-  const pricing = (answer as { pricing?: unknown }).pricing;
-  return pricing && typeof pricing === "object" && "prices" in pricing ? (pricing as RegionPricing) : null;
-}
-
 /** Who the sign-in service says is here. */
 interface Person {
   uid: string;
@@ -411,7 +399,8 @@ export function usePathProgress(cert: PathCert) {
           // The server sends it only when it is true.
           paymentPastDue: res.paymentPastDue === true,
           certId: res.certId,
-          pricing: pricingOf(res),
+          // The offer's prices for the learner's region, sent beside the progress.
+          pricing: res.pricing ?? null,
           stored: res.stored,
         };
       } catch (err) {
@@ -913,5 +902,3 @@ export function usePathProgress(cert: PathCert) {
     refreshAccess,
   };
 }
-
-export type PathProgressState = ReturnType<typeof usePathProgress>;

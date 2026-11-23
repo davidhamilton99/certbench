@@ -16,7 +16,9 @@ import type { ResponseValue } from "@/core/quiz-engine/types";
  * shown in its stored order instead, so that the letter in the text names the
  * answer under that letter. Its letters are then part of what is said about
  * the question, so each answer's letter is also in its name for a screen
- * reader ("A. Wireshark"): the key box that prints it is hidden from one.
+ * reader ("A. Wireshark"): the key box that prints it is hidden from one. Once
+ * the answers are marked, each keeps its letter in its key box and the check
+ * or the cross is drawn at its end (AnswerOption's `keepMarker`).
  *
  * Each answer is the shared AnswerOption, so it looks and marks as it does on
  * the study path. How the set behaves depends on what a choice means:
@@ -105,6 +107,7 @@ export function MultipleChoice({
             state={stateOf(originalIndex)}
             srPrefix={srPrefixOf(originalIndex, displayPos)}
             dense
+            keepMarker={keepOrder}
             disabled={revealed || disabled}
             onClick={() => onChange({ kind: "single", selectedIndex: originalIndex })}
           >
@@ -131,6 +134,7 @@ export function MultipleChoice({
             state={stateOf(originalIndex)}
             srPrefix={srPrefixOf(originalIndex, displayPos)}
             dense
+            keepMarker={keepOrder}
           >
             {options[originalIndex]}
           </AnswerOption>

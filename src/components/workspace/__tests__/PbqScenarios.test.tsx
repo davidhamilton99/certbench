@@ -99,7 +99,7 @@ describe("the workspace's labs", () => {
     const tabs = within(screen.getByRole("tablist", { name: "Kind of lab" }));
     expect(tabs.getByRole("tab", { name: "Exam-style labs (2)" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "Domain 2: Security" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Domain 4: Security Operations" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Domain 4: Security operations" })).toBeInTheDocument();
 
     const row = screen.getByRole("button", { name: /^New starters/ });
     // The kind and the time in words, and the briefing's first sentence, whole: nothing is cut short.
@@ -111,7 +111,7 @@ describe("the workspace's labs", () => {
     expect(screen.queryByText(/Included with Pro/)).toBeNull();
 
     await user.click(tabs.getByRole("tab", { name: "Short drills (2)" }));
-    expect(screen.getByRole("heading", { name: "Domain 1: Networking Concepts" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Domain 1: Networking concepts" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^DHCP DORA/ })).toHaveTextContent(
       "Ordering drill. Put the four DHCP messages in order."
     );

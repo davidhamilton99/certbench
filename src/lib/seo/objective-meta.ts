@@ -23,13 +23,36 @@ export interface ObjectiveMetaInput {
  * database keeps CompTIA's capitals ("Threats, Vulnerabilities, and
  * Mitigations") and the copy tables write sentence case ("Networking
  * concepts"), so without this one exam's domains were named two ways on the
- * public pages. A word in capitals throughout, an abbreviation, keeps them.
+ * public pages and the study path. A word that is written with its capitals in
+ * any sentence keeps them (see keepsCapitals).
  */
 export function domainName(title: string): string {
   return title
     .split(" ")
-    .map((word, i) => (i === 0 || /^[A-Z0-9]{2,}\b/.test(word) ? word : word.toLowerCase()))
+    .map((word, i) => (i === 0 || keepsCapitals(word) ? word : word.toLowerCase()))
     .join(" ");
+}
+
+/** Names of products that an exam's outline can name, which keep their capital anywhere in a sentence. */
+const PRODUCT_NAMES: ReadonlySet<string> = new Set([
+  "Android",
+  "Apple",
+  "Bluetooth",
+  "Chrome",
+  "Google",
+  "Linux",
+  "Microsoft",
+  "Wi-Fi",
+  "Windows",
+]);
+
+/**
+ * Whether a word keeps its capitals in sentence case: an abbreviation in
+ * capitals throughout ("IT", "OS"), a word with a capital after a small letter
+ * ("macOS", "IoT"), or a product's name ("Windows").
+ */
+function keepsCapitals(word: string): boolean {
+  return /^[A-Z0-9]{2,}\b/.test(word) || /[a-z][A-Z]/.test(word) || PRODUCT_NAMES.has(word.replace(/[^\w-]+$/, ""));
 }
 
 /** The longest title tag that a search result shows in full. */

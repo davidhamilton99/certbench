@@ -6,6 +6,7 @@ import { HANDS_ON } from "@/core/path/labs";
 import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
 import { labMeta } from "@/components/path/lab-types";
 import { keepCodes } from "@/lib/keep-codes";
+import { domainName } from "@/lib/seo/objective-meta";
 import { READINESS_TARGET, bandFor } from "@/lib/readiness/band";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export function Method({
           {/* The outline's own head and rows: nothing is cut short, and a long line wraps. */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-foreground/70 px-4 py-3">
             <p className="min-w-0 text-small font-semibold leading-snug">
-              Domain {label(first.number)}: {first.title}
+              Domain {label(first.number)}: {domainName(first.title)}
             </p>
             <p className="text-note text-muted-foreground">
               {first.weight}% of the exam. {complete} of {outline.length} complete.
@@ -173,12 +174,12 @@ export function Method({
                 return (
                   <li key={d.number} className="grid gap-1.5">
                     <span className="flex items-baseline justify-between gap-3 text-note">
-                      {/* Read aloud or as text, the row is "Domain 1: General Security Concepts 88%". */}
+                      {/* Read aloud or as text, the row is "Domain 1: General security concepts 88%". */}
                       <span className="min-w-0">
                         <span className="sr-only">Domain </span>
                         <span className="mr-1.5 font-mono text-muted-foreground">{label(d.number)}</span>
                         <span className="sr-only">: </span>
-                        {d.title}
+                        {domainName(d.title)}
                       </span>{" "}
                       <span className="shrink-0" style={{ color: b.ink }}>
                         {pct}%

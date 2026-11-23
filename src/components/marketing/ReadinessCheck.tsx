@@ -6,7 +6,7 @@ import { estimateReadiness, type CheckAnswer, type CheckQuestion } from "@/lib/t
 import { bandFor } from "@/lib/readiness/band";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { track } from "@/lib/analytics";
-import { splitExplanation } from "@/core/path/text";
+import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import type { ChoiceRep } from "@/core/path/types";
 import { RepCard, StopProgress, type RepAnswer } from "@/components/path/RepCard";
 import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
@@ -36,6 +36,7 @@ function toReps(questions: readonly CheckQuestion[]): ChoiceRep[] {
       takeaway,
       ...(rest ? { explanation: rest } : {}),
       lettered: true,
+      ...(mentionsOptionLetter(`${takeaway} ${rest}`) ? { keepsLetters: true } : {}),
     };
   });
 }

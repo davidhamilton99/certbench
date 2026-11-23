@@ -47,6 +47,11 @@ const KEY: Record<AnswerState, string> = {
  * the key box change, the key box shows a check or a cross, and `srPrefix`
  * says it in words to a screen reader ("Correct answer: ").
  *
+ * Where the explanation beside the answers names them by their letters
+ * ("Option B describes"), `keepMarker` keeps the letter in the key box once the
+ * answer is marked, in the mark's colours, and draws the check or the cross at
+ * the end of the answer instead: the learner can still tell which answer is B.
+ *
  * It renders a plain `<button>` and passes every other prop to it, so it can
  * be the child of a radio group item where a choice can be changed.
  */
@@ -56,6 +61,7 @@ export function AnswerOption({
   srPrefix,
   mono = false,
   dense = false,
+  keepMarker = false,
   className,
   children,
   ...props
@@ -69,9 +75,12 @@ export function AnswerOption({
   mono?: boolean;
   /** Longer, exam-style answers set a size smaller. */
   dense?: boolean;
+  /** Keep the letter in the key box once marked, and draw the check or the cross at the end. */
+  keepMarker?: boolean;
   children: ReactNode;
 }) {
   const marked = state === "correct" || state === "incorrect" || state === "dimmed";
+  const Mark = state === "correct" ? Check : state === "incorrect" ? X : null;
   return (
     <button
       type="button"
@@ -92,13 +101,7 @@ export function AnswerOption({
           KEY[state]
         )}
       >
-        {state === "correct" ? (
-          <Check className="size-3.5" strokeWidth={3} />
-        ) : state === "incorrect" ? (
-          <X className="size-3.5" strokeWidth={3} />
-        ) : (
-          marker
-        )}
+        {Mark && !keepMarker ? <Mark className="size-3.5" strokeWidth={3} /> : marker}
       </span>
       <span
         className={cn(
@@ -109,6 +112,13 @@ export function AnswerOption({
         {srPrefix && <span className="sr-only">{srPrefix}</span>}
         {children}
       </span>
+      {Mark && keepMarker && (
+        <Mark
+          aria-hidden
+          strokeWidth={3}
+          className={cn("ml-auto size-4 shrink-0", state === "correct" ? "text-success" : "text-destructive")}
+        />
+      )}
     </button>
   );
 }

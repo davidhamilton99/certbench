@@ -214,7 +214,7 @@ export function PathUnlocked({
         >
           <span
             aria-hidden
-            className="flex size-10 shrink-0 items-center justify-center rounded-xs bg-primary/10 text-primary"
+            className="flex size-10 shrink-0 items-center justify-center rounded-xs bg-tint-selected text-primary"
           >
             <FlaskConical className="size-5" />
           </span>

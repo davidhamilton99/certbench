@@ -181,6 +181,41 @@ describe("PathOffer", () => {
     });
   });
 
+  // "A single payment" read as buying the exam outright, but the added exam is
+  // open only while the plan is: access needs the plan and the exam together.
+  it("says that an added exam stays open while the Pro plan is active, at the learner's own price", async () => {
+    render(
+      offer({
+        proPlan: true,
+        initialPricing: {
+          discountPercent: 40,
+          prices: {
+            monthly: { original: "$19", discounted: "$11.40" },
+            quarterly: { original: "$39", discounted: "$23.40" },
+            annual: { original: "$99", discounted: "$59.40" },
+          },
+        },
+      })
+    );
+    expect(
+      screen.getByText("You can add another exam for a single payment of $23.40. The exam stays open while your Pro plan is active.")
+    ).toBeInTheDocument();
+    expect(h.calls).toEqual([]);
+  });
+
+  it("states the condition only beside a price: none is printed before the price is known", async () => {
+    let answer!: (pricing: unknown) => void;
+    h.pricing = new Promise((resolve) => {
+      answer = resolve;
+    });
+    const { container } = render(offer({ proPlan: true }));
+    expect(container.textContent).not.toMatch(/single payment of|stays open/);
+    answer(BASE_PRICES);
+    expect(
+      await screen.findByText("You can add another exam for a single payment of $39. The exam stays open while your Pro plan is active.")
+    ).toBeInTheDocument();
+  });
+
   it("does not count an added exam's checkout when the payment page could not be opened", async () => {
     h.checkout = new ApiError("conflict", "That certification is already in your plan.");
     render(offer({ proPlan: true }));
@@ -255,7 +290,11 @@ describe("PathOffer", () => {
   it("says what Pro includes for this exam", () => {
     render(offer({ labCount: 31, questionCount: 1008 }));
     expect(screen.getByText("All 22 remaining steps of your Security+ study path")).toBeInTheDocument();
-    expect(screen.getByText("All 31 hands-on labs, which work like the exam's performance-based questions")).toBeInTheDocument();
+    // What the labs are, in CertBench's own terms, and nothing about how the exam's questions work.
+    expect(
+      screen.getByText("All 31 hands-on labs, CertBench's practice for the exam's performance-based questions")
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/work like/);
     expect(screen.getByText("All 1,008 Security+ questions, with spaced review")).toBeInTheDocument();
   });
 });

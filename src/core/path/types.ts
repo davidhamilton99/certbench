@@ -51,6 +51,13 @@ export interface ChoiceRep extends RepBase {
   /** Options show A–D letters, like the exam (bank questions). */
   lettered?: boolean;
   /**
+   * The explanation names options by their letters ("Option A describes"), so
+   * the options keep their stored order and each keeps its letter once the
+   * question is marked: the check or the cross is drawn at the end of the
+   * answer instead of in place of its letter. Set by bankToRep (absent when false).
+   */
+  keepsLetters?: boolean;
+  /**
    * For bank questions: the stored position of each displayed option, so an
    * answer is recorded against the bank's order after shuffling.
    */

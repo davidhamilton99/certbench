@@ -185,7 +185,7 @@ describe("the home page below its first section", () => {
     expect(text).toContain(`CertBench has ${LABS} hands-on labs for Security+ SY0-701`);
     expect(text).toContain(`These are 5 of the ${LABS} Security+ SY0-701 labs.`);
     expect(text).toMatch(/The Security\+ SY0-701 study path has \d+ steps, from the first question to a full practice exam\./);
-    expect(text).toContain("Domain 1: General Security Concepts");
+    expect(text).toContain("Domain 1: General security concepts");
     expect(text).toContain("12% of the exam. 1 of 4 complete.");
   });
 

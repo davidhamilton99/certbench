@@ -1333,7 +1333,7 @@ export function PathApp({
   // outline's own (MapLegend); an exam with no public page of labs, or with
   // fewer labs, is given a sentence that is true of it.
   const freeNote = !shut ? null : labs.size > 0 && freeLabIds.size === FREE_LAB_COUNT ? (
-    <MapLegend labs="locked" />
+    <MapLegend />
   ) : (
     <p className="text-small text-muted-foreground">
       {labs.size === 0
@@ -2210,7 +2210,8 @@ export function PathApp({
       const info = library.find((l) => l.id === lab.id);
       const record = labResults.get(lab.id);
       if (shut || !info) {
-        const what = "This lab works like the exam's performance-based questions and is graded with partial credit.";
+        // What the lab is, in CertBench's own terms: nothing is claimed of how the exam's questions work.
+        const what = "This hands-on lab is CertBench's practice for the exam's performance-based questions, and it is graded with partial credit.";
         // Free for everyone on the exam's public page of labs: the row leads there.
         if (shut && free.labsHref && freeLabIds.has(lab.id)) {
           return {
@@ -2484,7 +2485,7 @@ export function PathApp({
                         detail: `There are ${library.length} labs.${
                           labResults.size > 0
                             ? ` You have completed ${labResults.size}.`
-                            : " They work like the exam's performance-based questions."
+                            : " They are CertBench's practice for the exam's performance-based questions."
                         }`,
                         action: "Open",
                         onAction: () => {

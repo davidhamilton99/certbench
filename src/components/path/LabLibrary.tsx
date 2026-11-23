@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { preloadLab } from "@/components/workspace/pbq-host";
 import type { PathLabInfo, PathStructure, StopRecord } from "@/core/path/types";
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES as HANDS_ON, LAB_TYPES, labMeta } from "./lab-types";
 
@@ -43,14 +44,17 @@ export function LabLibrary({
         <h1 tabIndex={-1} className="cb-section">
           Hands-on labs for {structure.examName}
         </h1>
+        {/* What the labs are, in CertBench's own terms: nothing is claimed of how the exam's questions work. */}
         <p className="text-body text-muted-foreground">
-          There are {handsOnCount(library)} that work like the exam&apos;s performance-based questions
+          The {handsOnCount(library)} {library.length - drills === 1 ? "is" : "are"} CertBench&apos;s practice for the
+          exam&apos;s performance-based questions.
           {drills > 0 && (
             <>
-              , and {drills} short {drills === 1 ? "drill" : "drills"}
+              {" "}
+              There {drills === 1 ? "is" : "are"} also {drills} short {drills === 1 ? "drill" : "drills"}.
             </>
-          )}
-          . You have completed {done} of {library.length}.
+          )}{" "}
+          You have completed {done} of {library.length}.
         </p>
       </div>
 
@@ -64,7 +68,7 @@ export function LabLibrary({
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 {/* Set out as the course outline sets out a domain, in the same words. */}
                 <h2 id={`labs-${d.number}`} className="min-w-0 text-small font-semibold">
-                  Domain {domainLabel(d.number)}: {d.title}
+                  Domain {domainLabel(d.number)}: {domainName(d.title)}
                 </h2>
                 <p className="shrink-0 text-note tabular-nums text-muted-foreground">
                   {played} of {labs.length} complete.
@@ -90,7 +94,7 @@ export function LabLibrary({
                           aria-hidden
                           className={cn(
                             "flex size-10 shrink-0 items-center justify-center rounded-xs",
-                            result ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            result ? "bg-success/15 text-success" : "bg-tint-selected text-primary"
                           )}
                         >
                           <Icon className="size-[18px]" />

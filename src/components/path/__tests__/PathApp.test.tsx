@@ -1244,6 +1244,11 @@ describe("labs on the path", () => {
     const freeLab = screen.getByRole("region", { name: "Lab for domain 1.0" });
     expect(freeLab).toHaveTextContent("It is free, and it opens on the page of free Security+ labs.");
     expect(freeLab).not.toHaveTextContent("included with Pro");
+    // What the lab is, in CertBench's own terms, and nothing about how the exam's questions work.
+    expect(freeLab).toHaveTextContent(
+      "This hands-on lab is CertBench's practice for the exam's performance-based questions, and it is graded with partial credit."
+    );
+    expect(freeLab).not.toHaveTextContent(/works? like/);
     expect(within(freeLab).getByRole("link", { name: "Open the free labs" })).toHaveAttribute(
       "href",
       "/security-plus-pbq-examples"
@@ -1753,6 +1758,10 @@ describe("the lab library", () => {
     server.progress = done(["warmup"], { goal });
     renderLibrary();
     expect(await screen.findByRole("button", { name: "Open: Hands-on labs" })).toBeInTheDocument();
+    // What the labs are, in CertBench's own terms.
+    expect(
+      screen.getByText("There are 4 labs. They are CertBench's practice for the exam's performance-based questions.")
+    ).toBeInTheDocument();
     await openLibrary();
     expect(track).toHaveBeenCalledWith("path_labs_viewed", { cert: "security-plus-sy0-701" });
     expect(screen.getByRole("heading", { name: "Domain 1: Domain 1" })).toBeInTheDocument();
@@ -1800,7 +1809,8 @@ describe("the lab library", () => {
     expect(Object.keys(lastSave().stops)).toEqual(["warmup"]);
 
     // Next is the next one not played yet.
-    expect(await screen.findByText("Your next lab. Topology, 6 minutes.")).toBeInTheDocument();
+    // A topology lab is called a network diagram, as on the public lab pages.
+    expect(await screen.findByText("Your next lab. Network diagram, 6 minutes.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Return to the labs" }));
     expect(await screen.findByText("4 of 5")).toBeInTheDocument();
   });
@@ -1932,7 +1942,9 @@ describe("the lab library", () => {
       { goal, checkpoint: { score: 60, at: 1, domains: [] } }
     );
     renderLibrary();
-    expect(await screen.findByText("All 4 hands-on labs, which work like the exam's performance-based questions")).toBeInTheDocument();
+    expect(
+      await screen.findByText("All 4 hands-on labs, CertBench's practice for the exam's performance-based questions")
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
 });

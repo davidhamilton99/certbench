@@ -178,10 +178,11 @@ describe("the score report card", () => {
       />
     );
     const rows = [...container.querySelectorAll("ul > li")];
+    // Each domain in sentence case, as the objective pages and the practice-test outline name it.
     expect(rows.map((row) => row.querySelector("div")?.textContent)).toEqual([
-      "Domain 1 General Security Concepts 5 of 6 correct",
-      "Domain 2 Threats, Vulnerabilities, and Mitigations 1 of 6 correct",
-      "Domain 3 Security Architecture Not asked",
+      "Domain 1 General security concepts 5 of 6 correct",
+      "Domain 2 Threats, vulnerabilities, and mitigations 1 of 6 correct",
+      "Domain 3 Security architecture Not asked",
     ]);
     const fills = rows.map((row) => row.querySelector<HTMLElement>("[aria-hidden='true'] .origin-left"));
     expect(fills.map((fill) => fill?.style.transform)).toEqual(["scaleX(0.83)", "scaleX(0.17)", "scaleX(0)"]);
@@ -189,6 +190,23 @@ describe("the score report card", () => {
     expect(container.innerHTML).not.toContain("truncate");
     // Counts are set in the text face; the code face is for codes.
     expect(container.querySelector("ul")?.innerHTML).not.toContain("font-mono");
+  });
+
+  // The card once carried five custom properties for its band (bandVars). The
+  // rules that read them were deleted, so it carries none.
+  it("sets no custom properties on its root for rules that no longer exist", () => {
+    const { container } = render(
+      <ReadingCard
+        result={result(80)}
+        structure={structure}
+        kicker="Security+ practice exam"
+        headline="You met the readiness target."
+        caption="Practice exam result"
+        summary="A summary."
+      />
+    );
+    expect(container.firstElementChild?.getAttribute("style")).toBeNull();
+    expect(container.innerHTML).not.toContain("--rv-");
   });
 
   it("is drawn with the score display that every page shares", () => {
@@ -200,11 +218,11 @@ describe("the score report card", () => {
 });
 
 describe("the note on where to gain the most", () => {
-  it("names the domain and its share of the exam", () => {
+  it("names the domain, in sentence case, and its share of the exam", () => {
     render(<OpportunityNote domain={structure.domains[1]} />);
     expect(screen.getByText("The area to focus on next")).toBeInTheDocument();
     expect(
-      screen.getByText("Threats, Vulnerabilities, and Mitigations accounts for 22% of the exam, and it is where you can gain the most.")
+      screen.getByText("Threats, vulnerabilities, and mitigations accounts for 22% of the exam, and it is where you can gain the most.")
     ).toBeInTheDocument();
   });
 });

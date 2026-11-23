@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ObjectiveStatus, PathStructure } from "@/core/path/types";
@@ -101,8 +103,11 @@ describe("the course outline's rows", () => {
       expect(item.hasAttribute("title")).toBe(false);
     }
     expect(items[1].textContent).toBe("1.2 Core security concepts, Complete");
-    // Each list is named by the heading over it.
-    expect(screen.getByRole("list", { name: "Domain 1: General Security Concepts" })).toBeInTheDocument();
+    // Each list is named by the heading over it. The domain is named in sentence case, as on the
+    // objective pages and the practice-test outline, not in the database's capitals.
+    expect(screen.getByRole("list", { name: "Domain 1: General security concepts" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Domain 2: Threats, vulnerabilities, and mitigations" })).toBeInTheDocument();
+    expect(screen.queryByText(/General Security Concepts/)).toBeNull();
     expect(screen.getByRole("list", { name: "Practice exam" })).toBeInTheDocument();
   });
 
@@ -305,16 +310,19 @@ describe("the practice exam's row", () => {
 
 describe("the sentence under the outline", () => {
   it("says what is free before what Pro adds", () => {
-    render(<MapLegend labs="locked" />);
+    render(<MapLegend />);
     expect(
       screen.getByText("One practice exam and 12 labs are free. Further labs and practice exams are included with Pro.")
     ).toBeInTheDocument();
   });
 
-  it("is left out for a learner with Pro, and where the outline has no labs", () => {
-    const { container, rerender } = render(<MapLegend labs="open" />);
-    expect(container.textContent).toBe("");
-    rerender(<MapLegend />);
-    expect(container.textContent).toBe("");
+  // Its one caller (the study path) decides when it is drawn: only for a
+  // learner without Pro, on an exam with its free labs. The argument that
+  // repeated that decision was always the same value, so it is gone.
+  it("takes no argument that only repeats its caller's decision", () => {
+    const source = readFileSync(join(process.cwd(), "src/components/path/ExamMap.tsx"), "utf8");
+    expect(source).toMatch(/export function MapLegend\(\{ className \}: \{ className\?: string \}\)/);
+    const caller = readFileSync(join(process.cwd(), "src/components/path/PathApp.tsx"), "utf8");
+    expect(caller).not.toMatch(/<MapLegend [^>]*labs=/);
   });
 });

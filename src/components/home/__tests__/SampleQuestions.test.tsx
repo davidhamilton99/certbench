@@ -112,7 +112,21 @@ describe("the home page's sample questions", () => {
         "The Security+ SY0-701 study path asks questions like these on all 3 exam objectives, in 41 short steps."
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Start the study path/ })).toHaveAttribute("href", "/start");
+    expect(screen.getByRole("link", { name: /Choose your exam/ })).toHaveAttribute("href", "/start");
+  });
+
+  // Network+ is set out by CertBench's own topics, not by CompTIA's objectives,
+  // so the sheet never counts "exam objectives" for it.
+  it("counts topics, not exam objectives, for an exam set out by CertBench's own topics", () => {
+    const netPlus = { ...STRUCTURE, certSlug: "network-plus-n10-009", examName: "Network+", examCode: "N10-009" };
+    const { container } = render(<SampleQuestions reps={REPS} structure={netPlus} steps={30} />);
+    answer(/Integrity/);
+    answer(/Smishing/);
+    answer(/Least privilege/);
+    expect(
+      screen.getByText("The Network+ N10-009 study path asks questions like these on all 3 topics, in 30 short steps.")
+    ).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/exam objectives/);
   });
 
   it("asks a missed question once more before the result, and says so", () => {
