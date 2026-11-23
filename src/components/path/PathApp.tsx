@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, FlaskConical, Loader2, RotateCcw, Timer } from "lucide-react";
@@ -345,6 +345,15 @@ const SLOW_AFTER_MS = 20_000;
 /** And how long it keeps asking the account on its own. */
 const STOP_ASKING_AFTER_MS = 120_000;
 
+// The address, read as the page renders (`flagged` in PathApp). What matters is
+// whether it carries the flag as the page opens, and only the page itself takes
+// the flag off: there is nothing to listen for.
+const subscribeToNothing = () => () => {};
+/** Whether the address carries the flag that the return from paying adds. */
+const upgradedInAddress = () => UPGRADED_FLAG.test(window.location.search);
+/** The server has no address to read, and the first pass in the browser repeats the server. */
+const notOnServer = () => false;
+
 /** Take the flag that the return from paying carries off the address. */
 function dropUpgradedFlag() {
   const url = new URL(window.location.href);
@@ -448,11 +457,14 @@ export function PathApp({
   // signed out keeps it: they are asked to sign in, and signing in brings them
   // back to this address, flag and all, to the wait for their confirmation.
   const [landing, setLanding] = useState<{ done: boolean } | null>(null);
-  useLayoutEffect(() => {
-    // The address is only readable once mounted; before paint, so the
-    // introductory questions do not flash.
-    if (UPGRADED_FLAG.test(window.location.search)) setLanding({ done: false });
-  }, []);
+  // The address is read in the browser only: the server's HTML, and the first
+  // pass over it in the browser, are drawn without it. On a page opened from
+  // inside the app it is read before the first paint; on a full page load the
+  // inline script holds the stage meanwhile (path-hold.ts), so the introductory
+  // questions never show. The flag is kept in `landing` as soon as it is seen,
+  // because it comes off the address once the page knows who is here.
+  const flagged = useSyncExternalStore(subscribeToNothing, upgradedInAddress, notOnServer);
+  if (flagged && landing === null) setLanding({ done: false });
 
   const freshPlay = useCallback(
     (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play =>
@@ -594,14 +606,22 @@ export function PathApp({
       }
     : undefined;
 
-  // This device's rehearsal for this account: one in progress, or the last one scored.
-  const [run, setRunState] = useState<RehearsalRun | null>(null);
-  useEffect(() => {
-    setRunState(p.ready && p.userId ? readRun(cert, p.userId) : null);
-  }, [p.ready, p.userId, cert]);
+  // This device's practice exam for this account: one in progress, or the last
+  // one scored. It is read from the device for the account that the page knows
+  // is here (nobody, until the page knows), and read again whenever that changes.
+  const runOwner = p.ready ? p.userId : null;
+  const [kept, setKept] = useState<{ cert: PathCert; owner: string | null; run: RehearsalRun | null }>({
+    cert,
+    owner: null,
+    run: null,
+  });
+  if (kept.cert !== cert || kept.owner !== runOwner) {
+    setKept({ cert, owner: runOwner, run: runOwner ? readRun(cert, runOwner) : null });
+  }
+  const { run } = kept;
   const saveRun = useCallback(
     (next: RehearsalRun) => {
-      setRunState(next);
+      setKept((k) => ({ ...k, run: next }));
       writeRun(cert, next);
     },
     [cert]
@@ -2070,7 +2090,7 @@ export function PathApp({
   /** Throw away a rehearsal in progress. */
   function discardRehearsal() {
     clearRun(cert);
-    setRunState(null);
+    setKept((k) => ({ ...k, run: null }));
   }
 
   /**

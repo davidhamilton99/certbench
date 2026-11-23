@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { buildPlan } from "@/core/path/plan";
 import { isoInDays } from "@/core/path/checkpoint";
@@ -1041,6 +1043,37 @@ describe("back from paying", () => {
     await waitFor(() => expect(document.activeElement).toBe(title));
   });
 
+  // A full page load is hydrated from the server's HTML, which is drawn without
+  // the address (the inline script holds the stage meanwhile). The flag is read
+  // once the page runs, and the wait goes on after it comes off the address.
+  it("waits for the confirmation on a page hydrated from the server's HTML, with nothing mismatched", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const recovered = vi.fn();
+    const page = (
+      <PathApp cert="security-plus-sy0-701" structure={structure} plan={plan} warmup={warmup} questionCount={842} free={free} />
+    );
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(page);
+    document.body.appendChild(container);
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    try {
+      expect(within(container).getByRole("heading", { level: 2, name: "Prompt a|1.1|w1" })).toBeInTheDocument();
+      root = await act(async () => hydrateRoot(container, page, { onRecoverableError: recovered }));
+      expect(await within(container).findByRole("button", { name: "Account" })).toBeInTheDocument();
+      expect(
+        within(container).getByRole("heading", { level: 1, name: "Your Security+ study path is being opened." })
+      ).toBeInTheDocument();
+      expect(window.location.search).toBe("");
+      expect(landed()).toEqual([]);
+      expect(recovered).not.toHaveBeenCalled();
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root?.unmount());
+      errors.mockRestore();
+      container.remove();
+    }
+  });
+
   it("takes the flag off the address for someone who is signed in, so that a reload is an ordinary visit", async () => {
     renderPath();
     // The account control appears once the page knows who is here.
@@ -1548,6 +1581,28 @@ describe("practice exams", () => {
     fireEvent.click(screen.getByRole("button", { name: /Resume/ }));
     expect(await screen.findByRole("heading", { name: `Prompt q|2.1|${uuid(2)}` })).toBeInTheDocument();
     expect(screen.getByText("1 of 3 answered")).toBeInTheDocument();
+  });
+
+  it("brings back the practice exam of the account that signs in on the page, and none before", async () => {
+    // A visitor, on a device where an account left a practice exam mid-way.
+    auth.session = null;
+    server.progress = null;
+    localStorage.setItem(runKey, storedRun({ owner: "old-user", picks: [0, null, null], i: 1 }));
+    renderPath();
+    await screen.findByText("Prompt a|1.1|w1");
+    for (let i = 0; i < 3; i++) await answer();
+    await screen.findByText(/You have completed the introductory questions/i);
+    expect(screen.queryByText("You have a practice exam in progress.")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "sam@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "long-enough-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in and continue" }));
+    // The step that the card named is played first. The practice exam waits on the map.
+    expect(await screen.findByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
+    fireEvent.click(headerLink());
+    expect(await screen.findByText("You have a practice exam in progress.")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 questions answered")).toBeInTheDocument();
   });
 
   it("never shows one account's practice exam to another on the same device", async () => {

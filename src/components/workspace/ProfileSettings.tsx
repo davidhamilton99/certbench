@@ -96,7 +96,11 @@ export function ProfileSettings({
       await api(deleteAccount, { confirm: "DELETE" });
       const supabase = createClient();
       await supabase.auth.signOut();
-      window.location.href = "/";
+      // A full page load of the home page, and not a move inside the app: it
+      // leaves nothing in memory from the deleted account's session, such as
+      // the pages that the app's router keeps. The address is written out in
+      // full because the load is meant.
+      window.location.assign(new URL("/", window.location.origin));
     } catch (err) {
       // Said beside the button and kept there: this is not a message to miss.
       setDeleteError(

@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import type { ReferenceTable } from "@/data/reference/types";
 import { buildDeck } from "@/lib/recall/recall-deck";
 import { RecallPlayer } from "@/components/recall/RecallPlayer";
@@ -281,5 +283,38 @@ describe("RecallPlayer, a choice of answers", () => {
 
     expect(container).not.toHaveTextContent(/streak|best/i);
     expect(onAnswer).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("RecallPlayer, in the server's HTML", () => {
+  it("holds a placeholder there and draws the first question once the page is hydrated, with nothing mismatched", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const recovered = vi.fn();
+    const player = <RecallPlayer decks={[deck]} deckKey="ports-protocols" />;
+
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(player);
+    document.body.appendChild(container);
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    try {
+      expect(within(container).getByRole("status")).toHaveTextContent("The drill is loading.");
+      expect(within(container).queryByRole("heading", { level: 2 })).toBeNull();
+
+      root = await act(async () => hydrateRoot(container, player, { onRecoverableError: recovered }));
+      expect(recovered).not.toHaveBeenCalled();
+      expect(errors).not.toHaveBeenCalled();
+      expect(within(container).queryByText("The drill is loading.")).toBeNull();
+      const asked = within(container).getByRole("heading", { level: 2 }).textContent?.trim() ?? "";
+      expect(answerTo(asked)).toBeDefined();
+    } finally {
+      await act(async () => root?.unmount());
+      container.remove();
+    }
+  });
+
+  it("asks at once when it first appears on a page that is already running, as a press on a deck's tab makes it", () => {
+    render(<RecallPlayer decks={[deck]} deckKey="ports-protocols" />);
+    expect(screen.queryByText("The drill is loading.")).toBeNull();
+    expect(answerTo(cue())).toBeDefined();
   });
 });

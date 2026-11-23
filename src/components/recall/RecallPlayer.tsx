@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ResolvedDeck } from "@/lib/recall/recall-deck";
 import { recallToRep } from "@/lib/path/fact-reps";
 import type { Rep } from "@/core/path/types";
 import { RepCard } from "@/components/path/RepCard";
+import { useInBrowser } from "./useInBrowser";
 
 /** Sentinel deck key: draw each question from a random deck. */
 export const MIXED_DECK_KEY = "__mixed__";
@@ -23,6 +24,14 @@ interface Turn extends Fact {
   rep: Rep;
 }
 
+interface RecallPlayerProps {
+  decks: ResolvedDeck[];
+  deckKey: string;
+  /** Ask for a typed answer in place of a choice (for decks with short answers). */
+  typed?: boolean;
+  onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
+}
+
 /**
  * The Recall drill for one selection: a single deck (by its table id) or MIXED
  * across all of them. The parent owns the selection and remounts this (through
@@ -35,51 +44,12 @@ interface Turn extends Fact {
  * only while the keyboard's focus is inside the card. A fact that is answered
  * incorrectly is asked again later in the session.
  *
- * The questions are drawn at random, so the first one is made after mount: the
- * server renders a placeholder of the same shape and hydration never mismatches.
+ * The questions are drawn at random, so the session is drawn in the browser
+ * only: the server's HTML, and the first pass over it in the browser, hold a
+ * placeholder of the same shape, and hydration never mismatches.
  */
-export function RecallPlayer({
-  decks,
-  deckKey,
-  typed = false,
-  onAnswer,
-}: {
-  decks: ResolvedDeck[];
-  deckKey: string;
-  /** Ask for a typed answer in place of a choice (for decks with short answers). */
-  typed?: boolean;
-  onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
-}) {
-  const [turn, setTurn] = useState<Turn | null>(null);
-  const [score, setScore] = useState({ correct: 0, answered: 0 });
-  const missed = useRef<Fact[]>([]);
-
-  function draw(n: number): Turn {
-    let fact: Fact | undefined;
-    if (missed.current.length > 0 && Math.random() < RESURFACE_RATE) fact = missed.current.shift();
-    if (!fact) {
-      const deck =
-        deckKey === MIXED_DECK_KEY
-          ? decks[Math.floor(Math.random() * decks.length)]
-          : (decks.find((d) => d.config.tableId === deckKey) ?? decks[0]);
-      const row = deck.rows[Math.floor(Math.random() * deck.rows.length)];
-      fact = { deck, itemId: row[deck.config.ask.key] };
-    }
-    // A typed answer is always asked in the deck's own direction (the port for
-    // a protocol), so nobody is asked to type a long name. A cue with more than
-    // one row (RADIUS) gets its sentence about the other correct answer from
-    // recallToRep, as it does on the study path.
-    const rep = recallToRep(fact.deck, fact.itemId, "recall", Math.random, typed);
-    return { n, ...fact, rep };
-  }
-
-  // The first question, after mount (random, so made on the client only).
-  useEffect(() => {
-    setTurn(draw(0));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (!turn) {
+export function RecallPlayer(props: RecallPlayerProps) {
+  if (!useInBrowser()) {
     return (
       <div className="grid gap-3">
         <p className="text-note text-muted-foreground">&nbsp;</p>
@@ -88,6 +58,43 @@ export function RecallPlayer({
         </div>
       </div>
     );
+  }
+  return <RecallSession {...props} />;
+}
+
+/** A fact from the chosen deck, or for Mixed from a deck chosen at random. */
+function freshFact(decks: ResolvedDeck[], deckKey: string): Fact {
+  const deck =
+    deckKey === MIXED_DECK_KEY
+      ? decks[Math.floor(Math.random() * decks.length)]
+      : (decks.find((d) => d.config.tableId === deckKey) ?? decks[0]);
+  const row = deck.rows[Math.floor(Math.random() * deck.rows.length)];
+  return { deck, itemId: row[deck.config.ask.key] };
+}
+
+/**
+ * The question that asks a fact. A typed answer is always asked in the deck's
+ * own direction (the port for a protocol), so nobody is asked to type a long
+ * name. A cue with more than one row (RADIUS) gets its sentence about the
+ * other correct answer from recallToRep, as it does on the study path.
+ */
+function turnFor(fact: Fact, n: number, typed: boolean): Turn {
+  const rep = recallToRep(fact.deck, fact.itemId, "recall", Math.random, typed);
+  return { n, ...fact, rep };
+}
+
+/** One session of the drill, in the browser. Its first question is drawn as it first appears. */
+function RecallSession({ decks, deckKey, typed = false, onAnswer }: RecallPlayerProps) {
+  // Facts answered incorrectly, to be asked again later in the session. The
+  // first question cannot be one of them: none has been answered yet.
+  const missed = useRef<Fact[]>([]);
+  const [turn, setTurn] = useState<Turn>(() => turnFor(freshFact(decks, deckKey), 0, typed));
+  const [score, setScore] = useState({ correct: 0, answered: 0 });
+
+  function draw(n: number): Turn {
+    let fact: Fact | undefined;
+    if (missed.current.length > 0 && Math.random() < RESURFACE_RATE) fact = missed.current.shift();
+    return turnFor(fact ?? freshFact(decks, deckKey), n, typed);
   }
 
   return (
