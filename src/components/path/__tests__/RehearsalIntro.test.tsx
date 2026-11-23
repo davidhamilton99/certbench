@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { PathStructure } from "@/core/path/types";
-import { RehearsalIntro } from "../RehearsalIntro";
+import type { ChoiceRep, PathStructure } from "@/core/path/types";
+import { RehearsalIntro, RehearsalResumeCard } from "../RehearsalIntro";
+import type { RehearsalRun } from "../rehearsal-run";
 
 const structure: PathStructure = {
   certSlug: "security-plus-sy0-701",
@@ -79,5 +80,85 @@ describe("the screen before a practice exam on the study path", () => {
     expect(onStart).toHaveBeenLastCalledWith("half");
     fireEvent.click(screen.getByRole("button", { name: "Return to the study path" }));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the card for a practice exam left part-way, on the study path's home screen", () => {
+  /** A class that draws text, a fill, an edge or an icon in the pressable colour, with or without a variant or a tint. */
+  const PRESSABLE = /(?:^|[\s:])(?:text|bg|border|fill|stroke|ring|outline|decoration)-primary(?:\/[\w.[\]%-]+)?(?=\s|$)/;
+  const classOf = (element: Element) => element.getAttribute("class") ?? "";
+
+  const question = (n: number): ChoiceRep => ({
+    id: `q-${n}`,
+    type: "choice",
+    label: "Exam style",
+    tier: "exam",
+    objective: "1.1",
+    prompt: `Question ${n}?`,
+    options: ["A", "B", "C", "D"],
+    answer: 0,
+    takeaway: "Because.",
+  });
+  const run: RehearsalRun = {
+    v: 1,
+    owner: "u1",
+    size: "full",
+    asStop: false,
+    reps: [question(1), question(2), question(3)],
+    picks: [0, null, null],
+    flagged: [],
+    i: 1,
+    spentMs: 5 * 60_000,
+    limitMs: 90 * 60_000,
+    startedAt: 1,
+    done: null,
+  };
+
+  function card(handlers: { onResume?: () => void; onDiscard?: () => void } = {}) {
+    const { container } = render(
+      <RehearsalResumeCard run={run} onResume={handlers.onResume ?? (() => {})} onDiscard={handlers.onDiscard ?? (() => {})} />
+    );
+    return container.firstElementChild!;
+  }
+
+  // The colour rule: one colour means "press this", and it is drawn only on what
+  // can be pressed. The card's edge was drawn in it, which made the whole card
+  // look like something to press.
+  it("has the ordinary edge of a card, and nothing but its controls in the pressable colour", () => {
+    const root = card();
+    expect(classOf(root)).toContain("glass");
+    expect(classOf(root)).not.toMatch(/border-primary/);
+    const notPressed = [root, ...root.querySelectorAll("*")].filter((el) => !el.closest("button, a"));
+    expect(notPressed.filter((el) => PRESSABLE.test(classOf(el))).map(classOf)).toEqual([]);
+    // The clock's icon is in the ink of its own line.
+    const clock = screen.getByText(/remaining$/);
+    expect(classOf(clock)).toContain("text-muted-foreground");
+    expect(classOf(clock.querySelector("svg")!)).not.toMatch(PRESSABLE);
+  });
+
+  it("says how far the exam has gone and how long is left, and resumes it", () => {
+    const onResume = vi.fn();
+    card({ onResume });
+    expect(screen.getByText("You have a practice exam in progress.")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 questions answered")).toBeInTheDocument();
+    expect(screen.getByText(/remaining$/)).toHaveTextContent("1:25:00 remaining");
+    fireEvent.click(screen.getByRole("button", { name: /^Resume the exam/ }));
+    expect(onResume).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks before discarding, opens the question on the choice that loses nothing, and returns the focus on keeping", () => {
+    const onDiscard = vi.fn();
+    card({ onDiscard });
+    fireEvent.click(screen.getByRole("button", { name: "Discard this practice exam" }));
+    expect(screen.getByText("Do you want to discard this practice exam? Its answers will not be counted.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Keep the exam" })).toHaveFocus();
+    expect(onDiscard).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Keep the exam" }));
+    expect(screen.getByRole("button", { name: "Discard this practice exam" })).toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: "Discard this practice exam" }));
+    fireEvent.click(screen.getByRole("button", { name: "Discard the exam" }));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 });

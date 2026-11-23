@@ -92,7 +92,11 @@ describe("the SY0-801 practice test page", () => {
     // The exam's card, served ready to start, with the condition for the score in its own sentence.
     expect(text(doc.querySelector("h2"))).toBe("90 questions in 90 minutes");
     expect(page).toContain("The exam is free. When you finish, a free account shows your score by domain");
-    expect(page).toContain("Take the exam with extended time: 135 minutes of extended time or 180 minutes of extended time.");
+    // Each button's name says the length of the whole sitting: "135 minutes of extended time" could be
+    // heard as 135 minutes added to the exam.
+    expect(page).toContain(
+      "Take the exam with extended time: 135 minutes in total, with extended time or 180 minutes in total, with extended time."
+    );
 
     // Each domain with its share of the exam and its questions in this practice exam.
     expect(page).toContain("The 90 questions are divided among the five domains in the proportions of the exam.");

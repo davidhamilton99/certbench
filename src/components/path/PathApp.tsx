@@ -8,9 +8,21 @@ import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
 // Named without their schemas (src/contracts/lazy.ts): the schema library is
 // fetched with the first request, not with the page.
-import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/client";
+import {
+  addCertCheckout,
+  createCheckout,
+  enrollInPath,
+  getPathLab,
+  getPathProgress,
+  getPathRehearsal,
+  getPathStop,
+  getRegionPricing,
+  recordPathAnswers,
+  savePathProgress,
+} from "@/contracts/client";
+import { warmContracts } from "@/contracts/lazy";
 import { ApiError, type ApiErrorCode } from "@/contracts/errors";
-import { userMessage } from "@/lib/errors/user-message";
+import { PAGE_OUT_OF_DATE, userMessage } from "@/lib/errors/user-message";
 import { FREE_LAB_COUNT, type FreeOnPublicPages } from "@/core/path/free-labs";
 import { CHECKPOINT_SIZE, PRACTICE_SIZE, stopAt } from "@/core/path/plan";
 import {
@@ -60,10 +72,10 @@ import {
 } from "./ExamMap";
 import { WelcomeBack } from "./WelcomeBack";
 import { LabLibrary, NextLabCard } from "./LabLibrary";
-import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
+import { kindOf, RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { PathHeader } from "./PathHeader";
 import { VersionSwitch } from "./VersionSwitch";
-import { PathOffer } from "./PathOffer";
+import { PathOffer, PathPaymentPastDue } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
 import { PathActivating, PathPaidSignIn, PathUnlocked } from "./PathUnlocked";
 import { HOLD_ATTRIBUTE, HOLD_WAIT_MS, holdsStage, UPGRADED_FLAG } from "./path-hold";
@@ -78,6 +90,8 @@ import { usePathProgress } from "./usePathProgress";
 import { mayTakeExam, readExamMark, writeExamMark } from "./local-path";
 import { pathUnlockedKey } from "./storage-key";
 import { takeOwedStartEvent } from "./path-start";
+import { reloadPage } from "./reload-page";
+import { whenIdleAfterLoad } from "./when-idle";
 
 // The lab players are big and only Pro reaches a lab: load them when one opens.
 // A simulation, a topology and a threat hunt each have a large player of their
@@ -294,6 +308,29 @@ const LAB_NOT_OPENED = "The lab could not be opened. Please try again.";
 const EXAM_NOT_PREPARED = "Your practice exam could not be prepared. Please try again.";
 const REVIEW_NOT_LOADED = "The questions for review could not be loaded. Please try again.";
 
+/**
+ * Every endpoint that this page calls: the study path's own, and those of the
+ * offer that the page makes (the prices, and the payment page). The schemas
+ * that read their answers are fetched once the page is idle after its first
+ * load, and are in memory from then on. Left to arrive with the first request
+ * that needs them, they could be asked for long into a visit: after a new
+ * version of the site had been published, the file was gone, and a save or a
+ * press of a plan was carried out by the server while the page could not read
+ * the answer (PAGE_OUT_OF_DATE).
+ */
+const PAGE_ENDPOINTS = [
+  getPathProgress,
+  savePathProgress,
+  getPathStop,
+  getPathLab,
+  getPathRehearsal,
+  enrollInPath,
+  recordPathAnswers,
+  getRegionPricing,
+  createCheckout,
+  addCertCheckout,
+] as const;
+
 /** Back from paying, how long "Payment received" waits before saying it's slow. */
 const SLOW_AFTER_MS = 20_000;
 /** And how long it keeps asking the account on its own. */
@@ -361,6 +398,11 @@ export function PathApp({
     events.forEach((name) => document.addEventListener(name, mark, true));
     return () => events.forEach((name) => document.removeEventListener(name, mark, true));
   }, []);
+
+  // The schemas of this page's endpoints, fetched in the background once the
+  // page has loaded and the browser is idle (see PAGE_ENDPOINTS). Never during
+  // the first load, which they are kept out of.
+  useEffect(() => whenIdleAfterLoad(() => warmContracts(PAGE_ENDPOINTS)), []);
 
   // Before first paint, as the page's inline script does on a full load: a
   // learner who's been here, or is back from paying, waits for their own
@@ -1278,6 +1320,10 @@ export function PathApp({
   // The notice above the screen then leaves its own button out, so that the
   // page shows one way to try again and not two (PathNotices).
   let screenRetries = false;
+  // The screen of a request that this page could not read the answer to,
+  // because the page is out of date. It says so itself, with the button that
+  // loads the page again, so the notice above does not say it a second time.
+  const staleScreen = !awaitingPro && view.kind === "error" && view.message === PAGE_OUT_OF_DATE;
 
   if (awaitingPro) {
     screen = paidSignedOut ? (
@@ -1321,6 +1367,10 @@ export function PathApp({
       rep && play.stop.kind !== "learn"
         ? structure.domains.flatMap((d) => d.objectives).find((o) => o.code === rep.objective)
         : undefined;
+    // The kind of question ("Exam-style question") is said on the objective's
+    // own line, so that one small line stands above a question and not two.
+    // Where there is no such line, the card prints the kind itself.
+    const kind = rep && objective ? kindOf(rep) : null;
     screen = (
       // One screen and one thing on it: the question. Where the step sits is
       // said in a line above it; the course outline waits on the path's home.
@@ -1343,10 +1393,12 @@ export function PathApp({
           <StopProgress results={play.results} current={play.i} />
         </div>
         <div className="glass grid grid-cols-[minmax(0,1fr)] gap-4 rounded-lg p-5 sm:p-8">
-          {/* One line above the question: the objective that it belongs to. */}
+          {/* One line above the question: the objective that it belongs to, and
+              then the kind of question where that is worth saying. The line is
+              keyed by both, so that it is a new element whenever its words change. */}
           {objective && (
-            <p key={objective.code} className="text-small text-muted-foreground">
-              Objective {objective.code}: {objective.title}.
+            <p key={`${objective.code}|${kind ?? ""}`} className="text-small text-muted-foreground">
+              Objective {objective.code}: {objective.title}.{kind ? ` ${kind}.` : ""}
             </p>
           )}
           {rep && (
@@ -1356,6 +1408,8 @@ export function PathApp({
               onAnswer={onAnswer}
               onNext={onNext}
               takeFocus={play.takeFocus}
+              // The line above has said the kind already.
+              showKind={!objective}
               // A step that continues from earlier answers says so above its first question.
               preface={
                 play.resumed && play.i === play.resumed.at
@@ -1390,18 +1444,29 @@ export function PathApp({
         <h1 data-screen-title tabIndex={-1} className="cb-measure-xs text-small">
           {view.message}
         </h1>
-        <Button
-          onClick={() => {
-            // The one "Try again" on this screen. While the account has not
-            // been reached either, it is asked again as well: both most often
-            // fail for the one reason, and come back together.
-            if (p.unreached) void refreshAccess();
-            view.retry();
-          }}
-        >
-          <RotateCcw aria-hidden />
-          Try again
-        </Button>
+        {staleScreen ? (
+          // The server carried the request out, and this page can no longer
+          // read its answers: asking again cannot help, and would only have
+          // the request carried out again. The sentence says to load the page
+          // again, so the button does that.
+          <Button onClick={reloadPage}>
+            <RotateCcw aria-hidden />
+            Reload the page
+          </Button>
+        ) : (
+          <Button
+            onClick={() => {
+              // The one "Try again" on this screen. While the account has not
+              // been reached either, it is asked again as well: both most often
+              // fail for the one reason, and come back together.
+              if (p.unreached) void refreshAccess();
+              view.retry();
+            }}
+          >
+            <RotateCcw aria-hidden />
+            Try again
+          </Button>
+        )}
       </div>
     );
   } else if (view.kind === "rehearsal-intro") {
@@ -1574,8 +1639,10 @@ export function PathApp({
   } else if (view.kind === "reveal") {
     const result = p.progress.checkpoint;
     // The offer stands under the result; without a result this is the home
-    // screen, which draws the offer by its own rule.
-    screenRetries = (result ? shut : offerOnHome) && !p.certId;
+    // screen, which draws the offer by its own rule. (A member whose payment
+    // is past due is shown the way to the billing page in its place, which has
+    // nothing to try again.)
+    screenRetries = (result ? shut : offerOnHome) && !p.certId && !p.paymentPastDue;
     screen = result ? (
       <PathReveal
         result={result}
@@ -1590,20 +1657,27 @@ export function PathApp({
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         ) : (
           <>
-            <PathOffer
-              cert={cert}
-              certId={p.certId}
-              examName={structure.examName}
-              remainingStops={remaining}
-              questionCount={questionCount}
-              proPlan={p.proPlan}
-              examDate={p.progress.goal?.examDate ?? null}
-              context="reveal"
-              labCount={library.length}
-              // The server has refused a step, but the account itself may still
-              // be out of reach: the offer then asks for it again from here.
-              onRetry={askAgain}
-            />
+            {p.paymentPastDue ? (
+              // A member whose last payment did not go through is not offered a
+              // second plan, which the checkout would refuse: they are shown the
+              // way to the billing page.
+              <PathPaymentPastDue />
+            ) : (
+              <PathOffer
+                cert={cert}
+                certId={p.certId}
+                examName={structure.examName}
+                remainingStops={remaining}
+                questionCount={questionCount}
+                proPlan={p.proPlan}
+                examDate={p.progress.goal?.examDate ?? null}
+                context="reveal"
+                labCount={library.length}
+                // The server has refused a step, but the account itself may still
+                // be out of reach: the offer then asks for it again from here.
+                onRetry={askAgain}
+              />
+            )}
             <button
               type="button"
               onClick={() => {
@@ -1695,7 +1769,7 @@ export function PathApp({
       </div>
     );
   } else {
-    screenRetries = offerOnHome && !p.certId;
+    screenRetries = offerOnHome && !p.certId && !p.paymentPastDue;
     screen = renderHome();
   }
 
@@ -1742,6 +1816,8 @@ export function PathApp({
           <PathNotices
             unreached={p.ready && p.signedIn && p.unreached}
             saveFailed={p.ready && p.signedIn ? p.saveFailed : null}
+            outOfDate={(p.ready && p.outOfDate) || staleScreen}
+            reloadOnScreen={staleScreen}
             storageRefused={p.ready && !p.signedIn && !p.deviceSaves}
             retryOnScreen={screenRetries}
             onRetry={askAgain}
@@ -1750,13 +1826,20 @@ export function PathApp({
             {screen}
           </div>
           {!p.ready && (
-            <p className="path-late mt-6 text-body" role="alert">
-              Your study path could not be loaded. Please check your connection and{" "}
-              <a href="" className="cb-link">
-                reload the page
-              </a>
-              .
-            </p>
+            // What the page says when its scripts never start. Under a first
+            // visit's question, which is that screen's title, it is a
+            // paragraph. On a held stage it is the only thing on the screen,
+            // so there it is the screen's title. Both are in the server's
+            // HTML with the same words, and the style rules show one of them:
+            // no script can be relied on in this state.
+            <div className="path-late mt-6 text-body" role="alert">
+              <h1 className="hidden [html[data-path-returning]_&]:block">
+                <LateSentence />
+              </h1>
+              <p className="[html[data-path-returning]_&]:hidden">
+                <LateSentence />
+              </p>
+            </div>
           )}
         </div>
       </main>
@@ -2270,18 +2353,23 @@ export function PathApp({
           ) : offerOnHome ? (
             // It takes the focus when a row of the outline leads here, so that it is read.
             <div id="path-offer" tabIndex={-1} className="scroll-mt-24">
-              <PathOffer
-                cert={cert}
-                certId={p.certId}
-                examName={structure.examName}
-                remainingStops={remaining}
-                questionCount={questionCount}
-                proPlan={p.proPlan}
-                examDate={p.progress.goal?.examDate ?? null}
-                context="home"
-                labCount={library.length}
-                onRetry={askAgain}
-              />
+              {p.paymentPastDue ? (
+                // In the offer's place for a member whose last payment did not go through.
+                <PathPaymentPastDue />
+              ) : (
+                <PathOffer
+                  cert={cert}
+                  certId={p.certId}
+                  examName={structure.examName}
+                  remainingStops={remaining}
+                  questionCount={questionCount}
+                  proPlan={p.proPlan}
+                  examDate={p.progress.goal?.examDate ?? null}
+                  context="home"
+                  labCount={library.length}
+                  onRetry={askAgain}
+                />
+              )}
             </div>
           ) : (
             <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
@@ -2473,6 +2561,8 @@ export function ContinueCard({
 function PathNotices({
   unreached,
   saveFailed,
+  outOfDate,
+  reloadOnScreen,
   storageRefused,
   retryOnScreen,
   onRetry,
@@ -2488,6 +2578,15 @@ function PathNotices({
   retryOnScreen: boolean;
   /** The error code of the latest save to the account, when it failed. */
   saveFailed: ApiErrorCode | null;
+  /**
+   * A new version of the site was published while this page was open, and the
+   * page can no longer read what the account answers. That is said in place of
+   * the two sentences about the account: neither "the connection" nor "try
+   * again" is true of it, and only loading the page again puts it right.
+   */
+  outOfDate: boolean;
+  /** The screen below says that the page is out of date, with its own button: it is not said twice. */
+  reloadOnScreen: boolean;
   /** Nobody is signed in, and the browser refuses to keep the progress. */
   storageRefused: boolean;
   /** Ask the account again. */
@@ -2502,11 +2601,22 @@ function PathNotices({
       setAsking(false);
     }
   }
+  const sayOutOfDate = outOfDate && !reloadOnScreen;
+  const sayUnreached = unreached && !outOfDate;
+  const saySaveFailed = saveFailed !== null && !outOfDate;
   return (
     <div role="status">
-      {(unreached || saveFailed || storageRefused) && (
+      {(sayOutOfDate || sayUnreached || saySaveFailed || storageRefused) && (
         <div className="mb-6 grid gap-2 text-small leading-relaxed text-muted-foreground">
-          {unreached && (
+          {sayOutOfDate && (
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="min-w-0 flex-1 basis-64">{PAGE_OUT_OF_DATE}</span>
+              <Button variant="outline" size="sm" onClick={reloadPage}>
+                Reload the page
+              </Button>
+            </p>
+          )}
+          {sayUnreached && (
             <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span className="min-w-0 flex-1 basis-64">
                 Your account could not be reached. The progress saved on this device is shown.
@@ -2518,7 +2628,7 @@ function PathNotices({
               )}
             </p>
           )}
-          {saveFailed && (
+          {saySaveFailed && (
             <p>
               {saveFailed === "internal"
                 ? "Your latest answers are kept on this device and will be saved to your account when the connection returns."
@@ -2529,6 +2639,22 @@ function PathNotices({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The sentence for a page whose scripts have not started. An empty address is
+ * the page's own address, so the link loads the page again with no script.
+ */
+function LateSentence() {
+  return (
+    <>
+      Your study path could not be loaded. Please check your connection and{" "}
+      <a href="" className="cb-link">
+        reload the page
+      </a>
+      .
+    </>
   );
 }
 

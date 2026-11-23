@@ -82,6 +82,7 @@ vi.mock("@/components/path/PathApp", () => ({
 import { FREE_LAB_COUNT, freeLabs } from "@/core/path/free-labs";
 import { PATH_CERTS } from "@/core/path/types";
 import { pbqRegistry } from "@/data/pbq";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { freeOnPublicPages } from "../path/[cert]/free-parts";
 import * as pathPage from "../path/[cert]/page";
 import StartPage from "../start/page";
@@ -188,6 +189,33 @@ describe("the study path's page", () => {
       expect(metadata.robots, cert).toMatchObject({ index: false });
       expect(metadata.alternates?.canonical, cert).toBe(`/path/${cert}`);
     }
+  });
+
+  // Security+ and A+ are taught objective by objective, as CompTIA lists them.
+  // The Network+ questions are grouped into topics of CertBench's own, which
+  // are not CompTIA's N10-009 objectives: nothing may say that its study path
+  // covers "every exam objective".
+  it("describes Network+ by its topics, and an exam whose steps are CompTIA's objectives by its objectives", async () => {
+    const description = async (cert: string) =>
+      (await pathPage.generateMetadata({ params: Promise.resolve({ cert }) })).description ?? "";
+
+    const network = await description("network-plus-n10-009");
+    expect(network).toBe(
+      "Study for Network+ one short step at a time: quick questions on every topic, a readiness checkpoint, and a chart of where you stand on every topic."
+    );
+    expect(network).not.toMatch(/objective/i);
+    expect(await description("security-plus-sy0-701")).toBe(
+      "Study for Security+ one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a chart of where you stand on every objective."
+    );
+
+    // The same rule as the public pages use, for every exam that has a study path.
+    for (const cert of PATH_CERTS) {
+      const said = await description(cert);
+      const official = usesOfficialObjectiveNumbers(cert);
+      expect(/every (exam )?objective/.test(said), cert).toBe(official);
+      expect(/every topic/.test(said), cert).toBe(!official);
+    }
+    expect(PATH_CERTS.filter((cert) => !usesOfficialObjectiveNumbers(cert))).toEqual(["network-plus-n10-009"]);
   });
 
   describe("as the server draws it", () => {

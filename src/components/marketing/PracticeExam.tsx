@@ -30,6 +30,12 @@ const SCORED = "exam";
  */
 const EXTENDED_TIME = [1.5, 2] as const;
 const extendedMinutes = (minutes: number, factor: number) => Math.ceil(minutes * factor);
+/**
+ * What a screen reader is read after each extended limit ("135 minutes"): the
+ * figure is the length of the whole sitting, not time added to the standard
+ * limit.
+ */
+const EXTENDED_TIME_SPOKEN = "in total, with extended time";
 
 /** Where a page's practice exam keeps its sitting on the device. */
 const storageIdOf = (testId: string) => `${testId}-practice-test`;
@@ -646,14 +652,16 @@ function Intro({
           </div>
           {/* For a candidate who sits the real exam with extended time. Each
               choice is named in full for a screen reader, which may read it
-              without the words before it. */}
+              without the words before it. The figure is the whole sitting, and
+              the hidden words say so: "135 minutes of extended time" can be
+              heard as 135 minutes more. */}
           <p className="text-small text-muted-foreground">
             Take the exam with extended time:{" "}
             {EXTENDED_TIME.map((factor, k) => (
               <span key={factor}>
                 {k > 0 && " or "}
                 <button type="button" onClick={() => onStartExtended(factor)} className="cb-link cb-tap">
-                  {extendedMinutes(minutes, factor)} minutes <span className="sr-only">of extended time</span>
+                  {extendedMinutes(minutes, factor)} minutes <span className="sr-only">{EXTENDED_TIME_SPOKEN}</span>
                 </button>
               </span>
             ))}

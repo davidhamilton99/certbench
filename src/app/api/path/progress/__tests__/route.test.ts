@@ -31,14 +31,39 @@ const h = vi.hoisted(() => ({
   write: { error: null } as { error: Failure | null },
   /** Every row that the endpoint wrote. */
   written: [] as { row: { user_id: string; cert_slug: string; progress: PathProgress }; options: unknown }[],
+  /** The account's subscription rows (it has one at most), or the failure of their read. */
+  subscriptions: { data: [], error: null } as { data: { plan: string; status: string }[] | null; error: Failure | null },
   /** Work left for after the response: the error report. */
   later: [] as (() => unknown)[],
   reportServerError: vi.fn<(error: unknown, place: Record<string, unknown>) => Promise<void>>(async () => {}),
 }));
 
+type Settle<T> = (value: T) => unknown;
+
 const user = { id: "user-1", email: "member@example.com" };
 const db = {
   from: (table: string) => {
+    if (table === "user_subscriptions") {
+      const rows = {
+        eq: () => rows,
+        // The endpoint reads the account's rows as a list.
+        then: (resolve: Settle<typeof h.subscriptions>, reject: Settle<unknown>) =>
+          Promise.resolve(h.subscriptions).then(resolve, reject),
+        // The plan service reads one row or none.
+        maybeSingle: () => Promise.resolve({ data: h.subscriptions.data?.[0] ?? null, error: h.subscriptions.error }),
+      };
+      return { select: () => rows };
+    }
+    if (table === "practice_exam_attempts") {
+      // The plan service also counts the day's practice questions: none here.
+      const rows = {
+        eq: () => rows,
+        gte: () => rows,
+        then: (resolve: Settle<Result>, reject: Settle<unknown>) =>
+          Promise.resolve({ data: [], error: null }).then(resolve, reject),
+      };
+      return { select: () => rows };
+    }
     if (table !== "path_progress") throw new Error(`Unexpected use of ${table}`);
     const read = {
       eq: () => read,
@@ -71,10 +96,13 @@ vi.mock("@/server/path/cert-id", () => ({ certIdFor: async () => "cert-701" }));
 vi.mock("@/server/path/access", () => ({ getPathAccess: async () => h.access }));
 
 import { GET, POST } from "../route";
+import { getUserPlan } from "@/server/services/subscription";
+import type { Db } from "@/server/supabase/server";
 
 const CERT = "security-plus-sy0-701";
 const NOT_READ = "Your study path could not be read. Please try again.";
 const NOT_SAVED = "Your study path could not be saved. Please try again.";
+const NOT_CHECKED = "Your account could not be checked. Please try again.";
 
 const read = () => GET(new NextRequest(`https://certbench.dev/api/path/progress?cert=${CERT}`));
 const save = (progress: PathProgress) =>
@@ -114,6 +142,7 @@ beforeEach(() => {
   h.read = { data: null, error: null };
   h.write = { error: null };
   h.written = [];
+  h.subscriptions = { data: [], error: null };
   h.later = [];
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -215,5 +244,72 @@ describe("POST /api/path/progress: saving the study path", () => {
     const res = await save(answered("a|1.1|w1"));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, stored: false });
+  });
+});
+
+/**
+ * A member whose last payment did not go through has no Pro while the payment
+ * is owed. The study path showed such a member the offer of Pro, and the
+ * press of a plan ended in a refusal at the checkout. The endpoint now says
+ * that a payment is owed, and the page shows the way to the billing page
+ * where the offer would have been.
+ */
+describe("GET /api/path/progress: a payment that is owed", () => {
+  /** What a subscription can be, and no subscription at all. */
+  const STANDINGS = ["active", "trialing", "past_due", "unpaid", "incomplete", "canceled", null] as const;
+  const subscriptionIs = (status: (typeof STANDINGS)[number]) => {
+    h.subscriptions = { data: status ? [{ plan: "pro", status }] : [], error: null };
+  };
+
+  it("says that a payment is owed for a subscription that is past due", async () => {
+    subscriptionIs("past_due");
+    const res = await read();
+    expect(res.status).toBe(200);
+    // No Pro while the payment is owed: the access check answers "free" for such an account.
+    expect(await res.json()).toMatchObject({ access: "free", proPlan: false, paymentPastDue: true });
+  });
+
+  it.each(STANDINGS.filter((status) => status !== "past_due"))(
+    "says nothing of it for a subscription that is %s",
+    async (status) => {
+      subscriptionIs(status);
+      const body = await (await read()).json();
+      // Sent only when it is true.
+      expect(body).not.toHaveProperty("paymentPastDue");
+    }
+  );
+
+  it.each(STANDINGS)("agrees with the plan service, which the billing page asks (%s)", async (status) => {
+    subscriptionIs(status);
+    const body = await (await read()).json();
+    const plan = await getUserPlan(db as unknown as Db, user.id);
+    // The billing page says "Your last payment did not go through." for exactly the accounts named here.
+    expect(body.paymentPastDue === true).toBe(plan.paymentPastDue);
+  });
+
+  it("does not take a failed read for 'no payment is owed': the account could not be checked", async () => {
+    h.subscriptions = { data: null, error: { message: "TimeoutError: The operation was aborted due to timeout" } };
+    const res = await read();
+    // Answered as "not owed", the page would show the offer to the member this is for.
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: { code: "internal", message: NOT_CHECKED } });
+    expect(await reported()).toHaveLength(1);
+  });
+
+  it("is read once when the study path is read, and not at all when it is saved", async () => {
+    let subscriptionReads = 0;
+    const real = db.from;
+    db.from = (table: string) => {
+      if (table === "user_subscriptions") subscriptionReads += 1;
+      return real(table);
+    };
+    try {
+      await read();
+      expect(subscriptionReads).toBe(1);
+      await save(answered("a|1.1|w1"));
+      expect(subscriptionReads).toBe(1);
+    } finally {
+      db.from = real;
+    }
   });
 });

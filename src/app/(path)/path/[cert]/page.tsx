@@ -9,6 +9,7 @@ import { studyPathTitle } from "@/core/path/versions";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { PathApp } from "@/components/path/PathApp";
 import { holdScript } from "@/components/path/path-hold";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { freeOnPublicPages } from "./free-parts";
 
@@ -30,12 +31,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { cert } = await params;
   const name = EXAM_NAMES[cert] ?? "CompTIA";
+  // Security+ and A+ are taught objective by objective, as CompTIA lists them.
+  // The Network+ questions are grouped into topics of CertBench's own, which
+  // are not CompTIA's N10-009 objectives, so its description says "topic".
+  const official = usesOfficialObjectiveNumbers(cert);
   // The app itself: a few words of server HTML and no heading, so it stays out
   // of search. The practice-test and objective pages are what should rank.
   return pageMetadata({
     // An exam that is taught in two versions carries its code in the title.
     title: studyPathTitle(cert, name),
-    description: `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a chart of where you stand on every objective.`,
+    description: official
+      ? `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a chart of where you stand on every objective.`
+      : `Study for ${name} one short step at a time: quick questions on every topic, a readiness checkpoint, and a chart of where you stand on every topic.`,
     path: `/path/${cert}`,
     noindex: true,
   });

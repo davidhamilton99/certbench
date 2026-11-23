@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { buildPlan } from "@/core/path/plan";
 import { isoInDays } from "@/core/path/checkpoint";
@@ -8,12 +8,26 @@ import { recordRep } from "@/core/path/progress";
 import type { FreeOnPublicPages } from "@/core/path/free-labs";
 import { EMPTY_PATH_PROGRESS, type ChoiceRep, type PathProgress, type PathStop, type PathStructure, type Rep } from "@/core/path/types";
 
-/** Who the mocked Supabase client says is signed in. */
-const auth = vi.hoisted(() => ({ session: null as null | { user: { id: string; email: string } } }));
+/**
+ * Who the mocked Supabase client says is signed in. `ended`: the sign-in
+ * service no longer knows the session (it was ended on another device). The
+ * client learns that only when it asks the service, and drops its cookie then.
+ */
+const auth = vi.hoisted(() => ({
+  session: null as null | { user: { id: string; email: string } },
+  ended: false,
+}));
 vi.mock("@/lib/supabase-browser", () => ({
   createClient: () => ({
     auth: {
       getSession: async () => ({ data: { session: auth.session } }),
+      getUser: async () => {
+        if (auth.ended || !auth.session) {
+          auth.session = null;
+          return { data: { user: null }, error: { name: "AuthSessionMissingError", status: 400 } };
+        }
+        return { data: { user: auth.session.user }, error: null };
+      },
       signOut: async () => ({}),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
       signUp: async ({ email }: { email: string }) => {
@@ -93,6 +107,18 @@ vi.mock("@/components/workspace/PbqPlayer", () => ({
   ),
 }));
 
+// Loading the page again is watched, not done: the test page cannot navigate.
+const reloadPage = vi.hoisted(() => vi.fn());
+vi.mock("../reload-page", () => ({ reloadPage }));
+
+// The background fetch of the schemas that read the server's answers is
+// watched here, and nothing is fetched. The rest of the module stays real.
+const warmContracts = vi.hoisted(() => vi.fn());
+vi.mock("@/contracts/lazy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/contracts/lazy")>()),
+  warmContracts,
+}));
+
 // The early fetch of a lab's large player is watched here; the rest of the
 // module stays real. (Nothing is fetched: the player above stands in for all of them.)
 const preloadLab = vi.hoisted(() => vi.fn());
@@ -106,6 +132,8 @@ const server = vi.hoisted(() => ({
   progress: null as null | object,
   access: "free" as "free" | "pro",
   proPlan: false,
+  /** The account's last payment did not go through (it has no Pro while the payment is owed). */
+  pastDue: false,
   /** What enrolling answers: false when a Pro member already has another exam. */
   enrolls: true,
   /** When set, the request that makes this the account's exam waits for it before it answers. */
@@ -134,6 +162,8 @@ vi.mock("@/lib/api-client", async () => {
             access: server.access,
             proPlan: server.proPlan,
             certId: "11111111-1111-4111-8111-111111111111",
+            // As the server does: sent only when it is true.
+            ...(server.pastDue ? { paymentPastDue: true } : {}),
           };
         case "POST /api/path/progress":
           if (server.saveError) throw server.saveError;
@@ -310,9 +340,11 @@ const done = (ids: string[], extra?: Partial<PathProgress>): PathProgress => ({
 
 beforeEach(() => {
   auth.session = null;
+  auth.ended = false;
   server.progress = null;
   server.access = "free";
   server.proPlan = false;
+  server.pastDue = false;
   server.enrolls = true;
   server.enrollWaits = null;
   cards.length = 0;
@@ -325,6 +357,8 @@ beforeEach(() => {
   track.mockClear();
   identifyUser.mockClear();
   preloadLab.mockClear();
+  reloadPage.mockClear();
+  warmContracts.mockClear();
   storage.refuses = false;
   localStorage.clear();
   window.history.replaceState(null, "", "/path/security-plus-sy0-701");
@@ -2300,12 +2334,26 @@ describe("the held stage", () => {
     expect(loading.tagName).toBe("H1");
     expect(loading.parentElement).toHaveAttribute("role", "status");
     expect(loading.parentElement).toHaveClass("path-wait");
-    expect(screen.getByText(/^Your study path could not be loaded\. Please check your connection and/)).toHaveAttribute(
-      "role",
-      "alert"
-    );
+    // The second is an alert, for a page whose scripts never start. Nothing else is on a
+    // held stage then, so there it is the screen's title; under a first visit's question,
+    // which has a title of its own, it is a paragraph. The same words stand in both, and
+    // the style rules show one of them, by the mark that the inline script leaves on <html>.
+    const late = document.querySelector<HTMLElement>(".path-stage > .path-late")!;
+    expect(late).toHaveAttribute("role", "alert");
+    const said = "Your study path could not be loaded. Please check your connection and reload the page.";
+    const [asTitle, asParagraph] = [...late.children] as HTMLElement[];
+    expect(late.children).toHaveLength(2);
+    expect(asTitle.tagName).toBe("H1");
+    expect(asTitle).toHaveTextContent(said);
+    expect(asTitle).toHaveClass("hidden", "[html[data-path-returning]_&]:block");
+    expect(asParagraph.tagName).toBe("P");
+    expect(asParagraph).toHaveTextContent(said);
+    expect(asParagraph).toHaveClass("[html[data-path-returning]_&]:hidden");
+    expect(asParagraph).not.toHaveClass("hidden");
     // An empty address is this page's own address: the link reloads it without any script.
-    expect(screen.getByText("reload the page").closest("a")).toHaveAttribute("href", "");
+    const links = within(late).getAllByText("reload the page");
+    expect(links).toHaveLength(2);
+    for (const link of links) expect(link.closest("a")).toHaveAttribute("href", "");
 
     expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
     expect(document.querySelector(".path-stage")).toHaveAttribute("data-ready", "true");
@@ -2592,6 +2640,216 @@ describe("when the account cannot be reached", () => {
   });
 });
 
+// The server answers "signed out" (401) to a learner whose browser holds a
+// session. The answer is believed only when the browser's own sign-in client
+// says the same. Believed wrongly, it showed a member the visitor's screen,
+// with their progress put away and nothing asked again.
+describe("when the server answers that nobody is signed in", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  const NOT_REACHED = "Your account could not be reached. The progress saved on this device is shown.";
+  const SIGN_IN_AGAIN = "Your Security+ study path is saved in your account.";
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner: "u1", progress: done(["warmup", "1.1"]) }));
+    server.readError = new ApiError("unauthorized");
+  });
+
+  it("does not show the visitor's screen while the browser holds a good session, and asks the account again", async () => {
+    renderPath();
+    // The learner's own home screen: what this device holds, with the reason said above it.
+    expect(await screen.findByText(NOT_REACHED)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.getByText(/You have completed 2 of \d+ steps/)).toBeInTheDocument();
+    // Not the screen that asks a signed-out learner to sign in again, and not a visitor's first question.
+    expect(screen.queryByRole("heading", { name: SIGN_IN_AGAIN })).toBeNull();
+    expect(screen.queryByText("Prompt a|1.1|w1")).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("path_welcome_back_viewed", expect.anything());
+    // Still signed in: the account menu is in the header.
+    expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
+
+    // Asked again, the server answers properly, and the notice goes.
+    server.readError = null;
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    expect(screen.getByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+  });
+
+  it("asks a learner whose session has ended to sign in again", async () => {
+    // Signed out on another device, say: the cookie is still here, and the session behind it is gone.
+    auth.ended = true;
+    renderPath();
+    expect(await screen.findByRole("heading", { level: 1, name: SIGN_IN_AGAIN })).toBeInTheDocument();
+    expect(screen.queryByText(NOT_REACHED)).toBeNull();
+    expect(track).toHaveBeenCalledWith("path_welcome_back_viewed", { cert: "security-plus-sy0-701" });
+  });
+});
+
+// A new version of the site was published while the page was open. The server
+// carries each request out, and the file that reads its answers is gone, so
+// `api()` says that the page is out of date. Neither "the connection" nor "try
+// again" is true of that: only loading the page again puts it right.
+describe("a page that is out of date", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  const OUT_OF_DATE = "This page is out of date. Please reload the page.";
+  const WHEN_THE_CONNECTION_RETURNS =
+    "Your latest answers are kept on this device and will be saved to your account when the connection returns.";
+  const NOT_REACHED = "Your account could not be reached. The progress saved on this device is shown.";
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+  });
+
+  it("says so in place of the sentence about the connection, with a button that loads the page again, and sends nothing again", async () => {
+    server.saveError = new ApiError("internal", OUT_OF_DATE);
+    server.stopHandler = (input) => stopReply(input.index, 1);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    await answer(true);
+    // The end of the step sends a save. The server stores it, and the page cannot read the answer.
+    const said = await screen.findByText(OUT_OF_DATE);
+    expect(said.closest('[role="status"]')).not.toBeNull();
+    expect(screen.queryByText(WHEN_THE_CONNECTION_RETURNS)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    // It was carried out, so it is not counted with the saves that failed.
+    expect(track).not.toHaveBeenCalledWith("path_save_failed", expect.anything());
+
+    // The page does not send it again when the browser says that the connection is back.
+    const sent = savedProgress().length;
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    await act(async () => {});
+    expect(savedProgress().length).toBe(sent);
+
+    fireEvent.click(screen.getByRole("button", { name: "Reload the page" }));
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("says so in place of 'could not be reached' when it is the account's own answer that cannot be read", async () => {
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner: "u1", progress: done(["warmup"]) }));
+    server.readError = new ApiError("internal", OUT_OF_DATE);
+    renderPath();
+    expect(await screen.findByText(OUT_OF_DATE)).toBeInTheDocument();
+    // The learner's own screen, from what this device holds.
+    expect(await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.queryByText(NOT_REACHED)).toBeNull();
+    // "Try again" could not help: the one button loads the page again.
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Reload the page" })).toBeInTheDocument();
+  });
+
+  it("offers to load the page again, and not to try again, on the screen of a step whose answer could not be read", async () => {
+    server.stopHandler = () => new ApiError("internal", OUT_OF_DATE);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    const said = await screen.findByRole("heading", { level: 1, name: OUT_OF_DATE });
+    expect(document.activeElement).toBe(said);
+    // Said once, with one button.
+    expect(screen.getAllByText(OUT_OF_DATE)).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+
+    // The press loads the page again. It does not ask the server for the step a second time.
+    const asked = stepRequests().length;
+    fireEvent.click(screen.getByRole("button", { name: "Reload the page" }));
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+    expect(stepRequests()).toHaveLength(asked);
+  });
+
+  it("says it once when a save and the next step both find the page out of date", async () => {
+    // A member between two study steps, so that Continue asks the server for a step.
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(["warmup", "1.1", "checkpoint"], {
+      goal: { examDate: null, target: null, minutes: 20, at: 1 },
+      checkpoint: { score: 60, at: 1, domains: [] },
+    });
+    server.saveError = new ApiError("internal", OUT_OF_DATE);
+    server.stopHandler = (input) => (input.index === 3 ? stopReply(3, 1) : new ApiError("internal", OUT_OF_DATE));
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByText("Prompt a|1.2|s3-0");
+    await answer(true);
+    await screen.findByText(OUT_OF_DATE);
+    // The next step cannot be read either: its screen says so, and the notice above does not repeat it.
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    await screen.findByRole("heading", { level: 1, name: OUT_OF_DATE });
+    expect(screen.getAllByText(OUT_OF_DATE)).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Reload the page" })).toHaveLength(1);
+  });
+});
+
+// The schemas that read the server's answers are kept out of the page's first
+// load. They are fetched in the background once the page is idle, so that a
+// new version of the site, published during the visit, cannot take them away.
+describe("the schemas that read the server's answers", () => {
+  type IdleWindow = {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  const idleWindow = window as unknown as IdleWindow;
+  /** What the browser was asked to do once it is idle. */
+  let idle: { callback: () => void; cancelled: boolean }[] = [];
+
+  beforeEach(() => {
+    idle = [];
+    idleWindow.requestIdleCallback = (callback) => {
+      idle.push({ callback, cancelled: false });
+      return idle.length;
+    };
+    idleWindow.cancelIdleCallback = (id) => {
+      idle[id - 1].cancelled = true;
+    };
+  });
+
+  afterEach(() => {
+    // The page is taken down while the browser can still be told that the request no longer stands.
+    cleanup();
+    delete idleWindow.requestIdleCallback;
+    delete idleWindow.cancelIdleCallback;
+  });
+
+  it("are not fetched as the page loads, and are fetched for every endpoint of the page once the browser is idle", async () => {
+    renderPath();
+    await act(async () => {});
+    // Nothing during the load: the browser has only been asked to say when it is idle.
+    expect(warmContracts).not.toHaveBeenCalled();
+    expect(idle).toHaveLength(1);
+
+    act(() => idle[0].callback());
+    expect(warmContracts).toHaveBeenCalledTimes(1);
+    const warmed = (warmContracts.mock.calls[0][0] as { method: string; path: string }[]).map(
+      (contract) => `${contract.method} ${contract.path}`
+    );
+    // The study path's own endpoints.
+    expect(warmed).toEqual(
+      expect.arrayContaining([
+        "GET /api/path/progress",
+        "POST /api/path/progress",
+        "POST /api/path/stop",
+        "POST /api/path/lab",
+        "POST /api/path/rehearsal",
+        "POST /api/path/enroll",
+        "POST /api/path/answers",
+      ])
+    );
+    // And those of the offer that the page makes: the prices and the payment page.
+    expect(warmed).toEqual(
+      expect.arrayContaining(["GET /api/pricing/region", "POST /api/stripe/checkout", "POST /api/stripe/cert-checkout"])
+    );
+  });
+
+  it("are not asked for by a page that is left before the browser is idle", async () => {
+    const { unmount } = renderPath();
+    await act(async () => {});
+    unmount();
+    expect(idle[0].cancelled).toBe(true);
+    expect(warmContracts).not.toHaveBeenCalled();
+  });
+});
+
 describe("moving the focus with the screen", () => {
   const goal = { examDate: null, target: null, minutes: 20, at: 1 };
 
@@ -2719,6 +2977,64 @@ describe("the question's own lines", () => {
     // The translated lines of the question before are gone, not left on the page.
     expect(screen.queryByText("Frage 1 von 3")).toBeNull();
     expect(screen.queryByText("Ziel 1.1")).toBeNull();
+  });
+
+  // An exam-style question used to carry two small lines above it: the
+  // objective's, and the card's own "Exam-style question" under it.
+  it("says the kind of an exam-style question on the objective's own line, and not a second time", async () => {
+    renderPath();
+    await act(async () => {});
+    // A quick question: the line names the objective, and there is no kind to say.
+    expect(screen.getByText("Objective 1.1: Objective 1.1.")).toBeInTheDocument();
+    expect(screen.queryByText(/Exam-style question/)).toBeNull();
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|1.1|w1" }, showKind: false });
+
+    await answer(true);
+    await answer(true);
+    // The third introductory question is exam-style, and the one line says so.
+    const line = screen.getByText("Objective 1.2: Objective 1.2. Exam-style question.");
+    expect(line.tagName).toBe("P");
+    // The card is told not to print the kind again: the words are on the screen once.
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|1.2|w3" }, showKind: false });
+    expect(screen.getAllByText(/Exam-style question/)).toEqual([line]);
+  });
+
+  it("draws the objective's line afresh when only the kind of question changes", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    // The checkpoint: two questions on the one objective, the second of them exam-style.
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("a|1.1|quick", "1.1"), rep("a|1.1|exam", "1.1", "exam")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the checkpoint/ }));
+    const first = await screen.findByText("Objective 1.1: Objective 1.1.");
+    // What a browser does when it translates the page.
+    first.innerHTML = "<font>Ziel 1.1</font>";
+
+    await answer(true);
+    const second = screen.getByText("Objective 1.1: Objective 1.1. Exam-style question.");
+    // The same objective, and still a new element: the translated words are not left in its place.
+    expect(second).not.toBe(first);
+    expect(screen.queryByText("Ziel 1.1")).toBeNull();
+  });
+
+  it("leaves the kind on the card where no objective line is shown: a step on one objective, which its title names", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("a|1.1|exam", "1.1", "exam")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|exam");
+    expect(screen.queryByText(/^Objective 1\.1: /)).toBeNull();
+    // The card's own label, once.
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|1.1|exam" }, showKind: true });
+    expect(screen.getAllByText("Exam-style question")).toHaveLength(1);
   });
 
   it("hands the question card the same handlers from one render to the next", async () => {
@@ -3044,5 +3360,70 @@ describe("the way on past the free steps", () => {
     fireEvent.click(within(row).getByRole("button", { name: "See what Pro includes" }));
     // The offer is on this screen: it is brought into view and takes the focus, so that it is read.
     expect(document.activeElement).toBe(document.getElementById("path-offer"));
+  });
+});
+
+// A member whose last payment did not go through has no Pro while the payment
+// is owed. The study path offered such a member Pro, and the plan they pressed
+// was refused at the checkout. They are shown the way to the billing page.
+describe("a member whose last payment did not go through", () => {
+  const PAST_DUE = "Your last payment did not go through.";
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+  const freeSteps = plan.stops.slice(0, plan.freeThrough + 1).map((s) => s.id);
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    // No Pro while the payment is owed: the account's access is "free".
+    server.pastDue = true;
+    server.progress = done(freeSteps, { goal, checkpoint: { score: 64, at: 1, domains: [] } });
+  });
+
+  it("is shown the way to the billing page on the home screen, where the offer would stand", async () => {
+    renderPath();
+    const title = await screen.findByRole("heading", { level: 2, name: PAST_DUE });
+    const notice = title.closest<HTMLElement>(".glass")!;
+    // The billing page's own two sentences, and a link to that page.
+    expect(within(notice).getByText("Please update your payment method to keep CertBench Pro.")).toBeInTheDocument();
+    expect(within(notice).getByRole("link", { name: "Manage billing" })).toHaveAttribute("href", "/upgrade");
+    // It stands in the offer's place, so a row of the outline that led to the offer leads here.
+    expect(document.getElementById("path-offer")).toContainElement(notice);
+
+    // No offer: nothing to buy, no price asked for, and no offer counted as seen.
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Continue to payment" })).toBeNull();
+    expect(screen.queryByText(/Pass guarantee/)).toBeNull();
+    await act(async () => {});
+    expect(server.calls.some((c) => c.path === "/api/pricing/region")).toBe(false);
+    expect(track).not.toHaveBeenCalledWith("path_offer_viewed", expect.anything());
+    // Nothing on it tries anything again.
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+  });
+
+  it("is shown it under the result of the readiness checkpoint as well", async () => {
+    server.progress = done(["warmup", "1.1"], { goal });
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("q|1.1|33333333-3333-4333-8333-333333333333", "1.1", "exam")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the checkpoint/ }));
+    await screen.findByText(/Prompt q\|1\.1/);
+    await answer(true);
+    expect(await screen.findByRole("heading", { level: 2, name: PAST_DUE })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Manage billing" })).toHaveAttribute("href", "/upgrade");
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
+    // The way back to the study path is still under it.
+    expect(screen.getByRole("button", { name: "Return to the study path" })).toBeInTheDocument();
+    expect(track).not.toHaveBeenCalledWith("path_offer_viewed", expect.anything());
+  });
+
+  it("is not shown it where there is no offer to take its place: the free steps are theirs as before", async () => {
+    // Before the readiness checkpoint nothing is offered, so nothing is said about billing either.
+    server.progress = done(["warmup"]);
+    renderPath();
+    expect(await screen.findByRole("button", { name: /^Continue/ })).toBeInTheDocument();
+    expect(screen.queryByText(PAST_DUE)).toBeNull();
+    expect(screen.queryByRole("link", { name: "Manage billing" })).toBeNull();
   });
 });

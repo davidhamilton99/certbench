@@ -10,6 +10,15 @@ const auth = vi.hoisted(() => ({
   session: null as null | { user: { id: string; email: string } },
   hangs: false,
   loads: 0,
+  /**
+   * What the sign-in service answers when the browser's client asks it who is
+   * signed in: the user of the session ("good"), that the session no longer
+   * exists ("ended", after which the client drops its cookie, as the real one
+   * does), or nothing, because it cannot be reached ("unreachable").
+   */
+  service: "good" as "good" | "ended" | "unreachable",
+  /** How many times the client asked the sign-in service. */
+  asked: 0,
 }));
 vi.mock("@/lib/supabase-lazy", () => ({
   hasSessionCookie: () => auth.session !== null || auth.hangs,
@@ -19,6 +28,17 @@ vi.mock("@/lib/supabase-lazy", () => ({
       auth: {
         getSession: () =>
           auth.hangs ? new Promise(() => {}) : Promise.resolve({ data: { session: auth.session } }),
+        getUser: async () => {
+          auth.asked++;
+          if (auth.service === "unreachable") {
+            return { data: { user: null }, error: { name: "AuthRetryableFetchError", status: 0 } };
+          }
+          if (auth.service === "ended" || !auth.session) {
+            auth.session = null;
+            return { data: { user: null }, error: { name: "AuthSessionMissingError", status: 400 } };
+          }
+          return { data: { user: auth.session.user }, error: null };
+        },
       },
     };
   },
@@ -33,12 +53,16 @@ const server = vi.hoisted(() => ({
   progress: null as null | object,
   access: "free" as "free" | "pro",
   proPlan: false,
+  /** The account's last payment did not go through. The server says so only when it is true. */
+  pastDue: false,
   /** Reading the account: it answers, it fails with this error, or it never answers. */
   read: "ok" as "ok" | "hang" | Error,
   /** Saving to the account: it works, or it fails with this error. */
   save: "ok" as "ok" | Error,
   /** False where the database has no table for saved progress: saving is not available there. */
   stored: true,
+  /** Something that happens in the browser just as the account is asked. */
+  whenRead: null as null | (() => void),
   calls: [] as { method: string; path: string; input: unknown; options: { timeoutMs?: number; keepalive?: boolean } }[],
 }));
 vi.mock("@/lib/api-client", () => ({
@@ -49,6 +73,7 @@ vi.mock("@/lib/api-client", () => ({
   ) => {
     server.calls.push({ method: contract.method, path: contract.path, input, options });
     if (contract.method === "GET") {
+      server.whenRead?.();
       if (server.read === "hang") return new Promise(() => {});
       if (server.read instanceof Error) throw server.read;
       return {
@@ -57,6 +82,7 @@ vi.mock("@/lib/api-client", () => ({
         access: server.access,
         proPlan: server.proPlan,
         certId: "11111111-1111-4111-8111-111111111111",
+        ...(server.pastDue ? { paymentPastDue: true } : {}),
       };
     }
     if (server.save instanceof Error) throw server.save;
@@ -122,9 +148,13 @@ beforeEach(() => {
   auth.session = null;
   auth.hangs = false;
   auth.loads = 0;
+  auth.service = "good";
+  auth.asked = 0;
+  server.whenRead = null;
   server.progress = null;
   server.access = "free";
   server.proPlan = false;
+  server.pastDue = false;
   server.read = "ok";
   server.save = "ok";
   server.stored = true;
@@ -290,13 +320,133 @@ describe("an account that cannot be reached", () => {
     expect(items(result.current.progress)).toEqual(["a|1.1|device", "a|1.2|account"]);
   });
 
-  it("is a signed-out visit when the account answers that the session has ended", async () => {
+});
+
+// The server answers "signed out" (401) to a page that holds a session. It is
+// believed only when the browser's own sign-in client says the same. A wrong
+// "signed out" shows a member the visitor's screen, with their progress put
+// away and nothing asked again.
+describe("an account that answers 'signed out'", () => {
+  beforeEach(() => {
+    signIn();
+    seed("u1", finishStop(answered("a|1.1|device"), "warmup", 1, 1, 5));
     server.read = new ApiError("unauthorized");
+  });
+
+  it("is not believed while the browser holds a good session: the account is 'not reached', and it is asked again", async () => {
     const { result } = open();
     await pass();
+    // Not the visitor's screen: the learner is still signed in, with their own progress in front of them.
+    expect(result.current).toMatchObject({ ready: true, signedIn: true, userId: "u1", access: "unknown", unreached: true });
+    expect(result.current.held).toBeNull();
+    expect(items(result.current.progress)).toEqual(["a|1.1|device"]);
+    // The sign-in client was asked, and it named the user.
+    expect(auth.asked).toBe(1);
+    // Nothing is sent to an account that has not answered.
+    expect(saves()).toHaveLength(0);
+
+    // It is asked again by itself. The server answers properly this time: a member.
+    server.read = "ok";
+    server.access = "pro";
+    await pass(1000);
+    expect(reads()).toHaveLength(2);
+    expect(result.current).toMatchObject({ signedIn: true, access: "pro", unreached: false });
+  });
+
+  it("is a signed-out visit when the sign-in service says that the session has ended", async () => {
+    // Signed out on another device, say: the cookie is still here, and the session behind it is gone.
+    auth.service = "ended";
+    const { result } = open();
+    await pass();
+    expect(auth.asked).toBe(1);
     expect(result.current).toMatchObject({ ready: true, signedIn: false, access: "anonymous", unreached: false });
     // The account's copy on the device is offered back, not shown.
     expect(items(result.current.held)).toEqual(["a|1.1|device"]);
+    // A visitor's page does not ask an account again.
+    await pass(8000);
+    expect(reads()).toHaveLength(1);
+  });
+
+  it("is a signed-out visit, with nobody asked, when the browser no longer holds a session cookie", async () => {
+    // The session ends in another tab while this page is asking the account.
+    server.whenRead = () => {
+      auth.session = null;
+    };
+    const { result } = open();
+    await pass();
+    expect(auth.asked).toBe(0);
+    expect(result.current).toMatchObject({ ready: true, signedIn: false, access: "anonymous" });
+    expect(items(result.current.held)).toEqual(["a|1.1|device"]);
+  });
+
+  it("is not believed when the sign-in service cannot be asked: nothing is known, so the learner stays signed in", async () => {
+    auth.service = "unreachable";
+    const { result } = open();
+    await pass();
+    expect(result.current).toMatchObject({ ready: true, signedIn: true, access: "unknown", unreached: true });
+    expect(items(result.current.progress)).toEqual(["a|1.1|device"]);
+  });
+
+  it("keeps a member's access when a later request is answered 'signed out' and the session is good", async () => {
+    server.read = "ok";
+    server.access = "pro";
+    const { result } = open();
+    await pass();
+    expect(result.current.access).toBe("pro");
+
+    server.read = new ApiError("unauthorized");
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    expect(result.current).toMatchObject({ signedIn: true, access: "pro", unreached: true });
+  });
+});
+
+describe("an account whose last payment did not go through", () => {
+  beforeEach(() => signIn());
+
+  it("is known as such once the account has said so, and never before", async () => {
+    server.pastDue = true;
+    const { result } = open();
+    // Nothing is known yet: nobody is told that a payment is owed.
+    expect(result.current.paymentPastDue).toBe(false);
+    await pass();
+    expect(result.current).toMatchObject({ access: "free", proPlan: false, paymentPastDue: true });
+  });
+
+  it("is not assumed of an account that says nothing about a payment", async () => {
+    const { result } = open();
+    await pass();
+    expect(result.current.paymentPastDue).toBe(false);
+  });
+
+  it("stays known while the account cannot be reached, and ends when the account says that nothing is owed", async () => {
+    server.pastDue = true;
+    const { result } = open();
+    await pass();
+
+    server.read = new ApiError("internal");
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    // What the account last said still stands: the offer does not come back because a request failed.
+    expect(result.current).toMatchObject({ unreached: true, paymentPastDue: true });
+
+    // The payment is made, and the plan is back.
+    server.read = "ok";
+    server.pastDue = false;
+    server.access = "pro";
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    expect(result.current).toMatchObject({ unreached: false, access: "pro", paymentPastDue: false });
+  });
+
+  it("is never said of a visitor", async () => {
+    auth.session = null;
+    const { result } = open();
+    await pass();
+    expect(result.current).toMatchObject({ signedIn: false, paymentPastDue: false });
   });
 });
 
@@ -495,6 +645,90 @@ describe("saving to the account", () => {
     });
     expect(saves()).toHaveLength(1);
     expect(saves()[0].options.keepalive).toBeUndefined();
+  });
+});
+
+// A new version of the site was published while the page was open. The server
+// carries each request out, and the file that reads its answers is gone: `api()`
+// then says that the page is out of date. Asking again cannot help.
+describe("a page that is out of date", () => {
+  const OUT_OF_DATE = new ApiError("internal", "This page is out of date. Please reload the page.");
+
+  beforeEach(() => signIn());
+
+  it("does not count a save that was carried out as a failed save, says that the page is out of date, and sends nothing again", async () => {
+    const { result } = open();
+    await pass();
+    expect(result.current.outOfDate).toBe(false);
+
+    server.save = OUT_OF_DATE;
+    await act(async () => {
+      result.current.finish("warmup", 3, 3);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current).toMatchObject({ outOfDate: true, saveFailed: null });
+    // The server stored it: it is not counted with the saves that failed.
+    expect(track).not.toHaveBeenCalledWith("path_save_failed", expect.anything());
+
+    // Nothing is sent again: not after the wait, not when the connection is said to be back, not when the tab is looked at again.
+    const sent = saves().length;
+    await pass(8000);
+    await act(async () => {
+      window.dispatchEvent(new Event("online"));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      setVisibility("visible");
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(saves().length).toBe(sent);
+
+    // The learner goes on: their next answers are still sent, and the page stays out of date until it is loaded again.
+    server.save = "ok";
+    await act(async () => {
+      result.current.finish("1.1", 3, 3);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(saves().length).toBe(sent + 1);
+    expect(result.current).toMatchObject({ outOfDate: true, saveFailed: null });
+  });
+
+  it("stops sending a save that had failed once the page learns that it is out of date", async () => {
+    const { result } = open();
+    await pass();
+    server.save = new ApiError("internal", "The connection was lost. Please check your connection and try again.");
+    await act(async () => {
+      result.current.finish("warmup", 3, 3);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current.saveFailed).toBe("internal");
+
+    // The save is sent again after its wait. This time the server stores it, and the page cannot read the answer.
+    server.save = OUT_OF_DATE;
+    await pass(8000);
+    expect(result.current).toMatchObject({ outOfDate: true, saveFailed: null });
+    const sent = saves().length;
+    await pass(30_000);
+    expect(saves().length).toBe(sent);
+  });
+
+  it("does not go on asking an account whose answer it cannot read", async () => {
+    seed("u1", answered("a|1.1|device"));
+    server.read = OUT_OF_DATE;
+    const { result } = open();
+    await pass();
+    // What the account holds stays unknown, and the device's copy is shown.
+    expect(result.current).toMatchObject({ ready: true, signedIn: true, access: "unknown", unreached: true, outOfDate: true });
+    expect(items(result.current.progress)).toEqual(["a|1.1|device"]);
+    expect(reads()).toHaveLength(1);
+
+    // An account that is only out of reach is asked again after 1, 3 and 8 seconds. This one is not.
+    await pass(8000);
+    await act(async () => {
+      window.dispatchEvent(new Event("online"));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(reads()).toHaveLength(1);
   });
 });
 

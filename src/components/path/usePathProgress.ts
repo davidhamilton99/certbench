@@ -8,6 +8,7 @@ import { identifyUser, track } from "@/lib/analytics";
 // are not part of the page's first load: each arrives with its first use.
 import { getPathProgress, savePathProgress } from "@/contracts/client";
 import { ApiError, type ApiErrorCode } from "@/contracts/errors";
+import { PAGE_OUT_OF_DATE } from "@/lib/errors/user-message";
 import {
   clearGuestPath,
   readGuestClaim,
@@ -68,6 +69,13 @@ interface View {
   access: PathAccess;
   /** Pro subscriber who hasn't added this exam yet. */
   proPlan: boolean;
+  /**
+   * The account's last payment did not go through. It has no Pro while the
+   * payment is owed, and the checkout would refuse it a second plan: where the
+   * page would make the offer, it shows the way to the billing page instead.
+   * False until the account has said so.
+   */
+  paymentPastDue: boolean;
   /** The exam's certification id, once the account has been asked. */
   certId: string | null;
   /** false when the account can't store progress yet; null when unknown. */
@@ -91,6 +99,15 @@ interface View {
   /** False while the browser refuses to keep the progress on the device. */
   deviceSaves: boolean;
   /**
+   * A new version of the site was published while this page was open, and the
+   * part of the page that reads the account's answers can no longer be
+   * fetched (PAGE_OUT_OF_DATE). The server carries each request out, and the
+   * page cannot read what it answers. Asking again cannot help, so the page
+   * stops asking by itself and says to load the page again. It stays true
+   * until the page is loaded again.
+   */
+  outOfDate: boolean;
+  /**
    * This account arrived on a device whose copy of the path belonged to
    * another account. Work that the device keeps without a name on it (a
    * practice exam from a public page) is then not this account's to take.
@@ -113,12 +130,14 @@ const INITIAL: View = {
   progress: EMPTY_PATH_PROGRESS,
   access: "anonymous",
   proPlan: false,
+  paymentPastDue: false,
   certId: null,
   stored: null,
   held: null,
   unreached: false,
   saveFailed: null,
   deviceSaves: true,
+  outOfDate: false,
   foreign: false,
   arrival: 0,
 };
@@ -149,6 +168,13 @@ const SAVE_AGAIN_MS = 8000;
  */
 const KEEPALIVE_MAX_BYTES = 60_000;
 
+/**
+ * Whether a request failed because this page is out of date: the server
+ * answered, and the file that reads its answer is no longer there to fetch
+ * (see `api()` in src/lib/api-client.ts).
+ */
+const isOutOfDate = (err: unknown) => err instanceof ApiError && err.message === PAGE_OUT_OF_DATE;
+
 /** Who the sign-in service says is here. */
 interface Person {
   uid: string;
@@ -157,7 +183,14 @@ interface Person {
 
 /** What the account answered when it was asked for this path. */
 type Account =
-  | { reached: true; access: "free" | "pro"; proPlan: boolean; certId: string; stored: boolean }
+  | {
+      reached: true;
+      access: "free" | "pro";
+      proPlan: boolean;
+      paymentPastDue: boolean;
+      certId: string;
+      stored: boolean;
+    }
   /**
    * `signedOut`: the server answered that nobody is signed in, and the
    * browser's own sign-in client says so as well (see `browserSaysSignedOut`).
@@ -257,6 +290,16 @@ export function usePathProgress(cert: PathCert) {
     [cert]
   );
 
+  /**
+   * The page has learned that it is out of date (see `outOfDate`). Whatever
+   * the page goes on to learn, this stays: only loading the page again ends it.
+   */
+  const markOutOfDate = useCallback(() => {
+    if (cur.current.outOfDate) return;
+    cur.current = { ...cur.current, outOfDate: true };
+    setView(cur.current);
+  }, []);
+
   /** Failure codes already reported this visit, so one failing save is one event. */
   const reportedFailures = useRef(new Set<string>());
   /** The number of the latest save sent: only its outcome says whether the account is up to date. */
@@ -284,6 +327,15 @@ export function usePathProgress(cert: PathCert) {
         const { stored } = await api(savePathProgress, input, keepalive ? { keepalive: true } : {});
         settle(null, stored);
       } catch (err) {
+        if (isOutOfDate(err)) {
+          // The server carried the save out: it is the answer that this page
+          // can no longer read. Nothing failed, so nothing is counted as a
+          // failed save and nothing is sent again. The page says that it is
+          // out of date, which only loading it again puts right.
+          settle(null);
+          markOutOfDate();
+          return;
+        }
         // It's on the device and goes up next time. Offline shows as "internal".
         const code = err instanceof ApiError ? err.code : "internal";
         if (!reportedFailures.current.has(code)) {
@@ -293,7 +345,7 @@ export function usePathProgress(cert: PathCert) {
         settle(code);
       }
     },
-    [cert]
+    [cert, markOutOfDate]
   );
 
   /**
@@ -307,7 +359,15 @@ export function usePathProgress(cert: PathCert) {
       try {
         const res = await api(getPathProgress, { cert }, timeoutMs ? { timeoutMs } : {});
         server = sanitizePathProgress(res.progress);
-        account = { reached: true, access: res.access, proPlan: res.proPlan, certId: res.certId, stored: res.stored };
+        account = {
+          reached: true,
+          access: res.access,
+          proPlan: res.proPlan,
+          // The server sends it only when it is true.
+          paymentPastDue: res.paymentPastDue === true,
+          certId: res.certId,
+          stored: res.stored,
+        };
       } catch (err) {
         // The account was not reached: what it holds and what it may open stay
         // unknown (never "free"), and the page carries on with this device's
@@ -316,6 +376,9 @@ export function usePathProgress(cert: PathCert) {
         // reached, and it is asked again.
         const refused = err instanceof ApiError && err.code === "unauthorized";
         account = { reached: false, signedOut: refused && (await browserSaysSignedOut()) };
+        // The account answered, and this page can no longer read its answers:
+        // the page says so, and does not go on asking.
+        if (isOutOfDate(err)) markOutOfDate();
       }
       // Only progress that is anonymous or already this account's is folded
       // in: never another account's from a shared device.
@@ -338,7 +401,7 @@ export function usePathProgress(cert: PathCert) {
         unsynced: (!!mine && hasStarted(mine.progress)) || played !== null,
       };
     },
-    [cert]
+    [cert, markOutOfDate]
   );
 
   /** Whether the account has been reached at least once on this visit. */
@@ -373,6 +436,7 @@ export function usePathProgress(cert: PathCert) {
         progress: mergePathProgress(carry ? mergePathProgress(kept, carry.progress) : kept, answered),
         held: device?.owner ? device.progress : null,
         deviceSaves: before.deviceSaves,
+        outOfDate: before.outOfDate,
         arrival: before.arrival + 1,
       };
     };
@@ -403,6 +467,7 @@ export function usePathProgress(cert: PathCert) {
         progress: mergePathProgress(carry ? mergePathProgress(kept, carry.progress) : kept, before.progress),
         access: account ? account.access : last ? last.access : "unknown",
         proPlan: account?.proPlan ?? last?.proPlan ?? false,
+        paymentPastDue: account?.paymentPastDue ?? last?.paymentPastDue ?? false,
         certId: account?.certId ?? last?.certId ?? null,
         stored: account?.stored ?? last?.stored ?? null,
         held: null,
@@ -503,8 +568,9 @@ export function usePathProgress(cert: PathCert) {
 
   // A save that failed is sent again when the connection returns, when the tab
   // is looked at again, and once after a short wait. It is also sent with the
-  // next answers, as every save is.
-  const saveFailed = view.saveFailed !== null && view.userId !== null;
+  // next answers, as every save is. A page that is out of date sends nothing
+  // again by itself: it could not read the answer.
+  const saveFailed = view.saveFailed !== null && view.userId !== null && !view.outOfDate;
   useEffect(() => {
     if (!saveFailed) return;
     const again = () => {
@@ -651,6 +717,7 @@ export function usePathProgress(cert: PathCert) {
         progress: res.merged,
         access: account ? account.access : "unknown",
         proPlan: account?.proPlan ?? false,
+        paymentPastDue: account?.paymentPastDue ?? false,
         certId: account?.certId ?? null,
         stored: account?.stored ?? null,
         held: null,
@@ -703,6 +770,7 @@ export function usePathProgress(cert: PathCert) {
         progress,
         access: res.account.access,
         proPlan: res.account.proPlan,
+        paymentPastDue: res.account.paymentPastDue,
         certId: res.account.certId,
         stored: res.account.stored,
         unreached: false,
@@ -719,9 +787,11 @@ export function usePathProgress(cert: PathCert) {
 
   // While the account cannot be reached, ask again: after 1, 3 and 8 seconds,
   // when the browser says the connection is back, and when the tab is looked
-  // at again. The page also offers "Try again".
+  // at again. The page also offers "Try again". A page that is out of date
+  // does not ask again by itself: the account answers, and the page cannot
+  // read the answer until it is loaded again.
   useEffect(() => {
-    if (!view.unreached) return;
+    if (!view.unreached || view.outOfDate) return;
     const again = () => {
       if (document.visibilityState === "visible") void refreshAccess();
     };
@@ -733,7 +803,7 @@ export function usePathProgress(cert: PathCert) {
       window.removeEventListener("online", again);
       document.removeEventListener("visibilitychange", again);
     };
-  }, [view.unreached, refreshAccess]);
+  }, [view.unreached, view.outOfDate, refreshAccess]);
 
   /**
    * A practice exam finished on a public page, brought onto the path in one

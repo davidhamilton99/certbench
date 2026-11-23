@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
@@ -168,6 +169,30 @@ export function PathOffer({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * In place of the offer, for a member whose last payment did not go through.
+ * Such a member has no Pro while the payment is owed, so the page used to
+ * offer them Pro, and the checkout refused the plan they pressed. What they
+ * need is the billing page, where the payment method is updated. The two
+ * sentences are the billing page's own (/upgrade).
+ */
+export function PathPaymentPastDue() {
+  return (
+    // A notice, not the offer: it has no rule in the pressable colour along its top.
+    <div className="glass grid gap-5 rounded-lg p-6 sm:p-9">
+      <div className="grid gap-1.5">
+        <h2 className="cb-subsection">Your last payment did not go through.</h2>
+        <p className="cb-measure text-body text-muted-foreground">
+          Please update your payment method to keep CertBench Pro.
+        </p>
+      </div>
+      <Button asChild size="lg" className="w-full justify-self-start sm:w-auto">
+        <Link href="/upgrade">Manage billing</Link>
+      </Button>
     </div>
   );
 }

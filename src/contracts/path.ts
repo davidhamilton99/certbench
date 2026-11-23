@@ -193,6 +193,11 @@ export const getPathRehearsal = {
  * A read that failed is answered with an internal error, never with an empty
  * path. `stored: false` means one thing: saving is not available in this
  * database yet (the table does not exist), and the path works from the device.
+ *
+ * `paymentPastDue` is true for a member whose last payment did not go
+ * through. Such an account has no Pro while the payment is owed (`access` is
+ * "free"), and it is shown the way to the billing page where another account
+ * would be shown the offer. The server sends it only when it is true.
  */
 export const getPathProgress = {
   path: "/api/path/progress",
@@ -204,6 +209,7 @@ export const getPathProgress = {
     access: z.enum(["free", "pro"]),
     proPlan: z.boolean(),
     certId: z.string(),
+    paymentPastDue: z.boolean().default(false),
   }),
 } as const satisfies EndpointContract;
 

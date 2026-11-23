@@ -490,10 +490,25 @@ describe("PracticeExam", () => {
 
   it("offers extended time, and keeps that allowance for the sitting and for another one after it", () => {
     mountFull();
-    expect(screen.getByText(/^Take the exam with extended time:/)).toHaveTextContent(
-      "Take the exam with extended time: 135 minutes of extended time or 180 minutes of extended time."
+    const line = screen.getByText(/^Take the exam with extended time:/);
+    const choices = within(line).getAllByRole("button");
+    // What is printed on each choice: the limit, which is the length of the whole sitting.
+    const printed = choices.map((button) => {
+      const copy = button.cloneNode(true) as HTMLElement;
+      copy.querySelectorAll(".sr-only").forEach((hidden) => hidden.remove());
+      return copy.textContent?.trim();
+    });
+    expect(printed).toEqual(["135 minutes", "180 minutes"]);
+    // What a screen reader is read: the same figure, said to be the whole sitting. Named
+    // "135 minutes of extended time", it could be heard as 135 minutes more than the standard 90.
+    expect(choices.map((button) => button.getAttribute("aria-label"))).toEqual([null, null]);
+    expect(choices[0]).toHaveAccessibleName("135 minutes in total, with extended time");
+    expect(choices[1]).toHaveAccessibleName("180 minutes in total, with extended time");
+    expect(line).toHaveTextContent(
+      "Take the exam with extended time: 135 minutes in total, with extended time or 180 minutes in total, with extended time."
     );
-    fireEvent.click(screen.getByRole("button", { name: "135 minutes of extended time" }));
+    expect(line.textContent).not.toMatch(/of extended time/);
+    fireEvent.click(screen.getByRole("button", { name: "135 minutes in total, with extended time" }));
     expect(savedRun().limitMs).toBe(135 * 60_000);
     expect(savedRun().size).toBe("full");
     expect(savedQuestions()).toHaveLength(90);
@@ -515,7 +530,7 @@ describe("PracticeExam", () => {
     cleanup();
     window.localStorage.clear();
     mountFull();
-    fireEvent.click(screen.getByRole("button", { name: "180 minutes of extended time" }));
+    fireEvent.click(screen.getByRole("button", { name: "180 minutes in total, with extended time" }));
     expect(savedRun().limitMs).toBe(180 * 60_000);
   });
 

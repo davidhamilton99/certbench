@@ -128,18 +128,20 @@ export function LabLibrary({
   );
 }
 
-/** After a lab from the list: the next one that has not been completed yet. */
+/**
+ * After a lab from the list: the next one that has not been completed yet.
+ *
+ * The icon says which kind of lab it is, as it does in the list. Here it is
+ * drawn in the ink of the line beside it, with no tinted tile: this card is
+ * not pressed, its button is, and the pressable colour is kept for the button.
+ * (In the list the whole row is pressed, so its tile keeps that colour.)
+ */
 export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => void }) {
   const { Icon } = LAB_TYPES[lab.type];
   return (
     <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
-        <span
-          aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-xs bg-primary/10 text-primary"
-        >
-          <Icon className="size-5" />
-        </span>
+        <Icon aria-hidden className="size-5 shrink-0 text-muted-foreground" />
         <div className="min-w-0">
           <p className="text-small text-muted-foreground">Your next lab. {labMeta(lab)}.</p>
           <h2 className="cb-statement mt-1">{lab.title}</h2>

@@ -117,7 +117,9 @@ export function RehearsalResumeCard({
   }
 
   return (
-    <div className="glass grid gap-4 rounded-lg border-primary p-5 sm:p-6">
+    // The card's edge is the ordinary rule, as every card's is. The pressable
+    // colour is kept for what can be pressed: here, the button that resumes.
+    <div className="glass grid gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-small text-muted-foreground">You have a practice exam in progress.</p>

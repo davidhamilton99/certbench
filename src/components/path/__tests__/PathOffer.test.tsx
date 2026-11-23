@@ -25,7 +25,7 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
-import { PathOffer } from "../PathOffer";
+import { PathOffer, PathPaymentPastDue } from "../PathOffer";
 
 const BASE_PRICES = {
   discountPercent: null,
@@ -257,5 +257,29 @@ describe("PathOffer", () => {
     expect(screen.getByText("All 22 remaining steps of your Security+ study path")).toBeInTheDocument();
     expect(screen.getByText("All 31 hands-on labs, which work like the exam's performance-based questions")).toBeInTheDocument();
     expect(screen.getByText("All 1,008 Security+ questions, with spaced review")).toBeInTheDocument();
+  });
+});
+
+// In the offer's place for a member whose last payment did not go through:
+// the checkout would refuse such a member a second plan.
+describe("PathPaymentPastDue", () => {
+  it("says what the billing page says, and leads there", () => {
+    const { container } = render(<PathPaymentPastDue />);
+    expect(screen.getByRole("heading", { level: 2, name: "Your last payment did not go through." })).toBeInTheDocument();
+    expect(screen.getByText("Please update your payment method to keep CertBench Pro.")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Manage billing" });
+    expect(link).toHaveAttribute("href", "/upgrade");
+    // The link is the one thing to press, and nothing else on the card is drawn as if it could be.
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.getAllByRole("link")).toEqual([link]);
+    // A notice, not the offer: no rule in the pressable colour along its top, and nothing in a marking colour.
+    expect(container.firstElementChild?.className).not.toMatch(/border-t-primary|border-primary/);
+    expect(container.innerHTML).not.toMatch(/text-success|text-destructive|text-warning/);
+  });
+
+  it("asks for no price and counts no offer as seen", () => {
+    render(<PathPaymentPastDue />);
+    expect(h.calls).toEqual([]);
+    expect(h.track).not.toHaveBeenCalled();
   });
 });
