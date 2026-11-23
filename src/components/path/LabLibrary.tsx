@@ -33,15 +33,18 @@ export function LabLibrary({
   return (
     <div className="path-rise grid gap-6">
       <div className="grid gap-2">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Hands-on labs · {structure.examCode}
-        </span>
-        <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
-          Every lab for {structure.examName}
+        <span className="cb-label text-muted-foreground">{structure.examCode}</span>
+        <h1 className="cb-display text-balance text-[1.875rem] sm:text-[2.5rem]">
+          Hands-on labs for {structure.examName}
         </h1>
-        <p className="text-muted-foreground">
-          {handsOnCount(library)} that work like the exam&apos;s performance-based questions
-          {drills > 0 && <>, and {drills} quick drills</>}. {done} of {library.length} done.
+        <p className="leading-relaxed text-muted-foreground">
+          There are {handsOnCount(library)} that work like the exam&apos;s performance-based questions
+          {drills > 0 && (
+            <>
+              , and {drills} short {drills === 1 ? "drill" : "drills"}
+            </>
+          )}
+          . You have completed {done} of {library.length}.
         </p>
       </div>
 
@@ -61,8 +64,8 @@ export function LabLibrary({
                   <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(d.number)}</span>
                   {d.title}
                 </h2>
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {played} of {labs.length} done
+                <span className="shrink-0 text-[0.8125rem] tabular-nums text-muted-foreground">
+                  {played} of {labs.length} complete
                 </span>
               </div>
               <ul className="grid gap-2">
@@ -77,17 +80,17 @@ export function LabLibrary({
                         aria-label={[
                           lab.title,
                           labMeta(lab),
-                          closing.has(lab.id) && "closes the domain",
+                          closing.has(lab.id) && "the lab that ends the domain",
                           result && `done, ${result.c} of ${result.t}`,
                         ]
                           .filter(Boolean)
                           .join(", ")}
-                        className="glass group flex w-full min-w-0 items-center gap-3.5 rounded-2xl p-3.5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-[0_22px_50px_-30px_var(--primary)] sm:p-4"
+                        className="glass group flex w-full min-w-0 items-center gap-3.5 rounded-md p-3.5 text-left transition-[border-color] duration-200 hover:border-primary/60 sm:p-4"
                       >
                         <span
                           className={cn(
-                            "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                            result ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            "flex size-10 shrink-0 items-center justify-center rounded-md",
+                            result ? "bg-success/10 text-success" : "bg-primary/[0.08] text-primary"
                           )}
                         >
                           <Icon className="size-[18px]" aria-hidden />
@@ -95,15 +98,14 @@ export function LabLibrary({
                         {/* Titles wrap, never truncate: on a phone a cut-off title hides what the lab is. */}
                         <span className="min-w-0 flex-1">
                           <span className="block text-balance font-medium leading-snug">{lab.title}</span>
-                          <span className="mt-1 block font-mono text-[11px] uppercase leading-relaxed tracking-wider text-muted-foreground">
-                            {labMeta(lab)}
-                            {closing.has(lab.id) && " · closes the domain"}
+                          <span className="mt-1 block text-sm text-muted-foreground">
+                            {labMeta(lab)}.{closing.has(lab.id) && " This lab ends the domain on your study path."}
                           </span>
                         </span>
                         {result ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 font-mono text-xs font-semibold tabular-nums text-success">
+                          <span className="inline-flex shrink-0 items-center gap-1 text-[0.8125rem] font-medium tabular-nums text-success">
                             <Check className="size-3.5" strokeWidth={3} aria-hidden />
-                            {result.c}/{result.t}
+                            {result.c} of {result.t}
                           </span>
                         ) : (
                           <ArrowRight
@@ -126,7 +128,7 @@ export function LabLibrary({
         onClick={onBack}
         className="justify-self-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
       >
-        Back to my map
+        Return to the study path
       </button>
     </div>
   );
@@ -136,20 +138,18 @@ export function LabLibrary({
 export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => void }) {
   const { Icon } = LAB_TYPES[lab.type];
   return (
-    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
+    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-primary/[0.08] text-primary">
           <Icon className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Next lab · {labMeta(lab)}
-          </p>
+          <p className="text-sm text-muted-foreground">Your next lab. {labMeta(lab)}.</p>
           <p className="mt-1 text-balance font-display text-lg font-semibold leading-snug tracking-tight">{lab.title}</p>
         </div>
       </div>
       <Button size="lg" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onOpen}>
-        Open
+        Open the lab
         <ArrowRight />
       </Button>
     </div>

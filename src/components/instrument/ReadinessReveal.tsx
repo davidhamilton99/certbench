@@ -1,74 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Check } from "lucide-react";
 import type { ExamResult } from "@/contracts/quiz";
 import { api } from "@/lib/api-client";
 import { updateExamDate } from "@/contracts/user";
-import { ApiError } from "@/contracts/common";
-import { bandFor, bandVars } from "@/lib/readiness/band";
-import { ReadinessDial } from "@/components/instrument/ReadinessDial";
-import { cn } from "@/lib/utils";
-
-/** Honest ballpark of weeks-to-ready from the raw diagnostic score. */
-function estimateWeeks(score: number): string {
-  if (score >= 80) return "2–3 weeks";
-  if (score >= 60) return "3–5 weeks";
-  if (score >= 40) return "5–7 weeks";
-  return "6–8 weeks";
-}
-
-/* Climbing trajectory: today's score → the exam-ready line. */
-function Trajectory({ start }: { start: number }) {
-  const yFor = (r: number) => 82 - (Math.max(0, Math.min(100, r)) / 100) * 70;
-  const y0 = yFor(start);
-  const yEnd = yFor(84);
-  const yReady = yFor(75);
-  const path = `M 16 ${y0} C 120 ${yEnd + 4}, 210 ${yEnd}, 286 ${yEnd}`;
-  return (
-    <svg viewBox="0 0 300 96" className="w-full" aria-hidden>
-      <defs>
-        <linearGradient id="rv-climb" x1="0" x2="1">
-          <stop offset="0" stopColor="var(--rv-accent)" stopOpacity="0.5" />
-          <stop offset="1" stopColor="var(--rv-accent)" />
-        </linearGradient>
-      </defs>
-      <line
-        x1="12"
-        y1={yReady}
-        x2="290"
-        y2={yReady}
-        stroke="rgba(255,255,255,0.28)"
-        strokeWidth={1}
-        strokeDasharray="4 4"
-      />
-      <text
-        x="290"
-        y={yReady - 5}
-        textAnchor="end"
-        className="fill-[var(--rv-muted)] font-mono text-[9px]"
-      >
-        exam-ready · 75
-      </text>
-      <path
-        d={path}
-        fill="none"
-        stroke="url(#rv-climb)"
-        strokeWidth={2.6}
-        strokeLinecap="round"
-      />
-      <circle cx="16" cy={y0} r={4.5} fill="var(--rv-accent)" />
-      <text
-        x="24"
-        y={y0 + 3}
-        className="fill-[var(--rv-ink)] font-mono text-[10px] font-semibold"
-      >
-        Today {Math.round(start)}%
-      </text>
-    </svg>
-  );
-}
+import { userMessage } from "@/lib/errors/user-message";
+import { bandFor, READINESS_TARGET } from "@/lib/readiness/band";
+import { ScoreReport } from "@/components/instrument/ScoreReport";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export interface ReadinessRevealProps {
   result: ExamResult;
@@ -76,16 +18,18 @@ export interface ReadinessRevealProps {
   certName: string;
   examCode: string;
   dashboardHref: string;
-  /** domainId → exam weight (%). Enables weighted "biggest opportunity". */
+  /** domainId → exam weight (%). Decides which domain is named as the one to study first. */
   domainWeights?: Record<string, number>;
 }
 
 /**
- * The post-diagnostic readiness reveal — CertBench 2.0's flagship moment. A
- * cinematic instrument stage: the score counts up on a glowing dial, the band
- * recolours everything, domains cascade in weighted by exam importance, and a
- * climb-to-exam-ready projection turns the number into a path. Replaces the
- * plain results card for the diagnostic.
+ * The result of the diagnostic, as a score report: what was completed in one
+ * sentence, the score against the readiness target, each domain on the same
+ * scale, the domain to study first, and a place to enter the exam date.
+ *
+ * It states only what was measured. It used to draw a curve from today's score
+ * to a fixed height and print an estimate of the weeks to the target; neither
+ * was data, so both are gone.
  */
 export function ReadinessReveal({
   result,
@@ -95,10 +39,11 @@ export function ReadinessReveal({
   dashboardHref,
   domainWeights,
 }: ReadinessRevealProps) {
-  const [revealed, setRevealed] = useState(false);
+  // The result follows a press on "Finish diagnostic": the focus goes to its
+  // heading, so the page that replaced the questions is read from its top.
+  const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setRevealed(true));
-    return () => cancelAnimationFrame(id);
+    headingRef.current?.focus();
   }, []);
 
   const score = result.scorePercent;
@@ -112,251 +57,166 @@ export function ReadinessReveal({
       weight: domainWeights?.[d.domainId] ?? null,
     }));
 
-  // Biggest opportunity = the most readiness points left on the table. With
-  // weights that's (1 − accuracy) × weight; without, simply the weakest domain.
-  let weakestId: string | null = null;
-  if (domains.length) {
-    weakestId = domains.reduce((best, d) => {
-      const gain = (1 - d.acc / 100) * (d.weight ?? 1);
-      const bestGain = (1 - best.acc / 100) * (best.weight ?? 1);
-      return gain > bestGain ? d : best;
-    }).domainId;
-  }
-  const weakest = domains.find((d) => d.domainId === weakestId) ?? null;
-  const allStrong = domains.length > 0 && domains.every((d) => d.acc >= 75);
+  // The domain to study first is the one with the most of the exam still to
+  // gain: (1 − accuracy) × weight where the weights are known, and the lowest
+  // score where they are not.
+  const weakest = domains.length
+    ? domains.reduce((best, d) => {
+        const gain = (1 - d.acc / 100) * (d.weight ?? 1);
+        const bestGain = (1 - best.acc / 100) * (best.weight ?? 1);
+        return gain > bestGain ? d : best;
+      })
+    : null;
+  const allStrong = domains.length > 0 && domains.every((d) => bandFor(d.acc).key === "ready");
 
+  // The diagnostic is a small set of questions: a first result and not a
+  // measure of readiness. So the report draws no mark at the readiness target,
+  // and a high score is called a strong first result, not "Target met". The
+  // study path reports its checkpoint the same way.
   const verdict =
     band.key === "ready"
-      ? "You're testing like someone who's ready. Time to prove it under real exam conditions."
+      ? "This is a strong first result. The next step is a full-length practice exam under exam conditions."
       : band.key === "close"
-        ? "You're closer than most people start — within striking distance of exam-ready. Here's the climb."
-        : "A low floor — not a verdict. The diagnostic is where everyone starts; from here it only climbs.";
+        ? `This is a first result and not a final one. The readiness target is ${READINESS_TARGET}%. The domain results below show where to study next.`
+        : "This is a starting point and not a final result. The domain results below show where to begin.";
+  // What one answer is worth, so that the size of the sample is plain.
+  const each = result.totalQuestions > 0 ? Math.round(100 / result.totalQuestions) : 0;
 
   return (
-    <div
-      className={cn("dark rv-stage rounded-3xl border border-white/10 p-6 sm:p-9", revealed && "rv-revealed")}
-      style={bandVars(band)}
-    >
-      {/* Eyebrow */}
-      <div
-        className="rv-rise flex items-center justify-center gap-3 text-center font-mono text-[12px] uppercase tracking-[0.28em] text-[var(--rv-muted)]"
-        data-d="1"
-      >
-        <span
-          className="grid size-[22px] place-items-center rounded-full border"
-          style={{ background: "var(--rv-accent-dim)", borderColor: "var(--rv-accent-soft)" }}
-        >
-          <Check className="size-3" style={{ color: "var(--rv-accent)" }} strokeWidth={3} />
-        </span>
-        <span>
-          Diagnostic complete&nbsp;·&nbsp;
-          <span className="tracking-[0.12em] text-[var(--rv-ink)]">
-            {certName} {examCode}
-          </span>
-        </span>
-      </div>
+    <div className="grid gap-6">
+      <ScoreReport
+        heading={`You have completed the ${certName} ${examCode} diagnostic.`}
+        headingRef={headingRef}
+        caption="Diagnostic result"
+        score={score}
+        readyMark={false}
+        verdict={band.key === "ready" ? "Strong first result" : undefined}
+        summary={
+          <>
+            {verdict}
+            {each > 0 && (
+              <>
+                {" "}
+                This result is based on {result.totalQuestions} questions, so each answer changes it by about {each}{" "}
+                {each === 1 ? "point" : "points"}.
+              </>
+            )}
+          </>
+        }
+        domains={domains.map((d) => ({
+          id: d.domainId,
+          number: d.domainNumber,
+          title: d.title,
+          correct: d.correct,
+          total: d.total,
+          weight: d.weight,
+        }))}
+      />
 
-      {/* Instrument */}
-      <div className="rv-rise mt-6" data-d="2">
-        <ReadinessDial score={score} band={band} caption="Diagnostic score" />
-      </div>
-
-      {/* Verdict */}
-      <p
-        className="rv-rise mx-auto mt-4 max-w-xl text-balance text-center font-display text-[19px] font-medium leading-snug sm:text-[23px]"
-        data-d="3"
-      >
-        {verdict}
-      </p>
-
-      {/* Domain cascade */}
-      <section
-        className="rv-rise mt-8 rounded-2xl border p-5 sm:p-6"
-        data-d="4"
-        style={{
-          borderColor: "var(--rv-line)",
-          background: "linear-gradient(180deg, var(--rv-surface), var(--rv-surface-2))",
-        }}
-      >
-        <h2 className="font-mono text-[11px] uppercase tracking-[0.26em] text-[var(--rv-muted)]">
-          Domain breakdown
-        </h2>
-        <p className="mt-1 text-[13px] text-[var(--rv-muted-2)]">
-          {domains.some((d) => d.weight != null)
-            ? "Weighted by how much each area counts on the real exam."
-            : "How you scored across every domain."}
-        </p>
-        <div className="mt-5 grid gap-4">
-          {domains.map((d, i) => {
-            const dc = bandFor(d.acc);
-            const isWeak = d.domainId === weakestId;
-            return (
-              <div key={d.domainId}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="font-mono text-[12px] text-[var(--rv-muted-2)]">
-                      {d.domainNumber}
-                    </span>
-                    <span className="text-[14.5px] text-[var(--rv-ink)]">{d.title}</span>
-                    {isWeak && (
-                      <span className="rv-chip shrink-0 rounded-full px-2 py-px font-mono text-[10px] tracking-wide">
-                        biggest opportunity
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className="shrink-0 font-mono text-[14px] tabular-nums"
-                    style={{ color: dc.accent }}
-                  >
-                    {d.acc}%
-                  </span>
-                </div>
-                <div className="relative mt-2 h-[7px] overflow-hidden rounded-full bg-white/[0.06]">
-                  <div
-                    className="rv-fill absolute inset-y-0 left-0"
-                    style={
-                      {
-                        "--w": `${Math.max(3, d.acc)}%`,
-                        "--dc": dc.accent,
-                        "--dc-dim": dc.soft,
-                        transitionDelay: `${1.5 + i * 0.09}s`,
-                      } as React.CSSProperties
-                    }
-                  />
-                </div>
-                {d.weight != null && (
-                  <div className="mt-1 text-right font-mono text-[11px] text-[var(--rv-muted-2)]">
-                    {d.weight}% of exam
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Climb + exam-date + CTA */}
-      <section
-        className="rv-rise mt-4 grid gap-4 rounded-2xl border p-5 sm:grid-cols-2 sm:p-6"
-        data-d="5"
-        style={{
-          borderColor: "var(--rv-line)",
-          background: "linear-gradient(180deg, var(--rv-surface), var(--rv-surface-2))",
-        }}
-      >
-        <div>
-          <Trajectory start={score} />
-        </div>
-        <div className="grid content-center gap-2 text-[14px] leading-relaxed text-[var(--rv-muted)]">
-          <p>
-            From here, we estimate{" "}
-            <b className="text-[var(--rv-ink)]">{estimateWeeks(score)}</b> to{" "}
-            <b className="text-[var(--rv-ink)]">exam-ready</b> at ~15 minutes a
-            day.
+      {weakest && !allStrong && (
+        <div className="glass grid gap-1 rounded-lg p-4 sm:p-5">
+          <h3 className="text-small font-semibold">The domain to study first</h3>
+          <p className="cb-measure text-small text-muted-foreground">
+            You answered {weakest.correct} of {weakest.total} questions correctly in {weakest.title}
+            {weakest.weight != null && <>, which is {weakest.weight}% of the exam</>}.
           </p>
-          {weakest && !allStrong && (
-            <p>
-              Start with <b className="text-[var(--rv-ink)]">{weakest.title}</b> —
-              you scored {weakest.correct}/{weakest.total} there, the fastest way
-              to move your readiness up.
-            </p>
-          )}
         </div>
-      </section>
+      )}
 
       <ExamDateCapture certId={certId} />
 
-      <div className="rv-rise mt-6 flex flex-wrap justify-center gap-3" data-d="6">
-        <Link
-          href={allStrong ? "/pbq" : dashboardHref}
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-[15px] font-semibold text-[#0b0c10] transition-transform hover:-translate-y-0.5"
-          style={{
-            background: "linear-gradient(180deg, var(--rv-accent-2), var(--rv-accent))",
-            boxShadow: "0 12px 30px -12px var(--rv-accent-soft)",
-          }}
-        >
-          {allStrong ? "Try a hands-on PBQ" : "Start closing your gap"}
-          <ArrowRight className="size-4" />
-        </Link>
-        <Link
-          href={dashboardHref}
-          className="inline-flex items-center rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-[15px] font-semibold text-[var(--rv-ink)] transition-colors hover:bg-white/10"
-        >
-          See your study plan
-        </Link>
+      <div className="flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href={dashboardHref}>See your study plan</Link>
+        </Button>
+        {allStrong && (
+          <Button asChild variant="outline">
+            <Link href="/pbq">Open the hands-on labs</Link>
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
-/** Lock-in-your-exam-date control, styled for the instrument stage. */
+/** Where a learner enters the date of the exam, once the diagnostic is done. */
 function ExamDateCapture({ certId }: { certId: string }) {
   const [examDate, setExamDate] = useState("");
-  const [savedDate, setSavedDate] = useState<string | null>(null);
+  // Once saved: the number of days to the exam, counted when it was saved.
+  const [savedDays, setSavedDays] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const today = new Date().toISOString().slice(0, 10);
+  const fieldId = useId();
+  const hintId = useId();
+  const errorId = useId();
+  // "Today" for the earliest date the field accepts, fixed for the life of the screen.
+  const [today] = useState(() => new Date().toISOString().slice(0, 10));
 
-  async function commit() {
-    if (!examDate) return;
+  async function commit(e: FormEvent) {
+    e.preventDefault();
+    if (!examDate || saving) return;
     setSaving(true);
     setError("");
     try {
       await api(updateExamDate, { certId, examDate });
-      setSavedDate(examDate);
+      setSavedDays(Math.max(0, Math.ceil((new Date(examDate).getTime() - Date.now()) / 86400000)));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't save that date");
+      setError(userMessage(err, "The date could not be saved. Please try again."));
     } finally {
       setSaving(false);
     }
   }
 
-  const daysToExam = savedDate
-    ? Math.max(0, Math.ceil((new Date(savedDate).getTime() - Date.now()) / 86400000))
-    : null;
+  // The form is replaced by the sentence that confirms it. The focus goes to
+  // that sentence, so that it is read and the keyboard keeps its place.
+  const savedRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (savedDays !== null) savedRef.current?.focus();
+  }, [savedDays]);
+
+  if (savedDays !== null) {
+    return (
+      <p ref={savedRef} tabIndex={-1} className="glass rounded-lg p-4 text-small sm:p-5">
+        Your exam date is saved.{" "}
+        {savedDays === 0 ? "Your exam is today." : `Your exam is in ${savedDays} ${savedDays === 1 ? "day" : "days"}.`}{" "}
+        Your study plan takes the date into account.
+      </p>
+    );
+  }
 
   return (
-    <div
-      className="rv-rise mt-4 rounded-2xl border p-5"
-      data-d="5"
-      style={{ borderColor: "var(--rv-line)", background: "var(--rv-surface-2)" }}
-    >
-      {savedDate ? (
-        <p className="flex items-center gap-2 text-[14px] text-[var(--rv-ink)]">
-          <Check className="size-4 shrink-0" style={{ color: "var(--rv-accent)" }} />
-          Locked in — <b>{daysToExam} day{daysToExam === 1 ? "" : "s"} to go</b>. Your
-          plan will pace you toward it.
+    <form onSubmit={commit} className="glass grid gap-3 rounded-lg p-4 sm:p-5">
+      <div className="grid gap-1.5">
+        <Label htmlFor={fieldId}>Exam date</Label>
+        <p id={hintId} className="cb-measure text-note text-muted-foreground">
+          If you have booked your exam, enter the date and your study plan will take it into account. You can change
+          the date on your{" "}
+          <Link href="/profile" className="cb-link">
+            profile page
+          </Link>
+          .
         </p>
-      ) : (
-        <div className="grid gap-2">
-          <label className="flex items-center gap-2 text-[14px] font-medium text-[var(--rv-ink)]">
-            <CalendarClock className="size-4" style={{ color: "var(--rv-accent)" }} />
-            Lock in your exam date
-          </label>
-          <p className="text-[12px] text-[var(--rv-muted-2)]">
-            A date turns this into a countdown and paces your daily plan. Change it
-            anytime.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="date"
-              min={today}
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-              className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[14px] text-[var(--rv-ink)] outline-none [color-scheme:dark] focus-visible:border-[var(--rv-accent)]"
-            />
-            <button
-              onClick={commit}
-              disabled={!examDate || saving}
-              className="h-9 rounded-lg px-4 text-[14px] font-semibold text-[#0b0c10] disabled:opacity-50"
-              style={{ background: "var(--rv-accent)" }}
-            >
-              {saving ? "Saving…" : "Set date"}
-            </button>
-          </div>
-          {error && <p className="text-[12px] text-[#fb7185]">{error}</p>}
-        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          id={fieldId}
+          type="date"
+          min={today}
+          value={examDate}
+          onChange={(e) => setExamDate(e.target.value)}
+          aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+          aria-invalid={error ? true : undefined}
+          className="w-auto"
+        />
+        <Button type="submit" variant="outline" loading={saving} disabled={!examDate}>
+          Save the exam date
+        </Button>
+      </div>
+      {error && (
+        <p id={errorId} role="alert" className="text-note text-destructive">
+          {error}
+        </p>
       )}
-    </div>
+    </form>
   );
 }

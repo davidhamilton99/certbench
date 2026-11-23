@@ -24,6 +24,8 @@ describe("calculateSubnet", () => {
     expect(r.broadcast).toBe("192.168.1.191");
     expect(r.firstHost).toBe("192.168.1.129");
     expect(r.lastHost).toBe("192.168.1.190");
+    // The range is written in words, first host to last.
+    expect(r.hostRange).toBe("192.168.1.129 to 192.168.1.190");
     expect(r.usableHosts).toBe(62);
     expect(r.mask).toBe("255.255.255.192");
     expect(r.wildcard).toBe("0.0.0.63");
@@ -52,7 +54,7 @@ describe("calculateSubnet", () => {
   it("treats /31 as RFC-3021 (2 usable, no broadcast)", () => {
     const r = calculateSubnet("192.168.1.4", 31)!;
     expect(r.usableHosts).toBe(2);
-    expect(r.broadcast).toBe("—");
+    expect(r.broadcast).toBe("None");
     expect(r.firstHost).toBe("192.168.1.4");
     expect(r.lastHost).toBe("192.168.1.5");
   });
@@ -60,7 +62,7 @@ describe("calculateSubnet", () => {
   it("treats /32 as a single host", () => {
     const r = calculateSubnet("8.8.8.8", 32)!;
     expect(r.usableHosts).toBe(1);
-    expect(r.broadcast).toBe("—");
+    expect(r.broadcast).toBe("None");
     expect(r.hostRange).toBe("8.8.8.8");
     expect(r.addressType).toBe("Public");
   });

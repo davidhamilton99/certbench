@@ -1,30 +1,61 @@
 import type { CSSProperties, ReactNode } from "react";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { Footer } from "@/components/marketing/Footer";
 import { keepCodes } from "@/lib/keep-codes";
 import { cn } from "@/lib/utils";
+import { COLUMN, PAGE } from "./layout";
 
 /**
- * The CertBench 3 landing-page kit. Every public page is built from the same
- * few pieces, so they all read as one product:
+ * The page kit. Every public page is built from the same few pieces, so they
+ * all read as one publication:
  *
- *   <LanderPage>            the canvas, header and footer
- *     <LanderHero>          one big line, one short line, a few labels
- *     <LanderStage>         the thing to play, lit, front and centre
+ *   <LanderPage>            the page (its header and footer come from the layout)
+ *     <LanderHero>          what the page is, in one line, and its facts
+ *     <LanderStage>         the thing to do, straight after it
  *     <LanderSection>       everything after it, each with one heading
+ *     <LanderBlock>         anything else: a note, a list of links, the questions and answers
  *
- * Act first: the hero is short and the stage comes straight after it. Labels,
- * not sentences: `specs` are a row of short facts rather than a paragraph.
+ * Set like a public document. There is one left edge: the page's container is
+ * the header's and the footer's, so the logo, the page's title and every
+ * heading begin on the same line down the page. Text, headings and rules keep
+ * to a reading column on that edge, and running text is no wider than its
+ * measure (`cb-measure`). A table or a list that needs the room runs past the
+ * column to the container's right edge; nothing is centred. The two widths
+ * are in ./layout.ts.
  */
 
+/**
+ * The page inside the public frame. The header, the main region and the footer
+ * are drawn once by src/app/(marketing)/layout.tsx.
+ */
 export function LanderPage({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("flex-1 pb-8", className)}>{children}</div>;
+}
+
+/**
+ * A block in the page's container, on the page's left edge: a note, a list of
+ * links, the questions and answers. It keeps to the reading column unless it
+ * is `wide`. `className` goes on the block itself (its spacing, its own grid).
+ */
+export function LanderBlock({
+  children,
+  wide = false,
+  className,
+}: {
+  children: ReactNode;
+  /** Let a table or a long list run to the container's right edge. */
+  wide?: boolean;
+  className?: string;
+}) {
   return (
-    <div className={cn("relative flex min-h-svh flex-col overflow-x-clip aurora-bg text-foreground", className)}>
-      <MarketingHeader />
-      <main className="flex-1 pb-8">{children}</main>
-      <Footer />
+    <div className={PAGE}>
+      <div className={cn(!wide && COLUMN, className)}>{children}</div>
     </div>
   );
+}
+
+/** One fact about the page: what it is, and its value. "Questions", "90". */
+export interface Spec {
+  label: string;
+  value: ReactNode;
 }
 
 export function LanderHero({
@@ -36,75 +67,93 @@ export function LanderHero({
   children,
   className,
 }: {
-  /** A short line over the title: the exam, the code, "Free". */
+  /** A short line over the title that says something the title does not: the exam, the code. */
   eyebrow?: ReactNode;
   title: ReactNode;
-  /** One short line under the title. */
+  /** One or two sentences under the title. */
   sub?: ReactNode;
-  /** Short facts in a row: "8 questions", "No account", "Marked as you tap". */
-  specs?: string[];
+  /** The page's facts, as labelled pairs. A plain string is accepted as a fact without a label. */
+  specs?: (Spec | string)[];
   /** Above the eyebrow: a breadcrumb. */
   above?: ReactNode;
-  /** Under it all: an action, or tiles to pick from. */
+  /** Under it all: an action, or links to choose from. */
   children?: ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("relative isolate", className)}>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[-18rem] -z-10 h-[34rem] w-[64rem] max-w-[200vw] -translate-x-1/2 rounded-full [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_17%,transparent),transparent)]"
-      />
-      <div className="mx-auto grid max-w-4xl justify-items-center gap-5 px-5 pt-12 text-center sm:px-6 sm:pt-20">
-        {above}
-        {eyebrow && (
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</p>
-        )}
-        <h1 className="cb-display text-balance text-[2.35rem] sm:text-6xl">
-          {typeof title === "string" ? keepCodes(title) : title}
-        </h1>
-        {sub && <p className="max-w-2xl text-balance text-lg text-muted-foreground">{sub}</p>}
-        {specs && specs.length > 0 && <Specs items={specs} />}
-        {children}
+    <section className={cn("relative", className)}>
+      <div className={cn(PAGE, "pt-10 sm:pt-16")}>
+        <div className={cn(COLUMN, "grid grid-cols-[minmax(0,1fr)] gap-4")}>
+          {above}
+          {eyebrow && <p className="cb-label text-muted-foreground">{eyebrow}</p>}
+          <h1 className="cb-title">{typeof title === "string" ? keepCodes(title) : title}</h1>
+          {sub && <p className="cb-measure text-lede text-muted-foreground sm:text-xl">{sub}</p>}
+          {specs && specs.length > 0 && <Specs items={specs} />}
+          {children}
+        </div>
       </div>
     </section>
   );
 }
 
+const SPEC_COLUMNS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+};
+
 /**
- * Short facts in a row, divided by dots. On a phone, where the row would wrap
- * and start a line with a dot, each fact is its own small chip instead.
+ * A page's facts as a summary list between two rules: each fact has a label
+ * and a value ("Questions", "90"), and each sits in a column of its own. Two
+ * columns on a phone, and from the `sm` width one equal column for each fact
+ * up to four, so a fact can wrap inside its column and never falls to a row
+ * by itself with a rule in front of it.
+ *
+ * A plain string is still accepted, as a fact without a label, for a page
+ * that has not yet named its facts.
  */
-export function Specs({ items, className }: { items: string[]; className?: string }) {
+export function Specs({ items, className }: { items: (Spec | string)[]; className?: string }) {
+  const layout = cn(
+    "mt-1 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-border py-3.5 text-left",
+    SPEC_COLUMNS[Math.min(items.length, 4)],
+    className
+  );
+  if (items.every((item): item is string => typeof item === "string")) {
+    return (
+      <ul className={layout}>
+        {items.map((item) => (
+          <li key={item} className="min-w-0 text-small text-muted-foreground">
+            {item}
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
-    <ul
-      className={cn(
-        "flex flex-wrap items-center justify-center gap-2 text-[13px] text-muted-foreground sm:gap-x-3 sm:gap-y-1.5 sm:text-sm",
-        className
-      )}
-    >
-      {items.map((s, i) => (
-        <li
-          key={s}
-          className="flex items-center gap-3 rounded-full bg-foreground/[0.06] px-3 py-1 sm:bg-transparent sm:p-0"
-        >
-          {i > 0 && <span aria-hidden className="hidden size-1 rounded-full bg-foreground/25 sm:block" />}
-          {s}
-        </li>
-      ))}
-    </ul>
+    <dl className={layout}>
+      {items.map((item) => {
+        const spec = typeof item === "string" ? { label: "", value: item } : item;
+        return (
+          <div key={spec.label || String(spec.value)} className="min-w-0">
+            {spec.label && <dt className="text-note text-muted-foreground">{spec.label}</dt>}
+            <dd className="text-small font-medium">{spec.value}</dd>
+          </div>
+        );
+      })}
+    </dl>
   );
 }
 
 const STAGE_WIDTH = {
-  md: "max-w-2xl",
-  lg: "max-w-3xl",
+  md: COLUMN,
+  lg: COLUMN,
   xl: "max-w-4xl",
 } as const;
 
 /**
- * Where the page's playable thing sits: wide, centred, with light pooling
- * under it, like the homepage's test drive.
+ * Where the page's thing to do sits: straight under the hero and on the same
+ * left edge, so the first screen is the product and not a description of it.
  */
 export function LanderStage({
   children,
@@ -116,63 +165,55 @@ export function LanderStage({
   className?: string;
 }) {
   return (
-    <div className={cn("relative mx-auto mt-10 w-full px-3 sm:mt-14 sm:px-6", STAGE_WIDTH[width], className)}>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-[-4%] -bottom-32 top-[12%] -z-10 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_15%,transparent),color-mix(in_oklab,var(--primary)_9%,transparent)_55%,transparent)]"
-      />
-      {children}
+    <div className={cn(PAGE, "relative mt-8 sm:mt-10", className)}>
+      <div className={STAGE_WIDTH[width]}>{children}</div>
     </div>
   );
 }
 
-const SECTION_WIDTH = {
-  md: "max-w-2xl",
-  lg: "max-w-3xl",
-  xl: "max-w-5xl",
-} as const;
-
-/** A section after the stage: a small label, one heading, then its content. */
+/** A section after the stage: a rule, one heading, then its content. */
 export function LanderSection({
   eyebrow,
   title,
   sub,
   children,
   width = "lg",
-  align = "center",
   id,
   className,
   style,
 }: {
+  /** A short line over the heading. Use it only for a fact the heading does not hold. */
   eyebrow?: ReactNode;
   title?: ReactNode;
   sub?: ReactNode;
   children?: ReactNode;
-  width?: keyof typeof SECTION_WIDTH;
+  /** `xl` lets the section (a table, a long list) run to the container's right edge. */
+  width?: "md" | "lg" | "xl";
+  /** Headings are set left everywhere; kept so that callers need not change. */
   align?: "center" | "left";
   id?: string;
   className?: string;
   style?: CSSProperties;
 }) {
   return (
-    <section id={id} style={style} className={cn("mx-auto w-full px-5 pt-20 sm:px-6 sm:pt-28", SECTION_WIDTH[width], className)}>
-      {(eyebrow || title || sub) && (
-        <div className={cn("mb-8 grid gap-3 sm:mb-10", align === "center" ? "justify-items-center text-center" : "text-left")}>
-          {eyebrow && (
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</p>
-          )}
-          {title && <h2 className="cb-display text-balance text-3xl sm:text-5xl">{title}</h2>}
-          {sub && <p className="max-w-xl text-balance text-muted-foreground">{sub}</p>}
-        </div>
-      )}
-      {children}
+    <section id={id} style={style} className={cn(PAGE, "pt-16 sm:pt-24", className)}>
+      <div className={cn(width !== "xl" && COLUMN)}>
+        {(eyebrow || title || sub) && (
+          <div className="mb-6 grid gap-2.5 border-t border-foreground/80 pt-5 text-left sm:mb-8">
+            {eyebrow && <p className="cb-label text-muted-foreground">{eyebrow}</p>}
+            {title && <h2 className={cn("cb-section", COLUMN)}>{title}</h2>}
+            {sub && <p className="cb-measure text-body text-muted-foreground">{sub}</p>}
+          </div>
+        )}
+        {children}
+      </div>
     </section>
   );
 }
 
 /**
  * The page's own words (what search reads and what a careful reader wants),
- * set quietly after the things to do.
+ * set quietly after the things to do, at the width of its measure.
  */
 export function LanderProse({
   children,
@@ -182,13 +223,10 @@ export function LanderProse({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "mx-auto grid w-full max-w-2xl gap-4 px-5 pt-20 text-[15px] leading-relaxed text-muted-foreground sm:px-6 sm:pt-24 [&_strong]:font-medium [&_strong]:text-foreground",
-        className
-      )}
-    >
-      {children}
+    <div className={cn(PAGE, "pt-16 sm:pt-20", className)}>
+      <div className="cb-measure grid gap-4 text-body text-muted-foreground [&_strong]:font-medium [&_strong]:text-foreground">
+        {children}
+      </div>
     </div>
   );
 }

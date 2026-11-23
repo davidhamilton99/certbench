@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
-import { objectivePageDescription, objectivePageTitle, titleCase } from "../objective-meta";
+import { objectivePageDescription, objectivePageTitle } from "../objective-meta";
 
 const security = {
   certSlug: "security-plus-sy0-701",
@@ -27,41 +27,37 @@ const aPlus = {
   topic: "Displays",
 };
 
-describe("titleCase", () => {
-  it("capitalizes words but leaves small words and acronyms alone", () => {
-    expect(titleCase("Signs of an attack")).toBe("Signs of an Attack");
-    expect(titleCase("Motherboard, RAM, CPU and power problems")).toBe(
-      "Motherboard, RAM, CPU and Power Problems"
+describe("objective page titles", () => {
+  it("are in sentence case: the topic keeps its own capitals and nothing else is raised", () => {
+    const title = (topic: string) => objectivePageTitle({ ...security, topic });
+    expect(title("Signs of an attack")).toBe("Signs of an attack practice questions (SY0-701 1.2)");
+    expect(title("Motherboard, RAM, CPU and power problems")).toBe(
+      "Motherboard, RAM, CPU and power problems practice questions (SY0-701 1.2)"
     );
-    expect(titleCase("macOS")).toBe("macOS");
-    expect(titleCase("IP addressing and subnets")).toBe("IP Addressing and Subnets");
+    expect(title("macOS")).toBe("macOS practice questions (SY0-701 1.2)");
   });
 
-  it("reads cleanly for every objective's short name", () => {
+  it("open with a capital for every objective's short name", () => {
     for (const titles of Object.values(OBJECTIVE_TITLES)) {
       for (const topic of Object.values(titles)) {
-        const cased = titleCase(topic);
         // "macOS" is the one name that starts lowercase.
-        if (topic !== "macOS") expect(cased[0]).toBe(cased[0].toUpperCase());
-        expect(cased.toLowerCase()).toBe(topic.toLowerCase());
+        if (topic !== "macOS") expect(topic[0], topic).toBe(topic[0].toUpperCase());
       }
     }
   });
-});
 
-describe("objective page titles", () => {
   it("lead with the topic and cite Security+ objective numbers, which are CompTIA's", () => {
-    expect(objectivePageTitle(security)).toBe("Core Security Concepts Practice Questions (SY0-701 1.2)");
+    expect(objectivePageTitle(security)).toBe("Core security concepts practice questions (SY0-701 1.2)");
     expect(objectivePageDescription(security)).toContain("objective 1.2: Summarize fundamental security concepts");
   });
 
-  it("never cite a Network+ number, because ours don't follow N10-009's", () => {
-    expect(objectivePageTitle(network)).toBe("IP Addressing and Subnets Practice Questions (Network+ N10-009)");
+  it("never cite a Network+ number, because ours do not follow N10-009's", () => {
+    expect(objectivePageTitle(network)).toBe("IP addressing and subnets practice questions (Network+ N10-009)");
     expect(objectivePageDescription(network)).not.toMatch(/objective|1\.4|Given a scenario/);
   });
 
-  it("cite A+ objective numbers now that they're 220-1201's", () => {
-    expect(objectivePageTitle(aPlus)).toBe("Displays Practice Questions (220-1201 3.1)");
+  it("cite A+ objective numbers now that they are 220-1201's", () => {
+    expect(objectivePageTitle(aPlus)).toBe("Displays practice questions (220-1201 3.1)");
     expect(objectivePageDescription(aPlus)).toBe(
       "Free A+ Core 1 (220-1201) practice questions for objective 3.1: Display components and attributes. Original, exam-style, with full explanations."
     );

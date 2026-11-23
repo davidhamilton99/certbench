@@ -7,9 +7,9 @@ import type { ResponseValue } from "@/core/quiz-engine/types";
 import { cn } from "@/lib/utils";
 
 /**
- * Controlled matching renderer: each left term picks a right definition from
- * a dropdown (rights listed in a seeded shuffle). pairs maps left original
- * index -> right original index, both as strings.
+ * Controlled matching renderer: each term on the left is given a definition
+ * from a list (the definitions are listed in a seeded shuffle). `pairs` maps
+ * the left original index to the right original index, both as strings.
  */
 export function Matching({
   questionId,
@@ -48,21 +48,21 @@ export function Matching({
           <div
             key={leftIndex}
             className={cn(
-              "flex flex-wrap items-center gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-2.5 text-sm",
-              isRight && "border-success/60 bg-success/10",
-              revealed && !isRight && "border-danger/60 bg-danger/10"
+              "flex flex-wrap items-center gap-3 rounded-md border border-border bg-card px-4 py-2.5 text-small",
+              isRight && "border-success bg-success/10",
+              revealed && !isRight && "border-destructive bg-destructive/10"
             )}
           >
-            <span className="min-w-32 flex-1 font-medium leading-relaxed">
-              {pair.left}
-            </span>
+            <span className="min-w-32 flex-1 font-medium">{pair.left}</span>
             {revealed ? (
               <span className="flex items-center gap-2 text-muted-foreground">
                 {isRight ? (
-                  <Check className="size-4 text-success" />
+                  <Check aria-hidden className="size-4 shrink-0 text-success" />
                 ) : (
-                  <X className="size-4 text-danger" />
+                  <X aria-hidden className="size-4 shrink-0 text-destructive" />
                 )}
+                {/* The mark in words, for a reader who does not see the colour or the icon. */}
+                <span className="sr-only">{isRight ? "Correct: " : "Incorrect. The correct match is "}</span>
                 {pair.right}
               </span>
             ) : (
@@ -70,10 +70,11 @@ export function Matching({
                 aria-label={`Match for ${pair.left}`}
                 value={picked ?? ""}
                 onChange={(e) => pick(leftIndex, e.target.value)}
-                className="h-9 min-w-40 flex-1 rounded-lg border border-border bg-foreground/5 px-2 text-sm outline-none dark:[color-scheme:dark] focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
+                // 16px on a phone, so the browser does not zoom the page when the list opens.
+                className="h-10 min-w-40 flex-1 rounded-md border border-input bg-card px-2 text-base focus-visible:border-ring md:text-small pointer-coarse:h-11 dark:[color-scheme:dark]"
               >
                 <option value="" disabled>
-                  Choose…
+                  Choose a match
                 </option>
                 {rightOrder.map((rightIndex) => (
                   <option key={rightIndex} value={String(rightIndex)}>

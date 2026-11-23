@@ -66,7 +66,14 @@ export async function listApprovedTestimonials(
   return attachCertNames(db, (data ?? []) as Row[]);
 }
 
-/** Pending submissions for the admin moderation queue. */
+/**
+ * Pending submissions for the moderation queue, oldest first.
+ *
+ * `db` must be the service client (createAdminClient), and the caller must
+ * have checked the admin role before it asks. An account's own client may read
+ * approved stories and its own, and no others (migration 022), so the queue
+ * read with it is empty for every story that someone else wrote.
+ */
 export async function listPendingTestimonials(db: Db): Promise<Testimonial[]> {
   const { data, error } = await db
     .from("testimonials")
@@ -97,17 +104,33 @@ export async function insertTestimonial(
   });
   // 23505 = unique violation: already submitted for this cert.
   if (error?.code === "23505") {
-    throw new ApiError("conflict", "You've already shared a story for this exam.");
+    throw new ApiError("conflict", "You have already shared a story for this exam.");
   }
   if (error) throw new ApiError("internal", error.message);
 }
 
-/** Admin: set a testimonial's moderation status. */
+/**
+ * Moderation: sets a testimonial's status.
+ *
+ * `db` must be the service client (createAdminClient), and the caller must
+ * have checked the admin role first. The table has no update policy for
+ * accounts (migration 022: "Moderation happens via the service-role admin
+ * client"), so an update made with an account's own client changes no row and
+ * reports no error. For that reason an update that changed no row is an error
+ * here: an approval must never appear to succeed when nothing was approved.
+ */
 export async function setTestimonialStatus(
   db: Db,
   id: string,
   status: "approved" | "hidden"
 ): Promise<void> {
-  const { error } = await db.from("testimonials").update({ status }).eq("id", id);
+  const { data, error } = await db
+    .from("testimonials")
+    .update({ status })
+    .eq("id", id)
+    .select("id");
   if (error) throw new ApiError("internal", error.message);
+  if (!data || data.length === 0) {
+    throw new ApiError("not_found", "This testimonial could not be found, so nothing was changed.");
+  }
 }

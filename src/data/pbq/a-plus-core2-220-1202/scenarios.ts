@@ -85,7 +85,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5, 6],
     explanation:
-      "Change management requires a formal request before any risk or impact is assessed. A plan including a rollback procedure is developed and tested in a safe environment before seeking approval. The change advisory board (CAB) approves the change before production implementation. Documentation closes the change record and provides an audit trail — this order ensures accountability and minimises unplanned outages.",
+      "Change management requires a formal request before any risk or impact is assessed. A plan including a rollback procedure is developed and tested in a safe environment before seeking approval. The change advisory board (CAB) approves the change before production implementation. Documentation closes the change record and provides an audit trail: this order ensures accountability and minimizes unplanned outages.",
   },
 
   /* ================================================================ */
@@ -110,14 +110,14 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "msconfig (System Configuration) manages startup behaviour and is commonly used for troubleshooting boot issues. regedit provides direct access to the Windows Registry and should be used with caution. diskmgmt.msc manages disk volumes and partitions. devmgmt.msc (Device Manager) is the primary tool for driver management. eventvwr.msc (Event Viewer) is essential for diagnosing errors and security events. taskschd.msc (Task Scheduler) automates maintenance and administrative tasks.",
+      "msconfig (System Configuration) manages startup behavior and is commonly used for troubleshooting boot issues. regedit provides direct access to the Windows Registry and should be used with caution. diskmgmt.msc manages disk volumes and partitions. devmgmt.msc (Device Manager) is the primary tool for driver management. eventvwr.msc (Event Viewer) is essential for diagnosing errors and security events. taskschd.msc (Task Scheduler) automates maintenance and administrative tasks.",
   },
   {
     type: "matching",
     id: "aplus-core2-malware-types",
-    title: "Match Malware Types to Behaviours",
+    title: "Match Malware Types to Behaviors",
     description:
-      "Match each type of malware to its defining behaviour or characteristic.",
+      "Match each type of malware to its defining behavior or characteristic.",
     domain_number: "2.0",
     domain_title: "Security",
     left: ["Ransomware", "Trojan", "Rootkit", "Keylogger", "Worm", "Cryptominer"],
@@ -131,7 +131,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Ransomware encrypts data and extorts victims — a major threat to businesses. Trojans rely on social engineering, appearing as legitimate software. Rootkits operate at kernel or firmware level to evade detection. Keyloggers capture credentials passively. Worms spread autonomously across networks, often causing significant bandwidth consumption. Cryptominers are increasingly common, silently degrading system performance while generating profit for attackers.",
+      "Ransomware encrypts data and extorts victims: a major threat to businesses. Trojans rely on social engineering, appearing as legitimate software. Rootkits operate at kernel or firmware level to evade detection. Keyloggers capture credentials passively. Worms spread autonomously across networks, often causing significant bandwidth consumption. Cryptominers are increasingly common, silently degrading system performance while generating profit for attackers.",
   },
   {
     type: "matching",
@@ -169,13 +169,13 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       "Fraudulent emails that trick recipients into revealing credentials or clicking malicious links",
       "Voice calls impersonating trusted entities to extract sensitive information",
       "SMS text messages containing malicious links or requests for personal information",
-      "Following an authorised person through a secured door without using credentials",
+      "Following an authorized person through a secured door without using credentials",
       "Observing a person's screen or keyboard to capture sensitive information",
       "Searching through discarded materials to find sensitive documents or data",
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Phishing uses email, vishing uses voice calls, and smishing uses SMS — all three impersonate trusted sources to steal information. Tailgating (also called piggybacking) is a physical access attack that bypasses door security. Shoulder surfing is a passive observation attack in public spaces. Dumpster diving exploits improperly disposed documents and media; shredding policies and clean-desk policies are the primary defences against the latter two.",
+      "Phishing uses email, vishing uses voice calls, and smishing uses SMS: all three impersonate trusted sources to steal information. Tailgating (also called piggybacking) is a physical access attack that bypasses door security. Shoulder surfing is a passive observation attack in public spaces. Dumpster diving exploits improperly disposed documents and media; shredding policies and clean-desk policies are the primary defenses against the latter two.",
   },
 
   /* ================================================================ */
@@ -205,7 +205,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       { text: "Facial recognition", category: 2 },
     ],
     explanation:
-      "Knowledge factors (something you know) are memorised secrets: passwords, PINs, and security question answers. Possession factors (something you have) are physical or digital objects in your control: smart cards, hardware TOTP tokens, and authenticator apps. Inherence factors (something you are) are biometric characteristics: fingerprints and facial geometry. Multi-factor authentication requires two or more categories, not just two instances from the same category.",
+      "Knowledge factors (something you know) are memorized secrets: passwords, PINs, and security question answers. Possession factors (something you have) are physical or digital objects in your control: smart cards, hardware TOTP tokens, and authenticator apps. Inherence factors (something you are) are biometric characteristics: fingerprints and facial geometry. Multi-factor authentication requires two or more categories, not just two instances from the same category.",
   },
   {
     type: "categorization",
@@ -228,7 +228,7 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       { text: "AppLocker application whitelisting", category: 2 },
     ],
     explanation:
-      "Windows Home includes consumer features such as the Microsoft Store, Windows Hello, and Cortana. Windows Pro adds enterprise-grade tools: BitLocker full-disk encryption, RDP host capability, domain join, and the Group Policy editor. Windows Enterprise builds on Pro with advanced features aimed at large organisations: BranchCache for WAN optimisation, DirectAccess for seamless VPN-free remote access, and AppLocker for granular application control.",
+      "Windows Home includes consumer features such as the Microsoft Store, Windows Hello, and Cortana. Windows Pro adds enterprise-grade tools: BitLocker full-disk encryption, RDP host capability, domain join, and the Group Policy editor. Windows Enterprise builds on Pro with advanced features aimed at large organizations: BranchCache for WAN optimization, DirectAccess for seamless VPN-free remote access, and AppLocker for granular application control.",
   },
   {
     type: "categorization",
@@ -267,13 +267,13 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
       { text: "Default file system for Windows system drives", category: 0 },
       { text: "Maximum single file size of 4 GB", category: 1 },
       { text: "Compatible with nearly all operating systems and devices", category: 1 },
-      { text: "Optimised for flash drives and memory cards larger than 32 GB", category: 2 },
+      { text: "Optimized for flash drives and memory cards larger than 32 GB", category: 2 },
       { text: "No practical file size limit; lacks journaling", category: 2 },
       { text: "Default file system on Debian and Ubuntu Linux", category: 3 },
       { text: "Supports journaling, large volumes, and extended attributes on Linux", category: 3 },
     ],
     explanation:
-      "NTFS is the Windows file system of choice, supporting permissions, EFS encryption, and journaling for crash recovery. FAT32 is universally compatible but limited to a 4 GB maximum file size and 8 TB volume size. exFAT was designed to replace FAT32 for large flash media — it removes the 4 GB file size limit while retaining broad cross-platform compatibility. ext4 is the standard Linux file system, featuring journaling, large file support, and extended attributes not present in Windows file systems.",
+      "NTFS is the Windows file system of choice, supporting permissions, EFS encryption, and journaling for crash recovery. FAT32 is universally compatible but limited to a 4 GB maximum file size and 8 TB volume size. exFAT was designed to replace FAT32 for large flash media: it removes the 4 GB file size limit while retaining broad cross-platform compatibility. ext4 is the standard Linux file system, featuring journaling, large file support, and extended attributes not present in Windows file systems.",
   },
 
   /* ================================================================ */
@@ -297,6 +297,6 @@ export const aPlusCore2Scenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Always verify system requirements first — insufficient disk space or an incompatible OS version is the most common cause of failed installs. Next, check for conflicts (leftover registry entries, running services from previous installs). Running as administrator resolves permission-related failures. If installation still fails, the installer log files contain specific error codes that can be researched for targeted fixes. After resolving the issue and completing installation, verify the application functions correctly.",
+      "Always verify system requirements first: insufficient disk space or an incompatible OS version is the most common cause of failed installs. Next, check for conflicts (leftover registry entries, running services from previous installs). Running as administrator resolves permission-related failures. If installation still fails, the installer log files contain specific error codes that can be researched for targeted fixes. After resolving the issue and completing installation, verify the application functions correctly.",
   },
 ];

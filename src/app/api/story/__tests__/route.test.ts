@@ -65,6 +65,10 @@ describe("POST /api/story", () => {
   it("asks a pass for a sentence or two", async () => {
     const res = await post({ token: signStoryToken("user-1", "cert-1"), passed: true, quote: "ok", displayName: "Sam K." });
     expect(res.status).toBe(400);
+    // The sentence the form shows: the same words as the form's own hint.
+    expect(await res.json()).toEqual({
+      error: { code: "validation_failed", message: "Please write at least 10 characters." },
+    });
     expect(insert).not.toHaveBeenCalled();
   });
 

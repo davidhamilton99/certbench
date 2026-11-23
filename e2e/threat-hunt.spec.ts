@@ -38,7 +38,7 @@ test("threat hunt: flag evidence, identify attack, perfect score", async ({
   for (const frag of maliciousFragments) {
     await page.getByRole("button", { name: new RegExp(escapeRe(frag)) }).click();
   }
-  await expect(page.getByText(`${maliciousFragments.length} flagged`)).toBeVisible();
+  await expect(page.getByText(`You have flagged ${maliciousFragments.length} lines.`)).toBeVisible();
 
   // Identify the attack.
   await page

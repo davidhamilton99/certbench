@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { Db } from "@/server/supabase/server";
 import { ApiError } from "@/contracts/common";
 import {

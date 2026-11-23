@@ -10,7 +10,7 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
   {
     id: "sec-acronyms",
     label: "Acronyms",
-    blurb: "Expand every SY0-701 acronym — both directions.",
+    blurb: "Expand every SY0-701 acronym, both directions.",
     tableId: "acronyms",
     mode: "choice",
     ask: { key: "acronym", label: "acronym" },
@@ -34,7 +34,7 @@ export const securityPlusRecallConfigs: RecallDeckConfig[] = [
   {
     id: "sec-crypto",
     label: "Crypto & hashing",
-    blurb: "Classify each algorithm — symmetric, asymmetric, hash…",
+    blurb: "Classify each algorithm: symmetric, asymmetric, hash…",
     tableId: "encryption-algorithms",
     mode: "choice",
     ask: { key: "algorithm", label: "algorithm" },

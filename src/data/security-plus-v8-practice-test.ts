@@ -28,11 +28,11 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     id: "sy0801-pt-01",
     objective: "1.1",
     questionText:
-      "A legacy production controller can't be patched for a known vulnerability until the vendor ships a fix next year. Until then, the security team isolates it on its own network segment and adds extra monitoring. Which type of control are these measures?",
+      "A legacy production controller cannot be patched for a known vulnerability until the vendor ships a fix next year. Until then, the security team isolates it on its own network segment and adds extra monitoring. Which type of control are these measures?",
     options: ["Deterring", "Directive", "Compensating", "Corrective"],
     correctIndex: 2,
     explanation:
-      "A compensating control stands in when the primary control, here patching, isn't possible. A deterring control discourages an attempt, a directive control tells people what to do, such as a policy or a sign, and a corrective control repairs things after an incident.",
+      "A compensating control stands in when the primary control, here patching, is not possible. A deterring control discourages an attempt, a directive control tells people what to do, such as a policy or a sign, and a corrective control repairs things after an incident.",
   },
   {
     id: "sy0801-pt-02",
@@ -52,7 +52,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Non-repudiation", "Confidentiality", "Availability", "Least privilege"],
     correctIndex: 0,
     explanation:
-      "A signature made with a private key that only the signer holds gives non-repudiation: the signer can't credibly deny the action. Confidentiality keeps data secret, availability keeps it reachable, and least privilege limits what an account may do.",
+      "A signature made with a private key that only the signer holds gives non-repudiation: the signer cannot credibly deny the action. Confidentiality keeps data secret, availability keeps it reachable, and least privilege limits what an account may do.",
   },
   {
     id: "sy0801-pt-04",
@@ -62,7 +62,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Impact analysis", "Standard operating procedure", "Stakeholder list", "Backout plan"],
     correctIndex: 3,
     explanation:
-      "A backout plan sets out the steps to undo a change and restore the last working state if it fails. Impact analysis estimates what a change could affect before it's approved, and a standard operating procedure describes how a routine task is done.",
+      "A backout plan sets out the steps to undo a change and restore the last working state if it fails. Impact analysis estimates what a change could affect before it is approved, and a standard operating procedure describes how a routine task is done.",
   },
   {
     id: "sy0801-pt-05",
@@ -97,7 +97,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Salting", "Key escrow", "Obfuscation", "Digital signatures"],
     correctIndex: 0,
     explanation:
-      "A salt is a unique random value added to each password before hashing, so identical passwords produce different hashes and precomputed tables stop working. Key escrow, obfuscation and digital signatures don't change how password hashes are derived.",
+      "A salt is a unique random value added to each password before hashing, so identical passwords produce different hashes and precomputed tables stop working. Key escrow, obfuscation and digital signatures do not change how password hashes are derived.",
   },
 
   // ---- 2.0 Threats, Vulnerabilities, and Attacks (11) ----
@@ -114,7 +114,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     ],
     correctIndex: 0,
     explanation:
-      "The Common Vulnerability Scoring System rates a vulnerability's severity from 0 to 10. CVE is the catalog that gives each publicly known vulnerability its identifier. Severity alone isn't risk, which also depends on how exposed and how valuable the affected system is.",
+      "The Common Vulnerability Scoring System rates a vulnerability's severity from 0 to 10. CVE is the catalog that gives each publicly known vulnerability its identifier. Severity alone is not risk, which also depends on how exposed and how valuable the affected system is.",
   },
   {
     id: "sy0801-pt-09",
@@ -174,7 +174,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Hardcoded secret", "Zero-day", "Unsafe exception handling", "Race condition"],
     correctIndex: 3,
     explanation:
-      "It's a race condition of the time-of-check to time-of-use kind: the state changes between the check and the use. The fix is to check and use the resource in one step, or to lock it in between.",
+      "It is a race condition of the time-of-check to time-of-use kind: the state changes between the check and the use. The fix is to check and use the resource in one step, or to lock it in between.",
   },
   {
     id: "sy0801-pt-14",
@@ -204,7 +204,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Impossible travel", "Account lockout", "Excessive resource consumption", "Log manipulation"],
     correctIndex: 0,
     explanation:
-      "Nobody can cover that distance in twenty minutes, so the two sign-ins can't both be the user in person: impossible travel. It often points to stolen credentials or a stolen session, though a VPN can cause it too.",
+      "Nobody can cover that distance in twenty minutes, so the two sign-ins cannot both be the user in person: impossible travel. It often points to stolen credentials or a stolen session, though a VPN can cause it too.",
   },
   {
     id: "sy0801-pt-17",
@@ -296,7 +296,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Tokenization", "Masking", "Hashing", "Obfuscation"],
     correctIndex: 0,
     explanation:
-      "Tokenization swaps sensitive data for a token that has no mathematical link to it, while the real value stays in a secured vault. Masking hides part of a value when it's displayed, and a hash is one-way, so the card couldn't be charged again from it.",
+      "Tokenization swaps sensitive data for a token that has no mathematical link to it, while the real value stays in a secured vault. Masking hides part of a value when it is displayed, and a hash is one-way, so the card could not be charged again from it.",
   },
   {
     id: "sy0801-pt-24",
@@ -346,7 +346,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Retention", "Scope", "Immutability", "Compression"],
     correctIndex: 2,
     explanation:
-      "An immutable backup can't be altered or deleted for a set period, even by an administrator, so ransomware can't encrypt it. Retention is how long backups are kept, and scope is what they include.",
+      "An immutable backup cannot be altered or deleted for a set period, even by an administrator, so ransomware cannot encrypt it. Retention is how long backups are kept, and scope is what they include.",
   },
 
   // ---- 4.0 Security Operations (12) ----
@@ -358,7 +358,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["BIMI", "802.1X", "A web application firewall", "DMARC"],
     correctIndex: 3,
     explanation:
-      "DMARC builds on SPF and DKIM: it publishes a policy telling receivers to quarantine or reject mail that fails them, and it sends the domain owner reports. BIMI shows a brand's logo beside mail that already passes DMARC; it doesn't block anything.",
+      "DMARC builds on SPF and DKIM: it publishes a policy telling receivers to quarantine or reject mail that fails them, and it sends the domain owner reports. BIMI shows a brand's logo beside mail that already passes DMARC; it does not block anything.",
   },
   {
     id: "sy0801-pt-29",
@@ -373,7 +373,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     ],
     correctIndex: 0,
     explanation:
-      "Network access control with 802.1X makes a device authenticate at the switch port before it's let on, and a posture check can send a non-compliant device to a restricted network. The other options don't control which devices may connect.",
+      "Network access control with 802.1X makes a device authenticate at the switch port before it is let on, and a posture check can send a non-compliant device to a restricted network. The other options do not control which devices may connect.",
   },
   {
     id: "sy0801-pt-30",
@@ -398,7 +398,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     ],
     correctIndex: 1,
     explanation:
-      "Disposal, or decommissioning, includes sanitizing storage so the data can't be recovered and keeping a record of it. Skipping that step is how retired equipment leaks data.",
+      "Disposal, or decommissioning, includes sanitizing storage so the data cannot be recovered and keeping a record of it. Skipping that step is how retired equipment leaks data.",
   },
   {
     id: "sy0801-pt-32",
@@ -453,7 +453,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     ],
     correctIndex: 1,
     explanation:
-      "A passkey is a cryptographic key pair bound to the site it was created for, so it won't work on a fake domain and no secret is typed. SMS codes, passwords and backup codes can all be typed into a phishing page.",
+      "A passkey is a cryptographic key pair bound to the site it was created for, so it will not work on a fake domain and no secret is typed. SMS codes, passwords and backup codes can all be typed into a phishing page.",
   },
   {
     id: "sy0801-pt-36",
@@ -488,7 +488,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     options: ["Legal hold", "E-discovery", "Chain of custody", "Root cause analysis"],
     correctIndex: 2,
     explanation:
-      "Chain of custody documents who held a piece of evidence, when and why, so it can be shown that the evidence wasn't altered. A legal hold is an instruction to preserve data that may be needed in a legal matter.",
+      "Chain of custody documents who held a piece of evidence, when and why, so it can be shown that the evidence was not altered. A legal hold is an instruction to preserve data that may be needed in a legal matter.",
   },
   {
     id: "sy0801-pt-39",
@@ -526,7 +526,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     id: "sy0801-pt-42",
     objective: "5.3",
     questionText:
-      "A company signs a contract with a cloud provider. It states that the service will be available 99.9% of each month and sets the credits the provider owes if it isn't. Which type of agreement contains these terms?",
+      "A company signs a contract with a cloud provider. It states that the service will be available 99.9% of each month and sets the credits the provider owes if it is not. Which type of agreement contains these terms?",
     options: [
       "Service-level agreement (SLA)",
       "Non-disclosure agreement (NDA)",
@@ -535,7 +535,7 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
     ],
     correctIndex: 0,
     explanation:
-      "A service-level agreement defines measurable service targets and what happens when they're missed. An NDA protects confidential information, an MOU records a shared intent, usually without binding terms, and a statement of work describes the work to be delivered.",
+      "A service-level agreement defines measurable service targets and what happens when they are missed. An NDA protects confidential information, an MOU records a shared intent, usually without binding terms, and a statement of work describes the work to be delivered.",
   },
   {
     id: "sy0801-pt-43",
@@ -566,10 +566,10 @@ export const SY0_801_PRACTICE_TEST: PracticeTestQuestion[] = [
       "Shoulder surfing; use a privacy screen",
       "Tailgating; challenge unknown visitors",
       "Business email compromise; confirm the request through a known, separate channel before paying",
-      "Removable media; don't plug in drives found lying around",
+      "Removable media; do not plug in drives found lying around",
     ],
     correctIndex: 2,
     explanation:
-      "It has the marks of business email compromise: an executive's name, urgency, secrecy and a change of payee. The defence is to verify through a channel you already trust, such as a phone number on file, before any money moves.",
+      "It has the marks of business email compromise: an executive's name, urgency, secrecy and a change of payee. The defense is to verify through a channel you already trust, such as a phone number on file, before any money moves.",
   },
 ];

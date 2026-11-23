@@ -11,10 +11,10 @@ import { EXAMS, RoundComplete } from "./DrillRound";
 const LABEL = "Acronyms";
 
 /**
- * The acronym drill on the free tool page, played in rounds on the path's own
- * card, with the path's own recall reps: round 1 is free, a free account keeps
- * going with rounds built from the visitor's misses, and every round ends on
- * the Security+ path.
+ * The acronym drill on the free tool page, played in rounds on the study
+ * path's own question card, with its own recall questions: round 1 is free, a
+ * free account continues with rounds built from the visitor's misses, and
+ * every round ends on the Security+ study path.
  */
 export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
   // One tile per acronym (the deck's cue column), with its first expansion.
@@ -53,10 +53,10 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
         noun={["acronym", "acronyms"]}
         tiles={tiles}
         variant="dots"
-        mapTitle="Your acronym map"
+        mapTitle="Your acronyms"
         lead={{
-          title: "Acronyms are the part anyone can max out.",
-          body: "The exam is decided by the scenarios most people underestimate. Your Security+ path walks every objective in short rounds like this one, up to a readiness checkpoint that shows where you stand.",
+          title: "Acronyms are a small part of the exam.",
+          body: "Most of the exam consists of scenarios. Your Security+ study path covers every objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus],
         }}
       />
@@ -67,7 +67,7 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
     <DrillPlayer
       key={rounds.roundNumber}
       rounds={rounds}
-      label={`${LABEL} · round ${rounds.roundNumber}`}
+      label={`${LABEL}, round ${rounds.roundNumber}`}
       deal={deal}
     />
   );

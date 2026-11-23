@@ -10,8 +10,8 @@ import { pageMetadata } from "@/lib/seo/metadata";
 import { Logo } from "@/components/brand/Logo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Pick your exam",
-  description: "Choose your CompTIA exam and start studying it one short step at a time.",
+  title: "Choose your exam",
+  description: "Choose your CompTIA exam to begin its study path.",
   path: "/start",
   noindex: true,
 });
@@ -49,18 +49,20 @@ export default async function StartPage({
           <ThemeToggle />
         </div>
       </header>
-      <main className="mx-auto grid w-full max-w-2xl flex-1 content-start gap-10 px-4 pb-20 pt-14 sm:px-6 sm:pt-24">
-        <div className="grid gap-4 text-center">
-          {paid && (
-            <span className="text-xs font-medium uppercase tracking-[0.16em] text-primary">Payment received</span>
-          )}
-          <h1 className="cb-display text-balance text-[2.5rem] sm:text-6xl">
-            {paid ? "Which exam is Pro for?" : "Which exam are you taking?"}
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto grid w-full max-w-2xl flex-1 content-start gap-10 px-4 pb-20 pt-14 outline-none sm:px-6 sm:pt-24"
+      >
+        <div className="grid gap-4">
+          {paid && <span className="cb-label text-muted-foreground">Your payment has been received.</span>}
+          <h1 className="cb-display text-balance text-[2.25rem] sm:text-[3rem]">
+            {paid ? "Which exam is your Pro plan for?" : "Which exam are you preparing for?"}
           </h1>
-          <p className="mx-auto max-w-md text-balance text-lg text-muted-foreground">
+          <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
             {paid
-              ? "Pick it and its whole path opens: every stop, every lab and the timed rehearsal."
-              : "That's the only choice you make. From here, every step is laid out for you."}
+              ? "Choose the exam, and its whole study path will open. This includes every step, every hands-on lab and the timed practice exams."
+              : "This is the only choice that you need to make. After this, each step is set out for you in order."}
           </p>
         </div>
         <ExamPicker surface="start" upgraded={paid} />

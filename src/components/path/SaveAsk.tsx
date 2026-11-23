@@ -8,15 +8,15 @@ import { InlineSignup } from "@/components/auth/InlineSignup";
 
 /** The stop an account opens next, named when it's one to learn from, or the checkpoint. */
 export function nextUpTitle(next: PathStop | null): string | null {
-  if (next?.kind === "learn") return `Next up: ${next.title}`;
-  if (next?.kind === "checkpoint") return "Next up: your readiness checkpoint";
+  if (next?.kind === "learn") return `Your next step: ${next.title}`;
+  if (next?.kind === "checkpoint") return "Your next step: the readiness checkpoint";
   return null;
 }
 
 /** How long that stop takes: the sentence ahead of what an account does. */
 export function nextUpLead(next: PathStop | null): string {
-  if (next?.kind === "learn") return `About ${MINUTES_PER_STOP} minutes of quick questions. `;
-  if (next?.kind === "checkpoint") return `${CHECKPOINT_SIZE} exam-style questions, then your score by domain. `;
+  if (next?.kind === "learn") return `It takes about ${MINUTES_PER_STOP} minutes. `;
+  if (next?.kind === "checkpoint") return `It has ${CHECKPOINT_SIZE} exam-style questions and gives you a score for each domain. `;
   return "";
 }
 
@@ -58,7 +58,7 @@ export function SaveAsk({
     <>
       <div className="grid gap-1">
         <Title className="font-display text-xl font-semibold tracking-tight">{title}</Title>
-        <p className="text-sm text-muted-foreground">{children}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{children}</p>
       </div>
       <InlineSignup
         nextPath={`/path/${cert}`}

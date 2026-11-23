@@ -20,7 +20,6 @@ export function portRep(q: QuizQuestion): ChoiceRep {
   const { answer, options } = q;
   const asksPort = q.direction === "port";
   const cue = asksPort ? answer.protocol : answer.port;
-  const reply = asksPort ? answer.port : answer.protocol;
   return {
     id: `port|${answer.port}`,
     type: "choice",
@@ -31,7 +30,7 @@ export function portRep(q: QuizQuestion): ChoiceRep {
     cue: asksPort ? "Which port?" : "Which protocol?",
     options: options.map((o) => (asksPort ? o.port : o.protocol)),
     answer: options.indexOf(answer),
-    takeaway: `${cue} → ${reply} over ${answer.transport}${answer.service ? ` · ${answer.service}` : ""}`,
+    takeaway: `${answer.protocol} uses port ${answer.port} over ${answer.transport}.${answer.service ? ` ${answer.service}.` : ""}`,
     mono: asksPort,
   };
 }
@@ -72,10 +71,10 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
         noun={["port", "ports"]}
         tiles={tiles}
         variant="labels"
-        mapTitle="Your port map"
+        mapTitle="Your ports"
         lead={{
-          title: "Ports are a small slice of the exam.",
-          body: "The rest decides whether you pass. Your path walks every exam objective in short rounds like this one, up to a readiness checkpoint that shows where you stand.",
+          title: "Port numbers are a small part of the exam.",
+          body: "The rest of the exam decides whether you pass. Your study path covers every exam objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />
@@ -86,7 +85,7 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
     <DrillPlayer
       key={rounds.roundNumber}
       rounds={rounds}
-      label={`${LABEL} · round ${rounds.roundNumber}`}
+      label={`${LABEL}, round ${rounds.roundNumber}`}
       deal={deal}
     />
   );

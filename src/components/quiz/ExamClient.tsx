@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import type {
   AnswerInput,
   ExamQuestion,
   ExamResult,
   ProgressSnapshot,
 } from "@/contracts/quiz";
-import { ApiError } from "@/contracts/common";
+import { ApiError } from "@/contracts/errors";
+import { userMessage } from "@/lib/errors/user-message";
 import type { QuizConfig, QuizSnapshot } from "@/core/quiz-engine/types";
 import { QuizShell } from "./QuizShell";
 import { ExamResultsView } from "./ExamResultsView";
@@ -31,14 +32,17 @@ export interface ExamClientProps {
     flaggedQuestionIds: string[]
   ) => Promise<ExamResult>;
   submitLabel: string;
+  /** The result's heading, as a sentence. */
   resultsTitle: string;
   backHref: string;
   backLabel: string;
-  /** Set for the diagnostic only — renders the cinematic readiness reveal. */
+  /** Set for the diagnostic only: its result adds the domain to study first and the exam date. */
   diagnosticCertId?: string;
   certName?: string;
   examCode?: string;
   domainWeights?: Record<string, number>;
+  /** The set is a full-length practice exam: its result is drawn against the readiness target. */
+  fullExam?: boolean;
 }
 
 type ClientState =
@@ -71,6 +75,7 @@ export function ExamClient({
   certName,
   examCode,
   domainWeights,
+  fullExam = false,
 }: ExamClientProps) {
   const [state, setState] = useState<ClientState>({ phase: "loading" });
   const started = useRef(false);
@@ -98,11 +103,10 @@ export function ExamClient({
       .catch((err) =>
         setState(
           err instanceof ApiError && err.code === "quota_exceeded"
-            ? { phase: "quota", message: err.message }
+            ? { phase: "quota", message: userMessage(err) }
             : {
                 phase: "error",
-                message:
-                  err instanceof ApiError ? err.message : "Couldn't start the exam",
+                message: userMessage(err, "The questions could not be loaded. Please try again."),
               }
         )
       );
@@ -112,42 +116,38 @@ export function ExamClient({
 
   if (state.phase === "loading") {
     return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      <div role="status" className="mx-auto flex w-full max-w-2xl items-center gap-3 py-24 text-small text-muted-foreground">
+        <Loader2 aria-hidden className="size-5 animate-spin" />
+        Your questions are being prepared.
       </div>
     );
   }
 
   if (state.phase === "error") {
     return (
-      <div className="mx-auto grid max-w-md gap-4 py-16 text-center">
-        <p className="text-sm text-muted-foreground">{state.message}</p>
-        <Button
-          variant="outline"
-          onClick={() => window.location.reload()}
-          className="justify-self-center"
-        >
-          Retry
+      <div className="mx-auto grid w-full max-w-2xl gap-4 py-16">
+        <p role="alert" className="cb-measure text-small">
+          {state.message}
+        </p>
+        <Button variant="outline" onClick={() => window.location.reload()} className="justify-self-start">
+          Try again
         </Button>
       </div>
     );
   }
 
-  // The paywall moment: the daily free allowance can't cover this session.
+  // The free plan's allowance for today does not cover this set of questions.
   if (state.phase === "quota") {
     return (
-      <div className="mx-auto grid max-w-md gap-4 py-16 text-center">
-        <Lock className="mx-auto size-6 text-muted-foreground" />
-        <h2 className="text-lg font-semibold tracking-tight">
-          Daily limit reached
-        </h2>
-        <p className="text-sm text-muted-foreground">{state.message}</p>
-        <div className="flex justify-center gap-2 pt-2">
+      <div className="mx-auto grid w-full max-w-2xl gap-4 py-16">
+        <h2 className="text-lg font-semibold">You have reached the limit for today.</h2>
+        <p className="cb-measure text-small text-muted-foreground">{state.message}</p>
+        <div className="flex flex-wrap gap-2 pt-2">
           <Button asChild>
-            <Link href="/upgrade?reason=daily-limit">Upgrade to Pro</Link>
+            <Link href="/upgrade?reason=daily-limit">See what Pro includes</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/dashboard">Back to your plan</Link>
+            <Link href="/dashboard">Return to your study plan</Link>
           </Button>
         </div>
       </div>
@@ -165,6 +165,7 @@ export function ExamClient({
         certName={certName}
         examCode={examCode}
         domainWeights={domainWeights}
+        fullExam={fullExam}
       />
     );
   }

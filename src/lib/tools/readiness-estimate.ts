@@ -1,7 +1,9 @@
 /**
- * Pure scoring for the public no-signup readiness check. Deliberately
- * simple and clearly labelled an ESTIMATE — the real readiness score uses
- * the full diagnostic plus ongoing performance with confidence penalties.
+ * Pure scoring for the public readiness check, which needs no account. It is
+ * deliberately simple and is always labelled an estimate: ten questions cannot
+ * say more. The words for a score ("Target met" and the rest) are not decided
+ * here. Every surface asks `bandFor` in src/lib/readiness/band.ts, so the same
+ * score is never described two ways.
  */
 
 export interface CheckAnswer {
@@ -28,9 +30,8 @@ export interface DomainEstimate {
 }
 
 export interface ReadinessEstimate {
-  /** 0–100, exam-weighted across the domains that were sampled. */
+  /** From 0 to 100, weighted as the exam weights the domains that were sampled. */
   score: number;
-  band: "ready" | "close" | "start";
   domains: DomainEstimate[];
 }
 
@@ -63,12 +64,7 @@ export function estimateReadiness(answers: CheckAnswer[]): ReadinessEstimate {
     });
   }
 
-  const score = weightSum > 0 ? Math.round(weighted / weightSum) : 0;
-  return {
-    score,
-    band: score >= 75 ? "ready" : score >= 40 ? "close" : "start",
-    domains,
-  };
+  return { score: weightSum > 0 ? Math.round(weighted / weightSum) : 0, domains };
 }
 
 /**

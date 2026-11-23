@@ -19,7 +19,8 @@ describe("the free PBQs in public copy", () => {
   it("gives every PBQ page the number its title promises", () => {
     for (const page of PBQ_EXAMPLE_PAGES) {
       expect(freeLabs(pbqRegistry[page.certSlug] ?? [])).toHaveLength(FREE_LAB_COUNT);
-      expect(page.metaTitle).toMatch(new RegExp(`^${FREE_LAB_COUNT} Free Interactive `));
+      // Sentence case, like every title on the site, and a space before the exam's name.
+      expect(page.metaTitle).toMatch(new RegExp(`^${FREE_LAB_COUNT} free interactive \\S.* PBQs \\(`));
     }
   });
 

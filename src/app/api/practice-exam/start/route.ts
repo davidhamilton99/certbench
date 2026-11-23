@@ -118,7 +118,7 @@ export const POST = defineEndpoint(startPracticeExam, {
       throw new ApiError(
         "not_found",
         input.examType === "weak_points"
-          ? "No weak-point questions yet — answer more questions first"
+          ? "No weak-point questions yet: answer more questions first"
           : "No questions available"
       );
     }

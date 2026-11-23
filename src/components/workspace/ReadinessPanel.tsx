@@ -1,18 +1,20 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
 import type { SessionPlanResult } from "@/core/session-plan/compute-plan";
-import { bandFor, bandVars, BUILDING_BAND } from "@/lib/readiness/band";
-import { ReadinessDial } from "@/components/instrument/ReadinessDial";
+import { bandFor, BUILDING_BAND } from "@/lib/readiness/band";
+import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
 import {
   ShareReadiness,
   type ShareReadinessProps,
 } from "@/components/workspace/ShareReadiness";
-import { cn } from "@/lib/utils";
 
 /**
- * The daily readiness instrument — the same dial as the post-diagnostic reveal,
- * sized for the dashboard, on the dark instrument surface. While preliminary,
- * the score wears the neutral "building baseline" treatment so a strong start on
- * a small sample never reads as a red "Needs work".
+ * The readiness score on the study plan: the score against the readiness
+ * target, then every domain on the same scale, drawn as the study path draws
+ * a result. While the score is preliminary it carries the neutral "Baseline
+ * in progress" label, so a strong start on a small sample is not called
+ * "Below target".
+ *
+ * Every bar is drawn at its final length in the markup: none grows from
+ * nothing, so the panel is right in a paused tab and in a session replay.
  */
 export function ReadinessPanel({
   plan,
@@ -30,111 +32,67 @@ export function ReadinessPanel({
   const totalCorrect = plan.domainScores.reduce((s, d) => s + d.correct, 0);
   const rawAccuracy =
     totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : null;
+  const days = plan.daysUntilExam;
+  const change = trend ? Math.round(Math.abs(trend.delta)) : 0;
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm"
-      style={bandVars(band)}
-    >
-      {/* Ambient accent glow behind the instrument. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-16 left-1/2 h-56 w-72 -translate-x-1/2 rounded-full blur-3xl"
-        style={{ background: "var(--rv-accent-dim)" }}
-      />
-
-      <div className="relative flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-base font-semibold tracking-tight">
-            Readiness
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {preliminary
-              ? "Climbs as you cover each domain"
-              : `Based on ${plan.totalQuestionsSeen} answered`}
-            {plan.daysUntilExam !== null && <> · {plan.daysUntilExam}d to exam</>}
-          </p>
-        </div>
+    <div className="glass rounded-lg p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-base font-semibold">Readiness</h2>
         {share && <ShareReadiness {...share} />}
       </div>
 
-      <div className="relative mt-2 grid justify-items-center gap-3">
-        <ReadinessDial
-          score={plan.readinessScore}
-          band={band}
-          caption="Readiness"
-          size={232}
-        />
-        {preliminary && rawAccuracy !== null && (
-          <p className="max-w-xs text-balance text-center text-xs leading-relaxed text-muted-foreground">
-            You&apos;re answering{" "}
-            <span className="font-medium text-foreground">{rawAccuracy}%</span>{" "}
-            correctly so far — readiness starts low on purpose and climbs as you
-            cover more of each domain.
-          </p>
-        )}
-        {trend && trend.delta !== 0 && (
-          <span
-            className={cn(
-              "flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-mono text-xs font-medium",
-              trend.delta > 0
-                ? "border-success/30 bg-success/10 text-success"
-                : "border-danger/30 bg-danger/10 text-danger"
-            )}
-          >
-            {trend.delta > 0 ? (
-              <TrendingUp className="size-3.5" />
-            ) : (
-              <TrendingDown className="size-3.5" />
-            )}
-            {trend.delta > 0 ? "+" : ""}
-            {trend.delta}% in {trend.daysSpan}d
-          </span>
-        )}
+      <div className="mt-4 grid gap-3">
+        {/* Printed and left: the page opening is not a press, so nothing counts up. */}
+        <ScoreLevel score={plan.readinessScore} band={band} caption="Readiness score" still />
+        <p className="text-note text-muted-foreground">
+          {preliminary ? (
+            <>
+              {rawAccuracy !== null && <>You have answered {rawAccuracy}% of your questions correctly so far. </>}
+              The readiness score starts low and rises as you cover more of each domain.
+            </>
+          ) : (
+            <>This score is based on {plan.totalQuestionsSeen} answered questions.</>
+          )}
+          {trend && change > 0 && (
+            <>
+              {" "}
+              It has {trend.delta > 0 ? "risen" : "fallen"} by {change} {change === 1 ? "point" : "points"} in the
+              last {trend.daysSpan} {trend.daysSpan === 1 ? "day" : "days"}.
+            </>
+          )}
+          {days !== null && <> {days === 0 ? "Your exam is today." : `Your exam is in ${days} ${days === 1 ? "day" : "days"}.`}</>}
+        </p>
       </div>
 
       {plan.domainScores.length > 0 && (
-        <div className="relative mt-6 grid gap-4 border-t border-border pt-5">
-          {plan.domainScores.map((d, i) => {
-            const dc = bandFor(d.score).accent;
+        <ul className="mt-5 grid gap-4 border-t border-border pt-5">
+          {plan.domainScores.map((d) => {
             const scored = d.attempted > 0;
+            const tone = bandFor(d.score);
             return (
-              <div key={d.domainId} className="grid min-w-0 gap-1.5">
-                <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-                  <span className="leading-snug">
-                    <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                      {d.domainNumber}
-                    </span>
+              <li key={d.domainId} className="grid min-w-0 gap-1.5">
+                <div className="flex min-w-0 items-baseline justify-between gap-3 text-small">
+                  <span className="min-w-0">
+                    <span className="sr-only">Domain </span>
+                    <span className="mr-1 text-note tabular-nums text-muted-foreground">
+                      {d.domainNumber.replace(/\.0$/, "")}
+                    </span>{" "}
                     {d.title}
                   </span>
                   <span
-                    className="shrink-0 font-mono text-sm tabular-nums"
-                    style={{ color: scored ? dc : undefined }}
+                    className="shrink-0 text-small font-medium tabular-nums"
+                    style={{ color: scored ? tone.ink : undefined }}
                   >
-                    {scored ? `${Math.round(d.score)}%` : "—"}
+                    {scored ? `${Math.round(d.score)}%` : "Not scored"}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/[0.08]">
-                    {scored && (
-                      <div
-                        className="animate-bar h-full rounded-full"
-                        style={{
-                          width: `${Math.max(2, Math.min(100, d.score))}%`,
-                          background: dc,
-                          animationDelay: `${150 + i * 90}ms`,
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span className="w-20 shrink-0 text-right font-mono text-[11px] text-muted-foreground">
-                    {d.examWeight}% of exam
-                  </span>
-                </div>
-              </div>
+                <ScoreBar value={scored ? d.score : null} color={tone.accent} />
+                <span className="text-note text-muted-foreground">{d.examWeight}% of the exam</span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

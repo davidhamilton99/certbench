@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { listEnrollments } from "@/server/data/enrollments";
 import {
   getCertificationBySlug,
@@ -31,6 +31,8 @@ export const metadata = {
 };
 
 const ACTIVITY_RANGE_DAYS = 30;
+/** An objective is listed once it has this many answers: fewer say too little. */
+const MIN_ATTEMPTED = 3;
 
 export default async function AnalyticsPage({
   searchParams,
@@ -38,11 +40,7 @@ export default async function AnalyticsPage({
   searchParams: Promise<{ cert?: string }>;
 }) {
   const { cert: certSlug } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const enrollments = await listEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
@@ -71,20 +69,20 @@ export default async function AnalyticsPage({
     questionToSub,
     subObjectives,
     new Map(domains.map((d) => [d.id, d.domainNumber])),
-    { minAttempted: 3, limit: 8 }
+    { minAttempted: MIN_ATTEMPTED, limit: 8 }
   );
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Analytics</h1>
-        <p className="text-sm text-muted-foreground">{active.name}</p>
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Analytics</h1>
+        <p className="text-small text-muted-foreground">These figures are from your work on {active.name}.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Readiness over time</CardTitle>
-          <CardDescription>Latest snapshot per day</CardDescription>
+          <CardTitle as="h2">Readiness over time</CardTitle>
+          <CardDescription>The chart shows the last readiness score recorded on each day.</CardDescription>
         </CardHeader>
         <CardContent>
           <ReadinessChart points={readinessSeries} />
@@ -93,9 +91,9 @@ export default async function AnalyticsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Activity</CardTitle>
+          <CardTitle as="h2">Activity</CardTitle>
           <CardDescription>
-            Questions answered per day, last {ACTIVITY_RANGE_DAYS} days
+            The chart shows the questions answered on each of the last {ACTIVITY_RANGE_DAYS} days.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,35 +103,48 @@ export default async function AnalyticsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Weakest sub-objectives</CardTitle>
+          <CardTitle as="h2">Objectives with the lowest scores</CardTitle>
           <CardDescription>
-            At least 3 attempts · lowest accuracy first
+            An objective is listed once you have answered at least {MIN_ATTEMPTED} of its questions. The lowest
+            score is first.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {weakest.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Not enough data yet — keep answering questions.
+            <p className="text-small text-muted-foreground">
+              There are not enough answers yet. The list appears as you answer more questions.
             </p>
           ) : (
-            <div className="grid gap-2">
-              {weakest.map((w) => (
-                <div
-                  key={w.subObjectiveId}
-                  className="flex items-baseline justify-between gap-3 text-sm"
-                >
-                  <span className="truncate">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {w.code}
-                    </span>{" "}
-                    {w.title}
-                  </span>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                    {Math.round(w.accuracy)}% · {w.correct}/{w.attempted}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <table className="w-full text-small">
+              <caption className="sr-only">Objectives with the lowest scores</caption>
+              <thead>
+                <tr className="border-b border-border text-left text-note text-muted-foreground">
+                  <th scope="col" className="py-2 pr-3 font-medium">
+                    Objective
+                  </th>
+                  <th scope="col" className="py-2 pl-3 text-right font-medium">
+                    Score
+                  </th>
+                  <th scope="col" className="py-2 pl-3 text-right font-medium">
+                    Correct
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {weakest.map((w) => (
+                  <tr key={w.subObjectiveId} className="border-b border-border last:border-0">
+                    <th scope="row" className="py-2 pr-3 text-left font-normal">
+                      <span className="mr-2 font-mono text-xs text-muted-foreground">{w.code}</span>
+                      {w.title}
+                    </th>
+                    <td className="py-2 pl-3 text-right tabular-nums">{Math.round(w.accuracy)}%</td>
+                    <td className="whitespace-nowrap py-2 pl-3 text-right tabular-nums text-muted-foreground">
+                      {w.correct} of {w.attempted}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </CardContent>
       </Card>

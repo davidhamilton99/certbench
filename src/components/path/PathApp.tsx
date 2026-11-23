@@ -6,10 +6,16 @@ import Link from "next/link";
 import { ArrowRight, FlaskConical, Loader2, RotateCcw, Timer } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
-import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/path";
-import { ApiError } from "@/contracts/common";
+// Named without their schemas (src/contracts/lazy.ts): the schema library is
+// fetched with the first request, not with the page.
+import { enrollInPath, getPathLab, getPathRehearsal, getPathStop, recordPathAnswers } from "@/contracts/client";
+import { ApiError, type ApiErrorCode } from "@/contracts/errors";
+import { userMessage } from "@/lib/errors/user-message";
+import { FREE_LAB_COUNT, type FreeOnPublicPages } from "@/core/path/free-labs";
 import { PRACTICE_SIZE, stopAt } from "@/core/path/plan";
 import {
+  answersSoFar,
+  doneStopIds,
   hasStarted,
   isStopDone,
   MAX_MISSED_SENT,
@@ -22,7 +28,7 @@ import {
 } from "@/core/path/progress";
 import { questionIdOf } from "@/core/path/rep-id";
 import { checkpointFromExam, examToImport } from "@/core/path/exam-import";
-import { EXAM_CODES, examVersions, LAST_EXAM_DAY, newerVersion } from "@/core/path/versions";
+import { EXAM_CODES, examVersions, LAST_EXAM_DAY, longDate, newerVersion } from "@/core/path/versions";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
 import { latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
 import type {
@@ -31,6 +37,7 @@ import type {
   PathCert,
   PathLabInfo,
   PathPlan,
+  PathProgress,
   PathStop,
   PathStructure,
   RehearsalSize,
@@ -39,7 +46,17 @@ import type {
 } from "@/core/path/types";
 import type { PbqGradeResult, PbqScenario } from "@/data/pbq/types";
 import { Button } from "@/components/ui/button";
-import { ExamMap, labTileKey, MapLegend, REHEARSAL_TILE, type LabState, type MapRehearsal, type MapTile } from "./ExamMap";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import {
+  ExamMap,
+  labTileKey,
+  MapLegend,
+  objectiveStanding,
+  REHEARSAL_TILE,
+  type LabState,
+  type MapRehearsal,
+  type MapTile,
+} from "./ExamMap";
 import { WelcomeBack } from "./WelcomeBack";
 import { LabLibrary, NextLabCard } from "./LabLibrary";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
@@ -47,8 +64,8 @@ import { PathHeader } from "./PathHeader";
 import { VersionSwitch } from "./VersionSwitch";
 import { PathOffer } from "./PathOffer";
 import { PathReveal } from "./PathReveal";
-import { PathActivating, PathUnlocked } from "./PathUnlocked";
-import { holdsStage, UPGRADED_FLAG } from "./path-hold";
+import { PathActivating, PathPaidSignIn, PathUnlocked } from "./PathUnlocked";
+import { HOLD_ATTRIBUTE, HOLD_WAIT_MS, holdsStage, UPGRADED_FLAG } from "./path-hold";
 import { PracticeCard, ReviewMissesCard } from "./PracticeCard";
 import { RehearsalIntro, RehearsalResumeCard } from "./RehearsalIntro";
 import { RehearsalPlayer } from "./RehearsalPlayer";
@@ -57,6 +74,7 @@ import { clearRun, readRun, writeRun, type RehearsalRun } from "./rehearsal-run"
 import { GoalStep } from "./GoalStep";
 import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { usePathProgress } from "./usePathProgress";
+import { mayTakeExam, readExamMark, writeExamMark } from "./local-path";
 import { pathUnlockedKey } from "./storage-key";
 import { cn } from "@/lib/utils";
 
@@ -64,9 +82,10 @@ import { cn } from "@/lib/utils";
 const PbqPlayer = dynamic(() => import("@/components/workspace/PbqPlayer").then((m) => m.PbqPlayer), {
   ssr: false,
   loading: () => (
-    <div className="grid min-h-60 place-items-center text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" />
-    </div>
+    <p role="status" className="flex min-h-60 items-center justify-center gap-2 text-small text-muted-foreground">
+      <Loader2 className="size-4 animate-spin" aria-hidden />
+      The lab is loading.
+    </p>
   ),
 });
 
@@ -78,11 +97,46 @@ interface Play {
   /** Bank answers to record against the account at the end of the stop. */
   bank: Map<string, number>;
   checkpoint: CheckpointAnswer[];
-  /** Objective statuses before the stop, to animate what it changed. */
+  /** Objective statuses before the stop, to say what it changed. */
   before: Map<string, ObjectiveStatus>;
   /** "misses": a review round of their misses alone. */
   focus?: "misses";
+  /**
+   * The step continues from answers given earlier (before a reload, or on
+   * another page): how many of its questions had been answered, and the
+   * question it continues at.
+   */
+  resumed?: { answered: number; at: number };
+  /**
+   * Whether the question in hand takes the keyboard's focus as it arrives:
+   * true for every question that follows something the person did on this
+   * page, false for the one that the page loads with.
+   */
+  takeFocus: boolean;
 }
+
+/** A step at its first question, with nothing answered. */
+const newPlay = (
+  stop: PathStop,
+  reps: Rep[],
+  before: Map<string, ObjectiveStatus>,
+  takeFocus: boolean,
+  focus?: "misses"
+): Play => ({
+  stop,
+  reps,
+  i: 0,
+  results: reps.map(() => null),
+  bank: new Map(),
+  checkpoint: [],
+  before,
+  focus,
+  takeFocus,
+});
+
+/** The first question at or after `from` that has no answer yet, or -1 when every one has. */
+const openFrom = (results: readonly (boolean | null)[], from: number) =>
+  results.findIndex((r, i) => i >= from && r === null);
 
 type View =
   | { kind: "play" }
@@ -95,10 +149,10 @@ type View =
       stop: PathStop;
       correct: number;
       total: number;
-      fresh: Set<string>;
       focus?: "misses";
     }
-  | { kind: "goal"; step: "exam" | "minutes"; then: number }
+  /** `then`: the step that the questions were asked before, or null when the exam date is being changed from the home screen. */
+  | { kind: "goal"; step: "exam" | "minutes"; then: number | null }
   | { kind: "intro"; index: number }
   | { kind: "reveal" }
   | {
@@ -122,46 +176,80 @@ const domainOf = (objective: string) =>
 
 const domainLabel = (number: string | null) => (number ?? "").replace(/\.0$/, "");
 
-/** What a map tile's card offers to do. `kind` names it for analytics. */
-interface TileAction {
-  label: string;
-  kind: "start" | "replay" | "lab" | "rehearsal" | "offer" | "save";
-  run: () => void;
-}
+/**
+ * What a row of the outline offers to do once it is opened. `kind` names it
+ * for analytics. Most are done on this page; what is free on one of the exam's
+ * public pages is a link to that page.
+ */
+type TileAction =
+  | { label: string; kind: "start" | "replay" | "lab" | "rehearsal" | "offer" | "save"; run: () => void }
+  | { label: string; kind: "free_exam" | "free_labs"; href: string };
 
-/** A tapped map tile's card: where it stands, and the one thing to do with it. */
+/** An opened row of the outline: where it stands, and the one thing to do with it. */
 interface TileInfo {
-  /** For analytics: done, next, later, locked, open, anonymous, none. */
+  /** For analytics: done, next, later, locked, free, open, anonymous, none. */
   state: string;
-  kicker: string;
+  /** Names the card to a screen reader; the row above it already shows it. */
   title: string;
+  /** Where the learner stands on it, in a sentence or two. */
   line?: string;
   action?: TileAction;
 }
 
+/** The kinds of action that start or continue study: the only ones drawn with the arrow. */
+const STUDY_ACTIONS: ReadonlySet<TileAction["kind"]> = new Set(["start", "replay", "lab", "rehearsal"]);
+
+/** What a step is called above its questions. A round of review has one name everywhere: "Review". */
 function stopLabel(stop: PathStop, total: number): string {
   switch (stop.kind) {
     case "warmup":
-      return "Warm-up";
+      return "Introductory questions";
     case "checkpoint":
       return "Readiness checkpoint";
     case "review":
-      return "Keep practicing";
+      return "Review";
     case "lab":
       return "Hands-on lab";
     case "rehearsal":
-      return "Exam rehearsal";
+      return "Practice exam";
     default:
-      return `Stop ${stop.index + 1} of ${total}`;
+      return `Step ${stop.index + 1} of ${total}: ${stop.title}`;
   }
 }
 
-const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "long", day: "numeric" });
+
+/** "1 is complete", "3 are to review": one part of the sentence that says what a step changed. */
+const standingClause = (n: number, words: string) => `${n} ${n === 1 ? "is" : "are"} ${words}`;
+
+/** "a", "a and b", "a, b and c". */
+const inWords = (parts: string[]) =>
+  parts.length <= 1 ? (parts[0] ?? "") : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`;
+
+/**
+ * Marks the history entry that the page adds when a learner opens a step, a
+ * lab or a practice exam, so that the browser's Back returns to the home
+ * screen of the study path.
+ */
+const OPENED_ENTRY = "cbPathOpened";
+const isOpenedEntry = (state: unknown): boolean =>
+  typeof state === "object" && state !== null && (state as Record<string, unknown>)[OPENED_ENTRY] === true;
+
+/** The screens that move the focus themselves: a question (RepCard) and the practice exam's own screens. */
+const SELF_FOCUSING: ReadonlySet<View["kind"]> = new Set(["play", "rehearsal-intro", "rehearsal", "rehearsal-result"]);
 
 /** Back from paying, how long "Payment received" waits before saying it's slow. */
 const SLOW_AFTER_MS = 20_000;
 /** And how long it keeps asking the account on its own. */
 const STOP_ASKING_AFTER_MS = 120_000;
+
+/** Take the flag that the return from paying carries off the address. */
+function dropUpgradedFlag() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("upgraded")) return;
+  url.searchParams.delete("upgraded");
+  window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+}
 
 /** True the first time this device shows Pro opening this exam's path. */
 function firstUnlock(cert: string): boolean {
@@ -175,10 +263,11 @@ function firstUnlock(cert: string): boolean {
 }
 
 /**
- * The guided path for one exam. One screen at a time, one obvious move on
- * each: play a stop, see the map it lit up, continue. Between stops it saves
- * the map to an account, asks one goal question at a time, runs the readiness
- * checkpoint, and makes the one offer — and that's the whole product.
+ * The study path for one exam. One screen at a time, and one clear thing to
+ * do on each: answer a step's questions, read what the step changed in the
+ * course outline, continue. Between steps it saves the progress to an account,
+ * asks one planning question at a time, runs the readiness checkpoint and
+ * makes the one offer.
  */
 export function PathApp({
   cert,
@@ -186,55 +275,97 @@ export function PathApp({
   plan,
   warmup,
   questionCount,
+  free,
 }: {
   cert: PathCert;
   structure: PathStructure;
   plan: PathPlan;
-  /** The warm-up, built on the server, so a first visit starts instantly. */
+  /** The introductory questions, built on the server, so that a first visit starts at once. */
   warmup: { stop: PathStop; reps: Rep[] };
   questionCount: number;
+  /**
+   * What this exam gives away on its public pages: one practice exam, and for
+   * most exams some of its labs. The outline says so and leads there, and only
+   * the rest is described as included with Pro.
+   */
+  free: FreeOnPublicPages;
 }) {
   const p = usePathProgress(cert);
   const total = plan.stops.length;
 
+  // Whether the person has done anything on this page yet. A screen or a
+  // question that arrives after that takes the keyboard's focus, so that it is
+  // read; what the page shows as it loads never does.
+  const acted = useRef(false);
+  useEffect(() => {
+    const mark = () => {
+      acted.current = true;
+    };
+    const events = ["pointerdown", "keydown", "click"] as const;
+    events.forEach((name) => document.addEventListener(name, mark, true));
+    return () => events.forEach((name) => document.removeEventListener(name, mark, true));
+  }, []);
+
   // Before first paint, as the page's inline script does on a full load: a
   // learner who's been here, or is back from paying, waits for their own
   // screen instead of the first visit's warm-up. Arriving from inside the app
-  // never runs that script, so the path checks again here.
+  // never runs that script, so the path checks again here, and starts the
+  // clock that lets the held stage say that it is loading.
   useLayoutEffect(() => {
-    document.documentElement.toggleAttribute("data-path-returning", holdsStage(cert, window.location.search));
+    const html = document.documentElement;
+    html.toggleAttribute(HOLD_ATTRIBUTE.returning, holdsStage(cert, window.location.search));
+    // The page's scripts are running: it is not "late" from here on.
+    html.setAttribute(HOLD_ATTRIBUTE.live, "");
+    html.removeAttribute(HOLD_ATTRIBUTE.late);
+    const wait = window.setTimeout(() => html.setAttribute(HOLD_ATTRIBUTE.wait, ""), HOLD_WAIT_MS);
+    return () => {
+      window.clearTimeout(wait);
+      // The next study path opened from inside the app starts its own clock.
+      html.removeAttribute(HOLD_ATTRIBUTE.wait);
+    };
   }, [cert]);
 
-  // Back from paying: Stripe's success link adds ?upgraded=1. The flag comes
-  // straight off the URL, so a reload is an ordinary visit.
+  // While a returning learner's stage is held, its hidden first-visit question
+  // can be neither focused, pressed nor read (the style rule hides it as well).
+  const stageBody = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const held = !p.ready && document.documentElement.hasAttribute(HOLD_ATTRIBUTE.returning);
+    stageBody.current?.toggleAttribute("inert", held);
+  }, [p.ready, cert]);
+
+  // Back from paying: Stripe's success link adds ?upgraded=1. For someone who
+  // is signed in, the flag comes off the address as soon as the page knows who
+  // they are (below), so a reload is an ordinary visit. A buyer who returns
+  // signed out keeps it: they are asked to sign in, and signing in brings them
+  // back to this address, flag and all, to the wait for their confirmation.
   const [landing, setLanding] = useState<{ done: boolean } | null>(null);
   useLayoutEffect(() => {
-    if (!UPGRADED_FLAG.test(window.location.search)) return;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("upgraded");
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    // The URL is only readable once mounted; before paint, so no flash of the warm-up.
-    setLanding({ done: false });
+    // The address is only readable once mounted; before paint, so the
+    // introductory questions do not flash.
+    if (UPGRADED_FLAG.test(window.location.search)) setLanding({ done: false });
   }, []);
 
   const freshPlay = useCallback(
-    (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play => ({
-      stop,
-      reps,
-      i: 0,
-      results: reps.map(() => null),
-      bank: new Map(),
-      checkpoint: [],
-      before,
-      focus,
-    }),
+    (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play =>
+      // A step that opens after the person has done something on the page
+      // takes the focus at its first question; the one a page loads with does not.
+      newPlay(stop, reps, before, acted.current, focus),
     []
   );
 
-  const [view, setView] = useState<View>({ kind: "play" });
+  const [view, setViewState] = useState<View>({ kind: "play" });
+  // Counts every screen the page moves to. A request notes the count as it is
+  // made. If the count has moved on when the answer arrives, the learner has
+  // gone elsewhere meanwhile (the exam's name in the header, the browser's
+  // Back), and the answer no longer decides what they see.
+  const moves = useRef(0);
+  const setView = useCallback((next: View | ((current: View) => View)) => {
+    moves.current++;
+    setViewState(next);
+  }, []);
   // "Now" for what's due for review, fixed for the visit: due-ness moves in days.
   const [visitAt] = useState(() => Date.now());
-  const [play, setPlayState] = useState<Play>(() => freshPlay(warmup.stop, warmup.reps, new Map()));
+  const [play, setPlayState] = useState<Play>(() => newPlay(warmup.stop, warmup.reps, new Map(), false));
   // Handlers read the play through a ref, so a timer-driven "next" or an
   // answer-then-advance in one tick always sees the current rep.
   const playRef = useRef(play);
@@ -244,48 +375,14 @@ export function PathApp({
   }, []);
 
   // First paint is the warm-up (fast for first-time visitors and crawlers);
-  // once the device's progress is known, a returning learner goes home.
-  const booted = useRef(false);
-  useEffect(() => {
-    if (!p.ready || booted.current) return;
-    booted.current = true;
-    // Signed out beside an account's path: offer that account before a blank one.
-    if (!p.signedIn && p.held && hasStarted(p.held)) {
-      setView({ kind: "welcome" });
-      track("path_welcome_back_viewed", { cert });
-      return;
-    }
-    if (hasStarted(p.progress)) setView({ kind: "home" });
-  }, [p.ready, p.progress, p.signedIn, p.held, cert]);
-
-  // A practice exam this device finished on the exam's public page counts on
-  // the path: its misses come back, and with no checkpoint yet it becomes the
-  // checkpoint, so its reveal and the offer come straight away.
-  const examChecked = useRef(false);
-  useEffect(() => {
-    if (!p.ready || !p.signedIn || examChecked.current) return;
-    examChecked.current = true;
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("from")) {
-      url.searchParams.delete("from");
-      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    }
-    const run = readRun(`${cert}-practice-test`, "public");
-    const exam = run ? examToImport(run, Date.now()) : null;
-    if (!run || !exam) return;
-    if (!p.importExam(exam.answers, exam.result)) return;
-    // The bank answers go to the account too, as a stop's do.
-    const answers = run.reps.flatMap((rep, i) => {
-      const pick = run.picks[i];
-      const qid = questionIdOf(rep.id);
-      if (!qid || pick === null) return [];
-      return [{ questionId: qid, selectedIndex: rep.type === "choice" && rep.order ? (rep.order[pick] ?? pick) : pick }];
-    });
-    if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
-    track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
-    setView({ kind: "reveal" });
-    window.scrollTo({ top: 0 });
-  }, [p, cert]);
+  // once the page knows who is here and what they have done, it decides where
+  // they belong (the effect below `onNext`). This is the arrival, as the
+  // progress hook counts them, that has been decided for.
+  const arrived = useRef(0);
+  // Whether the first-unlock check has been made (the effect after that one).
+  // The effects run in the order they are written: the arrival's decision,
+  // then a practice exam brought in from a public page, then the unlock.
+  const unlockChecked = useRef(false);
 
   // The map tile that's open on the home screen, if any.
   const [tile, setTile] = useState<MapTile | null>(null);
@@ -295,22 +392,52 @@ export function PathApp({
   const nextStop = stopAt(plan, structure, next);
   const remaining = total - stopsDone(plan, p.progress);
   const pro = p.access === "pro";
+  // The server refused a request this visit because the account is not Pro on
+  // this exam. That settles what an unreached account left open.
+  const [walled, setWalled] = useState(false);
+  // What Pro opens is shown as closed, and Pro is offered, only when the page
+  // knows that the account does not have it. While a signed-in learner's
+  // account has not been reached (p.access is "unknown") nothing is locked and
+  // nothing is offered: a member must never be asked to buy what they have.
+  // The way on asks the server, which decides each request.
+  const shut = !pro && (p.access !== "unknown" || walled);
   // Back from paying and Pro not confirmed yet: "Payment received" holds the
   // screen, never the offer they just paid for.
   const awaitingPro = landing !== null && !landing.done;
 
-  // Each domain's lab on the map: played, open (Pro), or a glimpse of Pro.
+  // The steps that are finished, and where each objective stands by the
+  // outline's own rule (ExamMap): "complete" only once the objective's own step
+  // is done with nothing left to review. The sentences on this page count on
+  // the same basis as the rows under them.
+  const doneStops = useMemo(() => doneStopIds(p.progress), [p.progress]);
+  const objectiveCodes = useMemo(
+    () => structure.domains.flatMap((d) => d.objectives.map((o) => o.code)),
+    [structure.domains]
+  );
+  const standingOf = useCallback(
+    (code: string, done: ReadonlySet<string> = doneStops, from: ReadonlyMap<string, ObjectiveStatus> = statuses) =>
+      objectiveStanding(from.get(code) ?? "new", done.has(code)),
+    [doneStops, statuses]
+  );
+  const objectivesStarted = objectiveCodes.filter((code) => standingOf(code) !== "new").length;
+
+  // The labs that are free for everyone on the exam's public page of labs.
+  const freeLabIds = useMemo(() => new Set(free.labsHref ? free.labIds : []), [free.labsHref, free.labIds]);
+
+  // Each domain's lab in the outline: completed, open to do (Pro), free on the
+  // exam's public page, or included with Pro.
   const labs = useMemo(() => {
     const out = new Map<string, LabState>();
     for (const s of plan.stops) {
       if (s.kind !== "lab" || !s.domain) continue;
-      out.set(s.domain, isStopDone(p.progress, s.id) ? "done" : pro ? "open" : "locked");
+      const lab = structure.domains.find((d) => d.number === s.domain)?.lab;
+      const closed: LabState = lab && freeLabIds.has(lab.id) ? "free" : "locked";
+      out.set(s.domain, isStopDone(p.progress, s.id) ? "done" : shut ? closed : "open");
     }
     return out;
-  }, [plan.stops, p.progress, pro]);
+  }, [plan.stops, structure.domains, p.progress, shut, freeLabIds]);
   const labMinutes = (stop: PathStop | null) =>
     stop?.kind === "lab" ? (structure.domains.find((d) => d.number === stop.domain)?.lab?.minutes ?? null) : null;
-  const labLegend = labs.size === 0 ? undefined : pro ? "open" : "locked";
 
   // The exam's whole lab library. A lab's latest result is its own record, or
   // for a domain's lab played before the library existed, its stop's.
@@ -344,13 +471,14 @@ export function PathApp({
     return after.find((l) => !labResults.has(l.id)) ?? null;
   };
 
-  // The exam rehearsal: the path's last stop, and for Pro, there any time.
+  // The practice exam: the study path's last step, and for Pro, there at any
+  // time. Without Pro one practice exam is free, on the exam's public page.
   const rehearsalStop = useMemo(() => plan.stops.find((s) => s.kind === "rehearsal") ?? null, [plan.stops]);
   const reading = latestReading(p.progress);
   const lastRehearsal = p.progress.rehearsals.at(-1) ?? null;
   const mapRehearsal: MapRehearsal | undefined = rehearsalStop
     ? {
-        state: isStopDone(p.progress, rehearsalStop.id) ? "done" : pro ? "open" : "locked",
+        state: isStopDone(p.progress, rehearsalStop.id) ? "done" : shut ? "free" : "open",
         questions: REHEARSAL_FORMATS.full.questions,
         minutes: REHEARSAL_FORMATS.full.minutes,
         score: lastRehearsal?.score,
@@ -371,27 +499,13 @@ export function PathApp({
   );
   const runInProgress = run && !run.done ? run : null;
 
-  // The first time Pro covers this exam on this device, open with what it
-  // opened: in place of their map, or of a stop not yet answered (the first
-  // paint's warm-up, which a started path is about to leave for the map).
-  // Mid-stop it waits until they're back on the map.
-  const unlockChecked = useRef(false);
-  useEffect(() => {
-    if (!p.ready || !p.signedIn || !pro || unlockChecked.current || awaitingPro) return;
-    const untouched = view.kind === "play" && playRef.current.results.every((r) => r === null);
-    if (view.kind !== "home" && !untouched) return;
-    unlockChecked.current = true;
-    if (!firstUnlock(cert)) return;
-    track("path_unlock_viewed", { cert });
-    setView({ kind: "unlocked" });
-  }, [p.ready, p.signedIn, pro, cert, view.kind, awaitingPro]);
-
   // Pro bought before the path asked for their exam (from /pricing, say) leaves
   // the account with no exam: Pro opens nothing, and the dashboard sends them
   // back to the picker. Claim this one. The server only lets an account with no
   // exam yet take it, so a member who has one still gets the offer to add it.
   const claimed = useRef(false);
-  const { ready, signedIn, proPlan, refreshAccess } = p;
+  // The hook's functions keep their identity from one render to the next.
+  const { ready, signedIn, proPlan, refreshAccess, arrival, record, finish, retire, peek } = p;
   useEffect(() => {
     if (!ready || !signedIn || !proPlan || pro || claimed.current) return;
     claimed.current = true;
@@ -405,16 +519,18 @@ export function PathApp({
     })();
   }, [ready, signedIn, proPlan, pro, cert, refreshAccess]);
 
-  // Back from paying: the moment Pro is confirmed, open with the unlock,
-  // straight from "Payment received" before any other screen paints. Signed
-  // out (the flag on its own), it's an ordinary visit.
+  // Back from paying. Signed out, the page asks the buyer to sign in (the
+  // screen is chosen below) and the flag stays on the address. Signed in, the
+  // flag comes off, and the moment Pro is confirmed the page opens with what
+  // it opened, straight from "Payment received" before any other screen paints.
   const waitedSince = useRef<number | null>(null);
   useLayoutEffect(() => {
-    if (!awaitingPro || !ready || (signedIn && !pro)) return;
+    if (!awaitingPro || !ready || !signedIn) return;
+    dropUpgradedFlag();
+    if (!pro) return;
     setLanding({ done: true });
-    if (!signedIn) return;
-    // This decides what opens: the first-visit boot and the unlock check stand down.
-    booted.current = true;
+    // This decides what opens: the arrival's own decision and the unlock check stand down.
+    arrived.current = arrival;
     unlockChecked.current = true;
     track("path_upgrade_landed", {
       cert,
@@ -423,7 +539,7 @@ export function PathApp({
     const first = firstUnlock(cert);
     if (first) track("path_unlock_viewed", { cert });
     setView(first ? { kind: "unlocked" } : { kind: "home" });
-  }, [awaitingPro, ready, signedIn, pro, cert]);
+  }, [awaitingPro, ready, signedIn, pro, cert, arrival, setView]);
 
   // Until then, ask the account again while the activation webhook lands:
   // every 2 seconds, every 5 once it's slow, on its own for 2 minutes.
@@ -454,19 +570,127 @@ export function PathApp({
       setView({ kind: "lab", stop, scenario, from: "path", graded: false });
       window.scrollTo({ top: 0 });
     },
+    [cert, setView]
+  );
+
+  // `finishStop`, `onAnswer` and `onNext` are what a question calls. They are
+  // made once: they use the progress hook's own functions, which never change,
+  // and read its state as it is at that moment (`peek`). The card that shows a
+  // question is therefore not handed new functions each time this page renders.
+  const finishStop = useCallback(() => {
+    const cur = playRef.current;
+    const signedInNow = peek().userId !== null;
+    const correct = cur.results.filter((r) => r === true).length;
+    const totalReps = cur.reps.length;
+    track("path_stop_completed", {
+      cert,
+      stop: cur.stop.id,
+      index: cur.stop.index,
+      kind: cur.stop.kind,
+      correct,
+      total: totalReps,
+      signed_in: signedInNow,
+      ...(cur.focus ? { focus: cur.focus } : {}),
+    });
+    if (signedInNow && cur.bank.size > 0) {
+      const answers = [...cur.bank].map(([questionId, selectedIndex]) => ({ questionId, selectedIndex }));
+      void api(recordPathAnswers, { cert, answers }).catch(() => {});
+    }
+    if (cur.stop.kind === "checkpoint") {
+      const result = scoreCheckpoint(cur.checkpoint, structure.domains, Date.now());
+      finish(cur.stop.id, correct, totalReps, result);
+      track("path_checkpoint_completed", { cert, score: result.score });
+      setView({ kind: "reveal" });
+    } else {
+      finish(cur.stop.id, correct, totalReps);
+      setView({ kind: "end", stop: cur.stop, correct, total: totalReps, focus: cur.focus });
+    }
+    window.scrollTo({ top: 0 });
+  }, [cert, finish, peek, structure.domains, setView]);
+
+  /**
+   * A play of a step that continues from the answers its questions already
+   * have: given before a reload, or on another page (the home page's sample
+   * questions are among the introductory questions).
+   */
+  const resumedPlay = useCallback(
+    (stop: PathStop, reps: Rep[], progress: PathProgress): Play => {
+      const results = answersSoFar(
+        progress,
+        reps.map((r) => r.id)
+      );
+      const answered = results.filter((r) => r !== null).length;
+      if (answered === 0) return freshPlay(stop, reps, objectiveStatuses(progress.items));
+      // What the step changes is measured from the path as it was without the step's own answers.
+      const own = new Set(reps.map((r) => r.id));
+      const others = Object.fromEntries(Object.entries(progress.items).filter(([id]) => !own.has(id)));
+      const at = Math.max(0, openFrom(results, 0));
+      return { ...freshPlay(stop, reps, objectiveStatuses(others)), i: at, results, resumed: { answered, at } };
+    },
+    [freshPlay]
+  );
+
+  /**
+   * Show the introductory questions that came with the page, from the first
+   * one that has no answer. When every one has an answer already, only the
+   * step is left to count, and its result is shown.
+   */
+  const resumeWarmup = useCallback(
+    (progress: PathProgress) => {
+      const next = resumedPlay(warmup.stop, warmup.reps, progress);
+      setPlay(next);
+      if (openFrom(next.results, 0) < 0) finishStop();
+      else setView({ kind: "play" });
+    },
+    [warmup, resumedPlay, setPlay, finishStop, setView]
+  );
+
+  // A step that was asked for ahead of time, while the end of the step before
+  // it was being read, so that Continue has nothing to wait for.
+  const ahead = useRef<{ key: string; request: Promise<BuiltStop>; built: BuiltStop | null } | null>(null);
+
+  /** What the server is sent to build a step, as every request for one sends it. */
+  const stopInput = useCallback(
+    (index: number, stop: PathStop, progress: PathProgress): StopInput => ({
+      cert,
+      index,
+      seen: seenIds(progress.items),
+      missed: missedIds(progress.items),
+      run: progress.stops[stop.id]?.n ?? 0,
+    }),
     [cert]
+  );
+
+  /**
+   * A step's questions: at once when the request made ahead of time has been
+   * answered, otherwise as a request to wait for (that one, if it was for the
+   * same step, or a new one).
+   */
+  const fetchStop = useCallback(
+    (index: number, stop: PathStop, progress: PathProgress): { built: BuiltStop } | { request: Promise<BuiltStop> } => {
+      const input = stopInput(index, stop, progress);
+      const waiting = ahead.current?.key === stopKey(input) ? ahead.current : null;
+      ahead.current = null;
+      if (waiting?.built) return { built: waiting.built };
+      return { request: waiting ? waiting.request : requestStop(input) };
+    },
+    [stopInput]
   );
 
   const startStop = useCallback(
     async (index: number, opts?: { skipIntro?: boolean }) => {
       const stop = stopAt(plan, structure, index);
       if (!stop) return;
-      // An account keeps the map; without one, the warm-up is the whole visit.
-      if (index > 0 && !p.signedIn) {
-        setView({ kind: "home" });
+      // An account keeps the map; without one, the introductory questions are
+      // the whole visit. They came with the page, so they need no request, and
+      // they go on from the first one that has no answer.
+      if (!p.signedIn) {
+        if (index === 0) resumeWarmup(p.progress);
+        else setView({ kind: "home" });
         return;
       }
-      if (index > plan.freeThrough && !pro) {
+      // While the account has not been reached, the server decides (see `shut`).
+      if (index > plan.freeThrough && shut) {
         setView({ kind: "reveal" });
         return;
       }
@@ -488,44 +712,78 @@ export function PathApp({
         return;
       }
 
-      setView({ kind: "loading" });
+      const got = fetchStop(index, stop, p.progress);
+      // The loading line is shown only when there is something to wait for.
+      if (!("built" in got)) setView({ kind: "loading" });
+      const asked = moves.current;
       try {
-        const built = await api(getPathStop, {
-          cert,
-          index,
-          seen: seenIds(p.progress.items),
-          missed: missedIds(p.progress.items),
-          run: p.progress.stops[stop.id]?.n ?? 0,
-        });
-        p.retire(built.retired);
+        const built = "built" in got ? got.built : await got.request;
+        // True whatever the learner is looking at by now.
+        retire(built.retired);
+        // The learner has gone elsewhere meanwhile: the answer is not theirs to be shown.
+        if (moves.current !== asked) return;
         if (built.lab) {
           openLab(built.stop, built.lab);
           return;
         }
         if (built.reps.length === 0) {
-          p.finish(built.stop.id, 0, 0);
+          finish(built.stop.id, 0, 0);
           setView({ kind: "home" });
           return;
         }
-        setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
+        if (built.stop.kind === "warmup") {
+          // The introductory questions go on from any that are answered already
+          // (on the home page, or before signing in).
+          const resumed = resumedPlay(built.stop, built.reps, p.progress);
+          setPlay(resumed);
+          if (openFrom(resumed.results, 0) < 0) {
+            finishStop();
+            return;
+          }
+        } else {
+          setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
+        }
         setView({ kind: "play" });
         window.scrollTo({ top: 0 });
       } catch (err) {
+        if (err instanceof ApiError && err.code === "quota_exceeded") {
+          // The server has answered: this account does not have Pro on this exam.
+          setWalled(true);
+          await refreshAccess();
+        }
+        if (moves.current !== asked) return;
         if (err instanceof ApiError && err.code === "unauthorized") {
           setView({ kind: "home" });
         } else if (err instanceof ApiError && err.code === "quota_exceeded") {
-          await p.refreshAccess();
           setView({ kind: "reveal" });
         } else {
           setView({
             kind: "error",
-            message: err instanceof ApiError ? err.message : "Couldn't load your next stop.",
+            message: userMessage(err, STEP_NOT_LOADED),
             retry: () => startStop(index, { skipIntro: true }),
           });
         }
       }
     },
-    [cert, plan, structure, p, pro, freshPlay, setPlay, openLab, runInProgress]
+    [
+      plan,
+      structure,
+      p.signedIn,
+      p.progress,
+      shut,
+      freshPlay,
+      setPlay,
+      setView,
+      openLab,
+      runInProgress,
+      resumedPlay,
+      resumeWarmup,
+      finishStop,
+      fetchStop,
+      retire,
+      finish,
+      refreshAccess,
+    ]
   );
 
   /**
@@ -566,7 +824,7 @@ export function PathApp({
 
   /** Open any lab from the library, in the path's own lab stage. */
   async function openLibraryLab(info: PathLabInfo) {
-    setView({ kind: "loading", label: "Opening the lab…" });
+    setView({ kind: "loading", label: "The lab is opening…" });
     try {
       const { lab } = await api(getPathLab, { cert, id: info.id });
       const stop = labStopOf(info.id);
@@ -575,12 +833,13 @@ export function PathApp({
       window.scrollTo({ top: 0 });
     } catch (err) {
       if (err instanceof ApiError && (err.code === "unauthorized" || err.code === "quota_exceeded")) {
+        if (err.code === "quota_exceeded") setWalled(true);
         await p.refreshAccess();
         setView({ kind: "home" });
       } else {
         setView({
           kind: "error",
-          message: err instanceof ApiError ? err.message : "Couldn't open that lab.",
+          message: err instanceof ApiError ? err.message : "The lab could not be opened. Please try again.",
           retry: () => void openLibraryLab(info),
         });
       }
@@ -611,42 +870,104 @@ export function PathApp({
     [cert, p, setPlay]
   );
 
-  const finishStop = useCallback(() => {
-    const cur = playRef.current;
-    const correct = cur.results.filter((r) => r === true).length;
-    const totalReps = cur.reps.length;
-    track("path_stop_completed", {
-      cert,
-      stop: cur.stop.id,
-      index: cur.stop.index,
-      kind: cur.stop.kind,
-      correct,
-      total: totalReps,
-      signed_in: p.signedIn,
-      ...(cur.focus ? { focus: cur.focus } : {}),
-    });
-    if (p.signedIn && cur.bank.size > 0) {
-      const answers = [...cur.bank].map(([questionId, selectedIndex]) => ({ questionId, selectedIndex }));
-      void api(recordPathAnswers, { cert, answers }).catch(() => {});
-    }
-    if (cur.stop.kind === "checkpoint") {
-      const result = scoreCheckpoint(cur.checkpoint, structure.domains, Date.now());
-      p.finish(cur.stop.id, correct, totalReps, result);
-      track("path_checkpoint_completed", { cert, score: result.score });
-      setView({ kind: "reveal" });
-    } else {
-      p.finish(cur.stop.id, correct, totalReps);
-      // Diff against the statuses as they are once this stop's answers count.
-      setView({ kind: "end", stop: cur.stop, correct, total: totalReps, fresh: new Set(), focus: cur.focus });
-    }
-    window.scrollTo({ top: 0 });
-  }, [cert, p, structure.domains]);
-
   const onNext = useCallback(() => {
     const cur = playRef.current;
-    if (cur.i < cur.reps.length - 1) setPlay({ ...cur, i: cur.i + 1 });
+    // The next question without an answer: a step that continues from earlier
+    // answers passes over the questions that already have one.
+    const to = openFrom(cur.results, cur.i + 1);
+    if (to >= 0) setPlay({ ...cur, i: to });
     else finishStop();
   }, [finishStop, setPlay]);
+
+  // Where the learner belongs, decided each time the page learns who is here
+  // or what their account holds: when it opens, when a slow sign-in service
+  // answers at last, and when an account that could not be reached is reached.
+  // Only someone who has not acted yet is moved: an answer given on the screen
+  // keeps them where they are, and it is kept (the progress hook merges it).
+  const welcomed = useRef(false);
+  useEffect(() => {
+    if (!p.ready || arrived.current === p.arrival) return;
+    arrived.current = p.arrival;
+    const cur = playRef.current;
+    const answeredHere = cur.results.filter((r) => r !== null).length > (cur.resumed?.answered ?? 0);
+    const undecided =
+      view.kind === "welcome" || (view.kind === "play" && cur.stop.id === warmup.stop.id && !answeredHere);
+    if (!undecided) return;
+
+    // Signed out beside an account's path: offer that account before a blank one.
+    if (!p.signedIn && p.held && hasStarted(p.held)) {
+      setView({ kind: "welcome" });
+      if (!welcomed.current) track("path_welcome_back_viewed", { cert });
+      welcomed.current = true;
+      return;
+    }
+    if (p.signedIn) {
+      // An account's own screen is its home, once it has anything on it.
+      setView(hasStarted(p.progress) ? { kind: "home" } : { kind: "play" });
+      return;
+    }
+    // Nobody is signed in. A visitor who has finished the introductory
+    // questions is asked to save them; one who left part-way (a reload, a tab
+    // the phone discarded) carries on from the first question without an answer.
+    if (isStopDone(p.progress, warmup.stop.id)) setView({ kind: "home" });
+    else resumeWarmup(p.progress);
+  }, [p.ready, p.arrival, p.progress, p.signedIn, p.held, cert, view.kind, warmup.stop.id, resumeWarmup]);
+
+  // A practice exam this device finished on the exam's public page counts on
+  // the path: its misses come back, and with no checkpoint yet it becomes the
+  // checkpoint, so its reveal and the offer come straight away. It waits until
+  // the account has been reached: an exam must not stand in for a checkpoint
+  // that the account already holds.
+  const examChecked = useRef(false);
+  useEffect(() => {
+    if (!p.ready || !p.userId || p.unreached || examChecked.current) return;
+    examChecked.current = true;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("from")) {
+      url.searchParams.delete("from");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+    const run = readRun(`${cert}-practice-test`, "public");
+    // An exam whose score was shown to another account is never read here.
+    const exam = run ? examToImport(run, Date.now(), p.userId) : null;
+    if (!run || !exam) return;
+    // A public page keeps an exam for the device, not for a person. On a shared
+    // computer it goes only to the account that it can be shown to belong to;
+    // otherwise it is set aside, and it stays set aside.
+    const mark = readExamMark(cert);
+    if (!mayTakeExam(p.userId, { at: exam.result.at, claimedBy: run.claimedBy ?? null }, { foreign: p.foreign, mark })) {
+      if (!run.claimedBy && mark?.at !== exam.result.at) writeExamMark(cert, { at: exam.result.at, by: null });
+      return;
+    }
+    const asCheckpoint = p.importExam(exam.answers, exam.result);
+    writeExamMark(cert, { at: exam.result.at, by: p.userId });
+    if (!asCheckpoint) return;
+    // The bank answers go to the account too, as a stop's do.
+    const answers = run.reps.flatMap((rep, i) => {
+      const pick = run.picks[i];
+      const qid = questionIdOf(rep.id);
+      if (!qid || pick === null) return [];
+      return [{ questionId: qid, selectedIndex: rep.type === "choice" && rep.order ? (rep.order[pick] ?? pick) : pick }];
+    });
+    if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
+    track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
+    setView({ kind: "reveal" });
+    window.scrollTo({ top: 0 });
+  }, [p, cert]);
+
+  // The first time Pro covers this exam on this device, open with what it
+  // opened: in place of their map, or of a stop not yet answered (the first
+  // paint's warm-up, which a started path is about to leave for the map).
+  // Mid-stop it waits until they're back on the map.
+  useEffect(() => {
+    if (!p.ready || !p.signedIn || !pro || unlockChecked.current || awaitingPro) return;
+    const untouched = view.kind === "play" && playRef.current.results.every((r) => r === null);
+    if (view.kind !== "home" && !untouched) return;
+    unlockChecked.current = true;
+    if (!firstUnlock(cert)) return;
+    track("path_unlock_viewed", { cert });
+    setView({ kind: "unlocked" });
+  }, [p.ready, p.signedIn, pro, cert, view.kind, awaitingPro]);
 
   // The stop-end map animates the objectives this stop changed.
   const endFresh = useMemo(() => {
@@ -693,56 +1014,59 @@ export function PathApp({
         stopsDone={p.held ? stopsDone(plan, p.held) : 0}
         onPlay={() => {
           track("path_welcome_back_played", { cert });
-          // Guest work kept from before carries on from home; otherwise the warm-up.
-          setView(hasStarted(p.progress) ? { kind: "home" } : { kind: "play" });
+          // Guest work kept from before: once it has finished the introductory
+          // questions it carries on from home, where it can be saved. Until
+          // then the questions go on from the first one without an answer.
+          if (isStopDone(p.progress, warmup.stop.id)) setView({ kind: "home" });
+          else resumeWarmup(p.progress);
           window.scrollTo({ top: 0 });
         }}
       />
     );
   } else if (view.kind === "play") {
     const rep = play.reps[play.i];
-    // The rep just answered pops its objective on the map beside the card.
-    const answered = rep && play.results[play.i] !== null ? new Set([rep.objective]) : undefined;
+    // A learn step is one objective, named in the heading; other steps mix
+    // objectives, so each question says which one it belongs to.
+    const objective =
+      rep && play.stop.kind !== "learn"
+        ? structure.domains.flatMap((d) => d.objectives).find((o) => o.code === rep.objective)
+        : undefined;
     screen = (
-      // One screen: the stop on the left and, on wide screens, the exam's map
-      // filling in beside it as each answer lands.
-      <div className="glass overflow-hidden rounded-3xl lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:rounded-[2rem]">
-        <div className="p-5 sm:p-8 lg:p-9">
-          <div className="mb-6 grid gap-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                {play.focus === "misses" ? "Review · your misses" : stopLabel(play.stop, total)}
-                {play.stop.kind === "learn" && <span className="text-foreground"> · {play.stop.title}</span>}
-                {play.stop.kind === "practice" && <span className="text-foreground"> · {play.stop.title}</span>}
-              </p>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                {play.i + 1} / {play.reps.length}
-              </span>
-            </div>
-            <StopProgress results={play.results} current={play.i} />
-          </div>
-          {rep && <RepCard key={`${play.stop.id}-${play.i}-${rep.id}`} rep={rep} onAnswer={onAnswer} onNext={onNext} />}
-        </div>
-        <aside
-          aria-label={`Your ${structure.examName} map`}
-          className="hidden border-l border-border/70 bg-foreground/[0.018] p-6 lg:grid lg:content-start lg:gap-4"
-        >
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-semibold tracking-[-0.01em]">Your {structure.examName} map</p>
-            <p className="font-mono text-xs text-muted-foreground">
-              {statuses.size} of {structure.domains.reduce((s, d) => s + d.objectives.length, 0)}
+      // One screen and one thing on it: the question. Where the step sits is
+      // said in a line above it; the course outline waits on the path's home.
+      <div className="grid gap-4">
+        <div className="grid gap-2.5">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <p className="min-w-0 text-[1.0625rem] font-semibold leading-snug">
+              {play.focus === "misses" ? "Review of questions you answered incorrectly" : stopLabel(play.stop, total)}
+            </p>
+            <p className="shrink-0 text-sm tabular-nums text-muted-foreground">
+              Question {play.i + 1} of {play.reps.length}
             </p>
           </div>
-          <ExamMap
-            structure={structure}
-            statuses={statuses}
-            current={rep ? new Set([rep.objective]) : undefined}
-            fresh={answered}
-            labs={labs}
-            rehearsal={mapRehearsal}
-            className="gap-3.5"
-          />
-        </aside>
+          <StopProgress results={play.results} current={play.i} />
+        </div>
+        <div className="glass grid grid-cols-[minmax(0,1fr)] gap-4 rounded-lg p-5 sm:p-8">
+          {objective && (
+            <p className="text-sm text-muted-foreground">
+              Objective {objective.code}: {objective.title}.
+            </p>
+          )}
+          {rep && (
+            <RepCard
+              key={`${play.stop.id}-${play.i}-${rep.id}`}
+              rep={rep}
+              onAnswer={onAnswer}
+              onNext={onNext}
+              // A step that continues from earlier answers says so above its first question.
+              preface={
+                play.resumed && play.i === play.resumed.at
+                  ? `You answered ${play.resumed.answered} of the ${play.reps.length} introductory questions earlier. The questions continue from here.`
+                  : undefined
+              }
+            />
+          )}
+        </div>
       </div>
     );
   } else if (view.kind === "loading") {
@@ -750,7 +1074,7 @@ export function PathApp({
       <div className="glass grid min-h-80 place-items-center rounded-3xl p-8 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" />
-          {view.label ?? "Building your next stop…"}
+          {view.label ?? "Your next step is being prepared…"}
         </span>
       </div>
     );
@@ -813,16 +1137,18 @@ export function PathApp({
     };
     screen = (
       <div className="path-rise grid gap-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-          Hands-on lab · Domain {domainLabel(scenario.domain_number)}
-          {minutes ? <> · about {minutes} min</> : null}
+        <p className="text-[1.0625rem] font-semibold leading-snug">
+          Hands-on lab for domain {domainLabel(scenario.domain_number)}
+          {minutes ? (
+            <span className="font-normal text-muted-foreground">. It takes about {minutes} minutes.</span>
+          ) : null}
         </p>
         {/* min-w-0: a lab's tab row doesn't wrap, and would widen a phone's page. */}
-        <div className="glass min-w-0 rounded-3xl p-4 sm:p-6">
+        <div className="glass min-w-0 rounded-lg p-4 sm:p-6">
           <PbqPlayer
             key={scenario.id}
             scenario={scenario}
-            backLabel={fromLibrary ? "Back to the labs" : "Back to my map"}
+            backLabel={fromLibrary ? "Return to the labs" : "Return to the study path"}
             onGraded={(result) => onLabGraded(view, result, !graded)}
             onBack={leave}
           />
@@ -892,17 +1218,13 @@ export function PathApp({
     );
   } else if (view.kind === "intro") {
     screen = (
-      <div className="glass path-rise grid gap-5 rounded-3xl p-6 sm:p-8">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Stop {view.index + 1} · Readiness checkpoint
-        </span>
-        <h2 className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">
-          Now try it the way the exam asks.
-        </h2>
-        <p className="max-w-prose text-muted-foreground">
-          Twelve exam-style questions from all {structure.domains.length} domains, weighted like the real{" "}
-          {structure.examCode}. Some cover ground you haven&apos;t reached yet. That&apos;s the point: it
-          shows where you stand across the whole exam.
+      <div className="glass path-rise grid gap-5 rounded-lg p-6 sm:p-8">
+        <span className="cb-label text-muted-foreground">Step {view.index + 1}</span>
+        <h2 className="cb-display text-balance text-[1.875rem] sm:text-[2.375rem]">The readiness checkpoint</h2>
+        <p className="max-w-prose leading-relaxed text-muted-foreground">
+          The checkpoint has twelve exam-style questions drawn from all {structure.domains.length} domains, weighted
+          as they are in the real {structure.examCode} exam. Some questions cover material that you have not studied
+          yet. This is intended, because the checkpoint shows where you stand across the whole exam.
         </p>
         <Button size="lg" className="h-12 w-full text-base sm:w-auto sm:justify-self-start" onClick={() => startStop(view.index, { skipIntro: true })}>
           Start the checkpoint
@@ -921,7 +1243,8 @@ export function PathApp({
         studied={plan.stops.filter((s) => s.kind === "learn" && isStopDone(p.progress, s.id)).length}
         fromExam={checkpointFromExam(p.progress)}
       >
-        {pro ? (
+        {/* The offer is made only to an account that is known not to have Pro. */}
+        {!shut ? (
           <ContinueCard stop={nextStop} total={total} minutes={labMinutes(nextStop)} onContinue={() => startStop(next)} />
         ) : (
           <>
@@ -934,14 +1257,17 @@ export function PathApp({
               proPlan={p.proPlan}
               examDate={p.progress.goal?.examDate ?? null}
               context="reveal"
-            labCount={library.length}
+              labCount={library.length}
+              // The server has refused a step, but the account itself may still
+              // be out of reach: the offer then asks for it again from here.
+              onRetry={refreshAccess}
             />
             <button
               type="button"
               onClick={() => setView({ kind: "home" })}
               className="justify-self-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
             >
-              Back to my map
+              Return to the study path
             </button>
           </>
         )}
@@ -953,57 +1279,60 @@ export function PathApp({
     const missed = view.total - view.correct;
     const reviewed = view.focus === "misses";
     screen = (
-      <div className="path-rise grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+      <div className="path-rise grid gap-6">
         <div className="grid min-w-0 gap-6">
-        <div className="grid gap-2">
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+        <div className="grid gap-2.5">
+          <span className="cb-label text-muted-foreground">
             {view.stop.kind === "review"
-              ? "Review"
+              ? "You have completed this review."
               : view.stop.kind === "warmup"
-                ? "Warm-up"
-                : `Stop ${view.stop.index + 1}`}{" "}
-            complete
+                ? "You have completed the introductory questions."
+                : `You have completed step ${view.stop.index + 1}.`}
           </span>
-          <h2 className="cb-display text-7xl sm:text-8xl">
-            {view.correct}
-            <span className="text-muted-foreground/60"> of {view.total}</span>
+          <h2 className="cb-display text-balance text-[1.875rem] sm:text-[2.375rem]">
+            You answered {view.correct} of {view.total} questions correctly.
           </h2>
-          <p className="text-muted-foreground">
+          <p className="leading-relaxed text-muted-foreground">
             {reviewed
-              ? `${toReview > 0 ? `${toReview} more to review.` : "Nothing left to review today."} The ones you got right come back once more in a few days, to make sure they stick.`
+              ? `${
+                  toReview > 0
+                    ? `${toReview} more ${toReview === 1 ? "question remains" : "questions remain"} to review.`
+                    : "There is nothing left to review today."
+                } Questions that you answered correctly will be asked once more in a few days.`
               : missed === 0
-                ? "Every one right."
-                : `${missed} to revisit. ${missed === 1 ? "It comes" : "They come"} back in your next stop.`}
+                ? "No questions need to be repeated."
+                : `${missed} ${missed === 1 ? "question" : "questions"} will be repeated in your next step.`}
           </p>
         </div>
 
-        {/* The way on comes before the map: the map fills a phone's screen. */}
+        {/* The way on comes before the outline, which is long on a phone. */}
         {p.signedIn ? (
           <ContinueCard
             stop={nextStop}
             total={total}
             minutes={labMinutes(nextStop)}
             onContinue={() => startStop(next)}
-            locked={next > plan.freeThrough && !pro}
+            locked={next > plan.freeThrough && shut}
           />
         ) : (
           <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
         )}
         {reviewed && toReview > 0 && (
-          <Button variant="outline" size="lg" className="h-12 justify-self-center px-6" onClick={() => void startReview("end")}>
+          <Button variant="outline" size="lg" className="h-12 justify-self-start px-6" onClick={() => void startReview("end")}>
             <RotateCcw />
-            Review {Math.min(toReview, PRACTICE_SIZE)} more
+            Review {Math.min(toReview, PRACTICE_SIZE)} more questions
           </Button>
         )}
 
         </div>
 
-        <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-6 lg:sticky lg:top-20">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-semibold tracking-[-0.01em]">Your {structure.examName} map</h3>
-            <span className="font-mono text-xs text-muted-foreground">
-              {statuses.size} of {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
-            </span>
+        <div className="glass grid gap-6 rounded-lg p-5 sm:p-8">
+          <div className="grid gap-1">
+            <h3 className="text-lg font-semibold tracking-[-0.01em]">{structure.examName} objectives</h3>
+            <p className="text-sm text-muted-foreground">
+              You have started {statuses.size} of {structure.domains.reduce((s, d) => s + d.objectives.length, 0)}{" "}
+              objectives.
+            </p>
           </div>
           <ExamMap
             structure={structure}
@@ -1035,19 +1364,47 @@ export function PathApp({
           window.scrollTo({ top: 0 });
         }}
       />
-      {/* A lab's console and diagrams want more room than a question does. */}
+      {/* One column for every screen, as wide as the bar above it: the page
+          does not change width when a step loads, opens or ends. */}
       <main
-        className={cn(
-          "mx-auto w-full flex-1 px-4 pb-20 pt-6 sm:px-6 sm:pt-10",
-          view.kind === "lab"
-            ? "max-w-3xl"
-            : view.kind === "play" || view.kind === "home" || view.kind === "end"
-              ? "max-w-2xl lg:max-w-5xl"
-              : "max-w-2xl"
-        )}
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl flex-1 px-4 pb-20 pt-6 outline-none sm:px-6 sm:pt-10"
       >
+        {/*
+          The stage. A first visit sees the introductory questions at once. A
+          returning learner's stage is held until the page knows where they
+          are: its body is hidden, and the style rules beside
+          `html[data-path-returning]` in globals.css show the two sentences
+          below when their time comes (path-hold.ts). They are in the server's
+          HTML, so they appear when the page's scripts are slow or never arrive.
+        */}
         <div className="path-stage" data-ready={p.ready ? "true" : "false"}>
-          {screen}
+          {!p.ready && (
+            <p className="path-wait mb-6 text-body text-muted-foreground" role="status">
+              Your study path is loading.
+            </p>
+          )}
+          {/* Always in the page, and empty until there is something to say, so
+              that a sentence arriving in it is announced. */}
+          <PathNotices
+            unreached={p.ready && p.signedIn && p.unreached}
+            saveFailed={p.ready && p.signedIn ? p.saveFailed : null}
+            storageRefused={p.ready && !p.signedIn && !p.deviceSaves}
+            onRetry={refreshAccess}
+          />
+          <div ref={stageBody} className="path-stage-body">
+            {screen}
+          </div>
+          {!p.ready && (
+            <p className="path-late mt-6 text-body" role="alert">
+              Your study path could not be loaded. Please check your connection and{" "}
+              <a href="" className="cb-link">
+                reload the page
+              </a>
+              .
+            </p>
+          )}
         </div>
       </main>
     </div>
@@ -1065,7 +1422,7 @@ export function PathApp({
   async function startRehearsal(size: RehearsalSize, asStop: boolean) {
     const owner = p.userId;
     if (!owner) return;
-    setView({ kind: "loading", label: "Drawing your rehearsal…" });
+    setView({ kind: "loading", label: "Your practice exam is being prepared…" });
     try {
       const drawn = await api(getPathRehearsal, {
         cert,
@@ -1095,12 +1452,13 @@ export function PathApp({
       if (err instanceof ApiError && err.code === "unauthorized") {
         setView({ kind: "home" });
       } else if (err instanceof ApiError && err.code === "quota_exceeded") {
+        setWalled(true);
         await p.refreshAccess();
         setView({ kind: "reveal" });
       } else {
         setView({
           kind: "error",
-          message: err instanceof ApiError ? err.message : "Couldn't draw your rehearsal.",
+          message: err instanceof ApiError ? err.message : "Your practice exam could not be prepared. Please try again.",
           retry: () => void startRehearsal(size, asStop),
         });
       }
@@ -1170,7 +1528,7 @@ export function PathApp({
     const due = reviewIds(p.progress.items, Date.now());
     const missed = [...new Set([...first, ...due])].slice(0, MAX_MISSED_SENT);
     if (missed.length === 0) return;
-    setView({ kind: "loading", label: "Gathering your misses…" });
+    setView({ kind: "loading", label: "The questions for review are being collected…" });
     try {
       const built = await api(getPathStop, {
         cert,
@@ -1193,12 +1551,13 @@ export function PathApp({
       if (err instanceof ApiError && err.code === "unauthorized") {
         setView({ kind: "home" });
       } else if (err instanceof ApiError && err.code === "quota_exceeded") {
+        setWalled(true);
         await p.refreshAccess();
         setView({ kind: "reveal" });
       } else {
         setView({
           kind: "error",
-          message: err instanceof ApiError ? err.message : "Couldn't gather your misses.",
+          message: err instanceof ApiError ? err.message : "The questions for review could not be loaded. Please try again.",
           retry: () => void startReview(from, first),
         });
       }
@@ -1236,7 +1595,7 @@ export function PathApp({
     } catch {
       setView({
         kind: "error",
-        message: "Couldn't load your next stop.",
+        message: "Your next step could not be loaded. Please try again.",
         retry: () => startStop(index, { skipIntro: true }),
       });
     }
@@ -1270,31 +1629,32 @@ export function PathApp({
     const result = p.progress.checkpoint;
     const toOffer = (): TileAction | undefined =>
       !p.signedIn
-        ? { label: "Save my map", kind: "save", run: () => reveal("path-save") }
-        : result && !pro
-          ? { label: "See what Pro opens", kind: "offer", run: () => reveal("path-offer") }
+        ? { label: "Save my progress", kind: "save", run: () => reveal("path-save") }
+        : result && shut
+          ? { label: "See what Pro includes", kind: "offer", run: () => reveal("path-offer") }
           : undefined;
 
+    // `shut`, not `!pro`: while the account has not been reached, nothing here
+    // says "included with Pro", and what is pressed asks the server.
     if (key === REHEARSAL_TILE) {
-      const title = `${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes`;
-      if (!pro) {
+      const title = "Practice exam";
+      const format = `The practice exam has ${REHEARSAL_FORMATS.full.questions} questions and a time limit of ${REHEARSAL_FORMATS.full.minutes} minutes.`;
+      if (shut) {
         return {
           state: "locked",
-          kicker: "Exam rehearsal · with Pro",
           title,
-          line: "The whole exam, timed, scored on your readiness dial.",
+          line: `${format} It is included with Pro.`,
           action: toOffer(),
         };
       }
       return {
         state: lastRehearsal ? "done" : "open",
-        kicker: "Exam rehearsal",
         title,
         line: lastRehearsal
-          ? `Last one ${lastRehearsal.score}% on ${fmtDay(lastRehearsal.at)}.`
-          : "Scored on your readiness dial, like the real exam.",
+          ? `Your last result was ${lastRehearsal.score}% on ${fmtDay(lastRehearsal.at)}.`
+          : `${format} Your result is compared with the readiness target.`,
         action: {
-          label: lastRehearsal ? "Take another" : "Start",
+          label: lastRehearsal ? "Take it again" : "Start",
           kind: "rehearsal",
           run: () => {
             setView({ kind: "rehearsal-intro", asStop: false });
@@ -1310,23 +1670,21 @@ export function PathApp({
       if (!domain || !lab) return null;
       const info = library.find((l) => l.id === lab.id);
       const record = labResults.get(lab.id);
-      if (!pro || !info) {
+      if (shut || !info) {
         return {
           state: "locked",
-          kicker: `Hands-on lab ${domainLabel(domain.number)} · with Pro`,
           title: lab.title,
-          line: "Played like the exam's PBQs, graded with partial credit.",
+          line: "This lab works like the exam's performance-based questions and is graded with partial credit. It is included with Pro.",
           action: toOffer(),
         };
       }
       return {
         state: record ? "done" : "open",
-        kicker: `Hands-on lab ${domainLabel(domain.number)}`,
         title: lab.title,
         line: record
-          ? `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.`
-          : `About ${lab.minutes} minutes, graded with partial credit.`,
-        action: { label: record ? "Play it again" : "Open the lab", kind: "lab", run: () => void openLibraryLab(info) },
+          ? `You scored ${record.c} of ${record.t} on ${fmtDay(record.at)}.`
+          : `This lab takes about ${lab.minutes} minutes and is graded with partial credit.`,
+        action: { label: record ? "Repeat the lab" : "Open the lab", kind: "lab", run: () => void openLibraryLab(info) },
       };
     }
 
@@ -1334,30 +1692,31 @@ export function PathApp({
     const objective = structure.domains.flatMap((d) => d.objectives).find((o) => o.code === key);
     if (!objective) return null;
     const status = statuses.get(key) ?? "new";
-    const kicker = `${key} · ${status === "got" ? "Covered" : status === "missed" ? "A miss to revisit" : "Not started"}`;
-    const base = { kicker, title: objective.title };
+    const base = { title: objective.title };
     if (!p.signedIn) {
       return {
         ...base,
         state: "anonymous",
-        line: "A free account saves your map and opens every stop through to your readiness checkpoint.",
+        line: "A free account saves your progress and opens every step up to your readiness checkpoint.",
         action: toOffer(),
       };
     }
     const index = plan.stops.findIndex((s) => s.kind === "learn" && s.objectives.includes(key));
     if (index < 0) return { ...base, state: "none" };
     const record = p.progress.stops[plan.stops[index].id];
-    const locked = index > plan.freeThrough && !pro;
+    const locked = index > plan.freeThrough && shut;
     if (record && record.n > 0) {
-      const ran = `Last run ${record.c} of ${record.t} right · ${fmtDay(record.at)}.`;
-      if (!pro) {
-        return { ...base, state: "done", line: `${ran} Playing it again comes with Pro.`, action: toOffer() };
+      const ran = `You answered ${record.c} of ${record.t} questions correctly on ${fmtDay(record.at)}.`;
+      if (shut) {
+        return { ...base, state: "done", line: `${ran} Repeating a completed step is included with Pro.`, action: toOffer() };
       }
+      // The account has not been reached: the result is shown, and nothing is offered or sold.
+      if (!pro) return { ...base, state: "done", line: ran };
       return {
         ...base,
         state: "done",
-        line: `${ran}${status === "missed" ? " Its misses come back in your next stops." : ""}`,
-        action: { label: "Play it again", kind: "replay", run: () => void startStop(index) },
+        line: `${ran}${status === "missed" ? " The questions you missed will return in your next steps." : ""}`,
+        action: { label: "Repeat this step", kind: "replay", run: () => void startStop(index) },
       };
     }
     // Past the free stops, even the next one is Pro's to open.
@@ -1365,7 +1724,9 @@ export function PathApp({
       return {
         ...base,
         state: "locked",
-        line: result ? "Opens with Pro." : "Opens with Pro, after your readiness checkpoint.",
+        line: result
+          ? "This objective is included with Pro."
+          : "This objective is included with Pro, which is offered after your readiness checkpoint.",
         action: toOffer(),
       };
     }
@@ -1373,7 +1734,7 @@ export function PathApp({
       return {
         ...base,
         state: "next",
-        line: "Up next on your path.",
+        line: "This objective is taught in your next step.",
         action: { label: "Start", kind: "start", run: () => void startStop(index) },
       };
     }
@@ -1381,7 +1742,10 @@ export function PathApp({
     return {
       ...base,
       state: "later",
-      line: ahead === 1 ? "Comes up right after your next stop." : `Comes up in ${ahead} stops.`,
+      line:
+        ahead === 1
+          ? "This objective is taught in the step after your next one."
+          : `This objective is taught ${ahead} steps from now.`,
     };
   }
 
@@ -1398,13 +1762,9 @@ export function PathApp({
       <div
         role="region"
         aria-label={info.title}
-        className="path-rise flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/80 p-4"
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-l-2 border-primary/50 bg-surface py-3 pl-4 pr-3"
       >
-        <div className="grid min-w-0 flex-1 basis-56 gap-0.5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{info.kicker}</p>
-          <p className="font-medium leading-snug">{info.title}</p>
-          {info.line && <p className="text-sm text-muted-foreground">{info.line}</p>}
-        </div>
+        {info.line && <p className="min-w-0 flex-1 basis-64 text-sm leading-relaxed">{info.line}</p>}
         {action && (
           <Button
             size="sm"
@@ -1425,31 +1785,34 @@ export function PathApp({
 
   function renderHome() {
     const result = p.progress.checkpoint;
-    const anonymousDone = !p.signedIn && hasStarted(p.progress);
-    const lockedNext = p.signedIn && next > plan.freeThrough && !pro;
+    // The save ask is for a visitor who has finished the introductory questions.
+    // One who has only begun them is given the questions, never an account wall.
+    const anonymousDone = !p.signedIn && isStopDone(p.progress, plan.stops[0].id);
+    // The offer is made only to an account that is known not to have Pro.
+    const lockedNext = p.signedIn && next > plan.freeThrough && shut;
     return (
-      <div className="path-rise grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+      <div className="path-rise grid gap-6">
         <div className="grid min-w-0 gap-6">
         <div className="grid gap-3">
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+          <span className="cb-label text-muted-foreground">
             {structure.examCode}
           </span>
-          <h1 className="cb-display text-balance text-[2.5rem] sm:text-6xl">Your {structure.examName} path</h1>
-          {/* How far along, as a line lit up to here, then the numbers. */}
-          <div className="mt-2 grid gap-2.5">
-            <div className="h-[3px] overflow-hidden rounded-full bg-foreground/[0.08]" aria-hidden>
+          <h1 className="cb-display text-balance text-[2rem] sm:text-[2.75rem]">Your {structure.examName} study path</h1>
+          {/* How far along, as a bar filled up to here, then the same in a sentence. */}
+          <div className="mt-1 grid gap-2.5">
+            <div className="h-2 overflow-hidden rounded-full bg-foreground/[0.09]" aria-hidden>
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-signal shadow-[0_0_12px_var(--primary)]"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${Math.max(1.5, (Math.min(next, total) / Math.max(1, total)) * 100)}%` }}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {Math.min(next, total)} of {total} stops done · {statuses.size} of{" "}
-              {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives started
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              You have completed {Math.min(next, total)} of {total} steps and started {statuses.size} of{" "}
+              {structure.domains.reduce((s, d) => s + d.objectives.length, 0)} objectives.
               {reading && (
                 <>
                   {" "}
-                  · last {reading.source} {reading.score}%
+                  Your last {reading.source === "rehearsal" ? "practice exam" : "checkpoint"} result was {reading.score}%.
                 </>
               )}
             </p>
@@ -1484,6 +1847,7 @@ export function PathApp({
               examDate={p.progress.goal?.examDate ?? null}
               context="home"
               labCount={library.length}
+              onRetry={refreshAccess}
             />
           </div>
         ) : (
@@ -1500,13 +1864,13 @@ export function PathApp({
                     {
                       key: "rehearsal",
                       Icon: Timer,
-                      title: "Exam rehearsal",
+                      title: "Practice exam",
                       detail: lastRehearsal ? (
                         <>
-                          Last one {lastRehearsal.score}% on {fmtDay(lastRehearsal.at)}
+                          Your last result was {lastRehearsal.score}% on {fmtDay(lastRehearsal.at)}.
                           {run?.done && (
                             <>
-                              {" · "}
+                              {" "}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1515,13 +1879,14 @@ export function PathApp({
                                 }}
                                 className="underline underline-offset-4 hover:text-foreground"
                               >
-                                see its answers
+                                Review its answers
                               </button>
+                              .
                             </>
                           )}
                         </>
                       ) : (
-                        `${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, scored on your dial`
+                        `It has ${REHEARSAL_FORMATS.full.questions} questions and a limit of ${REHEARSAL_FORMATS.full.minutes} minutes.`
                       ),
                       action: "Start",
                       onAction: () => {
@@ -1537,7 +1902,11 @@ export function PathApp({
                       key: "labs",
                       Icon: FlaskConical,
                       title: "Hands-on labs",
-                      detail: `${library.length} labs${labResults.size > 0 ? ` · ${labResults.size} done` : ", like the exam's PBQs"}`,
+                      detail: `There are ${library.length} labs.${
+                        labResults.size > 0
+                          ? ` You have completed ${labResults.size}.`
+                          : " They work like the exam's performance-based questions."
+                      }`,
                       action: "Open",
                       onAction: () => {
                         track("path_labs_viewed", { cert });
@@ -1552,8 +1921,8 @@ export function PathApp({
                     {
                       key: "review",
                       Icon: RotateCcw,
-                      title: "Your misses",
-                      detail: `${toReview} ${toReview === 1 ? "miss" : "misses"} to go over, ${Math.min(toReview, PRACTICE_SIZE)} at a time`,
+                      title: "Questions to review",
+                      detail: `You have ${toReview} ${toReview === 1 ? "question" : "questions"} to review, ${Math.min(toReview, PRACTICE_SIZE)} at a time.`,
                       action: "Review",
                       onAction: () => void startReview("home"),
                     },
@@ -1565,10 +1934,10 @@ export function PathApp({
 
         </div>
 
-        <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-6 lg:sticky lg:top-20">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-semibold tracking-[-0.01em]">Your map</h2>
-            <span className="font-mono text-[11px] text-muted-foreground">Tap any tile</span>
+        <div className="glass grid gap-6 rounded-lg p-5 sm:p-8">
+          <div className="grid gap-1">
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">Exam objectives</h2>
+            <p className="text-sm text-muted-foreground">Select an objective to see where you stand on it.</p>
           </div>
           <ExamMap
             structure={structure}
@@ -1585,20 +1954,18 @@ export function PathApp({
 
         {/* The save card carries its own. */}
         {!anonymousDone && (
-          <p className="text-center text-xs text-muted-foreground lg:col-span-2">
+          <p className="text-sm text-muted-foreground">
+            If you are studying for a different exam, you can{" "}
             <Link href="/start?pick=1" className="underline underline-offset-4 hover:text-foreground">
-              Studying for a different exam?
+              choose another exam
             </Link>
+            .
           </p>
         )}
-        {!anonymousDone && (
-          <div className="lg:col-span-2">
-            <VersionSwitch cert={cert} />
-          </div>
-        )}
+        {!anonymousDone && <VersionSwitch cert={cert} />}
         {/* What the path doesn't hold yet stays reachable, not advertised. */}
         {pro && (
-          <p className="-mt-3 text-center text-xs text-muted-foreground lg:col-span-2">
+          <p className="-mt-3 text-sm text-muted-foreground">
             Your study sets and full spaced repetition are in your{" "}
             <Link href="/dashboard" className="underline underline-offset-4 hover:text-foreground">
               study tools
@@ -1628,32 +1995,88 @@ function ContinueCard({
   if (!stop) return null;
   const label =
     stop.kind === "review"
-      ? "Keep practicing"
+      ? "Further practice"
       : stop.kind === "checkpoint"
         ? "Readiness checkpoint"
-        : stop.title;
+        : stop.kind === "warmup"
+          ? "Introductory questions"
+          : stop.title;
   const kicker =
     stop.kind === "review"
-      ? "Path complete · review round"
+      ? "You have completed the study path. This is a review round."
       : stop.kind === "lab"
-        ? `Next · hands-on lab${minutes ? ` · about ${minutes} min` : ""}`
+        ? `Your next step is a hands-on lab${minutes ? ` of about ${minutes} minutes` : ""}.`
         : stop.kind === "rehearsal"
-          ? `Last stop · the whole exam, timed`
-          : `Next · stop ${stop.index + 1} of ${total}`;
+          ? "Your last step is a full-length timed practice exam."
+          : `Your next step is step ${stop.index + 1} of ${total}.`;
   return (
-    <div className="glass relative isolate flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-[1.75rem] p-6 sm:p-8">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-24 left-0 -z-10 h-48 w-2/3 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_22%,transparent),transparent)]"
-      />
+    <div className="glass relative flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-lg border-l-[3px] border-l-primary p-6 sm:p-8">
       <div className="min-w-0 flex-1 basis-64">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{kicker}</p>
-        <p className="mt-2 text-balance text-2xl font-semibold leading-tight tracking-[-0.03em] sm:text-[2rem]">{label}</p>
+        <p className="text-sm text-muted-foreground">{kicker}</p>
+        <p className="mt-1.5 text-balance text-2xl font-semibold leading-tight tracking-[-0.02em] sm:text-[1.75rem]">{label}</p>
       </div>
       <Button size="lg" className={cn("h-12 w-full px-7 text-base sm:w-auto")} onClick={onContinue}>
-        {locked ? "See what's next" : "Continue"}
+        {locked ? "See what is next" : "Continue"}
         <ArrowRight />
       </Button>
+    </div>
+  );
+}
+
+/**
+ * What the page says when the learner's work is not where it should be: one
+ * quiet sentence for each case, above whatever screen is showing. In each
+ * case nothing has been lost, and the page is already trying again by itself.
+ * The region is always there, so a sentence that arrives in it is announced.
+ */
+function PathNotices({
+  unreached,
+  saveFailed,
+  storageRefused,
+  onRetry,
+}: {
+  /** Signed in, and the account has not answered. */
+  unreached: boolean;
+  /** The error code of the latest save to the account, when it failed. */
+  saveFailed: ApiErrorCode | null;
+  /** Nobody is signed in, and the browser refuses to keep the progress. */
+  storageRefused: boolean;
+  /** Ask the account again. */
+  onRetry: () => Promise<void>;
+}) {
+  const [asking, setAsking] = useState(false);
+  async function retry() {
+    setAsking(true);
+    try {
+      await onRetry();
+    } finally {
+      setAsking(false);
+    }
+  }
+  return (
+    <div role="status">
+      {(unreached || saveFailed || storageRefused) && (
+        <div className="mb-6 grid gap-2 text-small leading-relaxed text-muted-foreground">
+          {unreached && (
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="min-w-0 flex-1 basis-64">
+                Your account could not be reached. The progress saved on this device is shown.
+              </span>
+              <Button variant="outline" size="sm" loading={asking} onClick={() => void retry()}>
+                Try again
+              </Button>
+            </p>
+          )}
+          {saveFailed && (
+            <p>
+              {saveFailed === "internal"
+                ? "Your latest answers are kept on this device and will be saved to your account when the connection returns."
+                : "Your latest answers could not be saved to your account. They are kept on this device, and the page will try again."}
+            </p>
+          )}
+          {storageRefused && <p>This browser is not saving your progress. Create a free account to keep it.</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -1669,14 +2092,16 @@ function SaveCard({
   onSaved: (userId: string, email: string | undefined, method: "email_signup" | "email_login") => Promise<void>;
 }) {
   return (
-    <div className="glass grid gap-4 rounded-[1.75rem] p-5 sm:p-7">
-      <SaveAsk cert={cert} surface="path" title={nextUpTitle(next) ?? "Save your map to keep going"} onSaved={onSaved}>
-        {nextUpLead(next)}A free account saves your map and opens every stop through to your readiness checkpoint.
+    <div className="glass grid gap-4 rounded-lg p-5 sm:p-7">
+      <SaveAsk cert={cert} surface="path" title={nextUpTitle(next) ?? "Save your progress to continue"} onSaved={onSaved}>
+        {nextUpLead(next)}A free account saves your progress and opens every step up to your readiness checkpoint.
       </SaveAsk>
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
+        If you are studying for a different exam, you can{" "}
         <Link href="/start?pick=1" className="underline underline-offset-4 hover:text-foreground">
-          Studying for a different exam?
+          choose another exam
         </Link>
+        .
       </p>
     </div>
   );

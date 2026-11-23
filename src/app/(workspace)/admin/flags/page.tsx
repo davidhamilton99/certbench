@@ -1,19 +1,16 @@
-import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { notFound } from "next/navigation";
+import { requireProPage } from "@/server/auth";
 import { getProfile } from "@/server/data/profiles";
 import { listPendingFlags } from "@/server/data/flags";
 import { AdminFlagsList } from "@/components/workspace/AdminFlagsList";
 
 export const metadata = {
-  title: "Flag queue",
+  title: "Reported questions",
 };
 
 export default async function AdminFlagsPage() {
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  // The owner's account passes the Pro check; the role is then checked here.
+  const { db, user } = await requireProPage();
 
   const profile = await getProfile(db, user.id);
   if (profile?.role !== "admin") notFound();
@@ -22,10 +19,10 @@ export default async function AdminFlagsPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Flagged questions</h1>
-        <p className="text-sm text-muted-foreground">
-          {flags.length} pending report{flags.length === 1 ? "" : "s"}
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Reported questions</h1>
+        <p className="text-small text-muted-foreground">
+          {flags.length === 1 ? "1 report is" : `${flags.length} reports are`} waiting for review.
         </p>
       </div>
       <AdminFlagsList

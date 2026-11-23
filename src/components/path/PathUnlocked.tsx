@@ -7,18 +7,14 @@ import { isStopDone } from "@/core/path/progress";
 import type { ObjectiveStatus, PathPlan, PathProgress, PathStructure } from "@/core/path/types";
 import { ExamMap, MapLegend, type LabState, type MapRehearsal } from "./ExamMap";
 
-const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", timeZone: "UTC" });
 
 /** The card both screens share, so "Payment received" becomes the unlock in place. */
 function UnlockCard({ eyebrow, children }: { eyebrow: string; children: ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-6 shadow-sm sm:p-8">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-44 left-1/2 h-[24rem] w-[40rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_20%,transparent),transparent)]"
-      />
+    <div className="cb-sheet relative overflow-hidden rounded-lg p-6 sm:p-10">
       <div className="relative grid justify-items-center gap-3 text-center">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-primary">{eyebrow}</span>
+        <span className="cb-label text-muted-foreground">{eyebrow}</span>
         {children}
       </div>
     </div>
@@ -42,26 +38,26 @@ export function PathActivating({
 }) {
   return (
     <div className="path-rise grid gap-6" role="status">
-      <UnlockCard eyebrow={`Payment received · ${examName}`}>
-        <h2 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
-          Opening your whole path…
+      <UnlockCard eyebrow="Payment received">
+        <h2 className="cb-display text-balance text-[1.875rem] sm:text-[2.5rem]">
+          Your {examName} study path is being opened.
         </h2>
         {slow ? (
           <>
             <p className="max-w-md text-balance text-muted-foreground">
-              Your payment went through. Stripe is taking longer than usual to confirm it, and your path opens as soon
-              as it does.
+              Your payment was successful. Stripe is taking longer than usual to confirm it, and your study path will
+              open as soon as it does.
             </p>
             <button
               type="button"
               onClick={onCheck}
-              className="mt-2 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5"
+              className="mt-2 inline-flex items-center gap-2 rounded-md border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
             >
               <RotateCcw className="size-4" aria-hidden />
               Check again
             </button>
             <p className="text-sm text-muted-foreground">
-              Still waiting after a few minutes? Email{" "}
+              If you are still waiting after a few minutes, please email{" "}
               <a href="mailto:support@certbench.dev" className="underline underline-offset-4 hover:text-foreground">
                 support@certbench.dev
               </a>
@@ -71,7 +67,7 @@ export function PathActivating({
         ) : (
           <>
             <p className="max-w-md text-balance text-muted-foreground">
-              Your payment went through. Confirming it with Stripe takes a moment.
+              Your payment was successful. Confirming it with Stripe takes a moment.
             </p>
             <Loader2 className="mt-2 size-6 animate-spin text-primary" aria-hidden />
           </>
@@ -125,35 +121,35 @@ export function PathUnlocked({
 
   return (
     <div className="path-rise grid gap-6">
-      <UnlockCard eyebrow={`Pro · ${structure.examName}`}>
-        <h2 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
-          Your whole path is open.
+      <UnlockCard eyebrow="CertBench Pro">
+        <h2 className="cb-display text-balance text-[1.875rem] sm:text-[2.5rem]">
+          Your full {structure.examName} study path is now open.
         </h2>
-        <p className="max-w-md text-balance text-muted-foreground">
-          Everything from here to exam day, in the same short stops, with{" "}
-          {library > 0 ? `${library} hands-on labs` : "a hands-on lab closing every domain"} and a timed
-          rehearsal of the whole exam whenever you want one.
+        <p className="max-w-lg text-balance leading-relaxed text-muted-foreground">
+          The study path continues in the same short steps. It includes{" "}
+          {library > 0 ? `${library} hands-on labs` : "a hands-on lab at the end of every domain"} and timed
+          practice exams that you can take at any time.
         </p>
 
         <dl className="mt-4 grid w-full grid-cols-3 gap-2 sm:gap-3">
           {[
-            { n: count.stops, label: count.stops === 1 ? "short stop" : "short stops" },
-            { n: count.practice, label: count.practice === 1 ? "domain practice" : "domain practices" },
+            { n: count.stops, label: count.stops === 1 ? "study step" : "study steps" },
+            { n: count.practice, label: count.practice === 1 ? "domain review" : "domain reviews" },
             { n: count.labs, label: count.labs === 1 ? "hands-on lab" : "hands-on labs" },
           ].map(({ n, label }) => (
             <div
               key={label}
-              className="flex flex-col-reverse gap-0.5 rounded-2xl border border-border bg-background/50 px-2 py-3 text-center sm:py-4"
+              className="flex flex-col-reverse gap-0.5 rounded-md border border-border px-2 py-3 text-center sm:py-4"
             >
               <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="cb-display text-4xl tabular-nums sm:text-5xl">{n}</dd>
+              <dd className="cb-display text-3xl tabular-nums sm:text-4xl">{n}</dd>
             </div>
           ))}
         </dl>
 
         {finish && (
           <p className="mt-2 text-sm text-muted-foreground">
-            At {minutes} minutes a day, you finish by {fmt(finish)}.
+            At {minutes} minutes a day, you will finish by {fmt(finish)}.
           </p>
         )}
       </UnlockCard>
@@ -164,14 +160,14 @@ export function PathUnlocked({
         <button
           type="button"
           onClick={firstLab.onOpen}
-          className="glass group flex items-center gap-4 rounded-3xl p-5 text-left transition-colors hover:border-primary/40 sm:p-6"
+          className="glass group flex items-center gap-4 rounded-lg p-5 text-left transition-colors hover:border-primary sm:p-6"
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-primary/40 text-primary">
             <FlaskConical className="size-5" aria-hidden />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Or try a lab now{firstLab.minutes ? ` · about ${firstLab.minutes} min` : ""}
+            <span className="block text-sm text-muted-foreground">
+              You can also try a lab now.{firstLab.minutes ? ` It takes about ${firstLab.minutes} minutes.` : ""}
             </span>
             <span className="mt-1 block truncate font-display text-lg font-semibold tracking-tight">
               {firstLab.title}
@@ -181,8 +177,8 @@ export function PathUnlocked({
         </button>
       )}
 
-      <div className="glass grid gap-5 rounded-3xl p-5 sm:p-6">
-        <h3 className="font-display font-semibold tracking-tight">Your map</h3>
+      <div className="glass grid gap-5 rounded-lg p-5 sm:p-6">
+        <h3 className="font-semibold tracking-[-0.01em]">Exam objectives</h3>
         <ExamMap structure={structure} statuses={statuses} labs={labs} rehearsal={rehearsal} labsFresh />
         <MapLegend labs="open" />
       </div>

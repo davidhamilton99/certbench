@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BankQuestion, PathBank } from "../bank";
 
-const bank = vi.hoisted(() => ({ current: null as PathBank | null }));
-vi.mock("../bank", () => ({ loadPathBank: async () => bank.current }));
+const bank = vi.hoisted(() => ({
+  current: null as PathBank | null,
+  /** Set to make the read of the bank fail, as it does when the database cannot be reached. */
+  failure: null as Error | null,
+}));
+vi.mock("../bank", () => ({
+  loadPathBank: async () => {
+    if (bank.failure) throw bank.failure;
+    return bank.current;
+  },
+}));
 
 import { loadPublicTest } from "../public-test";
 
@@ -37,6 +46,7 @@ function withQuestions(n: number): PathBank {
 
 beforeEach(() => {
   bank.current = null;
+  bank.failure = null;
 });
 
 describe("loadPublicTest", () => {
@@ -59,11 +69,20 @@ describe("loadPublicTest", () => {
     expect(test?.reps).toHaveLength(45);
   });
 
-  it("leaves the page without a test when the bank can't fill one, or isn't there", async () => {
+  it("leaves the page without a test when the bank cannot fill one, or is not there", async () => {
     bank.current = withQuestions(30);
     expect(await loadPublicTest("network-plus-n10-009")).toBeNull();
     bank.current = null;
     expect(await loadPublicTest("network-plus-n10-009")).toBeNull();
+    expect(await loadPublicTest("not-an-exam")).toBeNull();
+  });
+
+  it("fails when the bank could not be read, so a page being rebuilt keeps its last good copy", async () => {
+    // Null would rebuild the page without its practice exam and keep it that
+    // way for a day. A failure leaves the page as it was and is tried again.
+    bank.failure = new Error("connection refused");
+    await expect(loadPublicTest("network-plus-n10-009")).rejects.toThrow("connection refused");
+    // An exam that is not on a study path is still simply absent.
     expect(await loadPublicTest("not-an-exam")).toBeNull();
   });
 });

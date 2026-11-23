@@ -49,9 +49,9 @@ export const networkPlusScenarios: PbqScenario[] = [
   {
     type: "ordering",
     id: "t568b-pin-order",
-    title: "T568B Wiring Standard — Pin Order",
+    title: "T568B Wiring Standard: Pin Order",
     description:
-      "Arrange the T568B colour pairs in the correct pin order from Pin 1 to Pin 8.",
+      "Arrange the T568B color pairs in the correct pin order from Pin 1 to Pin 8.",
     domain_number: "1.0",
     domain_title: "Networking Concepts",
     items: [
@@ -77,10 +77,10 @@ export const networkPlusScenarios: PbqScenario[] = [
     domain_number: "3.0",
     domain_title: "Network Operations",
     items: [
-      "DHCP Discover — client broadcasts to locate a DHCP server",
-      "DHCP Offer — server responds with an available IP address",
-      "DHCP Request — client broadcasts acceptance of the offered address",
-      "DHCP Acknowledge — server confirms the lease to the client",
+      "DHCP Discover: client broadcasts to locate a DHCP server",
+      "DHCP Offer: server responds with an available IP address",
+      "DHCP Request: client broadcasts acceptance of the offered address",
+      "DHCP Acknowledge: server confirms the lease to the client",
     ],
     correct_order: [0, 1, 2, 3],
     explanation:
@@ -116,7 +116,7 @@ export const networkPlusScenarios: PbqScenario[] = [
     id: "cable-types-to-speeds",
     title: "Match Cable Types to Maximum Speeds",
     description:
-      "Match each cable or fibre type to its maximum rated throughput.",
+      "Match each cable or fiber type to its maximum rated throughput.",
     domain_number: "1.0",
     domain_title: "Networking Concepts",
     left: [
@@ -124,20 +124,20 @@ export const networkPlusScenarios: PbqScenario[] = [
       "Cat 6",
       "Cat 6a",
       "Cat 7",
-      "Single-mode fibre (SMF)",
-      "Multimode fibre (MMF)",
+      "Single-mode fiber (SMF)",
+      "Multimode fiber (MMF)",
     ],
     right: [
       "1 Gbps (up to 100 m)",
       "1 Gbps (up to 55 m) / 10 Gbps (up to 55 m)",
       "10 Gbps (up to 100 m)",
       "10 Gbps (up to 100 m, fully shielded)",
-      "100 Gbps+ over long distances (kilometres)",
+      "100 Gbps+ over long distances (kilometers)",
       "10 Gbps (up to ~550 m at OM4)",
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 1 Gbps to 100 m and 10 Gbps to 55 m. Cat 6a extends 10 Gbps to the full 100 m run. Cat 7 also achieves 10 Gbps to 100 m but uses GG45 or TERA connectors and full shielding. Single-mode fibre (8.3 µm core) supports 100 Gbps+ over kilometres. Multimode fibre (50/62.5 µm core) is lower cost and used within buildings up to ~550 m (OM4).",
+      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 1 Gbps to 100 m and 10 Gbps to 55 m. Cat 6a extends 10 Gbps to the full 100 m run. Cat 7 also achieves 10 Gbps to 100 m but uses GG45 or TERA connectors and full shielding. Single-mode fiber (8.3 µm core) supports 100 Gbps+ over kilometers. Multimode fiber (50/62.5 µm core) is lower cost and used within buildings up to ~550 m (OM4).",
   },
   {
     type: "matching",
@@ -165,7 +165,7 @@ export const networkPlusScenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "802.11a and 802.11g both top out at 54 Mbps, but a uses 5 GHz and g uses 2.4 GHz. 802.11b was the first mass-market standard at 11 Mbps. 802.11n (Wi-Fi 4) introduced MIMO for up to 600 Mbps on both bands. 802.11ac (Wi-Fi 5) operates only on 5 GHz with MU-MIMO for up to 3.5 Gbps. 802.11ax (Wi-Fi 6) adds OFDMA and BSS Colouring for up to 9.6 Gbps across 2.4, 5, and 6 GHz bands.",
+      "802.11a and 802.11g both top out at 54 Mbps, but a uses 5 GHz and g uses 2.4 GHz. 802.11b was the first mass-market standard at 11 Mbps. 802.11n (Wi-Fi 4) introduced MIMO for up to 600 Mbps on both bands. 802.11ac (Wi-Fi 5) operates only on 5 GHz with MU-MIMO for up to 3.5 Gbps. 802.11ax (Wi-Fi 6) adds OFDMA and BSS Coloring for up to 9.6 Gbps across 2.4, 5, and 6 GHz bands.",
   },
   {
     type: "matching",
@@ -177,11 +177,11 @@ export const networkPlusScenarios: PbqScenario[] = [
     domain_title: "Networking Concepts",
     left: ["Hub", "Switch", "Router", "Firewall", "Wireless Access Point"],
     right: [
-      "Layer 1 — Physical",
-      "Layer 2 — Data Link",
-      "Layer 3 — Network",
-      "Layer 3–7 — Network to Application",
-      "Layer 2 — Data Link",
+      "Layer 1: Physical",
+      "Layer 2: Data Link",
+      "Layer 3: Network",
+      "Layer 3–7: Network to Application",
+      "Layer 2: Data Link",
     ],
     correct_map: [0, 1, 2, 3, 4],
     explanation:
@@ -194,7 +194,7 @@ export const networkPlusScenarios: PbqScenario[] = [
   {
     type: "categorization",
     id: "tcp-vs-udp-protocols",
-    title: "TCP vs UDP — Protocol Classification",
+    title: "TCP vs UDP: Protocol Classification",
     description:
       "Sort each protocol into the correct transport category based on whether it uses TCP, UDP, or both.",
     domain_number: "1.0",
@@ -213,7 +213,7 @@ export const networkPlusScenarios: PbqScenario[] = [
       { text: "SIP (port 5060)", category: 2 },
     ],
     explanation:
-      "TCP is used where reliability and ordered delivery matter: HTTP, FTP, SSH, and RDP all require TCP. UDP is used for speed-sensitive or broadcast-based protocols: DHCP, TFTP, SNMP, and NTP all use UDP exclusively. DNS uses UDP for standard queries (faster, smaller responses) but falls back to TCP for large responses and zone transfers. SIP uses UDP for most VoIP signalling but supports TCP for reliability when required.",
+      "TCP is used where reliability and ordered delivery matter: HTTP, FTP, SSH, and RDP all require TCP. UDP is used for speed-sensitive or broadcast-based protocols: DHCP, TFTP, SNMP, and NTP all use UDP exclusively. DNS uses UDP for standard queries (faster, smaller responses) but falls back to TCP for large responses and zone transfers. SIP uses UDP for most VoIP signaling but supports TCP for reliability when required.",
   },
   {
     type: "categorization",
@@ -233,7 +233,7 @@ export const networkPlusScenarios: PbqScenario[] = [
       { text: "BGP", category: 2 },
     ],
     explanation:
-      "Distance Vector protocols (RIPv1, RIPv2) advertise routing tables to neighbours and use hop count as the metric, suffering from slow convergence. Link State protocols (OSPF, IS-IS) build a complete topology map using LSAs/LSPs and run Dijkstra's SPF algorithm, enabling faster convergence. EIGRP is Cisco's hybrid protocol using a composite metric (bandwidth, delay). BGP is an Exterior Gateway Protocol using path attributes (AS-PATH, LOCAL_PREF) and is classified as a Path Vector protocol.",
+      "Distance Vector protocols (RIPv1, RIPv2) advertise routing tables to neighbors and use hop count as the metric, suffering from slow convergence. Link State protocols (OSPF, IS-IS) build a complete topology map using LSAs/LSPs and run Dijkstra's SPF algorithm, enabling faster convergence. EIGRP is Cisco's hybrid protocol using a composite metric (bandwidth, delay). BGP is an Exterior Gateway Protocol using path attributes (AS-PATH, LOCAL_PREF) and is classified as a Path Vector protocol.",
   },
   {
     type: "categorization",
@@ -257,12 +257,12 @@ export const networkPlusScenarios: PbqScenario[] = [
       { text: "Partial variant reduces cost while improving redundancy", category: 1 },
     ],
     explanation:
-      "Star topology centralises connections at a switch or hub — the most common LAN design, but the switch is a single point of failure. Bus topology uses a single shared backbone cable with terminators; any break disrupts all traffic. Mesh topology provides dedicated point-to-point links between nodes, offering maximum redundancy (full mesh) or balanced cost/redundancy (partial mesh) — commonly used in WAN cores. Ring topology passes data around a loop using token passing (e.g., Token Ring, FDDI); a break disrupts the ring unless dual-ring redundancy is used.",
+      "Star topology centralizes connections at a switch or hub: the most common LAN design, but the switch is a single point of failure. Bus topology uses a single shared backbone cable with terminators; any break disrupts all traffic. Mesh topology provides dedicated point-to-point links between nodes, offering maximum redundancy (full mesh) or balanced cost/redundancy (partial mesh), commonly used in WAN cores. Ring topology passes data around a loop using token passing (e.g., Token Ring, FDDI); a break disrupts the ring unless dual-ring redundancy is used.",
   },
   {
     type: "categorization",
     id: "cloud-service-model-responsibilities",
-    title: "Cloud Service Model — Customer Responsibilities",
+    title: "Cloud Service Model: Customer Responsibilities",
     description:
       "Sort each responsibility to the cloud service model where the CUSTOMER owns that responsibility.",
     domain_number: "4.0",
@@ -295,10 +295,10 @@ export const networkPlusScenarios: PbqScenario[] = [
     domain_number: "5.0",
     domain_title: "Network Troubleshooting",
     categories: [
-      "Layer 1 — Physical",
-      "Layer 2 — Data Link",
-      "Layer 3 — Network",
-      "Layer 7 — Application",
+      "Layer 1: Physical",
+      "Layer 2: Data Link",
+      "Layer 3: Network",
+      "Layer 7: Application",
     ],
     items: [
       { text: "Cable tester shows intermittent signal loss", category: 0 },
@@ -306,7 +306,7 @@ export const networkPlusScenarios: PbqScenario[] = [
       { text: "Speed/duplex mismatch causing late collisions", category: 1 },
       { text: "MAC address table overflow on the switch", category: 1 },
       { text: "Incorrect subnet mask prevents inter-VLAN routing", category: 2 },
-      { text: "TTL exceeded — traceroute shows a routing loop", category: 2 },
+      { text: "TTL exceeded: traceroute shows a routing loop", category: 2 },
       { text: "HTTPS certificate name mismatch error in browser", category: 3 },
       { text: "DNS resolves but web page returns HTTP 503", category: 3 },
     ],

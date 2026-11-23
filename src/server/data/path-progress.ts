@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { Db } from "@/server/supabase/server";
 import type { Json } from "@/types/database.gen";
 import { sanitizePathProgress } from "@/core/path/progress";

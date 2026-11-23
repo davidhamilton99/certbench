@@ -11,6 +11,11 @@ const run = vi.hoisted(() => vi.fn());
 vi.mock("@/server/services/lifecycle-email", () => ({ runLifecycleEmails: run }));
 const capture = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/server/analytics", () => ({ captureServerEvent: capture }));
+const report = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/server/api/report-error", () => ({ reportServerError: report }));
+
+/** This handler, as an error report names it. */
+const PLACE = { route: "/api/cron/lifecycle", method: "GET", kind: "route" };
 
 import { GET } from "@/app/api/cron/lifecycle/route";
 
@@ -21,9 +26,13 @@ const call = (authorization?: string) =>
     })
   );
 
+/** The names of the events recorded, in order. */
+const events = () => (capture.mock.calls as unknown[][]).map((args) => args[1]);
+
 beforeEach(() => {
   run.mockReset();
   capture.mockClear();
+  report.mockClear();
   vi.unstubAllEnvs();
 });
 
@@ -36,11 +45,45 @@ describe("the daily lifecycle cron", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ users: 2, failed: 0, countdowns: 1, pathNudges: 1 });
     expect(run).toHaveBeenCalledOnce();
+    expect(report).not.toHaveBeenCalled();
     // The run's numbers land in PostHog, on the job rather than a person.
     expect(capture).toHaveBeenCalledWith(
       "system:lifecycle-cron",
       "lifecycle_run",
       expect.objectContaining({ users: 2, countdowns: 1, pathNudges: 1 })
+    );
+  });
+
+  // A run that the platform ends at its time limit reports nothing afterwards.
+  // The start is recorded first, so that such a run shows as a start without an end.
+  it("records the start before the run, and the end after it", async () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    const order: string[] = [];
+    capture.mockImplementation(async (...args: unknown[]) => {
+      order.push(String(args[1]));
+    });
+    run.mockImplementation(async () => {
+      order.push("run");
+      return { users: 0 };
+    });
+
+    await call("Bearer s3cret");
+    capture.mockImplementation(async () => {});
+    expect(order).toEqual(["lifecycle_run_started", "run", "lifecycle_run"]);
+    expect(capture).toHaveBeenNthCalledWith(1, "system:lifecycle-cron", "lifecycle_run_started");
+  });
+
+  it("says in the run's event when the run stopped before it reached every account", async () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    run.mockResolvedValue({ users: 900, pages: 1, stoppedEarly: true });
+
+    const res = await call("Bearer s3cret");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ stoppedEarly: true });
+    expect(capture).toHaveBeenCalledWith(
+      "system:lifecycle-cron",
+      "lifecycle_run",
+      expect.objectContaining({ users: 900, pages: 1, stoppedEarly: true })
     );
   });
 
@@ -50,20 +93,43 @@ describe("the daily lifecycle cron", () => {
     expect(res.status).toBe(401);
     expect(run).not.toHaveBeenCalled();
     expect(capture).not.toHaveBeenCalled();
+    // A call that is turned away is not a fault of the server.
+    expect(report).not.toHaveBeenCalled();
   });
 
-  // Production from July to November 2026: Vercel's daily call got a 500 and
-  // no lifecycle email ever went out. The throw names the variable in the
-  // function's log; the run must never start without the secret.
+  // Production from July to November 2026: the secret was not set, the route
+  // threw before anything ran, Vercel's daily call got an empty 500 and no
+  // lifecycle email ever went out, with nothing recorded anywhere. The run
+  // must still never start without the secret, and now the failure is
+  // recorded: the log names the variable and PostHog has an event for the day.
   it.each([
     ["unset", undefined],
     ["empty", ""],
-  ])("fails naming the variable, and never runs, when CRON_SECRET is %s", async (_, value) => {
+  ])("answers 500, records why, and never runs, when CRON_SECRET is %s", async (_, value) => {
     vi.stubEnv("CRON_SECRET", value);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
     for (const auth of [undefined, "Bearer ", "Bearer undefined"]) {
-      await expect(call(auth)).rejects.toThrow("Missing required environment variable CRON_SECRET");
+      capture.mockClear();
+      const res = await call(auth);
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ error: { code: "internal", message: "Lifecycle run failed" } });
+      expect(capture).toHaveBeenCalledExactlyOnceWith("system:lifecycle-cron", "lifecycle_run_failed", {
+        message: "CRON_SECRET is not set",
+      });
     }
+    // Each of the three calls is also reported as a server error.
+    expect(report).toHaveBeenCalledTimes(3);
+    expect(report).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining("CRON_SECRET") }),
+      PLACE
+    );
     expect(run).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      "lifecycle cron failed:",
+      expect.objectContaining({ message: expect.stringContaining("Missing required environment variable CRON_SECRET") })
+    );
+    consoleError.mockRestore();
   });
 
   it("answers 500 when the run itself fails", async () => {
@@ -77,6 +143,26 @@ describe("the daily lifecycle cron", () => {
     expect(consoleError).toHaveBeenCalledWith("lifecycle cron failed:", expect.any(Error));
     expect(capture).toHaveBeenCalledWith("system:lifecycle-cron", "lifecycle_run_failed", {
       message: "listUsers failed: timeout",
+    });
+    // The start was recorded, then the failure: never a "lifecycle_run".
+    expect(events()).toEqual(["lifecycle_run_started", "lifecycle_run_failed"]);
+    expect(report).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ message: "listUsers failed: timeout" }), PLACE);
+    consoleError.mockRestore();
+  });
+
+  // A deployment without the mail service's key: the run refuses to start (it
+  // would record every email as failed), and the event names the variable.
+  it("records a run that could not start because the mail service's key is missing", async () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    run.mockRejectedValue(
+      new Error("Missing required environment variable RESEND_API_KEY: set it in .env.local (dev) or the Vercel environment.")
+    );
+
+    const res = await call("Bearer s3cret");
+    expect(res.status).toBe(500);
+    expect(capture).toHaveBeenCalledWith("system:lifecycle-cron", "lifecycle_run_failed", {
+      message: expect.stringContaining("RESEND_API_KEY"),
     });
     consoleError.mockRestore();
   });

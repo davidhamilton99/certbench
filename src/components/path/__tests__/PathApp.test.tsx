@@ -27,6 +27,13 @@ vi.mock("@/lib/supabase-browser", () => ({
   }),
 }));
 
+// The path reads the session cookie before it loads the sign-in client: in
+// these tests the cookie is there exactly when someone is signed in.
+vi.mock("@/lib/supabase-lazy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/supabase-lazy")>()),
+  hasSessionCookie: () => auth.session !== null,
+}));
+
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const track = vi.hoisted(() => vi.fn());
@@ -75,6 +82,8 @@ const server = vi.hoisted(() => ({
   labHandler: null as null | ((input: { id: string }) => unknown),
   /** What saving answers with, when it fails. */
   saveError: null as null | Error,
+  /** What reading the account answers with, when the account cannot be reached. */
+  readError: null as null | Error,
   calls: [] as { path: string; input: unknown }[],
 }));
 vi.mock("@/lib/api-client", async () => {
@@ -84,6 +93,7 @@ vi.mock("@/lib/api-client", async () => {
       server.calls.push({ path: contract.path, input });
       switch (`${contract.method} ${contract.path}`) {
         case "GET /api/path/progress":
+          if (server.readError) throw server.readError;
           return {
             progress: server.progress ?? { items: {}, stops: {}, checkpoint: null, goal: null },
             stored: true,
@@ -139,11 +149,16 @@ import { pathRehearsalKey } from "../storage-key";
 // Node's own experimental `localStorage` global shadows jsdom's — use a plain
 // in-memory Storage so the path's persistence is exercised for real.
 const store = new Map<string, string>();
+/** When true, the browser refuses every write, as it does with site data blocked. */
+const storage = { refuses: false };
 Object.defineProperty(window, "localStorage", {
   configurable: true,
   value: {
     getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    setItem: (k: string, v: string) => {
+      if (storage.refuses) throw new DOMException("The quota has been exceeded.", "QuotaExceededError");
+      store.set(k, String(v));
+    },
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
   },
@@ -190,10 +205,13 @@ function renderPath() {
   return render(<PathApp cert="security-plus-sy0-701" structure={structure} plan={plan} warmup={warmup} questionCount={842} />);
 }
 
-/** Answer the rep on screen (right or wrong) and move on. */
+/**
+ * Answer the rep on screen (right or wrong) and move on. An answer is a plain
+ * button, and every answer waits for Continue.
+ */
 async function answer(right = true) {
-  fireEvent.click(screen.getByRole("radio", { name: right ? /Right answer/ : /Wrong one/ }));
-  fireEvent.click(await screen.findByRole("button", { name: right ? /^Next/ : /Got it/ }));
+  fireEvent.click(screen.getByRole("button", { name: right ? /Right answer/ : /Wrong one/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
 }
 
 /** Whether one element is ahead of another on the page. */
@@ -220,11 +238,15 @@ beforeEach(() => {
   server.rehearsalHandler = null;
   server.labHandler = null;
   server.saveError = null;
+  server.readError = null;
   server.calls = [];
   track.mockClear();
   identifyUser.mockClear();
+  storage.refuses = false;
   localStorage.clear();
   window.history.replaceState(null, "", "/path/security-plus-sy0-701");
+  // What the page, or its inline script, leaves on <html> for the held stage.
+  for (const name of ["returning", "wait", "late", "live"]) document.documentElement.removeAttribute(`data-path-${name}`);
 });
 
 describe("a first visit", () => {
@@ -232,25 +254,25 @@ describe("a first visit", () => {
     renderPath();
     await act(async () => {});
     expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
-    expect(screen.getByText("Warm-up")).toBeInTheDocument();
+    expect(screen.getByText("Introductory questions")).toBeInTheDocument();
     // No map to go back to yet, so the exam name isn't a link.
     expect(screen.queryByRole("link", { name: "Security+" })).toBeNull();
   });
 
-  it("ends the warm-up by naming the next stop, the save prompt ahead of the map", async () => {
+  it("ends the warm-up by naming the next step, the save prompt ahead of the map", async () => {
     renderPath();
     await act(async () => {});
     await answer(true);
     await answer(false);
     await answer(true);
-    expect(await screen.findByText(/Warm-up complete/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 to revisit/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
-    expect(screen.getByText(/About 4 minutes of quick questions\./)).toBeInTheDocument();
+    expect(await screen.findByText(/You have completed the introductory questions/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 question will be repeated/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your next step: Objective 1.1" })).toBeInTheDocument();
+    expect(screen.getByText(/It takes about 4 minutes\./)).toBeInTheDocument();
     const save = screen.getByRole("button", { name: "Save and continue" });
-    expect(comesBefore(save, screen.getByText("Your Security+ map"))).toBe(true);
+    expect(comesBefore(save, screen.getByText("Security+ objectives"))).toBe(true);
     // Signing up here plays the next stop in place, and the form says so.
-    expect(screen.getByText(/You stay right here\./)).toBeInTheDocument();
+    expect(screen.getByText(/You will stay on this page\./)).toBeInTheDocument();
     // Counted apart from the same ask on a public page.
     expect(track).toHaveBeenCalledWith("path_save_viewed", { cert: "security-plus-sy0-701", surface: "path" });
     // Nothing went to the server: the warm-up needs no account.
@@ -267,17 +289,18 @@ describe("a first visit", () => {
   it("shows the takeaway and waits on a miss", async () => {
     renderPath();
     await act(async () => {});
-    fireEvent.click(screen.getByRole("radio", { name: /Wrong one/ }));
-    expect(await screen.findByText(/It's Right answer\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Wrong one/ }));
+    expect(await screen.findByText(/The correct answer is Right answer\./)).toBeInTheDocument();
     expect(screen.getByText("Takeaway a|1.1|w1")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Got it/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Continue/ })).toBeInTheDocument();
   });
 
   it("answers from the keyboard", async () => {
     renderPath();
     await act(async () => {});
-    fireEvent.keyDown(document, { key: "1" });
-    expect(await screen.findByText(/^Right\./)).toBeInTheDocument();
+    // The keys act while the focus is inside the question's card.
+    fireEvent.keyDown(screen.getByText("Prompt a|1.1|w1"), { key: "1" });
+    expect(await screen.findByText(/^Correct\./)).toBeInTheDocument();
   });
 });
 
@@ -288,8 +311,8 @@ describe("a returning visitor", () => {
       JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) })
     );
     renderPath();
-    expect(await screen.findByText("Your Security+ path")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
+    expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your next step: Objective 1.1" })).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|w1")).toBeNull();
   });
 
@@ -302,47 +325,48 @@ describe("a returning visitor", () => {
   }
 
   function fillIn(email = "sam@example.com") {
-    fireEvent.change(screen.getByLabelText("Email"), { target: { value: email } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
+    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: email } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "long-enough-password" } });
   }
 
   it("finds their map, the save card and a note after backing out of Google", async () => {
     returning("warmup");
     window.history.replaceState(null, "", "/path/security-plus-sy0-701?signin_cancelled=1");
     renderPath();
-    expect(await screen.findByRole("status")).toHaveTextContent(/didn.t finish/);
-    expect(screen.getByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
+    // (The page has other status lines: the note is found by what it says.)
+    expect(await screen.findByText(/was not completed/)).toHaveAttribute("role", "status");
+    expect(screen.getByRole("heading", { name: "Your next step: Objective 1.1" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
     expect(window.location.search).toBe("");
   });
 
-  it("plays the stop the card named once they've signed up", async () => {
+  it("plays the step the card named once they have signed up", async () => {
     returning("warmup");
     renderPath();
-    expect(await screen.findByRole("heading", { name: "Next up: Objective 1.1" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your next step: Objective 1.1" })).toBeInTheDocument();
     fillIn();
     fireEvent.click(screen.getByRole("button", { name: "Save and continue" }));
     expect(await screen.findByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
     expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({ index: 1 });
   });
 
-  it("names the readiness checkpoint when it's the stop an account opens next", async () => {
+  it("names the readiness checkpoint when it is the step an account opens next", async () => {
     returning("warmup", "1.1");
     renderPath();
-    expect(await screen.findByRole("heading", { name: "Next up: your readiness checkpoint" })).toBeInTheDocument();
-    expect(screen.getByText(/12 exam-style questions, then your score by domain\./)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your next step: the readiness checkpoint" })).toBeInTheDocument();
+    expect(screen.getByText(/It has 12 exam-style questions and gives you a score for each domain\./)).toBeInTheDocument();
   });
 
-  it("goes to the map, not backwards, when they log in to an account that's further along", async () => {
+  it("goes to the map, not backwards, when they log in to an account that is further along", async () => {
     returning("warmup");
     server.progress = done(["warmup", "1.1"]);
     renderPath();
-    await screen.findByRole("heading", { name: "Next up: Objective 1.1" });
-    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    await screen.findByRole("heading", { name: "Your next step: Objective 1.1" });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     fillIn();
-    fireEvent.click(screen.getByRole("button", { name: "Log in and keep going" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign in and continue" }));
     expect(await screen.findByRole("button", { name: "Continue" })).toBeInTheDocument();
-    expect(screen.getByText("Your Security+ path")).toBeInTheDocument();
+    expect(screen.getByText("Your Security+ study path")).toBeInTheDocument();
     expect(screen.getAllByText("Readiness checkpoint").length).toBeGreaterThan(0);
     expect(server.calls.filter((c) => c.path === "/api/path/stop")).toHaveLength(0);
   });
@@ -385,21 +409,21 @@ describe("a signed-in learner", () => {
     server.proPlan = true;
     server.progress = done(["warmup"]);
     const { unmount } = renderPath();
-    expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Continue/ })).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
     unmount();
 
     renderPath();
-    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Your whole path is open." })).toBeNull();
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
   });
 
-  it("doesn't open with the unlock moment for a free account", async () => {
+  it("does not open with the unlock moment for a free account", async () => {
     server.progress = done(["warmup"]);
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.queryByRole("heading", { name: "Your whole path is open." })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
   });
 
   it("keeps a Pro member on the path: the header leads nowhere else", async () => {
@@ -407,7 +431,7 @@ describe("a signed-in learner", () => {
     server.progress = done(["warmup"]);
     localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
     renderPath();
-    await screen.findByRole("heading", { name: "Your Security+ path" });
+    await screen.findByRole("heading", { name: "Your Security+ study path" });
     const header = screen.getByRole("banner");
     expect([...header.querySelectorAll("a")].map((a) => a.getAttribute("href"))).not.toContain("/dashboard");
     // What the path doesn't hold yet is still one quiet link away.
@@ -428,7 +452,7 @@ describe("a signed-in learner", () => {
     expect(identifyUser).toHaveBeenCalledWith("u1", { email: "u1@example.com" });
   });
 
-  it("continues to the next stop with one tap", async () => {
+  it("continues to the next step with one tap", async () => {
     server.progress = done(["warmup"]);
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
@@ -437,16 +461,16 @@ describe("a signed-in learner", () => {
     expect(call?.input).toMatchObject({ cert: "security-plus-sy0-701", index: 1 });
   });
 
-  it("ends a stop with the way on ahead of the map", async () => {
+  it("ends a step with the way on ahead of the map", async () => {
     server.progress = done(["warmup"]);
     server.stopHandler = (input) => stopReply(input.index, 1);
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     await screen.findByText("Prompt a|1.1|s1-0");
     await answer(true);
-    await screen.findByText(/Stop 2 complete/i);
+    await screen.findByText(/You have completed step 2/i);
     const onward = screen.getByRole("button", { name: /Continue/ });
-    expect(comesBefore(onward, screen.getByText("Your Security+ map"))).toBe(true);
+    expect(comesBefore(onward, screen.getByText("Security+ objectives"))).toBe(true);
   });
 
   it("asks the exam date and daily time right before the checkpoint, then opens it", async () => {
@@ -454,15 +478,15 @@ describe("a signed-in learner", () => {
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(await screen.findByText("Have you booked your Security+ exam?")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Not booked yet" }));
-    fireEvent.click(screen.getByRole("button", { name: "In 1–2 months" }));
-    expect(await screen.findByText("How much time can you give it on most days?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "No, I have not booked it yet" }));
+    fireEvent.click(screen.getByRole("button", { name: "In one to two months" }));
+    expect(await screen.findByText("How much time can you study on most days?")).toBeInTheDocument();
     expect(server.calls.some((c) => c.path === "/api/path/enroll")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "About 20 minutes" }));
     expect(await screen.findByRole("button", { name: /Start the checkpoint/ })).toBeInTheDocument();
   });
 
-  it("asks one goal question at a time between stops, then plays the stop", async () => {
+  it("asks one goal question at a time between stops, then plays the step", async () => {
     server.access = "pro";
     localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
     server.progress = done(["warmup", "1.1", "checkpoint"], {
@@ -471,13 +495,13 @@ describe("a signed-in learner", () => {
     });
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
-    expect(await screen.findByText("How much time can you give it on most days?")).toBeInTheDocument();
+    expect(await screen.findByText("How much time can you study on most days?")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "About 20 minutes" }));
     expect(await screen.findByText("Prompt a|1.2|s3-0")).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_goal_set", { cert: "security-plus-sy0-701", step: "minutes", value: "20" });
   });
 
-  it("records bank answers against the account at the end of a stop", async () => {
+  it("records bank answers against the account at the end of a step", async () => {
     server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
     // Displayed order is shuffled: shown option 1 is the bank's option 3.
     server.stopHandler = () => ({
@@ -488,7 +512,7 @@ describe("a signed-in learner", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     await screen.findByText(/Prompt q\|1\.1/);
     await answer(false);
-    await screen.findByText(/Stop 2 complete/i);
+    await screen.findByText(/You have completed step 2/i);
     const recorded = server.calls.find((c) => c.path === "/api/path/answers");
     expect(recorded?.input).toEqual({
       cert: "security-plus-sy0-701",
@@ -510,16 +534,16 @@ describe("a signed-in learner", () => {
     await answer(true);
     await answer(false);
     expect(await screen.findByTestId("dial")).toHaveTextContent("50%");
-    expect(screen.getByRole("heading", { name: "You're on your way." })).toBeInTheDocument();
-    expect(screen.getByText("Unlock the rest of your path")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Unlock my path/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "You are making good progress." })).toBeInTheDocument();
+    expect(screen.getByText("Continue your study path with Pro")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue with Pro/ })).toBeInTheDocument();
     // The guarantee states its conditions right on the offer.
-    expect(screen.getByText(/Study with Pro for 30\+ days and don't pass\? We refund your last payment\./)).toBeInTheDocument();
+    expect(screen.getByText(/If you study with Pro for 30 days or more and do not pass your exam, CertBench refunds your last payment\./)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", { cert: "security-plus-sy0-701", score: 50 });
     expect(track).toHaveBeenCalledWith("path_offer_viewed", { cert: "security-plus-sy0-701", context: "reveal" });
   });
 
-  it("calls a high checkpoint a strong first read, never exam-ready, and shows what's still unstudied", async () => {
+  it("calls a high checkpoint a strong first read, never exam-ready, and shows what is still unstudied", async () => {
     // The warm-up and 1.1 are done: one of the six objectives.
     const before = plan.stops.slice(0, plan.freeThrough).map((s) => s.id);
     server.progress = done(before, { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
@@ -537,38 +561,39 @@ describe("a signed-in learner", () => {
     const dial = await screen.findByTestId("dial");
     expect(dial).toHaveTextContent("100%");
     // A dozen questions can't call anyone exam-ready: not the label, the mark or the copy.
-    expect(dial).toHaveAttribute("data-label", "Strong start");
+    expect(dial).toHaveAttribute("data-label", "Strong first result");
     expect(dial).toHaveAttribute("data-ready-mark", "false");
-    expect(screen.getByRole("heading", { name: "A strong first read." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "This is a strong first result." })).toBeInTheDocument();
     // The size of the sample, as a label rather than a paragraph.
-    expect(screen.getByText("2 questions · ±50 pts each · exam asks 90")).toBeInTheDocument();
+    expect(screen.getByText("This result is based on 2 questions, so each answer changes it by about 50 points. The exam itself has up to 90 questions.")).toBeInTheDocument();
     expect(screen.queryByText(/exam[- ]ready/i)).toBeNull();
     expect(screen.queryByText(/in good shape/i)).toBeNull();
     // How much of the exam the path has taught so far, above the offer.
-    const studied = screen.getByText("1 of 6 objectives studied");
-    expect(screen.getByText("5 to go")).toBeInTheDocument();
-    expect(comesBefore(studied, screen.getByText("Unlock the rest of your path"))).toBe(true);
+    const studied = screen.getByText("You have studied 1 of 6 objectives.");
+    expect(screen.getByText("There are 5 objectives still to study.")).toBeInTheDocument();
+    expect(comesBefore(studied, screen.getByText("Continue your study path with Pro"))).toBe(true);
   });
 
-  it("offers the rest of the path when the server says it's Pro-only", async () => {
+  it("offers the rest of the path when the server says it is Pro-only", async () => {
     const free = plan.stops.slice(0, plan.freeThrough + 1).map((s) => s.id);
     server.progress = done(free, {
       checkpoint: { score: 64, at: 1, domains: [{ number: "1.0", correct: 2, total: 3 }] },
     });
     renderPath();
-    expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Continue/ })).toBeNull();
+    expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
+    // The offer's own button is the only way on: no plain "Continue" to a step that is not open.
+    expect(screen.queryByRole("button", { name: /^Continue$/ })).toBeNull();
   });
 
-  it("shows the reveal with the offer when a stop comes back 402", async () => {
+  it("shows the reveal with the offer when a step comes back 402", async () => {
     server.progress = done(["warmup"], {
       goal: { examDate: null, target: null, minutes: 20, at: 1 },
       checkpoint: { score: 40, at: 1, domains: [] },
     });
-    server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the path is part of Pro.");
+    server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
-    expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
+    expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
   });
 
   it("goes back to the map from the exam name in the header", async () => {
@@ -577,10 +602,10 @@ describe("a signed-in learner", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     await screen.findByText("Prompt a|1.1|s1-0");
     fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
-    expect(await screen.findByText("Your Security+ path")).toBeInTheDocument();
+    expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|s1-0")).toBeNull();
     // Switching exams is still a click away, under the map.
-    expect(screen.getByRole("link", { name: "Studying for a different exam?" })).toHaveAttribute("href", "/start?pick=1");
+    expect(screen.getByRole("link", { name: "choose another exam" })).toHaveAttribute("href", "/start?pick=1");
   });
 
   it("clears a miss the server says can never come back", async () => {
@@ -607,10 +632,10 @@ describe("a signed-in learner", () => {
     await waitFor(() =>
       expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({ index: plan.freeThrough + 1 })
     );
-    expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
   });
 
-  it("doesn't offer to sign in before it knows who's there", async () => {
+  it("does not offer to sign in before it knows who is there", async () => {
     auth.session = null;
     renderPath();
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
@@ -635,26 +660,26 @@ describe("back from paying", () => {
   it("opens straight onto the unlock moment when Pro is already on", async () => {
     server.access = "pro";
     renderPath();
-    expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
     expect(window.location.search).toBe("");
     expect(landed()).toEqual([{ cert: "security-plus-sy0-701", waited_ms: 0 }]);
     expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
-    expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
   });
 
   it("says the payment went through while Stripe confirms it, never the offer, then opens", async () => {
     renderPath();
     await screen.findByRole("button", { name: "Account" });
-    expect(screen.getByRole("heading", { name: "Opening your whole path…" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your Security+ study path is being opened." })).toBeInTheDocument();
     expect(screen.getByText(/Payment received/)).toBeInTheDocument();
-    expect(screen.queryByText("Unlock the rest of your path")).toBeNull();
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
     expect(screen.queryByRole("button", { name: /Continue/ })).toBeNull();
     expect(window.location.search).toBe("");
 
     // The activation webhook lands: the path's next look at the account opens it.
     server.access = "pro";
     expect(
-      await screen.findByRole("heading", { name: "Your whole path is open." }, { timeout: 4000 })
+      await screen.findByRole("heading", { name: "Your full Security+ study path is now open." }, { timeout: 4000 })
     ).toBeInTheDocument();
     expect(landed()).toHaveLength(1);
     expect(landed()[0].waited_ms).toBeGreaterThan(0);
@@ -675,18 +700,18 @@ describe("back from paying", () => {
       );
       server.access = "pro";
       fireEvent.click(again);
-      expect(await screen.findByRole("heading", { name: "Your whole path is open." })).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
     } finally {
       later.mockRestore();
     }
   }, 10_000);
 
-  it("is an ordinary visit when they aren't signed in", async () => {
+  it("is an ordinary visit when they are not signed in", async () => {
     auth.session = null;
     server.progress = null;
     renderPath();
-    expect(await screen.findByRole("radio", { name: /Right answer/ })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Opening your whole path…" })).toBeNull();
+    expect(await screen.findByRole("button", { name: /Right answer/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your Security+ study path is being opened." })).toBeNull();
     expect(window.location.search).toBe("");
   });
 });
@@ -708,8 +733,8 @@ describe("keeping a learner's work", () => {
     unsavedOnDevice("u1");
     const signedOut = renderPath();
     // Signing back in comes first, not a blank path.
-    expect(await screen.findByRole("heading", { name: "Your Security+ path is in your account" })).toBeInTheDocument();
-    expect(screen.getByText(/4 stops done\./)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path is saved in your account." })).toBeInTheDocument();
+    expect(screen.getByText(/You have completed 4 steps\./)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sign in with email" })).toHaveAttribute(
       "href",
       "/login?next=/path/security-plus-sy0-701"
@@ -727,7 +752,7 @@ describe("keeping a learner's work", () => {
   it("keeps guest work played beside an account's copy through a Google sign-in, and adds it to the account", async () => {
     unsavedOnDevice("u1");
     const signedOut = renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Play without signing in" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Continue without signing in" }));
     expect(track).toHaveBeenCalledWith("path_welcome_back_played", { cert: "security-plus-sy0-701" });
     await screen.findByText("Prompt a|1.1|w1");
     await answer();
@@ -771,34 +796,34 @@ describe("keeping a learner's work", () => {
     unsavedOnDevice("old-user");
     server.progress = done(["warmup", "1.1"]);
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Play without signing in" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Continue without signing in" }));
     await screen.findByText("Prompt a|1.1|w1");
     for (let i = 0; i < 3; i++) await answer();
-    await screen.findByText(/Warm-up complete/i);
-    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
-    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "sam@example.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-password" } });
-    fireEvent.click(screen.getByRole("button", { name: "Log in and keep going" }));
+    await screen.findByText(/You have completed the introductory questions/i);
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "sam@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "long-enough-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in and continue" }));
     await waitFor(() => expect(saves().at(-1)?.stops).toHaveProperty("1.3"));
     expect(saves().at(-1)?.stops).toHaveProperty("warmup");
     expect(localStorage.getItem("cb_path_guest_security-plus-sy0-701")).toBeNull();
   });
-  it("won't take an exam date that can't be right, and saves a real one", async () => {
+  it("will not take an exam date that cannot be right, and saves a real one", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup", "1.1"]);
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
-    fireEvent.click(await screen.findByRole("button", { name: "Yes, I have a date" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Yes, I have booked a date" }));
     const input = screen.getByLabelText("Exam date");
     // What a browser's date input reports when 12092026 is typed into the year first.
     fireEvent.change(input, { target: { value: "120920-02-06" } });
-    expect(screen.getByRole("button", { name: /Set my date/ })).toBeDisabled();
-    expect(screen.getByRole("alert")).toHaveTextContent("That date doesn't look right");
+    expect(screen.getByRole("button", { name: /Save the date/ })).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("That date is not valid");
 
     const date = isoInDays(30, Date.now());
     fireEvent.change(input, { target: { value: date } });
-    fireEvent.click(screen.getByRole("button", { name: /Set my date/ }));
-    expect(await screen.findByText("How much time can you give it on most days?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Save the date/ }));
+    expect(await screen.findByText("How much time can you study on most days?")).toBeInTheDocument();
     await waitFor(() => expect(saves().at(-1)?.goal?.examDate).toBe(date));
   });
 
@@ -816,7 +841,7 @@ describe("keeping a learner's work", () => {
       fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
       await screen.findByText(`Prompt a|${objective}|s${index}-0`);
       for (let i = 0; i < 3; i++) await answer();
-      await screen.findByText(new RegExp(`Stop ${index + 1} complete`, "i"));
+      await screen.findByText(new RegExp(`You have completed step ${index + 1}\\.`, "i"));
     }
     expect(saves().length).toBeGreaterThanOrEqual(2);
     expect(track.mock.calls.filter(([event]) => event === "path_save_failed")).toEqual([
@@ -864,19 +889,19 @@ describe("labs on the path", () => {
     renderLabs();
     await screen.findByRole("button", { name: /Continue/ });
     expect(screen.getAllByLabelText(/hands-on lab, Lab for domain .*: part of Pro/)).toHaveLength(2);
-    expect(screen.getByText("Hands-on lab, with Pro")).toBeInTheDocument();
+    expect(screen.getByText("Hands-on labs and the practice exam are included with Pro.")).toBeInTheDocument();
   });
 
-  it("plays a lab in place and counts it once it's graded", async () => {
+  it("plays a lab in place and counts it once it is graded", async () => {
     server.access = "pro";
     localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
     server.progress = done(labPlan.stops.slice(0, lab1).map((s) => s.id), { goal });
     renderLabs();
-    expect(await screen.findByText(/Next · hands-on lab · about 6 min/)).toBeInTheDocument();
+    expect(await screen.findByText(/Your next step is a hands-on lab of about 6 minutes\./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
 
     expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
-    expect(screen.getByText(/Hands-on lab · Domain 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Hands-on lab for domain 1/)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_lab_started", {
       cert: "security-plus-sy0-701",
       stop: "lab1",
@@ -903,24 +928,24 @@ describe("labs on the path", () => {
     server.progress = done(labPlan.stops.slice(0, lab1).map((s) => s.id), { goal });
     renderLabs();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
-    fireEvent.click(await screen.findByRole("button", { name: "Back to my map" }));
-    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
-    expect(screen.getByText(/Next · hands-on lab/)).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Return to the study path" }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.getByText(/Your next step is a hands-on lab/)).toBeInTheDocument();
   });
 
   it("offers the first lab from the unlock moment", async () => {
     server.access = "pro";
     server.progress = done(["warmup"], { goal });
     renderLabs();
-    await screen.findByRole("heading", { name: "Your whole path is open." });
+    await screen.findByRole("heading", { name: "Your full Security+ study path is now open." });
     // Both domain labs are still ahead.
     expect(screen.getByText("hands-on labs").nextSibling).toHaveTextContent("2");
-    fireEvent.click(screen.getByRole("button", { name: /Or try a lab now.*Lab for domain 1.0/ }));
+    fireEvent.click(screen.getByRole("button", { name: /You can also try a lab now.*Lab for domain 1.0/ }));
     expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
   });
 });
 
-describe("exam rehearsals", () => {
+describe("practice exams", () => {
   const goal = { examDate: null, target: null, minutes: 20, at: 1 };
   const checkpoint = { score: 58, at: 1, domains: [] };
   const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
@@ -963,8 +988,8 @@ describe("exam rehearsals", () => {
     fireEvent.click(screen.getByRole("button", { name: /Next/ }));
     fireEvent.click(screen.getByRole("radio", { name: /Wrong one/ }));
     fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
-    expect(screen.getByRole("heading", { name: "Every question answered" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /See my score/ }));
+    expect(screen.getByRole("heading", { name: "Every question is answered." })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Finish and view my score/ }));
   }
 
   beforeEach(() => {
@@ -977,12 +1002,12 @@ describe("exam rehearsals", () => {
   it("lets a Pro member sit the whole exam from their map, and scores it on the dial", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     renderPath();
-    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Start: Exam rehearsal" }));
+    expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start: Practice exam" }));
 
-    expect(await screen.findByRole("heading", { name: "Sit the whole exam, start to finish." })).toBeInTheDocument();
-    expect(screen.getByText(/set against your checkpoint's 58%/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Start the full rehearsal/ }));
+    expect(await screen.findByRole("heading", { name: "Take a full-length practice exam." })).toBeInTheDocument();
+    expect(screen.getByText(/with your checkpoint result of 58%/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Start the full practice exam/ }));
     await sitIt();
 
     expect(server.calls.find((c) => c.path === "/api/path/rehearsal")?.input).toMatchObject({
@@ -996,9 +1021,9 @@ describe("exam rehearsals", () => {
     });
 
     // Domain 1 half right, domain 2 all right, weighted evenly: 75.
-    expect(await screen.findByText("Exam rehearsal · Security+")).toBeInTheDocument();
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
     expect(screen.getByTestId("dial")).toHaveTextContent("75%");
-    expect(screen.getByRole("heading", { name: "Up 17, and exam-ready on this run." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "You met the readiness target, 17 points above your checkpoint." })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Missed (1)" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText(`Prompt q|1.2|${uuid(3)}`)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith(
@@ -1023,27 +1048,27 @@ describe("exam rehearsals", () => {
 
     // Home again, the latest reading is the rehearsal's, and its answers are a tap away.
     fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
-    expect(await screen.findByText(/last rehearsal 75%/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "see its answers" }));
+    expect(await screen.findByText(/Your last practice exam result was 75%/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review its answers" }));
     expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();
   });
 
-  it("shows a free account the rehearsal at the end of the map, as part of Pro", async () => {
+  it("shows a free account the practice exam at the end of the map, as part of Pro", async () => {
     server.access = "free";
     server.progress = done(["warmup"]);
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.getByLabelText("Exam rehearsal: part of Pro")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Start: Exam rehearsal" })).toBeNull();
+    expect(screen.getByLabelText("Practice exam: part of Pro")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start: Practice exam" })).toBeNull();
   });
 
-  it("brings back a rehearsal left mid-way, where it was and with its clock", async () => {
+  it("brings back a practice exam left mid-way, where it was and with its clock", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     localStorage.setItem(runKey, storedRun({ picks: [0, null, null], i: 1, spentMs: 10 * 60_000 }));
     renderPath();
-    expect(await screen.findByText("Exam rehearsal · in progress")).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 answered")).toBeInTheDocument();
-    expect(screen.getByText("1:20:00 left")).toBeInTheDocument();
+    expect(await screen.findByText("You have a practice exam in progress.")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 questions answered")).toBeInTheDocument();
+    expect(screen.getByText("1:20:00 remaining")).toBeInTheDocument();
     // It waits ahead of the next stop: its clock is waiting.
     expect(comesBefore(screen.getByRole("button", { name: /Resume/ }), screen.getByRole("button", { name: /Continue/ }))).toBe(
       true
@@ -1053,35 +1078,35 @@ describe("exam rehearsals", () => {
     expect(screen.getByText("1 of 3 answered")).toBeInTheDocument();
   });
 
-  it("never shows one account's rehearsal to another on the same device", async () => {
+  it("never shows one account's practice exam to another on the same device", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     localStorage.setItem(runKey, storedRun({ owner: "someone-else", picks: [0, null, null] }));
     renderPath();
-    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
-    expect(screen.queryByText("Exam rehearsal · in progress")).toBeNull();
+    expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
+    expect(screen.queryByText("You have a practice exam in progress.")).toBeNull();
   });
 
-  it("throws a rehearsal away only once that's confirmed", async () => {
+  it("throws a practice exam away only once that is confirmed", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
     localStorage.setItem(runKey, storedRun({ size: "half", limitMs: 45 * 60_000 }));
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Discard this rehearsal" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Discard this practice exam" }));
     expect(localStorage.getItem(runKey)).not.toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Discard it" }));
-    expect(await screen.findByRole("button", { name: "Start: Exam rehearsal" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Discard the exam" }));
+    expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
     expect(localStorage.getItem(runKey)).toBeNull();
   });
 
-  it("ends the path on the rehearsal, and counts it as the last stop", async () => {
+  it("ends the path on the practice exam, and counts it as the last step", async () => {
     const last = plan.stops.at(-1)!;
     server.progress = done(plan.stops.slice(0, -1).map((s) => s.id), { goal, checkpoint });
     renderPath();
-    expect(await screen.findByText("Last stop · the whole exam, timed")).toBeInTheDocument();
+    expect(await screen.findByText("Your last step is a full-length timed practice exam.")).toBeInTheDocument();
     // The Continue card already leads there: no second card for it.
-    expect(screen.queryByRole("button", { name: "Start: Exam rehearsal" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start: Practice exam" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(await screen.findByText(`Stop ${last.index + 1} · Exam rehearsal`)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Half: 45 questions/ }));
+    expect(await screen.findByText(`Step ${last.index + 1}: practice exam`)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Half-length exam: 45 questions/ }));
     await sitIt();
 
     expect(server.calls.find((c) => c.path === "/api/path/rehearsal")?.input).toMatchObject({ size: "half" });
@@ -1092,24 +1117,24 @@ describe("exam rehearsals", () => {
     );
     expect(lastSave().stops.rehearsal).toMatchObject({ n: 1, c: 2, t: 3 });
     // The path goes on to review rounds.
-    expect(await screen.findByText("Path complete · review round")).toBeInTheDocument();
+    expect(await screen.findByText("You have completed the study path. This is a review round.")).toBeInTheDocument();
   });
 
-  it("offers Pro when the server says rehearsals are part of it", async () => {
+  it("offers Pro when the server says practice exams are part of it", async () => {
     server.progress = done(["warmup"], { goal, checkpoint });
-    server.rehearsalHandler = () => new ApiError("quota_exceeded", "Exam rehearsals are part of Pro.");
+    server.rehearsalHandler = () => new ApiError("quota_exceeded", "Timed practice exams on your study path are included with Pro.");
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Start: Exam rehearsal" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start: Practice exam" }));
     server.access = "free";
-    fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
-    expect(await screen.findByText("Unlock the rest of your path")).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: /Start the full practice exam/ }));
+    expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
   });
 
-  it("goes over a rehearsal's misses from its result, those first", async () => {
+  it("goes over a practice exam's misses from its result, those first", async () => {
     server.progress = done(["warmup"], { goal, checkpoint, items: recordRep(EMPTY_PATH_PROGRESS, "a|2.2|old", false, 1).items });
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Start: Exam rehearsal" }));
-    fireEvent.click(await screen.findByRole("button", { name: /Start the full rehearsal/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start: Practice exam" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the full practice exam/ }));
     await sitIt();
     fireEvent.click(await screen.findByRole("button", { name: /Review 1/ }));
     await waitFor(() =>
@@ -1120,7 +1145,7 @@ describe("exam rehearsals", () => {
       })
     );
     expect(track).toHaveBeenCalledWith("path_review_started", expect.objectContaining({ from: "rehearsal" }));
-    expect(await screen.findByText("Review · your misses")).toBeInTheDocument();
+    expect(await screen.findByText("Review of questions you answered incorrectly")).toBeInTheDocument();
   });
 });
 
@@ -1148,7 +1173,7 @@ describe("reviewing misses", () => {
   it("goes over them from a Pro home, and says when the right ones come back", async () => {
     server.progress = withMisses();
     renderPath();
-    fireEvent.click(await screen.findByRole("button", { name: "Review: Your misses" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Review: Questions to review" }));
     await waitFor(() =>
       expect(server.calls.find((c) => c.path === "/api/path/stop")?.input).toMatchObject({
         index: plan.stops.length,
@@ -1157,13 +1182,13 @@ describe("reviewing misses", () => {
       })
     );
     expect(track).toHaveBeenCalledWith("path_review_started", { cert: "security-plus-sy0-701", from: "home", reps: 3 });
-    expect(await screen.findByText("Review · your misses")).toBeInTheDocument();
+    expect(await screen.findByText("Review of questions you answered incorrectly")).toBeInTheDocument();
 
     await answer(true);
     await answer(true);
     await answer(false);
-    expect(await screen.findByText("Review complete")).toBeInTheDocument();
-    expect(screen.getByText(/^1 more to review\. The ones you got right come back once more in a few days/)).toBeInTheDocument();
+    expect(await screen.findByText("You have completed this review.")).toBeInTheDocument();
+    expect(screen.getByText(/^1 more question remains to review\. Questions that you answered correctly will be asked once more in a few days/)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith(
       "path_stop_completed",
       expect.objectContaining({ stop: "review", kind: "review", focus: "misses", correct: 2, total: 3 })
@@ -1180,22 +1205,22 @@ describe("reviewing misses", () => {
   it("shows how many there are on the home", async () => {
     server.progress = withMisses();
     renderPath();
-    expect(await screen.findByText("3 misses to go over, 3 at a time")).toBeInTheDocument();
+    expect(await screen.findByText("You have 3 questions to review, 3 at a time.")).toBeInTheDocument();
   });
 
   it("has nothing to offer with nothing missed", async () => {
     server.progress = done(["warmup"], { goal });
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.queryByRole("button", { name: "Review: Your misses" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Review: Questions to review" })).toBeNull();
   });
 
-  it("leaves a free account's misses to its next stops", async () => {
+  it("leaves a free account's misses to its next steps", async () => {
     server.access = "free";
     server.progress = withMisses();
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.queryByRole("button", { name: "Review: Your misses" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Review: Questions to review" })).toBeNull();
   });
 });
 
@@ -1227,7 +1252,7 @@ describe("the lab library", () => {
   /** From the home, into the library. */
   async function openLibrary() {
     fireEvent.click(await screen.findByRole("button", { name: "Open: Hands-on labs" }));
-    expect(await screen.findByRole("heading", { name: "Every lab for Security+" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Hands-on labs for Security+" })).toBeInTheDocument();
   }
 
   beforeEach(() => {
@@ -1248,10 +1273,10 @@ describe("the lab library", () => {
     expect(track).toHaveBeenCalledWith("path_labs_viewed", { cert: "security-plus-sy0-701" });
     expect(screen.getByRole("heading", { name: "Domain 1: Domain 1" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Domain 2: Domain 2" })).toBeInTheDocument();
-    expect(screen.getAllByText(/· closes the domain$/)).toHaveLength(2);
-    expect(screen.getByText("Matching drill · 3 min")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back to my map" }));
-    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+    expect(screen.getAllByText(/This lab ends the domain on your study path\.$/)).toHaveLength(2);
+    expect(screen.getByText("Matching drill, 3 minutes.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Return to the study path" }));
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
   });
 
   it("plays any lab in the path's stage, keeps its score, and offers the next one", async () => {
@@ -1284,12 +1309,12 @@ describe("the lab library", () => {
     expect(Object.keys(lastSave().stops)).toEqual(["warmup"]);
 
     // Next is the next one not played yet.
-    expect(await screen.findByText("Next lab · Topology · 6 min")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back to the labs" }));
-    expect(await screen.findByText("4/5")).toBeInTheDocument();
+    expect(await screen.findByText("Your next lab. Topology, 6 minutes.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Return to the labs" }));
+    expect(await screen.findByText("4 of 5")).toBeInTheDocument();
   });
 
-  it("counts a domain's lab played from the library as its stop on the path", async () => {
+  it("counts a domain's lab played from the library as its step on the path", async () => {
     server.progress = done(["warmup"], { goal });
     renderLibrary();
     await openLibrary();
@@ -1305,9 +1330,9 @@ describe("the lab library", () => {
   it("shows a domain's lab played on the path as done in the library", async () => {
     server.progress = done(["warmup", "lab1"], { goal });
     renderLibrary();
-    expect(await screen.findByText("4 labs · 1 done")).toBeInTheDocument();
+    expect(await screen.findByText("There are 4 labs. You have completed 1.")).toBeInTheDocument();
     await openLibrary();
-    expect(screen.getByText("3/3")).toBeInTheDocument();
+    expect(screen.getByText("3 of 3")).toBeInTheDocument();
   });
 
   it("goes home when the server says the labs are part of Pro", async () => {
@@ -1317,7 +1342,7 @@ describe("the lab library", () => {
     await openLibrary();
     server.access = "free";
     fireEvent.click(screen.getByRole("button", { name: /Port matching/ }));
-    expect(await screen.findByRole("heading", { name: "Your Security+ path" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
 
@@ -1328,7 +1353,7 @@ describe("the lab library", () => {
       { goal, checkpoint: { score: 60, at: 1, domains: [] } }
     );
     renderLibrary();
-    expect(await screen.findByText("All 4 hands-on PBQ labs, one closing every domain")).toBeInTheDocument();
+    expect(await screen.findByText("All 4 hands-on labs, which work like the exam's performance-based questions")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open: Hands-on labs" })).toBeNull();
   });
 });
@@ -1353,7 +1378,7 @@ describe("the map", () => {
   const stopCalls = () => server.calls.filter((c) => c.path === "/api/path/stop").map((c) => c.input as { index: number; run: number });
   const tileButton = (code: string) => screen.getByRole("button", { name: new RegExp(`^${code.replace(".", "\\.")} Objective`) });
 
-  it("opens a played stop's card from its tile, and plays it again with Pro", async () => {
+  it("opens a played step's card from its tile, and plays it again with Pro", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.access = "pro";
     // Pro's first visit opens on the unlock moment; this device has seen it.
@@ -1362,37 +1387,36 @@ describe("the map", () => {
     renderPath();
     fireEvent.click(await waitFor(() => tileButton("1.1")));
     const card = screen.getByRole("region", { name: "Objective 1.1" });
-    expect(card).toHaveTextContent("1.1 · Not started");
-    expect(card).toHaveTextContent("Last run 3 of 3 right");
+    expect(card).toHaveTextContent("You answered 3 of 3 questions correctly");
     expect(track).toHaveBeenCalledWith("path_map_tile_opened", { cert: "security-plus-sy0-701", tile: "1.1", state: "done" });
-    fireEvent.click(screen.getByRole("button", { name: /Play it again/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Repeat this step/ }));
     await screen.findByText(`Prompt a|1.1|s${index("1.1")}-0`);
     expect(stopCalls().at(-1)).toMatchObject({ index: index("1.1"), run: 1 });
     expect(track).toHaveBeenCalledWith("path_map_action", { cert: "security-plus-sy0-701", tile: "1.1", action: "replay" });
   });
 
-  it("shows a free learner a played stop's score, and that playing it again comes with Pro", async () => {
+  it("shows a free learner a played step's score, and that playing it again comes with Pro", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
     renderPath();
     fireEvent.click(await waitFor(() => tileButton("1.1")));
     const card = screen.getByRole("region", { name: "Objective 1.1" });
-    expect(card).toHaveTextContent("Last run 3 of 3 right");
-    expect(card).toHaveTextContent("Playing it again comes with Pro.");
+    expect(card).toHaveTextContent("You answered 3 of 3 questions correctly");
+    expect(card).toHaveTextContent("Repeating a completed step is included with Pro.");
     // Before the checkpoint there's no offer on the page to lead to.
-    expect(screen.queryByRole("button", { name: /Play it again|See what Pro opens/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Repeat this step|See what Pro includes/ })).toBeNull();
     expect(track).toHaveBeenCalledWith("path_map_tile_opened", { cert: "security-plus-sy0-701", tile: "1.1", state: "done" });
   });
 
-  it("tells a free learner a stop past the checkpoint opens with Pro, after it", async () => {
+  it("tells a free learner a step past the checkpoint opens with Pro, after it", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
     renderPath();
     fireEvent.click(await waitFor(() => tileButton("1.2")));
-    expect(screen.getByRole("region", { name: "Objective 1.2" })).toHaveTextContent("Opens with Pro, after your readiness checkpoint.");
+    expect(screen.getByRole("region", { name: "Objective 1.2" })).toHaveTextContent("This objective is included with Pro, which is offered after your readiness checkpoint.");
   });
 
-  it("starts the stop that's next from its tile, and says how far off a later one is", async () => {
+  it("starts the step that is next from its tile, and says how far off a later one is", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.access = "pro";
     localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
@@ -1402,13 +1426,13 @@ describe("the map", () => {
     });
     renderPath();
     fireEvent.click(await waitFor(() => tileButton("1.3")));
-    expect(screen.getByRole("region", { name: "Objective 1.3" })).toHaveTextContent(/Comes up/);
+    expect(screen.getByRole("region", { name: "Objective 1.3" })).toHaveTextContent(/This objective is taught/);
     expect(within(screen.getByRole("region", { name: "Objective 1.3" })).queryByRole("button")).toBeNull();
     // A second tap closes it; the next stop's tile has the way on.
     fireEvent.click(tileButton("1.3"));
     expect(screen.queryByRole("region", { name: "Objective 1.3" })).toBeNull();
     fireEvent.click(tileButton("1.2"));
-    expect(screen.getByRole("region", { name: "Objective 1.2" })).toHaveTextContent("Up next on your path.");
+    expect(screen.getByRole("region", { name: "Objective 1.2" })).toHaveTextContent("This objective is taught in your next step.");
     fireEvent.click(within(screen.getByRole("region", { name: "Objective 1.2" })).getByRole("button", { name: /^Start/ }));
     await screen.findByText(`Prompt a|1.2|s${index("1.2")}-0`);
   });
@@ -1423,8 +1447,8 @@ describe("the map", () => {
     renderPath();
     const later = plan.stops.find((s, i) => s.kind === "learn" && i > plan.freeThrough)!;
     fireEvent.click(await waitFor(() => tileButton(later.objectives[0])));
-    expect(screen.getByRole("region", { name: `Objective ${later.objectives[0]}` })).toHaveTextContent("Opens with Pro.");
-    fireEvent.click(screen.getByRole("button", { name: /See what Pro opens/ }));
+    expect(screen.getByRole("region", { name: `Objective ${later.objectives[0]}` })).toHaveTextContent("This objective is included with Pro.");
+    fireEvent.click(screen.getByRole("button", { name: /See what Pro includes/ }));
     expect(track).toHaveBeenCalledWith(
       "path_map_action",
       expect.objectContaining({ tile: later.objectives[0], action: "offer" })
@@ -1432,9 +1456,9 @@ describe("the map", () => {
 
     // A stop they played leads there too, past the checkpoint (what a replay showed them tapping).
     fireEvent.click(tileButton("1.1"));
-    expect(screen.getByRole("region", { name: "Objective 1.1" })).toHaveTextContent("Playing it again comes with Pro.");
-    expect(screen.getByRole("button", { name: /See what Pro opens/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Play it again/ })).toBeNull();
+    expect(screen.getByRole("region", { name: "Objective 1.1" })).toHaveTextContent("Repeating a completed step is included with Pro.");
+    expect(screen.getByRole("button", { name: /See what Pro includes/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Repeat this step/ })).toBeNull();
   });
 
 });
@@ -1450,10 +1474,12 @@ describe("a practice exam finished on the exam's public page", () => {
         : []
     );
 
-  function finishedExam(at = Date.now() - 600_000) {
+  /** `extra`: for example the account the public page showed the score to (`claimedBy`). */
+  function finishedExam(at = Date.now() - 600_000, extra: object = {}) {
     localStorage.setItem(
       KEY,
       JSON.stringify({
+        ...extra,
         v: 1,
         owner: "public",
         size: "half",
@@ -1481,9 +1507,9 @@ describe("a practice exam finished on the exam's public page", () => {
     window.history.replaceState(null, "", "/path/security-plus-sy0-701?from=practice-test");
     renderPath();
 
-    expect(await screen.findByText("Your practice exam · Security+")).toBeInTheDocument();
-    expect(screen.getByText("Unlock the rest of your path")).toBeInTheDocument();
-    expect(screen.getByText("12 questions · ±8 pts each · exam asks 90")).toBeInTheDocument();
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+    expect(screen.getByText("Continue your study path with Pro")).toBeInTheDocument();
+    expect(screen.getByText("This result is based on 12 questions, so each answer changes it by about 8 points. The exam itself has up to 90 questions.")).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", {
       cert: "security-plus-sy0-701",
       score: 67,
@@ -1498,22 +1524,407 @@ describe("a practice exam finished on the exam's public page", () => {
     expect(answers?.answers).toHaveLength(12);
   });
 
-  it("leaves a checkpoint already taken in place, and keeps the exam as a rehearsal", async () => {
+  it("leaves a checkpoint already taken in place, and keeps the exam as a practice exam", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup", "1.1", "checkpoint"], { checkpoint: { score: 55, at: 1, domains: [] } });
     finishedExam();
     renderPath();
     await waitFor(() => expect(saved().at(-1)?.rehearsals).toHaveLength(1));
     expect(saved().at(-1)?.checkpoint?.score).toBe(55);
-    expect(screen.queryByText("Your practice exam · Security+")).toBeNull();
+    expect(screen.queryByText("Security+ practice exam")).toBeNull();
     expect(track).not.toHaveBeenCalledWith("path_checkpoint_completed", expect.objectContaining({ source: "practice_exam" }));
   });
 
-  it("waits for an account: a signed-out visitor's path doesn't take it", async () => {
+  it("waits for an account: a signed-out visitor's path does not take it", async () => {
     finishedExam();
     renderPath();
-    await screen.findByText(/Warm-up/);
+    await screen.findByText(/Introductory questions/);
     expect(saved()).toHaveLength(0);
-    expect(screen.queryByText("Your practice exam · Security+")).toBeNull();
+    expect(screen.queryByText("Security+ practice exam")).toBeNull();
+  });
+
+  // A public page keeps an exam for the device and not for a person, so on a
+  // shared computer it must not go to whoever opens the study path next.
+  describe("on a shared computer", () => {
+    const PATH = "cb_path_security-plus-sy0-701";
+    const TAKEN = "cb_path_exam_taken_security-plus-sy0-701";
+    const imported = () => saved().some((p) => p.rehearsals.length > 0);
+    /** The device holds another account's study path. */
+    const someoneElsesDevice = () =>
+      localStorage.setItem(PATH, JSON.stringify({ v: 1, owner: "someone-else", progress: done(["warmup", "1.1"]) }));
+
+    beforeEach(() => {
+      auth.session = { user: { id: "u1", email: "u1@example.com" } };
+      server.progress = done(["warmup"]);
+    });
+
+    it("leaves an exam whose score was shown to another account where it is", async () => {
+      finishedExam(undefined, { claimedBy: "someone-else" });
+      renderPath();
+      await screen.findByRole("button", { name: /^Continue/ });
+      expect(imported()).toBe(false);
+      expect(screen.queryByText("Security+ practice exam")).toBeNull();
+      expect(track).not.toHaveBeenCalledWith(
+        "path_checkpoint_completed",
+        expect.objectContaining({ source: "practice_exam" })
+      );
+    });
+
+    it("takes an exam whose score was shown to this account, whatever the device held", async () => {
+      someoneElsesDevice();
+      finishedExam(undefined, { claimedBy: "u1" });
+      renderPath();
+      expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+      await waitFor(() => expect(saved().at(-1)?.checkpoint?.score).toBe(67));
+      expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
+    });
+
+    it("sets aside an exam that nobody claimed when the device held another account's study path, and keeps it set aside", async () => {
+      someoneElsesDevice();
+      finishedExam();
+      const first = renderPath();
+      await screen.findByRole("button", { name: /^Continue/ });
+      expect(imported()).toBe(false);
+      expect(screen.queryByText("Security+ practice exam")).toBeNull();
+      expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: null });
+      first.unmount();
+
+      // The device's copy is this account's now, and the exam is still not theirs.
+      expect(JSON.parse(localStorage.getItem(PATH)!).owner).toBe("u1");
+      renderPath();
+      await screen.findByRole("button", { name: /^Continue/ });
+      expect(imported()).toBe(false);
+    });
+
+    it("gives an exam that nobody claimed to one account only", async () => {
+      finishedExam();
+      const first = renderPath();
+      await waitFor(() => expect(imported()).toBe(true));
+      expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
+      first.unmount();
+
+      // The next person to sign in on this device, on two visits: the second
+      // time the device's copy is their own, and the exam is still not theirs.
+      auth.session = { user: { id: "u2", email: "u2@example.com" } };
+      for (let visit = 0; visit < 2; visit++) {
+        server.calls = [];
+        const next = renderPath();
+        await screen.findByRole("button", { name: /^Continue/ });
+        await act(async () => {});
+        expect(imported()).toBe(false);
+        next.unmount();
+      }
+      expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
+    });
+
+    it("waits until the account has been reached, so that an exam never replaces a checkpoint the account holds", async () => {
+      server.readError = new ApiError("internal");
+      finishedExam();
+      renderPath();
+      await screen.findByText(/Your account could not be reached/);
+      expect(saved()).toHaveLength(0);
+      expect(localStorage.getItem(TAKEN)).toBeNull();
+
+      server.readError = null;
+      server.progress = done(["warmup", "1.1", "checkpoint"], { checkpoint: { score: 55, at: 1, domains: [] } });
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      await waitFor(() => expect(saved().at(-1)?.rehearsals).toHaveLength(1));
+      expect(saved().at(-1)?.checkpoint?.score).toBe(55);
+    });
+  });
+});
+
+describe("coming back during the introductory questions", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  const EARLIER = /introductory questions earlier/;
+  /** A visitor's device with these introductory questions answered and the step not finished. */
+  const partWay = (...answers: [id: string, correct: boolean][]) =>
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        v: 1,
+        owner: null,
+        progress: answers.reduce((p, [id, ok], n) => recordRep(p, id, ok, n + 1), EMPTY_PATH_PROGRESS),
+      })
+    );
+
+  it("carries on from the next question after a reload, and asks for no account before the step is done", async () => {
+    const first = renderPath();
+    await act(async () => {});
+    await answer(true);
+    expect(screen.getByText("Prompt a|2.1|w2")).toBeInTheDocument();
+    // The phone discards the tab, and the page loads afresh.
+    first.unmount();
+
+    renderPath();
+    expect(await screen.findByText("Prompt a|2.1|w2")).toBeInTheDocument();
+    expect(
+      screen.getByText("You answered 1 of the 3 introductory questions earlier. The questions continue from here.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Question 2 of 3")).toBeInTheDocument();
+    // Not the account wall, and not the first question again.
+    expect(screen.queryByText("Your Security+ study path")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save and continue" })).toBeNull();
+    expect(screen.queryByText("Prompt a|1.1|w1")).toBeNull();
+
+    await answer(false);
+    // The line said where the questions continued: it is not repeated.
+    expect(screen.queryByText(EARLIER)).toBeNull();
+    await answer(true);
+    // The step ends with the whole score, and only now the save ask.
+    expect(await screen.findByText(/You have completed the introductory questions/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "You answered 2 of 3 questions correctly." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith(
+      "path_stop_completed",
+      expect.objectContaining({ stop: "warmup", correct: 2, total: 3, signed_in: false })
+    );
+    expect(server.calls.filter((c) => c.path === "/api/path/stop")).toHaveLength(0);
+  });
+
+  it("copes with any questions answered already, such as the home page's sample questions", async () => {
+    // The second introductory question was answered on the home page.
+    partWay(["a|2.1|w2", true]);
+    renderPath();
+    expect(
+      await screen.findByText("You answered 1 of the 3 introductory questions earlier. The questions continue from here.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
+    expect(screen.getByText("Question 1 of 3")).toBeInTheDocument();
+    await answer(true);
+    // The question that has an answer is passed over.
+    expect(await screen.findByText("Prompt a|1.2|w3")).toBeInTheDocument();
+    expect(screen.getByText("Question 3 of 3")).toBeInTheDocument();
+    await answer(false);
+    expect(await screen.findByRole("heading", { name: "You answered 2 of 3 questions correctly." })).toBeInTheDocument();
+  });
+
+  it("counts the step at once when every introductory question has an answer already", async () => {
+    partWay(["a|1.1|w1", true], ["a|2.1|w2", false], ["a|1.2|w3", true]);
+    renderPath();
+    expect(await screen.findByRole("heading", { name: "You answered 2 of 3 questions correctly." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(key)!).progress.stops.warmup).toMatchObject({ n: 1, c: 2, t: 3 });
+  });
+
+  it("gives the introductory questions, not an account wall, to a visitor who has only played rounds on public pages", async () => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ v: 1, owner: null, progress: recordRep(done(["1.1"]), "a|1.1|x", true, 1) })
+    );
+    renderPath();
+    expect(await screen.findByText("Prompt a|1.1|w1")).toBeInTheDocument();
+    await act(async () => {});
+    expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
+    expect(screen.queryByText(EARLIER)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save and continue" })).toBeNull();
+  });
+
+  it("asks a visitor who has finished the introductory questions to save them, as before", async () => {
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) }));
+    renderPath();
+    expect(await screen.findByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(screen.getByText("Your Security+ study path")).toBeInTheDocument();
+  });
+
+  it("continues them for a learner who signs in after answering some", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    partWay(["a|2.1|w2", true]);
+    // The server builds the first step from the same introductory questions.
+    server.stopHandler = () => ({ stop: plan.stops[0], reps: warmup.reps });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    expect(
+      await screen.findByText("You answered 1 of the 3 introductory questions earlier. The questions continue from here.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
+  });
+
+  it("keeps a learner on the question they have answered when their own screen arrives late", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderPath();
+    // The first question is answered before the account has been read.
+    fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+    await screen.findByRole("button", { name: "Account" });
+    await act(async () => {});
+    // They are not sent to the path's home, and the answer is theirs.
+    expect(screen.getByText(/^Correct\./)).toBeInTheDocument();
+    expect(screen.queryByText("Your Security+ study path")).toBeNull();
+    const saves = server.calls.flatMap((c) =>
+      c.path === "/api/path/progress" && "progress" in (c.input as object)
+        ? [(c.input as { progress: PathProgress }).progress]
+        : []
+    );
+    expect(saves.at(-1)?.items).toHaveProperty(["a|1.1|w1"]);
+    expect(saves.at(-1)?.stops).toHaveProperty("warmup");
+  });
+});
+
+describe("the held stage", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  const html = document.documentElement;
+  const body = () => document.querySelector(".path-stage > .path-stage-body")!;
+
+  it("keeps a returning learner's first-visit question from being read, focused or pressed until their own screen is ready", async () => {
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) }));
+    renderPath();
+    // Before the device has been read, the stage is held.
+    expect(html).toHaveAttribute("data-path-returning");
+    expect(document.querySelector(".path-stage")).toHaveAttribute("data-ready", "false");
+    expect(body()).toHaveAttribute("inert");
+    // The two sentences are in the page; the style rules decide when each is seen.
+    expect(screen.getByText("Your study path is loading.")).toHaveAttribute("role", "status");
+    expect(screen.getByText(/^Your study path could not be loaded\. Please check your connection and/)).toHaveAttribute(
+      "role",
+      "alert"
+    );
+    // An empty address is this page's own address: the link reloads it without any script.
+    expect(screen.getByText("reload the page").closest("a")).toHaveAttribute("href", "");
+
+    expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
+    expect(document.querySelector(".path-stage")).toHaveAttribute("data-ready", "true");
+    expect(body()).not.toHaveAttribute("inert");
+    expect(screen.queryByText("Your study path is loading.")).toBeNull();
+    expect(screen.queryByText(/could not be loaded/)).toBeNull();
+  });
+
+  it("leaves a first visit's question in use, and marks the page's scripts as running", async () => {
+    // The inline script found the page late: its scripts had not started.
+    html.setAttribute("data-path-late", "");
+    renderPath();
+    expect(html).not.toHaveAttribute("data-path-returning");
+    expect(html).toHaveAttribute("data-path-live");
+    expect(html).not.toHaveAttribute("data-path-late");
+    expect(body()).not.toHaveAttribute("inert");
+    expect(screen.getByRole("button", { name: /Right answer/ })).toBeEnabled();
+    await act(async () => {});
+  });
+
+  it("is held for someone who is signed in: their account may hold a path that this device does not", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    // The sign-in client's session cookie, which the page can read before its scripts load.
+    document.cookie = "sb-abcdefgh-auth-token=session";
+    try {
+      renderPath();
+      expect(html).toHaveAttribute("data-path-returning");
+      expect(body()).toHaveAttribute("inert");
+      expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
+      expect(body()).not.toHaveAttribute("inert");
+    } finally {
+      document.cookie = "sb-abcdefgh-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
+  });
+
+  it("says that it is loading after half a second when the page was opened from inside the app", async () => {
+    localStorage.setItem(key, JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) }));
+    vi.useFakeTimers();
+    try {
+      const page = renderPath();
+      expect(html).not.toHaveAttribute("data-path-wait");
+      act(() => void vi.advanceTimersByTime(500));
+      expect(html).toHaveAttribute("data-path-wait");
+      // Leaving the page resets the clock for the next study path.
+      page.unmount();
+      expect(html).not.toHaveAttribute("data-path-wait");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("when the account cannot be reached", () => {
+  const key = "cb_path_security-plus-sy0-701";
+  const NOT_REACHED = "Your account could not be reached. The progress saved on this device is shown.";
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+  /** The device of someone past the checkpoint: a member's, for all the page can tell. */
+  const pastCheckpoint = () =>
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        v: 1,
+        owner: "u1",
+        progress: done(
+          plan.stops.slice(0, plan.freeThrough + 1).map((s) => s.id),
+          { goal, checkpoint: { score: 64, at: 1, domains: [{ number: "1.0", correct: 2, total: 3 }] } }
+        ),
+      })
+    );
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.readError = new ApiError("internal", "The connection was lost. Please check your connection and try again.");
+  });
+
+  it("offers nothing and locks nothing, says what is shown, and asks again on request", async () => {
+    pastCheckpoint();
+    renderPath();
+    expect(await screen.findByText(NOT_REACHED)).toBeInTheDocument();
+    expect(screen.getByText("Your Security+ study path")).toBeInTheDocument();
+    // A member must not be asked to buy what they have: no offer and no lock,
+    // and the way on is a plain Continue that asks the server.
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
+    expect(screen.queryByText(/included with Pro/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /^Continue/ })).toBeInTheDocument();
+
+    // The account answers: a member.
+    server.readError = null;
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.queryByText(NOT_REACHED)).toBeNull());
+    expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
+    expect(await screen.findByRole("button", { name: "Start: Practice exam" })).toBeInTheDocument();
+  });
+
+  it("makes the offer once the server has said that the account does not have Pro", async () => {
+    pastCheckpoint();
+    server.stopHandler = () => new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
+    renderPath();
+    await screen.findByText(NOT_REACHED);
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
+    // The account itself has still not been read, and the page still says so.
+    expect(screen.getByText(NOT_REACHED)).toBeInTheDocument();
+  });
+
+  it("offers Pro to a free account as before once the account has answered", async () => {
+    pastCheckpoint();
+    server.readError = null;
+    renderPath();
+    expect(await screen.findByText("Continue your study path with Pro")).toBeInTheDocument();
+    expect(screen.queryByText(NOT_REACHED)).toBeNull();
+  });
+
+  it("says when the latest answers were not saved, until a save succeeds", async () => {
+    server.readError = null;
+    server.progress = done(["warmup"]);
+    server.saveError = new ApiError("internal");
+    server.stopHandler = (input) => stopReply(input.index, 1);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    await answer(true);
+    const line = "Your latest answers are kept on this device and will be saved to your account when the connection returns.";
+    expect(await screen.findByText(line)).toBeInTheDocument();
+
+    server.saveError = null;
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    await waitFor(() => expect(screen.queryByText(line)).toBeNull());
+  });
+
+  it("tells a visitor when the browser is not keeping their progress", async () => {
+    auth.session = null;
+    storage.refuses = true;
+    renderPath();
+    expect(
+      await screen.findByText("This browser is not saving your progress. Create a free account to keep it.")
+    ).toBeInTheDocument();
+    // The questions still work in this tab.
+    await answer(true);
+    expect(screen.getByText("Prompt a|2.1|w2")).toBeInTheDocument();
   });
 });

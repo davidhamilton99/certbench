@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.gen";
 import { publicEnv } from "@/env";
+import { fetchWithTimeLimit } from "./time-limit";
 
 export type Db = SupabaseClient<Database>;
 
@@ -20,6 +21,8 @@ export async function createClient(): Promise<Db> {
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      // Every request has a time limit: see ./time-limit.
+      global: { fetch: fetchWithTimeLimit() },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -30,8 +33,10 @@ export async function createClient(): Promise<Db> {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Called from a Server Component — safe to ignore because
-            // middleware refreshes the session on every request.
+            // Called from a Server Component, which cannot write cookies.
+            // Safe to ignore: the proxy refreshes the session ahead of every
+            // page a signed-in visitor opens, and a route handler (which
+            // can write cookies) does not land here.
           }
         },
       },

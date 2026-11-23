@@ -2,33 +2,40 @@
 
 import { useState, type ReactNode } from "react";
 import { CalendarClock, Target } from "lucide-react";
-import { ReadinessDial } from "@/components/instrument/ReadinessDial";
-import { bandFor, bandVars } from "@/lib/readiness/band";
+import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { bandFor, bandVars, type BandKey } from "@/lib/readiness/band";
 import { biggestOpportunity, daysUntil, projectFinish } from "@/core/path/checkpoint";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointResult, PathDomain, PathGoal, PathStructure } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
 /**
- * A checkpoint is a dozen questions, so its top band is a strong first read,
- * never "exam ready": that's a call for a full rehearsal to make. From Nov 1
- * to 15, 2026, 11 of the 13 people who finished one scored 75% or more, were
- * told they were exam-ready, and left without opening the offer under it.
+ * What the checkpoint's result is called, by the band its score falls in. A
+ * checkpoint is a dozen questions, so its top band is a strong first result
+ * and never "ready for the exam": that is for a full practice exam to say.
+ * From Nov 1 to 15, 2026, 11 of the 13 people who finished one scored 75% or
+ * more, were told they were exam-ready, and left without opening the offer
+ * under it.
  */
-const HEADLINE = {
-  work: "Here's your starting point.",
-  close: "You're on your way.",
-  ready: "A strong first read.",
-} as const;
-
-/** Under the score, in place of the band's own label where that would overclaim. */
-const VERDICT: Partial<Record<string, string>> = { ready: "Strong start" };
-
-const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+const HEADLINE: Record<BandKey, string> = {
+  work: "This is your starting point.",
+  close: "You are making good progress.",
+  ready: "This is a strong first result.",
+  building: "This is your starting point.",
+};
 
 /**
- * The checkpoint result: score on the readiness dial as a first read, how each
- * domain went, how much of the exam the path has taught so far, where the
+ * Under the score, in place of the band's own words where those would say too
+ * much. Every other band is described in the words bandFor gives it.
+ */
+const VERDICT: Partial<Record<BandKey, string>> = { ready: "Strong first result" };
+
+const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+
+/**
+ * The checkpoint result: the score against the scale as a first result, how
+ * each domain went, how much of the exam the path has taught so far, where the
  * biggest gain is, and when the rest of the path gets done at the pace they
  * set. Ends with what to do next (`children`): the offer, or "Continue" for Pro.
  */
@@ -45,9 +52,9 @@ export function PathReveal({
   structure: PathStructure;
   goal: PathGoal | null;
   remainingStops: number;
-  /** Objectives whose learn stop is done. */
+  /** Objectives whose own step is done. */
   studied: number;
-  /** The reading came from a practice exam sat on a public page, not the checkpoint's dozen. */
+  /** The result came from a practice exam taken on a public page, not the checkpoint's dozen questions. */
   fromExam?: boolean;
   children: ReactNode;
 }) {
@@ -74,12 +81,12 @@ export function PathReveal({
     const spare = daysToExam - daysToFinish;
     pace =
       spare >= 3
-        ? `That leaves ${spare} days before ${what} to review and take full practice exams.`
+        ? `This leaves ${spare} days before ${what} for review and full-length practice exams.`
         : spare >= 0
-          ? `That's right up against ${what}. More time a day buys you review days.`
-          : `${what === "your exam" ? "Your exam" : "Your target date"} is ${daysToExam} days away. Plan on more time a day, or start with your weakest domains.`;
+          ? `This is very close to ${what}. Studying for longer each day would leave time for review.`
+          : `${what === "your exam" ? "Your exam" : "Your target date"} is ${daysToExam} ${daysToExam === 1 ? "day" : "days"} away. Plan to study for longer each day, or begin with your weakest domains.`;
   } else {
-    pace = "Set your exam date when you book it, and the path keeps you on schedule.";
+    pace = "When you book your exam, enter the date and the study path will keep you on schedule.";
   }
 
   return (
@@ -87,44 +94,49 @@ export function PathReveal({
       <ReadingCard
         result={result}
         structure={structure}
-        kicker={`${fromExam ? "Your practice exam" : "Readiness checkpoint"} · ${structure.examName}`}
-        headline={HEADLINE[band.key as keyof typeof HEADLINE] ?? HEADLINE.work}
-        caption={fromExam ? "Practice exam" : "Checkpoint"}
+        kicker={`${structure.examName} ${fromExam ? "practice exam" : "readiness checkpoint"}`}
+        headline={HEADLINE[band.key]}
+        // This screen's title: nothing on it stands above the result.
+        headlineAs="h1"
+        caption={fromExam ? "Practice exam result" : "Checkpoint result"}
         verdict={VERDICT[band.key]}
         readyMark={false}
         summary={
-          <span className="font-mono text-xs uppercase tracking-[0.14em]">
-            {asked} questions · ±{each} pts each · exam asks {REHEARSAL_FORMATS.full.questions}
-          </span>
+          <>
+            This result is based on {asked} {asked === 1 ? "question" : "questions"}, so each answer changes it by about{" "}
+            {each} {each === 1 ? "point" : "points"}. The exam itself has up to {REHEARSAL_FORMATS.full.questions}{" "}
+            questions.
+          </>
         }
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {ahead > 0 && (
-          <div className="glass grid gap-3 rounded-2xl p-4 sm:col-span-2 sm:p-5">
-            <div className="flex items-baseline justify-between gap-3 text-sm">
+          <div className="glass grid gap-3 rounded-lg p-4 sm:col-span-2 sm:p-5">
+            <p className="text-small">
               <span className="font-medium">
-                {learned} of {objectives} objectives studied
+                You have studied {learned} of {objectives} objectives.
+              </span>{" "}
+              <span className="text-muted-foreground">
+                {ahead === 1 ? "There is 1 objective" : `There are ${ahead} objectives`} still to study.
               </span>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ahead} to go</span>
-            </div>
-            <div className="flex gap-0.5" aria-hidden>
-              {Array.from({ length: objectives }, (_, i) => (
-                <span key={i} className={cn("h-1.5 min-w-0 flex-1 rounded-full", i < learned ? "bg-primary" : "bg-muted")} />
-              ))}
-            </div>
+            </p>
+            {/* The sentence above gives the figure; the bar draws it, at its final length. */}
+            <ProgressBar value={(learned / Math.max(1, objectives)) * 100} size="lg" still />
           </div>
         )}
         {opportunity && <OpportunityNote domain={opportunity} />}
-        <div className={cn("glass flex gap-3 rounded-2xl p-4 sm:p-5", !opportunity && "sm:col-span-2")}>
-          <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" />
-          <div className="grid content-start gap-0.5 text-sm">
+        <div className={cn("glass flex gap-3 rounded-lg p-4 sm:p-5", !opportunity && "sm:col-span-2")}>
+          <CalendarClock className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <div className="grid content-start gap-0.5 text-small">
             <span className="font-medium">
               {remainingStops > 0
-                ? `At ${minutes} minutes a day, you finish the path by ${fmt(finish)}`
-                : "You've finished every stop on the path"}
+                ? `At ${minutes} minutes a day, you will finish the study path by ${fmt(finish)}.`
+                : "You have completed every step of the study path."}
+            </span>{" "}
+            <span className="text-muted-foreground">
+              {remainingStops > 0 ? pace : "Continue to practice so that you maintain your result."}
             </span>
-            <span className="text-muted-foreground">{remainingStops > 0 ? pace : "Keep practicing to hold your score."}</span>
           </div>
         </div>
       </div>
@@ -135,15 +147,20 @@ export function PathReveal({
 }
 
 /**
- * A score on the readiness dial, banded, with how each domain went: the card a
- * checkpoint and a rehearsal both report on. Given `from`, the dial sweeps up
- * (or down) from the reading before.
+ * A score against the scale, in its band, with how each domain went: the card
+ * that a checkpoint and a practice exam both report on. Given `from`, the
+ * score counts up (or down) from the result before.
+ *
+ * The band's words are bandFor's, so a score is described the same way here as
+ * everywhere else. `verdict` replaces them only where they would say more than
+ * the result can support.
  */
 export function ReadingCard({
   result,
   structure,
   kicker,
   headline,
+  headlineAs: Headline = "h2",
   caption,
   summary,
   from,
@@ -154,62 +171,62 @@ export function ReadingCard({
   structure: PathStructure;
   kicker: string;
   headline: string;
+  /** "h1" where the result is the title of the screen it is on. */
+  headlineAs?: "h1" | "h2";
   caption: string;
   summary: ReactNode;
   from?: number;
-  /** Under the score, in place of the band's label ("Exam ready" and so on). */
+  /** Under the score, in place of the band's own words ("Target met" and so on). */
   verdict?: string;
-  /** The dial's "75 · READY" mark; off for a reading too small to call it. */
+  /** The mark at the readiness target. It is left out for a result too small to call anyone ready. */
   readyMark?: boolean;
 }) {
   const band = bandFor(result.score);
   return (
-    <div
-      className="glass relative isolate overflow-hidden rounded-[2rem] p-6 sm:p-10"
-      style={bandVars(band)}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[26rem] w-[40rem] max-w-[200%] -translate-x-1/2"
-        style={{ background: "radial-gradient(closest-side, var(--rv-accent-dim), transparent)" }}
-      />
-      <div className="relative grid justify-items-center gap-2 text-center">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{kicker}</span>
-        <h2 className="cb-display text-balance text-[2rem] sm:text-5xl">{headline}</h2>
-        <ReadinessDial
+    // A score report: the result on top, then every domain on the same scale,
+    // so each one sits against the same line as the whole.
+    <div className="glass overflow-hidden rounded-lg" style={bandVars(band)}>
+      <div className="grid gap-5 p-5 sm:p-8">
+        <div className="grid gap-2">
+          <span className="cb-label text-muted-foreground">{kicker}</span>
+          {/* It can take the focus when the screen changes, so that a screen reader starts at the result. */}
+          <Headline tabIndex={-1} className="cb-section">
+            {headline}
+          </Headline>
+        </div>
+        <ScoreLevel
           score={result.score}
           band={verdict ? { ...band, label: verdict } : band}
           caption={caption}
-          size={250}
           from={from}
           readyMark={readyMark}
         />
-        <p className="max-w-sm text-balance text-sm text-muted-foreground">{summary}</p>
+        <p className="text-small text-muted-foreground">{summary}</p>
       </div>
 
-      <ul className="relative mt-6 grid gap-3">
-        {structure.domains.map((d, i) => {
+      <ul className="grid gap-3.5 border-t border-border bg-muted/60 p-5 sm:p-8">
+        {structure.domains.map((d) => {
           const r = result.domains.find((x) => x.number === d.number);
           const pct = r && r.total > 0 ? Math.round((r.correct / r.total) * 100) : null;
           const tone = pct === null ? null : bandFor(pct);
-          // min-w-0: a long domain title truncates instead of pushing the row past the card on a phone.
+          // min-w-0: a long domain title wraps instead of pushing the row past the card on a phone.
           return (
-            <li key={d.number} className="grid min-w-0 gap-1.5" style={{ animationDelay: `${300 + i * 90}ms` }}>
-              <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate">
-                  <span className="mr-2 font-mono text-xs text-muted-foreground">{d.number.replace(/\.0$/, "")}</span>
+            <li
+              key={d.number}
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-center gap-x-5 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]"
+            >
+              <div className="flex min-w-0 items-baseline justify-between gap-3 text-small">
+                <span className="min-w-0">
+                  <span className="sr-only">Domain </span>
+                  <span className="mr-1 text-note tabular-nums text-muted-foreground">{d.number.replace(/\.0$/, "")}</span>{" "}
                   {d.title}
-                </span>
-                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                  {r ? `${r.correct}/${r.total}` : "not asked"}
+                </span>{" "}
+                <span className="shrink-0 text-note tabular-nums text-muted-foreground">
+                  {r ? `${r.correct} of ${r.total}` : "Not asked"}
+                  {r && <span className="sr-only"> correct</span>}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]">
-                <div
-                  className="h-full rounded-full transition-[width] duration-700"
-                  style={{ width: `${pct ?? 0}%`, background: tone?.accent }}
-                />
-              </div>
+              <ScoreBar value={pct} color={tone?.accent} readyLine={readyMark} />
             </li>
           );
         })}
@@ -221,12 +238,12 @@ export function ReadingCard({
 /** The domain with the most to gain, as a note beside a result. */
 export function OpportunityNote({ domain }: { domain: PathDomain }) {
   return (
-    <div className="glass flex gap-3 rounded-2xl p-4 sm:p-5">
-      <Target className="mt-0.5 size-5 shrink-0 text-primary" />
-      <div className="grid content-start gap-0.5 text-sm">
-        <span className="font-medium">Biggest opportunity</span>
+    <div className="glass flex gap-3 rounded-lg p-4 sm:p-5">
+      <Target className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+      <div className="grid content-start gap-0.5 text-small">
+        <span className="font-medium">The area to focus on next</span>{" "}
         <span className="text-muted-foreground">
-          {domain.title}, {domain.weight}% of the exam.
+          {domain.title} accounts for {domain.weight}% of the exam, and it is where you can gain the most.
         </span>
       </div>
     </div>

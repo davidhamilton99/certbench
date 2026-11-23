@@ -1,5 +1,6 @@
 import { api } from "@/lib/api-client";
-import { getPathProgress } from "@/contracts/path";
+// Named without its schemas (see src/contracts/lazy.ts): they arrive with the request.
+import { getPathProgress } from "@/contracts/client";
 import { hasStarted, mergePathProgress, sanitizePathProgress } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type PathCert, type PathProgress } from "@/core/path/types";
 import { examVersions } from "@/core/path/versions";
@@ -35,10 +36,17 @@ const MAPPINGS: Partial<Record<PathCert, () => Promise<VersionMapping>>> = {
 export type VersionCarry = CarriedProgress & { from: PathCert; source: "device" | "account" | "both" };
 
 /**
+ * How long the earlier version's account copy is waited for. The study path
+ * is being opened meanwhile, so the wait is short: without the account's copy
+ * the device's copy is still carried.
+ */
+const EARLIER_ACCOUNT_LIMIT_MS = 6000;
+
+/**
  * A first visit to the newer version's path, with nothing on it yet: the
  * earlier version's answers, from this device and (signed in) the account,
  * re-keyed for the newer one. Null when there's nothing to carry. The earlier
- * version keeps its own path untouched, so switching back is safe.
+ * version keeps its own study path untouched, so switching back is safe.
  */
 export async function carryFromEarlierVersion(cert: PathCert, userId: string | null): Promise<VersionCarry | null> {
   const load = MAPPINGS[cert];
@@ -51,7 +59,9 @@ export async function carryFromEarlierVersion(cert: PathCert, userId: string | n
   let account: PathProgress = EMPTY_PATH_PROGRESS;
   if (userId) {
     try {
-      account = sanitizePathProgress((await api(getPathProgress, { cert: earlier })).progress);
+      account = sanitizePathProgress(
+        (await api(getPathProgress, { cert: earlier }, { timeoutMs: EARLIER_ACCOUNT_LIMIT_MS })).progress
+      );
     } catch {
       /* unreachable: the device's copy is still worth carrying */
     }

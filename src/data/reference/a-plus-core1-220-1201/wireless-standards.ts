@@ -31,8 +31,8 @@ export const wirelessStandards: ReferenceTable = {
     { columns: { standard: "RFID (HF)", name: "High Frequency RFID", frequency: "13.56 MHz", maxSpeed: "~26 Kbps", features: "Range ≤1 m; smart cards, library tags, NFC overlaps this band" } },
     { columns: { standard: "RFID (UHF)", name: "Ultra High Frequency RFID", frequency: "860–960 MHz", maxSpeed: "~140 Kbps", features: "Range up to 12 m; retail inventory, supply chain, asset tracking" } },
     // Cellular
-    { columns: { standard: "3G (HSPA+)", name: "3rd Generation", frequency: "700 MHz – 2.1 GHz", maxSpeed: "~42 Mbps", features: "Legacy mobile broadband; being sunset by most carriers" } },
-    { columns: { standard: "4G LTE", name: "4th Generation (LTE)", frequency: "700 MHz – 2.6 GHz", maxSpeed: "~150 Mbps", features: "Current baseline mobile standard; LTE-Advanced (LTE-A) is faster still" } },
+    { columns: { standard: "3G (HSPA+)", name: "3rd Generation", frequency: "700 MHz: 2.1 GHz", maxSpeed: "~42 Mbps", features: "Legacy mobile broadband; being sunset by most carriers" } },
+    { columns: { standard: "4G LTE", name: "4th Generation (LTE)", frequency: "700 MHz: 2.6 GHz", maxSpeed: "~150 Mbps", features: "Current baseline mobile standard; LTE-Advanced (LTE-A) is faster still" } },
     { columns: { standard: "5G", name: "5th Generation", frequency: "Sub-6 GHz / mmWave (24–100 GHz)", maxSpeed: "Up to 20 Gbps (mmWave)", features: "Low latency (<1 ms); mmWave = high speed, short range; sub-6 = broader coverage" } },
   ],
 };

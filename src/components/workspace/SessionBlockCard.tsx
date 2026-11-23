@@ -1,36 +1,5 @@
 import Link from "next/link";
-import {
-  Activity,
-  ArrowRight,
-  ClipboardList,
-  Clock,
-  Compass,
-  Crosshair,
-  Lock,
-  RotateCcw,
-  Target,
-  type LucideIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import type { SessionBlock } from "@/core/session-plan/compute-plan";
-import { cn } from "@/lib/utils";
-
-const TILE: Record<SessionBlock["color"], string> = {
-  primary: "bg-primary/10 text-primary",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/15 text-warning",
-  danger: "bg-danger/10 text-danger",
-  urgency: "bg-danger/10 text-danger",
-};
-
-const ICON: Record<SessionBlock["type"], LucideIcon> = {
-  diagnostic: Activity,
-  srs_review: RotateCcw,
-  domain_drill: Target,
-  weak_points: Crosshair,
-  practice_exam: ClipboardList,
-  new_content: Compass,
-};
 
 /** Maps a session block to the route that starts it. */
 function blockHref(block: SessionBlock, certSlug: string): string {
@@ -51,6 +20,15 @@ function blockHref(block: SessionBlock, certSlug: string): string {
   }
 }
 
+/**
+ * One piece of today's work on the study plan: its place in the order, what it
+ * is, why it is there and how long it takes. The whole row is the link that
+ * starts it.
+ *
+ * It is drawn in ink on paper. The plan's kinds of work used to be told apart
+ * by a coloured tile each (green, amber, red); those colours are kept for
+ * marks on answers and for scores, so the order and the words say it here.
+ */
 export function SessionBlockCard({
   block,
   certSlug,
@@ -59,56 +37,48 @@ export function SessionBlockCard({
 }: {
   block: SessionBlock;
   certSlug: string;
-  /** 1-based position in today's plan, shown as a step number. */
+  /** The block's place in today's plan, from 1. */
   order?: number;
-  /** Free plan can't cover this session today — badge it (server enforces). */
+  /** The free plan's allowance for today does not cover this block (the server enforces it). */
   locked?: boolean;
 }) {
-  const Icon = ICON[block.type];
+  const size: string[] = [];
+  if (block.questionCount !== undefined) {
+    size.push(`${block.questionCount} ${block.questionCount === 1 ? "question" : "questions"}`);
+  }
+  if (block.estimatedMinutes !== undefined) {
+    size.push(`about ${block.estimatedMinutes} ${block.estimatedMinutes === 1 ? "minute" : "minutes"}`);
+  }
+
   return (
-    <Link href={blockHref(block, certSlug)} className="group block">
-      <Card className="py-5 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-[0_14px_34px_-18px_var(--color-primary)]">
-        <CardContent className="flex items-center gap-4">
-          <span
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105",
-              TILE[block.color]
+    <Link
+      href={blockHref(block, certSlug)}
+      className="glass flex items-start gap-4 rounded-lg p-5 transition-colors hover:border-primary hover:bg-tint-hover"
+    >
+      {order !== undefined && (
+        <span
+          aria-hidden
+          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xs border border-input font-mono text-xs text-muted-foreground"
+        >
+          {order}
+        </span>
+      )}
+      <span className="grid min-w-0 flex-1 gap-1">
+        <span className="font-semibold">
+          {order !== undefined && <span className="sr-only">{order}. </span>}
+          {block.title}
+        </span>
+        <span className="text-small text-muted-foreground">{block.description}</span>
+        {(size.length > 0 || locked) && (
+          <span className="text-note text-muted-foreground">
+            {size.length > 0 && (
+              // Sentence case: "25 questions, about 20 minutes."
+              <>{size.join(", ").replace(/^./, (c) => c.toUpperCase())}.</>
             )}
-          >
-            <Icon className="size-5" />
+            {locked && <> This is included with Pro.</>}
           </span>
-          <div className="grid min-w-0 flex-1 gap-0.5">
-            <span className="flex items-center gap-2 font-display text-[15px] font-semibold tracking-tight">
-              {block.title}
-              {locked && (
-                <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                  <Lock className="size-3" />
-                  Pro
-                </span>
-              )}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {block.description}
-            </span>
-            <span className="flex items-center gap-3 pt-1 text-xs text-muted-foreground">
-              {order !== undefined && (
-                <span className="font-mono text-muted-foreground/70">
-                  {String(order).padStart(2, "0")}
-                </span>
-              )}
-              {block.questionCount !== undefined && (
-                <span className="font-mono">{block.questionCount} questions</span>
-              )}
-              {block.estimatedMinutes !== undefined && (
-                <span className="flex items-center gap-1">
-                  <Clock className="size-3" />~{block.estimatedMinutes} min
-                </span>
-              )}
-            </span>
-          </div>
-          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-foreground" />
-        </CardContent>
-      </Card>
+        )}
+      </span>
     </Link>
   );
 }

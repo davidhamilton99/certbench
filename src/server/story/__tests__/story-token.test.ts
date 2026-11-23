@@ -31,7 +31,7 @@ describe("story tokens", () => {
     expect(verifyStoryToken(token, NOW + STORY_TOKEN_TTL_MS + 1)).toBeNull();
   });
 
-  it("don't accept another kind of signed token, or junk", () => {
+  it("do not accept another kind of signed token, or junk", () => {
     const share = signShare({ n: "A B.", c: "CompTIA Security+", x: "SY0-701", s: 80, p: 0, d: [] });
     expect(verifyStoryToken(share, NOW)).toBeNull();
     for (const t of ["", "nodot", ".", "a.b"]) expect(verifyStoryToken(t, NOW)).toBeNull();

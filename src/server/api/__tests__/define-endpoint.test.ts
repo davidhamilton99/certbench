@@ -14,6 +14,11 @@ const auth = {
   requirePro: vi.fn(),
 };
 const rateLimiter = { check: vi.fn() };
+/** The owner's report of a fault, and the work left for after the response. */
+const report = vi.hoisted(() => ({
+  reportServerError: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}),
+  later: [] as (() => unknown)[],
+}));
 
 vi.mock("@/server/auth", () => ({
   getOptionalUser: (...a: unknown[]) => auth.getOptionalUser(...a),
@@ -26,7 +31,12 @@ vi.mock("@/server/rate-limit", () => ({
     check: (...a: unknown[]) => rateLimiter.check(...a),
   },
 }));
-vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
+vi.mock("@/server/api/report-error", () => ({ reportServerError: report.reportServerError }));
+vi.mock("@/server/api/after-response", () => ({
+  afterResponse: (work: () => unknown) => {
+    report.later.push(work);
+  },
+}));
 
 import { defineEndpoint } from "../define-endpoint";
 
@@ -47,6 +57,7 @@ function post(body: unknown): NextRequest {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  report.later = [];
   auth.requireUser.mockResolvedValue({ db: mockDb, user: mockUser });
   auth.getOptionalUser.mockResolvedValue({ db: mockDb, user: null });
   rateLimiter.check.mockResolvedValue(true);
@@ -149,6 +160,88 @@ describe("defineEndpoint", () => {
     const body = await res.json();
     expect(body.error.code).toBe("internal");
     expect(body.error.message).not.toContain("connection string");
+    consoleError.mockRestore();
+  });
+
+  it("reports an unexpected error to the owner, after the response and not before", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fault = new Error("connection string leaked!");
+    const route = defineEndpoint(echoContract, {
+      auth: "user",
+      handler: async () => {
+        throw fault;
+      },
+    });
+
+    const res = await route(post({ value: 1 }));
+    expect(res.status).toBe(500);
+    // Nothing is sent while the visitor waits.
+    expect(report.reportServerError).not.toHaveBeenCalled();
+    expect(report.later).toHaveLength(1);
+
+    await report.later[0]();
+    expect(report.reportServerError).toHaveBeenCalledTimes(1);
+    expect(report.reportServerError).toHaveBeenCalledWith(fault, {
+      route: "/api/test/echo",
+      path: "/api/test/echo",
+      method: "POST",
+      kind: "route",
+    });
+    consoleError.mockRestore();
+  });
+
+  it("reports a fault that was thrown as an internal ApiError, and still answers with its sentence", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fault = new ApiError("internal", "Your account could not be checked. Please try again.");
+    auth.requireUser.mockRejectedValue(fault);
+    const route = defineEndpoint(echoContract, {
+      auth: "user",
+      handler: async () => ({ doubled: 0 }),
+    });
+
+    const res = await route(post({ value: 1 }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({
+      error: { code: "internal", message: "Your account could not be checked. Please try again." },
+    });
+    expect(consoleError).toHaveBeenCalledWith("[POST /api/test/echo]", fault);
+    expect(report.later).toHaveLength(1);
+    await report.later[0]();
+    expect(report.reportServerError).toHaveBeenCalledWith(fault, expect.objectContaining({ route: "/api/test/echo" }));
+    consoleError.mockRestore();
+  });
+
+  it("does not report a refusal: it is an answer, not a fault", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const refusals = [
+      new ApiError("unauthorized"),
+      new ApiError("forbidden", "Pro subscription required"),
+      new ApiError("not_found", "That exam is not available."),
+      new ApiError("quota_exceeded", "The hands-on labs on your study path are included with Pro."),
+      new ApiError("conflict"),
+    ];
+    for (const refusal of refusals) {
+      const route = defineEndpoint(echoContract, {
+        auth: "user",
+        handler: async () => {
+          throw refusal;
+        },
+      });
+      const res = await route(post({ value: 1 }));
+      expect(res.status).toBe(refusal.status);
+    }
+    // Bad input and a rate limit are refusals as well.
+    await defineEndpoint(echoContract, { auth: "user", handler: async () => ({ doubled: 0 }) })(post({ value: -5 }));
+    rateLimiter.check.mockResolvedValue(false);
+    await defineEndpoint(echoContract, {
+      auth: "user",
+      rateLimit: { limit: 5, windowSeconds: 60 },
+      handler: async () => ({ doubled: 0 }),
+    })(post({ value: 1 }));
+
+    expect(report.later).toHaveLength(0);
+    expect(report.reportServerError).not.toHaveBeenCalled();
+    expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 

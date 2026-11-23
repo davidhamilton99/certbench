@@ -62,7 +62,7 @@ describe("shuffled", () => {
     expect(items).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it("follows the random source it's given", () => {
+  it("follows the random source it is given", () => {
     // Always picking the last candidate leaves the order as it was.
     expect(shuffled(["a", "b", "c"], () => 0.999)).toEqual(["a", "b", "c"]);
     // Always picking the first rotates the list.

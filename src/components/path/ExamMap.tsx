@@ -1,75 +1,103 @@
-import type { CSSProperties, ReactNode } from "react";
-import { FlaskConical, Lock, Timer } from "lucide-react";
+import { useId, type ReactNode } from "react";
+import { Check, ChevronDown } from "lucide-react";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import type { ObjectiveStatus, PathStructure } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
-/** The exam rehearsal at the end of the map: its state, format and latest score. */
+/** The practice exam at the end of the outline: its state, format and latest score. */
 export interface MapRehearsal {
+  /**
+   * "done" and "open" are a Pro learner's. Without Pro the row says that one
+   * practice exam is free, whether "free" or "locked" is passed: every exam
+   * has one on its public page, so the row never reads as Pro only.
+   */
   state: LabState;
   questions: number;
   minutes: number;
-  /** The latest rehearsal's score, once one is done. */
+  /** The latest practice exam's score, once one is done. */
   score?: number;
 }
 
-/** Where a domain's lab stands: played, open to play, or part of Pro. */
-export type LabState = "done" | "open" | "locked";
+/**
+ * Where a domain's lab stands for this learner: done, open to do, free for
+ * everyone on the exam's public lab page, or part of Pro.
+ */
+export type LabState = "done" | "open" | "free" | "locked";
 
-/** A tappable tile's key: an objective's code ("1.2"), a domain's lab ("lab:1.0"), or "rehearsal". */
+/** A row's key: an objective's code ("1.2"), a domain's lab ("lab:1.0"), or "rehearsal". */
 export type MapTile = string;
 
 export const labTileKey = (domain: string): MapTile => `lab:${domain}`;
 export const REHEARSAL_TILE: MapTile = "rehearsal";
 
-const LAB_TILE: Record<LabState, string> = {
-  done: "bg-success text-success-foreground",
-  open: "bg-primary/10 text-primary ring-1 ring-inset ring-primary/50",
-  locked: "border border-dashed border-border text-muted-foreground",
+/** Shown at the end of a lab's row. */
+const LAB_STATUS: Record<LabState, string> = {
+  done: "Complete",
+  open: "Available",
+  free: "Free",
+  locked: "Included with Pro",
 };
 
-const LAB_LABEL: Record<LabState, string> = {
-  done: "done",
-  open: "open",
-  locked: "part of Pro",
-};
-
-const TILE: Record<ObjectiveStatus, string> = {
-  got: "bg-success text-success-foreground",
-  missed: "bg-warning text-warning-foreground",
-  new: "bg-muted/50 text-muted-foreground ring-1 ring-inset ring-border",
-};
-
-/** The objective up next: lit in the accent with an outer ring that pulses. */
-const CURRENT: Record<ObjectiveStatus, string> = {
-  got: "bg-success text-success-foreground",
-  missed: "bg-warning text-warning-foreground",
-  new: "bg-primary/15 text-primary",
-};
-
-const STATUS_LABEL: Record<ObjectiveStatus, string> = {
-  got: "covered",
-  missed: "a miss to revisit",
-  new: "not started",
-};
+/** Shown at the end of the practice exam's row for a learner without Pro. */
+const EXAM_FREE = "One practice exam is free.";
 
 /**
- * The whole exam at a glance: one row per domain, one tile per objective,
- * coloured by where the learner stands, and the hands-on lab that closes the
- * domain; then the exam rehearsal the path ends on. The objective in play
- * pulses; tiles a stop just changed pop in, one after another.
+ * Where an objective stands in the outline. "Complete" is kept for an
+ * objective whose own step is finished with no question left to review. One
+ * that has only been touched by other questions (the introductory questions,
+ * the checkpoint, a practice exam) is "Started": an instructor who checks the
+ * outline against the syllabus must not find an objective marked complete that
+ * has not been studied.
+ */
+type Standing = "new" | "started" | "review" | "complete";
+
+/** `stepDone` is null when the caller does not say which steps are finished. */
+export function objectiveStanding(status: ObjectiveStatus, stepDone: boolean | null): Standing {
+  if (stepDone === null) return status === "got" ? "complete" : status === "missed" ? "review" : "new";
+  if (stepDone) return status === "missed" ? "review" : "complete";
+  return status === "new" ? "new" : "started";
+}
+
+const STANDING_TEXT: Record<Standing, string> = {
+  new: "Not started",
+  started: "Started",
+  review: "To review",
+  complete: "Complete",
+};
+
+const STANDING_CLASS: Record<Standing, string> = {
+  new: "text-muted-foreground",
+  started: "text-foreground",
+  review: "text-warning-ink",
+  complete: "text-success",
+};
+
+const label = (n: string) => n.replace(/\.0$/, "");
+
+/** Read between the parts of a row by a screen reader, which sees no columns. */
+const Pause = () => <span className="sr-only">, </span>;
+
+/**
+ * The exam as a course outline: a section for each domain, a row for each
+ * objective saying where the learner stands, then the hands-on lab that closes
+ * the domain; and at the end the practice exam the path finishes with. It is
+ * set out the way a course's module list is, so it reads as a syllabus and
+ * not as a board.
  *
- * Given `onSelect`, every tile is a button, the way a game's level map is:
- * the tapped one is ringed and `detail` opens under its row. (Replays showed
- * people tapping tiles again and again, and nothing happening.) Without it the
- * map is informative only.
+ * Given `onSelect`, every row is a button: pressing one opens `detail` beneath
+ * it. (Replays showed people pressing the old grid again and again, and
+ * nothing happening.) Without it the outline is informative only.
+ *
+ * A row's accessible name is the text it shows, in the order it shows it: a
+ * person who speaks the words on a row to a voice control, or who is read the
+ * row by a screen reader, gets the same words as a person looking at it.
  */
 export function ExamMap({
   structure,
   statuses,
+  doneStops,
   current,
-  fresh,
   labs,
-  labsFresh,
   rehearsal,
   selected = null,
   onSelect,
@@ -78,244 +106,239 @@ export function ExamMap({
 }: {
   structure: PathStructure;
   statuses: Map<string, ObjectiveStatus>;
-  /** Objectives of the stop that's next (or in play). */
+  /**
+   * The ids of the steps that are finished. An objective's own step has the
+   * objective's code as its id. Without it the outline cannot tell an objective
+   * that has been studied from one that other questions have touched, and
+   * calls both "Complete".
+   */
+  doneStops?: ReadonlySet<string>;
+  /** Objectives of the step that's next (or in hand): the only rows that are tinted. */
   current?: ReadonlySet<string>;
-  /** Objectives whose status just changed — animated in. */
+  /**
+   * Kept for callers. A row that a step has just changed is no longer tinted:
+   * one tint means "next", and the sentence above the outline says what changed.
+   */
   fresh?: ReadonlySet<string>;
   /** Each domain's lab, by domain number. A domain without one shows none. */
   labs?: ReadonlyMap<string, LabState>;
-  /** Pop the lab tiles in, one domain after another (they just opened). */
+  /** Kept for callers; lab rows are not animated. */
   labsFresh?: boolean;
-  /** The exam rehearsal that ends the path. */
+  /** The practice exam that ends the path. */
   rehearsal?: MapRehearsal;
-  /** The tile that's open. */
+  /** The row that's open. */
   selected?: MapTile | null;
-  /** Tap a tile (null closes it). Makes every tile a button. */
+  /** Press a row (null closes it). Makes every row a button. */
   onSelect?: (tile: MapTile | null) => void;
-  /** What opens under the selected tile's row. */
+  /** What opens beneath the selected row. */
   detail?: ReactNode;
   className?: string;
 }) {
-  let order = 0;
+  const id = useId();
   const tap = onSelect ? (key: MapTile) => () => onSelect(selected === key ? null : key) : undefined;
+  const standingOf = (code: string) =>
+    objectiveStanding(statuses.get(code) ?? "new", doneStops ? doneStops.has(code) : null);
   return (
-    <div className={cn("grid gap-4", className)}>
-      {structure.domains.map((d, di) => {
-        const open =
-          selected !== null &&
-          (selected === labTileKey(d.number) || d.objectives.some((o) => o.code === selected));
+    <div className={cn("grid gap-7", className)}>
+      {structure.domains.map((d) => {
+        const done = d.objectives.filter((o) => standingOf(o.code) === "complete").length;
+        const headingId = `${id}-domain-${d.number}`;
         return (
-          <div key={d.number} className="grid gap-2">
-            <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="min-w-0">
-                <span className="mr-2 font-mono text-xs text-muted-foreground">{d.number.replace(/\.0$/, "")}</span>
-                <span className="font-medium">{d.title}</span>
-              </span>
-              <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{d.weight}% of exam</span>
+          <section key={d.number} className="grid gap-0">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-foreground/70 pb-2">
+              <h3 id={headingId} className="min-w-0 text-small font-semibold">
+                Domain {label(d.number)}: {d.title}
+              </h3>
+              <p className="shrink-0 text-note tabular-nums text-muted-foreground">
+                {d.weight}% of the exam. {done} of {d.objectives.length} complete.
+              </p>
             </div>
-            <ul className="flex flex-wrap gap-1.5" aria-label={`Domain ${d.number} objectives`}>
+            <ul aria-labelledby={headingId} className="divide-y divide-border">
               {d.objectives.map((o) => {
-                const status = statuses.get(o.code) ?? "new";
-                const isCurrent = current?.has(o.code);
-                const isFresh = fresh?.has(o.code);
-                const style = isFresh ? ({ "--d": `${250 + order++ * 140}ms` } as CSSProperties) : undefined;
+                const standing = standingOf(o.code);
+                const isCurrent = !!current?.has(o.code);
+                // The step that is next says so, whatever other questions have touched it.
+                const next = isCurrent && (standing === "new" || standing === "started");
                 return (
-                  <Tile
+                  <Row
                     key={o.code}
-                    title={`${o.code} ${o.title}`}
-                    label={`${o.code} ${o.title}: ${STATUS_LABEL[status]}${isCurrent ? ", up next" : ""}`}
-                    style={style}
                     onTap={tap?.(o.code)}
                     selected={selected === o.code}
-                    className={cn(
-                      "flex h-7 min-w-10 items-center justify-center rounded-md px-1.5 font-mono text-[11px] font-semibold tabular-nums transition-colors",
-                      isCurrent
-                        ? `${CURRENT[status]} path-current ring-2 ring-primary ring-offset-2 ring-offset-background`
-                        : TILE[status],
-                      isFresh && "path-pop"
-                    )}
+                    detail={selected === o.code ? detail : null}
+                    highlight={isCurrent}
                   >
-                    {o.code}
-                  </Tile>
+                    <span className="w-8 shrink-0 font-mono text-note tabular-nums text-muted-foreground">{o.code}</span>{" "}
+                    <span className={cn("min-w-0 flex-1 text-small", isCurrent && "font-semibold")}>{o.title}</span>
+                    <Pause />
+                    {next ? (
+                      <span className="shrink-0 text-note font-medium text-primary">
+                        Next<span className="sr-only"> step</span>
+                      </span>
+                    ) : (
+                      <Status className={STANDING_CLASS[standing]} check={standing === "complete"}>
+                        {STANDING_TEXT[standing]}
+                      </Status>
+                    )}
+                  </Row>
                 );
               })}
               {d.lab && labs?.has(d.number) && (
-                <LabTile
-                  state={labs.get(d.number)!}
-                  title={d.lab.title}
-                  domain={d.number}
-                  style={labsFresh ? ({ "--d": `${300 + di * 160}ms` } as CSSProperties) : undefined}
-                  fresh={labsFresh}
+                <Row
                   onTap={tap?.(labTileKey(d.number))}
                   selected={selected === labTileKey(d.number)}
-                />
+                  detail={selected === labTileKey(d.number) ? detail : null}
+                >
+                  <span className="w-8 shrink-0 text-note text-muted-foreground">Lab</span>
+                  <Pause />
+                  <TitleAndStatus title={d.lab.title}>
+                    <LabStatus state={labs.get(d.number)!} />
+                  </TitleAndStatus>
+                </Row>
               )}
             </ul>
-            {open && detail}
-          </div>
+          </section>
         );
       })}
       {rehearsal && (
-        <div className="grid gap-2 border-t border-border/70 pt-4">
-          <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="font-medium">Exam rehearsal</span>
-            <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
-              {rehearsal.questions} questions · {rehearsal.minutes} min
-            </span>
+        <section className="grid gap-0">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-foreground/70 pb-2">
+            <h3 id={`${id}-exam`} className="text-small font-semibold">
+              Practice exam
+            </h3>
+            <p className="shrink-0 text-note tabular-nums text-muted-foreground">
+              {rehearsal.questions} questions in {rehearsal.minutes} minutes.
+            </p>
           </div>
-          <ul className="flex flex-wrap gap-1.5" aria-label="The path's last stop">
-            <RehearsalTile
-              rehearsal={rehearsal}
-              style={
-                labsFresh ? ({ "--d": `${300 + structure.domains.length * 160}ms` } as CSSProperties) : undefined
-              }
-              fresh={labsFresh}
+          <ul aria-labelledby={`${id}-exam`} className="divide-y divide-border">
+            <Row
               onTap={tap?.(REHEARSAL_TILE)}
               selected={selected === REHEARSAL_TILE}
-            />
+              detail={selected === REHEARSAL_TILE ? detail : null}
+            >
+              <span className="w-8 shrink-0 text-note text-muted-foreground">Exam</span>
+              <Pause />
+              <TitleAndStatus title="Full-length timed practice exam">
+                <ExamStatus rehearsal={rehearsal} />
+              </TitleAndStatus>
+            </Row>
           </ul>
-          {selected === REHEARSAL_TILE && detail}
-        </div>
+        </section>
       )}
     </div>
   );
 }
 
-/** A tile: a list item, or a button in one when the map is tappable. */
-function Tile({
-  title,
-  label,
-  style,
-  className,
+/**
+ * A row's standing, at its end. The words and the mark share the row's
+ * baseline: the mark is set a little below the middle of its box, so that
+ * "Complete" sits on the same line as the title beside it.
+ */
+function Status({ className, check = false, children }: { className?: string; check?: boolean; children: ReactNode }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-baseline gap-1 text-note", className)}>
+      {check && <Check className="size-3.5 translate-y-0.5" strokeWidth={2.5} aria-hidden />}
+      {children}
+    </span>
+  );
+}
+
+/**
+ * A lab's or the practice exam's title with its status. These statuses run to
+ * several words ("Included with Pro", "One practice exam is free."), so on a
+ * row too narrow for both the status goes under the title instead of pressing
+ * the title into three short lines.
+ */
+function TitleAndStatus({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+      <span className="text-small">{title}</span>
+      <Pause />
+      {children}
+    </span>
+  );
+}
+
+function LabStatus({ state }: { state: LabState }) {
+  return (
+    <Status
+      check={state === "done"}
+      className={
+        state === "done"
+          ? "text-success"
+          : state === "open"
+            ? "font-medium text-primary"
+            : state === "free"
+              ? "text-foreground"
+              : "text-muted-foreground"
+      }
+    >
+      {LAB_STATUS[state]}
+    </Status>
+  );
+}
+
+function ExamStatus({ rehearsal }: { rehearsal: MapRehearsal }) {
+  const pro = rehearsal.state === "done" || rehearsal.state === "open";
+  if (!pro) return <Status className="text-foreground">{EXAM_FREE}</Status>;
+  if (rehearsal.score !== undefined) {
+    return <Status className="tabular-nums text-muted-foreground">Last result: {rehearsal.score}%</Status>;
+  }
+  return <LabStatus state={rehearsal.state} />;
+}
+
+/** A row of the outline: a list item, or a button in one when rows can be pressed. */
+function Row({
   onTap,
   selected,
+  detail,
+  highlight = false,
   children,
 }: {
-  title: string;
-  label: string;
-  style?: CSSProperties;
-  className: string;
   onTap?: () => void;
   selected: boolean;
+  /** What opens beneath this row while it is selected. */
+  detail?: ReactNode;
+  /** The row of the step that is next. */
+  highlight?: boolean;
   children: ReactNode;
 }) {
+  // The tint reaches a little past the text on both sides, and the text keeps its edge.
+  const row = "-mx-2 flex items-baseline gap-3 px-3 py-2.5 text-left";
   if (!onTap) {
-    return (
-      <li title={title} aria-label={label} style={style} className={className}>
-        {children}
-      </li>
-    );
+    return <li className={cn(row, highlight && "bg-tint-selected")}>{children}</li>;
   }
   return (
-    <li style={style} className="flex">
+    <li>
       <button
         type="button"
-        title={title}
-        aria-label={label}
         aria-expanded={selected}
         onClick={onTap}
         className={cn(
-          className,
-          "cursor-pointer outline-none transition-[filter,box-shadow,transform] hover:brightness-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          selected && "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background"
+          row,
+          "w-[calc(100%+1rem)] transition-[background-color] focus-visible:-outline-offset-2",
+          highlight || selected ? "bg-tint-selected hover:bg-tint-press" : "hover:bg-tint-hover"
         )}
       >
         {children}
+        <ChevronDown
+          aria-hidden
+          className={cn("size-4 shrink-0 self-center text-muted-foreground transition-transform", selected && "rotate-180")}
+        />
       </button>
+      {selected && detail && <div className="pb-3 pt-1">{detail}</div>}
     </li>
   );
 }
 
-function RehearsalTile({
-  rehearsal,
-  style,
-  fresh,
-  onTap,
-  selected,
-}: {
-  rehearsal: MapRehearsal;
-  style?: CSSProperties;
-  fresh?: boolean;
-  onTap?: () => void;
-  selected: boolean;
-}) {
-  const { state, score } = rehearsal;
-  const Icon = state === "locked" ? Lock : Timer;
-  const scored = score !== undefined && state !== "locked";
-  return (
-    <Tile
-      title="Exam rehearsal"
-      label={`Exam rehearsal: ${LAB_LABEL[state]}${scored ? `, latest score ${score}%` : ""}`}
-      style={style}
-      onTap={onTap}
-      selected={selected}
-      className={cn(
-        "flex h-7 items-center gap-1 rounded-md px-2 font-mono text-[11px] font-semibold",
-        LAB_TILE[state],
-        fresh && "path-pop"
-      )}
-    >
-      <Icon className="size-3" aria-hidden />
-      {state === "locked" ? "Rehearsal · with Pro" : scored ? `Rehearsal · last ${score}%` : "Rehearsal"}
-    </Tile>
-  );
-}
-
-function LabTile({
-  state,
-  title,
-  domain,
-  style,
-  fresh,
-  onTap,
-  selected,
-}: {
-  state: LabState;
-  title: string;
-  domain: string;
-  style?: CSSProperties;
-  fresh?: boolean;
-  onTap?: () => void;
-  selected: boolean;
-}) {
-  const Icon = state === "locked" ? Lock : FlaskConical;
-  return (
-    <Tile
-      title={`Hands-on lab: ${title}`}
-      label={`Domain ${domain.replace(/\.0$/, "")} hands-on lab, ${title}: ${LAB_LABEL[state]}`}
-      style={style}
-      onTap={onTap}
-      selected={selected}
-      className={cn(
-        "flex h-7 items-center gap-1 rounded-md px-2 font-mono text-[11px] font-semibold",
-        LAB_TILE[state],
-        fresh && "path-pop"
-      )}
-    >
-      <Icon className="size-3" aria-hidden />
-      Lab
-    </Tile>
-  );
-}
-
+/**
+ * A sentence under the outline saying what is free and what Pro adds. The rows
+ * state their own status, so no key to colours is needed.
+ */
 export function MapLegend({ className, labs }: { className?: string; labs?: "open" | "locked" }) {
+  if (labs !== "locked") return null;
   return (
-    <div className={cn("flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground", className)}>
-      <span className="inline-flex items-center gap-1.5">
-        <i className="size-2.5 rounded-[3px] bg-success" /> Covered
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <i className="size-2.5 rounded-[3px] bg-warning" /> A miss, comes back later
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <i className="size-2.5 rounded-[3px] bg-muted ring-1 ring-inset ring-border" /> Not started
-      </span>
-      {labs && (
-        <span className="inline-flex items-center gap-1.5">
-          <FlaskConical className="size-3" aria-hidden />
-          {labs === "open" ? "Hands-on lab" : "Hands-on lab, with Pro"}
-        </span>
-      )}
-    </div>
+    <p className={cn("text-small text-muted-foreground", className)}>
+      One practice exam and {FREE_LAB_COUNT} labs are free. Further labs and practice exams are included with Pro.
+    </p>
   );
 }

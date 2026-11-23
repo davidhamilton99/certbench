@@ -23,11 +23,11 @@ export const printerTypes: ReferenceTable = {
     },
     {
       columns: {
-        type: "Laser (colour)",
-        technology: "Same as mono laser but uses 4 separate toner cartridges (CMYK) and a transfer belt to layer colours",
+        type: "Laser (color)",
+        technology: "Same as mono laser but uses 4 separate toner cartridges (CMYK) and a transfer belt to layer colors",
         consumables: "4 toner cartridges (C, M, Y, K), drum units, fuser, transfer belt/roller",
-        maintenance: "Replace individual colour toners; calibrate colours; clean transfer belt; replace fuser",
-        bestFor: "Colour documents, presentations; higher cost per page than mono laser; slower than mono",
+        maintenance: "Replace individual color toners; calibrate colors; clean transfer belt; replace fuser",
+        bestFor: "Color documents, presentations; higher cost per page than mono laser; slower than mono",
       },
     },
     {
@@ -36,7 +36,7 @@ export const printerTypes: ReferenceTable = {
         technology: "Propels droplets of liquid ink onto paper; thermal (heat bubble) or piezoelectric methods; high DPI for photo-quality output",
         consumables: "Ink cartridges (individual CMYK or combined), printhead (may be in cartridge or fixed)",
         maintenance: "Clean printheads; replace cartridges; calibrate (align) the printhead; clear paper jams",
-        bestFor: "Photo printing, home use, low-volume colour; ink can smear when wet; higher cost per page than laser",
+        bestFor: "Photo printing, home use, low-volume color; ink can smear when wet; higher cost per page than laser",
       },
     },
     {

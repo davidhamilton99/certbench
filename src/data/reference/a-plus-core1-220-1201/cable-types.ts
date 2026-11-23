@@ -41,11 +41,11 @@ export const cableTypes: ReferenceTable = {
     // DVI / VGA
     { columns: { cable: "DVI-D", category: "Video (digital)", maxSpeed: "~9.9 Gbps", maxDistance: "5 m", connector: "DVI-D (digital only)" } },
     { columns: { cable: "DVI-I", category: "Video (digital + analog)", maxSpeed: "~9.9 Gbps", maxDistance: "5 m", connector: "DVI-I (digital + analog pins)" } },
-    { columns: { cable: "VGA", category: "Video (analog)", maxSpeed: "N/A (analog signal)", maxDistance: "10 m", connector: "DE-15 (HD15) — 15-pin" } },
+    { columns: { cable: "VGA", category: "Video (analog)", maxSpeed: "N/A (analog signal)", maxDistance: "10 m", connector: "DE-15 (HD15): 15-pin" } },
     // Storage
     { columns: { cable: "SATA III", category: "Storage", maxSpeed: "6 Gbps", maxDistance: "1 m", connector: "SATA 7-pin data / 15-pin power" } },
     { columns: { cable: "eSATA", category: "Storage (external)", maxSpeed: "6 Gbps", maxDistance: "2 m", connector: "eSATA" } },
     // Legacy serial
-    { columns: { cable: "Serial (RS-232)", category: "Serial (legacy)", maxSpeed: "115.2 Kbps", maxDistance: "15 m", connector: "DB-9 (DE-9) — 9-pin" } },
+    { columns: { cable: "Serial (RS-232)", category: "Serial (legacy)", maxSpeed: "115.2 Kbps", maxDistance: "15 m", connector: "DB-9 (DE-9): 9-pin" } },
   ],
 };

@@ -25,15 +25,21 @@ const prettyLabel = (label: string) =>
 export function recallToRep(deck: ResolvedDeck, itemId: string, objective: string, rng: Rng, typed: boolean): Rep {
   const q = generateRecallQuestion(deck, rng, { itemId, noSwap: typed });
   const id = recallRepId(objective, deck.config.id, q.itemId);
-  // One line: the pairing and its first detail. A long cue (a description)
-  // isn't repeated back — the answer and its detail are what to remember.
-  const detail = q.detail.split(" · ")[0];
-  const takeaway =
+  // The card prints the takeaway straight after its verdict ("Correct." or
+  // "Incorrect. The correct answer is 22."). A deck that explains its answers
+  // in sentences (the `explain` of its configuration) gives those sentences,
+  // the same ones whichever way round the fact was asked. Any other deck keeps
+  // its note: the pairing and its first detail. A long cue (a description) is
+  // not repeated back in a note, because the answer and its detail are what to
+  // remember.
+  const detail = q.details[0];
+  const note =
     q.promptValue.length > 24
       ? detail
         ? `${q.answer}: ${detail}`
         : q.answer
-      : `${q.promptValue} → ${q.answer}${detail ? ` · ${detail}` : ""}`;
+      : `${q.promptValue}: ${q.answer}${detail ? ` (${detail})` : ""}`;
+  const takeaway = q.explanation ?? note;
   if (typed) {
     return {
       id,
@@ -72,7 +78,8 @@ export const subnetRepId = (objective: string, mode: DrillMode) => `r|${objectiv
 /**
  * A fresh hands-on subnetting problem for one skill. "Same subnet?" is a
  * yes/no choice; the rest are typed and graded by the subnetting engine. The
- * first worked step is the takeaway, the rest folds away.
+ * question is the engine's own sentence, the first worked step is the
+ * takeaway, and the rest folds away.
  */
 export function subnetToRep(objective: string, mode: DrillMode, rng: Rng, difficulty: Difficulty = "standard"): Rep {
   const q = generateQuestion(mode, difficulty, rng);
@@ -94,14 +101,13 @@ export function subnetToRep(objective: string, mode: DrillMode, rng: Rng, diffic
       explanation,
     };
   }
-  const text = `${q.prompt} ${q.promptValue}`;
   return {
     id,
     type: "typed",
     label: "Hands-on",
     tier: "quick",
     objective,
-    prompt: /^(What|How|Which|Are)\b/.test(q.prompt) ? `${text}?` : text,
+    prompt: q.sentence,
     cue: "Your answer",
     accept: [q.answer],
     answerText: q.answerKind === "cidr" ? `/${q.answer}` : q.answer,

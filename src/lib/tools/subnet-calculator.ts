@@ -1,7 +1,7 @@
 /**
- * Pure IPv4 subnet calculator — powers the free /tools/subnet-calculator page.
- * Reuses the IP-math primitives from the subnetting drill engine so the two
- * tools can never disagree. No side effects; fully unit-tested.
+ * The arithmetic behind the free page /tools/subnet-calculator. It reuses the
+ * address functions of the subnetting drill, so the two tools can never
+ * disagree. It has no side effects, and every result is unit-tested.
  */
 import {
   ipToInt,
@@ -19,10 +19,11 @@ export interface SubnetResult {
   wildcard: string;
   maskBinary: string;
   network: string;
-  /** "—" for /31 and /32, where there is no broadcast address. */
+  /** "None" for /31 and /32, where there is no broadcast address. */
   broadcast: string;
   firstHost: string;
   lastHost: string;
+  /** The first and last usable host as words, "10.0.0.1 to 10.0.0.254", or the one host of a /32. */
   hostRange: string;
   usableHosts: number;
   totalAddresses: number;
@@ -105,8 +106,9 @@ export function calculateSubnet(ipRaw: string, prefix: number): SubnetResult | n
     usableHosts = total - 2;
   }
 
-  const hostRange =
-    firstHost === lastHost ? firstHost : `${firstHost} – ${lastHost}`;
+  // A range is written in words. (A colon between two addresses reads as a
+  // label and its value, not as a range.)
+  const hostRange = firstHost === lastHost ? firstHost : `${firstHost} to ${lastHost}`;
   const { ipClass, addressType } = classify(octets);
 
   return {
@@ -116,7 +118,7 @@ export function calculateSubnet(ipRaw: string, prefix: number): SubnetResult | n
     wildcard,
     maskBinary: maskBinary(mask),
     network: intToIp(netInt),
-    broadcast: prefix >= 31 ? "—" : intToIp(bcInt),
+    broadcast: prefix >= 31 ? "None" : intToIp(bcInt),
     firstHost,
     lastHost,
     hostRange,

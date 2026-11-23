@@ -17,7 +17,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
       /* ── Task 1: Subnet Calculation ─────────────────────────────── */
       {
         id: "np-sim-subnet-t1",
-        title: "Task 1 — Subnet Calculation",
+        title: "Task 1: Subnet Calculation",
         instructions:
           "Using the 192.168.10.0/24 block, select the correct subnet mask for each department and enter the corresponding network address. Allocate subnets in order from largest to smallest, starting at 192.168.10.0.",
         fields: [
@@ -109,7 +109,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
       /* ── Task 2: IP Assignment ──────────────────────────────────── */
       {
         id: "np-sim-subnet-t2",
-        title: "Task 2 — IP Assignment",
+        title: "Task 2: IP Assignment",
         instructions:
           "For each subnet, enter the default gateway address (the first usable host address, conventionally assigned to the router interface) and the last usable host address.",
         fields: [
@@ -177,7 +177,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
       /* ── Task 3: Verify Design ──────────────────────────────────── */
       {
         id: "np-sim-subnet-t3",
-        title: "Task 3 — Verify Design",
+        title: "Task 3: Verify Design",
         instructions:
           "Answer the following verification questions about the completed subnet design to confirm it is correct before deployment.",
         fields: [
@@ -201,10 +201,10 @@ export const networkPlusSimulations: SimulationScenario[] = [
             label:
               "Can host 192.168.10.50 (Engineering) communicate directly with host 192.168.10.80 (Sales) without routing?",
             options: [
-              "Yes — they share the same /24 supernet",
-              "No — they are in different /26 subnets",
-              "No — they are in different subnets and require a router",
-              "Yes — both addresses fall within 192.168.10.0/25",
+              "Yes: they share the same /24 supernet",
+              "No: they are in different /26 subnets",
+              "No: they are in different subnets and require a router",
+              "Yes, both addresses fall within 192.168.10.0/25",
             ],
             correctIndex: 2,
           },
@@ -237,7 +237,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
           },
         ],
         explanation:
-          "A /26 has 2^6 = 64 addresses; subtract network and broadcast = 62 usable. A /27 has 2^5 = 32 addresses; 30 usable. Hosts in different subnets cannot communicate at Layer 2 — a router (Layer 3) is required. The Guest /28 block 192.168.10.112–127 has broadcast .127. The four subnets consume .0–.127; the first unallocated address is 192.168.10.128, leaving .128–.255 (a full /25) available for future growth.",
+          "A /26 has 2^6 = 64 addresses; subtract network and broadcast = 62 usable. A /27 has 2^5 = 32 addresses; 30 usable. Hosts in different subnets cannot communicate at Layer 2: a router (Layer 3) is required. The Guest /28 block 192.168.10.112–127 has broadcast .127. The four subnets consume .0–.127; the first unallocated address is 192.168.10.128, leaving .128–.255 (a full /25) available for future growth.",
       },
     ],
     explanation:
@@ -260,7 +260,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
       /* ── Task 1: VLAN Creation ──────────────────────────────────── */
       {
         id: "np-sim-vlan-t1",
-        title: "Task 1 — VLAN Creation",
+        title: "Task 1: VLAN Creation",
         instructions:
           "Enter the correct VLAN IDs and names as they should be configured in the switch VLAN database. Names are case-sensitive; use the values shown in the briefing.",
         evidence: [
@@ -326,9 +326,9 @@ export const networkPlusSimulations: SimulationScenario[] = [
       /* ── Task 2: Port Assignment ────────────────────────────────── */
       {
         id: "np-sim-vlan-t2",
-        title: "Task 2 — Port Assignment",
+        title: "Task 2: Port Assignment",
         instructions:
-          "Assign each switch port range to the correct VLAN by dragging the port labels into the appropriate VLAN zones. Fa0/24 will be configured as a trunk in the next task — assign it to Management for now.",
+          "Assign each switch port range to the correct VLAN by dragging the port labels into the appropriate VLAN zones. Fa0/24 will be configured as a trunk in the next task: assign it to Management for now.",
         evidence: [
           {
             label: "Desired Port-to-VLAN Mapping",
@@ -350,7 +350,7 @@ Fa0/21-24     99      Management / Trunk`,
               "Fa0/17–Fa0/20",
               "Fa0/21–Fa0/24",
             ],
-            zones: ["VLAN 10 — Data", "VLAN 20 — Voice", "VLAN 99 — Management"],
+            zones: ["VLAN 10: Data", "VLAN 20: Voice", "VLAN 99: Management"],
             correctZones: [0, 0, 1, 2],
           },
           {
@@ -388,7 +388,7 @@ Fa0/21-24     99      Management / Trunk`,
       /* ── Task 3: Trunk Configuration ────────────────────────────── */
       {
         id: "np-sim-vlan-t3",
-        title: "Task 3 — Trunk Configuration",
+        title: "Task 3: Trunk Configuration",
         instructions:
           "Configure Fa0/24 as an 802.1Q trunk port to carry all three VLANs to the upstream router. Select the correct value for each trunk parameter.",
         evidence: [
@@ -430,7 +430,7 @@ Trunking VLANs Enabled: ALL`,
             id: "np-sim-vlan-t3-native",
             label: "Which VLAN should be set as the native VLAN on the trunk?",
             options: [
-              "VLAN 1 (default — leave unchanged)",
+              "VLAN 1 (default: leave unchanged)",
               "VLAN 10 (Data)",
               "VLAN 20 (Voice)",
               "VLAN 99 (Management)",
@@ -443,7 +443,7 @@ Trunking VLANs Enabled: ALL`,
             id: "np-sim-vlan-t3-allowed",
             label: "Which VLANs should be explicitly allowed on the Fa0/24 trunk?",
             options: [
-              "All VLANs (1–4094) — leave as default",
+              "All VLANs (1–4094): leave as default",
               "VLAN 10 only",
               "VLANs 10, 20, 99",
               "VLANs 10, 20, 99, and 1",
@@ -472,7 +472,7 @@ Trunking VLANs Enabled: ALL`,
       },
     ],
     explanation:
-      "VLANs are a fundamental Layer 2 segmentation technology. Access ports carry traffic for a single VLAN; trunk ports carry multiple VLANs tagged with 802.1Q headers. Security hardening of trunks — changing the native VLAN, restricting allowed VLANs, and disabling DTP — is a mandatory step in any production deployment. The Management VLAN should always be separate from user data VLANs so that administrative access remains available even during network incidents.",
+      "VLANs are a fundamental Layer 2 segmentation technology. Access ports carry traffic for a single VLAN; trunk ports carry multiple VLANs tagged with 802.1Q headers. Security hardening of trunks (changing the native VLAN, restricting allowed VLANs, and disabling DTP) is a mandatory step in any production deployment. The Management VLAN should always be separate from user data VLANs so that administrative access remains available even during network incidents.",
   },
 
   /* ================================================================ */
@@ -491,12 +491,12 @@ Trunking VLANs Enabled: ALL`,
       /* ── Task 1: Diagnose Issue ──────────────────────────────────── */
       {
         id: "np-sim-wireless-t1",
-        title: "Task 1 — Diagnose the Issue",
+        title: "Task 1: Diagnose the Issue",
         instructions:
-          "Review the wireless survey data and AP configuration below. Answer the diagnostic questions to characterise the problem.",
+          "Review the wireless survey data and AP configuration below. Answer the diagnostic questions to characterize the problem.",
         evidence: [
           {
-            label: "Wireless Survey — Conference Room B (2.4 GHz band)",
+            label: "Wireless Survey: Conference Room B (2.4 GHz band)",
             content: `SSID              BSSID              Channel  Signal (dBm)  Channel Width
 ----------------  -----------------  -------  ------------  -------------
 CorpNet           00:1A:2B:3C:4D:5E  6        -52           20 MHz        <- AP-CR-B
@@ -579,13 +579,13 @@ Radio 1 (5 GHz)
           },
         ],
         explanation:
-          "Co-channel interference (CCI) occurs when two or more APs share the same channel — they must contend for the medium using CSMA/CA, dramatically reducing effective throughput. The survey shows three APs on channel 6 (AP-CR-B, AP-LOBBY, and NeighborCo-WiFi). The high Tx retry count (1847) confirms the client is struggling to deliver frames cleanly. SNR = Signal − Noise = −68 − (−85) = 17 dB; anything below 20 dB indicates a poor link quality that will cause retries and disconnections.",
+          "Co-channel interference (CCI) occurs when two or more APs share the same channel: they must contend for the medium using CSMA/CA, dramatically reducing effective throughput. The survey shows three APs on channel 6 (AP-CR-B, AP-LOBBY, and NeighborCo-WiFi). The high Tx retry count (1847) confirms the client is struggling to deliver frames cleanly. SNR = Signal − Noise = −68 − (−85) = 17 dB; anything below 20 dB indicates a poor link quality that will cause retries and disconnections.",
       },
 
       /* ── Task 2: Identify Root Cause ────────────────────────────── */
       {
         id: "np-sim-wireless-t2",
-        title: "Task 2 — Identify Root Cause",
+        title: "Task 2: Identify Root Cause",
         instructions:
           "Based on your diagnosis, identify the primary and contributing root causes of the intermittent connectivity.",
         fields: [
@@ -594,7 +594,7 @@ Radio 1 (5 GHz)
             id: "np-sim-wireless-t2-primary-cause",
             label: "What is the PRIMARY root cause of the connectivity issue?",
             options: [
-              "Weak signal — AP-CR-B is too far from the conference room",
+              "Weak signal: AP-CR-B is too far from the conference room",
               "Co-channel interference from AP-LOBBY and NeighborCo-WiFi on channel 6",
               "Incorrect WPA2 security settings on AP-CR-B",
               "Excessive client count on the 5 GHz radio",
@@ -627,13 +627,13 @@ Radio 1 (5 GHz)
           },
         ],
         explanation:
-          "In the 2.4 GHz band, only channels 1, 6, and 11 are non-overlapping (20 MHz wide) in North America. Having three APs on channel 6 creates maximum CCI. High Tx power widens the area over which AP-CR-B causes interference to AP-LOBBY, and vice versa. With 18 clients on 2.4 GHz and only 2 on 5 GHz, the dual-band radio is being underused — likely because clients are defaulting to 2.4 GHz on association.",
+          "In the 2.4 GHz band, only channels 1, 6, and 11 are non-overlapping (20 MHz wide) in North America. Having three APs on channel 6 creates maximum CCI. High Tx power widens the area over which AP-CR-B causes interference to AP-LOBBY, and vice versa. With 18 clients on 2.4 GHz and only 2 on 5 GHz, the dual-band radio is being underused: likely because clients are defaulting to 2.4 GHz on association.",
       },
 
       /* ── Task 3: Implement Fix ──────────────────────────────────── */
       {
         id: "np-sim-wireless-t3",
-        title: "Task 3 — Implement the Fix",
+        title: "Task 3: Implement the Fix",
         instructions:
           "Select the correct corrective AP settings to resolve the co-channel interference and improve overall wireless performance in Conference Room B.",
         fields: [
@@ -658,7 +658,7 @@ Radio 1 (5 GHz)
               "To reduce the interference radius of AP-CR-B, what should be done with its transmit power?",
             options: [
               "Increase to maximum to overpower the interference",
-              "Leave at 100% — power has no effect on CCI",
+              "Leave at 100%: power has no effect on CCI",
               "Reduce to a level that covers only Conference Room B (e.g. 25–50%)",
               "Set to 0% to disable the 2.4 GHz radio entirely",
               "Enable automatic power control and set maximum to 100%",
@@ -685,17 +685,17 @@ Radio 1 (5 GHz)
             label:
               "Should the 2.4 GHz channel width be changed from 20 MHz to 40 MHz for higher throughput in this environment?",
             options: [
-              "Yes — 40 MHz doubles throughput and should always be used",
-              "No — 40 MHz in 2.4 GHz consumes nearly the entire band and worsens interference for all neighbours",
-              "Yes — but only if the neighbouring APs also use 40 MHz",
-              "Yes — channel width only affects 5 GHz, not 2.4 GHz",
-              "No — 40 MHz is not supported on 2.4 GHz",
+              "Yes: 40 MHz doubles throughput and should always be used",
+              "No: 40 MHz in 2.4 GHz consumes nearly the entire band and worsens interference for all neighbors",
+              "Yes, but only if the neighboring APs also use 40 MHz",
+              "Yes: channel width only affects 5 GHz, not 2.4 GHz",
+              "No: 40 MHz is not supported on 2.4 GHz",
             ],
             correctIndex: 1,
           },
         ],
         explanation:
-          "The correct remediation: change AP-CR-B to channel 11 (the only remaining non-overlapping channel; AP-SALES is on 1, AP-LOBBY on 6), reduce Tx power to minimise the interference footprint, and enable band steering to offload capable clients to the less-congested 5 GHz radio. Using 40 MHz channel width in 2.4 GHz is strongly discouraged in dense environments because it occupies channels 1–9 or 3–11, leaving no room for non-overlapping APs and worsening CCI for all nearby devices.",
+          "The correct remediation: change AP-CR-B to channel 11 (the only remaining non-overlapping channel; AP-SALES is on 1, AP-LOBBY on 6), reduce Tx power to minimize the interference footprint, and enable band steering to offload capable clients to the less-congested 5 GHz radio. Using 40 MHz channel width in 2.4 GHz is strongly discouraged in dense environments because it occupies channels 1–9 or 3–11, leaving no room for non-overlapping APs and worsening CCI for all nearby devices.",
       },
     ],
     explanation:
@@ -718,7 +718,7 @@ Radio 1 (5 GHz)
       /* ── Task 1: Diagnose Connectivity ──────────────────────────── */
       {
         id: "np-sim-cmd-t1",
-        title: "Task 1 — Diagnose Connectivity",
+        title: "Task 1: Diagnose Connectivity",
         instructions:
           "Review the ping and traceroute output captured from WS-ACCT-04. Answer the questions to identify where in the path connectivity breaks down.",
         evidence: [
@@ -785,9 +785,9 @@ Ethernet adapter Ethernet0:
             id: "np-sim-cmd-t1-gateway-reach",
             label: "Is WS-ACCT-04 able to reach its default gateway?",
             options: [
-              "No — all pings to the gateway failed",
-              "Yes — all pings to 10.10.1.1 succeeded",
-              "Partially — intermittent packet loss to the gateway",
+              "No: all pings to the gateway failed",
+              "Yes: all pings to 10.10.1.1 succeeded",
+              "Partially: intermittent packet loss to the gateway",
               "Cannot determine from the output provided",
             ],
             correctIndex: 1,
@@ -797,10 +797,10 @@ Ethernet adapter Ethernet0:
             id: "np-sim-cmd-t1-failure-point",
             label: "Based on the tracert output, at which hop does routing to 8.8.8.8 fail?",
             options: [
-              "Hop 1 — the default gateway (10.10.1.1) is not responding",
-              "Hop 2 — immediately after the default gateway",
-              "Hop 4 — somewhere in the ISP core",
-              "Hop 8 — just before Google's network",
+              "Hop 1: the default gateway (10.10.1.1) is not responding",
+              "Hop 2: immediately after the default gateway",
+              "Hop 4: somewhere in the ISP core",
+              "Hop 8: just before Google's network",
               "The destination (8.8.8.8) is rejecting all probes",
             ],
             correctIndex: 1,
@@ -811,11 +811,11 @@ Ethernet adapter Ethernet0:
             label:
               "The workstation can reach 10.10.1.1 but not 8.8.8.8. Which layer of the OSI model is most likely involved in this failure?",
             options: [
-              "Layer 1 — Physical (cable unplugged)",
-              "Layer 2 — Data Link (MAC address issue)",
-              "Layer 3 — Network (routing or gateway issue beyond the local router)",
-              "Layer 4 — Transport (TCP/UDP port blocked)",
-              "Layer 7 — Application (browser misconfiguration)",
+              "Layer 1: Physical (cable unplugged)",
+              "Layer 2: Data Link (MAC address issue)",
+              "Layer 3: Network (routing or gateway issue beyond the local router)",
+              "Layer 4: Transport (TCP/UDP port blocked)",
+              "Layer 7: Application (browser misconfiguration)",
             ],
             correctIndex: 2,
           },
@@ -834,13 +834,13 @@ Ethernet adapter Ethernet0:
           },
         ],
         explanation:
-          "The ping and traceroute results tell a clear story: Layer 2 and the local gateway are healthy (hop 1 replies). Routing fails immediately beyond the gateway (hop 2 onwards). This is a Layer 3 issue — either the upstream router has lost its default route, the WAN link is down, or NAT/PAT is misconfigured. The DNS servers listed (10.10.1.254 and .253) are internal — they must be able to forward to external resolvers or they will also fail for external hostnames.",
+          "The ping and traceroute results tell a clear story: Layer 2 and the local gateway are healthy (hop 1 replies). Routing fails immediately beyond the gateway (hop 2 onwards). This is a Layer 3 issue, either the upstream router has lost its default route, the WAN link is down, or NAT/PAT is misconfigured. The DNS servers listed (10.10.1.254 and .253) are internal: they must be able to forward to external resolvers or they will also fail for external hostnames.",
       },
 
       /* ── Task 2: Analyse DNS ────────────────────────────────────── */
       {
         id: "np-sim-cmd-t2",
-        title: "Task 2 — Analyse DNS",
+        title: "Task 2: Analyze DNS",
         instructions:
           "Review the nslookup output and DNS-related command results captured from WS-ACCT-04. Identify the DNS failure mode.",
         evidence: [
@@ -888,9 +888,9 @@ Ping statistics for 10.10.1.254:
             id: "np-sim-cmd-t2-dns-reachable",
             label: "Is the internal DNS server (10.10.1.254) reachable from WS-ACCT-04?",
             options: [
-              "No — all pings to 10.10.1.254 timed out",
-              "Yes — ping succeeds, but DNS queries for external names fail",
-              "Yes — DNS is fully functional for all names",
+              "No: all pings to 10.10.1.254 timed out",
+              "Yes: ping succeeds, but DNS queries for external names fail",
+              "Yes: DNS is fully functional for all names",
               "Cannot determine from the output",
             ],
             correctIndex: 1,
@@ -901,10 +901,10 @@ Ping statistics for 10.10.1.254:
             label:
               "Can the internal DNS server resolve internal hostnames (e.g. intranet.corp.internal)?",
             options: [
-              "No — the internal DNS server is completely non-functional",
-              "Yes — internal resolution works; only external forwarding fails",
-              "Yes — but only for A records, not CNAME records",
-              "Cannot determine — no internal lookup was tested",
+              "No: the internal DNS server is completely non-functional",
+              "Yes: internal resolution works; only external forwarding fails",
+              "Yes, but only for A records, not CNAME records",
+              "Cannot determine: no internal lookup was tested",
             ],
             correctIndex: 1,
           },
@@ -914,9 +914,9 @@ Ping statistics for 10.10.1.254:
             label:
               "Why does 'nslookup www.example.com 8.8.8.8' also fail, even though 8.8.8.8 is a valid public resolver?",
             options: [
-              "8.8.8.8 does not exist — it is a private address",
+              "8.8.8.8 does not exist: it is a private address",
               "The workstation has a firewall rule blocking DNS on port 53",
-              "The query to 8.8.8.8 times out because there is no route to 8.8.8.8 from this network — confirming an upstream routing/WAN issue",
+              "The query to 8.8.8.8 times out because there is no route to 8.8.8.8 from this network, confirming an upstream routing/WAN issue",
               "The nslookup tool does not support specifying an alternative DNS server",
               "8.8.8.8 requires a VPN to access",
             ],
@@ -928,7 +928,7 @@ Ping statistics for 10.10.1.254:
             label:
               "Combining all evidence, what is the most likely single root cause of both the connectivity and DNS failure?",
             options: [
-              "The internal DNS server is misconfigured — it is forwarding to the wrong upstream resolver",
+              "The internal DNS server is misconfigured: it is forwarding to the wrong upstream resolver",
               "WS-ACCT-04 has an incorrect default gateway configured",
               "The upstream router (10.10.1.1) has lost its WAN connection or default route, so no traffic can exit the local network",
               "WS-ACCT-04 has a corrupted TCP/IP stack",
@@ -938,13 +938,13 @@ Ping statistics for 10.10.1.254:
           },
         ],
         explanation:
-          "The DNS analysis confirms the root cause is upstream, not on the workstation or DNS server. The internal DNS server is reachable and resolves internal names correctly — it is the DNS forwarding to the internet that fails, because the forwarder queries external resolvers via the same broken WAN path. The direct query to 8.8.8.8 also fails for the same reason (no route to internet). This converges on a single root cause: the WAN link or default route on the gateway router (10.10.1.1) has failed.",
+          "The DNS analysis confirms the root cause is upstream, not on the workstation or DNS server. The internal DNS server is reachable and resolves internal names correctly: it is the DNS forwarding to the internet that fails, because the forwarder queries external resolvers via the same broken WAN path. The direct query to 8.8.8.8 also fails for the same reason (no route to internet). This converges on a single root cause: the WAN link or default route on the gateway router (10.10.1.1) has failed.",
       },
 
       /* ── Task 3: Fix the Issue ──────────────────────────────────── */
       {
         id: "np-sim-cmd-t3",
-        title: "Task 3 — Fix the Issue",
+        title: "Task 3: Fix the Issue",
         instructions:
           "The network team has confirmed the upstream router had a misconfigured static default route. The WAN interface is up but the route was deleted during a maintenance window. Select the correct remediation steps and DNS configuration.",
         evidence: [
@@ -962,7 +962,7 @@ L        203.0.113.1/32 is directly connected, GigabitEthernet0/2`,
           },
           {
             label: "Router WAN interface details",
-            content: `GigabitEthernet0/2 — WAN (ISP)
+            content: `GigabitEthernet0/2: WAN (ISP)
   IP Address : 203.0.113.1/30
   ISP Gateway: 203.0.113.2
   Status     : up/up`,
@@ -980,7 +980,7 @@ L        203.0.113.1/32 is directly connected, GigabitEthernet0/2`,
               "Change the DNS servers on WS-ACCT-04 to 8.8.8.8 and 8.8.4.4 permanently",
               "Verify the default route is present in the routing table after adding it",
               "Test connectivity from WS-ACCT-04 to 8.8.8.8 after the route is restored",
-              "Replace the gateway router — it is faulty",
+              "Replace the gateway router: it is faulty",
               "Flush the DNS resolver cache on WS-ACCT-04 with ipconfig /flushdns",
             ],
             correctIndices: [0, 3, 4, 6],
@@ -1002,11 +1002,11 @@ L        203.0.113.1/32 is directly connected, GigabitEthernet0/2`,
             label:
               "After restoring the default route, should the workstation's DNS servers be changed from the internal servers to Google (8.8.8.8)?",
             options: [
-              "Yes — internal DNS servers should never be used for external resolution",
-              "No — the internal DNS servers will resume forwarding to external resolvers once the route is restored; no change to WS-ACCT-04 is needed",
-              "Yes — 8.8.8.8 is always faster than internal DNS servers",
-              "No — but only if the internal DNS servers are updated to forward to 1.1.1.1 instead of 8.8.8.8",
-              "Yes — the internal DNS servers should be decommissioned",
+              "Yes: internal DNS servers should never be used for external resolution",
+              "No: the internal DNS servers will resume forwarding to external resolvers once the route is restored; no change to WS-ACCT-04 is needed",
+              "Yes: 8.8.8.8 is always faster than internal DNS servers",
+              "No, but only if the internal DNS servers are updated to forward to 1.1.1.1 instead of 8.8.8.8",
+              "Yes: the internal DNS servers should be decommissioned",
             ],
             correctIndex: 1,
           },
@@ -1026,10 +1026,10 @@ L        203.0.113.1/32 is directly connected, GigabitEthernet0/2`,
           },
         ],
         explanation:
-          "The root cause was a missing default route ('Gateway of last resort is not set'). The fix is to re-add 'ip route 0.0.0.0 0.0.0.0 203.0.113.2' — a static default route pointing to the ISP gateway. After restoration, the internal DNS servers will automatically resume forwarding external queries; there is no need to reconfigure workstations. Flushing the DNS cache (ipconfig /flushdns) clears any negative cache entries (SERVFAIL responses cached during the outage) so the client immediately retries. Most importantly, 'copy running-config startup-config' must be run after every configuration change so the route survives a reload — the original deletion likely occurred because a previous config was reloaded without being saved.",
+          "The root cause was a missing default route ('Gateway of last resort is not set'). The fix is to re-add 'ip route 0.0.0.0 0.0.0.0 203.0.113.2': a static default route pointing to the ISP gateway. After restoration, the internal DNS servers will automatically resume forwarding external queries; there is no need to reconfigure workstations. Flushing the DNS cache (ipconfig /flushdns) clears any negative cache entries (SERVFAIL responses cached during the outage) so the client immediately retries. Most importantly, 'copy running-config startup-config' must be run after every configuration change so the route survives a reload: the original deletion likely occurred because a previous config was reloaded without being saved.",
       },
     ],
     explanation:
-      "This scenario demonstrates the CompTIA recommended troubleshooting methodology applied to a real outage: identify the problem (no internet), establish a theory (upstream failure), test the theory (ping gateway — OK; ping 8.8.8.8 — fail; tracert — drops at hop 2), isolate the cause (missing default route on router), implement the fix (re-add static route), and verify (test connectivity from workstation). Key commands to know for the N10-009 exam: ping, tracert/traceroute, nslookup/dig, ipconfig /all, ipconfig /flushdns, and show ip route on Cisco IOS.",
+      "This scenario demonstrates the CompTIA recommended troubleshooting methodology applied to a real outage: identify the problem (no internet), establish a theory (upstream failure), test the theory (ping gateway: OK; ping 8.8.8.8: fail; tracert: drops at hop 2), isolate the cause (missing default route on router), implement the fix (re-add static route), and verify (test connectivity from workstation). Key commands to know for the N10-009 exam: ping, tracert/traceroute, nslookup/dig, ipconfig /all, ipconfig /flushdns, and show ip route on Cisco IOS.",
   },
 ];

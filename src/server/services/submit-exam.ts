@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeSrsUpdate } from "@/core/srs/compute-srs";
 import { SRS_DEFAULT_EASE_FACTOR } from "@/core/constants";
+import { allRows } from "@/server/data/paging";
 import {
   computeReadinessScore,
   type DomainPerformance,
@@ -152,23 +153,34 @@ export async function recomputeAndSnapshotReadiness(
 ): Promise<ReadinessResult | null> {
   const { userId, certificationId } = opts;
 
-  const [domainsResult, allPerformanceResult, allCertQuestionsResult] =
-    await Promise.all([
-      supabase
-        .from("cert_domains")
-        .select("id, domain_number, title, exam_weight")
-        .eq("certification_id", certificationId)
-        .order("sort_order"),
+  // An exam's bank and a member's history can each run past the 1,000 rows one
+  // select returns (SY0-801 has 1,008 questions), so both are read a page at a
+  // time in a fixed order. A page that fails leaves the score uncomputed
+  // (null), as a failed select did before: never a score from part of the rows.
+  const [domainsResult, allPerformance, allCertQuestions] = await Promise.all([
+    supabase
+      .from("cert_domains")
+      .select("id, domain_number, title, exam_weight")
+      .eq("certification_id", certificationId)
+      .order("sort_order"),
+    allRows<{ question_id: string; times_seen: number; times_correct: number }>((from, to) =>
       supabase
         .from("question_performance")
         .select("question_id, times_seen, times_correct")
         .eq("user_id", userId)
-        .eq("certification_id", certificationId),
+        .eq("certification_id", certificationId)
+        .order("question_id")
+        .range(from, to)
+    ).catch(() => null),
+    allRows<{ id: string; domain_id: string; is_active: boolean }>((from, to) =>
       supabase
         .from("cert_questions")
         .select("id, domain_id, is_active")
-        .eq("certification_id", certificationId),
-    ]);
+        .eq("certification_id", certificationId)
+        .order("id")
+        .range(from, to)
+    ).catch(() => null),
+  ]);
 
   const domains = domainsResult.data as
     | Array<{
@@ -177,12 +189,6 @@ export async function recomputeAndSnapshotReadiness(
         title: string;
         exam_weight: number;
       }>
-    | null;
-  const allPerformance = allPerformanceResult.data as
-    | Array<{ question_id: string; times_seen: number; times_correct: number }>
-    | null;
-  const allCertQuestions = allCertQuestionsResult.data as
-    | Array<{ id: string; domain_id: string; is_active: boolean }>
     | null;
 
   if (!domains || !allPerformance || !allCertQuestions) return null;

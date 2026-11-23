@@ -1,73 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/server/supabase/admin";
+import {
+  UNSUBSCRIBE_PAGE_PATH,
+  isUnsubscribeToken,
+  parseUnsubscribeScope,
+  unsubscribe,
+  type UnsubscribeOutcome,
+} from "@/server/email/unsubscribe";
 
 /**
- * One-click unsubscribe from lifecycle email. Token-authenticated (the
- * random unsubscribe_token from the email link — no session required, as
- * mail clients open this logged-out), so it's a plain handler rather than
- * a factory endpoint. Returns a tiny HTML page.
+ * The address every email carries for unsubscribing. The random token in the
+ * link says whose preference it is, and no session is needed (a mail client
+ * opens it signed out), so this is a plain handler and not a factory endpoint.
+ *
+ * GET changes nothing. It leads to the page at /unsubscribe, which says what
+ * will stop and has the one button. Mail scanners and link previews open every
+ * link in a message, and a GET must be safe to repeat (RFC 9110, 9.2.1).
+ *
+ * POST makes the change. Two things send one: a mail client's own
+ * "Unsubscribe" button (RFC 8058, announced by the List-Unsubscribe-Post
+ * header), which is answered in JSON, and the button on the page, which is
+ * answered with the page again, saying what happened.
  */
 
-function page(title: string, body: string, status = 200) {
-  return new NextResponse(
-    `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:grid;place-items:center;min-height:90vh;margin:0;background:#f4f4f5;color:#18181b;">
-<div style="text-align:center;padding:24px;"><h1 style="font-size:20px;">${title}</h1><p style="color:#52525b;">${body}</p></div>
-</body></html>`,
-    { status, headers: { "Content-Type": "text/html; charset=utf-8" } }
-  );
+/** The page, with only the parameters it reads. */
+function pageUrl(req: NextRequest, query: Record<string, string | null>): URL {
+  const url = new URL(UNSUBSCRIBE_PAGE_PATH, req.url);
+  for (const [key, value] of Object.entries(query)) {
+    if (value) url.searchParams.set(key, value);
+  }
+  return url;
 }
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  // Basic shape check keeps junk out of the query below.
-  if (!token || !/^[0-9a-f-]{36}$/i.test(token)) {
-    return page("Invalid link", "This unsubscribe link isn't valid.", 400);
+  const scope = parseUnsubscribeScope(req.nextUrl.searchParams.get("scope"));
+  // A link in mail already sent arrives here. The page checks the token's
+  // shape again and says so when the link is not valid.
+  return NextResponse.redirect(pageUrl(req, { token: isUnsubscribeToken(token) ? token : null, scope }));
+}
+
+const NOT_VALID = "This unsubscribe link is not valid.";
+
+export async function POST(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token");
+  const scope = parseUnsubscribeScope(req.nextUrl.searchParams.get("scope"));
+  // The page's form says where it came from. A mail client sends only
+  // "List-Unsubscribe=One-Click", and some send no readable body at all.
+  const form = await req.formData().catch(() => null);
+  const fromPage = form?.get("from") === "page";
+
+  let outcome: UnsubscribeOutcome;
+  if (!isUnsubscribeToken(token)) {
+    outcome = "invalid";
+  } else {
+    try {
+      outcome = await unsubscribe(createAdminClient(), token, scope);
+    } catch (err) {
+      console.error("unsubscribe failed:", err);
+      outcome = "failed";
+    }
   }
 
-  const scope = req.nextUrl.searchParams.get("scope");
-  const admin = createAdminClient();
-
-  // scope=lead: a free-tool study-plan lead (separate tool_leads table).
-  if (scope === "lead") {
-    const { data, error } = await admin
-      .from("tool_leads")
-      .update({ unsubscribed: true, updated_at: new Date().toISOString() })
-      .eq("unsubscribe_token", token)
-      .select("id");
-    if (error) return page("Something went wrong", "Please try again later.", 500);
-    if (!data || data.length === 0) {
-      return page("Invalid link", "This unsubscribe link isn't valid.", 400);
-    }
-    return page(
-      "You're unsubscribed",
-      "You won't receive study-plan emails from CertBench anymore."
+  if (fromPage) {
+    // 303: the browser fetches the page with a GET, so a reload of the result
+    // does not send the form again. The token goes back only when the person
+    // needs it to try again.
+    return NextResponse.redirect(
+      pageUrl(req, { status: outcome, scope, token: outcome === "failed" ? token : null }),
+      303
     );
   }
 
-  // scope=daily turns off just the daily study reminder; no scope unsubscribes
-  // from all lifecycle mail (the default one-click behaviour).
-  const daily = scope === "daily";
-  const patch = daily
-    ? { daily_reminder_enabled: false, updated_at: new Date().toISOString() }
-    : { digest_enabled: false, updated_at: new Date().toISOString() };
-
-  const { data, error } = await admin
-    .from("email_preferences")
-    .update(patch)
-    .eq("unsubscribe_token", token)
-    .select("user_id");
-
-  if (error) {
-    return page("Something went wrong", "Please try again later.", 500);
+  if (outcome === "done") return NextResponse.json({ ok: true });
+  if (outcome === "failed") {
+    return NextResponse.json(
+      { error: { code: "internal", message: "You could not be unsubscribed. Please try again." } },
+      { status: 500 }
+    );
   }
-  if (!data || data.length === 0) {
-    return page("Invalid link", "This unsubscribe link isn't valid.", 400);
-  }
-  return page(
-    "You're unsubscribed",
-    daily
-      ? "You won't receive daily study reminders anymore — your weekly digest and exam reminders are unchanged. You can keep using CertBench as usual."
-      : "You won't receive study digests or exam reminders anymore. You can keep using CertBench as usual."
-  );
+  return isUnsubscribeToken(token)
+    ? NextResponse.json({ error: { code: "not_found", message: NOT_VALID } }, { status: 404 })
+    : NextResponse.json({ error: { code: "validation_failed", message: NOT_VALID } }, { status: 400 });
 }

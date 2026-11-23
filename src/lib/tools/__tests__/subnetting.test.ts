@@ -195,7 +195,7 @@ describe("combination coverage (every variant appears)", () => {
     for (const d of ["standard", "any-prefix"] as const) {
       const qs = sweep("binary", d, 300);
       expect(qs.some((q) => q.prompt.includes("8-bit binary"))).toBe(true);
-      expect(qs.some((q) => q.prompt.includes("Convert to decimal"))).toBe(true);
+      expect(qs.some((q) => q.prompt.includes("binary number to decimal"))).toBe(true);
     }
     // Standard mixes mask octets AND familiar octets.
     const values = new Set(
@@ -270,5 +270,112 @@ describe("combination coverage (every variant appears)", () => {
     const seen = new Set<string>();
     for (let i = 0; i < 200; i++) seen.add(pickGauntletMode(rng));
     expect(seen.size).toBe(MODES.length);
+  });
+});
+
+describe("what a learner reads", () => {
+  /** Every mode in both difficulties, many times over. */
+  function everything(): DrillQuestion[] {
+    const rng = seeded(801);
+    const qs: DrillQuestion[] = [];
+    for (const { id } of MODES) {
+      for (const d of ["standard", "any-prefix"] as const) {
+        for (let i = 0; i < 400; i++) qs.push(generateQuestion(id, d, rng));
+      }
+    }
+    return qs;
+  }
+  const all = everything();
+
+  /** Characters that stand in for words: arrows, an ellipsis, a middle dot. */
+  const SHORTHAND = /[\u2190-\u21ff\u2026\u00b7]|\.\.\./;
+
+  it("names every mode in words, with no arrow and no ampersand", () => {
+    expect(MODES.map((m) => m.label)).toEqual([
+      "Binary",
+      "CIDR and mask",
+      "Network ID",
+      "Broadcast and range",
+      "Host math",
+      "Same subnet?",
+    ]);
+  });
+
+  it("states the task, and the whole question, as a sentence", () => {
+    for (const q of all) {
+      for (const text of [q.prompt, q.sentence]) {
+        expect(text, text).toMatch(/^[A-Z]/);
+        expect(text, text).toMatch(/[.?]$/);
+        expect(text, text).not.toMatch(SHORTHAND);
+      }
+      // A question ends with a question mark, an instruction with a full stop.
+      expect(/^(What|How|Which|Are)\b/.test(q.prompt), q.prompt).toBe(q.prompt.endsWith("?"));
+      expect(/^(What|How|Which|Are)\b/.test(q.sentence), q.sentence).toBe(q.sentence.endsWith("?"));
+    }
+  });
+
+  it("puts the value that is asked about inside the whole question", () => {
+    for (const q of all) {
+      // "10.0.0.1 and 10.0.0.2  /26" is two addresses and a prefix; every other value is one token or two.
+      const parts = q.promptValue.replace(/ hosts$/, "").split(/\s+and\s+|\s+/);
+      for (const part of parts) expect(q.sentence, `${q.sentence} should hold ${part}`).toContain(part);
+    }
+  });
+
+  it("writes every worked step as a sentence, with its arithmetic inside it", () => {
+    for (const q of all) {
+      expect(q.solution.length, q.sentence).toBeGreaterThan(0);
+      for (const step of q.solution) {
+        expect(step, step).toMatch(/^[A-Z]/);
+        expect(step, step).toMatch(/\.$/);
+        expect(step.split(/\s+/).length, step).toBeGreaterThanOrEqual(5);
+        expect(step, step).not.toMatch(SHORTHAND);
+        expect(step, step).not.toMatch(/\(s\)|e\.g\.|#\d/);
+        // "Usable range: a: b." was a dash sweep's leftover.
+        expect(step, step).not.toMatch(/: \d[\d.]*: /);
+      }
+    }
+  });
+
+  it("states the answer in the worked steps", () => {
+    for (const q of all) {
+      if (q.answerKind === "yes-no") {
+        const last = q.solution[q.solution.length - 1];
+        expect(last).toContain(q.answer === "yes" ? "are on the same subnet" : "are not on the same subnet");
+        continue;
+      }
+      const shown = q.answerKind === "cidr" ? `/${q.answer}` : q.answer;
+      expect(q.solution.join(" "), `${q.sentence} -> ${shown}`).toContain(shown);
+    }
+  });
+
+  it("never promises a third subnet where a block of 128 has two", () => {
+    const halves = all.filter((q) => q.solution.some((s) => s.includes("The block size is 256 − 128 = 128")));
+    expect(halves.length).toBeGreaterThan(0);
+    for (const q of halves) {
+      const step = q.solution.find((s) => s.includes("The block size is"));
+      expect(step).toContain("begin at 0 and 128.");
+      expect(step).not.toContain("256 and so on");
+    }
+  });
+
+  it("gives an example of the answer's form that is never the answer", () => {
+    const bare = (v: string) => v.replace(/^\//, "");
+    for (const q of all) {
+      if (q.answerKind === "yes-no") {
+        expect(q.placeholder).toBe("");
+        continue;
+      }
+      expect(q.placeholder, q.sentence).not.toBe("");
+      expect(q.placeholder, q.sentence).not.toMatch(/e\.g\.|example/i);
+      expect(bare(q.placeholder), q.sentence).not.toBe(bare(q.answer));
+      // The example is itself a correct entry of its kind: it is graded as an answer would be.
+      expect(grade({ ...q, answer: bare(q.placeholder) }, q.placeholder), q.placeholder).toBe(true);
+    }
+    // The cases a fixed example gave away are among those swept.
+    expect(all.some((q) => q.answerKind === "cidr" && q.answer === "26")).toBe(true);
+    expect(all.some((q) => q.answer === "255.255.255.192")).toBe(true);
+    expect(all.some((q) => q.answer === "10101100")).toBe(true);
+    expect(all.some((q) => q.answerKind === "count" && q.answer === "62")).toBe(true);
   });
 });

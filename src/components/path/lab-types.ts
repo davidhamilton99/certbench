@@ -42,8 +42,9 @@ export function handsOnCount(labs: readonly Pick<PathLabInfo, "type">[]): string
   return `${handsOn.length} ${list}`;
 }
 
-/** "Simulation · 12 min", for a lab's line. */
-export const labMeta = (lab: Pick<PathLabInfo, "type" | "minutes">) => `${LAB_TYPES[lab.type].label} · ${lab.minutes} min`;
+/** "Simulation, 12 minutes", for a lab's line. */
+export const labMeta = (lab: Pick<PathLabInfo, "type" | "minutes">) =>
+  `${LAB_TYPES[lab.type].label}, ${lab.minutes} ${lab.minutes === 1 ? "minute" : "minutes"}`;
 
 /** "3.0" → "3". */
 export const domainLabel = (number: string) => number.replace(/\.0$/, "");

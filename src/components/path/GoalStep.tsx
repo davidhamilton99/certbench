@@ -8,7 +8,7 @@ import { EXAM_DATE_HORIZON_DAYS, isPlannableExamDate, isoInDays } from "@/core/p
 import { cn } from "@/lib/utils";
 
 const chip =
-  "rounded-xl border border-border bg-card px-4 py-3.5 text-left text-[15px] font-medium transition-colors hover:border-primary/60 hover:bg-primary/[0.03] focus-visible:outline-2 focus-visible:outline-primary";
+  "rounded-md border border-input bg-card px-4 py-3.5 text-left text-[15px] font-medium transition-colors hover:border-primary/70 hover:bg-primary/[0.04] focus-visible:outline-2 focus-visible:outline-primary";
 
 /**
  * One question between stops, answered in a tap: when the exam is, then how
@@ -40,7 +40,7 @@ export function GoalStep({
   if (step === "minutes") {
     return (
       <div className="path-rise grid gap-6">
-        <Header eyebrow="One quick question" title="How much time can you give it on most days?" />
+        <Header eyebrow="Your study plan" title="How much time can you study on most days?" />
         <div className="grid gap-2.5 sm:grid-cols-2">
           {[
             [10, "About 10 minutes"],
@@ -58,7 +58,7 @@ export function GoalStep({
           onClick={() => onMinutes(0)}
           className="justify-self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
         >
-          Not sure yet
+          I am not sure yet
         </button>
       </div>
     );
@@ -96,19 +96,19 @@ export function GoalStep({
               autoFocus
             />
             <Button type="submit" size="lg" className="h-12" disabled={!plannable}>
-              Set my date
+              Save the date
               <ArrowRight />
             </Button>
           </div>
           {wrong && (
             <p id="exam-date-hint" role="alert" className="text-sm text-destructive">
-              That date doesn&apos;t look right. Pick one from today to {longDate(latest)}.
+              That date is not valid. Please choose a date between today and {longDate(latest)}.
             </p>
           )}
           {retiring && plannable && date > retiring.lastDay && (
             <p role="status" className="text-sm text-muted-foreground">
-              {retiring.code} can be taken in English until {longDate(retiring.lastDay)}. Sitting it in English
-              after that means {retiring.newer.code}:{" "}
+              {retiring.code} can be taken in English until {longDate(retiring.lastDay)}. If you will take the exam
+              in English after that date, you will need {retiring.newer.code}. You can{" "}
               <a href={retiring.newer.href} className="font-medium text-primary underline underline-offset-4">
                 study {retiring.newer.code} instead
               </a>
@@ -124,12 +124,12 @@ export function GoalStep({
   if (mode === "target") {
     return (
       <div className="path-rise grid gap-6">
-        <Header eyebrow="Your exam" title="Roughly when are you aiming for?" />
+        <Header eyebrow="Your exam" title="When do you expect to take the exam?" />
         <div className="grid gap-2.5 sm:grid-cols-3">
           {[
-            [30, "Within a month"],
-            [60, "In 1–2 months"],
-            [90, "In 3 months or more"],
+            [30, "Within one month"],
+            [60, "In one to two months"],
+            [90, "In three months or more"],
           ].map(([days, label]) => (
             <button
               key={days}
@@ -149,16 +149,16 @@ export function GoalStep({
   return (
     <div className="path-rise grid gap-6">
       <Header
-        eyebrow="One quick question"
+        eyebrow="Your study plan"
         title={`Have you booked your ${examName} exam?`}
-        sub="It sets the pace of your path. You can change it any time."
+        sub="Your answer sets the pace of your study path. You can change it at any time."
       />
       <div className="grid gap-2.5 sm:grid-cols-2">
         <button type="button" className={chip} onClick={() => setMode("date")}>
-          Yes, I have a date
+          Yes, I have booked a date
         </button>
         <button type="button" className={chip} onClick={() => setMode("target")}>
-          Not booked yet
+          No, I have not booked it yet
         </button>
       </div>
     </div>
@@ -178,7 +178,7 @@ function longDate(iso: string): string {
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
   return (
     <div className="grid gap-2">
-      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</span>
+      <span className="cb-label text-muted-foreground">{eyebrow}</span>
       <h2 className="cb-display text-balance text-[1.75rem] sm:text-[2.1rem]">{title}</h2>
       {sub && <p className="text-sm text-muted-foreground">{sub}</p>}
     </div>

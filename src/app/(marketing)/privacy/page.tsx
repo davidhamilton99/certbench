@@ -1,44 +1,42 @@
-import { Metadata } from "next";
-import { BackLink } from "@/components/marketing/BackLink";
+import type { ReactNode } from "react";
+import type { Metadata } from "next";
+import { ArticleBody, ArticleSection } from "@/components/marketing/lander/Article";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import { COLUMN } from "@/components/marketing/lander/layout";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
-  description: "CertBench Privacy Policy — how we collect, use, and protect your personal data.",
+  description: "CertBench Privacy Policy: how we collect, use, and protect your personal data.",
   path: "/privacy",
 });
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen aurora-bg text-foreground">
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        <BackLink />
-        <h1 className="cb-display mb-3 text-4xl sm:text-5xl">
-          Privacy Policy
-        </h1>
-        <p className="text-[13px] text-muted-foreground mb-2">
-          Effective date: March 14, 2026 · Last updated: November 6, 2026
-        </p>
-        <p className="text-[13px] text-muted-foreground mb-8">
-          This Privacy Policy describes how CertBench (&ldquo;we,&rdquo;
-          &ldquo;us,&rdquo; or &ldquo;our&rdquo;) collects, uses, shares, and
-          protects your personal information when you use our website,
-          applications, and services (the &ldquo;Service&rdquo;). By using the
-          Service, you agree to the practices described in this policy.
-        </p>
+    // The page is set like every reading page: on the page's one left edge,
+    // inside the public frame, which draws the header and the footer.
+    <LanderPage className="pb-16 sm:pb-24">
+      <ArticleBody>
+        <header className={COLUMN}>
+          <h1 className="cb-title">Privacy Policy</h1>
+          <p className="mt-4 text-small text-muted-foreground">
+            Effective date: March 14, 2026. Last updated: November 22, 2026.
+          </p>
+          <p className="cb-measure mt-6 text-body text-muted-foreground">
+            This Privacy Policy describes how CertBench (&ldquo;we,&rdquo;
+            &ldquo;us,&rdquo; or &ldquo;our&rdquo;) collects, uses, shares, and
+            protects your personal information when you use our website,
+            applications, and services (the &ldquo;Service&rdquo;). By using the
+            Service, you agree to the practices described in this policy.
+          </p>
+        </header>
 
-        <div className="prose-custom">
+        <div>
           <Section title="1. Information We Collect">
             <p>We collect the following categories of information:</p>
 
             <p>
-              <strong>1.1 Account information.</strong> When you create an
-              account, we collect your email address, display name, and
-              password. Passwords are stored as secure cryptographic hashes — we
-              never store or have access to your plaintext password. If you sign
-              in with Google instead, Google shares your name, email address,
-              profile picture, and Google account ID with us, and no password is
-              created. Section 5 explains how we handle data from Google.
+              <strong>1.1 Account information.</strong> When you create an account, we collect your email address, display name, and password. Passwords are stored as secure cryptographic hashes: we never store or have access to your plaintext password. If you sign in with Google instead, Google shares your name, email address, profile picture, and Google account ID with us, and no password is created. Section 5 explains how we handle data from Google.
             </p>
             <p>
               <strong>1.2 Study and usage data.</strong> We collect data
@@ -48,9 +46,10 @@ export default function PrivacyPage() {
               interactions.
             </p>
             <p>
-              <strong>1.3 User-generated content.</strong> Study materials you
-              upload, questions you generate, and study sets you create are
-              stored on our servers to provide the Service.
+              <strong>1.3 User-generated content.</strong> Study sets you have
+              created, the questions in them, and any excerpt of your study
+              materials that was saved with a study set are stored on our
+              servers to provide the Service.
             </p>
             <p>
               <strong>1.4 Payment information.</strong> If you subscribe to
@@ -87,36 +86,32 @@ export default function PrivacyPage() {
             <p>We use the information we collect to:</p>
             <ul>
               <li>
-                <strong>Provide the Service</strong> — authenticate your
-                account, deliver study content, calculate readiness scores, and
-                generate adaptive study plans
+                <strong>Provide the Service</strong>: authenticate your
+                account, deliver study content, calculate readiness scores,
+                record your progress on your study path, and schedule your
+                spaced review
               </li>
               <li>
-                <strong>Process AI question generation</strong> — send your
-                uploaded study materials to our AI provider for processing when
-                you use the generation feature
-              </li>
-              <li>
-                <strong>Process payments</strong> — manage your subscription and
+                <strong>Process payments</strong>: manage your subscription and
                 billing through Stripe
               </li>
               <li>
-                <strong>Communicate with you</strong> — send account emails
+                <strong>Communicate with you</strong>: send account emails
                 (account verification, password resets, billing receipts) and
                 emails about your study, which you can unsubscribe from at any
                 time
               </li>
               <li>
-                <strong>Improve the Service</strong> — study how the Service is
+                <strong>Improve the Service</strong>: study how the Service is
                 used, including session recordings, to find and fix problems and
                 decide what to build next
               </li>
               <li>
-                <strong>Ensure security</strong> — detect and prevent fraud,
+                <strong>Ensure security</strong>: detect and prevent fraud,
                 abuse, and unauthorized access
               </li>
               <li>
-                <strong>Comply with legal obligations</strong> — respond to
+                <strong>Comply with legal obligations</strong>: respond to
                 lawful requests from authorities and meet regulatory
                 requirements
               </li>
@@ -131,21 +126,21 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>Contract performance</strong> — processing necessary to
+                <strong>Contract performance</strong>: processing necessary to
                 provide the Service you signed up for (account data, study
                 data, payment processing)
               </li>
               <li>
-                <strong>Legitimate interests</strong> — improving the Service,
+                <strong>Legitimate interests</strong>: improving the Service,
                 ensuring security, and preventing fraud, where these interests
                 are not overridden by your rights
               </li>
               <li>
-                <strong>Consent</strong> — where you have opted in to receive
+                <strong>Consent</strong>: where you have opted in to receive
                 marketing communications (you may withdraw consent at any time)
               </li>
               <li>
-                <strong>Legal obligation</strong> — processing required to
+                <strong>Legal obligation</strong>: processing required to
                 comply with applicable laws
               </li>
             </ul>
@@ -153,27 +148,35 @@ export default function PrivacyPage() {
 
           <Section title="4. AI Processing">
             <p>
-              When you use the AI question generation feature, your uploaded
-              study materials are sent to our AI provider, Anthropic, for
-              processing. Important details:
+              Until November 2026, CertBench offered a tool that made practice
+              questions from study materials that members uploaded. When a
+              member used that tool, the uploaded study materials were sent to
+              our AI provider at the time, Anthropic, for processing. The tool
+              has been retired, and uploaded study materials are no longer sent
+              to an AI provider. While the tool was offered:
             </p>
             <ul>
               <li>
-                Content is transmitted securely via encrypted connections (TLS)
+                Content was transmitted securely via encrypted connections (TLS)
               </li>
               <li>
-                Anthropic processes content solely for the purpose of generating
-                study questions and does not use it to train their AI models
+                Anthropic processed content solely for the purpose of generating
+                study questions and did not use it to train its AI models
               </li>
               <li>
-                Your study materials are not shared with any other third party
-                through the AI generation process
+                Study materials were not shared with any other third party
+                through the tool
               </li>
               <li>
-                AI-generated output may be stored as part of your study sets but
-                is not used by Anthropic beyond the generation request
+                The questions that the tool produced were stored as part of the
+                member&apos;s study sets and were not used by Anthropic beyond
+                the request that produced them
               </li>
             </ul>
+            <p>
+              Study sets that were made with the tool remain stored with the
+              accounts of the members who made them.
+            </p>
           </Section>
 
           <Section title="5. Google User Data">
@@ -185,7 +188,7 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>What Google user data we access</strong> — when you sign
+                <strong>What Google user data we access</strong>: when you sign
                 in with Google, we ask only for Google&apos;s basic sign-in
                 permissions (your name, email address, and profile). Google
                 shares your name, email address, profile picture, and Google
@@ -193,34 +196,34 @@ export default function PrivacyPage() {
                 Drive, contacts, calendar, or any other Google data.
               </li>
               <li>
-                <strong>How we use Google user data</strong> — only to create
-                your CertBench account, recognise you when you sign in, and send
+                <strong>How we use Google user data</strong>: only to create
+                your CertBench account, recognize you when you sign in, and send
                 account and study emails to your email address. We do not use
                 Google user data for advertising, we do not sell it, and we do
                 not use it to develop, improve, or train AI or machine-learning
                 models.
               </li>
               <li>
-                <strong>How we share Google user data</strong> — we do not share,
+                <strong>How we share Google user data</strong>: we do not share,
                 transfer, or disclose it to anyone except the service providers
                 listed in section 6 that need it to run CertBench (our
                 authentication provider, Supabase, which stores it), or when the
                 law requires it.
               </li>
               <li>
-                <strong>How we store and protect Google user data</strong> — it
+                <strong>How we store and protect Google user data</strong>: it
                 is stored with your account by Supabase, encrypted in transit
                 (TLS) and at rest, and protected by access controls so that only
                 your account and CertBench&apos;s servers can read it.
               </li>
               <li>
                 <strong>How long we keep Google user data, and how to delete
-                it</strong> — we keep it for as long as your account exists and
+                it</strong>: we keep it for as long as your account exists and
                 delete it when your account is deleted. To have your account and
                 its Google user data deleted, email{" "}
                 <a
                   href="mailto:privacy@certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   privacy@certbench.dev
                 </a>
@@ -234,7 +237,7 @@ export default function PrivacyPage() {
               Google APIs adheres to the{" "}
               <a
                 href="https://developers.google.com/terms/api-services-user-data-policy"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 Google API Services User Data Policy
               </a>
@@ -250,29 +253,26 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>Supabase</strong> — database hosting, authentication,
+                <strong>Supabase</strong>: database hosting, authentication,
                 and file storage (US-based infrastructure)
               </li>
               <li>
-                <strong>Vercel</strong> — application hosting and content
+                <strong>Vercel</strong>: application hosting and content
                 delivery (global edge network)
               </li>
               <li>
-                <strong>Stripe</strong> — payment processing for Pro
+                <strong>Stripe</strong>: payment processing for Pro
                 subscribers (PCI DSS Level 1 compliant)
               </li>
               <li>
-                <strong>Anthropic</strong> — AI-powered question generation
-              </li>
-              <li>
-                <strong>PostHog</strong> — usage analytics and session
+                <strong>PostHog</strong>: usage analytics and session
                 recordings (US-based infrastructure)
               </li>
               <li>
-                <strong>Resend</strong> — sending our emails
+                <strong>Resend</strong>: sending our emails
               </li>
               <li>
-                <strong>Google</strong> — sign-in, if you choose to sign in with
+                <strong>Google</strong>: sign-in, if you choose to sign in with
                 Google
               </li>
             </ul>
@@ -306,26 +306,26 @@ export default function PrivacyPage() {
             <p>We retain your information as follows:</p>
             <ul>
               <li>
-                <strong>Account data</strong> — retained for as long as your
+                <strong>Account data</strong>: retained for as long as your
                 account is active, plus 30 days after deletion to allow for
                 account recovery
               </li>
               <li>
-                <strong>Study data</strong> — retained for as long as your
+                <strong>Study data</strong>: retained for as long as your
                 account is active and deleted upon account deletion
               </li>
               <li>
-                <strong>Payment records</strong> — retained for 7 years after
+                <strong>Payment records</strong>: retained for 7 years after
                 the last transaction to comply with tax and financial reporting
                 requirements
               </li>
               <li>
-                <strong>Analytics data</strong> — session recordings are deleted
+                <strong>Analytics data</strong>: session recordings are deleted
                 automatically after 30 days; other usage analytics are kept for
                 as long as they help us improve the Service
               </li>
               <li>
-                <strong>Support communications</strong> — retained for 2 years
+                <strong>Support communications</strong>: retained for 2 years
                 after resolution
               </li>
             </ul>
@@ -372,32 +372,32 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>Access</strong> — request a copy of the personal data we
+                <strong>Access</strong>: request a copy of the personal data we
                 hold about you
               </li>
               <li>
-                <strong>Correction</strong> — request that we correct inaccurate
+                <strong>Correction</strong>: request that we correct inaccurate
                 or incomplete data
               </li>
               <li>
-                <strong>Deletion</strong> — request that we delete your personal
+                <strong>Deletion</strong>: request that we delete your personal
                 data (Pro members can also delete their account directly from
                 their profile settings)
               </li>
               <li>
-                <strong>Data portability</strong> — request your data in a
+                <strong>Data portability</strong>: request your data in a
                 structured, commonly used, machine-readable format
               </li>
               <li>
-                <strong>Restriction</strong> — request that we restrict
+                <strong>Restriction</strong>: request that we restrict
                 processing of your data in certain circumstances
               </li>
               <li>
-                <strong>Objection</strong> — object to processing based on
+                <strong>Objection</strong>: object to processing based on
                 legitimate interests
               </li>
               <li>
-                <strong>Withdraw consent</strong> — where processing is based on
+                <strong>Withdraw consent</strong>: where processing is based on
                 consent, withdraw it at any time without affecting the
                 lawfulness of prior processing
               </li>
@@ -406,7 +406,7 @@ export default function PrivacyPage() {
               To exercise any of these rights, contact us at{" "}
               <a
                 href="mailto:privacy@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 privacy@certbench.dev
               </a>
@@ -422,21 +422,21 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>Right to know</strong> — request details about the
+                <strong>Right to know</strong>: request details about the
                 categories and specific pieces of personal information we
                 collect, the purposes, and the third parties with whom it is
                 shared
               </li>
               <li>
-                <strong>Right to delete</strong> — request deletion of your
+                <strong>Right to delete</strong>: request deletion of your
                 personal information, subject to certain exceptions
               </li>
               <li>
-                <strong>Right to non-discrimination</strong> — we will not
+                <strong>Right to non-discrimination</strong>: we will not
                 discriminate against you for exercising your CCPA rights
               </li>
               <li>
-                <strong>No sale of personal information</strong> — we do not
+                <strong>No sale of personal information</strong>: we do not
                 sell personal information as defined under the CCPA
               </li>
             </ul>
@@ -444,7 +444,7 @@ export default function PrivacyPage() {
               To submit a CCPA request, contact us at{" "}
               <a
                 href="mailto:privacy@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 privacy@certbench.dev
               </a>
@@ -462,7 +462,7 @@ export default function PrivacyPage() {
               personal data, please contact us at{" "}
               <a
                 href="mailto:privacy@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 privacy@certbench.dev
               </a>
@@ -479,7 +479,7 @@ export default function PrivacyPage() {
             <p>
               <strong>Analytics.</strong> PostHog stores an identifier in a
               first-party cookie and in your browser&apos;s local storage, so it
-              can recognise your visits to CertBench and connect them for the
+              can recognize your visits to CertBench and connect them for the
               analytics and session recordings described in section 1.5. It
               does not track you on other websites.
             </p>
@@ -520,7 +520,7 @@ export default function PrivacyPage() {
                 <strong>General inquiries:</strong>{" "}
                 <a
                   href="mailto:support@certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   support@certbench.dev
                 </a>
@@ -529,7 +529,7 @@ export default function PrivacyPage() {
                 <strong>Privacy-specific requests:</strong>{" "}
                 <a
                   href="mailto:privacy@certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   privacy@certbench.dev
                 </a>
@@ -538,7 +538,7 @@ export default function PrivacyPage() {
                 <strong>Website:</strong>{" "}
                 <a
                   href="https://certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   certbench.dev
                 </a>
@@ -546,26 +546,22 @@ export default function PrivacyPage() {
             </ul>
           </Section>
         </div>
-      </div>
-    </div>
+      </ArticleBody>
+    </LanderPage>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+/**
+ * One numbered clause: the rule and heading of every reading page, then the
+ * clause's text at the width of its measure. The clauses stand closer
+ * together than an article's sections do, because many of them are short.
+ */
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-10">
-      <h2 className="text-[17px] font-semibold text-foreground mb-3">
-        {title}
-      </h2>
-      <div className="text-[14px] text-muted-foreground leading-relaxed space-y-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[14px]">
+    <ArticleSection title={title} className="mt-12 sm:mt-16">
+      <div className="cb-measure grid gap-4 text-body text-muted-foreground [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-5">
         {children}
       </div>
-    </section>
+    </ArticleSection>
   );
 }

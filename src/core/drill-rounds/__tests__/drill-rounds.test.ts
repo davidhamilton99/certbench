@@ -45,7 +45,7 @@ describe("statuses", () => {
     expect(itemStatus({ a: 3, c: 1, s: 1, t: 1 })).toBe("got");
   });
 
-  it("reads a skill by overall accuracy, so one slip doesn't flip it", () => {
+  it("reads a skill by overall accuracy, so one slip does not flip it", () => {
     expect(skillStatus({ a: 10, c: 9, s: 0, t: 1 })).toBe("got");
     expect(skillStatus({ a: 10, c: 7, s: 3, t: 1 })).toBe("missed");
     expect(skillStatus(undefined)).toBe("new");

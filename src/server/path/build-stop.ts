@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { BankQuestion, PathBank } from "./bank";
 import { PATH_CONTENT } from "@/data/path";
 import type { AuthoredRep } from "@/data/path/types";

@@ -28,7 +28,7 @@ export async function generateMetadata({
   // of search. The practice-test and objective pages are what should rank.
   return pageMetadata({
     title: `${name} study path`,
-    description: `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a map of where you stand.`,
+    description: `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a chart of where you stand on every objective.`,
     path: `/path/${cert}`,
     noindex: true,
   });

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { listEnrollments } from "@/server/data/enrollments";
 import {
   getCertificationBySlug,
@@ -19,11 +19,7 @@ export default async function ReferencePage({
   searchParams: Promise<{ cert?: string }>;
 }) {
   const { cert: certSlug } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const enrollments = await listEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
@@ -42,15 +38,15 @@ export default async function ReferencePage({
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Reference tables</h1>
-        <p className="text-sm text-muted-foreground">
-          {active.name} · quick lookup for key exam topics
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Reference tables</h1>
+        <p className="text-small text-muted-foreground">
+          These are the reference tables for {active.name}. Each table can be searched.
         </p>
       </div>
       {!tables ? (
-        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          No reference tables for this certification yet.
+        <p className="rounded-lg border border-dashed border-input p-8 text-small text-muted-foreground">
+          There are no reference tables for this certification yet.
         </p>
       ) : (
         <ReferenceTableViewer

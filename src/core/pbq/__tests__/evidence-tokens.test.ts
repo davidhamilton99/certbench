@@ -8,7 +8,7 @@ const toned = (line: string, tone: EvidenceTone) =>
     .filter((t) => t.tone === tone)
     .map((t) => t.text);
 
-describe("evidence colour", () => {
+describe("evidence color", () => {
   it("gives every line of every lab's evidence back exactly", () => {
     const sims = Object.values(pbqRegistry)
       .flat()

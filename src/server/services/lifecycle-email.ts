@@ -1,6 +1,6 @@
 import "server-only";
 
-import { publicEnv } from "@/env";
+import { serverEnv } from "@/env";
 import type { Db } from "@/server/supabase/server";
 import { createAdminClient } from "@/server/supabase/admin";
 import { getProfile } from "@/server/data/profiles";
@@ -9,6 +9,7 @@ import { getCertification } from "@/server/data/certifications";
 import { getPathProgress } from "@/server/data/path-progress";
 import { loadPathBank } from "@/server/path/bank";
 import { sendEmail, type SendEmailInput } from "@/server/email/resend";
+import { unsubscribeHeaders, unsubscribeUrl } from "@/server/email/unsubscribe";
 import { captureServerEvent } from "@/server/analytics";
 import { signStoryToken } from "@/server/story/story-token";
 import {
@@ -32,6 +33,19 @@ export const COUNTDOWN_DAYS = [14, 7, 3, 1] as const;
 
 /** Days AFTER the exam date to send the "how did it go?" story request. */
 export const POST_EXAM_DAY = 2;
+
+/**
+ * How long a run may work before it stops taking new accounts. Vercel ends the
+ * function at 300 seconds (maxDuration in the cron route) and a run that is
+ * ended there reports nothing, so the run stops itself first and says so.
+ */
+export const RUN_BUDGET_MS = 240_000;
+
+/** How many accounts are read from the sign-in service at a time. */
+const ACCOUNTS_PER_PAGE = 1000;
+
+/** The most pages a run will ask for: a stop in case the service never answers with an empty page. */
+const MAX_ACCOUNT_PAGES = 1000;
 
 /** Whole days from `now` until a yyyy-mm-dd exam date (UTC calendar). */
 export function daysUntil(examDate: string, now: Date): number {
@@ -69,7 +83,13 @@ async function deliver(
   input: SendEmailInput,
   result?: LifecycleRunResult
 ): Promise<boolean> {
-  const sent = await sendEmail(input);
+  let sent = false;
+  try {
+    sent = await sendEmail(input);
+  } catch (err) {
+    // sendEmail answers false instead of throwing. This is for anything unforeseen.
+    console.error(`lifecycle email ${emailType} failed:`, err);
+  }
   if (!sent && result) result.sendFailures += 1;
   await captureServerEvent(userId, sent ? "lifecycle_email_sent" : "lifecycle_email_failed", {
     email_type: emailType,
@@ -98,19 +118,20 @@ async function getPrefs(admin: Db, userId: string): Promise<EmailPrefs> {
   }
   return {
     digestEnabled: row.digest_enabled,
-    unsubscribeUrl: `${publicEnv.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${row.unsubscribe_token}`,
+    unsubscribeUrl: unsubscribeUrl(row.unsubscribe_token),
   };
 }
 
 /**
- * Idempotency gate: claims (user, type, today) in email_log. Returns false
- * when today's row already exists — the email was (or is being) sent.
+ * Idempotency gate: claims (user, type, today) in email_log and answers with
+ * the claim's row id. Answers null when today's row already exists: the email
+ * was (or is being) sent.
  */
 async function claimSend(
   admin: Db,
   userId: string,
   emailType: string
-): Promise<boolean> {
+): Promise<number | null> {
   const { data, error } = await admin
     .from("email_log")
     .upsert(
@@ -121,9 +142,35 @@ async function claimSend(
   if (error) {
     // Missing migration or transient failure: skip rather than double-send.
     console.error("email_log claim failed:", error.message);
-    return false;
+    return null;
   }
-  return (data ?? []).length > 0;
+  return data?.[0]?.id ?? null;
+}
+
+/**
+ * Sends an email that has been claimed, and gives the claim back when the send
+ * fails. A row in email_log therefore means the mail service accepted the
+ * email. A row left behind by a failed send used up the one-time emails for
+ * good (sentBefore reads it for ever) and hid the failure from the next run.
+ */
+async function deliverClaimed(
+  admin: Db,
+  claimId: number,
+  userId: string,
+  emailType: string,
+  input: SendEmailInput,
+  result?: LifecycleRunResult
+): Promise<boolean> {
+  let sent = false;
+  try {
+    sent = await deliver(userId, emailType, input, result);
+  } finally {
+    if (!sent) {
+      const { error } = await admin.from("email_log").delete().eq("id", claimId);
+      if (error) console.error("email_log release failed:", error.message);
+    }
+  }
+  return sent;
 }
 
 /** Whether this email type ever went to them (claimSend only covers today). */
@@ -143,9 +190,11 @@ async function sentBefore(admin: Db, userId: string, emailType: string): Promise
 }
 
 /**
- * Welcome email after onboarding. Transactional — no digest opt-out check,
- * but still deduped via email_log so re-running onboarding can't resend it.
- * Never throws: onboarding must not fail because email is down.
+ * The welcome email, sent once for an account, ever. The enrollment route
+ * calls this each time a learner without Pro confirms an exam, which happens
+ * again before every checkout, so today's claim alone would welcome the same
+ * person on each later day. Transactional: no opt-out check.
+ * Never throws: enrollment must not fail because email is down.
  */
 export async function sendWelcome(
   userId: string,
@@ -155,13 +204,15 @@ export async function sendWelcome(
   try {
     if (isTestAccount(email)) return;
     const admin = createAdminClient();
-    if (!(await claimSend(admin, userId, "welcome"))) return;
+    if (await sentBefore(admin, userId, "welcome")) return;
     const [profile, cert] = await Promise.all([
       getProfile(admin, userId),
       getCertification(admin, certId),
     ]);
     if (!cert) return;
-    await deliver(userId, "welcome", {
+    const claim = await claimSend(admin, userId, "welcome");
+    if (claim === null) return;
+    await deliverClaimed(admin, claim, userId, "welcome", {
       to: email,
       ...welcomeEmail({
         displayName: profile?.displayName ?? "there",
@@ -181,10 +232,21 @@ export interface LifecycleRunResult {
   postExam: number;
   pathNudges: number;
   pathOffers: number;
-  /** Sends Resend refused (or skipped with no API key). */
+  /** Sends the mail service refused, or that received no answer. */
   sendFailures: number;
   /** Accounts with a path saved inside the path emails' window. */
   recentPaths: number;
+  /** Pages of accounts read from the sign-in service. */
+  pages: number;
+  /** The run reached its time budget before it reached every account. */
+  stoppedEarly: boolean;
+}
+
+export interface LifecycleRunOptions {
+  /** How long the run may work before it stops taking new accounts. */
+  budgetMs?: number;
+  /** The clock the budget is measured on, in milliseconds. */
+  clock?: () => number;
 }
 
 /** A path someone saved progress on, as of its last save. */
@@ -214,10 +276,22 @@ interface RunContext {
  * All sends respect digest_enabled and are deduped per day via email_log.
  * Apart from countdowns, which are tied to a date, a user gets at most one
  * "study" email a day (see sentStudyEmailToday).
+ *
+ * The run reads every page of accounts. It stops taking new accounts when its
+ * time budget is spent and says so in its result (`stoppedEarly`); a second
+ * run on the same day is safe, because each email is claimed in email_log.
  */
 export async function runLifecycleEmails(
-  now: Date = new Date()
+  now: Date = new Date(),
+  options: LifecycleRunOptions = {}
 ): Promise<LifecycleRunResult> {
+  // Without the mail service's key every send would fail. Stop before anything
+  // is read or written, so that the cron route records a failed run.
+  serverEnv("RESEND_API_KEY");
+
+  const clock = options.clock ?? Date.now;
+  const deadline = clock() + (options.budgetMs ?? RUN_BUDGET_MS);
+
   const admin = createAdminClient();
   const result: LifecycleRunResult = {
     users: 0,
@@ -228,29 +302,44 @@ export async function runLifecycleEmails(
     pathOffers: 0,
     sendFailures: 0,
     recentPaths: 0,
+    pages: 0,
+    stoppedEarly: false,
   };
-
-  const { data: userPage, error } = await admin.auth.admin.listUsers({
-    perPage: 1000,
-  });
-  if (error) throw new Error(`listUsers failed: ${error.message}`);
 
   const [pro, recent] = await Promise.all([loadProUsers(admin), loadRecentPaths(admin, now)]);
   const ctx: RunContext = { now, pro, recent };
   result.recentPaths = recent.size;
 
-  for (const user of userPage.users) {
-    if (!user.email || !user.email_confirmed_at) continue;
-    if (isTestAccount(user.email)) continue;
-    result.users += 1;
+  // Accounts already handled in this run. The service pages by position, so an
+  // account can appear on two pages when someone signs up during the run.
+  const seen = new Set<string>();
 
-    // One user's failure (bad data, missing prefs table, transient error)
-    // must not sink the whole run.
-    try {
-      await processUser(admin, user.id, user.email, ctx, result);
-    } catch (err) {
-      result.failed += 1;
-      console.error(`lifecycle emails failed for user ${user.id}:`, err);
+  accounts: for (let page = 1; page <= MAX_ACCOUNT_PAGES; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: ACCOUNTS_PER_PAGE });
+    if (error) throw new Error(`listUsers failed${page > 1 ? ` on page ${page}` : ""}: ${error.message}`);
+    const fresh = data.users.filter((user) => !seen.has(user.id));
+    // An empty page, or one that repeats accounts already handled, is the end.
+    if (fresh.length === 0) break;
+    result.pages = page;
+
+    for (const user of fresh) {
+      seen.add(user.id);
+      if (!user.email || !user.email_confirmed_at) continue;
+      if (isTestAccount(user.email)) continue;
+      if (clock() >= deadline) {
+        result.stoppedEarly = true;
+        break accounts;
+      }
+      result.users += 1;
+
+      // One user's failure (bad data, missing prefs table, transient error)
+      // must not sink the whole run.
+      try {
+        await processUser(admin, user.id, user.email, ctx, result);
+      } catch (err) {
+        result.failed += 1;
+        console.error(`lifecycle emails failed for user ${user.id}:`, err);
+      }
     }
   }
 
@@ -323,6 +412,8 @@ async function processUser(
 
   const profile = await getProfile(admin, userId);
   const displayName = profile?.displayName ?? "there";
+  // Every lifecycle email can be stopped from the mail client's own button.
+  const headers = unsubscribeHeaders(prefs.unsubscribeUrl);
 
   // One "study" email a day. Countdowns are tied to a date and always go; the
   // path emails only go on a day nothing else did.
@@ -338,10 +429,11 @@ async function processUser(
     // different cert can still fire.
     if (days === -POST_EXAM_DAY) {
       const cert = await getCertification(admin, enrollment.certificationId);
-      if (cert && (await claimSend(admin, userId, `postexam_${cert.id}`))) {
-        const sent = await deliver(userId, `postexam_${cert.slug}`, {
+      const claim = cert ? await claimSend(admin, userId, `postexam_${cert.id}`) : null;
+      if (cert && claim !== null) {
+        const sent = await deliverClaimed(admin, claim, userId, `postexam_${cert.slug}`, {
           to: email,
-          headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` },
+          headers,
           ...postExamEmail({
             displayName,
             certName: cert.name,
@@ -362,11 +454,14 @@ async function processUser(
     if (!cert) continue;
     const content = await pathCountdown(admin, userId, cert.slug, days, displayName, pro, prefs.unsubscribeUrl);
     if (!content) continue;
-    if (!(await claimSend(admin, userId, `countdown_${days}`))) continue;
-    const sent = await deliver(
+    const claim = await claimSend(admin, userId, `countdown_${days}`);
+    if (claim === null) continue;
+    const sent = await deliverClaimed(
+      admin,
+      claim,
       userId,
       `countdown_${days}`,
-      { to: email, headers: { "List-Unsubscribe": `<${prefs.unsubscribeUrl}>` }, ...content },
+      { to: email, headers, ...content },
       result
     );
     if (sent) {
@@ -456,11 +551,14 @@ async function sendPathEmail(
     } else continue;
     const type = kind === "offer" ? pathOfferType(saved.cert) : pathNudgeType(saved.cert);
     if (await sentBefore(admin, userId, type)) continue;
-    if (!(await claimSend(admin, userId, type))) continue;
-    const sent = await deliver(
+    const claim = await claimSend(admin, userId, type);
+    if (claim === null) continue;
+    const sent = await deliverClaimed(
+      admin,
+      claim,
       userId,
       type,
-      { to: email, headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` }, ...content },
+      { to: email, headers: unsubscribeHeaders(unsubscribeUrl), ...content },
       result
     );
     return sent ? kind : null;

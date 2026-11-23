@@ -1,89 +1,114 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Timer, X } from "lucide-react";
+import { OPTION_LETTERS } from "@/components/quiz/AnswerOption";
 import { biggestOpportunity } from "@/core/path/checkpoint";
-import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { PathStructure } from "@/core/path/types";
+import { READINESS_TARGET } from "@/lib/readiness/band";
 import type { RehearsalRun } from "./rehearsal-run";
 import { OpportunityNote, ReadingCard } from "./PathReveal";
 import { cn } from "@/lib/utils";
-
-const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 /** The domain an objective sits in: "4.2" is in "4.0". */
 export const domainOf = (objective: string) =>
   objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
 
-/** The headline: how the dial moved since the reading before. */
+/** The headline: how the score moved since the reading before. */
 function headline(score: number, before: NonNullable<RehearsalRun["done"]>["before"]): string {
-  const ready = score >= 75;
-  if (!before) return ready ? "Exam-ready on this run." : "Here's where you stand.";
+  const ready = score >= READINESS_TARGET;
+  const points = (n: number) => `${n} ${n === 1 ? "point" : "points"}`;
+  if (!before) return ready ? "You met the readiness target." : "This is where you stand.";
   const delta = score - before.score;
-  const since = before.source === "checkpoint" ? "your checkpoint" : "your last rehearsal";
-  if (delta > 0) return ready ? `Up ${delta}, and exam-ready on this run.` : `Up ${delta} since ${since}.`;
-  if (delta === 0) return ready ? "Exam-ready on this run." : `Level with ${since}.`;
-  return `Down ${-delta} from ${since}.`;
+  const since = before.source === "checkpoint" ? "your checkpoint" : "your last practice exam";
+  if (delta > 0)
+    return ready
+      ? `You met the readiness target, ${points(delta)} above ${since}.`
+      : `Your result is ${points(delta)} higher than ${since}.`;
+  if (delta === 0) return ready ? "You met the readiness target." : `Your result is the same as ${since}.`;
+  return `Your result is ${points(-delta)} lower than ${since}.`;
 }
 
 /**
- * A finished exam rehearsal: the score on the readiness dial, swept from the
- * reading before; how each domain went; the time it took; the way on
- * (`children`); and every answer to look back over, misses first. A public
- * practice test reports on it under its own name (`label`, `caption`).
+ * A finished practice exam: the score against the readiness target, counted
+ * from the reading before; how each domain went; the time it took; the way on
+ * (`children`); and every answer to look back over, the missed ones first. The
+ * study path and the public practice exams both report on it.
+ *
+ * It is shown in answer to a press or to the clock running out, so it takes the
+ * focus as it arrives (`takeFocus`): a screen reader is told that this is the
+ * result, and that the time limit was reached when it was, before anything else.
  */
 export function RehearsalResult({
   run,
   structure,
-  label = "Exam rehearsal",
-  caption = "Rehearsal",
+  label = "Practice exam",
+  caption = "Practice exam result",
+  takeFocus = true,
   children,
 }: {
   run: RehearsalRun & { done: NonNullable<RehearsalRun["done"]> };
   structure: PathStructure;
   /** What this sitting is called above the score. */
   label?: string;
-  /** The word under the dial's number. */
+  /** The words above the score's figure. */
   caption?: string;
+  /** False where the page that shows it moves the focus itself. */
+  takeFocus?: boolean;
   children: ReactNode;
 }) {
   const { result, before, timedOut } = run.done;
   const minutesUsed = Math.max(1, Math.round(result.seconds / 60));
-  const limit = REHEARSAL_FORMATS[result.size].minutes;
+  // The sitting's own limit: a public practice exam can be taken with extended time.
+  const limit = Math.round(run.limitMs / 60_000);
   const unanswered = result.total - result.answered;
   const opportunity = biggestOpportunity(result, structure.domains);
   const fell = before !== null && result.score < before.score;
+  const name = `${structure.examName} ${label.toLowerCase()}`;
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (takeFocus) rootRef.current?.focus({ preventScroll: true });
+  }, [takeFocus]);
 
   return (
-    <div className="path-rise grid gap-6">
+    <div
+      ref={rootRef}
+      // Takes the focus so that it is read; it is not a control.
+      tabIndex={-1}
+      role="group"
+      aria-label={`${timedOut ? "The time limit was reached. " : ""}${name} result`}
+      className="path-rise grid grid-cols-[minmax(0,1fr)] gap-6"
+    >
       <ReadingCard
         result={result}
         structure={structure}
-        kicker={`${label} · ${structure.examName}`}
+        kicker={name}
         headline={headline(result.score, before)}
         caption={caption}
         from={before?.score}
         summary={
           <>
-            {result.score}% across {result.total} questions, weighted the way the real exam weights its domains. 75%
-            is where we call it exam-ready.
-            {fell && " One sitting can swing a few points; your misses come back in the stops ahead."}
+            You scored {result.score}% across {result.total} questions, weighted in the same way as the domains of
+            the real exam.
+            {fell &&
+              " A single exam can vary by a few points. The questions that you missed will return in your next steps."}
           </>
         }
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {opportunity && <OpportunityNote domain={opportunity} />}
-        <div className={cn("flex gap-3 rounded-2xl border border-border bg-card p-4", !opportunity && "sm:col-span-2")}>
-          <Timer className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div className={cn("glass flex gap-3 rounded-lg p-4 sm:p-5", !opportunity && "sm:col-span-2")}>
+          <Timer className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
           <div className="grid gap-0.5 text-sm">
             <span className="font-medium">
-              {timedOut ? `Time ran out at ${limit} minutes` : `${minutesUsed} of ${limit} minutes`}
+              {timedOut ? `The time limit of ${limit} minutes was reached.` : `You used ${minutesUsed} of ${limit} minutes.`}
             </span>
             <span className="text-muted-foreground">
               {unanswered === 0
-                ? "Every question answered."
-                : `${unanswered} left unanswered, counted as wrong.`}
+                ? "You answered every question."
+                : `${unanswered} ${unanswered === 1 ? "question was" : "questions were"} left unanswered and counted as incorrect.`}
             </span>
           </div>
         </div>
@@ -104,12 +129,12 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
   const domainName = new Map(structure.domains.map((d) => [d.number, d.title]));
 
   return (
-    <section className="glass grid gap-5 rounded-3xl p-5 sm:p-6" aria-labelledby="rehearsal-answers">
+    <section className="glass grid gap-5 rounded-lg p-5 sm:p-6" aria-labelledby="rehearsal-answers">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 id="rehearsal-answers" className="font-display text-lg font-semibold tracking-tight">
+        <h3 id="rehearsal-answers" className="cb-statement">
           Your answers
         </h3>
-        <div role="tablist" aria-label="Which answers" className="inline-flex rounded-full bg-muted p-1 text-sm">
+        <div role="tablist" aria-label="Which answers to show" className="inline-flex rounded-md bg-muted p-1 text-small">
           {(
             [
               ["missed", `Missed (${missed.length})`],
@@ -123,7 +148,7 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
               aria-selected={show === key}
               onClick={() => setShow(key)}
               className={cn(
-                "rounded-full px-3 py-1 font-medium transition-colors",
+                "cb-tap rounded-xs px-3 py-1 font-medium transition-colors duration-100",
                 show === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -134,23 +159,23 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
       </div>
 
       {list.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Not one missed.</p>
+        <p className="text-small text-muted-foreground">You did not miss any questions.</p>
       ) : (
-        <ol className="grid gap-4">
+        <ol className="grid grid-cols-[minmax(0,1fr)] gap-4">
           {list.map(({ rep, i, pick, right }) => (
-            <li key={rep.id} className="grid gap-3 rounded-2xl border border-border bg-card/60 p-4 sm:p-5">
-              <div className="flex items-baseline justify-between gap-3 font-mono text-[11px] uppercase tracking-wider">
-                <span
-                  className="min-w-0 truncate text-muted-foreground"
-                  title={domainName.get(domainOf(rep.objective))}
-                >
-                  Question {i + 1} · Domain {domainOf(rep.objective).replace(/\.0$/, "")}
+            <li
+              key={rep.id}
+              className="grid grid-cols-[minmax(0,1fr)] gap-3 rounded-md border border-border bg-card p-4 [overflow-wrap:anywhere] sm:p-5"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-small">
+                <span className="min-w-0 text-muted-foreground" title={domainName.get(domainOf(rep.objective))}>
+                  Question {i + 1}, Domain {domainOf(rep.objective).replace(/\.0$/, "")}
                 </span>
-                <span className={cn("shrink-0", right ? "text-success" : "text-destructive")}>
-                  {pick === null ? "Unanswered" : right ? "Right" : "Missed"}
+                <span className={cn("shrink-0 font-medium", right ? "text-success" : "text-destructive")}>
+                  {pick === null ? "Not answered" : right ? "Correct" : "Incorrect"}
                 </span>
               </div>
-              <p className="text-[15px] font-medium leading-relaxed">{rep.prompt}</p>
+              <p className="text-small font-medium">{rep.prompt}</p>
               <ul className="grid gap-1.5">
                 {rep.options.map((option, k) => {
                   const isAnswer = k === rep.answer;
@@ -159,39 +184,42 @@ function RehearsalAnswers({ run, structure }: { run: RehearsalRun; structure: Pa
                     <li
                       key={`${k}-${option}`}
                       className={cn(
-                        "flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm",
+                        "flex items-start gap-2.5 rounded-md px-3 py-2 text-small",
                         isAnswer && "bg-success/10",
-                        isPick && !isAnswer && "bg-destructive/[0.07]",
+                        isPick && !isAnswer && "bg-destructive/10",
                         !isAnswer && !isPick && "text-muted-foreground"
                       )}
                     >
-                      <span className="mt-px font-mono text-[11px]" aria-hidden>
-                        {LETTERS[k]}
+                      {/* The same size as the answer beside it, so the two share a line. */}
+                      <span className="w-4 shrink-0 text-muted-foreground" aria-hidden>
+                        {OPTION_LETTERS[k]}
                       </span>
-                      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{option}</span>
+                      <span className="min-w-0 flex-1">{option}</span>
                       {isAnswer && (
                         <>
                           <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
-                          <span className="sr-only">(the answer{isPick ? ", yours" : ""})</span>
+                          <span className="sr-only">
+                            {isPick ? "(the correct answer, and your answer)" : "(the correct answer)"}
+                          </span>
                         </>
                       )}
                       {isPick && !isAnswer && (
                         <>
                           <X className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-                          <span className="sr-only">(your answer)</span>
+                          <span className="sr-only">(your answer, which is incorrect)</span>
                         </>
                       )}
                     </li>
                   );
                 })}
               </ul>
-              <p className="text-sm leading-relaxed">{rep.takeaway}</p>
+              <p className="text-small">{rep.takeaway}</p>
               {rep.explanation && (
-                <details className="text-sm text-muted-foreground">
-                  <summary className="cursor-pointer select-none font-medium text-foreground marker:text-muted-foreground">
-                    Why, in full
+                <details className="text-small text-muted-foreground">
+                  <summary className="cb-tap w-fit cursor-pointer select-none font-medium text-foreground marker:text-muted-foreground">
+                    Read the full explanation
                   </summary>
-                  <p className="mt-2 leading-relaxed">{rep.explanation}</p>
+                  <p className="mt-2">{rep.explanation}</p>
                 </details>
               )}
             </li>

@@ -4,6 +4,8 @@ import { z } from "zod";
 import type { Db } from "@/server/supabase/server";
 import { ApiError } from "@/contracts/common";
 import type { CertQuestion, QuestionOption } from "@/core/question-selection/types";
+import { repairText } from "@/core/path/text";
+import { allRows } from "@/server/data/paging";
 
 /** Runtime guard for the options JSONB column. */
 const optionsSchema = z.array(
@@ -36,26 +38,36 @@ function mapQuestion(row: QuestionRow): CertQuestion {
     certification_id: row.certification_id,
     domain_id: row.domain_id,
     sub_objective_id: row.sub_objective_id,
-    question_text: row.question_text,
-    options: parsed.data as QuestionOption[],
+    // Shown as written, apart from the house style for dashes (see repairText).
+    question_text: repairText(row.question_text),
+    options: parsed.data.map((o) => ({ ...o, text: repairText(o.text) })) as QuestionOption[],
     correct_index: row.correct_index,
-    explanation: row.explanation,
+    explanation: repairText(row.explanation ?? ""),
     difficulty: row.difficulty,
   };
 }
 
-/** All active questions for a cert — feeds the selection algorithms. */
+/*
+ * The selects below that take every question of an exam are read a page at a
+ * time (allRows), in id order: one select answers with at most 1,000 rows, and
+ * a bank can hold more. src/__tests__/whole-exam-selects.test.ts keeps it so.
+ */
+
+/** All active questions for a cert, which feed the selection algorithms. */
 export async function listActiveQuestions(
   db: Db,
   certId: string
 ): Promise<CertQuestion[]> {
-  const { data, error } = await db
-    .from("cert_questions")
-    .select(QUESTION_COLUMNS)
-    .eq("certification_id", certId)
-    .eq("is_active", true);
-  if (error) throw new ApiError("internal", error.message);
-  return (data ?? []).map(mapQuestion);
+  const rows = await allRows<QuestionRow>((from, to) =>
+    db
+      .from("cert_questions")
+      .select(QUESTION_COLUMNS)
+      .eq("certification_id", certId)
+      .eq("is_active", true)
+      .order("id")
+      .range(from, to)
+  );
+  return rows.map(mapQuestion);
 }
 
 /** Active diagnostic-eligible questions for a cert. */
@@ -63,14 +75,17 @@ export async function listDiagnosticQuestions(
   db: Db,
   certId: string
 ): Promise<CertQuestion[]> {
-  const { data, error } = await db
-    .from("cert_questions")
-    .select(QUESTION_COLUMNS)
-    .eq("certification_id", certId)
-    .eq("is_active", true)
-    .eq("is_diagnostic_eligible", true);
-  if (error) throw new ApiError("internal", error.message);
-  return (data ?? []).map(mapQuestion);
+  const rows = await allRows<QuestionRow>((from, to) =>
+    db
+      .from("cert_questions")
+      .select(QUESTION_COLUMNS)
+      .eq("certification_id", certId)
+      .eq("is_active", true)
+      .eq("is_diagnostic_eligible", true)
+      .order("id")
+      .range(from, to)
+  );
+  return rows.map(mapQuestion);
 }
 
 /** Fetch specific questions by id (grading, SRS cards, review). */
@@ -87,20 +102,62 @@ export async function getQuestionsByIds(
   return (data ?? []).map(mapQuestion);
 }
 
+/**
+ * The answer key for some of one exam's active questions: which option is
+ * correct for each id given. Ids from another exam, retired questions and ids
+ * that do not exist are simply absent from the answer. For grading answers
+ * without reading the whole bank.
+ */
+export async function listAnswerKeys(
+  db: Db,
+  certId: string,
+  ids: string[]
+): Promise<{ id: string; correct_index: number }[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await db
+    .from("cert_questions")
+    .select("id, correct_index")
+    .eq("certification_id", certId)
+    .eq("is_active", true)
+    .in("id", ids);
+  if (error) throw new ApiError("internal", error.message);
+  return data ?? [];
+}
+
+/**
+ * Every question of an exam with the domain it belongs to, retired questions
+ * included (a member's history can hold answers to them). For readiness and
+ * session planning, which total answers by domain.
+ */
+export async function listQuestionDomains(
+  db: Db,
+  certId: string
+): Promise<{ id: string; domain_id: string; is_active: boolean }[]> {
+  return allRows<{ id: string; domain_id: string; is_active: boolean }>((from, to) =>
+    db
+      .from("cert_questions")
+      .select("id, domain_id, is_active")
+      .eq("certification_id", certId)
+      .order("id")
+      .range(from, to)
+  );
+}
+
 /** question id -> sub_objective id map for a cert (analytics rollups). */
 export async function getQuestionSubObjectiveMap(
   db: Db,
   certId: string
 ): Promise<Map<string, string>> {
-  const { data, error } = await db
-    .from("cert_questions")
-    .select("id, sub_objective_id")
-    .eq("certification_id", certId)
-    .not("sub_objective_id", "is", null);
-  if (error) throw new ApiError("internal", error.message);
-  return new Map(
-    (data ?? []).map((q) => [q.id, q.sub_objective_id as string])
+  const rows = await allRows<{ id: string; sub_objective_id: string | null }>((from, to) =>
+    db
+      .from("cert_questions")
+      .select("id, sub_objective_id")
+      .eq("certification_id", certId)
+      .not("sub_objective_id", "is", null)
+      .order("id")
+      .range(from, to)
   );
+  return new Map(rows.map((q) => [q.id, q.sub_objective_id as string]));
 }
 
 /**
@@ -133,7 +190,7 @@ export async function countActiveQuestions(db: Db, certId: string): Promise<numb
   return count ?? 0;
 }
 
-/** Active questions tagged to a sub-objective (stable id order) — objective pages. */
+/** Active questions tagged to a sub-objective (stable id order), for objective pages. */
 export async function listQuestionsBySubObjective(
   db: Db,
   subObjectiveId: string,
@@ -155,15 +212,18 @@ export async function countQuestionsBySubObjective(
   db: Db,
   certId: string
 ): Promise<Map<string, number>> {
-  const { data, error } = await db
-    .from("cert_questions")
-    .select("sub_objective_id")
-    .eq("certification_id", certId)
-    .eq("is_active", true)
-    .not("sub_objective_id", "is", null);
-  if (error) throw new ApiError("internal", error.message);
+  const rows = await allRows<{ sub_objective_id: string | null }>((from, to) =>
+    db
+      .from("cert_questions")
+      .select("sub_objective_id")
+      .eq("certification_id", certId)
+      .eq("is_active", true)
+      .not("sub_objective_id", "is", null)
+      .order("id")
+      .range(from, to)
+  );
   const counts = new Map<string, number>();
-  for (const row of data ?? []) {
+  for (const row of rows) {
     const id = row.sub_objective_id as string;
     counts.set(id, (counts.get(id) ?? 0) + 1);
   }

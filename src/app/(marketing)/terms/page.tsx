@@ -1,39 +1,43 @@
-import { Metadata } from "next";
-import { BackLink } from "@/components/marketing/BackLink";
+import type { ReactNode } from "react";
+import type { Metadata } from "next";
+import { ArticleBody, ArticleSection } from "@/components/marketing/lander/Article";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import { COLUMN } from "@/components/marketing/lander/layout";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
-  description: "CertBench Terms of Service — the rules governing your use of our certification study platform.",
+  description: "CertBench Terms of Service: the rules governing your use of our certification study platform.",
   path: "/terms",
 });
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen aurora-bg text-foreground">
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        <BackLink />
-        <h1 className="cb-display mb-3 text-4xl sm:text-5xl">
-          Terms of Service
-        </h1>
-        <p className="text-[13px] text-muted-foreground mb-2">
-          Effective date: March 14, 2026 · Last updated: October 24, 2026
-        </p>
-        <p className="text-[13px] text-muted-foreground mb-8">
-          These Terms of Service (&ldquo;Terms&rdquo;) are a legally binding
-          agreement between you and CertBench (&ldquo;we,&rdquo;
-          &ldquo;us,&rdquo; or &ldquo;our&rdquo;). They govern your access to
-          and use of the CertBench website, applications, and services
-          (collectively, the &ldquo;Service&rdquo;). Please read them carefully.
-        </p>
+    // The page is set like every reading page: on the page's one left edge,
+    // inside the public frame, which draws the header and the footer.
+    <LanderPage className="pb-16 sm:pb-24">
+      <ArticleBody>
+        <header className={COLUMN}>
+          <h1 className="cb-title">Terms of Service</h1>
+          <p className="mt-4 text-small text-muted-foreground">
+            Effective date: March 14, 2026. Last updated: November 22, 2026.
+          </p>
+          <p className="cb-measure mt-6 text-body text-muted-foreground">
+            These Terms of Service (&ldquo;Terms&rdquo;) are a legally binding
+            agreement between you and CertBench (&ldquo;we,&rdquo;
+            &ldquo;us,&rdquo; or &ldquo;our&rdquo;). They govern your access to
+            and use of the CertBench website, applications, and services
+            (collectively, the &ldquo;Service&rdquo;). Please read them carefully.
+          </p>
+        </header>
 
-        <div className="prose-custom">
+        <div>
           <Section title="1. Acceptance of Terms">
             <p>
               By accessing or using the Service, creating an account, or
               clicking &ldquo;I agree,&rdquo; you confirm that you have read,
               understood, and agree to be bound by these Terms and our{" "}
-              <a href="/privacy" className="text-primary hover:underline">
+              <a href="/privacy" className="cb-link">
                 Privacy Policy
               </a>
               , which is incorporated by reference. If you do not agree to these
@@ -57,10 +61,10 @@ export default function TermsPage() {
 
           <Section title="3. Description of Service">
             <p>
-              CertBench is a certification study platform that provides practice
-              questions, adaptive assessments, spaced-repetition scheduling,
-              AI-powered question generation, study planning tools, and
-              community study sets for IT certification preparation.
+              CertBench is a certification study platform that provides a study
+              path for each exam, practice questions, hands-on labs, timed
+              practice exams, spaced review, and community study sets for IT
+              certification preparation.
             </p>
             <p>
               The Service is provided &ldquo;as is.&rdquo; We do not guarantee
@@ -86,7 +90,7 @@ export default function TermsPage() {
                 Notify us immediately at{" "}
                 <a
                   href="mailto:support@certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   support@certbench.dev
                 </a>{" "}
@@ -104,7 +108,7 @@ export default function TermsPage() {
             <p>
               CertBench offers free, no-account tools and a paid Pro
               subscription. Details of what each includes are described on our{" "}
-              <a href="/pricing" className="text-primary hover:underline">
+              <a href="/pricing" className="cb-link">
                 Pricing page
               </a>
               .
@@ -138,7 +142,7 @@ export default function TermsPage() {
               us at{" "}
               <a
                 href="mailto:support@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 support@certbench.dev
               </a>{" "}
@@ -146,12 +150,12 @@ export default function TermsPage() {
             </p>
             <p id="pass-guarantee">
               <strong>Pass guarantee.</strong> If you study with an active Pro
-              subscription for at least 30 days and don&apos;t pass the
+              subscription for at least 30 days and do not pass the
               certification exam your plan covers, we will refund your most
               recent Pro payment. To claim it, email{" "}
               <a
                 href="mailto:support@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 support@certbench.dev
               </a>{" "}
@@ -167,9 +171,13 @@ export default function TermsPage() {
 
           <Section title="6. AI-Generated Content">
             <p>
-              CertBench uses artificial intelligence to generate practice
-              questions from your uploaded study materials. You acknowledge and
-              agree that:
+              Until November 2026, CertBench offered a tool that used artificial
+              intelligence to generate practice questions from study materials
+              that members uploaded. That tool has been retired, and CertBench
+              no longer generates questions from uploaded materials. Study sets
+              that were made with the tool are kept in the accounts of the
+              members who made them. If you use a study set that was made with
+              the tool, you acknowledge and agree that:
             </p>
             <ul>
               <li>
@@ -185,7 +193,7 @@ export default function TermsPage() {
                 reliance on AI-generated content
               </li>
               <li>
-                AI-generated questions are produced for study purposes only and
+                AI-generated questions were produced for study purposes only and
                 do not represent actual certification exam content
               </li>
             </ul>
@@ -196,14 +204,14 @@ export default function TermsPage() {
               <strong>Your content.</strong> You retain all ownership rights to
               study materials you upload and study sets you create
               (&ldquo;User Content&rdquo;). By uploading User Content, you
-              grant CertBench a non-exclusive, worldwide, royalty-free licence
+              grant CertBench a non-exclusive, worldwide, royalty-free license
               to host, store, and process that content solely for the purpose of
               providing the Service to you.
             </p>
             <p>
               <strong>Public study sets.</strong> If you choose to make a study
               set public, you grant other CertBench users a non-exclusive,
-              non-transferable licence to view and practice with that content
+              non-transferable license to view and practice with that content
               through the Service. You may revoke this by making the set private
               at any time.
             </p>
@@ -238,7 +246,7 @@ export default function TermsPage() {
                 Service without prior written permission
               </li>
               <li>Share your account credentials or allow others to access your account</li>
-              <li>Use the AI generation feature to produce harmful, abusive, or misleading content</li>
+              <li>Use the Service to produce or share harmful, abusive, or misleading content</li>
               <li>Circumvent usage limits, rate limiting, or billing mechanisms</li>
               <li>
                 Use the Service in any manner that could damage, disable,
@@ -272,7 +280,7 @@ export default function TermsPage() {
               copyright, please send a notice to{" "}
               <a
                 href="mailto:support@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 support@certbench.dev
               </a>{" "}
@@ -357,7 +365,7 @@ export default function TermsPage() {
               <strong>By you.</strong> You may delete your account at any time
               from your profile settings. Upon deletion, we will remove your
               personal data in accordance with our{" "}
-              <a href="/privacy" className="text-primary hover:underline">
+              <a href="/privacy" className="cb-link">
                 Privacy Policy
               </a>
               .
@@ -392,7 +400,7 @@ export default function TermsPage() {
               claim, you agree to first contact us at{" "}
               <a
                 href="mailto:support@certbench.dev"
-                className="text-primary hover:underline"
+                className="cb-link"
               >
                 support@certbench.dev
               </a>{" "}
@@ -472,7 +480,7 @@ export default function TermsPage() {
                 <strong>Email:</strong>{" "}
                 <a
                   href="mailto:support@certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   support@certbench.dev
                 </a>
@@ -481,7 +489,7 @@ export default function TermsPage() {
                 <strong>Website:</strong>{" "}
                 <a
                   href="https://certbench.dev"
-                  className="text-primary hover:underline"
+                  className="cb-link"
                 >
                   certbench.dev
                 </a>
@@ -489,26 +497,22 @@ export default function TermsPage() {
             </ul>
           </Section>
         </div>
-      </div>
-    </div>
+      </ArticleBody>
+    </LanderPage>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+/**
+ * One numbered clause: the rule and heading of every reading page, then the
+ * clause's text at the width of its measure. The clauses stand closer
+ * together than an article's sections do, because many of them are short.
+ */
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-10">
-      <h2 className="text-[17px] font-semibold text-foreground mb-3">
-        {title}
-      </h2>
-      <div className="text-[14px] text-muted-foreground leading-relaxed space-y-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[14px]">
+    <ArticleSection title={title} className="mt-12 sm:mt-16">
+      <div className="cb-measure grid gap-4 text-body text-muted-foreground [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-5">
         {children}
       </div>
-    </section>
+    </ArticleSection>
   );
 }

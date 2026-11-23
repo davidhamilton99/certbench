@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+import { ApiError } from "@/contracts/common";
 import { createAnonClient } from "@/server/supabase/anon";
 import {
   getCertificationBySlug,
@@ -48,10 +50,13 @@ const readable = (q: { question_text: string; options: { text: string }[] }) =>
  * readiness check, shortest and most readable first. Stable (ordered by
  * length, then id) so the page content doesn't churn between ISR
  * revalidations.
+ *
+ * Wrapped in React's cache: the page's metadata and its body ask for the same
+ * check in one render, and the second does not download the questions again.
  */
-export async function loadReadinessCheck(
+export const loadReadinessCheck = cache(async (
   certSlug: string
-): Promise<ReadinessCheckData | null> {
+): Promise<ReadinessCheckData | null> => {
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
   if (!cert) return null;
@@ -96,14 +101,16 @@ export async function loadReadinessCheck(
     }
   });
 
-  // Sub-objective count for the CTA copy ("tracks all N objectives").
-  const { count } = await db
+  // Sub-objective count for the CTA copy ("tracks all N objectives"). A count
+  // that could not be read throws: the page must not be rebuilt saying zero.
+  const { count, error: countError } = await db
     .from("cert_sub_objectives")
     .select("id", { count: "exact", head: true })
     .in(
       "domain_id",
       domains.map((d) => d.id)
     );
+  if (countError) throw new ApiError("internal", countError.message);
 
   return {
     certSlug: cert.slug,
@@ -113,4 +120,4 @@ export async function loadReadinessCheck(
     objectiveCount: count ?? 0,
     questions,
   };
-}
+});

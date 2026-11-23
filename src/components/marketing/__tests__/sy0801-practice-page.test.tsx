@@ -49,9 +49,20 @@ function fullDraw(): PublicTestData {
   };
 }
 
-async function served(): Promise<string> {
+/** The page as served, parsed: what search and a visitor with scripts off get. */
+async function served(): Promise<Document> {
   const doc = new DOMParser().parseFromString(renderToString(await Page()), "text/html");
-  return (doc.querySelector("main")?.textContent ?? "").replace(/\s+/g, " ");
+  // Structured data is not something a visitor reads.
+  doc.querySelectorAll("script").forEach((s) => s.remove());
+  return doc;
+}
+
+const text = (node: Element | null | undefined) => (node?.textContent ?? "").replace(/\s+/g, " ").trim();
+
+/** A fact in the summary list under the title, by its label. */
+function fact(doc: Document, label: string): string {
+  const term = [...doc.querySelectorAll("dt")].find((dt) => text(dt) === label);
+  return text(term?.nextElementSibling);
 }
 
 beforeEach(() => {
@@ -59,24 +70,69 @@ beforeEach(() => {
 });
 
 describe("the SY0-801 practice test page", () => {
-  it("serves the full-length exam from the bank, and says so", async () => {
+  it("serves the full-length exam from the bank, and says who offers it and on what terms", async () => {
     drawn.current = fullDraw();
-    const text = await served();
-    expect(text).toContain("A full-length exam: 90 questions in 90 minutes, the real exam's limit, across all of SY0-801's 27 objectives.");
-    expect(text).toContain("take a half exam of 45");
-    expect(text).toContain("work through 45 more questions one at a time");
-    expect(text).toContain("The 90 questions are split across the five domains");
-    expect(text).toContain("This practice exam is the same length: 90 multiple-choice questions in 90 minutes, or a half exam of 45 in 45 minutes");
+    const doc = await served();
+    const page = text(doc.body);
+    // The page is content only: the header, the main region and the footer come from the layout.
+    expect(doc.querySelector("main, header, footer")).toBeNull();
+    expect(doc.querySelectorAll("h1")).toHaveLength(1);
+    expect(text(doc.querySelector("h1"))).toBe("Free Security+ SY0-801 practice test");
+
+    expect(page).toContain(
+      "CertBench offers a free full-length practice exam for Security+ SY0-801. It has 90 questions and a time limit of 90 minutes, which is the limit of the real exam. You do not need an account to start, and a free account shows your score."
+    );
+    expect(page).toContain("You can also take a half-length exam of 45 questions, or answer 45 more questions one at a time.");
+    // The facts under the title, each with its label.
+    expect(fact(doc, "Questions")).toBe("90");
+    expect(fact(doc, "Time limit")).toBe("90 minutes");
+    expect(fact(doc, "Scoring")).toBe("By domain");
+    expect(fact(doc, "Objectives covered")).toBe("27 of 27");
+
+    // The exam's card, served ready to start, with the condition for the score in its own sentence.
+    expect(text(doc.querySelector("h2"))).toBe("90 questions in 90 minutes");
+    expect(page).toContain("The exam is free. When you finish, a free account shows your score by domain");
+    expect(page).toContain("Take the exam with extended time: 135 minutes of extended time or 180 minutes of extended time.");
+
+    // Each domain with its share of the exam and its questions in this practice exam.
+    expect(page).toContain("The 90 questions are divided among the five domains in the proportions of the exam.");
+    const rows = [...doc.querySelectorAll("table tbody tr")];
+    expect(rows).toHaveLength(SY0_801_DOMAINS.length);
+    expect(rows.map((tr) => text(tr.children[1]))).toEqual(SY0_801_DOMAINS.map((d) => `${d.weight}%`));
+    expect(rows.reduce((n, tr) => n + Number(text(tr.children[2])), 0)).toBe(90);
+
+    expect(page).toContain(
+      "This practice exam is the same length: 90 multiple-choice questions in 90 minutes, or a half-length exam of 45 questions in 45 minutes at the same pace."
+    );
     const { description } = await generateMetadata();
     expect(description).toMatch(/^Free full-length Security\+ SY0-801 practice exam: 90 questions in 90 minutes/);
   });
 
-  it("keeps its own 45 questions as the timed test while the bank isn't there, and says that instead", async () => {
-    const text = await served();
-    expect(text).toContain("45 original questions in 45 minutes, with at least one on each of SY0-801's 27 objectives.");
-    expect(text).not.toContain("full-length");
-    expect(text).toContain("This practice test is half that: 45 multiple-choice questions in 45 minutes");
+  it("keeps its own 45 questions as the timed exam while the bank is not there, and says that instead", async () => {
+    const doc = await served();
+    const page = text(doc.body);
+    expect(page).toContain(
+      "CertBench offers a free practice exam for Security+ SY0-801. It has 45 original questions and a time limit of 45 minutes, with at least one question on each of the 27 SY0-801 objectives."
+    );
+    expect(page).toContain("You can also answer the questions one at a time.");
+    expect(page).not.toContain("full-length");
+    expect(page).not.toContain("full length");
+    expect(fact(doc, "Questions")).toBe("45");
+    expect(fact(doc, "Time limit")).toBe("45 minutes");
+    expect(text(doc.querySelector("h2"))).toBe("45 questions in 45 minutes");
+    expect(page).toContain("This practice exam is half that length: 45 multiple-choice questions in 45 minutes");
     const { description } = await generateMetadata();
     expect(description).toMatch(/^Free 45-question Security\+ SY0-801 practice test/);
+  });
+
+  it("calls the exam a practice exam in its sentences, and a practice test only where the page is named", async () => {
+    drawn.current = fullDraw();
+    const doc = await served();
+    // The title, the questions people search for, and the names of other pages keep "practice test".
+    // The practice questions themselves (the lists) are not the page's own sentences.
+    doc.querySelectorAll("h1, h3, a, ol").forEach((el) => el.remove());
+    const sentences = text(doc.body);
+    expect(sentences).not.toMatch(/practice test\b/i);
+    expect(sentences).toContain("practice exam");
   });
 });

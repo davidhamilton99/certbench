@@ -26,8 +26,7 @@ export function SimulationPlayer({
   scenario,
   onBack,
   upsell,
-  onGraded,
-  backLabel,
+  ...host
 }: {
   scenario: SimulationScenario;
   onBack: () => void;
@@ -68,8 +67,8 @@ export function SimulationPlayer({
       explanation={scenario.explanation}
       upsell={upsell}
       onBack={onBack}
-      onGraded={onGraded}
-      backLabel={backLabel}
+      // The result, the way out, word of the first move and the focus on arrival.
+      {...host}
     />
   );
 }

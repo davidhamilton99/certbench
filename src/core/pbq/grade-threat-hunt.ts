@@ -49,7 +49,7 @@ export function gradeThreatHunt(
         benignLeftAlone++;
         lineCorrect++;
       } else {
-        feedback.push(`False alarm — this line is benign: ${line.text}`);
+        feedback.push(`False alarm: this line is benign: ${line.text}`);
       }
     }
   });
@@ -66,7 +66,7 @@ export function gradeThreatHunt(
         ? scenario.options[answer.attackChoice]
         : "(no attack selected)";
     feedback.push(
-      `Attack identification: you chose "${chosen}" — the evidence points to "${scenario.options[scenario.correctOption]}".`
+      `Attack identification: you chose "${chosen}": the evidence points to "${scenario.options[scenario.correctOption]}".`
     );
   }
 
@@ -82,4 +82,45 @@ export function gradeThreatHunt(
     correctItems: lineCorrect + (idCorrect ? 1 : 0),
     feedback,
   };
+}
+
+/** How a hunt went, in the counts its score is made of. */
+export interface HuntTally {
+  /** The lines that were evidence. */
+  evidence: number;
+  /** How many of them were flagged. */
+  caught: number;
+  /** Lines that were flagged and were not evidence. */
+  falseAlarms: number;
+  /** Whether the question after the log was answered correctly. */
+  identified: boolean;
+}
+
+export function huntTally(scenario: ThreatHuntScenario, answer: ThreatHuntAnswer): HuntTally {
+  const flagged = new Set(answer.flagged);
+  let evidence = 0;
+  let caught = 0;
+  let falseAlarms = 0;
+  scenario.lines.forEach((line, i) => {
+    if (line.malicious) {
+      evidence++;
+      if (flagged.has(i)) caught++;
+    } else if (flagged.has(i)) {
+      falseAlarms++;
+    }
+  });
+  return { evidence, caught, falseAlarms, identified: answer.attackChoice === scenario.correctOption };
+}
+
+/**
+ * The tally in two sentences, for the line under a hunt's score. It says what
+ * the score counts: the evidence that was flagged, the flags that were wrong
+ * (flagging every line is not a way to a high score), and the question.
+ */
+export function huntSentence(tally: HuntTally): string {
+  const { evidence, caught, falseAlarms, identified } = tally;
+  const flags = `You flagged ${caught} of the ${evidence} ${evidence === 1 ? "line" : "lines"} of evidence`;
+  const wrong =
+    falseAlarms === 0 ? "" : ` and ${falseAlarms} ${falseAlarms === 1 ? "line that was" : "lines that were"} not evidence`;
+  return `${flags}${wrong}. Your answer to the question was ${identified ? "correct" : "incorrect"}.`;
 }

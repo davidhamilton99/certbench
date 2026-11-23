@@ -8,6 +8,8 @@ import {
   type ApiErrorEnvelope,
   type EndpointContract,
 } from "@/contracts/common";
+import { afterResponse } from "@/server/api/after-response";
+import { reportServerError } from "@/server/api/report-error";
 import { getOptionalUser, requireAdmin, requirePro, requireUser } from "@/server/auth";
 import { rateLimiter, type RateLimitOptions } from "@/server/rate-limit";
 import type { Db } from "@/server/supabase/server";
@@ -44,6 +46,11 @@ function errorResponse(error: ApiError): NextResponse<ApiErrorEnvelope> {
  *
  * Every API route exports `GET/POST/... = defineEndpoint(contract, options)`.
  * Errors are always the uniform `{ error: { code, message } }` envelope.
+ *
+ * A fault on our side (an unexpected error, or an ApiError with the code
+ * "internal") is written to the log and reported to the owner once the
+ * response has gone. A refusal (not signed in, not allowed, bad input, too
+ * many requests) is an answer, not a fault, and is not reported.
  */
 export function defineEndpoint<C extends EndpointContract>(
   contract: C,
@@ -112,11 +119,15 @@ export function defineEndpoint<C extends EndpointContract>(
 
       return NextResponse.json(result);
     } catch (err) {
-      if (err instanceof ApiError) return errorResponse(err);
+      if (err instanceof ApiError && err.code !== "internal") return errorResponse(err);
       console.error(`[${contract.method} ${contract.path}]`, err);
-      const { captureException } = await import("@sentry/nextjs");
-      captureException(err);
-      return errorResponse(new ApiError("internal", "Something went wrong"));
+      const place = { route: contract.path, path: contract.path, method: contract.method, kind: "route" };
+      afterResponse(() => reportServerError(err, place));
+      // An ApiError keeps the message it was thrown with, as it always has
+      // (the account checks throw a sentence written for the member). Anything
+      // else is answered without its own words, which can hold what must not
+      // be shown.
+      return errorResponse(err instanceof ApiError ? err : new ApiError("internal", "Something went wrong"));
     }
   };
 }

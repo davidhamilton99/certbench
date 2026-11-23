@@ -1,25 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Loader2, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
+import { userMessage } from "@/lib/errors/user-message";
 import { submitStory } from "@/contracts/story";
-import { ApiError } from "@/contracts/common";
+import { ApiError } from "@/contracts/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 type Step = "ask" | "story" | "regroup" | "thanks";
 
-const tile =
-  "glass group grid gap-2 rounded-2xl p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_24px_60px_-30px_var(--primary)] sm:p-6";
+/** The shortest comment that is stored (the same limit as the endpoint's). */
+const MIN_COMMENT = 10;
+const MAX_COMMENT = 600;
+
+/** Shown when the answer could not be sent and the endpoint gave no more exact reason. */
+const NOT_SENT = "Your answer could not be sent. Please try again.";
+
+/** One of the two answers: a plain pressable row, as an answer to a question is. */
+const choice =
+  "grid gap-1.5 rounded-md border border-input bg-card p-5 text-left transition-[border-color,background-color] duration-100 hover:border-primary hover:bg-tint-hover active:bg-tint-press sm:p-6";
 
 /**
- * How an exam went, answered from the post-exam email in two taps and a
- * sentence. A pass becomes a story for the homepage (after review); a miss
- * gets pointed back at the path, where retakes start.
+ * How an exam went, answered from the post-exam email in two presses and a
+ * sentence. A pass becomes a comment for the home page, once it has been
+ * reviewed. A candidate who did not pass is taken back to the study path,
+ * where preparing for the next attempt starts.
  */
 export function StoryForm({
   token,
@@ -42,10 +52,26 @@ export function StoryForm({
   const [name, setName] = useState(defaultName);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const id = useId();
+  const quoteId = `${id}-quote`;
+  const nameId = `${id}-name`;
+  const errorId = `${id}-error`;
 
   useEffect(() => {
     track("story_viewed", { preset: preset === true ? "pass" : preset === false ? "fail" : "none" });
   }, [preset]);
+
+  // Each press replaces the screen, and the button that had the focus goes
+  // with it. The new screen's heading takes the focus, so a screen reader
+  // reads it and the keyboard continues from there. Not on the first screen:
+  // a page does not take the focus as it loads.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const shown = useRef(step);
+  useEffect(() => {
+    if (shown.current === step) return;
+    shown.current = step;
+    headingRef.current?.focus();
+  }, [step]);
 
   function pick(passed: boolean) {
     track("story_answer_picked", { passed });
@@ -54,6 +80,7 @@ export function StoryForm({
   }
 
   async function send(passed: boolean) {
+    if (saving) return;
     setSaving(true);
     setError("");
     try {
@@ -61,13 +88,13 @@ export function StoryForm({
       if (passed) setStep("thanks");
       else window.location.assign(pathHref);
     } catch (err) {
-      // Sent once already from this link: that's a yes, not an error.
+      // An answer was sent from this link already: that is a yes, not an error.
       if (err instanceof ApiError && err.code === "conflict") {
         if (passed) setStep("thanks");
         else window.location.assign(pathHref);
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      setError(userMessage(err, NOT_SENT));
     } finally {
       setSaving(false);
     }
@@ -76,21 +103,20 @@ export function StoryForm({
   if (step === "ask") {
     return (
       <div className="grid gap-8">
-        <Header eyebrow={certName} title="How did it go?" sub="Your exam date has passed. One tap tells us." />
+        <Header
+          headingRef={headingRef}
+          eyebrow={certName}
+          title="How did your exam go?"
+          sub="The date of your exam has passed. Please let us know the result."
+        />
         <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => pick(true)} className={tile}>
-            <span className="flex size-10 items-center justify-center rounded-full bg-success/15 text-success">
-              <Check className="size-5" strokeWidth={3} />
-            </span>
-            <span className="text-xl font-semibold tracking-[-0.02em]">I passed</span>
-            <span className="text-sm text-muted-foreground">Tell the next person what helped</span>
+          <button type="button" onClick={() => pick(true)} className={choice}>
+            <span className="text-lede font-semibold">I passed</span>
+            <span className="text-small text-muted-foreground">Tell other candidates what helped you.</span>
           </button>
-          <button type="button" onClick={() => pick(false)} className={tile}>
-            <span className="flex size-10 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground/70">
-              <RotateCcw className="size-5" />
-            </span>
-            <span className="text-xl font-semibold tracking-[-0.02em]">Not this time</span>
-            <span className="text-sm text-muted-foreground">Pick up where you left off</span>
+          <button type="button" onClick={() => pick(false)} className={choice}>
+            <span className="text-lede font-semibold">I did not pass</span>
+            <span className="text-small text-muted-foreground">Continue from where you stopped.</span>
           </button>
         </div>
       </div>
@@ -100,76 +126,91 @@ export function StoryForm({
   if (step === "thanks") {
     return (
       <div className="grid justify-items-center gap-6 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-success/15 text-success">
-          <Check className="size-7" strokeWidth={3} />
-        </span>
-        <Header center title="Thank you." sub="Your story helps the next person start. It goes up after a quick review." />
+        <Header
+          headingRef={headingRef}
+          center
+          title="Thank you."
+          sub="Your comment helps other candidates to begin. It will be reviewed before it is published on CertBench."
+        />
         <Button asChild size="lg">
-          <Link href="/">
-            Back to CertBench
-            <ArrowRight />
-          </Link>
+          <Link href="/">Return to the home page</Link>
         </Button>
       </div>
     );
   }
 
   const passed = step === "story";
+  const written = quote.trim().length;
+  const tooShort = passed && written < MIN_COMMENT;
   return (
     <form
       className="grid gap-7"
       onSubmit={(e) => {
         e.preventDefault();
+        if (tooShort) return;
         void send(passed);
       }}
     >
       {passed ? (
-        <Header eyebrow={certName} title="Congratulations." sub="What helped you pass? A sentence or two is plenty." />
+        <Header
+          headingRef={headingRef}
+          eyebrow={certName}
+          title="Congratulations."
+          sub="What helped you to pass? One or two sentences are enough."
+        />
       ) : (
         <Header
+          headingRef={headingRef}
           eyebrow={certName}
-          title="That one isn't over."
-          sub="Plenty of people pass on the retake. Your path picks up where you left off."
+          title="You can take the exam again."
+          sub="Your study path continues from where you stopped."
         />
       )}
 
-      <div className="glass grid gap-5 rounded-[1.75rem] p-5 sm:p-7">
-        <label className="grid gap-2">
-          <span className="text-sm font-medium">{passed ? "What helped" : "What tripped you up (optional)"}</span>
+      <div className="glass grid gap-5 rounded-lg p-5 sm:p-7">
+        <div className="grid gap-2">
+          <Label htmlFor={quoteId}>{passed ? "What helped you" : "What you found difficult (optional)"}</Label>
           <textarea
+            id={quoteId}
             value={quote}
-            onChange={(e) => setQuote(e.target.value.slice(0, 600))}
+            onChange={(e) => setQuote(e.target.value.slice(0, MAX_COMMENT))}
             rows={4}
             required={passed}
-            minLength={passed ? 10 : undefined}
-            placeholder={
-              passed
-                ? "e.g. The readiness checkpoint showed me exactly which domains to fix. Passed first try."
-                : "e.g. The performance-based questions took longer than I expected."
-            }
-            className="w-full resize-none rounded-xl border border-input bg-background/60 px-4 py-3 text-[15px] leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+            minLength={passed ? MIN_COMMENT : undefined}
+            aria-describedby={error ? `${quoteId}-hint ${errorId}` : `${quoteId}-hint`}
+            className="w-full resize-none rounded-md border border-input bg-card px-3 py-2.5 text-base transition-colors focus-visible:border-ring md:text-small"
           />
-          <span className="text-xs text-muted-foreground">{quote.length}/600</span>
-        </label>
+          <p id={`${quoteId}-hint`} className="text-note text-muted-foreground">
+            {passed && <>Please write at least {MIN_COMMENT} characters. </>}
+            You have used {quote.length} of {MAX_COMMENT} characters.
+          </p>
+        </div>
         {passed && (
-          <label className="grid gap-2">
-            <span className="text-sm font-medium">Name to show</span>
-            <Input value={name} onChange={(e) => setName(e.target.value.slice(0, 60))} maxLength={60} />
-            <span className="text-xs text-muted-foreground">Shown on CertBench with your story, after a quick review.</span>
-          </label>
+          <div className="grid gap-2">
+            <Label htmlFor={nameId}>Name to show</Label>
+            <Input
+              id={nameId}
+              value={name}
+              onChange={(e) => setName(e.target.value.slice(0, 60))}
+              maxLength={60}
+              autoComplete="name"
+              aria-describedby={`${nameId}-hint`}
+            />
+            <p id={`${nameId}-hint`} className="text-note text-muted-foreground">
+              This name is shown with your comment if it is published.
+            </p>
+          </div>
         )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" size="lg" disabled={saving || (passed && quote.trim().length < 10)}>
-            {saving ? <Loader2 className="animate-spin" /> : null}
-            {passed ? "Share my story" : quote.trim() ? "Send and go to my path" : "Go to my path"}
-            {!saving && <ArrowRight />}
+        {error && (
+          <p id={errorId} role="alert" className="text-small text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Button type="submit" size="lg" loading={saving} disabled={tooShort}>
+            {passed ? "Send my comment" : written > 0 ? "Send and go to the study path" : "Go to the study path"}
           </Button>
-          <button
-            type="button"
-            onClick={() => setStep("ask")}
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
+          <button type="button" onClick={() => setStep("ask")} className="cb-link cb-tap text-small">
             Change my answer
           </button>
         </div>
@@ -178,12 +219,26 @@ export function StoryForm({
   );
 }
 
-function Header({ eyebrow, title, sub, center = false }: { eyebrow?: string; title: string; sub: string; center?: boolean }) {
+function Header({
+  eyebrow,
+  title,
+  sub,
+  center = false,
+  headingRef,
+}: {
+  eyebrow?: string;
+  title: string;
+  sub: string;
+  center?: boolean;
+  headingRef: RefObject<HTMLHeadingElement | null>;
+}) {
   return (
     <div className={cn("grid gap-3", center ? "justify-items-center text-center" : "text-left")}>
-      {eyebrow && <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</p>}
-      <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">{title}</h1>
-      <p className="max-w-md text-balance text-lg text-muted-foreground">{sub}</p>
+      {eyebrow && <p className="cb-label text-muted-foreground">{eyebrow}</p>}
+      <h1 ref={headingRef} tabIndex={-1} className="cb-title">
+        {title}
+      </h1>
+      <p className="cb-measure-xs text-lede text-muted-foreground">{sub}</p>
     </div>
   );
 }

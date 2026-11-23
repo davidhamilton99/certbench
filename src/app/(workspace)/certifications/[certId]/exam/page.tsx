@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { getCertificationBySlug } from "@/server/data/certifications";
 import { canAccessCert } from "@/server/data/enrollments";
 import { PracticeExamClient } from "@/components/quiz/PracticeExamClient";
@@ -9,11 +9,15 @@ export const metadata = {
   title: "Practice exam",
 };
 
+/** The page's title and the sentence under it, for each kind of set. */
 const HEADINGS = {
-  full: { title: "Practice exam", sub: "questions across all domains" },
+  full: {
+    title: "Practice exam",
+    sub: (certName: string) => `The questions cover every domain of ${certName}.`,
+  },
   weak_points: {
     title: "Weak points review",
-    sub: "questions you've missed before",
+    sub: (certName: string) => `These are ${certName} questions that you have answered incorrectly before.`,
   },
 } as const;
 
@@ -25,11 +29,7 @@ export default async function PracticeExamPage({
   searchParams: Promise<{ type?: string }>;
 }) {
   const [{ certId: slug }, { type }] = await Promise.all([params, searchParams]);
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const parsedType = examTypeSchema.safeParse(type ?? "full");
   const mode = parsedType.success && parsedType.data !== "domain_drill"
@@ -46,11 +46,9 @@ export default async function PracticeExamPage({
 
   return (
     <div className="grid gap-6">
-      <div className="mx-auto w-full max-w-2xl">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{heading.title}</h1>
-        <p className="text-sm text-muted-foreground">
-          {cert.name} · {heading.sub}
-        </p>
+      <div className="mx-auto grid w-full max-w-2xl gap-1.5">
+        <h1 className="cb-subsection">{heading.title}</h1>
+        <p className="text-small text-muted-foreground">{heading.sub(cert.name)}</p>
       </div>
       <PracticeExamClient certId={cert.id} examType={mode} />
     </div>

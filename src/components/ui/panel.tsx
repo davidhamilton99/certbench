@@ -3,12 +3,14 @@ import { cn } from "@/lib/utils";
 
 type AccentColor = "primary" | "success" | "warning" | "danger" | "urgency";
 
+// A ruled edge is square at both ends: on a rounded corner it would curl into
+// a hook, so the panel's left corners are straight where it has one.
 const ACCENT_STYLES: Record<AccentColor, string> = {
-  primary: "border-l-4 border-l-primary",
-  success: "border-l-4 border-l-success",
-  warning: "border-l-4 border-l-warning",
-  danger: "border-l-4 border-l-danger",
-  urgency: "border-l-4 border-l-danger",
+  primary: "rounded-l-none border-l-4 border-l-primary",
+  success: "rounded-l-none border-l-4 border-l-success",
+  warning: "rounded-l-none border-l-4 border-l-warning",
+  danger: "rounded-l-none border-l-4 border-l-danger",
+  urgency: "rounded-l-none border-l-4 border-l-danger",
 };
 
 const PADDING_STYLES = {

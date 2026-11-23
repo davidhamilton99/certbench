@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -14,7 +14,16 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-/** Lightweight modal confirm — API preserved from the previous app. */
+/**
+ * A question that must be answered before anything else: "Leave the lab?".
+ *
+ * It is a real modal dialog. While it is open the page behind it cannot be
+ * reached with Tab, a pointer or a screen reader; Escape and a press outside
+ * it both mean the safe answer; and when it closes, focus goes back to the
+ * control that opened it. It opens with focus on the safe answer (the one that
+ * changes nothing), so a stray Enter never discards work. The title is the
+ * dialog's name and the message its description.
+ */
 export function ConfirmDialog({
   open,
   title,
@@ -24,44 +33,34 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const confirmRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    confirmRef.current?.focus();
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onCancel]);
-
-  if (!open) return null;
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onCancel}
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <p className="text-sm text-muted-foreground">{message}</p>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onCancel}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim" />
+        <Dialog.Content
+          className="glass fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg p-6 text-card-foreground"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            cancelRef.current?.focus();
+          }}
+        >
+          <Dialog.Title className="text-base font-semibold leading-snug">{title}</Dialog.Title>
+          <Dialog.Description className="text-small text-muted-foreground">{message}</Dialog.Description>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button ref={cancelRef} variant="outline" onClick={onCancel}>
               {cancelLabel}
             </Button>
-            <Button ref={confirmRef} onClick={onConfirm}>
-              {confirmLabel}
-            </Button>
+            <Button onClick={onConfirm}>{confirmLabel}</Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

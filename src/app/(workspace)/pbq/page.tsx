@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { listEnrollments } from "@/server/data/enrollments";
 import {
   getCertificationBySlug,
@@ -10,7 +10,7 @@ import { getUserPlan } from "@/server/services/subscription";
 import { PbqScenarios } from "@/components/workspace/PbqScenarios";
 
 export const metadata = {
-  title: "PBQ lab",
+  title: "Hands-on labs",
 };
 
 export default async function PbqPage({
@@ -19,11 +19,7 @@ export default async function PbqPage({
   searchParams: Promise<{ cert?: string }>;
 }) {
   const { cert: certSlug } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const enrollments = await listEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
@@ -40,16 +36,16 @@ export default async function PbqPage({
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">PBQ lab</h1>
-        <p className="text-sm text-muted-foreground">
-          {active.name} · interactive scenarios that mirror the hands-on exam
-          questions
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Hands-on labs</h1>
+        <p className="cb-measure text-small text-muted-foreground">
+          These are the hands-on labs for {active.name}. Each one is a task of the kind that the exam sets as a
+          performance-based question (PBQ).
         </p>
       </div>
       {scenarios.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          No scenarios for this certification yet.
+        <p className="rounded-lg border border-dashed border-input p-8 text-small text-muted-foreground">
+          There are no hands-on labs for this certification yet.
         </p>
       ) : (
         <PbqScenarios scenarios={scenarios} isPro={plan.plan === "pro"} />

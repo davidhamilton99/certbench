@@ -6,6 +6,7 @@ import { acceptableAnswers, normalizeAnswer } from "../normalize";
 import {
   autoDeckConfig,
   buildDeck,
+  explainRow,
   generateRecallQuestion,
   gradeRecall,
   isDataRate,
@@ -84,7 +85,7 @@ describe("buildDeck validation", () => {
     answer: { key: "def", label: "definition" },
   };
 
-  it("throws on a column that isn't in the table", () => {
+  it("throws on a column that is not in the table", () => {
     expect(() =>
       buildDeck({ ...base, answer: { key: "nope", label: "x" } }, synthetic)
     ).toThrow(/not in table/);
@@ -175,10 +176,137 @@ describe("detail line", () => {
   );
 
   it("names a bare number by its column: a count number-first, an identifier label-first", () => {
-    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).detail).toBe(
-      "2 usable hosts · default AD 1 · port 49 · Point-to-point links"
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).details).toEqual([
+      "2 usable hosts",
+      "default AD 1",
+      "port 49",
+      "Point-to-point links",
+    ]);
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).details[0]).toBe("1,022 usable hosts");
+  });
+
+  it("lists one detail for each detail column that has a value, and none for a deck without details", () => {
+    const sparse: ReferenceTable = {
+      ...subnets,
+      entries: [...subnets.entries, { columns: { cidr: "/28", mask: "255.255.255.240", hosts: "14", ad: "", port: "", note: "" } }],
+    };
+    const some = buildDeck({ ...deck.config, id: "sparse" }, sparse);
+    expect(generateRecallQuestion(some, seeded(1), { itemId: "255.255.255.240" }).details).toEqual(["14 usable hosts"]);
+    const none = buildDeck({ ...deck.config, id: "plain", detailKeys: undefined }, subnets);
+    expect(generateRecallQuestion(none, seeded(1), { itemId: "255.255.255.252" }).details).toEqual([]);
+  });
+});
+
+describe("explanation in sentences", () => {
+  const ports: ReferenceTable = {
+    id: "ports",
+    title: "Ports",
+    description: "",
+    columnHeaders: [
+      { key: "port", label: "Port" },
+      { key: "protocol", label: "Protocol" },
+      { key: "service", label: "Service / Use" },
+      { key: "purpose", label: "Purpose" },
+    ],
+    entries: [
+      { columns: { port: "22", protocol: "SSH", service: "Secure Shell: encrypted remote access", purpose: "Remote shell access" } },
+      { columns: { port: "67/68", protocol: "DHCP", service: "Dynamic Host Configuration Protocol (server/client)", purpose: "DNS and gateway settings" } },
+      { columns: { port: "443", protocol: "HTTPS", service: "", purpose: "Secure web browsing" } },
+      { columns: { port: "3389", protocol: "RDP", service: "N/A (see the notes)", purpose: "Windows remote desktop" } },
+    ],
+  };
+  const base: RecallDeckConfig = {
+    id: "p",
+    label: "p",
+    tableId: "ports",
+    mode: "choice",
+    ask: { key: "protocol", label: "protocol" },
+    answer: { key: "port", label: "port" },
+    bidirectional: true,
+    detailKeys: ["service"],
+  };
+  const row = (protocol: string) => ports.entries.find((e) => e.columns.protocol === protocol)!.columns;
+
+  it("fills the deck's template from the row", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}." } };
+    expect(explainRow(config, row("SSH"))).toBe("SSH uses port 22.");
+    expect(explainRow(config, row("HTTPS"))).toBe("HTTPS uses port 443.");
+  });
+
+  it("gives a row its own sentences where its cells do not fit the template", () => {
+    const config: RecallDeckConfig = {
+      ...base,
+      explain: {
+        template: "{protocol} uses port {port}.",
+        rows: { DHCP: "{protocol} uses ports 67 and 68. The server uses port 67, and the client uses port 68." },
+      },
+    };
+    expect(explainRow(config, row("DHCP"))).toBe(
+      "DHCP uses ports 67 and 68. The server uses port 67, and the client uses port 68."
     );
-    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).detail).toMatch(/^1,022 usable hosts/);
+    // The other rows keep the template.
+    expect(explainRow(config, row("SSH"))).toBe("SSH uses port 22.");
+  });
+
+  it("names a row by the column the deck says, the cue column when it does not say", () => {
+    const rows = { "22": "Port 22 belongs to SSH." };
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}.", rows, by: "port" } }, row("SSH"))).toBe(
+      "Port 22 belongs to SSH."
+    );
+    // By the cue column (the protocol), "22" names no row.
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}.", rows } }, row("SSH"))).toBe(
+      "SSH uses port 22."
+    );
+  });
+
+  it("sets a cell that opens with a capital inside a sentence, and leaves an acronym as it is", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} provides {purpose:lowerFirst}." } };
+    expect(explainRow(config, row("SSH"))).toBe("SSH provides remote shell access.");
+    expect(explainRow(config, row("DHCP"))).toBe("DHCP provides DNS and gateway settings.");
+    // Only where the template asks for it.
+    expect(explainRow({ ...base, explain: { template: "{purpose} is what {protocol} provides." } }, row("SSH"))).toBe(
+      "Remote shell access is what SSH provides."
+    );
+  });
+
+  it("gives no explanation when the deck has no template", () => {
+    expect(explainRow(base, row("SSH"))).toBeNull();
+  });
+
+  it("gives no explanation, rather than a sentence with a hole, when a cell it names is missing", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}. It is {service}." } };
+    // A blank cell, a placeholder cell and a column the table does not have.
+    expect(explainRow(config, row("HTTPS"))).toBeNull();
+    expect(explainRow(config, row("RDP"))).toBeNull();
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses {transport}." } }, row("SSH"))).toBeNull();
+    // A place written wrongly would be printed with its braces.
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses {port:plural}." } }, row("SSH"))).toBeNull();
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}}." } }, row("SSH"))).toBeNull();
+  });
+
+  it("does not take a name that every object carries for a cell or for a row's own sentences", () => {
+    expect(explainRow({ ...base, explain: { template: "{protocol} is {constructor}." } }, row("SSH"))).toBeNull();
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}.", rows: {}, by: "purpose" } };
+    expect(explainRow(config, { ...row("SSH"), purpose: "toString" })).toBe("SSH uses port 22.");
+  });
+
+  it("puts the explanation on the question, the same one whichever way round it is asked", () => {
+    const explained = buildDeck({ ...base, explain: { template: "{protocol} uses port {port}." } }, ports);
+    const asked = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      const q = generateRecallQuestion(explained, seeded(seed), { itemId: "SSH" });
+      asked.add(q.askLabel);
+      expect(q.explanation).toBe("SSH uses port 22.");
+    }
+    expect(asked).toEqual(new Set(["protocol", "port"]));
+    expect(generateRecallQuestion(explained, seeded(1), { itemId: "SSH", noSwap: true }).explanation).toBe("SSH uses port 22.");
+  });
+
+  it("leaves the explanation off the question for a deck without a template", () => {
+    const plain = buildDeck(base, ports);
+    const q = generateRecallQuestion(plain, seeded(1), { itemId: "SSH" });
+    expect(q).not.toHaveProperty("explanation");
+    expect(q.details).toEqual(["Secure Shell: encrypted remote access"]);
   });
 });
 
@@ -229,7 +357,8 @@ describe("generateRecallQuestion (choice)", () => {
 
   it("surfaces detail on the chosen row", () => {
     const q = generateRecallQuestion(deck, seeded(4));
-    expect(["crypto", "network", "iam"]).toContain(q.detail);
+    expect(q.details).toHaveLength(1);
+    expect(["crypto", "network", "iam"]).toContain(q.details[0]);
   });
 
   it("tags each question with a stable item id from the cue column", () => {
@@ -503,7 +632,7 @@ describe("all recall decks (every cert)", () => {
     const deck = getRecallDecks("a-plus-core2-220-1202").find((d) => d.config.tableId === "windows-tools")!;
     expect(deck.config.id).toBe("a2-tools");
     const q = generateRecallQuestion(deck, seeded(3), { itemId: "View system, application, and security event logs" });
-    expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", detail: "eventvwr.msc" });
+    expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", details: ["eventvwr.msc"] });
   });
 
   it("drills OSI layers by name and number, both ways", () => {

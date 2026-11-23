@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createAnonClient } from "@/server/supabase/anon";
 import {
   getCertificationBySlug,
@@ -118,11 +119,15 @@ export interface ObjectivePageData {
   siblings: ObjectiveLink[];
 }
 
-/** Everything an objective page renders, or null if the page shouldn't exist. */
-export async function loadObjectivePage(
+/**
+ * Everything an objective page renders, or null if the page shouldn't exist.
+ * Wrapped in React's cache: the page's metadata and its body ask for the same
+ * objective in one render, and the second asks the database nothing.
+ */
+export const loadObjectivePage = cache(async (
   certSlug: string,
   codeSlug: string
-): Promise<ObjectivePageData | null> {
+): Promise<ObjectivePageData | null> => {
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
   if (!cert) return null;
@@ -169,7 +174,7 @@ export async function loadObjectivePage(
     })),
     siblings,
   };
-}
+});
 
 export interface ObjectiveHubData {
   certSlug: string;
@@ -185,10 +190,13 @@ export interface ObjectiveHubData {
   }[];
 }
 
-/** One exam's objectives by domain, for its index page; null if it has none. */
-export async function loadObjectiveHub(
+/**
+ * One exam's objectives by domain, for its index page; null if it has none.
+ * Wrapped in React's cache, for the same reason as loadObjectivePage.
+ */
+export const loadObjectiveHub = cache(async (
   certSlug: string
-): Promise<ObjectiveHubData | null> {
+): Promise<ObjectiveHubData | null> => {
   if (!OBJECTIVE_HUB_CERTS.includes(certSlug)) return null;
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
@@ -216,4 +224,4 @@ export async function loadObjectiveHub(
         .map((s) => objectiveLink(cert.slug, s)),
     })),
   };
-}
+});

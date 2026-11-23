@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check } from "lucide-react";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { listEnrollments } from "@/server/data/enrollments";
 import {
   getCertificationBySlug,
@@ -16,17 +15,16 @@ export const metadata = {
   title: "Review",
 };
 
+/** The most questions the page lists. It is passed to the query and printed in the sentence, so the two agree. */
+const REVIEW_LIMIT = 25;
+
 export default async function ReviewPage({
   searchParams,
 }: {
   searchParams: Promise<{ cert?: string }>;
 }) {
   const { cert: certSlug } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const enrollments = await listEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
@@ -39,72 +37,62 @@ export default async function ReviewPage({
   }
   if (!active) redirect("/onboarding");
 
-  const missed = await listMissedQuestions(db, user.id, active.id);
+  const missed = await listMissedQuestions(db, user.id, active.id, REVIEW_LIMIT);
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Review</h1>
-        <p className="text-sm text-muted-foreground">
-          {active.name} · questions you&apos;ve missed, worst first
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Review</h1>
+        <p className="text-small text-muted-foreground">
+          These are {active.name} questions that you have answered incorrectly at least once. The questions with the
+          lowest scores are first, and up to {REVIEW_LIMIT} are listed.
         </p>
       </div>
 
       {missed.length === 0 ? (
-        <div className="grid gap-4 rounded-lg border border-dashed p-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nothing to review yet — missed questions will collect here.
+        <div className="grid gap-4 rounded-lg border border-dashed border-input p-8">
+          <p className="text-small text-muted-foreground">
+            You have no questions to review. A question that you answer incorrectly is listed here.
           </p>
-          <Button asChild variant="outline" className="justify-self-center">
-            <Link href="/dashboard">Back to your plan</Link>
+          <Button asChild variant="outline" className="justify-self-start">
+            <Link href="/dashboard">Return to your study plan</Link>
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <ol className="grid gap-3">
           {missed.map((m, i) => (
-            <details
-              key={m.question.id}
-              className="group rounded-xl border border-border bg-card px-4 py-3"
-            >
-              <summary className="flex cursor-pointer items-start gap-3 text-sm [&::-webkit-details-marker]:hidden">
-                <span className="mt-0.5 shrink-0 rounded bg-danger/10 px-1.5 py-0.5 font-mono text-[11px] text-danger">
-                  {m.timesCorrect}/{m.timesSeen}
-                </span>
-                <span className="leading-relaxed">
-                  <span className="mr-1.5 font-mono text-xs text-muted-foreground">
-                    {i + 1}.
+            <li key={m.question.id}>
+              <details className="glass rounded-lg px-4 py-3">
+                <summary className="flex cursor-pointer items-start gap-3 text-small [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0 flex-1">
+                    <span className="mr-1.5 text-note tabular-nums text-muted-foreground">{i + 1}.</span>
+                    {m.question.question_text}
                   </span>
-                  {m.question.question_text}
-                </span>
-              </summary>
-              <div className="mt-3 grid gap-1.5 border-t pt-3 text-sm">
-                {m.question.options.map((option, oi) => (
-                  <p
-                    key={oi}
-                    className={cn(
-                      "flex items-start gap-2 rounded px-2 py-1",
-                      oi === m.question.correct_index &&
-                        "bg-success/10 text-success"
-                    )}
-                  >
-                    {oi === m.question.correct_index && (
-                      <Check className="mt-0.5 size-3.5 shrink-0" />
-                    )}
-                    {option.text}
-                  </p>
-                ))}
-                {m.question.explanation && (
-                  <p className="mt-1 text-muted-foreground">
-                    {m.question.explanation}
-                  </p>
-                )}
-                <div className="mt-1">
-                  <QuestionFlagButton questionId={m.question.id} />
+                  <span className="shrink-0 whitespace-nowrap text-note tabular-nums text-muted-foreground">
+                    {m.timesCorrect} of {m.timesSeen} correct
+                  </span>
+                </summary>
+                <div className="mt-3 grid gap-1.5 border-t border-border pt-3 text-small">
+                  {m.question.options.map((option, oi) => {
+                    const correct = oi === m.question.correct_index;
+                    return (
+                      <p key={oi} className={cn("rounded-xs px-2 py-1", correct && "bg-success/10")}>
+                        {correct && <span className="font-semibold text-success">Correct answer: </span>}
+                        {option.text}
+                      </p>
+                    );
+                  })}
+                  {m.question.explanation && (
+                    <p className="mt-1 text-muted-foreground">{m.question.explanation}</p>
+                  )}
+                  <div className="mt-1">
+                    <QuestionFlagButton questionId={m.question.id} />
+                  </div>
                 </div>
-              </div>
-            </details>
+              </details>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
     </div>
   );

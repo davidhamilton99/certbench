@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { Db } from "@/server/supabase/server";
-import { ApiError } from "@/contracts/common";
+import { allRows } from "@/server/data/paging";
+import type { PerformanceRow } from "@/server/data/performance";
 import { getQuestionsByIds } from "@/server/data/questions";
 import type { CertQuestion } from "@/core/question-selection/types";
 
@@ -22,15 +23,19 @@ export async function listMissedQuestions(
   certId: string,
   limit = 25
 ): Promise<MissedQuestion[]> {
-  const { data, error } = await db
-    .from("question_performance")
-    .select("question_id, times_seen, times_correct, last_seen_at")
-    .eq("user_id", userId)
-    .eq("certification_id", certId)
-    .gt("times_seen", 0);
-  if (error) throw new ApiError("internal", error.message);
+  // The whole history for the exam, a page at a time: see allRows.
+  const answered = await allRows<PerformanceRow>((from, to) =>
+    db
+      .from("question_performance")
+      .select("question_id, times_seen, times_correct, last_seen_at")
+      .eq("user_id", userId)
+      .eq("certification_id", certId)
+      .gt("times_seen", 0)
+      .order("question_id")
+      .range(from, to)
+  );
 
-  const missed = (data ?? [])
+  const missed = answered
     .filter((p) => p.times_correct < p.times_seen)
     .sort(
       (a, b) =>

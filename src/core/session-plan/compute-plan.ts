@@ -1,4 +1,5 @@
 import {
+  DIAGNOSTIC_QUESTION_COUNT,
   FULL_EXAM_CADENCE_DAYS,
   FULL_EXAM_QUESTION_COUNT,
   DOMAIN_DRILL_QUESTION_COUNT,
@@ -80,6 +81,12 @@ export interface SessionEngineInput {
 
 // --- Engine ---
 
+/** How long until the exam, as a sentence. */
+function examIn(days: number): string {
+  if (days <= 0) return "Your exam is today.";
+  return `Your exam is in ${days} ${days === 1 ? "day" : "days"}.`;
+}
+
 export function computeSessionPlan(
   input: SessionEngineInput
 ): SessionPlanResult {
@@ -93,10 +100,10 @@ export function computeSessionPlan(
         {
           type: "diagnostic",
           priority: 0,
-          title: "Take Your Diagnostic",
-          description: "25 questions to establish your baseline",
-          reason: "Complete the diagnostic exam to unlock your study plan",
-          questionCount: 25,
+          title: "Take the diagnostic",
+          description: `The diagnostic has ${DIAGNOSTIC_QUESTION_COUNT} questions and measures your starting point in every domain.`,
+          reason: "Your study plan is built from the result of the diagnostic.",
+          questionCount: DIAGNOSTIC_QUESTION_COUNT,
           estimatedMinutes: 20,
           color: "primary",
         },
@@ -170,9 +177,9 @@ export function computeSessionPlan(
     blocks.push({
       type: "srs_review",
       priority: 1,
-      title: "Spaced Repetition Review",
-      description: `${srsDue.length} card${srsDue.length === 1 ? "" : "s"} due for review`,
-      reason: "These concepts are at risk of being forgotten",
+      title: "Spaced repetition review",
+      description: `${srsDue.length} ${srsDue.length === 1 ? "question is" : "questions are"} due for review.`,
+      reason: "These are the questions whose next review is due.",
       questionIds: srsDue.slice(0, cardCount).map((qp) => qp.question_id),
       questionCount: cardCount,
       estimatedMinutes: Math.ceil(cardCount * 1.5),
@@ -190,9 +197,9 @@ export function computeSessionPlan(
     blocks.push({
       type: "domain_drill",
       priority: 2,
-      title: `Focus: ${weakest.title}`,
-      description: `Score: ${Math.round(weakest.score)}% — ${weakest.examWeight}% of exam`,
-      reason: `This domain is your weakest and worth ${weakest.examWeight}% of the exam`,
+      title: `Domain drill: ${weakest.title}`,
+      description: `Your score in this domain is ${Math.round(weakest.score)}%. The domain is ${weakest.examWeight}% of the exam.`,
+      reason: `This is your weakest domain, and it is ${weakest.examWeight}% of the exam.`,
       domainId: weakest.domainId,
       domainNumber: weakest.domainNumber,
       questionCount: DOMAIN_DRILL_QUESTION_COUNT,
@@ -207,9 +214,9 @@ export function computeSessionPlan(
       blocks.push({
         type: "practice_exam",
         priority: 3,
-        title: "Full Practice Exam",
-        description: `${daysUntilExam} day${daysUntilExam === 1 ? "" : "s"} until exam — simulate real conditions`,
-        reason: "Final week preparation",
+        title: "Full practice exam",
+        description: `${examIn(daysUntilExam)} Take a full practice exam under exam conditions.`,
+        reason: "Your exam is within a week.",
         questionCount: FULL_EXAM_QUESTION_COUNT,
         estimatedMinutes: 90,
         color: "urgency",
@@ -220,13 +227,15 @@ export function computeSessionPlan(
         blocks.push({
           type: "domain_drill",
           priority: 3,
-          title: `Targeted: ${domain.title}`,
-          description: `${daysUntilExam} days left — bring this domain up`,
-          reason: `${daysUntilExam} days until exam, this domain needs work`,
+          title: `Domain drill: ${domain.title}`,
+          description: `${examIn(daysUntilExam)} Your score in this domain is ${Math.round(domain.score)}%.`,
+          reason: "Your exam is within a month, and this domain is below 70%.",
           domainId: domain.domainId,
           domainNumber: domain.domainNumber,
-          questionCount: 15,
-          estimatedMinutes: 20,
+          // The drill page starts a drill of the standard size, so that is the
+          // size printed (this block used to say 15 questions).
+          questionCount: DOMAIN_DRILL_QUESTION_COUNT,
+          estimatedMinutes: 15,
           color: "urgency",
         });
       }
@@ -244,9 +253,9 @@ export function computeSessionPlan(
     blocks.push({
       type: "weak_points",
       priority: 4,
-      title: "Weak Points Review",
-      description: `${weakCount} question${weakCount === 1 ? "" : "s"} you've missed before`,
-      reason: "Revisit questions you've gotten wrong to close gaps",
+      title: "Weak points review",
+      description: `You have answered ${weakCount} ${weakCount === 1 ? "question" : "questions"} incorrectly before.`,
+      reason: "Answering them again shows which ones you now know.",
       questionCount: wantCount,
       estimatedMinutes: Math.ceil(wantCount * 1.5),
       color: "warning",
@@ -269,11 +278,11 @@ export function computeSessionPlan(
     blocks.push({
       type: "practice_exam",
       priority: 5,
-      title: "Practice Exam",
-      description: `${FULL_EXAM_QUESTION_COUNT} questions across all domains`,
+      title: "Practice exam",
+      description: `A practice exam has ${FULL_EXAM_QUESTION_COUNT} questions and covers every domain.`,
       reason: daysSinceFullExam
-        ? `Last full exam was ${daysSinceFullExam} days ago`
-        : "Build your baseline with a full practice exam",
+        ? `Your last full practice exam was ${daysSinceFullExam} days ago.`
+        : "You have not yet taken a full practice exam.",
       questionCount: FULL_EXAM_QUESTION_COUNT,
       estimatedMinutes: 90,
       color: "primary",
@@ -287,14 +296,20 @@ export function computeSessionPlan(
   const unseenCount = input.totalQuestionCount - seenQuestionIds.size;
 
   if (unseenCount > 0) {
+    // This block's link opens a full practice exam (see blockHref in
+    // SessionBlockCard and the exam page, which starts examType "full" with no
+    // count of its own), and a practice exam asks unseen questions first. The
+    // block used to say "15 questions"; it says what opens.
     blocks.push({
       type: "new_content",
       priority: 6,
-      title: "Explore New Questions",
-      description: `${unseenCount} question${unseenCount === 1 ? "" : "s"} you haven't seen yet`,
-      reason: "Cover more of the exam objectives",
-      questionCount: Math.min(15, unseenCount),
-      estimatedMinutes: Math.ceil(Math.min(15, unseenCount) * 1.5),
+      title: "New questions",
+      description: `${
+        unseenCount === 1 ? "There is 1 question" : `There are ${unseenCount} questions`
+      } that you have not seen yet. A practice exam asks new questions first.`,
+      reason: "New questions cover more of the exam objectives.",
+      questionCount: FULL_EXAM_QUESTION_COUNT,
+      estimatedMinutes: 90,
       color: "primary",
     });
   }

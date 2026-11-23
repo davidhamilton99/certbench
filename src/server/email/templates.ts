@@ -8,13 +8,16 @@ import type { CheckpointFollowUp } from "@/core/path/follow-up";
 import type { PathNudge, PathStanding } from "@/core/path/nudge";
 import type { PathDomain } from "@/core/path/types";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
-import { BASE_PRICES_CENTS, formatUsd } from "@/lib/pricing/ppp";
+import { PRO_PRICE_TERMS } from "@/lib/pricing/terms";
+import { READINESS_TARGET, bandFor } from "@/lib/readiness/band";
+import { EMAIL_BAND_COLORS, EMAIL_COLORS as C } from "./colors";
 
 /**
  * Hand-rolled HTML email templates. Inline styles only (email clients strip
- * stylesheets), 560px column, system font stack. Every lifecycle email
- * carries an unsubscribe link; the welcome email is transactional and
- * doesn't need one.
+ * stylesheets), 560px column, system font stack. The colours are the site's
+ * own (./colors.ts): its ink on a sheet of paper, on the desk-coloured ground.
+ * Every lifecycle email carries an unsubscribe link; the welcome email is
+ * transactional and doesn't need one.
  */
 
 export interface EmailContent {
@@ -31,24 +34,24 @@ const APP = () => publicEnv.NEXT_PUBLIC_APP_URL;
  */
 function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): string {
   return `<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<body style="margin:0;padding:0;background:#f4f4f5;">
+<body style="margin:0;padding:0;background:${C.ground};">
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>` : ""}
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink};">
     <div style="margin-bottom:24px;">
-      <img src="https://certbench.dev/icon-192.png" width="24" height="24" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:6px;" />
+      <img src="https://certbench.dev/icon-192.png" width="24" height="24" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:5px;" />
       <span style="font-size:16px;font-weight:600;margin-left:8px;">CertBench</span>
     </div>
-    <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;padding:28px;">
+    <div style="background:${C.paper};border:1px solid ${C.rule};border-radius:8px;padding:28px;">
       ${bodyHtml}
     </div>
-    <p style="font-size:12px;color:#71717a;margin-top:20px;line-height:1.6;">
-      CertBench · adaptive CompTIA exam prep
-      ${unsubscribeUrl ? `· <a href="${unsubscribeUrl}" style="color:#71717a;">Unsubscribe from these emails</a>` : ""}
+    <p style="font-size:12px;color:${C.muted};margin-top:20px;line-height:1.6;">
+      CertBench is an independent study program for CompTIA exams.
+      ${unsubscribeUrl ? `<a href="${esc(unsubscribeUrl)}" style="color:${C.muted};">Unsubscribe from these emails</a>.` : ""}
     </p>
   </div>
 </body>
@@ -56,17 +59,14 @@ function layout(bodyHtml: string, unsubscribeUrl?: string, preheader?: string): 
 }
 
 function button(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;margin-top:8px;">${label}</a>`;
+  return `<a href="${href}" style="display:inline-block;background:${C.primary};color:${C.onPrimary};text-decoration:none;border-radius:6px;padding:11px 20px;font-size:14px;font-weight:600;margin-top:8px;">${label}</a>`;
 }
-
-const scoreColor = (score: number) =>
-  score >= 75 ? "#16a34a" : score >= 40 ? "#d97706" : "#dc2626";
 
 /** For names and titles going into email HTML. */
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const stopCount = (n: number) => `${n} stop${n === 1 ? "" : "s"}`;
+const stopCount = (n: number) => `${n} step${n === 1 ? "" : "s"}`;
 
 /**
  * A link into someone's path from an email. It goes through sign-in so it
@@ -86,29 +86,31 @@ export function pathEmailLink(cert: string, campaign: string): string {
 /**
  * The free stretch of a path as a row of stops: played ones filled and
  * checked, the next one ringed, the checkpoint flagged at the end. Tables and
- * borders only, so it holds up in every mail client.
+ * borders only, so it holds up in every mail client. It is drawn in the ink
+ * that can be pressed and in the page's rule: green, amber and red are kept
+ * for marks on answers and for scores.
  */
 function pathStrip(stretch: PathNudge["stretch"]): string {
   const next = stretch.findIndex((s) => !s.done);
   const dot = (s: PathNudge["stretch"][number], i: number) => {
     const [bg, fg, ring, mark] = s.done
-      ? ["#2563eb", "#ffffff", "#2563eb", "&#10003;"]
+      ? [C.primary, C.onPrimary, C.primary, "&#10003;"]
       : s.kind === "checkpoint"
-        ? ["#fffbeb", "#b45309", i === next ? "#2563eb" : "#f59e0b", "&#9873;"]
+        ? [C.paper, i === next ? C.primary : C.muted, i === next ? C.primary : C.rule, "&#9873;"]
         : i === next
-          ? ["#ffffff", "#2563eb", "#2563eb", String(i + 1)]
-          : ["#fafafa", "#a1a1aa", "#e4e4e7", String(i + 1)];
+          ? [C.paper, C.primary, C.primary, String(i + 1)]
+          : [C.ground, C.muted, C.rule, String(i + 1)];
     return `<td width="28" style="width:28px;padding:0;"><div style="width:24px;height:24px;line-height:24px;border:2px solid ${ring};border-radius:14px;background:${bg};color:${fg};font-size:12px;font-weight:700;text-align:center;">${mark}</div></td>`;
   };
   const line = (lit: boolean) =>
-    `<td style="padding:0 3px;"><div style="height:2px;line-height:2px;font-size:0;background:${lit ? "#2563eb" : "#e4e4e7"};">&nbsp;</div></td>`;
+    `<td style="padding:0 3px;"><div style="height:2px;line-height:2px;font-size:0;background:${lit ? C.primary : C.rule};">&nbsp;</div></td>`;
   const cells = stretch
     .map((s, i) => (i === 0 ? "" : line(stretch[i - 1].done && s.done)) + dot(s, i))
     .join("");
   return `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:4px 0 6px;"><tr>${cells}</tr></table>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px;font-size:11px;color:#71717a;"><tr>
-        <td style="padding:0;">Warm-up</td><td style="padding:0;text-align:right;">Checkpoint</td>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px;font-size:11px;color:${C.muted};"><tr>
+        <td style="padding:0;">Introductory questions</td><td style="padding:0;text-align:right;">Readiness checkpoint</td>
       </tr></table>`;
 }
 
@@ -119,28 +121,28 @@ export function welcomeEmail(input: {
   const { displayName, certName } = input;
   const first = displayName.split(" ")[0] || displayName;
   return {
-    subject: `Your ${certName} path is saved`,
+    subject: `Your ${certName} study path is saved`,
     html: layout(`
-      <h1 style="font-size:20px;margin:0 0 12px;">Welcome, ${first} 👋</h1>
+      <h1 style="font-size:20px;margin:0 0 12px;">Welcome to CertBench, ${first}</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        You're set up for <strong>${certName}</strong>. Here's how CertBench works:
+        Your account is set up for <strong>${certName}</strong>. This is how CertBench works.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Follow your path</strong> — every exam objective as a short stop, in order. You never have to decide what to study next.</li>
-        <li><strong>Let misses come back</strong> — anything you get wrong returns in a later stop until it sticks.</li>
-        <li><strong>Hit the readiness checkpoint</strong> — exam-style questions across every domain show where you stand.</li>
+        <li><strong>Follow your study path.</strong> Every exam objective is a short step, and the steps are in order, so you do not have to decide what to study next.</li>
+        <li><strong>Review what you miss.</strong> A question that you answer incorrectly returns in a later step until you answer it correctly.</li>
+        <li><strong>Take the readiness checkpoint.</strong> Exam-style questions from every domain show where you stand.</li>
       </ol>
-      ${button(`${APP()}/start`, "Continue my path")}
+      ${button(`${APP()}/start`, "Continue the study path")}
     `),
-    text: `Welcome, ${first}!\n\nYou're set up for ${certName}. Follow your path one short stop at a time; anything you miss comes back until it sticks, and the readiness checkpoint shows where you stand.\n\nContinue your path: ${APP()}/start`,
+    text: `Welcome to CertBench, ${first}.\n\nYour account is set up for ${certName}. Follow your study path one short step at a time. A question that you answer incorrectly returns in a later step until you answer it correctly, and the readiness checkpoint shows where you stand.\n\nContinue your study path: ${APP()}/start`,
   };
 }
 
 const TOOL_INTRO: Record<ToolSource, string> = {
-  "port-numbers-quiz": "You've been drilling port numbers on CertBench",
-  "subnetting-practice": "You've been drilling subnetting on CertBench",
+  "port-numbers-quiz": "You have been practicing port numbers on CertBench",
+  "subnetting-practice": "You have been practicing subnetting on CertBench",
   "security-plus-acronyms-quiz":
-    "You've been drilling Security+ acronyms on CertBench",
+    "You have been practicing Security+ acronyms on CertBench",
 };
 
 /**
@@ -155,27 +157,26 @@ export function studyPlanEmail(input: {
   const app = APP();
   const intro = TOOL_INTRO[input.source];
   return {
-    subject: "Your CompTIA study plan — start here",
+    subject: "Your CompTIA study plan",
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">Here's your study plan</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">Your study plan</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        ${intro} — nice work. Drills like that are the easy wins; here's how
-        to turn them into a pass:
+        ${intro}. Drills of that kind cover the facts. These three steps cover the rest of the exam.
       </p>
       <ol style="font-size:14px;line-height:1.9;margin:0 0 16px;padding-left:20px;">
-        <li><strong>Pick your exam</strong> — CertBench lays out every objective as a path of short stops, so you never have to decide what to study next.</li>
-        <li><strong>Play a stop a day, or five</strong> — each one is about three minutes of quick questions on one objective. What you miss comes back until it sticks.</li>
-        <li><strong>Hit the readiness checkpoint</strong> — exam-style questions across every domain, scored the way the real exam weights them.</li>
+        <li><strong>Choose your exam.</strong> CertBench sets out every objective as a study path of short steps, so you do not have to decide what to study next.</li>
+        <li><strong>Complete one step or more each day.</strong> Each step is about three minutes of short questions on one objective. A question that you miss returns until you answer it correctly.</li>
+        <li><strong>Take the readiness checkpoint.</strong> It has exam-style questions from every domain, weighted in the same way as the real exam.</li>
       </ol>
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
-        Your first stop needs no account:
+        You do not need an account for your first step.
       </p>
-      ${button(`${app}/start`, "Start my exam path")}
+      ${button(`${app}/start`, "Start the study path for my exam")}
     `,
       input.unsubscribeUrl
     ),
-    text: `Here's your CompTIA study plan.\n\n${intro}. Here's how to turn it into a pass:\n1. Pick your exam: every objective is laid out as a path of short stops.\n2. Play a stop at a time: about three minutes each, and misses come back until they stick.\n3. Hit the readiness checkpoint to see where you stand across every domain.\n\nStart your path (no account needed): ${app}/start\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `This is your CompTIA study plan.\n\n${intro}. Drills of that kind cover the facts. These three steps cover the rest of the exam.\n1. Choose your exam. Every objective is set out as a study path of short steps.\n2. Complete one step or more each day. Each step takes about three minutes, and a question that you miss returns until you answer it correctly.\n3. Take the readiness checkpoint to see where you stand in every domain.\n\nStart the study path (you do not need an account): ${app}/start\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 
@@ -192,30 +193,30 @@ export function postExamEmail(input: {
     subject: `How did your ${input.certName} exam go?`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">How did it go, ${first}?</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">How did your exam go, ${first}?</h1>
       <p style="font-size:14px;line-height:1.7;margin:0 0 16px;">
-        Your ${input.certName} exam date has passed — we're pulling for you.
-        Let us know how it went:
+        The date of your ${input.certName} exam has passed, and we hope that it went well.
+        Please let us know the result.
       </p>
       <div style="margin:0 0 8px;">
-        ${button(input.passHref, "I passed 🎉")}
+        ${button(input.passHref, "I passed the exam")}
       </div>
       <p style="font-size:14px;line-height:1.7;margin:8px 0 0;">
-        Didn't get it this time?
-        <a href="${esc(input.failHref)}" style="color:#2563eb;">We'll help you regroup →</a>
+        If you did not pass this time,
+        <a href="${esc(input.failHref)}" style="color:${C.primary};">CertBench can help you prepare for a retake</a>.
       </p>
     `,
       input.unsubscribeUrl
     ),
-    text: `How did your ${input.certName} exam go?\n\nPassed? Tell us: ${input.passHref}\nNot this time? We'll help you regroup: ${input.failHref}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `How did your ${input.certName} exam go?\n\nIf you passed, please tell us: ${input.passHref}\nIf you did not pass this time, CertBench can help you prepare for a retake: ${input.failHref}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 
 const countdownSubject = (days: number, name: string) =>
-  days <= 1 ? `Tomorrow's the day — ${name}` : `${days} days to your ${name} exam`;
+  days <= 1 ? `Your ${name} exam is tomorrow` : `${days} days until your ${name} exam`;
 
 const countdownHeading = (days: number) =>
-  days <= 1 ? "Exam day is tomorrow" : `${days} days to go`;
+  days <= 1 ? "Your exam is tomorrow" : `Your exam is in ${days} days`;
 
 /**
  * The exam countdown: where they are on their path and the way back to it.
@@ -235,21 +236,21 @@ export function pathCountdownEmail(input: {
   const left = standing.total - standing.done;
   const where =
     standing.done === 0
-      ? `Your ${examName} path is ready: ${stopCount(standing.total)}, about ${MINUTES_PER_STOP} minutes each.`
+      ? `Your ${examName} study path is ready. It has ${stopCount(standing.total)} of about ${MINUTES_PER_STOP} minutes each.`
       : left === 0
-        ? `You've played every stop of your ${examName} path.`
+        ? `You have completed every step of your ${examName} study path.`
         : standing.freeLeft === 0 && !input.pro
-          ? `You've played every free stop of your ${examName} path, readiness checkpoint included. ${left === 1 ? "One more stop is" : `${left} more stops are`} waiting for you.`
-          : `You're ${standing.done} of ${standing.total} stops into your ${examName} path.`;
+          ? `You have completed every free step of your ${examName} study path, including the readiness checkpoint. ${left === 1 ? "One more step remains" : `${left} more steps remain`}.`
+          : `You have completed ${standing.done} of the ${standing.total} steps in your ${examName} study path.`;
   const advice =
     days <= 1
-      ? "No cramming tonight. Get some sleep: you've done the work."
+      ? "Do not study late tonight. Rest well: you have done the work."
       : days <= 3
-        ? "Final stretch: a few stops a day keeps it all fresh, and anything you miss comes back until it sticks."
+        ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
         : days <= 7
-          ? `This week, play a few stops every day. Each one takes about ${MINUTES_PER_STOP} minutes.`
-          : `Two weeks out, a few stops a day adds up fast. Each one takes about ${MINUTES_PER_STOP} minutes.`;
-  const label = standing.done === 0 ? "Start my path" : "Continue my path";
+          ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
+          : `With two weeks remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
+  const label = standing.done === 0 ? "Start the study path" : "Continue the study path";
   return {
     subject: countdownSubject(days, examName),
     html: layout(
@@ -281,54 +282,54 @@ export function pathNudgeEmail(input: {
   const first = input.displayName.split(" ")[0] || input.displayName;
 
   if (nudge.next.kind === "checkpoint") {
-    const what = `Next is your readiness checkpoint: ${CHECKPOINT_SIZE} exam-style questions across every domain, weighted the way the real exam weights them.`;
+    const what = `Your next step is the readiness checkpoint. It has ${CHECKPOINT_SIZE} exam-style questions from every domain, weighted in the same way as the real exam.`;
     const then =
-      "When you finish, you'll see a first read of your readiness, how you did on each domain, and when you'd finish the rest of your path.";
+      "When you finish, you will see a first measure of your readiness, your result in each domain, and the date by which you would finish the rest of your study path.";
     return {
       subject: `Your ${examName} readiness checkpoint is next`,
       html: layout(
         `
-        <h1 style="font-size:18px;margin:0 0 12px;">Your checkpoint is next, ${esc(first)}</h1>
+        <h1 style="font-size:18px;margin:0 0 12px;">Your readiness checkpoint is next, ${esc(first)}</h1>
         ${pathStrip(nudge.stretch)}
         <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
-          You've played ${stopCount(nudge.done)} of your ${examName} path. ${what}
+          You have completed ${stopCount(nudge.done)} of your ${examName} study path. ${what}
         </p>
-        <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:#71717a;">${then}</p>
-        ${button(href, "Take my checkpoint")}
+        <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${then}</p>
+        ${button(href, "Take the checkpoint")}
       `,
         input.unsubscribeUrl
       ),
-      text: `Your checkpoint is next, ${first}.\n\nYou've played ${stopCount(nudge.done)} of your ${examName} path. ${what}\n${then}\n\nTake your checkpoint: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+      text: `Your readiness checkpoint is next, ${first}.\n\nYou have completed ${stopCount(nudge.done)} of your ${examName} study path. ${what}\n${then}\n\nTake the checkpoint: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
     };
   }
 
   const where =
     nudge.done > 0
-      ? `You're ${stopCount(nudge.done)} into your ${examName} path.`
-      : `You've started your ${examName} path.`;
+      ? `You have completed ${stopCount(nudge.done)} of your ${examName} study path.`
+      : `You have started your ${examName} study path.`;
   const length =
     nudge.next.kind === "practice"
-      ? `${PRACTICE_SIZE} exam-style questions`
-      : `about ${MINUTES_PER_STOP} minutes of quick questions`;
+      ? `It has ${PRACTICE_SIZE} exam-style questions`
+      : `It takes about ${MINUTES_PER_STOP} minutes`;
   const after =
     nudge.toCheckpoint === 1
-      ? `Right after it comes your readiness checkpoint: ${CHECKPOINT_SIZE} exam-style questions that show where you stand on every domain.`
-      : `It's ${nudge.toCheckpoint} short stops from here to your readiness checkpoint, where ${CHECKPOINT_SIZE} exam-style questions show where you stand on every domain.`;
+      ? `Your readiness checkpoint follows it. The checkpoint has ${CHECKPOINT_SIZE} exam-style questions that show where you stand in every domain.`
+      : `There are ${nudge.toCheckpoint} short steps between here and your readiness checkpoint, where ${CHECKPOINT_SIZE} exam-style questions show where you stand in every domain.`;
   return {
-    subject: `Next on your ${examName} path: ${nudge.next.title}`,
+    subject: `Your next ${examName} step: ${nudge.next.title}`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 12px;">Pick up where you left off, ${esc(first)}</h1>
+      <h1 style="font-size:18px;margin:0 0 12px;">Continue your study path, ${esc(first)}</h1>
       ${pathStrip(nudge.stretch)}
       <p style="font-size:14px;line-height:1.7;margin:0 0 8px;">
-        ${where} Next up is <strong>${esc(nudge.next.title)}</strong>: ${length}.
+        ${where} Your next step is <strong>${esc(nudge.next.title)}</strong>. ${length}.
       </p>
-      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:#71717a;">${after}</p>
-      ${button(href, "Play my next stop")}
+      <p style="font-size:14px;line-height:1.7;margin:0 0 12px;color:${C.muted};">${after}</p>
+      ${button(href, "Go to the next step")}
     `,
       input.unsubscribeUrl
     ),
-    text: `Pick up where you left off, ${first}.\n\n${where} Next up is ${nudge.next.title}: ${length}.\n${after}\n\nPlay your next stop: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
+    text: `Continue your study path, ${first}.\n\n${where} Your next step is ${nudge.next.title}. ${length}.\n${after}\n\nGo to the next step: ${href}\n\nUnsubscribe: ${input.unsubscribeUrl}`,
   };
 }
 
@@ -337,13 +338,15 @@ function bar(pct: number, color: string): string {
   const filled = Math.max(0, Math.min(100, Math.round(pct)));
   const td = (w: number, bg: string) =>
     `<td width="${w}%" style="width:${w}%;height:6px;line-height:6px;font-size:0;background:${bg};">&nbsp;</td>`;
-  const cells = (filled > 0 ? td(filled, color) : "") + (filled < 100 ? td(100 - filled, "#e4e4e7") : "");
+  const cells = (filled > 0 ? td(filled, color) : "") + (filled < 100 ? td(100 - filled, C.rule) : "");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${cells}</tr></table>`;
 }
 
-// A checkpoint is a dozen questions: its top band is a strong start, never "exam ready".
-const bandLabel = (score: number) =>
-  score >= 75 ? "Strong start" : score >= 40 ? "Getting close" : "Your starting point";
+/** The band a score falls into, in an email's colours. The words and the thresholds are `bandFor`'s. */
+const emailBand = (score: number) => {
+  const band = bandFor(score);
+  return { key: band.key, label: band.label, ...EMAIL_BAND_COLORS[band.key] };
+};
 
 /**
  * The one-time follow-up for someone who took their readiness checkpoint and
@@ -364,85 +367,89 @@ export function checkpointResultEmail(input: {
   const first = input.displayName.split(" ")[0] || input.displayName;
   const score = result.score;
   const asked = result.domains.reduce((s, d) => s + d.total, 0);
-  // The path's offer sells both plans, so the email states both.
-  const monthly = formatUsd(BASE_PRICES_CENTS.monthly);
-  const quarterly = formatUsd(BASE_PRICES_CENTS.quarterly);
+  const band = emailBand(score);
   const guarantee = `${APP()}${PASS_GUARANTEE_HREF}`;
 
+  // A checkpoint is a dozen questions: a score at the target is a strong first result, never "ready".
   const read =
-    score >= 75
-      ? `You scored ${score}% on your ${examName} readiness checkpoint: ${asked} exam-style questions, weighted the way the real exam weights its domains. That's a strong first read, not a verdict: the real exam asks up to ${REHEARSAL_FORMATS.full.questions} questions, and the rest of your path and full timed practice exams are how you make sure.`
-      : `You scored ${score}% on your ${examName} readiness checkpoint: ${asked} exam-style questions, weighted the way the real exam weights its domains. 75% is where we call it exam-ready.`;
+    band.key === "ready"
+      ? `You scored ${score}% on your ${examName} readiness checkpoint, which has ${asked} exam-style questions weighted in the same way as the domains of the real exam. This is a strong first result, but it is not a final measure. The real exam has up to ${REHEARSAL_FORMATS.full.questions} questions, and the rest of your study path and full timed practice exams will confirm it.`
+      : `You scored ${score}% on your ${examName} readiness checkpoint, which has ${asked} exam-style questions weighted in the same way as the domains of the real exam. The readiness target is ${READINESS_TARGET}%.`;
   const rows = domains.map((d) => {
     const r = result.domains.find((x) => x.number === d.number);
     return {
       n: d.number.replace(/\.0$/, ""),
       title: d.title,
-      tally: r ? `${r.correct}/${r.total}` : "not asked",
+      tally: r ? `${r.correct} of ${r.total}` : "Not asked",
       pct: r && r.total > 0 ? (r.correct / r.total) * 100 : 0,
     };
   });
-  const gain = opportunity ? `Your biggest opportunity is ${opportunity.title}, ${opportunity.weight}% of the exam.` : "";
+  const gain = opportunity
+    ? `The area to focus on next is ${opportunity.title}, which accounts for ${opportunity.weight}% of the exam.`
+    : "";
   const includes = [
-    ...(remaining > 0 ? [`All ${remaining} remaining ${remaining === 1 ? "stop" : "stops"} of your ${examName} path`] : []),
+    ...(remaining > 0 ? [`All ${remaining} remaining ${remaining === 1 ? "step" : "steps"} of your ${examName} study path`] : []),
     `Practice across all ${input.questionCount.toLocaleString("en-US")} ${examName} questions`,
-    "Timed practice exams, PBQ labs and spaced review",
+    "Timed practice exams, hands-on labs and spaced review",
   ];
-  const terms = "Both plans renew. Cancel anytime.";
+  // The price itself is worded once for the whole site (src/lib/pricing/terms.ts):
+  // the three plans, the currency and the regional adjustment.
+  const terms = "Each plan renews automatically. You can cancel at any time.";
 
   return {
     subject: `Your ${examName} checkpoint: ${score}%`,
     html: layout(
       `
-      <h1 style="font-size:18px;margin:0 0 16px;">Here's where you stand, ${esc(first)}</h1>
-      <div style="text-align:center;padding:0 0 18px;">
-        <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#71717a;">Readiness checkpoint · ${examName}</div>
-        <div style="font-size:52px;line-height:1.15;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${scoreColor(score)};margin-top:6px;">${score}%</div>
-        <div style="font-size:13px;font-weight:600;color:${scoreColor(score)};">${bandLabel(score)}</div>
+      <h1 style="font-size:18px;margin:0 0 16px;">Your checkpoint result, ${esc(first)}</h1>
+      <div style="padding:0 0 18px;">
+        <div style="font-size:13px;color:${C.muted};">${examName} readiness checkpoint</div>
+        <div style="font-size:44px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${C.ink};margin-top:6px;">${score}%</div>
+        <div style="font-size:13px;font-weight:600;color:${band.ink};">${band.label}</div>
       </div>
       <p style="font-size:14px;line-height:1.7;margin:0 0 6px;">${read}</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 14px;">
         ${rows
           .map(
             (r) => `<tr>
-          <td style="padding:10px 0 5px;font-size:13px;"><span style="color:#a1a1aa;margin-right:6px;">${r.n}</span>${esc(r.title)}</td>
-          <td style="padding:10px 0 5px;font-size:12px;text-align:right;color:#71717a;font-variant-numeric:tabular-nums;white-space:nowrap;">${r.tally}</td>
+          <td style="padding:10px 0 5px;font-size:13px;"><span style="color:${C.muted};margin-right:6px;">${r.n}</span>${esc(r.title)}</td>
+          <td style="padding:10px 0 5px;font-size:12px;text-align:right;color:${C.muted};font-variant-numeric:tabular-nums;white-space:nowrap;">${r.tally}</td>
         </tr>
-        <tr><td colspan="2" style="padding:0;">${bar(r.pct, scoreColor(r.pct))}</td></tr>`
+        <tr><td colspan="2" style="padding:0;">${bar(r.pct, emailBand(r.pct).fill)}</td></tr>`
           )
           .join("")}
       </table>
       ${
         opportunity
-          ? `<p style="font-size:14px;line-height:1.7;margin:0;">Your biggest opportunity is <strong>${esc(opportunity.title)}</strong>, ${opportunity.weight}% of the exam.</p>`
+          ? `<p style="font-size:14px;line-height:1.7;margin:0;">The area to focus on next is <strong>${esc(opportunity.title)}</strong>, which accounts for ${opportunity.weight}% of the exam.</p>`
           : ""
       }
-      <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:10px;padding:18px;margin:18px 0 0;">
-        <div style="font-size:16px;font-weight:700;margin:0 0 10px;">The rest of your ${examName} path</div>
+      <div style="border:1px solid ${C.rule};border-top:3px solid ${C.navy};background:${C.ground};border-radius:0 0 6px 6px;padding:18px;margin:18px 0 0;">
+        <div style="font-size:16px;font-weight:700;margin:0 0 4px;">The rest of your ${examName} study path</div>
+        <div style="font-size:13px;color:${C.muted};margin:0 0 10px;">CertBench Pro includes:</div>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;line-height:1.6;">
           ${includes
             .map(
               (line) =>
-                `<tr><td style="padding:2px 10px 2px 0;vertical-align:top;color:#2563eb;font-weight:700;">&#10003;</td><td style="padding:2px 0;">${esc(line)}</td></tr>`
+                `<tr><td style="padding:2px 10px 2px 0;vertical-align:top;color:${C.primary};font-weight:700;">&#10003;</td><td style="padding:2px 0;">${esc(line)}</td></tr>`
             )
             .join("")}
         </table>
-        <div style="margin:14px 0 0;"><span style="font-size:28px;font-weight:700;">${monthly}</span> <span style="font-size:13px;color:#71717a;">a month, or ${quarterly} for 3 months</span></div>
-        <div style="font-size:12px;color:#71717a;margin:2px 0 6px;">${terms}</div>
-        ${button(href, "Unlock my path")}
-        <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:#71717a;"><span style="color:#15803d;font-weight:600;">&#10003; Pass guarantee:</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${guarantee}" style="color:#71717a;">Terms</a></div>
+        <p style="font-size:14px;line-height:1.7;margin:14px 0 0;">${esc(PRO_PRICE_TERMS)}</p>
+        <p style="font-size:12px;line-height:1.6;color:${C.muted};margin:2px 0 6px;">${terms}</p>
+        ${button(href, "Continue with Pro")}
+        <div style="font-size:12px;line-height:1.6;margin:12px 0 0;color:${C.muted};"><span style="color:${C.ink};font-weight:600;">Pass guarantee.</span> ${esc(PASS_GUARANTEE_TERMS)} <a href="${guarantee}" style="color:${C.muted};">Read the terms</a>.</div>
       </div>
     `,
       input.unsubscribeUrl,
-      "How each domain went, and what the rest of your path covers."
+      "Your result in each domain, and what the rest of your study path covers."
     ),
     text: [
-      `Here's where you stand, ${first}.`,
+      `Your checkpoint result, ${first}.`,
       read,
       rows.map((r) => `${r.n} ${r.title}: ${r.tally}`).join("\n"),
       gain,
-      `The rest of your ${examName} path:\n${includes.map((l) => `- ${l}`).join("\n")}\n${monthly} a month, or ${quarterly} for 3 months. ${terms}\nPass guarantee: ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
-      `Unlock your path: ${href}`,
+      `The rest of your ${examName} study path. CertBench Pro includes:\n${includes.map((l) => `- ${l}`).join("\n")}\n${PRO_PRICE_TERMS} ${terms}\nPass guarantee. ${PASS_GUARANTEE_TERMS} Terms: ${guarantee}`,
+      `Continue with Pro: ${href}`,
       `Unsubscribe: ${input.unsubscribeUrl}`,
     ]
       .filter(Boolean)

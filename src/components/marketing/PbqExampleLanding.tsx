@@ -4,6 +4,7 @@ import type { PbqScenario } from "@/data/pbq/types";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { labLibrary, minutesOf } from "@/core/path/labs";
 import { freeLabs } from "@/core/path/free-labs";
+import { EXAM_CODES } from "@/core/path/versions";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { PbqExamplePage } from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
@@ -12,27 +13,30 @@ import { PathCard } from "@/components/marketing/PathCard";
 import { ReferenceFold } from "@/components/marketing/ReferenceFold";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import { LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
+import { LanderBlock, LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES, LAB_TYPES, labMeta } from "@/components/path/lab-types";
 
 const TIER: Record<PbqScenario["type"], LabTier> = {
-  ordering: "Warm-up",
+  ordering: "Introductory",
   "threat-hunt": "Core",
   matching: "Core",
   categorization: "Core",
-  topology: "Exam-level",
-  simulation: "Exam-level",
+  topology: "Exam level",
+  simulation: "Exam level",
 };
 
-/** Shared server template for the /​*-pbq-examples pages. */
+/** The labs that the chooser leads with, which need no account (see PbqLab). */
+const OPEN_TO_ALL = 3;
+
+/** The server template that the four PBQ example pages share. */
 export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
   const scenarios = pbqRegistry[page.certSlug] ?? [];
-  // Most of the exam's labs, free with no account (core/path/free-labs.ts).
+  // Most of the exam's labs are free on this page (core/path/free-labs.ts).
   const free = freeLabs(scenarios);
   const freeIds = new Set(free.map((s) => s.id));
   const labs: FreeLab[] = free.map((s) => ({ scenario: s, tier: TIER[s.type], minutes: minutesOf(s) }));
 
-  // The rest, as the path's lab library lists them: domain by domain, hands-on first.
+  // The rest, as the study path's list of labs sets them out: domain by domain, hands-on first.
   const rest = labLibrary(scenarios.filter((s) => !freeIds.has(s.id)));
   const domains = [...new Map(scenarios.map((s) => [s.domain_number, s.domain_title] as const))]
     .filter(([number]) => rest.some((l) => l.domain === number))
@@ -41,9 +45,10 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
 
   const path = `/path/${page.certSlug}`;
   const examName = EXAM_NAMES[page.certSlug] ?? page.title.replace(/ PBQ examples$/, "");
+  const examCode = (EXAM_CODES as Record<string, string | undefined>)[page.certSlug];
 
-  // GEO/SEO: a free, interactive practice resource, so search and AI answers
-  // can say what it is and how many labs it gives away.
+  // A free, interactive practice resource, described so that search and AI
+  // answers can say what it is and that it is free.
   const learningResource = {
     "@context": "https://schema.org",
     "@type": "LearningResource",
@@ -63,64 +68,81 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
     <LanderPage>
       <JsonLd data={learningResource} />
       <LanderHero
-        eyebrow={`${examName} · PBQ labs`}
+        // The exam's code is the one fact here that the title does not hold.
+        eyebrow={examCode ? `${examName} ${examCode}` : undefined}
         title={page.h1}
-        sub="Pick one and work it right here."
-        specs={[`${free.length} free interactive PBQs`, "Graded with partial credit", "Start with no account"]}
+        sub="Choose a lab and complete it on this page."
+        specs={[
+          { label: "Free labs", value: free.length },
+          { label: "Grading", value: "With partial credit" },
+          {
+            label: "Account",
+            value: free.length > OPEN_TO_ALL ? `Not required for the first ${OPEN_TO_ALL} labs` : "Not required",
+          },
+        ]}
       />
 
-      {/* Lead with the thing they came for: a lab, on the path's own stage. */}
+      {/* The thing the visitor came for comes first: a lab, on the study path's own stage. */}
       {labs.length > 0 && (
         <LanderStage width="lg">
           <PbqLab labs={labs} examName={examName} pathHref={path} labCount={scenarios.length} />
         </LanderStage>
       )}
 
-      <div className="mx-auto mt-10 grid w-full max-w-3xl gap-8 px-5 sm:px-6">
+      {/* Nothing is drawn for an exam that has no note. */}
+      <LanderBlock className="mt-10 empty:hidden">
         <ExamVersionNote certSlugs={[page.certSlug]} />
+      </LanderBlock>
 
-        {/* Every other lab, listed the way the path's lab library lists them,
-            folded so it's there for anyone looking (and for search) without
-            being a wall under the lab. */}
-        {rest.length > 0 && (
+      {/* Every other lab, listed domain by domain and folded: in the page for
+          anyone who looks for it, and for search, without standing as a wall
+          under the lab. */}
+      {rest.length > 0 && (
+        <LanderBlock className="mt-8">
           <ReferenceFold
             title={`${rest.length} more labs with Pro`}
             summary={
               <>
                 {handsOnCount(rest)}
-                {drills > 0 && <>, plus {drills} quick drills</>}, graded with partial credit. Pro opens all{" "}
-                {scenarios.length} on your {examName} path, offered after its readiness checkpoint, with your
-                progress kept.
+                {drills > 0 && (
+                  <>
+                    , and {drills} short {drills === 1 ? "drill" : "drills"}
+                  </>
+                )}
+                , all graded with partial credit. Pro opens all {scenarios.length} on your {examName} study path. It
+                is offered after the readiness checkpoint, and your progress is kept.
               </>
             }
           >
-            <div className="grid gap-6 p-1 sm:p-2">
+            <div className="grid gap-8 p-2 sm:p-3">
               {domains.map(([number, title]) => {
                 const inDomain = rest.filter((l) => l.domain === number);
                 return (
-                  <section key={number} aria-labelledby={`labs-${number}`} className="grid gap-2.5">
-                    <h3 id={`labs-${number}`} className="text-sm font-medium leading-snug">
-                      <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(number)}</span>
-                      {title}
+                  <section key={number} aria-labelledby={`labs-${number}`}>
+                    <h3 id={`labs-${number}`} className="border-b border-foreground/70 pb-2 text-small font-semibold">
+                      Domain {domainLabel(number)}: {title}
                     </h3>
-                    <ul className="grid gap-2 sm:grid-cols-2">
+                    {/* A ruled list: these rows are read, not pressed, so they have no boxes. */}
+                    <ul className="divide-y divide-border border-b border-border">
                       {inDomain.map((lab) => {
                         const { Icon } = LAB_TYPES[lab.type];
                         return (
-                          <li
-                            key={lab.id}
-                            className="flex min-w-0 items-center gap-3.5 rounded-2xl border border-border bg-card/60 p-3.5"
-                          >
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                              <Icon className="size-[18px]" aria-hidden />
+                          <li key={lab.id} className="flex min-w-0 items-center gap-3.5 py-3">
+                            <span
+                              aria-hidden
+                              className="flex size-8 shrink-0 items-center justify-center rounded-xs bg-primary/10 text-primary"
+                            >
+                              <Icon className="size-4" />
                             </span>
                             <span className="min-w-0 flex-1">
-                              <span className="block text-balance font-medium leading-snug">{lab.title}</span>
-                              <span className="mt-1 block font-mono text-[11px] uppercase leading-relaxed tracking-wider text-muted-foreground">
-                                {labMeta(lab)}
-                              </span>
+                              <span className="block text-small font-medium leading-snug">{lab.title}</span>
+                              <span className="mt-0.5 block text-note text-muted-foreground">{labMeta(lab)}</span>
                             </span>
-                            <Lock className="size-4 shrink-0 text-muted-foreground" aria-label="With Pro" />
+                            <Lock
+                              className="size-4 shrink-0 text-muted-foreground"
+                              role="img"
+                              aria-label="Included with Pro"
+                            />
                           </li>
                         );
                       })}
@@ -130,21 +152,19 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
               })}
             </div>
           </ReferenceFold>
-        )}
-      </div>
+        </LanderBlock>
+      )}
 
-      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
-        <PathCard
-          kicker={`Your ${examName} path`}
-          title="PBQs are only part of it"
-          href={path}
-          label="Start my path"
-          context="pbq_page"
-        >
-          Your guided path walks every exam objective in short stops, and a readiness checkpoint shows where you
-          stand.
-        </PathCard>
-      </div>
+      <PathCard
+        className="mt-16 sm:mt-24"
+        kicker={`${examName} study path`}
+        title="PBQs are one part of the exam"
+        href={path}
+        label="Start the study path"
+        context="pbq_page"
+      >
+        The study path covers every exam objective in short steps, and a readiness checkpoint shows where you stand.
+      </PathCard>
 
       <LanderProse>
         {page.intro.map((p) => (
@@ -152,10 +172,10 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
         ))}
       </LanderProse>
 
-      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
+      <LanderBlock>
         <RelatedLinks links={page.related ?? []} />
         <FaqSection faqs={page.faqs} />
-      </div>
+      </LanderBlock>
     </LanderPage>
   );
 }

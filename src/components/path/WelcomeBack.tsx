@@ -27,19 +27,19 @@ export function WelcomeBack({
   const path = `/path/${cert}`;
   return (
     <div className="path-rise grid gap-6">
-      <div className="glass grid gap-6 rounded-3xl p-6 sm:p-8">
+      <div className="glass grid gap-6 rounded-lg p-6 sm:p-8">
         <div className="grid gap-2">
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-primary">Welcome back</span>
-          <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
-            Your {examName} path is in your account
+          <span className="cb-label text-muted-foreground">Welcome back</span>
+          <h1 className="cb-display text-balance text-[1.875rem] sm:text-[2.5rem]">
+            Your {examName} study path is saved in your account.
           </h1>
-          <p className="text-muted-foreground">
+          <p className="leading-relaxed text-muted-foreground">
             {stopsDone > 0 && (
               <>
-                {stopsDone} {stopsDone === 1 ? "stop" : "stops"} done.{" "}
+                You have completed {stopsDone} {stopsDone === 1 ? "step" : "steps"}.{" "}
               </>
             )}
-            Sign in to pick up where you left off.
+            Sign in to continue from where you stopped.
           </p>
         </div>
         <div className="grid gap-2.5 sm:max-w-sm">
@@ -53,7 +53,7 @@ export function WelcomeBack({
           onClick={onPlay}
           className="w-fit text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
         >
-          Play without signing in
+          Continue without signing in
         </button>
       </div>
     </div>

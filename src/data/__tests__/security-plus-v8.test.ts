@@ -38,7 +38,7 @@ describe("the AI objective's practice questions", () => {
     for (const t of SY0_801_AI_TOPICS) expect(t.gist.length).toBeGreaterThan(30);
   });
 
-  it("practises every topic at least once", () => {
+  it("practices every topic at least once", () => {
     const practised = new Set(SY0_801_AI_QUESTIONS.map((q) => q.topic));
     for (const term of terms) expect(practised.has(term), term).toBe(true);
     for (const q of SY0_801_AI_QUESTIONS) expect(terms).toContain(q.topic);
@@ -55,7 +55,7 @@ describe("the AI objective's practice questions", () => {
     expect(new Set(SY0_801_AI_QUESTIONS.map((q) => q.questionText)).size).toBe(SY0_801_AI_QUESTIONS.length);
   });
 
-  it("marks the topic it practises as the answer, when the options are topics", () => {
+  it("marks the topic it practices as the answer, when the options are topics", () => {
     for (const q of SY0_801_AI_QUESTIONS) {
       if (q.options.every((o) => terms.includes(o))) {
         expect(q.options[q.correctIndex], q.questionText).toBe(q.topic);

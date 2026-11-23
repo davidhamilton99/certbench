@@ -1,5 +1,5 @@
-import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { notFound } from "next/navigation";
+import { requireProPage } from "@/server/auth";
 import { getStudySet, listSetQuestions } from "@/server/data/study-sets";
 import { listBookmarkedSetIds } from "@/server/data/community";
 import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
@@ -9,7 +9,7 @@ import {
 } from "@/components/workspace/CommunitySetActions";
 
 export const metadata = {
-  title: "Community set",
+  title: "Community study set",
 };
 
 export default async function CommunitySetPage({
@@ -18,11 +18,7 @@ export default async function CommunitySetPage({
   params: Promise<{ setId: string }>;
 }) {
   const { setId } = await params;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const set = await getStudySet(db, setId);
   if (!set || !set.isPublic) notFound();
@@ -35,12 +31,12 @@ export default async function CommunitySetPage({
   return (
     <div className="grid gap-6">
       <AttemptPing setId={set.id} />
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{set.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {set.questionCount} question{set.questionCount === 1 ? "" : "s"}
-            {set.description && <> · {set.description}</>}
+      <div className="mx-auto grid w-full max-w-2xl gap-3">
+        <div className="grid gap-1.5">
+          <h1 className="cb-subsection">{set.title}</h1>
+          <p className="text-small text-muted-foreground">
+            This study set has {set.questionCount} {set.questionCount === 1 ? "question" : "questions"}.
+            {set.description && <> {set.description}</>}
           </p>
         </div>
         <CommunitySetActions
@@ -55,7 +51,7 @@ export default async function CommunitySetPage({
         seed={crypto.randomUUID()}
         persistProgress={false}
         backHref="/community"
-        backLabel="Back to community"
+        backLabel="Return to the community study sets"
       />
     </div>
   );

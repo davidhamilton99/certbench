@@ -12,8 +12,8 @@ export function VersionSwitch({ cert }: { cert: PathCert }) {
   if (!others.length) return null;
   const last = LAST_EXAM_DAY[cert];
   return (
-    <p className="text-center text-xs text-muted-foreground">
-      You&apos;re studying {EXAM_CODES[cert]}
+    <p className="text-sm text-muted-foreground">
+      You are studying {EXAM_CODES[cert]}
       {last ? `, which can be taken in English until ${longDate(last)}` : ""}.{" "}
       {others.map((other) => (
         <Link
@@ -22,9 +22,10 @@ export function VersionSwitch({ cert }: { cert: PathCert }) {
           onClick={() => track("path_version_switched", { from: cert, to: other })}
           className="underline underline-offset-4 hover:text-foreground"
         >
-          Switch to {EXAM_CODES[other]}
+          Change to {EXAM_CODES[other]}
         </Link>
       ))}
+      .
     </p>
   );
 }

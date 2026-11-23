@@ -23,17 +23,17 @@ export interface PracticeRow {
 export function PracticeCard({ rows }: { rows: PracticeRow[] }) {
   if (rows.length === 0) return null;
   return (
-    <section aria-labelledby="practice-any-time" className="glass rounded-3xl px-2 pb-2 pt-4 sm:px-3">
+    <section aria-labelledby="practice-any-time" className="glass rounded-lg px-2 pb-2 pt-4 sm:px-3">
       <h2
         id="practice-any-time"
-        className="px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground sm:px-4"
+        className="px-3 cb-label text-muted-foreground sm:px-4"
       >
-        Practice any time
+        Practice at any time
       </h2>
       <ul className="mt-1 divide-y divide-border/70">
         {rows.map(({ key, Icon, title, detail, action, onAction }) => (
           <li key={key} className="flex items-center gap-3.5 px-3 py-3.5 sm:px-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/[0.08] text-primary">
               <Icon className="size-[18px]" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
@@ -54,22 +54,22 @@ export function PracticeCard({ rows }: { rows: PracticeRow[] }) {
 /** After a rehearsal: go over what it missed, a round at a time. */
 export function ReviewMissesCard({ count, onReview }: { count: number; onReview: () => void }) {
   return (
-    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
+    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-primary/[0.08] text-primary">
           <RotateCcw className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Review · {count} missed
+          <p className="text-sm text-muted-foreground">
+            You answered {count} {count === 1 ? "question" : "questions"} incorrectly.
           </p>
           <p className="mt-1 text-balance font-display text-lg font-semibold leading-snug tracking-tight">
-            Go over this rehearsal&apos;s misses
+            Review the questions that you missed
           </p>
         </div>
       </div>
       <Button size="lg" variant="outline" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onReview}>
-        Review {Math.min(count, PRACTICE_SIZE)}
+        Review {Math.min(count, PRACTICE_SIZE)} {Math.min(count, PRACTICE_SIZE) === 1 ? "question" : "questions"}
         <ArrowRight />
       </Button>
     </div>

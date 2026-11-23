@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { CheckCircle2, Loader2, PartyPopper } from "lucide-react";
-import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { submitTestimonial } from "@/contracts/testimonials";
-import { ApiError } from "@/contracts/common";
+import { userMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface CertOption {
@@ -18,6 +15,20 @@ interface CertOption {
   certName: string;
 }
 
+/** The shortest and longest story the server accepts (src/contracts/testimonials.ts). */
+const STORY_MIN = 10;
+const STORY_MAX = 600;
+
+/**
+ * "How did your exam go?", reached from the email sent after a member's exam
+ * date. A member who passed can write a short story for publication; one who
+ * did not is pointed back to the study plan. Nothing is sent until the story
+ * is submitted.
+ *
+ * The question is a pair of radio buttons in a group named by the question.
+ * Every field has a visible label, the rules are said before they are broken,
+ * and an error is said beside the button and tied to the field.
+ */
 export function FeedbackClient({
   options,
   defaultDisplayName,
@@ -33,13 +44,29 @@ export function FeedbackClient({
   const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const storyHintId = useId();
+  const nameHintId = useId();
+  const errorId = useId();
 
-  async function submit() {
-    if (quote.trim().length < 10) {
-      toast.error("A sentence or two, please — at least 10 characters.");
+  // The form is replaced by its confirmation: the focus goes to the
+  // confirmation's heading, so that it is read and the keyboard keeps its place.
+  const doneRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (done) doneRef.current?.focus();
+  }, [done]);
+
+  const tooShort = quote.trim().length < STORY_MIN;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    if (tooShort) {
+      setError(`Please write at least ${STORY_MIN} characters.`);
       return;
     }
     setSaving(true);
+    setError("");
     try {
       await api(submitTestimonial, {
         certId: certId || null,
@@ -49,144 +76,148 @@ export function FeedbackClient({
       });
       setDone(true);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(userMessage(err, "Your story could not be sent. Please try again."));
       setSaving(false);
     }
   }
 
   if (done) {
     return (
-      <Card>
-        <CardContent className="grid justify-items-center gap-3 py-10 text-center">
-          <CheckCircle2 className="size-8 text-success" />
-          <h2 className="text-lg font-semibold tracking-tight">Thank you!</h2>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Your story is in — we review submissions before they go live, and
-            it may soon help someone decide to start studying. Congratulations
-            on the pass. 🎉
-          </p>
-          <Button asChild className="mt-1">
-            <Link href="/dashboard">Back to your dashboard</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="glass grid gap-3 rounded-lg p-5 sm:p-8">
+        <h2 ref={doneRef} tabIndex={-1} className="cb-statement">
+          Thank you. Your story has been received.
+        </h2>
+        <p className="cb-measure text-small text-muted-foreground">
+          Each story is reviewed before it is published. Congratulations on passing your exam.
+        </p>
+        <Button asChild className="justify-self-start">
+          <Link href="/dashboard">Return to your study plan</Link>
+        </Button>
+      </div>
     );
   }
 
+  const field =
+    "rounded-md border border-input bg-card px-3 text-base focus-visible:border-ring md:text-small dark:[color-scheme:dark]";
+
   return (
     <div className="grid gap-5">
-      {/* Pass / not this time */}
-      <div className="grid gap-2">
-        <Label>Did you pass?</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setPassed(true)}
-            className={cn(
-              "rounded-lg border px-4 py-3 text-sm font-medium transition-colors",
-              passed === true
-                ? "border-success bg-success/10 text-success ring-1 ring-success"
-                : "hover:border-muted-foreground/40"
-            )}
-          >
-            I passed 🎉
-          </button>
-          <button
-            type="button"
-            onClick={() => setPassed(false)}
-            className={cn(
-              "rounded-lg border px-4 py-3 text-sm font-medium transition-colors",
-              passed === false
-                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                : "hover:border-muted-foreground/40"
-            )}
-          >
-            Not this time
-          </button>
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-small font-medium">Did you pass your exam?</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["I passed", true],
+              ["I did not pass", false],
+            ] as const
+          ).map(([label, value]) => (
+            <label
+              key={label}
+              className={cn(
+                "flex min-h-12 cursor-pointer items-center gap-3 rounded-md border px-3.5 py-3 text-small font-medium transition-colors",
+                passed === value ? "border-primary bg-tint-selected" : "border-input hover:border-primary hover:bg-tint-hover"
+              )}
+            >
+              <input
+                type="radio"
+                name="passed"
+                checked={passed === value}
+                onChange={() => {
+                  setPassed(value);
+                  setError("");
+                }}
+                className="size-4 accent-primary"
+              />
+              {label}
+            </label>
+          ))}
         </div>
-      </div>
+      </fieldset>
 
       {passed === true && (
-        <Card>
-          <CardContent className="grid gap-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-success">
-              <PartyPopper className="size-4" />
-              Congratulations! Share how CertBench helped.
-            </div>
+        <form onSubmit={submit} noValidate className="glass grid gap-4 rounded-lg p-5 sm:p-6">
+          <p className="cb-measure text-small">
+            Congratulations on passing your exam. If you wish, write a few sentences about how you prepared.
+          </p>
 
-            {options.length > 1 && (
-              <div className="grid gap-1.5">
-                <Label htmlFor="fb-cert">Which exam?</Label>
-                <select
-                  id="fb-cert"
-                  value={certId}
-                  onChange={(e) => setCertId(e.target.value)}
-                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                >
-                  {options.map((o) => (
-                    <option key={o.certId} value={o.certId}>
-                      {o.certName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
+          {options.length > 1 && (
             <div className="grid gap-1.5">
-              <Label htmlFor="fb-quote">Your story</Label>
-              <textarea
-                id="fb-quote"
-                value={quote}
-                onChange={(e) => setQuote(e.target.value)}
-                rows={4}
-                maxLength={600}
-                placeholder="e.g. The readiness score told me exactly when I was ready. Passed Security+ first try with a 780."
-                className="rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-              />
-              <span className="text-xs text-muted-foreground">
-                {quote.length}/600 · shown publicly after a quick review.
-              </span>
+              <Label htmlFor="fb-cert">Exam</Label>
+              <select
+                id="fb-cert"
+                value={certId}
+                onChange={(e) => setCertId(e.target.value)}
+                className={cn(field, "h-10 max-w-sm pointer-coarse:h-11")}
+              >
+                {options.map((o) => (
+                  <option key={o.certId} value={o.certId}>
+                    {o.certName}
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="fb-name">Display name</Label>
-              <Input
-                id="fb-name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={60}
-                placeholder="How you'd like to be credited"
-              />
-            </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="fb-quote">Your story</Label>
+            <p id={storyHintId} className="cb-measure text-note text-muted-foreground">
+              Write between {STORY_MIN} and {STORY_MAX} characters. After it has been reviewed, your story may be
+              published on CertBench with the name that you give below.
+            </p>
+            <textarea
+              id="fb-quote"
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              rows={5}
+              maxLength={STORY_MAX}
+              aria-describedby={error ? `${storyHintId} ${errorId}` : storyHintId}
+              aria-invalid={error ? true : undefined}
+              className={cn(field, "py-2 aria-invalid:border-destructive")}
+            />
+            <p className="text-note tabular-nums text-muted-foreground">
+              {quote.length} of {STORY_MAX} characters
+            </p>
+          </div>
 
-            <Button
-              onClick={submit}
-              disabled={saving || quote.trim().length < 10}
-              className="justify-self-start"
-            >
-              {saving && <Loader2 className="animate-spin" />}
-              Share my story
+          <div className="grid gap-1.5">
+            <Label htmlFor="fb-name">Name to publish</Label>
+            <p id={nameHintId} className="text-note text-muted-foreground">
+              For example, your first name and the first letter of your last name.
+            </p>
+            <Input
+              id="fb-name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={60}
+              autoComplete="off"
+              aria-describedby={nameHintId}
+              className="max-w-sm"
+            />
+          </div>
+
+          <div className="grid justify-items-start gap-2">
+            <Button type="submit" loading={saving}>
+              Send my story
             </Button>
-          </CardContent>
-        </Card>
+            {error && (
+              <p id={errorId} role="alert" className="text-small text-destructive">
+                {error}
+              </p>
+            )}
+          </div>
+        </form>
       )}
 
       {passed === false && (
-        <Card>
-          <CardContent className="grid gap-3 py-6 text-sm">
-            <p className="font-medium">
-              That&apos;s not the end — most people who retake pass.
-            </p>
-            <p className="text-muted-foreground">
-              Your progress is saved. Head back to your plan: your weakest
-              domains are already queued, and spaced repetition will bring back
-              exactly what tripped you up. You&apos;ve got this.
-            </p>
-            <Button asChild className="mt-1 justify-self-start">
-              <Link href="/dashboard">Back to studying</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="glass grid gap-3 rounded-lg p-5 sm:p-6">
+          <p className="cb-measure text-small">
+            Your progress is saved. Your study plan shows your score in each domain, and the questions that you
+            answered incorrectly are listed under Review.
+          </p>
+          <Button asChild className="justify-self-start">
+            <Link href="/dashboard">Return to your study plan</Link>
+          </Button>
+        </div>
       )}
     </div>
   );

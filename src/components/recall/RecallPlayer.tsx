@@ -1,300 +1,118 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Flame, X } from "lucide-react";
-import {
-  generateRecallQuestion,
-  gradeRecall,
-  type RecallQuestion,
-  type ResolvedDeck,
-} from "@/lib/recall/recall-deck";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
+import type { ResolvedDeck } from "@/lib/recall/recall-deck";
+import { recallToRep } from "@/lib/path/fact-reps";
+import type { Rep } from "@/core/path/types";
+import { RepCard } from "@/components/path/RepCard";
 
 /** Sentinel deck key: draw each question from a random deck. */
 export const MIXED_DECK_KEY = "__mixed__";
-/** How often a previously-missed item resurfaces instead of a fresh one. */
+/** How often a fact that was answered incorrectly is asked again in place of a new one. */
 const RESURFACE_RATE = 0.3;
-/** Pause on a correct answer before auto-advancing (ms). */
-const ADVANCE_MS = 550;
+
+/** One fact from one deck: what to ask, and where its result is recorded. */
+interface Fact {
+  deck: ResolvedDeck;
+  itemId: string;
+}
+
+interface Turn extends Fact {
+  /** The place of this question in the session, from 0. */
+  n: number;
+  rep: Rep;
+}
 
 /**
- * The Recall drill for one selection — a single deck (by its table id) or
- * MIXED across all of them. Fast and keyboard-first: number keys answer,
- * correct answers auto-advance to keep a session in flow, and missed items
- * resurface until you get them right. The parent owns selection and remounts
- * this (via `key={deckKey}`) to start a fresh session, so state is simple.
+ * The Recall drill for one selection: a single deck (by its table id) or MIXED
+ * across all of them. The parent owns the selection and remounts this (through
+ * `key`) to start a new session, so the state here is one session's.
  *
- * Question generation is random, so the first question is created after mount —
- * SSR renders a stable placeholder and hydration never mismatches.
+ * Each fact is asked on the study path's own question card (RepCard), so a
+ * port or an acronym looks and answers here as it does on the path: the
+ * verdict in a sentence, then "Continue". Nothing moves by itself; a correct
+ * answer waits for Continue as an incorrect one does. The number keys answer
+ * only while the keyboard's focus is inside the card. A fact that is answered
+ * incorrectly is asked again later in the session.
  *
- * A host can run the drill as planned rounds (the public acronym tool): it
- * supplies which item to ask next, can hold the player at the end of a round,
- * and can replace the scoreboard's accuracy readout with its own status.
+ * The questions are drawn at random, so the first one is made after mount: the
+ * server renders a placeholder of the same shape and hydration never mismatches.
  */
 export function RecallPlayer({
   decks,
   deckKey,
   typed = false,
   onAnswer,
-  nextItem,
-  beforeAdvance,
-  status,
-  nextLabel,
 }: {
   decks: ResolvedDeck[];
   deckKey: string;
-  /** Render a typed-answer input instead of multiple choice (active recall). */
+  /** Ask for a typed answer in place of a choice (for decks with short answers). */
   typed?: boolean;
   onAnswer?: (tableId: string, itemId: string, correct: boolean) => void;
-  /** The item to ask next; when set, it replaces the miss-resurfacing queue. */
-  nextItem?: () => string | null;
-  /** Called before moving on from an answer; return true to hold here. */
-  beforeAdvance?: () => boolean;
-  /** Replaces the accuracy readout at the left of the scoreboard. */
-  status?: ReactNode;
-  /** Label for the advance button (defaults to "Next"). */
-  nextLabel?: string;
 }) {
-  const [question, setQuestion] = useState<RecallQuestion | null>(null);
-  const [answerValue, setAnswerValue] = useState<string | null>(null);
-  const [entry, setEntry] = useState("");
+  const [turn, setTurn] = useState<Turn | null>(null);
   const [score, setScore] = useState({ correct: 0, answered: 0 });
-  const [streak, setStreak] = useState(0);
-  const [best, setBest] = useState(0);
-  const [qpm, setQpm] = useState(0);
+  const missed = useRef<Fact[]>([]);
 
-  const startedAt = useRef<number | null>(null);
-  const missQueue = useRef<RecallQuestion[]>([]);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function deckFor(): ResolvedDeck {
-    if (deckKey === MIXED_DECK_KEY) {
-      return decks[Math.floor(Math.random() * decks.length)];
+  function draw(n: number): Turn {
+    let fact: Fact | undefined;
+    if (missed.current.length > 0 && Math.random() < RESURFACE_RATE) fact = missed.current.shift();
+    if (!fact) {
+      const deck =
+        deckKey === MIXED_DECK_KEY
+          ? decks[Math.floor(Math.random() * decks.length)]
+          : (decks.find((d) => d.config.tableId === deckKey) ?? decks[0]);
+      const row = deck.rows[Math.floor(Math.random() * deck.rows.length)];
+      fact = { deck, itemId: row[deck.config.ask.key] };
     }
-    return decks.find((d) => d.config.tableId === deckKey) ?? decks[0];
+    // A typed answer is always asked in the deck's own direction (the port for
+    // a protocol), so nobody is asked to type a long name.
+    return { n, ...fact, rep: recallToRep(fact.deck, fact.itemId, "recall", Math.random, typed) };
   }
 
-  // Typed mode always asks in the deck's default direction (you type the answer,
-  // e.g. the port number), so a bidirectional deck never asks you to type a long
-  // protocol name.
-  function gen(): RecallQuestion {
-    return generateRecallQuestion(deckFor(), Math.random, {
-      noSwap: typed,
-      itemId: nextItem?.() ?? undefined,
-    });
-  }
-
-  function nextQuestion(): RecallQuestion {
-    if (nextItem) return gen();
-    if (missQueue.current.length > 0 && Math.random() < RESURFACE_RATE) {
-      return missQueue.current.shift()!;
-    }
-    return gen();
-  }
-
-  // First question after mount (random → client-only). Single setState.
+  // The first question, after mount (random, so made on the client only).
   useEffect(() => {
-    startedAt.current = Date.now();
-    setQuestion(gen());
-    return () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    };
+    setTurn(draw(0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep the typed input focused as questions fly by.
-  useEffect(() => {
-    if (typed && !answerValue) inputRef.current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [question]);
-
-  const revealed = answerValue !== null;
-
-  function advance() {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    if (beforeAdvance?.()) return;
-    setAnswerValue(null);
-    setEntry("");
-    setQuestion(nextQuestion());
-  }
-
-  function record(value: string) {
-    if (revealed || !question) return;
-    const correct = gradeRecall(question, value);
-    setAnswerValue(value);
-    onAnswer?.(question.tableId, question.itemId, correct);
-
-    const answered = score.answered + 1;
-    setScore({ correct: score.correct + (correct ? 1 : 0), answered });
-
-    const elapsedMin = (Date.now() - (startedAt.current ?? Date.now())) / 60000;
-    setQpm(elapsedMin > 0 ? Math.round(answered / elapsedMin) : 0);
-
-    if (correct) {
-      const s = streak + 1;
-      setStreak(s);
-      if (s > best) setBest(s);
-      advanceTimer.current = setTimeout(advance, ADVANCE_MS);
-    } else {
-      setStreak(0);
-      missQueue.current.push(question);
-    }
-  }
-
-  // Keyboard: number keys pick an option; Enter/Space advances after reveal.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!question) return;
-      if (revealed) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          advance();
-        }
-        return;
-      }
-      if (!typed) {
-        const idx = Number(e.key) - 1;
-        if (Number.isInteger(idx) && idx >= 0 && idx < question.options.length) {
-          e.preventDefault();
-          record(question.options[idx]);
-        }
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [question, revealed]);
-
-  if (!question) {
+  if (!turn) {
     return (
-      <div className="grid min-h-72 place-items-center rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-        Loading the drill…
+      <div className="grid gap-3">
+        <p className="text-note text-muted-foreground">&nbsp;</p>
+        <div role="status" className="glass grid min-h-72 content-start rounded-lg p-5 text-small text-muted-foreground sm:p-8">
+          The drill is loading.
+        </div>
       </div>
     );
   }
 
-  const accuracy =
-    score.answered > 0 ? Math.round((score.correct / score.answered) * 100) : 0;
-  const wasCorrect = revealed && gradeRecall(question, answerValue!);
-
   return (
-    <div className="grid gap-4">
-      {/* Scoreboard */}
-      <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
-        {status ?? (
-          <span>
-            {accuracy}% · {score.correct}/{score.answered}
-          </span>
-        )}
-        <span className="flex items-center gap-3">
-          <span aria-label="questions per minute">{qpm} q/min</span>
-          <span className="flex items-center gap-1">
-            <Flame
-              className={cn(
-                "size-3.5",
-                streak >= 3 ? "text-warning" : "text-muted-foreground/50"
-              )}
-            />
-            {streak} · best {best}
-          </span>
-        </span>
-      </div>
-
-      {/* Question card */}
-      <div className="grid gap-5 rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-        <div className="grid gap-1.5 text-center">
-          <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
-            name the {question.answerLabel}
-          </span>
-          <p className="text-balance font-display text-2xl font-semibold tracking-tight">
-            {question.promptValue}
-          </p>
-        </div>
-
-        {!typed ? (
-          <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
-            {question.options.map((option, i) => {
-              const isAnswer = revealed && option === question.answer;
-              const isWrongPick =
-                revealed && option === answerValue && !isAnswer;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={answerValue === option}
-                  disabled={revealed}
-                  onClick={() => record(option)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
-                    !revealed && "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.05]",
-                    isAnswer && "border-success/60 bg-success/10",
-                    isWrongPick && "border-danger/60 bg-danger/10",
-                    revealed && "cursor-default"
-                  )}
-                >
-                  <span
-                    className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border font-mono text-[11px] text-muted-foreground"
-                    aria-hidden
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="flex-1">{option}</span>
-                  {isAnswer && <Check className="size-4 shrink-0 text-success" />}
-                  {isWrongPick && <X className="size-4 shrink-0 text-danger" />}
-                </button>
-              );
-            })}
-          </div>
+    <div className="grid gap-3">
+      <p className="text-note text-muted-foreground">
+        {score.answered > 0 ? (
+          <>
+            {score.correct} of {score.answered} correct
+          </>
         ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!revealed && entry.trim()) record(entry);
-            }}
-            className="grid gap-2"
-          >
-            <input
-              ref={inputRef}
-              autoFocus
-              value={entry}
-              disabled={revealed}
-              onChange={(e) => setEntry(e.target.value)}
-              placeholder={`Type the ${question.answerLabel}…`}
-              inputMode="text"
-              autoComplete="off"
-              className={cn(
-                "w-full rounded-xl border border-border bg-foreground/5 px-4 py-3.5 font-mono text-sm outline-none transition-colors focus:border-primary",
-                revealed &&
-                  (wasCorrect
-                    ? "border-success/60 bg-success/10"
-                    : "border-danger/60 bg-danger/10")
-              )}
-            />
-          </form>
+          // The line is always kept, so the card does not move after the first answer.
+          <>&nbsp;</>
         )}
-
-        {revealed && (
-          <div
-            className={cn(
-              "rounded-lg border px-4 py-3 text-sm leading-relaxed",
-              wasCorrect
-                ? "border-success/40 bg-success/5"
-                : "border-danger/40 bg-danger/5"
-            )}
-          >
-            <span className="font-semibold">{question.answer}</span>
-            {question.detail && (
-              <span className="text-muted-foreground"> · {question.detail}</span>
-            )}
-          </div>
-        )}
-
-        <Button onClick={advance} disabled={!revealed} className="min-w-28">
-          {nextLabel ?? "Next"}
-        </Button>
+      </p>
+      <div className="glass min-h-72 rounded-lg p-5 sm:p-8">
+        <RepCard
+          key={turn.n}
+          rep={turn.rep}
+          // The first question of a session arrives with the page or with a press
+          // on a deck's tab, which keeps the focus; every later one takes it.
+          takeFocus={turn.n > 0}
+          onAnswer={({ correct }) => {
+            setScore((s) => ({ correct: s.correct + (correct ? 1 : 0), answered: s.answered + 1 }));
+            if (!correct) missed.current.push({ deck: turn.deck, itemId: turn.itemId });
+            onAnswer?.(turn.deck.config.tableId, turn.itemId, correct);
+          }}
+          onNext={() => setTurn(draw(turn.n + 1))}
+        />
       </div>
     </div>
   );

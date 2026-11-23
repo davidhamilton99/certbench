@@ -48,3 +48,6 @@ next-env.d.ts
 
 # supabase cli
 /supabase/.temp/
+
+# audit reports and the AI answers log: working papers, kept out of the public repository
+/reviews/

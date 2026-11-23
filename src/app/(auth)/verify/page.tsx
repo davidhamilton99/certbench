@@ -1,12 +1,5 @@
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
@@ -15,24 +8,19 @@ export const metadata = {
 
 export default function VerifyPage() {
   return (
-    <Card className="mx-auto w-full max-w-[26rem] rounded-[1.75rem] py-8">
-      <CardHeader className="items-center text-center">
-        <MailCheck className="mb-2 size-8 text-primary" />
-        <CardTitle className="text-2xl font-semibold tracking-[-0.03em]">Check your inbox</CardTitle>
-        <CardDescription>
-          We sent you a verification link. Click it to activate your account,
-          then sign in.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3 text-center">
+    <AuthCard
+      title="Please check your inbox"
+      description="A verification link has been sent to your email address. Open the link to activate your account, and then sign in."
+    >
+      <div className="flex flex-col gap-3 text-center">
         <Button asChild>
-          <Link href="/login">Go to sign in</Link>
+          <Link href="/login">Continue to sign in</Link>
         </Button>
-        <p className="text-xs text-muted-foreground">
-          Nothing arrived? Check spam, or register again with the same email to
-          resend the link.
+        <p className="text-note text-muted-foreground">
+          If the email has not arrived, please check your spam folder. You can also register again with the same email
+          address to have the link sent again.
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </AuthCard>
   );
 }

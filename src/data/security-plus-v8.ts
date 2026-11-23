@@ -124,7 +124,7 @@ export const SY0_801_AI_TOPICS: AiTopic[] = [
   },
   {
     term: "Explainability",
-    gist: "Whether anyone can tell why a model produced its output. Without it, a decision can't be audited or challenged.",
+    gist: "Whether anyone can tell why a model produced its output. Without it, a decision cannot be audited or challenged.",
   },
   {
     term: "Hallucinations",
@@ -132,7 +132,7 @@ export const SY0_801_AI_TOPICS: AiTopic[] = [
   },
   {
     term: "Jailbreaking",
-    gist: "Prompts built to talk a model out of its safety rules, so it produces what it's meant to refuse.",
+    gist: "Prompts built to talk a model out of its safety rules, so it produces what it is meant to refuse.",
   },
   {
     term: "Evasion",
@@ -144,7 +144,7 @@ export const SY0_801_AI_TOPICS: AiTopic[] = [
   },
   {
     term: "Ethical considerations",
-    gist: "Whether a use of AI is fair, transparent and accountable to the people it affects, beyond whether it's legal or secure.",
+    gist: "Whether a use of AI is fair, transparent and accountable to the people it affects, beyond whether it is legal or secure.",
   },
   {
     term: "Session hijacking",
@@ -214,7 +214,7 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Model manipulation", "Data loss", "Evasion", "Bias"],
     correctIndex: 1,
     explanation:
-      "Sensitive data has left the company's control and may be kept or used for training: data loss. Typical controls are an approved AI service that doesn't retain data, data loss prevention rules and a clear acceptable use policy.",
+      "Sensitive data has left the company's control and may be kept or used for training: data loss. Typical controls are an approved AI service that does not retain data, data loss prevention rules and a clear acceptable use policy.",
   },
   {
     topic: "Hallucinations",
@@ -232,16 +232,16 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Bias", "Hallucinations", "Poisoning", "Privacy"],
     correctIndex: 0,
     explanation:
-      "The model learned the skew in its historical training data and repeats it: bias. Nobody attacked the data, so it isn't poisoning; the history itself was skewed. Test outputs across groups and review training data before deployment.",
+      "The model learned the skew in its historical training data and repeats it: bias. Nobody attacked the data, so it is not poisoning; the history itself was skewed. Test outputs across groups and review training data before deployment.",
   },
   {
     topic: "Explainability",
     questionText:
-      "A bank's AI model declines a customer's loan. The customer and a regulator ask why, and the bank's team can't say which factors drove the decision. Which concern does this BEST describe?",
+      "A bank's AI model declines a customer's loan. The customer and a regulator ask why, and the bank's team cannot say which factors drove the decision. Which concern does this BEST describe?",
     options: ["Data loss", "Evasion", "Code execution", "Explainability"],
     correctIndex: 3,
     explanation:
-      "Explainability is whether people can tell why a model reached its output. Without it, a decision can't be audited, challenged or shown to be fair.",
+      "Explainability is whether people can tell why a model reached its output. Without it, a decision cannot be audited, challenged or shown to be fair.",
   },
   {
     topic: "Privacy",
@@ -259,7 +259,7 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Evasion", "Session hijacking", "Ethical considerations", "Poisoning"],
     correctIndex: 2,
     explanation:
-      "Fairness, transparency and accountability to the people affected are ethical considerations, and they apply even when a use is legal. They're why many organizations review a use of AI before it makes decisions about people.",
+      "Fairness, transparency and accountability to the people affected are ethical considerations, and they apply even when a use is legal. They are why many organizations review a use of AI before it makes decisions about people.",
   },
   {
     topic: "Session hijacking",
@@ -285,12 +285,12 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
       "After finding staff pasting customer records into public AI tools, a security manager wants to cut the risk while still letting staff use AI. Which of the following would BEST do that?",
     options: [
       "Block all outbound HTTPS traffic from the network",
-      "Provide an approved AI service that doesn't retain data, and add DLP rules for public AI sites",
+      "Provide an approved AI service that does not retain data, and add DLP rules for public AI sites",
       "Retrain the company's own models every month",
       "Require an explainability report for every prompt",
     ],
     correctIndex: 1,
     explanation:
-      "A sanctioned tool that doesn't keep their data, plus data loss prevention on unsanctioned AI sites, cuts the risk while keeping AI useful. Blocking all HTTPS would stop the business, and the other options don't address data leaving through prompts.",
+      "A sanctioned tool that does not keep their data, plus data loss prevention on unsanctioned AI sites, cuts the risk while keeping AI useful. Blocking all HTTPS would stop the business, and the other options do not address data leaving through prompts.",
   },
 ];

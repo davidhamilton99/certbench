@@ -121,3 +121,22 @@ export function stageTally(task: { fields: readonly SimField[] }, credit: Readon
   }
   return { right, partly, moves: task.fields.length, points, total };
 }
+
+/**
+ * A stage's tally as a sentence, for the card that ends the stage: how many of
+ * its questions were answered correctly, and how many of the rest earned part
+ * of their credit (a sort with one item misplaced, a pick-all with one miss).
+ */
+export function stageSentence(tally: { right: number; partly: number; moves: number }): string {
+  const { right, partly, moves } = tally;
+  if (moves === 1) {
+    if (right >= 1) return "You answered the question correctly.";
+    return partly > 0 ? "Your answer earned partial credit." : "You did not answer the question correctly.";
+  }
+  const first =
+    right >= moves
+      ? `You answered all ${moves} questions correctly.`
+      : `You answered ${right} of ${moves} questions correctly.`;
+  if (partly <= 0) return first;
+  return `${first} ${partly === 1 ? "One other answer" : `${partly} other answers`} earned partial credit.`;
+}

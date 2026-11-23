@@ -4,106 +4,137 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * CertBench design tokens — CertBench 3.
- * One quiet canvas, one electric blue used as light (progress, selection, the
- * route), and solid ink for the actions. Dark is the default; `.dark` is
- * toggled by next-themes. Status colours stay reserved for answers and bands.
+ * CertBench design tokens (CertBench 4).
+ *
+ * The site is meant to read like a public institution's: white paper,
+ * blue-black ink, one institutional blue for anything you can press, and a
+ * navy band (`--sheet`) for the header and a page's closing call to action.
+ * Facts are set in sentences, summary lists and plain tables; nothing is
+ * decorated. Light is the default; `.dark` (next-themes) is the same page on
+ * dark paper. Green, amber and red are quiet and are kept for marks on
+ * answers and for scores; they never decorate.
+ *
+ * The mark is a bench mark, the sign a surveyor cuts to fix a known height: a
+ * level bar and a broad arrow pointing up to it (src/components/brand/Logo.tsx).
  */
 
-:root {
-  --radius: 0.75rem;
+:root,
+.cb-paper {
+  --radius: 0.5rem;
 
-  /* Light: a white ground, near-black ink, a deeper blue for contrast. */
+  /* Paper and ink. */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.17 0.012 266);
+  --foreground: oklch(0.21 0.03 262);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.012 266);
+  --card-foreground: oklch(0.21 0.03 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.012 266);
-  --primary: oklch(0.56 0.215 258);
+  --popover-foreground: oklch(0.21 0.03 262);
+  /* The desk a sheet of paper lies on: app screens and alternate bands. */
+  --surface: oklch(0.975 0.004 255);
+  /* The ink you can press: links, buttons, selection, the question in hand. */
+  --primary: oklch(0.44 0.14 257);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.965 0.004 265);
-  --secondary-foreground: oklch(0.22 0.012 266);
-  --muted: oklch(0.965 0.004 265);
-  --muted-foreground: oklch(0.49 0.016 266);
-  --accent: oklch(0.955 0.006 265);
-  --accent-foreground: oklch(0.22 0.012 266);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.915 0.006 265);
-  --input: oklch(0.89 0.006 265);
-  --ring: oklch(0.56 0.215 258);
-  /* The route's light: blue running into cyan. */
-  --signal: oklch(0.68 0.16 228);
+  --secondary: oklch(0.966 0.006 258);
+  --secondary-foreground: oklch(0.24 0.03 262);
+  --muted: oklch(0.966 0.006 258);
+  --muted-foreground: oklch(0.455 0.026 262);
+  --accent: oklch(0.948 0.009 258);
+  --accent-foreground: oklch(0.24 0.03 262);
+  --destructive: oklch(0.48 0.16 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.885 0.009 262);
+  /* The edge of anything you type in or choose: 3:1 against paper and against
+     the desk, so a field or an answer is found by its outline alone
+     (WCAG 1.4.11). Rules that only divide stay the lighter `--border`. */
+  --input: oklch(0.63 0.02 262);
+  --ring: oklch(0.44 0.14 257);
 
-  /* Readiness bands (READINESS_THRESHOLDS: green >= 75, orange >= 40) */
-  --success: oklch(0.627 0.194 149.214);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.769 0.188 70.08);
-  --warning-foreground: oklch(0.141 0.005 285.823);
-  --danger: oklch(0.577 0.245 27.325);
-  --danger-foreground: oklch(0.985 0 0);
+  /* The navy: the header band, and a page's closing call to action. */
+  --sheet: oklch(0.29 0.085 258);
+  --sheet-raised: oklch(0.35 0.09 258);
+  --sheet-foreground: oklch(0.99 0 0);
+  --sheet-faint: oklch(1 0 0 / 22%);
+  --sheet-muted: oklch(1 0 0 / 78%);
 
-  --chart-1: oklch(0.56 0.215 258);
-  --chart-2: oklch(0.627 0.194 149.214);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.577 0.245 27.325);
-  --chart-5: oklch(0.552 0.016 285.938);
+  /* The veil over a page while a dialog asks its question. */
+  --scrim: oklch(0.21 0.03 262 / 55%);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.17 0.012 266);
-  --sidebar-primary: oklch(0.56 0.215 258);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.965 0.004 265);
-  --sidebar-accent-foreground: oklch(0.22 0.012 266);
-  --sidebar-border: oklch(0.915 0.006 265);
-  --sidebar-ring: oklch(0.56 0.215 258);
+  /* Tints of the ink you can press, one for each thing a tint says. */
+  --tint-hover: color-mix(in oklab, var(--primary) 4%, transparent);
+  --tint-selected: color-mix(in oklab, var(--primary) 7%, transparent);
+  --tint-press: color-mix(in oklab, var(--primary) 10%, transparent);
+
+  /* Marks. `-ink` variants are the same mark set as text on paper. */
+  --success: oklch(0.46 0.105 157);
+  --success-foreground: oklch(0.99 0 0);
+  /* The amber mark is drawn at the weight of the other two (3.7:1 on paper):
+     a paler amber read as tan beside the green and the red. */
+  --warning: oklch(0.62 0.115 75);
+  --warning-foreground: oklch(0.99 0 0);
+  --warning-ink: oklch(0.46 0.085 72);
+  --danger: oklch(0.48 0.16 27);
+  --danger-foreground: oklch(0.99 0 0);
+
+  --sidebar: oklch(0.985 0.003 258);
+  --sidebar-foreground: oklch(0.21 0.03 262);
+  --sidebar-primary: oklch(0.44 0.14 257);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.955 0.008 258);
+  --sidebar-accent-foreground: oklch(0.24 0.03 262);
+  --sidebar-border: oklch(0.885 0.009 262);
+  --sidebar-ring: oklch(0.44 0.14 257);
 }
 
-.dark {
-  /* Dark: a deep blue-black, panels lit from above, an electric blue. */
-  --background: oklch(0.12 0.005 268);
-  --foreground: oklch(0.975 0.003 265);
-  --card: oklch(0.165 0.007 268);
-  --card-foreground: oklch(0.975 0.003 265);
-  --popover: oklch(0.18 0.008 268);
-  --popover-foreground: oklch(0.975 0.003 265);
-  --primary: oklch(0.67 0.18 255);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.22 0.008 268);
-  --secondary-foreground: oklch(0.975 0.003 265);
-  --muted: oklch(0.22 0.008 268);
-  --muted-foreground: oklch(0.71 0.014 266);
-  --accent: oklch(0.235 0.009 268);
-  --accent-foreground: oklch(0.975 0.003 265);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 8.5%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.67 0.18 255);
-  --signal: oklch(0.82 0.13 215);
+.dark,
+.dark .cb-paper {
+  /* The same drawing on dark paper: blue-black, never pure black. */
+  --background: oklch(0.175 0.024 262);
+  --foreground: oklch(0.96 0.006 262);
+  --card: oklch(0.215 0.027 262);
+  --card-foreground: oklch(0.96 0.006 262);
+  --popover: oklch(0.235 0.028 262);
+  --popover-foreground: oklch(0.96 0.006 262);
+  --surface: oklch(0.155 0.022 262);
+  --primary: oklch(0.76 0.105 255);
+  --primary-foreground: oklch(0.175 0.024 262);
+  --secondary: oklch(0.25 0.028 262);
+  --secondary-foreground: oklch(0.96 0.006 262);
+  --muted: oklch(0.25 0.028 262);
+  --muted-foreground: oklch(0.75 0.02 262);
+  --accent: oklch(0.275 0.03 262);
+  --accent-foreground: oklch(0.96 0.006 262);
+  /* On dark paper the three marks sit at the blue's level: red was the loudest
+     colour on the page and amber the lightest. */
+  --destructive: oklch(0.72 0.115 25);
+  --destructive-foreground: oklch(0.175 0.024 262);
+  --border: oklch(1 0 0 / 13%);
+  --input: oklch(1 0 0 / 36%);
+  --ring: oklch(0.76 0.105 255);
 
-  --success: oklch(0.696 0.17 162.48);
-  --success-foreground: oklch(0.141 0.005 285.823);
-  --warning: oklch(0.795 0.184 86.047);
-  --warning-foreground: oklch(0.141 0.005 285.823);
-  --danger: oklch(0.704 0.191 22.216);
-  --danger-foreground: oklch(0.985 0 0);
+  --scrim: oklch(0.1 0.02 262 / 70%);
 
-  --chart-1: oklch(0.67 0.18 255);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.795 0.184 86.047);
-  --chart-4: oklch(0.704 0.191 22.216);
-  --chart-5: oklch(0.705 0.015 286.067);
+  --sheet: oklch(0.25 0.065 258);
+  --sheet-raised: oklch(0.31 0.07 258);
+  --sheet-foreground: oklch(0.99 0 0);
+  --sheet-faint: oklch(1 0 0 / 22%);
+  --sheet-muted: oklch(1 0 0 / 78%);
 
-  --sidebar: oklch(0.145 0.006 268);
-  --sidebar-foreground: oklch(0.975 0.003 265);
-  --sidebar-primary: oklch(0.67 0.18 255);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.22 0.008 268);
-  --sidebar-accent-foreground: oklch(0.975 0.003 265);
-  --sidebar-border: oklch(1 0 0 / 8.5%);
-  --sidebar-ring: oklch(0.67 0.18 255);
+  --success: oklch(0.74 0.115 158);
+  --success-foreground: oklch(0.175 0.024 262);
+  --warning: oklch(0.76 0.1 84);
+  --warning-foreground: oklch(0.22 0.04 70);
+  --warning-ink: oklch(0.76 0.1 84);
+  --danger: oklch(0.72 0.115 25);
+  --danger-foreground: oklch(0.175 0.024 262);
+
+  --sidebar: oklch(0.195 0.026 262);
+  --sidebar-foreground: oklch(0.96 0.006 262);
+  --sidebar-primary: oklch(0.76 0.105 255);
+  --sidebar-primary-foreground: oklch(0.175 0.024 262);
+  --sidebar-accent: oklch(0.25 0.028 262);
+  --sidebar-accent-foreground: oklch(0.96 0.006 262);
+  --sidebar-border: oklch(1 0 0 / 13%);
+  --sidebar-ring: oklch(0.76 0.105 255);
 }
 
 @theme inline {
@@ -126,19 +157,26 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-ink: var(--warning-ink);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
 
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  --color-sheet: var(--sheet);
+  --color-sheet-raised: var(--sheet-raised);
+  --color-sheet-foreground: var(--sheet-foreground);
+  --color-sheet-faint: var(--sheet-faint);
+  --color-sheet-muted: var(--sheet-muted);
+
+  --color-scrim: var(--scrim);
+  --color-tint-hover: var(--tint-hover);
+  --color-tint-selected: var(--tint-selected);
+  --color-tint-press: var(--tint-press);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -149,27 +187,137 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-  /* One family: Inter, set tight at display sizes. */
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --color-signal: var(--signal);
+  /*
+   * Three voices. Headings are set in STIX Two, the face scientific and
+   * standards publishers built for technical papers (it draws a full-size "+",
+   * which "Security+" needs). Everything you read or press is IBM Plex Sans.
+   * Plex Mono is for what is code on the exam too: ports, addresses, commands,
+   * exam and objective codes.
+   */
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-stix), "Times New Roman", ui-serif, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* `font-display` was the old heading family; in-card titles stay sans. */
+  --font-display: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
 
+  /*
+   * Three corners, each with a job. 2px for a mark or a bar (`rounded-xs`).
+   * 6px for anything pressed: a button, a field, an answer (`rounded-md`).
+   * 8px for a sheet of paper (`rounded-lg`). Nothing is rounder: the larger
+   * names draw the sheet's corner too, so two cards side by side always match.
+   */
+  --radius-xs: 2px;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+
+  /*
+   * One curve for everything that moves: away at once, then a soft landing.
+   * It is what the entrances below were already drawn with, so a hover, a
+   * press and a question arriving all feel like the same hand.
+   */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --default-transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --default-transition-duration: 150ms;
+
+  /*
+   * Running text, four sizes and no others: `text-lede` (the sentence under a
+   * page title), `text-body`, `text-small` (tables, lists, controls) and
+   * `text-note` (captions, notes, labels). Headings have their own classes
+   * below (`cb-title` and the rest), which carry their leading and tracking.
+   */
+  --text-note: 0.8125rem;
+  --text-note--line-height: 1.25rem;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.5rem;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.75rem;
+  --text-lede: 1.125rem;
+  --text-lede--line-height: 1.75rem;
+
+  /* Headings sized to be read, not to fill the screen. */
+  --text-5xl: 2.625rem;
+  --text-5xl--line-height: 1.08;
+  --text-6xl: 3.25rem;
+  --text-6xl--line-height: 1.05;
+  --text-7xl: 4rem;
+  --text-7xl--line-height: 1.03;
+  --text-8xl: 4.75rem;
+  --text-8xl--line-height: 1;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    /* A tap is answered by the control's own pressed state, not a grey flash. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Whatever the browser scrolls into view (a control taking the keyboard,
+       the target of a link, the skip link's destination) stops below the bar
+       at the top of the page and not underneath it. */
+    scroll-padding-top: 5rem;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
   }
   ::selection {
-    @apply bg-primary/20;
+    background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  /* Headings break into even lines; running text never leaves one word alone
+     on its last line. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  dd,
+  figcaption,
+  blockquote {
+    text-wrap: pretty;
+  }
+  /* Whatever takes the keyboard shows it: one ring, the ink you can press, on
+     every link and control. It is an outline and not a shadow, so it is still
+     drawn under a Windows contrast theme, which removes shadows and tints. A
+     component that needs the ring inside its box (a row in a clipped list)
+     sets a negative offset; none removes the outline. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* A region that takes focus only so that it can be read (the page's main
+     region after the skip link, a new question, a result) shows no ring: it
+     cannot be pressed. */
+  [tabindex="-1"]:focus-visible {
+    outline: none;
+  }
+  /* A link reached from a table of contents lands below the bar at the top,
+     not underneath it. */
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+  /* No wait for a second tap on anything you can press. */
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  summary,
+  label {
+    touch-action: manipulation;
   }
   /* Scores, counts, and exam codes line up in columns everywhere. */
   .font-mono {
@@ -186,9 +334,8 @@
   }
 }
 
-/* One-shot entrance animations for the readiness instrument. Server-rendered
-   (pure CSS): the gauge sweeps from empty to its score, bars grow from the
-   left. Disabled under prefers-reduced-motion. */
+/* One-shot entrance animations for score bars. Server-rendered (pure CSS):
+   bars grow from the left. Disabled under prefers-reduced-motion. */
 @keyframes gauge-sweep {
   from {
     stroke-dashoffset: var(--gauge-track);
@@ -202,13 +349,12 @@
 /* Free-drill progress map: tiles settle in, staggered by inline delay. */
 @keyframes tile-in {
   from {
-    opacity: 0;
-    transform: scale(0.6);
+    transform: scale(0.8);
   }
 }
 @layer utilities {
   .animate-tile {
-    animation: tile-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: tile-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
   .animate-gauge {
     animation: gauge-sweep 1s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -227,272 +373,268 @@
 }
 
 /* =========================================================================
- * CertBench 3 materials
- * `.glass` is the one panel every card is made of. It's opaque now (text sits
- * crisper and nothing behind it needs blurring): white lifted by a hairline
- * and a soft shadow in light; in dark, lit from above — a faint top-down
- * gradient, a bright top edge and a deep shadow, like a machined panel under
- * a studio light. It lives in the components layer so utilities on the same
- * element (a hover border, a tinted fill) still win.
- * `.glass-nav` is the translucent bar content scrolls under.
- * `.aurora-bg` is the page canvas: flat in light, a soft light from above in dark.
+ * Materials
+ * `.glass` is the one panel every card is made of. The name is historical:
+ * it is a sheet of paper now, opaque, with a ruled edge and no glow. It lives
+ * in the components layer so utilities on the same element (a hover border, a
+ * tinted fill) still win.
+ * `.glass-nav` is the bar at the top of every page: the navy band.
+ * `.aurora-bg` is the canvas of app screens (also historical): the desk a
+ * sheet of paper lies on, a shade off white, easier on the eyes for long study.
+ * `.cb-sheet` is the same navy as a block: a page's closing call to action.
  * ========================================================================= */
 @layer components {
   .glass {
     background-color: var(--card);
-    border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
-      0 18px 44px -24px color-mix(in oklab, var(--foreground) 24%, transparent);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 4%, transparent);
   }
   .dark .glass {
-    background-image: linear-gradient(180deg, oklch(1 0 0 / 4.5%), oklch(1 0 0 / 0.6%) 58%);
-    border-color: oklch(1 0 0 / 8%);
-    box-shadow:
-      inset 0 1px 0 oklch(1 0 0 / 7%),
-      0 1px 2px oklch(0 0 0 / 40%),
-      0 32px 70px -34px oklch(0 0 0 / 85%);
-  }
-  .glass-nav {
-    background-color: color-mix(in oklab, var(--background) 74%, transparent);
-    /* Unprefixed only: the CSS minifier adds -webkit- for Safari itself. Given
-       both, it kept just the prefixed one, and Chrome drew no blur at all. */
-    backdrop-filter: blur(20px) saturate(1.6);
-    border-bottom: 1px solid color-mix(in oklab, var(--foreground) 7%, transparent);
+    box-shadow: none;
   }
   .aurora-bg {
-    background-color: var(--background);
+    background-color: var(--surface);
   }
-  .dark .aurora-bg {
-    background-image: radial-gradient(1100px 520px at 50% -180px, oklch(0.67 0.18 255 / 9%), transparent 72%);
-    background-repeat: no-repeat;
+
+  /* The sheet re-inks everything set on it: the same components draw in white
+     line work there, so a button, a muted line or a rule needs no variant of
+     its own. A sheet of paper laid on it (`.cb-paper`, declared with the root
+     tokens above) is ordinary paper again. */
+  .glass-nav,
+  .cb-sheet {
+    --background: var(--sheet);
+    --foreground: var(--sheet-foreground);
+    --card: var(--sheet-raised);
+    --card-foreground: var(--sheet-foreground);
+    --popover: var(--sheet-raised);
+    --popover-foreground: var(--sheet-foreground);
+    --primary: var(--sheet-foreground);
+    --primary-foreground: var(--sheet);
+    --secondary: oklch(1 0 0 / 12%);
+    --secondary-foreground: var(--sheet-foreground);
+    --muted: oklch(1 0 0 / 9%);
+    --muted-foreground: var(--sheet-muted);
+    --accent: oklch(1 0 0 / 14%);
+    --accent-foreground: var(--sheet-foreground);
+    --border: var(--sheet-faint);
+    --input: oklch(1 0 0 / 42%);
+    --ring: var(--sheet-foreground);
+    --tint-hover: oklch(1 0 0 / 8%);
+    --tint-selected: oklch(1 0 0 / 12%);
+    --tint-press: oklch(1 0 0 / 16%);
+    /* A mark set on the navy is drawn as it is on dark paper. */
+    --success: oklch(0.74 0.115 158);
+    --destructive: oklch(0.72 0.115 25);
+    --danger: oklch(0.72 0.115 25);
+    --warning: oklch(0.76 0.1 84);
+    --warning-ink: oklch(0.76 0.1 84);
+    background-color: var(--sheet);
+    color: var(--sheet-foreground);
+  }
+  .cb-paper {
+    color: var(--foreground);
+  }
+
+  /* The one sheet a visitor operates before anything is asked of them: the
+     sample questions on the home page. Paper lying on the page, a little
+     nearer than the cards around it. No glow, and flat on dark paper. */
+  .cb-exam-sheet {
+    box-shadow:
+      0 1px 0 color-mix(in oklab, var(--foreground) 5%, transparent),
+      0 22px 44px -30px color-mix(in oklab, var(--foreground) 38%, transparent);
+  }
+  .dark .cb-exam-sheet {
+    box-shadow: none;
+  }
+
+  /* A small plain line over a heading or beside a figure: what this is, in
+     the exam's own words. Sentence case, never spaced capitals. */
+  .cb-label {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* A link in running text. */
+  .cb-link {
+    color: var(--primary);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--primary) 35%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+  .cb-link:hover {
+    text-decoration-color: currentColor;
   }
 }
 
 /* =========================================================================
- * CertBench 3 motion and light
- * Entrances move; they never start invisible (session replays freeze an
- * animation at its first frame, and a fade from 0 reads as a blank page).
+ * Type
  * ========================================================================= */
 
-/* Rises into place when its section scrolls into view (InView sets data-in). */
-.cb-rise {
-  transform: translateY(26px);
-  transition: transform 0.9s cubic-bezier(0.2, 0.75, 0.2, 1);
-  transition-delay: var(--rise-delay, 0ms);
-}
-[data-in] .cb-rise,
-.cb-rise[data-in] {
-  transform: none;
-}
-
-/* The big product screen: tilted back like a display on a stand, it settles
-   flat as it scrolls up the page. Browsers without scroll timelines show it flat. */
-@keyframes cb-settle {
-  from {
-    transform: perspective(1800px) rotateX(17deg) scale(0.93);
+/*
+ * Headings are STIX Two on a scale of four sizes, each with its own leading
+ * and tracking, and a heading is never larger than the heading above it:
+ *
+ *   cb-title        a page's title, once on a page   36 / 40 on a phone, 52 / 56 from sm
+ *   cb-section      a section of a page              30 / 34, then 40 / 44
+ *   cb-subsection   a part of a section, an article  24 / 29, then 30 / 36
+ *   cb-statement    a sentence set large in a card   22 / 28, then 24 / 30
+ *
+ * `cb-display` is the same face with no size of its own, for a figure (a
+ * score, a price) that is sized where it is used. All of them live in the
+ * components layer, so a utility on the same element still wins.
+ */
+@layer components {
+  .cb-display,
+  .cb-title,
+  .cb-section,
+  .cb-subsection,
+  .cb-statement {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    /* STIX draws its figures to one width unless asked: in a heading or a
+       price they are set to their own widths, as the letters are. */
+    font-variant-numeric: lining-nums proportional-nums;
+    text-wrap: balance;
   }
-  to {
-    transform: none;
+  .cb-display {
+    letter-spacing: -0.012em;
+    line-height: 1.05;
   }
-}
-@supports (animation-timeline: view()) {
-  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-    .cb-settle {
-      transform-origin: 50% 0%;
-      animation: cb-settle linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 42%;
+  .cb-title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    letter-spacing: -0.018em;
+  }
+  .cb-section {
+    font-size: 1.875rem;
+    line-height: 2.125rem;
+    letter-spacing: -0.014em;
+  }
+  .cb-subsection {
+    font-size: 1.5rem;
+    line-height: 1.8125rem;
+    letter-spacing: -0.008em;
+  }
+  .cb-statement {
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+    letter-spacing: 0;
+  }
+  @media (min-width: 40rem) {
+    .cb-title {
+      font-size: 3.25rem;
+      line-height: 3.5rem;
+    }
+    .cb-section {
+      font-size: 2.5rem;
+      line-height: 2.75rem;
+    }
+    .cb-subsection {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    .cb-statement {
+      font-size: 1.5rem;
+      line-height: 1.875rem;
     }
   }
-}
 
-/* Light running along the route, and the pulse round "you are here". */
-@keyframes cb-run {
-  from {
-    transform: translateX(-30%);
+  /* How wide a line of running text may run, by its size: about 75 characters
+     and never more. The box a paragraph sits in may be wider; the text is not. */
+  .cb-measure {
+    max-width: 38rem;
   }
-  to {
-    transform: translateX(130%);
+  .cb-measure-sm {
+    max-width: 34rem;
   }
-}
-.cb-run {
-  animation: cb-run 4.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
-}
-@keyframes cb-ping {
-  0% {
-    transform: scale(1);
-    opacity: 0.55;
-  }
-  80%,
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-.cb-ping {
-  animation: cb-ping 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
-}
-
-/* Display type: Inter set tight, the way large type wants to be. */
-.cb-display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
-}
-
-/* Text lit like the route: ink running into the blue. */
-.cb-lit {
-  background-image: linear-gradient(100deg, var(--foreground) 10%, var(--primary) 55%, var(--signal) 95%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cb-rise {
-    transition: none;
-    transform: none;
-  }
-  .cb-run,
-  .cb-ping {
-    animation: none;
+  .cb-measure-xs {
+    max-width: 30rem;
   }
 }
 
 /* =========================================================================
- * Instrument design language — CertBench 2.0
- * A self-contained, cinematic dark "stage" for reveal moments (the diagnostic
- * readiness reveal is the first). Stage colours are fixed (a committed dark
- * instrument look, independent of the app light/dark theme); the accent is
- * injected per-band via inline --rv-accent* custom properties (see band.ts).
- * The score count-up + dial sweep are driven in JS; entrance + bar-fill are
- * pure CSS, gated by the .rv-revealed class the component adds on mount.
+ * Motion
+ * Things move when you do something: an answer marks its cell, a score counts
+ * up once. Sections do not slide in as you scroll, and nothing pulses to say
+ * it is alive. Entrances that remain move a few pixels and never start
+ * invisible (session replays freeze an animation at its first frame, and a
+ * fade from 0 reads as a blank page).
+ * ========================================================================= */
+
+/* =========================================================================
+ * The score report
+ * A reading against the line: the score as a bar on a 0–100 scale, the ready
+ * line ruled through it and through every domain's bar beneath. The count-up
+ * is driven in JS (ScoreLevel); `--rv-accent*` carry the band's colour.
+ * The `rv-` names are kept from the instrument this replaced.
  * ========================================================================= */
 .rv-stage {
-  --rv-ink: #eef1f9;
-  --rv-muted: #8b93ab;
-  --rv-muted-2: #626a82;
-  --rv-line: rgba(255, 255, 255, 0.07);
-  --rv-line-strong: rgba(255, 255, 255, 0.12);
-  --rv-surface: #171c2c;
-  --rv-surface-2: #141826;
+  --rv-ink: var(--foreground);
+  --rv-muted: var(--muted-foreground);
+  --rv-muted-2: var(--muted-foreground);
+  --rv-line: var(--border);
+  --rv-line-strong: var(--input);
+  --rv-surface: var(--card);
+  --rv-surface-2: var(--muted);
   position: relative;
-  overflow: hidden;
-  color: var(--rv-ink);
-  background:
-    radial-gradient(1100px 620px at 50% -12%, rgba(99, 102, 241, 0.1), transparent 60%),
-    radial-gradient(880px 520px at 50% 4%, var(--rv-accent-dim), transparent 55%),
-    linear-gradient(180deg, #0e1119, #0a0c12);
+  color: var(--foreground);
+  background: var(--background);
 }
 
-/* Entrance primitives */
+/* Entrance primitives: a short rise, readable at every frame. */
 .rv-rise {
-  opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translateY(8px);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .rv-revealed .rv-rise {
-  opacity: 1;
   transform: none;
 }
-.rv-revealed .rv-rise[data-d="1"] { transition-delay: 0.05s; }
-.rv-revealed .rv-rise[data-d="2"] { transition-delay: 0.15s; }
-.rv-revealed .rv-rise[data-d="3"] { transition-delay: 1.35s; }
-.rv-revealed .rv-rise[data-d="4"] { transition-delay: 1.5s; }
-.rv-revealed .rv-rise[data-d="5"] { transition-delay: 2.35s; }
-.rv-revealed .rv-rise[data-d="6"] { transition-delay: 2.55s; }
+.rv-revealed .rv-rise[data-d="1"] { transition-delay: 0.03s; }
+.rv-revealed .rv-rise[data-d="2"] { transition-delay: 0.08s; }
+.rv-revealed .rv-rise[data-d="3"] { transition-delay: 0.14s; }
+.rv-revealed .rv-rise[data-d="4"] { transition-delay: 0.2s; }
+.rv-revealed .rv-rise[data-d="5"] { transition-delay: 0.26s; }
+.rv-revealed .rv-rise[data-d="6"] { transition-delay: 0.32s; }
 
-/* Instrument dial */
-.rv-scan {
-  position: absolute;
-  inset: 8%;
-  border-radius: 999px;
-  background: conic-gradient(from 0deg, transparent 0deg, var(--rv-accent-dim) 40deg, transparent 80deg);
-  filter: blur(6px);
-  opacity: 0;
-  transition: opacity 1s ease 0.3s;
-  animation: rv-spin 9s linear infinite;
-}
-.rv-live .rv-scan { opacity: 0.7; }
-@keyframes rv-spin { to { transform: rotate(360deg); } }
 @keyframes rv-pop {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateY(8px); }
+  to { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   [style*="rv-pop"] { animation: none !important; }
 }
 
-.rv-track { stroke: color-mix(in srgb, var(--foreground) 8%, transparent); }
-.rv-tick { stroke: color-mix(in srgb, var(--foreground) 22%, transparent); }
-.rv-tick.major { stroke: color-mix(in srgb, var(--foreground) 42%, transparent); }
-.rv-tick.ready { stroke: var(--rv-accent); }
-.rv-sweep {
-  stroke: var(--rv-accent);
-  filter: drop-shadow(0 0 7px var(--rv-accent-soft)) drop-shadow(0 0 2px var(--rv-accent-soft));
-  transition: stroke 0.4s ease;
-}
-.rv-comet { fill: var(--rv-accent-2); filter: drop-shadow(0 0 6px var(--rv-accent)); }
-/* Where an earlier score sat, when the dial sweeps from it. */
-.rv-ghost {
-  fill: var(--background);
-  stroke: color-mix(in srgb, var(--foreground) 55%, transparent);
-  stroke-width: 1.6;
-}
-.rv-ready-label {
-  fill: var(--rv-accent);
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.12em;
-  opacity: 0;
-  transition: opacity 0.5s ease 0.5s;
-}
-.rv-live .rv-ready-label { opacity: 0.9; }
-
 .rv-score {
-  font-family: var(--font-mono);
+  font-family: var(--font-serif);
   font-weight: 600;
-  color: var(--rv-accent);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  text-shadow: 0 0 34px var(--rv-accent-soft);
+  color: var(--foreground);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.015em;
 }
 .rv-band {
-  font-family: var(--font-display);
-  color: var(--rv-accent);
-  opacity: 0;
-  transform: translateY(6px) scale(0.96);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s cubic-bezier(0.2, 1.4, 0.3, 1);
+  font-family: var(--font-sans);
+  color: var(--rv-accent-ink, var(--foreground));
 }
-.rv-scored .rv-band { opacity: 1; transform: none; }
 
-/* Domain cascade */
+/* Domain bars: drawn at their full length and grown from the left by a
+   transform, which the compositor moves without laying the page out again. */
 .rv-fill {
-  width: 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--dc-dim), var(--dc));
-  transition: width 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  width: var(--w);
+  border-radius: 1px;
+  background: var(--dc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.rv-fill::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 22px;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5));
-  opacity: 0.7;
-}
-.rv-revealed .rv-fill { width: var(--w); }
+.rv-revealed .rv-fill { transform: none; }
 
 .rv-chip {
-  color: var(--rv-accent);
+  color: var(--rv-accent-ink, var(--foreground));
   background: var(--rv-accent-dim);
   border: 1px solid var(--rv-accent-soft);
 }
@@ -500,38 +642,38 @@
 @media (prefers-reduced-motion: reduce) {
   .rv-rise,
   .rv-fill,
-  .rv-band,
-  .rv-scan,
-  .rv-sweep {
+  .rv-band {
     transition: none !important;
     animation: none !important;
   }
 }
 
 /* ─── Guided path ───────────────────────────────────────────────────────────
- * Motion for the path player: reps rise in, map tiles pop when a stop lights
- * them, the auto-advance bar drains, and the next objective pulses. The stage
- * stays invisible until the client knows whether to resume or start fresh, so
- * a returning learner never sees the first rep flash past.
+ * Motion for the player: a new question rises a few pixels, an objective's
+ * cell is stamped when a step marks it, and the auto-advance bar drains. The
+ * stage stays invisible until the client knows whether to resume or start
+ * fresh, so a returning learner never sees the first question flash past.
  *
  * Entrances move, they don't fade from nothing: content must be readable at
  * every frame. A fade from opacity 0 left questions blank in session replays
  * (which freeze animations at their first frame) and anywhere an animation
  * stalls.
  */
+/* A learner meets this hundreds of times in a sitting, so it is short and
+   small: enough to say "this is new", never enough to wait for. */
 @keyframes path-rise {
-  from { transform: translateY(8px); }
+  from { transform: translateY(4px); }
   to { transform: none; }
 }
-.path-rise { animation: path-rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.path-rise { animation: path-rise 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
+/* A mark pressed onto its cell: down, then settled. No bounce. */
 @keyframes path-pop {
-  0% { transform: scale(0.55); }
-  60% { transform: scale(1.14); }
+  0% { transform: scale(1.22); }
   100% { transform: scale(1); }
 }
 .path-pop {
-  animation: path-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation: path-pop 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: var(--d, 0ms);
 }
 
@@ -544,22 +686,115 @@
   animation: path-drain var(--dur, 1.4s) linear both;
 }
 
-@keyframes path-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 45%, transparent); }
-  50% { box-shadow: 0 0 0 6px color-mix(in oklch, var(--primary) 0%, transparent); }
-}
-.path-current { animation: path-pulse 2.2s ease-in-out infinite; }
+/* The objective in hand is outlined, not pulsing. */
+.path-current { animation: none; }
 
-/* Only a returning learner (flagged before first paint) waits for the client;
-   a first visit shows the warm-up straight from the server. Shown instantly
-   once ready — no fade to freeze at blank. */
-html[data-path-returning] .path-stage[data-ready="false"] { opacity: 0; }
+/* The held stage. Only a returning learner (flagged before first paint by the
+   inline script in src/components/path/path-hold.ts) waits for the page's
+   scripts; a first visit shows the introductory questions straight from the
+   server.
+
+   While the stage is held its body is hidden with `visibility`, not with
+   opacity: the question under it can then be neither read by a screen reader,
+   focused nor pressed. Two sentences stand in for it. Each is shown by an
+   attribute that the same inline script sets on a clock, so they appear when
+   the page's scripts are slow and when they never arrive. Nothing here is
+   animated, so a session replay shows what the learner saw. */
+html[data-path-returning] .path-stage[data-ready="false"] > .path-stage-body { visibility: hidden; }
+.path-wait,
+.path-late { display: none; }
+/* After about half a second: "Your study path is loading." */
+html[data-path-returning][data-path-wait]:not([data-path-late]) .path-stage[data-ready="false"] > .path-wait { display: block; }
+/* The page's scripts have not started after ten seconds: the page says so and
+   offers to reload. A first visit keeps its question and reads the sentence
+   under it; a held stage has nothing to show, so its body gives up its room. */
+html[data-path-late] .path-stage[data-ready="false"] > .path-late { display: block; }
+html[data-path-returning][data-path-late] .path-stage[data-ready="false"] > .path-stage-body { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .path-rise,
-  .path-pop,
-  .path-current {
+  .path-pop {
     animation: none !important;
   }
   .path-drain { animation-duration: 0.01ms !important; }
+}
+
+/* =========================================================================
+ * Reduced motion, as a rule and not a list
+ * Someone who has asked their device for less motion gets none here: every
+ * transition and animation, in this file or in a component, ends at once.
+ * The one exception is the small spinner that says a request is still in
+ * flight, because a still spinner reads as a page that has stopped.
+ * ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  *:not(.animate-spin)::before,
+  *:not(.animate-spin)::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    /* Zero, not a hundredth of a millisecond: any duration above zero turns
+       every change of style on every element into a transition (the property
+       list defaults to all), whose first frame still has the old values, so
+       code that measures a box straight after changing it reads the old size. */
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* On a screen too short to spare it (a phone on its side, a page at 400%),
+   the bar at the top scrolls away with the page instead of covering it. */
+@media (max-height: 480px) {
+  .glass-nav {
+    position: static !important;
+  }
+}
+
+/* =========================================================================
+ * Skip link
+ * The first stop for a keyboard: past the bar at the top, to the page itself.
+ * It stays out of sight until it has the focus, then sits on the navy band.
+ * ========================================================================= */
+.cb-skip {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.625rem 0.875rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: oklch(1 0 0);
+  color: oklch(0.21 0.03 262);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  box-shadow: 0 0 0 2px oklch(0.44 0.14 257), 0 6px 20px -8px oklch(0.21 0.03 262 / 45%);
+  transform: translateY(-200%);
+}
+.cb-skip:focus-visible,
+.cb-skip:focus {
+  transform: none;
+  outline: none;
+}
+
+/* =========================================================================
+ * Touch targets
+ * A control that is drawn small for a mouse still takes a thumb: on a touch
+ * screen its hit area is at least 44 by 44, without moving anything around it.
+ * ========================================================================= */
+@media (pointer: coarse) {
+  .cb-tap {
+    position: relative;
+  }
+  .cb-tap::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
 }

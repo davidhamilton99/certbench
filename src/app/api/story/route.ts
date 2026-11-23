@@ -23,7 +23,7 @@ export const POST = defineEndpoint(submitStory, {
 
     const quote = input.quote.trim();
     if (input.passed && quote.length < MIN_STORY) {
-      throw new ApiError("validation_failed", "Tell us a little more: a sentence or two.");
+      throw new ApiError("validation_failed", `Please write at least ${MIN_STORY} characters.`);
     }
     if (quote.length >= MIN_STORY) {
       await insertTestimonial(createAdminClient(), claim.userId, {

@@ -12,19 +12,23 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    // Dark instrument identity, matching the workspace — the entry into the app.
-    <div className="relative flex min-h-svh flex-col overflow-hidden aurora-bg px-4 pb-10 pt-8 text-foreground">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-48 left-1/2 h-[28rem] w-[56rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_12%,transparent),transparent)]"
-      />
-      {/* Wordmark anchored top-centre like a header; content centres in the
-          space below so tall pages (register's rail) don't push it adrift. */}
-      <Logo className="relative mx-auto" />
-      {/* Pages own their width so register can widen for its value rail. */}
-      <div className="relative flex w-full flex-1 items-center justify-center py-8">
+    // The way in: the wordmark, and one sheet of paper on the desk.
+    <div className="relative flex min-h-svh flex-col overflow-hidden bg-muted px-4 pb-10 pt-8 text-foreground">
+      {/* The wordmark stands at the top centre as the page's header. The form
+          is centred in the space below it, so a tall page (the register page
+          and its list of what happens next) does not push it adrift. */}
+      <header className="relative mx-auto">
+        <Logo />
+      </header>
+      {/* The page's one main region, where the "Skip to main content" link
+          leads. Each page sets its own width, so the register page can widen. */}
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative flex w-full flex-1 items-center justify-center py-8 outline-none"
+      >
         {children}
-      </div>
+      </main>
     </div>
   );
 }

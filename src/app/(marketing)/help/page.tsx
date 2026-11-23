@@ -1,14 +1,21 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Footer } from "@/components/marketing/Footer";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import { ArticleBody, ArticleHero, ArticleSection } from "@/components/marketing/lander/Article";
+import { COLUMN } from "@/components/marketing/lander/layout";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { CHECKPOINT_SIZE, MAX_RESURFACED, PRACTICE_SIZE } from "@/core/path/plan";
+import { REVIEW_AGAIN_DAYS } from "@/core/path/progress";
+import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
+import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
+import { PRO_PRICES, PRO_PRICE_TERMS, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
+import { READINESS_TARGET } from "@/lib/readiness/band";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { cn } from "@/lib/utils";
 
 export const metadata = pageMetadata({
-  title: "Help Centre",
+  title: "Help center",
   description:
-    "Everything you need to know about using CertBench to prepare for your CompTIA certification exam.",
+    "Answers to common questions about CertBench: how the study path works, how the readiness score is calculated, how labs and practice exams work, and how to manage your account.",
   path: "/help",
 });
 
@@ -30,151 +37,167 @@ interface Section {
   items: FaqItem[];
 }
 
-// Every answer describes the guided path as it is (src/core/path,
-// src/components/path). A guard test keeps the old workspace's claims off
-// this page: src/lib/seo/__tests__/public-copy.test.ts.
+const FULL = REHEARSAL_FORMATS.full;
+const HALF = REHEARSAL_FORMATS.half;
+/**
+ * The labs anyone can open on a PBQ page without an account (the three its
+ * chooser leads with, `FEATURED` in PbqLab.tsx). A free account opens the rest
+ * of the free ones.
+ */
+const LABS_WITHOUT_ACCOUNT = 3;
+
+/** A count as a sentence writes it: in words below ten, in figures from ten. */
+function count(n: number): string {
+  return ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][n] ?? String(n);
+}
+
+// Every answer describes the study path as it is (src/core/path,
+// src/components/path), in the words its screens use, and every figure comes
+// from the constant the product itself uses. The price and what one plan
+// covers are worded once, in src/lib/pricing/terms.ts. A guard test keeps the
+// old workspace's claims off this page: src/lib/seo/__tests__/public-copy.test.ts.
 const sections: Section[] = [
   {
     id: "getting-started",
-    title: "Getting Started",
-    description:
-      "New here? These cover what CertBench is, what’s free, and where to begin.",
+    title: "Getting started",
+    description: "What CertBench is, what is free, and where to begin.",
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is CompTIA exam prep laid out as a guided path. Pick your exam and each objective becomes a short stop: quick questions first, then questions in the real exam’s wording. A readiness checkpoint shows where you stand, and a timed exam rehearsal finishes the path. It covers Security+ SY0-701, Network+ N10-009, and A+ Core 1 and Core 2. Our A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
+        a: "CertBench is a study program for CompTIA exams, set out as a study path. You choose your exam, and each objective becomes a short step. A step begins with short questions and then moves to questions in the wording of the real exam. A readiness checkpoint shows where you stand, and a timed practice exam completes the study path. CertBench covers Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ Core 1 and Core 2. The A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
       },
       {
         q: "Is CertBench free?",
-        a: `The start of it is. With no account you can play each exam’s warm-up, take the 3-minute readiness check, sit a full-length practice exam (90 questions in 90 minutes, or a 45-question half), try the first three interactive PBQs, use the subnet calculator, and play a first round of the port, subnetting, and acronym drills. A free account shows your practice exam score, opens 9 more PBQs, saves your progress, opens your path through the readiness checkpoint, and keeps the drills going with no limit. Pro opens the rest of your path, every objective to exam day, with domain practice, every hands-on PBQ lab, fresh timed exam rehearsals with questions you haven’t seen first, and spaced review of your misses. ${PASS_GUARANTEE_TERMS}`,
-        link: { href: "/pricing", label: "See plans and prices" },
+        a: `The first part is free. Without an account you can try the introductory questions for each exam, take the three-minute readiness check, take a full-length practice exam (${FULL.questions} questions in ${FULL.minutes} minutes, or a half-length exam of ${HALF.questions} questions), try the first ${count(LABS_WITHOUT_ACCOUNT)} hands-on labs, use the subnet calculator, and try a first round of the port, subnetting and acronym drills. A free account shows your practice exam score, opens ${count(FREE_LAB_COUNT - LABS_WITHOUT_ACCOUNT)} more hands-on labs so that ${FREE_LAB_COUNT} are free for each exam, saves your progress, opens your study path up to the readiness checkpoint, and removes the limit on the drills. Pro opens the rest of your study path, covering every objective, with domain practice, every hands-on lab, new timed practice exams that begin with questions you have not seen, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS}`,
+        link: { href: "/pricing", label: "View plans and prices" },
       },
       {
         q: "Where do I start?",
-        a: "Pick your exam. Its first stop is a warm-up that needs no account. Save your map with a free account to keep going: your first objective, then the readiness checkpoint, a few minutes in, which shows where you stand in each domain.",
-        link: { href: "/start", label: "Pick your exam" },
+        a: "Choose your exam. The first step is a set of introductory questions, and it needs no account. To continue, save your progress with a free account. You then study your first objective and take the readiness checkpoint, which shows where you stand in each domain.",
+        link: { href: "/start", label: "Choose your exam" },
       },
       {
-        q: "Is this an exam dump?",
-        a: "No. Every question in CertBench is independently written, and none comes from a real certification exam. Exam-style questions come with a full explanation of why the right answer is right. We built CertBench to help you understand the material, not memorise leaked answers.",
+        q: "Does CertBench use real exam questions?",
+        a: "No. Every question in CertBench is written independently, and none comes from a real certification exam. Exam-style questions have a full explanation of why the correct answer is correct. CertBench is designed to help you understand the material, and not to memorize leaked answers.",
+        link: { href: "/about", label: "Read how CertBench is made" },
       },
       {
         q: "Can I use CertBench as my only study resource?",
-        a: "CertBench teaches through questions: most stops work through one objective, every answer shows you the one thing to remember, and exam-style questions explain their reasoning in full. There are no video lessons or textbook chapters, so it works best alongside a video course (like Professor Messer or Jason Dion) or a book. Use CertBench to practise, find your weak spots, and see when you’re ready.",
+        a: "CertBench teaches through questions. Most steps work through one objective, every answer shows you the main point to remember, and exam-style questions explain their reasoning in full. CertBench has no video lessons or textbook chapters, so it works best alongside a video course (such as Professor Messer or Jason Dion) or a textbook. Use CertBench to practice, to find the areas where you are weak, and to see when you are ready.",
       },
     ],
   },
   {
     id: "path",
-    title: "Your Path",
-    description: "How the stops are laid out, and what comes after them.",
+    title: "The study path",
+    description: "How the steps are arranged, and what follows them.",
     items: [
       {
-        q: "How does the path work?",
-        a: "Your path goes through the exam’s objectives in order, domain by domain. Most stops cover one objective: quick questions first, then one in the real exam’s wording. When a domain ends, a practice stop asks 10 exam-style questions from it, and with Pro a hands-on lab closes it. The readiness checkpoint comes after your first objective, and a timed exam rehearsal ends the path. Your map shows each objective as covered, a miss that comes back later, or not started.",
+        q: "How does the study path work?",
+        a: `The study path goes through the exam objectives in order, one domain at a time. Most steps cover one objective, beginning with short questions and ending with one in the wording of the real exam. At the end of each domain, a practice step asks ${PRACTICE_SIZE} exam-style questions from that domain, and with Pro a hands-on lab completes it. The readiness checkpoint follows your first objective, and a timed practice exam is the last step. The course outline on your study path shows the status of each objective, such as “Complete” or “To review”.`,
       },
       {
-        q: "Do I have to go in order?",
-        a: "Yes. There’s always one next stop, so you never have to decide what to study. With Pro, “Practice any time” on your map also lets you start an exam rehearsal, open any lab in your exam’s lab library, or review your misses whenever you like.",
+        q: "Do I have to follow the steps in order?",
+        a: "Yes. There is always one next step, so you do not have to decide what to study. With Pro, the section named “Practice at any time” on your study path also lets you start a practice exam, open any lab in the lab library for your exam, or review the questions that you missed.",
       },
       {
-        q: "Why does the path ask about my exam date?",
-        a: "Early on, your path asks when your exam is (or roughly when you’re aiming for) and how much time you can give it on most days. At the readiness checkpoint it uses your answers to show when you’ll finish the path at that pace, and how that fits with your exam date.",
+        q: "Why does the study path ask for my exam date?",
+        a: "Near the beginning, the study path asks when your exam is, or when you expect to take it, and how much time you can study on most days. At the readiness checkpoint it uses your answers to show when you will finish the study path at that pace, and how that date compares with your exam date.",
       },
       {
-        q: "What happens after the last stop?",
-        a: "Your path keeps going with “Keep practicing” rounds: your misses first, then questions from your weakest domains. You can also sit another exam rehearsal whenever you like.",
+        q: "What happens after the last step?",
+        a: "The study path continues with rounds of further practice. These begin with the questions that you missed and then draw on your weakest domains. You can also take another practice exam at any time.",
       },
     ],
   },
   {
     id: "readiness-score",
-    title: "Readiness Score",
-    description:
-      "Where the number on your readiness dial comes from, and what it means.",
+    title: "The readiness score",
+    description: "How your readiness score is calculated, and what it means.",
     items: [
       {
         q: "What is the readiness checkpoint?",
-        a: "Twelve exam-style questions across every domain of your exam, after your first objective. It’s free with an account. You get a score weighted the way the real exam weights its domains, how each domain went, the domain with the most to gain, and when you’ll finish the path at your pace.",
+        a: `The readiness checkpoint is a set of ${CHECKPOINT_SIZE} exam-style questions that covers every domain of your exam. It follows your first objective and is free with an account. It gives you a score that is weighted in the same way as the real exam, a result for each domain, the domain in which you can gain the most, and the date by which you will finish the study path at your pace.`,
       },
       {
-        q: "How is my readiness score worked out?",
-        a: "From exam-style questions only, weighted the way the real exam weights its domains. The checkpoint gives your first reading. With Pro, each timed exam rehearsal is scored the same way, on the same dial, so you can watch it move. Your map shows your latest reading, from the checkpoint or your last rehearsal.",
+        q: "How is my readiness score calculated?",
+        a: "The score is calculated from exam-style questions only, weighted in the same way as the domains of the real exam. The checkpoint gives your first result. With Pro, each timed practice exam is scored in the same way and against the same readiness target, so you can follow your progress. Your study path shows your latest result, which comes from the checkpoint or from your last practice exam.",
       },
       {
-        q: "What score means I’m ready to book my exam?",
-        a: "CertBench calls 75% exam-ready. Treat it as a guide, not a promise: check CompTIA’s passing score for your exam, and remember the real exam includes performance-based questions, so practise the hands-on labs too.",
+        q: "What score means that I am ready to book my exam?",
+        a: `CertBench sets its readiness target at ${READINESS_TARGET}%. The target is a guide and not a guarantee. Check CompTIA’s passing score for your exam, and bear in mind that the real exam includes performance-based questions, so you should practice the hands-on labs as well.`,
       },
       {
         q: "Why did my score go down?",
-        a: "Your score is your latest reading, not an average. A full rehearsal asks 90 questions across every domain, against the checkpoint’s 12, so it can read lower, and unanswered questions count as wrong, as on the exam. Each rehearsal result shows the change since your last reading and lets you go through every answer, so you know what to work on. Better to find a gap here than on exam day.",
+        a: `Your score is your latest result and not an average. A full practice exam asks ${FULL.questions} questions across every domain, compared with the ${CHECKPOINT_SIZE} questions of the checkpoint, so its result can be lower. Unanswered questions count as incorrect, as they do in the exam. Each practice exam result shows the change since your previous result and lets you review every answer, so that you know what to study.`,
       },
       {
         q: "How is the free readiness check different?",
-        a: "The readiness check is a quick public estimate: 10 exam-weighted questions in about three minutes, with no account. The checkpoint is part of your path. It’s saved with your progress, and it’s the first reading on your readiness dial.",
+        a: "The readiness check is a short public estimate. It has 10 exam-weighted questions, takes about three minutes and needs no account. The checkpoint is part of your study path. It is saved with your progress, and it gives your first result against the readiness target.",
       },
     ],
   },
   {
     id: "spaced-repetition",
-    title: "Spaced Review",
-    description: "Why the questions you miss keep coming back.",
+    title: "Spaced review",
+    description: "Why the questions that you miss are repeated.",
     items: [
       {
-        q: "What happens to questions I get wrong?",
-        a: "They come back. Most stops start with up to two of your earlier misses, and your map marks an objective with a miss until you get it right. With Pro, “Your misses” under “Practice any time” goes over them ten at a time. A miss you then get right comes back once more three days later, and leaves review after two right answers, days apart. That spacing is what makes it stick.",
+        q: "What happens to questions that I answer incorrectly?",
+        a: `They are repeated. Most steps begin with up to ${count(MAX_RESURFACED)} questions that you missed earlier, and the course outline marks an objective as “To review” until you answer its question correctly. With Pro, “Questions to review” under “Practice at any time” repeats them ${PRACTICE_SIZE} at a time. A question that you then answer correctly is asked once more ${count(REVIEW_AGAIN_DAYS)} days later, and it leaves review after two correct answers on different days. This spacing helps you to remember the answer.`,
       },
       {
         q: "Will I see the same question twice?",
-        a: "Yes, on purpose: misses come back until they stick. Otherwise, new stops and rehearsals pick questions you haven’t seen first, and after the last stop, “Keep practicing” rounds bring back your misses, then questions from your weakest domains.",
+        a: "Yes, by design. Questions that you miss are repeated until you answer them correctly. Otherwise, new steps and practice exams choose questions that you have not seen first. After the last step, rounds of further practice repeat the questions that you missed and then draw on your weakest domains.",
       },
     ],
   },
   {
     id: "labs-and-rehearsals",
-    title: "Labs & Exam Rehearsals",
-    description: "Hands-on PBQs, and the whole exam against the clock.",
+    title: "Labs and practice exams",
+    description: "The hands-on labs, and the full-length timed practice exam.",
     items: [
       {
         q: "What are PBQs, and how do the labs work?",
-        a: "Performance-based questions (PBQs) are the hands-on tasks on real CompTIA exams. CertBench’s labs are played in your browser: simulations, network topologies, and threat hunts, plus ordering, matching, and sorting tasks. On your path a lab closes every domain, and Pro opens your exam’s whole lab library. Each exam’s PBQ page has 12 you can play free: 3 with no account, the rest with a free account.",
+        a: `Performance-based questions (PBQs) are the hands-on tasks in real CompTIA exams. CertBench’s hands-on labs run in your browser. They include simulations, network topologies and threat hunts, and also ordering, matching and sorting tasks. On your study path a lab completes every domain, and Pro opens the whole lab library for your exam. The PBQ page for each exam has ${FREE_LAB_COUNT} labs that are free: ${count(LABS_WITHOUT_ACCOUNT)} with no account, and the rest with a free account.`,
       },
       {
         q: "How are labs scored?",
-        a: "With partial credit. Each field, step, or match you get right counts toward your score, so one slip doesn’t cost you the whole lab.",
+        a: "Labs are scored with partial credit. Each field, step or match that you complete correctly counts toward your score, so a single mistake does not cost you the whole lab.",
       },
       {
-        q: "What is the exam rehearsal?",
-        a: "The whole exam in one sitting: 90 questions in 90 minutes, CompTIA’s limit for Security+, Network+, and A+, or a half rehearsal of 45 in 45. Questions are spread the way the exam weights its domains, ones you haven’t seen first, and there are no answers until you finish. Unanswered questions count as wrong, as on the exam. It’s the last stop on your path, and with Pro you can start one any time, each drawn fresh. Each exam’s practice-test page also has a free full-length exam, the same for everyone; a free account shows its score.",
+        q: "What is the practice exam?",
+        a: `The practice exam is the whole exam in one sitting. It has ${FULL.questions} questions and a time limit of ${FULL.minutes} minutes, which is CompTIA’s limit for Security+, Network+ and A+, or you can take a half-length exam of ${HALF.questions} questions in ${HALF.minutes} minutes. The questions are distributed in the same proportions as the exam domains, beginning with questions that you have not seen, and no answers are shown until you finish. Unanswered questions count as incorrect, as they do in the exam. The practice exam is the last step of your study path, and with Pro you can start a new one at any time. The practice-test page for each exam also has a free full-length practice exam, which is the same for everyone, and a free account shows its score.`,
       },
       {
         q: "Can I flag questions?",
-        a: "Yes, in an exam rehearsal. Flag anything to come back to and jump to any question from the grid, as on the real exam. If you leave mid-way, the clock pauses until you’re back.",
+        a: "Yes, in a practice exam. You can flag any question to return to it, and you can move to any question from the question grid, as in the real exam. If you leave during the exam, the clock pauses until you return.",
       },
     ],
   },
   {
     id: "account",
-    title: "Account & Billing",
-    description:
-      "Plans, studying for more than one exam, cancelling, and deleting your account.",
+    title: "Account and billing",
+    description: "Plans, studying for more than one exam, canceling, and deleting your account.",
     items: [
       {
         q: "What does Pro cost, and what does it include?",
-        a: `Pro is $19/month, $39 every 3 months, or $99/year, in USD and adjusted for your region. It covers one exam: the rest of its path, every objective to exam day, with domain practice, every hands-on PBQ lab, timed exam rehearsals, spaced review of your misses, and a readiness score. ${PASS_GUARANTEE_TERMS} The full terms are in our Terms of Service. Cancel any time.`,
+        a: `${PRO_PRICE_TERMS} ${PRO_SCOPE_TERMS} Pro includes the rest of the study path for your exam, covering every objective, with domain practice, every hands-on lab, timed practice exams that are scored against the readiness target, and spaced review of the questions that you missed. ${PASS_GUARANTEE_TERMS} The full terms of the guarantee are in the terms of service. You can cancel at any time.`,
+        link: { href: PASS_GUARANTEE_HREF, label: "Read the guarantee terms" },
       },
       {
         q: "Can I study for more than one exam?",
-        a: "Yes. Each exam has its own path, map, and readiness score; switch with “Studying for a different exam?” under your map. Pro covers one exam. To add another, open its path: after that exam’s readiness checkpoint you’re offered it for a one-time payment ($39, adjusted for your region), and it stays unlocked while you’re on Pro.",
+        a: `Yes. Each exam has its own study path, course outline and readiness score. To change exam, use the link “choose another exam” at the foot of your study path. ${PRO_SCOPE_TERMS} To add another exam, open its study path. After the readiness checkpoint for that exam, you are offered it for a single payment of ${PRO_PRICES.quarterly}, which is adjusted by region, and it remains open for as long as you have Pro.`,
       },
       {
         q: "How do I cancel Pro?",
-        a: "From the billing portal. Signed in, go to certbench.dev/upgrade and choose “Manage billing”: it opens Stripe’s customer portal, where you can cancel. You keep Pro until the end of the period you’ve paid for.",
+        a: "You can cancel from the billing portal. Sign in, go to certbench.dev/upgrade and choose “Manage billing”. This opens Stripe’s customer portal, where you can cancel. You keep Pro until the end of the period that you have paid for.",
         link: { href: "/upgrade", label: "Go to billing" },
       },
       {
         q: "Can I delete my account?",
-        a: "Yes. Pro members can do it themselves: signed in, go to certbench.dev/profile and type DELETE in the danger zone. That permanently deletes your account, progress, and history, and can’t be undone. On any account, free or Pro, you can also ask us to delete it at privacy@certbench.dev, as our Privacy Policy describes.",
+        a: "Yes. Pro members can delete their own account. Sign in, go to certbench.dev/profile, and type DELETE in the section named “Delete your account”. This permanently deletes your account, your progress and your history, and it cannot be undone. Deleting your account also cancels your Pro subscription. With any account, free or Pro, you can also ask CertBench to delete it by writing to privacy@certbench.dev, as the privacy policy describes.",
+        link: { href: "/privacy", label: "Read the privacy policy" },
       },
     ],
   },
@@ -184,111 +207,78 @@ const sections: Section[] = [
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+/** A group of questions: its heading, then each question as a heading of its own with the answer under it. */
 function SectionBlock({ section }: { section: Section }) {
   return (
-    <div id={section.id} className="scroll-mt-24">
-      <h2 className="text-[22px] font-bold text-foreground tracking-tight">
-        {section.title}
-      </h2>
-      <p className="text-[15px] text-muted-foreground mt-1 mb-6">
-        {section.description}
-      </p>
-      <div className="flex flex-col gap-5">
-        {section.items.map((item, i) => (
-          <div
-            key={i}
-            className="border border-border rounded-lg bg-card p-5"
-          >
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {item.q}
-            </h3>
-            <p className="text-[14px] text-muted-foreground mt-2 leading-relaxed">
-              {item.a}
-            </p>
-            {item.link && (
-              <Link
-                href={item.link.href}
-                className="mt-3 inline-block text-[14px] font-medium text-primary hover:underline"
-              >
-                {item.link.label} &rarr;
-              </Link>
-            )}
+    <ArticleSection id={section.id} title={section.title} sub={section.description}>
+      <div className="border-t border-border">
+        {section.items.map((item) => (
+          <div key={item.q} className="grid gap-2 border-b border-border py-5">
+            <h3 className="text-body font-semibold">{item.q}</h3>
+            <div className="cb-measure grid gap-3 text-body text-muted-foreground">
+              <p>{item.a}</p>
+              {item.link && (
+                <p>
+                  <Link href={item.link.href} className="cb-link">
+                    {item.link.label}
+                  </Link>
+                </p>
+              )}
+            </div>
           </div>
         ))}
       </div>
-    </div>
+    </ArticleSection>
   );
 }
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden aurora-bg text-foreground">
-      <MarketingHeader />
-
-      <main className="mx-auto max-w-3xl px-5 pb-16 pt-12 sm:px-6 sm:pt-20">
-        {/* Hero */}
-        <div className="text-center mb-6">
-          <h1 className="cb-display text-[2.35rem] sm:text-6xl">
-            Help Centre
-          </h1>
-          <p className="text-[17px] text-muted-foreground mt-3 max-w-xl mx-auto">
-            Everything you need to know about using CertBench. If you
-            can&apos;t find your answer here, reach out — we respond to
-            every message.
-          </p>
-          <div className="mt-4">
-            <Link
-              href="/contact"
-              className="text-[15px] text-primary hover:underline font-medium"
-            >
-              Contact support &rarr;
+    <LanderPage>
+      <ArticleBody>
+        <ArticleHero title="Help center">
+          <p>
+            This page answers common questions about CertBench. If you cannot find the answer that you need, please{" "}
+            <Link href="/contact" className="cb-link">
+              contact support
             </Link>
-          </div>
-        </div>
-
-        {/* Jump nav */}
-        <nav className="border border-border rounded-lg bg-card p-5 mb-12">
-          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
-            Jump to
+            . Every message is answered.
           </p>
-          <div className="flex flex-wrap gap-2">
+        </ArticleHero>
+
+        <nav aria-labelledby="help-contents" className={cn(COLUMN, "mt-10 border-t border-border pt-5 sm:mt-12")}>
+          <h2 id="help-contents" className="text-small font-semibold">
+            Contents
+          </h2>
+          <ul className="mt-2 grid gap-x-8 sm:grid-cols-2">
             {sections.map((s) => (
-              <a
-                key={s.id}
-                href={`#${s.id}`}
-                className="px-3 py-1.5 text-[13px] text-muted-foreground bg-background border border-border rounded-md hover:text-primary hover:border-primary transition-colors duration-150"
-              >
-                {s.title}
-              </a>
+              <li key={s.id}>
+                <a href={`#${s.id}`} className="cb-link inline-block py-1.5 text-small">
+                  {s.title}
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </nav>
 
-        {/* Sections */}
-        <div className="flex flex-col gap-14">
-          {sections.map((section) => (
-            <SectionBlock key={section.id} section={section} />
-          ))}
-        </div>
+        {sections.map((section) => (
+          <SectionBlock key={section.id} section={section} />
+        ))}
 
-        {/* Bottom CTA */}
-        <div className="mt-16 border border-border rounded-lg bg-card p-8 text-center">
-          <h2 className="text-[20px] font-bold text-foreground">
-            Still have questions?
-          </h2>
-          <p className="text-[15px] text-muted-foreground mt-2">
-            I read and reply to every message. If something is broken,
-            confusing, or missing — I want to know.
-          </p>
-          <div className="mt-5 flex items-center justify-center gap-3">
-            <Link href="/contact">
-              <Button size="lg">Get in Touch</Button>
-            </Link>
+        <ArticleSection title="If your question is not answered here">
+          <div className="cb-measure grid gap-3 text-body text-muted-foreground">
+            <p>
+              Please write to CertBench. Every message is read and answered. If something is not working, is unclear
+              or is missing, CertBench would like to know.
+            </p>
+            <p>
+              <Link href="/contact" className="cb-link">
+                Contact CertBench
+              </Link>
+            </p>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+        </ArticleSection>
+      </ArticleBody>
+    </LanderPage>
   );
 }

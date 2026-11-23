@@ -9,8 +9,8 @@ import { loadQuickRound } from "@/server/path/quick-round";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { objectivePageDescription, objectivePageTitle } from "@/lib/seo/objective-meta";
 
-export const revalidate = 86400; // daily — question samples are stable
-export const dynamicParams = false; // only the pre-built objective pages exist
+export const revalidate = 86400; // Once a day: the sample questions rarely change.
+export const dynamicParams = false; // Only the objective pages that were built exist.
 
 export async function generateStaticParams() {
   return listObjectivePages();
@@ -39,7 +39,7 @@ export default async function ObjectivePage({
   const { cert, code } = await params;
   const data = await loadObjectivePage(cert, code);
   if (!data) notFound();
-  // Lead with this objective's stop of the guided path, playable inline.
+  // The page leads with this objective's step of the study path, played on the page itself.
   const round = await loadQuickRound(data.certSlug, data.code);
   return <ObjectiveLanding data={data} round={round} />;
 }

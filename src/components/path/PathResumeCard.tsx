@@ -3,7 +3,7 @@ import { ArrowRight, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * The guided path's place on the Pro dashboard: where they are on it and one
+ * The study path's place on the Pro dashboard: where they are on it and one
  * button back in. The path is the main way to study; this card says so first.
  */
 export function PathResumeCard({
@@ -26,22 +26,26 @@ export function PathResumeCard({
     <div className="glass relative overflow-hidden rounded-2xl p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
             <Route className="size-5" />
           </span>
           <div className="min-w-0">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Your {examName} path
-              {started && total ? ` · ${done} of ${total} stops` : ""}
+            <p className="text-sm text-muted-foreground">
+              Your {examName} study path.
+              {started && total ? ` You have completed ${done} of ${total} steps.` : ""}
             </p>
             <p className="mt-0.5 truncate font-display text-lg font-semibold tracking-tight">
-              {nextTitle ? `Next: ${nextTitle}` : started ? "Pick up where you left off" : "Start with the warm-up"}
+              {nextTitle
+                ? `Next step: ${nextTitle}`
+                : started
+                  ? "Continue from where you stopped"
+                  : "Begin with the introductory questions"}
             </p>
           </div>
         </div>
         <Button asChild size="lg" className="w-full sm:w-auto">
           <Link href={href}>
-            {started ? "Continue" : "Start my path"}
+            {started ? "Continue" : "Start the study path"}
             <ArrowRight />
           </Link>
         </Button>

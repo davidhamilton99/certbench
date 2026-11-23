@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ApiError } from "@/contracts/common";
+import { accountNotChecked } from "@/server/data/account-errors";
 import type { Db } from "@/server/supabase/server";
 
 /**
@@ -16,6 +17,14 @@ export interface UserPlan {
   /** Practice questions started today (UTC) via metered quiz starts. */
   questionsUsedToday: number;
   questionsLimitPerDay: number | null; // null = unlimited
+  /**
+   * The subscription's last payment did not go through (the row is marked
+   * past due). The billing page says so and offers the card form. It is
+   * information only: who has Pro is decided by `plan`, as before.
+   */
+  paymentPastDue: boolean;
+  /** Whether the account has a Stripe customer, and so a billing portal to open. */
+  hasBillingAccount: boolean;
 }
 
 /** Start of the current UTC day, ISO — the daily quota window boundary. */
@@ -45,21 +54,35 @@ async function questionsStartedToday(db: Db, userId: string): Promise<number> {
 }
 
 export async function getUserPlan(db: Db, userId: string): Promise<UserPlan> {
-  const { data: sub } = await db
+  const { data: sub, error } = await db
     .from("user_subscriptions")
-    .select("plan, status, current_period_end")
+    .select("plan, status, current_period_end, stripe_customer_id")
     .eq("user_id", userId)
     .maybeSingle();
+  // A row that could not be read is not a free plan. Answering "free" here
+  // showed a paying member the offer to buy what they have, and the daily
+  // limit of the free plan. The same error as every other account check.
+  if (error) throw accountNotChecked("plan", error);
 
   const isPro =
     sub?.plan === "pro" && (sub.status === "active" || sub.status === "trialing");
 
   const questionsUsedToday = await questionsStartedToday(db, userId);
 
+  const billing = {
+    paymentPastDue: sub?.status === "past_due",
+    hasBillingAccount: Boolean(sub?.stripe_customer_id),
+  };
+
   if (isPro) {
-    return { plan: "pro", questionsUsedToday, questionsLimitPerDay: null };
+    return { plan: "pro", questionsUsedToday, questionsLimitPerDay: null, ...billing };
   }
-  return { plan: "free", questionsUsedToday, questionsLimitPerDay: FREE_DAILY_QUESTION_LIMIT };
+  return {
+    plan: "free",
+    questionsUsedToday,
+    questionsLimitPerDay: FREE_DAILY_QUESTION_LIMIT,
+    ...billing,
+  };
 }
 
 /**
@@ -75,7 +98,7 @@ export function quizQuotaError(
   const remaining = Math.max(0, limit - usedToday);
   if (requested <= remaining) return null;
   return remaining === 0
-    ? `You've used your ${limit} free questions for today. Upgrade to Pro for unlimited practice.`
+    ? `You have used your ${limit} free questions for today. Upgrade to Pro for unlimited practice.`
     : `This session needs ${requested} questions but you have ${remaining} left today. Upgrade to Pro for unlimited practice.`;
 }
 

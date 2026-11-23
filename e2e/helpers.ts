@@ -45,13 +45,33 @@ export async function grantPro(email: string): Promise<void> {
 }
 
 /**
- * Picks the exam on /start (where a new account lands) and opens its guided
- * path, then makes it the account's exam the way the path does at its first
- * goal question — so the Pro workspace has an enrolled exam to open.
+ * The version the specs study when an exam is taught in two (Security+): the
+ * labs and questions they exercise are SY0-701's.
  */
-export async function pickExam(page: Page, cert: RegExp): Promise<void> {
+const DEFAULT_VERSION = /SY0-701/;
+
+/**
+ * Picks the exam on /start (where a new account lands) and opens its study
+ * path, then makes it the account's exam the way the study path does at its
+ * first goal question, so that the Pro workspace has an enrolled exam to open.
+ *
+ * The list on /start has two kinds of row. An exam taught in one version is a
+ * link straight to its study path. An exam taught in two versions is a button
+ * ("Security+ SY0-801 and SY0-701 Choose") that opens a link for each version;
+ * `version` says which of those to follow.
+ */
+export async function pickExam(page: Page, cert: RegExp, version: RegExp = DEFAULT_VERSION): Promise<void> {
   await page.waitForURL("**/start**");
-  await page.getByRole("link", { name: cert }).first().click();
+  const row = page.getByRole("link", { name: cert }).first();
+  const versions = page.getByRole("button", { name: cert }).first();
+  // Wait for whichever of the two the list shows for this exam.
+  await row.or(versions).first().waitFor();
+  if (await row.isVisible()) {
+    await row.click();
+  } else {
+    await versions.click();
+    await page.getByRole("link", { name: version }).first().click();
+  }
   await page.waitForURL("**/path/**");
   const slug = new URL(page.url()).pathname.split("/").pop();
   const res = await page.request.post("/api/path/enroll", { data: { cert: slug, examDate: null } });

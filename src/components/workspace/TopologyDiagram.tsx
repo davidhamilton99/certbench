@@ -16,7 +16,7 @@ const MARK_WORDS: Record<DeviceMark, string> = {
   right: "fixed",
   partly: "partly fixed",
   wrong: "not fixed",
-  ok: "checks out",
+  ok: "correct as it is",
 };
 
 /* ------------------------------------------------------------------ */
@@ -140,30 +140,55 @@ function DeviceIcon({ type, x, y }: { type: TopoDeviceType; x: number; y: number
   }
 }
 
-/** A device's badge on the map: "!" to fix, a tick or a cross once it's done, a tick if it checks out. */
+/**
+ * The colours of a mark: its fill and what is drawn on it. Each fill is paired
+ * with its own foreground token, never a fixed white: the marks are light in
+ * the dark theme, and white on them could not be read there.
+ */
+type MarkTone = "warning" | "destructive" | "success";
+
+function toneOf(mark: DeviceMark): MarkTone {
+  if (mark === "fix" || mark === "active" || mark === "partly") return "warning";
+  return mark === "wrong" ? "destructive" : "success";
+}
+
+const MAP_TONE: Record<MarkTone, { box: string; text: string; line: string }> = {
+  warning: { box: "fill-warning", text: "fill-warning-foreground", line: "stroke-warning-foreground" },
+  destructive: { box: "fill-destructive", text: "fill-destructive-foreground", line: "stroke-destructive-foreground" },
+  success: { box: "fill-success", text: "fill-success-foreground", line: "stroke-success-foreground" },
+};
+
+const CHIP_TONE: Record<MarkTone, string> = {
+  warning: "bg-warning text-warning-foreground",
+  destructive: "bg-destructive text-destructive-foreground",
+  success: "bg-success text-success-foreground",
+};
+
+/**
+ * A device's mark on the map: "!" to fix, a tick or a cross once it is done, a
+ * tick if it is correct as it is. A small square with the corner every mark on
+ * the site has. It is drawn still: nothing on the map pulses.
+ */
 function MapBadge({ mark, x, y }: { mark: DeviceMark; x: number; y: number }) {
   const big = mark !== "ok";
   const r = big ? 10 : 8;
-  const fill =
-    mark === "fix" || mark === "active" || mark === "partly"
-      ? "fill-amber-500"
-      : mark === "wrong"
-        ? "fill-destructive"
-        : "fill-success";
+  const tone = MAP_TONE[toneOf(mark)];
   return (
     <g transform={`translate(${x + 20}, ${y - 24})`} aria-hidden>
-      <circle cx={0} cy={0} r={r} className={cn(fill, (mark === "fix" || mark === "active") && "animate-pulse")} />
+      <rect x={-r} y={-r} width={r * 2} height={r * 2} rx={3} className={tone.box} />
       {mark === "fix" || mark === "active" ? (
-        <text x={0} y={5} textAnchor="middle" className="fill-white font-bold" style={{ fontSize: "15px" }}>
-          !
-        </text>
+        // The attention mark is drawn, not typed: a character here would count as part of the device's visible name.
+        <>
+          <path d="M 0 -5.5 L 0 1" fill="none" className={tone.line} strokeWidth={2.4} strokeLinecap="round" />
+          <circle cx={0} cy={5.2} r={1.5} className={tone.text} />
+        </>
       ) : mark === "wrong" ? (
-        <path d="M -4 -4 L 4 4 M 4 -4 L -4 4" fill="none" stroke="white" strokeWidth={2.2} strokeLinecap="round" />
+        <path d="M -4 -4 L 4 4 M 4 -4 L -4 4" fill="none" className={tone.line} strokeWidth={2.2} strokeLinecap="round" />
       ) : (
         <path
           d={big ? "M -4.5 0 L -1.5 3 L 4.5 -3" : "M -3.5 0 L -1 2.5 L 3.5 -2"}
           fill="none"
-          stroke="white"
+          className={tone.line}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -173,17 +198,11 @@ function MapBadge({ mark, x, y }: { mark: DeviceMark; x: number; y: number }) {
   );
 }
 
-/** The same mark, as an icon for the device chips under the map. */
+/** The same mark, as an icon for the device buttons under the map. */
 function ChipMark({ mark }: { mark: DeviceMark | undefined }) {
-  if (!mark) return <span aria-hidden className="size-2 rounded-full bg-muted-foreground/40" />;
-  const tone =
-    mark === "fix" || mark === "active" || mark === "partly"
-      ? "bg-amber-500"
-      : mark === "wrong"
-        ? "bg-destructive"
-        : "bg-success";
+  if (!mark) return <span aria-hidden className="size-2 rounded-xs bg-muted-foreground/40" />;
   return (
-    <span aria-hidden className={cn("flex size-4 items-center justify-center rounded-full text-white", tone)}>
+    <span aria-hidden className={cn("flex size-4 shrink-0 items-center justify-center rounded-xs", CHIP_TONE[toneOf(mark)])}>
       {mark === "fix" || mark === "active" ? (
         <AlertTriangle className="size-2.5" strokeWidth={3} />
       ) : mark === "wrong" ? (
@@ -238,14 +257,15 @@ export function TopologyDiagram({
   }).length;
 
   return (
-    <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2">
-        <span className="min-w-0 truncate font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          {diagramTitle}
-        </span>
-        <span className="shrink-0 font-mono text-[11px] tabular-nums text-amber-700 dark:text-amber-300">
-          {toFix > 0 ? `${toFix} to fix` : ""}
-        </span>
+    <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-b border-border px-4 py-2">
+        {/* The map's name wraps: cut short, it could not be read on a phone or at a large zoom. */}
+        <span className="cb-label min-w-0 text-muted-foreground">{diagramTitle}</span>
+        {toFix > 0 && (
+          <span className="shrink-0 text-note tabular-nums text-muted-foreground">
+            {toFix === 1 ? "1 device needs fixing." : `${toFix} devices need fixing.`}
+          </span>
+        )}
       </div>
 
       <svg viewBox="0 0 1000 600" className="h-auto w-full" preserveAspectRatio="xMidYMid meet" style={{ maxHeight: "460px" }}>
@@ -278,9 +298,12 @@ export function TopologyDiagram({
               key={device.id}
               onClick={() => clickable && onDeviceClick(device.id)}
               className={clickable ? "cursor-pointer" : "cursor-default"}
-              role={clickable ? "button" : undefined}
+              // A device with nothing to open is a picture with a name, so its name and its mark are still read.
+              role={clickable ? "button" : "img"}
               tabIndex={clickable ? 0 : undefined}
-              aria-label={`${device.label} (${device.type.replace("-", " ")})${mark ? `, ${MARK_WORDS[mark]}` : ""}`}
+              // The name begins with the words drawn under the device, in their order, so a voice command
+              // that says what is seen reaches it; where the device stands follows.
+              aria-label={`${device.label} ${device.type.replace("-", " ")}${mark ? `, ${MARK_WORDS[mark]}` : ""}`}
               aria-pressed={clickable ? device.id === shownId : undefined}
               onKeyDown={(e) => {
                 if (clickable && (e.key === "Enter" || e.key === " ")) {
@@ -290,12 +313,13 @@ export function TopologyDiagram({
               }}
             >
               {isActive && (
+                // The device in hand is outlined, and the outline is still.
                 <circle
                   cx={pos.x}
                   cy={pos.y}
                   r={34}
                   fill="none"
-                  className="animate-pulse stroke-primary"
+                  className="stroke-primary"
                   strokeWidth={3}
                   strokeDasharray="6 3"
                 />
@@ -317,13 +341,9 @@ export function TopologyDiagram({
               >
                 {device.label}
               </text>
-              <text
-                x={pos.x}
-                y={pos.y + 56}
-                textAnchor="middle"
-                className="fill-muted-foreground"
-                style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "13px" }}
-              >
+              {/* A space between the two lines of the name. It is not drawn; it keeps them two words when the
+                  device's text is read as one string (by a checker comparing it with the name above). */}{" "}
+              <text x={pos.x} y={pos.y + 56} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: "13px" }}>
                 {device.type.replace("-", " ")}
               </text>
             </g>
@@ -377,20 +397,23 @@ export function TopologyDiagram({
                 aria-label={`${d.label}${mark ? `, ${MARK_WORDS[mark]}` : ""}`}
                 onClick={() => onDeviceClick(d.id)}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors",
-                  shown
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground",
-                  !clickable && "opacity-50"
+                  // The same frame and press as an answer; a full-size target on a touch screen.
+                  "inline-flex min-h-9 items-center gap-1.5 rounded-md border px-2.5 font-medium transition-[border-color,background-color] duration-100 pointer-coarse:min-h-11",
+                  !clickable
+                    ? // A device with nothing to open: quieter, and still easy to read.
+                      "border-border text-muted-foreground"
+                    : shown
+                      ? "border-primary bg-tint-selected"
+                      : "border-input hover:border-primary hover:bg-tint-hover active:bg-tint-press"
                 )}
               >
                 <ChipMark mark={mark} />
-                {d.label}
+                <span className="text-note">{d.label}</span>
               </button>
             );
           })}
         </div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Tap a device to see its config</p>
+        <p className="text-note text-muted-foreground">Select a device to see its configuration.</p>
       </div>
     </div>
   );

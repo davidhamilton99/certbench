@@ -9,10 +9,13 @@ const server = vi.hoisted(() => ({
   failSaves: false,
 }));
 
+// How many times the sign-in client was made: it must not be for a visitor with no session cookie.
+const client = vi.hoisted(() => ({ made: 0 }));
 vi.mock("@/lib/supabase-browser", () => ({
-  createClient: () => ({
-    auth: { getSession: async () => ({ data: { session: session.current } }) },
-  }),
+  createClient: () => {
+    client.made += 1;
+    return { auth: { getSession: async () => ({ data: { session: session.current } }) } };
+  },
 }));
 
 vi.mock("@/lib/api-client", () => ({
@@ -62,9 +65,19 @@ Object.defineProperty(window, "localStorage", {
   },
 });
 
+/** The cookie the sign-in client keeps its session in. The hook reads the session only when one is there. */
+const SESSION_COOKIE = "sb-test-auth-token";
+
+function signIn(user: { id: string; email?: string }) {
+  session.current = { user };
+  document.cookie = `${SESSION_COOKIE}=1; path=/`;
+}
+
 beforeEach(() => {
   localStorage.clear();
   session.current = null;
+  client.made = 0;
+  document.cookie = `${SESSION_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   server.progress = { items: {}, rounds: 0 };
   server.saves = [];
   server.failSaves = false;
@@ -131,7 +144,7 @@ describe("useDrillRounds — anonymous", () => {
     expect(again.result.current.progress.rounds).toBe(1);
   });
 
-  it("can't start another round without an account", async () => {
+  it("cannot start another round without an account", async () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     await playRound(result);
@@ -223,7 +236,7 @@ describe("useDrillRounds — signed in", () => {
     await playRound(anon.result);
     anon.unmount();
 
-    session.current = { user: { id: "user-1" } };
+    signIn({ id: "user-1" });
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     expect(result.current.signedIn).toBe(true);
@@ -247,7 +260,7 @@ describe("useDrillRounds — signed in", () => {
         round: null,
       })
     );
-    session.current = { user: { id: "user-1" } };
+    signIn({ id: "user-1" });
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     expect(result.current.progress).toEqual({ items: {}, rounds: 0 });
@@ -256,7 +269,7 @@ describe("useDrillRounds — signed in", () => {
 
   it("ties a signed-in visitor to their account, however they arrived", async () => {
     vi.mocked(identifyUser).mockClear();
-    session.current = { user: { id: "user-1", email: "learner@example.com" } };
+    signIn({ id: "user-1", email: "learner@example.com" });
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     expect(identifyUser).toHaveBeenCalledWith("user-1", { email: "learner@example.com" });
@@ -269,8 +282,33 @@ describe("useDrillRounds — signed in", () => {
     expect(identifyUser).not.toHaveBeenCalled();
   });
 
-  it("plays unlimited rounds and saves each one", async () => {
+  it("does not load the sign-in client for a browser with no session cookie", async () => {
+    // A session the client would report, but no cookie: nobody is signed in, and the client is never fetched.
     session.current = { user: { id: "user-1" } };
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.signedIn).toBe(false);
+    expect(client.made).toBe(0);
+  });
+
+  it("reads the session when the browser holds a session cookie", async () => {
+    signIn({ id: "user-1" });
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.signedIn).toBe(true);
+    expect(client.made).toBe(1);
+  });
+
+  it("treats a cookie with no live session behind it as a visitor", async () => {
+    document.cookie = `${SESSION_COOKIE}=1; path=/`;
+    const { result } = setup();
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.signedIn).toBe(false);
+    expect(result.current.gated).toBe(false);
+  });
+
+  it("plays unlimited rounds and saves each one", async () => {
+    signIn({ id: "user-1" });
     const { result } = setup();
     await waitFor(() => expect(result.current.ready).toBe(true));
     for (let n = 1; n <= 3; n++) {

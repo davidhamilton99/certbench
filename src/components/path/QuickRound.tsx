@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { identifyUser, track } from "@/lib/analytics";
+import { api } from "@/lib/api-client";
+import { savePathProgress } from "@/contracts/client";
 import { SIGNIN_CANCELLED_PARAM } from "@/lib/google-signin";
 import { buildPlan, stopAt } from "@/core/path/plan";
 import { finishStop, nextStopIndex, objectiveStatuses, recordRep } from "@/core/path/progress";
@@ -15,7 +17,7 @@ import { ExamMap, MapLegend } from "./ExamMap";
 import { useKeyboardTurn } from "./keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
-import { claimLocalPath, readLocalPath, updateLocalPath } from "./local-path";
+import { claimLocalPath, readVisitorPath, updateLocalPath } from "./local-path";
 
 /** A finished round: its score, and its own answers as path progress. */
 interface RoundResult {
@@ -23,13 +25,15 @@ interface RoundResult {
   total: number;
   /** This round's answers alone; empty when the result was picked back up after a reload. */
   own: PathProgress;
+  /** False when the browser refused to keep the round on this device. */
+  kept: boolean;
 }
 
 /** Room for the public pages' sticky header when the result scrolls into view. */
 const HEADER_CLEARANCE = 72;
 
 /**
- * One stop of the guided path, playable right on a public page with no
+ * One stop of the study path, playable right on a public page with no
  * account. Same reps and player as the path, so the page leads with the thing
  * people come back for, and the answers count on their path (kept on this
  * device until they save it). It ends the way a first stop ends on the path:
@@ -73,16 +77,25 @@ export function QuickRound({
   const current = useRef(0);
   const right = useRef(0);
   const own = useRef<PathProgress>(EMPTY_PATH_PROGRESS);
+  // False once the browser has refused to keep an answer of this round.
+  const kept = useRef(true);
 
   // Back from a Google sign-in they didn't finish: the page loaded afresh, so
   // pick the round up at the result they left, where its Google button says so.
+  // Nobody is signed in then, so the round is in the visitor's own work.
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has(SIGNIN_CANCELLED_PARAM)) return;
-    const record = readLocalPath(cert)?.progress.stops[stopId];
+    const record = readVisitorPath(cert)?.stops[stopId];
     // The address and the device's path can only be read after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (record) setEnded({ correct: record.c, total: record.t, own: EMPTY_PATH_PROGRESS });
+    if (record) setEnded({ correct: record.c, total: record.t, own: EMPTY_PATH_PROGRESS, kept: true });
   }, [cert, stopId]);
+
+  // The round is the work of whoever is at the keyboard. On a device that
+  // holds another account's study path it is kept beside that copy, never in
+  // it (see local-path.ts). Until the session has been read, nobody is taken
+  // to be signed in.
+  const who = userId ?? null;
 
   const onAnswer = useCallback(
     (answer: RepAnswer) => {
@@ -92,14 +105,14 @@ export function QuickRound({
       if (answer.correct) right.current += 1;
       const now = Date.now();
       own.current = recordRep(own.current, rep.id, answer.correct, now);
-      updateLocalPath(cert, (p) => recordRep(p, rep.id, answer.correct, now));
+      if (!updateLocalPath(cert, (p) => recordRep(p, rep.id, answer.correct, now), who)) kept.current = false;
       setResults((prev) => {
         const next = [...prev];
         next[index] = answer.correct;
         return next;
       });
     },
-    [cert, reps]
+    [cert, reps, who]
   );
 
   const onNext = useCallback(() => {
@@ -108,15 +121,20 @@ export function QuickRound({
       setI(current.current);
       return;
     }
-    updateLocalPath(cert, (p) => finishStop(p, stopId, right.current, reps.length, Date.now()));
+    const now = Date.now();
+    own.current = finishStop(own.current, stopId, right.current, reps.length, now);
+    if (!updateLocalPath(cert, (p) => finishStop(p, stopId, right.current, reps.length, now), who)) {
+      kept.current = false;
+    }
     track("quick_round_completed", { cert, surface, correct: right.current, total: reps.length });
-    setEnded({ correct: right.current, total: reps.length, own: own.current });
-  }, [cert, stopId, surface, reps.length]);
+    setEnded({ correct: right.current, total: reps.length, own: own.current, kept: kept.current });
+  }, [cert, stopId, surface, reps.length, who]);
 
   function playAgain() {
     current.current = 0;
     right.current = 0;
     own.current = EMPTY_PATH_PROGRESS;
+    kept.current = true;
     setI(0);
     setResults(reps.map(() => null));
     setEnded(null);
@@ -142,14 +160,14 @@ export function QuickRound({
           onReplay={playAgain}
         />
       ) : (
-        <div className="glass min-w-0 rounded-3xl p-5 sm:p-8">
+        <div className="glass min-w-0 rounded-lg p-5 sm:p-8">
           <div className="mb-6 grid gap-3">
             <div className="flex min-w-0 items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="min-w-0 truncate cb-label text-muted-foreground">
                 {label}
               </p>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                {i + 1} / {reps.length}
+              <span className="shrink-0 text-[0.8125rem] tabular-nums text-muted-foreground">
+                Question {i + 1} of {reps.length}
               </span>
             </div>
             <StopProgress results={results} current={i} />
@@ -163,7 +181,7 @@ export function QuickRound({
               promptAs="p"
               keyboard={keyboard}
               // The last answer leads somewhere the page hasn't shown yet: say where.
-              nextLabel={i === reps.length - 1 ? "See my result" : undefined}
+              nextLabel={i === reps.length - 1 ? "View my result" : undefined}
             />
           )}
         </div>
@@ -205,14 +223,16 @@ function RoundEnd({
   onReplay: () => void;
 }) {
   const router = useRouter();
-  // The device's path as the round left it. This only mounts in the browser,
-  // once a round is over, so it can be read straight away.
-  const [device] = useState(() => readLocalPath(cert));
-  // The device can hold an account's path while that account is signed out,
-  // or while someone else is signed in. That map isn't this visitor's to see,
-  // so theirs is this round alone.
-  const theirs = device !== null && (device.owner === null || device.owner === userId);
-  const progress = theirs ? device.progress : result.own;
+  // The visitor's own work on this device as the round left it. This only
+  // mounts in the browser, once a round is over, so it can be read straight
+  // away. The device can hold an account's path while that account is signed
+  // out, or while someone else is signed in: that copy is not this visitor's
+  // to see, and the round was kept beside it. When the browser keeps nothing,
+  // their work is this round alone.
+  const [device] = useState(() => readVisitorPath(cert, userId));
+  const progress = device ?? result.own;
+  // The round is on the device, so their study path takes it up when it opens.
+  const theirs = result.kept && device !== null;
   const statuses = useMemo(() => objectiveStatuses(progress.items), [progress]);
   const plan = useMemo(() => buildPlan(structure), [structure]);
   const next = stopAt(plan, structure, nextStopIndex(plan, progress));
@@ -242,10 +262,10 @@ function RoundEnd({
       aria-label={`${label}: your result`}
       className="grid min-w-0 scroll-mt-24 gap-4 outline-none"
     >
-      <div className="glass path-rise grid min-w-0 gap-5 rounded-3xl p-6 sm:p-8">
+      <div className="glass path-rise grid min-w-0 gap-5 rounded-lg p-6 sm:p-8">
         <div className="grid min-w-0 gap-1.5">
           <div className="flex min-w-0 items-baseline justify-between gap-3">
-            <span className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="min-w-0 truncate cb-label text-muted-foreground">
               {label}
             </span>
             <button
@@ -254,7 +274,7 @@ function RoundEnd({
               className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="size-3.5" />
-              Play again
+              Answer the questions again
             </button>
           </div>
           <p className="cb-display text-5xl tabular-nums">
@@ -262,8 +282,8 @@ function RoundEnd({
           </p>
           <p className="text-muted-foreground">
             {missed === 0
-              ? "Every one right."
-              : `${missed} to revisit. ${missed === 1 ? "It comes" : "They come"} back in a later stop on your path.`}
+              ? "You answered every question correctly."
+              : `${missed} ${missed === 1 ? "question" : "questions"} will be repeated in a later step of your study path.`}
           </p>
         </div>
 
@@ -271,11 +291,9 @@ function RoundEnd({
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/70 pt-5">
             <div className="grid min-w-0 gap-1">
               {theirs && (
-                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  This round counts on your path
-                </p>
+                <p className="text-sm text-muted-foreground">These questions count toward your study path.</p>
               )}
-              <p className="font-display text-xl font-semibold tracking-tight">Your {examName} path</p>
+              <p className="font-display text-xl font-semibold tracking-tight">Your {examName} study path</p>
             </div>
             <Button asChild size="lg" className="h-12 w-full px-6 text-base sm:w-auto">
               <Link href={`/path/${cert}`} onClick={() => track("path_exam_picked", { cert, surface })}>
@@ -289,31 +307,38 @@ function RoundEnd({
             <SaveAsk
               cert={cert}
               surface={surface}
-              title={nextUp ?? "Save your map"}
+              title={nextUp ?? "Save your progress"}
               titleAs="h2"
               staysOnPage={false}
-              onSaved={(uid, email, method) => {
+              onSaved={async (uid, email, method) => {
                 identifyUser(uid, { email });
                 track("path_account_linked", { cert, method });
                 // This device's rounds are the new account's now: the path saves
                 // them when it opens (and doesn't count the link a second time).
                 claimLocalPath(cert, uid);
+                // A browser that keeps nothing has nothing to hand over, so the
+                // round goes to the account from here. If that fails, the study
+                // path still opens.
+                if (!result.kept) await api(savePathProgress, { cert, progress: result.own }).catch(() => {});
                 router.push(`/path/${cert}`);
               }}
             >
-              {nextUpLead(next)}A free account saves your map and opens your {examName} path: short rounds like
-              this, up to a readiness checkpoint that shows where you stand.
-              {!nextUp && " Until then, your map is kept on this device only."}
+              {nextUpLead(next)}A free account saves your progress and opens your {examName} study path. The path
+              continues in short sets of questions like this one, up to a readiness checkpoint that shows where you
+              stand.
+              {!result.kept
+                ? " This browser is not saving your progress. Create a free account to keep it."
+                : !nextUp && " Until then, your progress is kept on this device only."}
             </SaveAsk>
           </div>
         )}
       </div>
 
-      <div className="glass grid min-w-0 gap-5 rounded-3xl p-5 sm:p-6">
+      <div className="glass grid min-w-0 gap-5 rounded-lg p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display font-semibold tracking-tight">Your {examName} map</h2>
-          <span className="font-mono text-xs text-muted-foreground">
-            {statuses.size} of {tiles} {unit} started
+          <h2 className="font-display font-semibold tracking-tight">{examName} objectives</h2>
+          <span className="text-[0.8125rem] text-muted-foreground">
+            You have started {statuses.size} of {tiles} {unit}.
           </span>
         </div>
         <ExamMap structure={structure} statuses={statuses} fresh={fresh} />

@@ -6,7 +6,7 @@ import type { ChoiceRep, PathDomain, PathProgress, RehearsalResult, RehearsalSiz
  * The exam rehearsal: the whole exam in one sitting, timed, with no answers
  * until the end. Full length is the real exam's own limit: Security+, Network+
  * and A+ each allow at most 90 questions in 90 minutes (CompTIA's exam pages,
- * checked 2026-11-07). Half is for a shorter sitting. It's scored like the
+ * checked 2026-11-22). Half is for a shorter sitting. It's scored like the
  * checkpoint, so both read on one dial.
  */
 export const REHEARSAL_FORMATS: Record<RehearsalSize, { questions: number; minutes: number }> = {
@@ -64,6 +64,42 @@ export function scoreRehearsal(
     total: answers.length,
     seconds: run.seconds,
   };
+}
+
+const isCount = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0;
+
+/**
+ * A finished rehearsal's result as read back from storage, or null when any
+ * part of it is out of range. A stored result is not trusted: it is checked
+ * before a page prints it or the study path takes it in. These are the checks
+ * the path applies to the rehearsals kept with its progress (progress.ts).
+ */
+export function sanitizeRehearsalResult(raw: unknown): RehearsalResult | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (!isCount(r.score) || r.score > 100 || !isCount(r.at)) return null;
+  if (r.size !== "full" && r.size !== "half") return null;
+  if (!isCount(r.answered) || !isCount(r.total) || !isCount(r.seconds)) return null;
+  if (r.answered > r.total || r.total > 200 || r.seconds > 86_400) return null;
+  if (!Array.isArray(r.domains) || r.domains.length > 12) return null;
+  const domains: RehearsalResult["domains"] = [];
+  for (const d of r.domains) {
+    if (!d || typeof d !== "object") return null;
+    const { number, correct, total } = d as Record<string, unknown>;
+    if (typeof number !== "string" || number.length === 0 || number.length > 8) return null;
+    if (!isCount(correct) || !isCount(total) || correct > total) return null;
+    domains.push({ number, correct, total });
+  }
+  return { score: r.score, at: r.at, domains, size: r.size, answered: r.answered, total: r.total, seconds: r.seconds };
+}
+
+/** A stored reading (the score a result is set against), or null when it is not one. */
+export function sanitizeReading(raw: unknown): Reading | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (!isCount(r.score) || r.score > 100 || !isCount(r.at)) return null;
+  if (r.source !== "checkpoint" && r.source !== "rehearsal") return null;
+  return { score: r.score, at: r.at, source: r.source };
 }
 
 /** Oldest first, one entry per run (a run is its finish time), the newest kept. */

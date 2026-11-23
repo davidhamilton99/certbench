@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import {
   getCertificationBySlug,
   listDomains,
@@ -8,7 +8,7 @@ import { canAccessCert } from "@/server/data/enrollments";
 import { DiagnosticClient } from "@/components/quiz/DiagnosticClient";
 
 export const metadata = {
-  title: "Diagnostic exam",
+  title: "Diagnostic",
 };
 
 export default async function DiagnosticPage({
@@ -17,11 +17,7 @@ export default async function DiagnosticPage({
   params: Promise<{ certId: string }>;
 }) {
   const { certId: slug } = await params;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
@@ -36,10 +32,10 @@ export default async function DiagnosticPage({
 
   return (
     <div className="grid gap-6">
-      <div className="mx-auto w-full max-w-2xl">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Diagnostic</h1>
-        <p className="text-sm text-muted-foreground">
-          {cert.name} · establishes your baseline across every domain
+      <div className="mx-auto grid w-full max-w-2xl gap-1.5">
+        <h1 className="cb-subsection">Diagnostic</h1>
+        <p className="text-small text-muted-foreground">
+          The diagnostic measures your starting point in every domain of {cert.name}.
         </p>
       </div>
       <DiagnosticClient

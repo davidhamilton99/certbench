@@ -1,22 +1,5 @@
 import { replacedBy, usesOfficialObjectiveNumbers } from "./exam-versions";
 
-const SMALL_WORDS = new Set(["a", "an", "and", "of", "or", "the", "to", "in", "on", "for"]);
-
-/**
- * "Signs of an attack" → "Signs of an Attack". Words with capitals of their
- * own (RAM, macOS, SOHO) stay as they are.
- */
-export function titleCase(text: string): string {
-  return text
-    .split(" ")
-    .map((word, i) =>
-      /^[a-z-]+[,]?$/.test(word) && (i === 0 || !SMALL_WORDS.has(word))
-        ? word[0].toUpperCase() + word.slice(1)
-        : word
-    )
-    .join(" ");
-}
-
 export interface ObjectiveMetaInput {
   certSlug: string;
   shortCertName: string;
@@ -30,7 +13,9 @@ export interface ObjectiveMetaInput {
 /**
  * Leads with the topic: nobody searches "Security+ objective 1.2", they search
  * the thing it covers. Security+ and A+ cite their objective numbers, which are
- * CompTIA's; our Network+ ones aren't.
+ * CompTIA's; our Network+ ones aren't. The title is in sentence case like every
+ * heading on the site, so the topic keeps the capitals it was written with
+ * ("Signs of an attack", "IP addressing and subnets", "macOS").
  */
 export function objectivePageTitle(o: ObjectiveMetaInput): string {
   const suffix =
@@ -39,7 +24,7 @@ export function objectivePageTitle(o: ObjectiveMetaInput): string {
       : replacedBy(o.certSlug)
         ? o.shortCertName
         : `${o.shortCertName} ${o.examCode}`;
-  return `${titleCase(o.topic)} Practice Questions (${suffix})`;
+  return `${o.topic} practice questions (${suffix})`;
 }
 
 export function objectivePageDescription(o: ObjectiveMetaInput): string {

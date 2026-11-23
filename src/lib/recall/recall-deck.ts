@@ -54,6 +54,42 @@ export interface RecallDeckConfig {
    * reference table, just not in the drill.
    */
   only?: (row: Record<string, string>) => boolean;
+  /**
+   * How the deck explains an answer in sentences. A deck without it keeps the
+   * note form ("SSH: 22 (Secure Shell)").
+   */
+  explain?: RecallExplanation;
+}
+
+/**
+ * A deck's explanation of an answer, in sentences. The question card prints it
+ * straight after its verdict ("Correct." or "Incorrect. The correct answer is
+ * 22."), so it has to read on from either one: "SSH uses port 22." Plain data,
+ * like the rest of a deck's configuration, so it crosses from a server page to
+ * a client component with the deck.
+ */
+export interface RecallExplanation {
+  /**
+   * The sentence, or two, that a row gets. A column's key in braces is replaced
+   * by the row's cell as the table has it: "{protocol} uses port {port}." A
+   * cell that opens with a capital can be set inside a sentence:
+   * "{purpose:lowerFirst}" gives "list directory contents" for "List directory
+   * contents".
+   */
+  template: string;
+  /**
+   * Rows whose cells do not fit the template as they stand (a pair of ports
+   * written "67/68", a speed written "Up to 40 Gbps (TB4)", a purpose with a
+   * colon in it). Each has sentences of its own here, under its cell in the
+   * `by` column, and they are filled like the template. The reference table
+   * keeps its cells as they are, for where it is shown as a table.
+   */
+  rows?: Record<string, string>;
+  /**
+   * The column that names a row in `rows`: one whose cells differ from row to
+   * row. Left out, it is the cue column.
+   */
+  by?: string;
 }
 
 /** A data rate like "1 Gbps", "100+ Gbps" or "~550 MB/s", for decks that ask a speed. */
@@ -103,8 +139,17 @@ export interface RecallQuestion {
   acceptable: string[];
   /** Up to four shuffled options (the answer plus distractors). */
   options: string[];
-  /** Context line shown on reveal ("" when the deck defines no detail). */
-  detail: string;
+  /**
+   * Context for the reveal: one entry for each detail column that has a value
+   * in this row, in the deck's order (none when the deck defines no detail).
+   */
+  details: string[];
+  /**
+   * The answer explained in sentences, for a deck that has an explanation
+   * template. Left out for every other deck, and for a row whose template
+   * names a cell the row does not have.
+   */
+  explanation?: string;
 }
 
 function shuffle<T>(arr: T[], rng: Rng): T[] {
@@ -286,6 +331,48 @@ export function canAutoDrill(table: ReferenceTable): boolean {
   return autoDeckConfig(table) !== null;
 }
 
+/** A place in an explanation template: "{port}", or "{purpose:lowerFirst}". */
+const PLACE = /\{(\w+)(:lowerFirst)?\}/g;
+
+/**
+ * A cell that opens a line in its table, set inside a sentence: "List directory
+ * contents" becomes "list directory contents". A first word in capitals ("DNS
+ * records") is an acronym and stays as it is.
+ */
+function lowerFirst(cell: string): string {
+  return /^[A-Z][a-z]/.test(cell) ? cell[0].toLowerCase() + cell.slice(1) : cell;
+}
+
+const has = (record: object, key: string) => Object.prototype.hasOwnProperty.call(record, key);
+
+/**
+ * A row's explanation in sentences: the row's own sentences where the deck has
+ * written some, the deck's template otherwise, with every place filled from
+ * the row. Null for a deck that has no template, and for a row that lacks a
+ * cell its sentence names: the question card then keeps the note form, which
+ * is better than a sentence with a hole in it. A test holds every row of every
+ * deck that has a template to complete sentences (explanations.test.ts).
+ */
+export function explainRow(
+  config: Pick<RecallDeckConfig, "ask" | "explain">,
+  row: Record<string, string>
+): string | null {
+  const explain = config.explain;
+  if (!explain) return null;
+  const name = row[explain.by ?? config.ask.key];
+  const sentences =
+    explain.rows && name !== undefined && has(explain.rows, name) ? explain.rows[name] : explain.template;
+  // A brace that is not part of a place is a place written wrongly
+  // ("{port:plural}"): it would be printed as it stands.
+  let whole = !/[{}]/.test(sentences.replace(PLACE, ""));
+  const text = sentences.replace(PLACE, (_place, key: string, inside?: string) => {
+    const cell = has(row, key) && isValue(row[key]) ? row[key].trim() : "";
+    if (!cell) whole = false;
+    return inside ? lowerFirst(cell) : cell;
+  });
+  return whole ? text : null;
+}
+
 /**
  * Generate one question. `rng` defaults to `Math.random` for the live drill.
  * Every question carries both multiple-choice `options` and the accepted typed
@@ -344,15 +431,15 @@ export function generateRecallQuestion(
 
   // A bare number means nothing on its own, so it's named. A count reads
   // number first ("2 usable hosts"), an identifier label first ("port 49").
-  const detail = (config.detailKeys ?? [])
+  const details = (config.detailKeys ?? [])
     .map((k) => {
       const v = row[k];
       if (!v || !/^[\d,.]+$/.test(v)) return v;
       const label = noun(deck.labels?.[k] ?? k);
       return /[^sui]s$/i.test(label) ? `${v} ${label}` : `${label} ${v}`;
     })
-    .filter(Boolean)
-    .join(" · ");
+    .filter((v): v is string => Boolean(v));
+  const explanation = explainRow(config, row);
 
   return {
     deckId: config.id,
@@ -365,7 +452,8 @@ export function generateRecallQuestion(
     answer,
     acceptable: acceptableAnswers(answer, config.accept),
     options,
-    detail,
+    details,
+    ...(explanation ? { explanation } : {}),
   };
 }
 

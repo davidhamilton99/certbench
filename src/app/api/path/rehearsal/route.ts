@@ -17,10 +17,10 @@ export const POST = defineEndpoint(getPathRehearsal, {
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
     const bank = await loadPathBank(input.cert);
-    if (!bank) throw new ApiError("not_found", "That exam isn't available.");
+    if (!bank) throw new ApiError("not_found", "That exam is not available.");
 
     const { level } = await getPathAccess(db, user, bank.certId);
-    if (level !== "pro") throw new ApiError("quota_exceeded", "Exam rehearsals are part of Pro.");
+    if (level !== "pro") throw new ApiError("quota_exceeded", "Timed practice exams on your study path are included with Pro.");
 
     const reps = buildRehearsal({
       bank,

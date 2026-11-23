@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.gen";
 import { publicEnv, serverEnv } from "@/env";
 import type { Db } from "./server";
+import { fetchWithTimeLimit } from "./time-limit";
 
 /**
  * Service-role client — BYPASSES Row-Level Security.
@@ -23,6 +24,10 @@ export function createAdminClient(): Db {
   return createSupabaseClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     serverEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      // Every request has a time limit: see ./time-limit.
+      global: { fetch: fetchWithTimeLimit() },
+    }
   );
 }

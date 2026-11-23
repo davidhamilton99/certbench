@@ -43,7 +43,7 @@ const rep = (id: string, objective = "1.1"): ChoiceRep => ({
 });
 
 describe("buildPlan", () => {
-  it("puts the checkpoint right after the warm-up and the first learn stop", () => {
+  it("puts the checkpoint right after the warm-up and the first learn step", () => {
     // Security+ shape: domain 1 has four objectives, and the rest of it follows the checkpoint.
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(plan.stops.slice(0, 7).map((s) => s.id)).toEqual([
@@ -64,7 +64,7 @@ describe("buildPlan", () => {
     expect(ids.at(-1)).toBe("rehearsal");
   });
 
-  it("gives every stop a unique id and its own index", () => {
+  it("gives every step a unique id and its own index", () => {
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(new Set(plan.stops.map((s) => s.id)).size).toBe(plan.stops.length);
     plan.stops.forEach((s, i) => expect(s.index).toBe(i));
@@ -129,7 +129,7 @@ describe("labs on the path", () => {
     for (const s of plan.stops) expect(s.id.length).toBeLessThanOrEqual(32);
   });
 
-  it("adds no stop for a domain without a lab", () => {
+  it("adds no step for a domain without a lab", () => {
     expect(buildPlan(structure([4, 5])).stops.some((s) => s.kind === "lab")).toBe(false);
   });
 
@@ -158,7 +158,7 @@ describe("rep ids", () => {
 });
 
 describe("progress", () => {
-  it("finds the next stop and counts what's done", () => {
+  it("finds the next step and counts what is done", () => {
     const plan = buildPlan(structure([4, 5]));
     let p = EMPTY_PATH_PROGRESS;
     expect(nextStopIndex(plan, p)).toBe(0);
@@ -310,8 +310,8 @@ describe("explanations", () => {
     expect(rest).toBe("It has current data. Failover takes minutes.");
   });
 
-  it("repairs lost dashes and apostrophes", () => {
-    expect(repairText("physical layer � it has")).toBe("physical layer — it has");
+  it("repairs lost dashes and apostrophes, and sets a dash as the punctuation the site uses", () => {
+    expect(repairText("physical layer � it has")).toBe("physical layer: it has");
     expect(repairText("the user�s account")).toBe("the user’s account");
   });
 

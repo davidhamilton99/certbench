@@ -36,7 +36,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     domain_title: "Hardware and Network Troubleshooting",
     items: [
       "Power-On Self-Test (POST)",
-      "BIOS/UEFI initialises hardware",
+      "BIOS/UEFI initializes hardware",
       "MBR/GPT partition table is read",
       "Bootloader executes",
       "OS kernel loads into memory",
@@ -44,7 +44,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "On power-on, POST runs first to verify hardware integrity, then BIOS/UEFI initialises and enumerates hardware devices. The firmware reads the MBR or GPT to locate the active partition, hands control to the bootloader (e.g. GRUB or Windows Boot Manager), which loads the OS kernel into memory. Once the kernel has initialised all drivers and services, the login prompt is presented to the user.",
+      "On power-on, POST runs first to verify hardware integrity, then BIOS/UEFI initializes and enumerates hardware devices. The firmware reads the MBR or GPT to locate the active partition, hands control to the bootloader (e.g. GRUB or Windows Boot Manager), which loads the OS kernel into memory. Once the kernel has initialized all drivers and services, the login prompt is presented to the user.",
   },
   {
     type: "ordering",
@@ -93,7 +93,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5, 6, 7],
     explanation:
-      "Port 22 = SSH, 25 = SMTP, 53 = DNS, 80 = HTTP, 110 = POP3, 143 = IMAP, 443 = HTTPS, 3389 = RDP. These are all CompTIA A+ exam-required port numbers. POP3 and IMAP are both email retrieval protocols — POP3 downloads and removes mail from the server whereas IMAP keeps mail on the server and synchronises across devices.",
+      "Port 22 = SSH, 25 = SMTP, 53 = DNS, 80 = HTTP, 110 = POP3, 143 = IMAP, 443 = HTTPS, 3389 = RDP. These are all CompTIA A+ exam-required port numbers. POP3 and IMAP are both email retrieval protocols: POP3 downloads and removes mail from the server whereas IMAP keeps mail on the server and synchronizes across devices.",
   },
   {
     type: "matching",
@@ -103,18 +103,18 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       "Match each network cable type to its maximum rated throughput and distance capability.",
     domain_number: "2.0",
     domain_title: "Networking",
-    left: ["Cat 5e", "Cat 6", "Cat 6a", "Single-mode fibre", "Multimode fibre", "RG-6 coax"],
+    left: ["Cat 5e", "Cat 6", "Cat 6a", "Single-mode fiber", "Multimode fiber", "RG-6 coax"],
     right: [
       "1 Gbps up to 100 m",
       "10 Gbps up to 55 m",
       "10 Gbps up to 100 m",
-      "100 Gbps+ over many kilometres",
+      "100 Gbps+ over many kilometers",
       "10 Gbps up to 550 m (OM4)",
       "Used for cable TV and broadband up to ~1 Gbps",
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 10 Gbps but only to 55 m due to alien crosstalk; Cat 6a eliminates this with thicker shielding, reaching 10 Gbps at the full 100 m. Single-mode fibre uses a laser and tiny core for very long-distance high-bandwidth links. Multimode fibre uses an LED and larger core for shorter campus runs. RG-6 coaxial cable carries DOCSIS cable broadband signals.",
+      "Cat 5e supports 1 Gbps to 100 m. Cat 6 supports 10 Gbps but only to 55 m due to alien crosstalk; Cat 6a eliminates this with thicker shielding, reaching 10 Gbps at the full 100 m. Single-mode fiber uses a laser and tiny core for very long-distance high-bandwidth links. Multimode fiber uses an LED and larger core for shorter campus runs. RG-6 coaxial cable carries DOCSIS cable broadband signals.",
   },
   {
     type: "matching",
@@ -129,14 +129,14 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       "Standard host-side USB connector on PCs and chargers",
       "Reversible connector for modern devices, supports USB 3.x, Thunderbolt, and power",
       "8-position 8-contact connector for Ethernet networking",
-      "6-position 2-contact connector for analogue telephone lines",
-      "Small-form-factor fibre connector with a latch, used in SFP modules",
-      "Square snap-in fibre connector, common in older networking installations",
+      "6-position 2-contact connector for analog telephone lines",
+      "Small-form-factor fiber connector with a latch, used in SFP modules",
+      "Square snap-in fiber connector, common in older networking installations",
       "Threaded coaxial connector for cable TV and broadband modems",
     ],
     correct_map: [0, 1, 2, 3, 4, 5, 6],
     explanation:
-      "USB-A is the rectangular host connector; USB-C is the smaller oval reversible connector increasingly used for everything from data to video to power. RJ-45 terminates Ethernet cables (8 wires) while RJ-11 terminates phone lines (2-4 wires). LC connectors are small form-factor fibre connectors used in high-density SFP ports; SC connectors are the larger square push-pull type. The F-type threaded connector is used on coaxial cable for TV distribution and DOCSIS broadband.",
+      "USB-A is the rectangular host connector; USB-C is the smaller oval reversible connector increasingly used for everything from data to video to power. RJ-45 terminates Ethernet cables (8 wires) while RJ-11 terminates phone lines (2-4 wires). LC connectors are small form-factor fiber connectors used in high-density SFP ports; SC connectors are the larger square push-pull type. The F-type threaded connector is used on coaxial cable for TV distribution and DOCSIS broadband.",
   },
   {
     type: "matching",
@@ -148,14 +148,14 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     domain_title: "Hardware",
     left: ["RAID 0", "RAID 1", "RAID 5", "RAID 10"],
     right: [
-      "Striping only — maximum performance and capacity, no fault tolerance",
-      "Mirroring only — full redundancy, 50% usable capacity, requires 2 drives",
-      "Striping with distributed parity — fault tolerance with 1 drive loss, requires minimum 3 drives",
-      "Stripe of mirrors — high performance and redundancy, requires minimum 4 drives",
+      "Striping only: maximum performance and capacity, no fault tolerance",
+      "Mirroring only: full redundancy, 50% usable capacity, requires 2 drives",
+      "Striping with distributed parity: fault tolerance with 1 drive loss, requires minimum 3 drives",
+      "Stripe of mirrors: high performance and redundancy, requires minimum 4 drives",
     ],
     correct_map: [0, 1, 2, 3],
     explanation:
-      "RAID 0 stripes data across drives for performance but has zero redundancy — any single drive failure loses all data. RAID 1 mirrors data identically across two drives, surviving one drive failure. RAID 5 distributes parity across all drives in the array, allowing recovery from one drive failure while using n-1 drives of usable space. RAID 10 (1+0) combines mirroring and striping for both speed and redundancy but requires at least four drives.",
+      "RAID 0 stripes data across drives for performance but has zero redundancy: any single drive failure loses all data. RAID 1 mirrors data identically across two drives, surviving one drive failure. RAID 5 distributes parity across all drives in the array, allowing recovery from one drive failure while using n-1 drives of usable space. RAID 10 (1+0) combines mirroring and striping for both speed and redundancy but requires at least four drives.",
   },
 
   /* ================================================================ */
@@ -166,7 +166,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     id: "aplus-core1-display-connectors",
     title: "Classify Display Connectors by Signal Type",
     description:
-      "Sort each display connector into the correct category based on whether it carries a digital signal, an analogue signal, or both.",
+      "Sort each display connector into the correct category based on whether it carries a digital signal, an analog signal, or both.",
     domain_number: "3.0",
     domain_title: "Hardware",
     categories: ["Digital Only", "Analog Only", "Both Digital and Analog"],
@@ -180,7 +180,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       { text: "DVI-I", category: 2 },
     ],
     explanation:
-      "HDMI, DisplayPort, Thunderbolt, and DVI-D carry only digital signals. VGA (DE-15) is a purely analogue interface and was the standard before digital displays became common. DVI-A carries only the analogue signal path of the DVI standard. DVI-I (Integrated) includes both the digital and analogue pins, making it the only DVI variant that supports both signal types from a single connector.",
+      "HDMI, DisplayPort, Thunderbolt, and DVI-D carry only digital signals. VGA (DE-15) is a purely analog interface and was the standard before digital displays became common. DVI-A carries only the analog signal path of the DVI standard. DVI-I (Integrated) includes both the digital and analog pins, making it the only DVI variant that supports both signal types from a single connector.",
   },
   {
     type: "categorization",
@@ -200,7 +200,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       { text: "802.11ax (Wi-Fi 6/6E)", category: 2 },
     ],
     explanation:
-      "802.11b and 802.11g operate exclusively on the 2.4 GHz band. 802.11a was the first 5 GHz standard (1999) and operates only at 5 GHz; 802.11ac (Wi-Fi 5) also operates only on 5 GHz. 802.11n (Wi-Fi 4) was the first dual-band standard, and 802.11ax (Wi-Fi 6) is also dual-band — with Wi-Fi 6E extending further into the 6 GHz band on capable hardware.",
+      "802.11b and 802.11g operate exclusively on the 2.4 GHz band. 802.11a was the first 5 GHz standard (1999) and operates only at 5 GHz; 802.11ac (Wi-Fi 5) also operates only on 5 GHz. 802.11n (Wi-Fi 4) was the first dual-band standard, and 802.11ax (Wi-Fi 6) is also dual-band, with Wi-Fi 6E extending further into the 6 GHz band on capable hardware.",
   },
   {
     type: "categorization",
@@ -268,7 +268,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     ],
     correct_map: [0, 1, 2, 3, 4, 5],
     explanation:
-      "NFC operates within centimetres for contactless payments (Apple Pay, Google Pay). Bluetooth creates personal area networks for peripherals. Hotspot/tethering shares cellular connectivity via Wi-Fi, USB, or Bluetooth PAN. Lightning is Apple's proprietary connector (replaced by USB-C on iPhone 15+). USB-C is the universal standard now used on most devices. Cellular (LTE/5G) provides wide-area data access through carrier towers.",
+      "NFC operates within centimeters for contactless payments (Apple Pay, Google Pay). Bluetooth creates personal area networks for peripherals. Hotspot/tethering shares cellular connectivity via Wi-Fi, USB, or Bluetooth PAN. Lightning is Apple's proprietary connector (replaced by USB-C on iPhone 15+). USB-C is the universal standard now used on most devices. Cellular (LTE/5G) provides wide-area data access through carrier towers.",
   },
   {
     type: "categorization",

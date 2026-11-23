@@ -1,5 +1,5 @@
 /**
- * The guided path — one exam's objectives as a sequence of short stops, each a
+ * The study path — one exam's objectives as a sequence of short stops, each a
  * round of reps (one thing to answer). Shared by the server (which composes
  * and gates stops) and the client (which plays them), so a stop means the same
  * thing on both sides. Pure types; see plan.ts, progress.ts and compose.ts.
@@ -74,6 +74,11 @@ export interface TypedRep extends RepBase {
    * host counts), not by plain text matching, which would ignore the dots.
    */
   answerKind?: "binary" | "dotted" | "cidr" | "count";
+  /**
+   * An example of the form the answer takes ("255.255.255.192"), never the
+   * answer itself. The card prints it as a hint under the label ("For example,
+   * ..."). The name is kept from when it was the field's grey text.
+   */
   placeholder?: string;
   /** Worked steps, folded behind "Why, in full". */
   explanation?: string;
@@ -224,7 +229,7 @@ export interface PublicTestData {
 export interface QuickRoundData {
   cert: PathCert;
   examName: string;
-  /** The stop's title ("Security controls", "Warm-up"). */
+  /** The stop's title ("Security controls", "Introductory questions"). */
   title: string;
   reps: Rep[];
   /**

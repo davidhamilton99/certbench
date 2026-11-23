@@ -1,11 +1,25 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import * as Tabs from "@radix-ui/react-tabs";
 import type { ReferenceTable } from "@/data/reference/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
+/**
+ * The reference tables for one exam: a row of tabs to choose a table, a field
+ * to search it, and the table itself.
+ *
+ * The tabs are real tabs (one stop for the Tab key, the arrow keys move
+ * between them). The search field has a label. The table scrolls sideways
+ * inside its own frame on a narrow screen, and that frame can take the
+ * keyboard, so it can be scrolled without a pointer. The count under the
+ * table is a status line, so a screen reader hears how many entries match as
+ * the search is typed.
+ */
 export function ReferenceTableViewer({
   tables,
   certSlug,
@@ -15,153 +29,131 @@ export function ReferenceTableViewer({
   certSlug: string;
   drillableTableIds: string[];
 }) {
-  const [activeTableId, setActiveTableId] = useState(tables[0]?.id || "");
+  const [activeTableId, setActiveTableId] = useState(tables[0]?.id ?? "");
   const [search, setSearch] = useState("");
+  const searchId = useId();
 
-  const activeTable = tables.find((t) => t.id === activeTableId) || tables[0];
-  const isDrillable = activeTable
-    ? drillableTableIds.includes(activeTable.id)
-    : false;
+  const activeTable = tables.find((t) => t.id === activeTableId) ?? tables[0];
+  const isDrillable = activeTable ? drillableTableIds.includes(activeTable.id) : false;
+  const query = search.trim();
 
   const filteredEntries = useMemo(() => {
     if (!activeTable) return [];
-    if (!search.trim()) return activeTable.entries;
-
-    const query = search.toLowerCase();
-    return activeTable.entries.filter((entry) => {
-      const values = Object.values(entry.columns).join(" ").toLowerCase();
-      return values.includes(query);
-    });
-  }, [activeTable, search]);
+    if (!query) return activeTable.entries;
+    const needle = query.toLowerCase();
+    return activeTable.entries.filter((entry) =>
+      Object.values(entry.columns).join(" ").toLowerCase().includes(needle)
+    );
+  }, [activeTable, query]);
 
   if (!activeTable) return null;
 
+  const total = activeTable.entries.length;
+  /** A table's title is written with an ampersand in the data; the page says "and". */
+  const plain = (title: string) => title.replace(/\s*&\s*/g, " and ");
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Search */}
-      <div className="relative">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-          />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search across all columns..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 text-[14px] bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-        />
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+    <Tabs.Root
+      value={activeTable.id}
+      onValueChange={(id) => {
+        setActiveTableId(id);
+        setSearch("");
+      }}
+      className="grid gap-4"
+    >
+      <Tabs.List aria-label="Reference table" className="flex flex-wrap gap-1.5">
         {tables.map((table) => (
-          <button
+          <Tabs.Trigger
             key={table.id}
-            onClick={() => {
-              setActiveTableId(table.id);
-              setSearch("");
-            }}
-            className={`
-              px-3 py-1.5 rounded-md text-[13px] font-medium whitespace-nowrap
-              transition-colors duration-150
-              ${
-                activeTableId === table.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-              }
-            `}
+            value={table.id}
+            className={cn(
+              "rounded-md border border-input px-3.5 py-1.5 text-small font-medium transition-colors pointer-coarse:py-2.5",
+              "hover:border-primary hover:bg-tint-hover",
+              "data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            )}
           >
-            {table.title}
-          </button>
+            {plain(table.title)}
+          </Tabs.Trigger>
         ))}
-      </div>
+      </Tabs.List>
 
-      {/* Description + drill link */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[13px] text-muted-foreground">
-          {activeTable.description}
-        </p>
-        {isDrillable && (
-          <Button asChild size="sm" variant="outline" className="shrink-0">
-            <Link href={`/recall?deck=${activeTable.id}&cert=${certSlug}`}>
-              <Zap className="size-3.5" />
-              Drill this
-            </Link>
-          </Button>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-border bg-muted/40">
-                {activeTable.columnHeaders.map((col) => (
-                  <th
-                    key={col.key}
-                    className={`px-4 py-3 text-left font-semibold text-foreground ${
-                      col.mono ? "font-mono" : ""
-                    }`}
-                  >
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEntries.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={activeTable.columnHeaders.length}
-                    className="px-4 py-8 text-center text-muted-foreground"
-                  >
-                    {search
-                      ? `No results for "${search}"`
-                      : "No entries available."}
-                  </td>
-                </tr>
-              ) : (
-                filteredEntries.map((entry, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-border-light last:border-0 hover:bg-muted/40 transition-colors"
-                  >
-                    {activeTable.columnHeaders.map((col) => (
-                      <td
-                        key={col.key}
-                        className={`px-4 py-3 text-muted-foreground ${
-                          col.mono
-                            ? "font-mono tabular-nums text-foreground font-medium"
-                            : ""
-                        }`}
-                      >
-                        {entry.columns[col.key] || "—"}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* The panel holds its own controls, so the panel itself is not a stop for the Tab key. */}
+      <Tabs.Content value={activeTable.id} tabIndex={-1} className="grid gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="cb-measure text-small text-muted-foreground">{activeTable.description}</p>
+          {isDrillable && (
+            <Button asChild size="sm" variant="outline" className="shrink-0">
+              <Link href={`/recall?deck=${activeTable.id}&cert=${certSlug}`}>Practice this table in Recall</Link>
+            </Button>
+          )}
         </div>
-      </div>
 
-      {/* Count */}
-      <p className="text-[12px] text-muted-foreground">
-        {filteredEntries.length} of {activeTable.entries.length} entries
-        {search ? ` matching "${search}"` : ""}
-      </p>
-    </div>
+        <div className="grid max-w-md gap-1.5">
+          <Label htmlFor={searchId}>Search this table</Label>
+          <Input
+            id={searchId}
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+
+        <div className="glass overflow-hidden rounded-lg">
+          <div
+            // The frame scrolls sideways on a narrow screen: it takes the keyboard so that it can be scrolled.
+            tabIndex={0}
+            role="region"
+            aria-label={`${plain(activeTable.title)}, table`}
+            className="overflow-x-auto focus-visible:-outline-offset-2"
+          >
+            <table className="w-full text-small">
+              <caption className="sr-only">{plain(activeTable.title)}</caption>
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-left">
+                  {activeTable.columnHeaders.map((col) => (
+                    <th key={col.key} scope="col" className="px-4 py-3 font-semibold">
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEntries.length === 0 ? (
+                  <tr>
+                    <td colSpan={activeTable.columnHeaders.length} className="px-4 py-8 text-muted-foreground">
+                      {query ? `No entries match "${query}".` : "This table has no entries."}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEntries.map((entry, idx) => (
+                    <tr key={idx} className="border-b border-border last:border-0">
+                      {activeTable.columnHeaders.map((col) => (
+                        <td
+                          key={col.key}
+                          className={cn(
+                            "px-4 py-3 align-top",
+                            col.mono ? "font-mono font-medium tabular-nums" : "text-muted-foreground"
+                          )}
+                        >
+                          {entry.columns[col.key] || "None"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p role="status" className="text-note text-muted-foreground">
+          {query
+            ? `${filteredEntries.length} of ${total} ${total === 1 ? "entry" : "entries"} ${filteredEntries.length === 1 ? "matches" : "match"} "${query}".`
+            : `This table has ${total} ${total === 1 ? "entry" : "entries"}.`}
+        </p>
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

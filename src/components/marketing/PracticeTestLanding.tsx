@@ -1,18 +1,25 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
-import { QuestionDeck, QuestionList, type DeckQuestion } from "@/components/marketing/QuestionDeck";
+import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { PathCard } from "@/components/marketing/PathCard";
-import { LanderHero, LanderPage, LanderProse, LanderSection, LanderStage } from "@/components/marketing/lander/Lander";
+import {
+  LanderBlock,
+  LanderHero,
+  LanderPage,
+  LanderProse,
+  LanderSection,
+  LanderStage,
+  type Spec,
+} from "@/components/marketing/lander/Lander";
 import { ExamOutline } from "@/components/marketing/lander/ExamOutline";
 import { TileGrid, type Tile } from "@/components/marketing/lander/TileGrid";
 import { QuickRound } from "@/components/path/QuickRound";
-import { PracticeExam } from "@/components/marketing/PracticeExam";
+import { PracticeExam, PracticeExamJump } from "@/components/marketing/PracticeExam";
 import type { PublicTestData, QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { keepCodes } from "@/lib/keep-codes";
 import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 
@@ -42,7 +49,13 @@ export interface ObjectiveLink {
   slug: string;
 }
 
-/** Presentational template for the /​*-practice-test pages; pages load data via @/server/seo. */
+/** The practice exam's place on the page: the opening lines link to it. */
+const EXAM_ANCHOR = "practice-test";
+
+/** Counts are written the American way wherever the page is built. */
+const count = (n: number) => n.toLocaleString("en-US");
+
+/** The template of the practice-test pages. A page loads its data with @/server/seo and passes it in. */
 export function PracticeTestLanding({
   page,
   data,
@@ -53,16 +66,16 @@ export function PracticeTestLanding({
   page: PracticeTestPage;
   data: PracticeTestLandingData;
   objectives?: ObjectiveLink[];
-  /** The exam's warm-up, played inline at the top (single-exam pages). */
+  /** The exam's introductory questions, played at the top (pages for one exam). */
   round?: QuickRoundData | null;
-  /** The exam's free timed practice test, on single-exam pages. */
+  /** The exam's free timed practice exam (pages for one exam). */
   test?: PublicTestData | null;
 }) {
-  // The cores' own pages are offered at the top, so they aren't repeated here.
+  // The cores' own pages are offered at the top, so they are not repeated here.
   const otherHubs = PRACTICE_TEST_PAGES.filter(
     (p) => p.path !== page.path && !page.cores?.some((c) => c.href === `/${p.path}`)
   );
-  // Network+ objective numbers aren't CompTIA's yet, so that list goes by topic.
+  // The Network+ objective numbers are not CompTIA's yet, so that list goes by topic.
   const official = page.certSlugs.every(usesOfficialObjectiveNumbers);
   const retired = page.certSlugs.some((slug) => replacedBy(slug) !== null);
   const examOutlines =
@@ -77,25 +90,57 @@ export function PracticeTestLanding({
       })),
     }));
 
-  // The samples as one deck, shortest first within each exam so the opener is
-  // approachable rather than the most daunting. A page with two exams tags each.
+  // The samples as one deck, shortest first within each exam so that the first
+  // question is an approachable one. A page with two exams says which exam
+  // each question belongs to.
   const multi = data.sampleGroups.length > 1;
   const deck: DeckQuestion[] = data.sampleGroups.flatMap((group) =>
     [...group.questions]
       .sort((a, b) => a.questionText.length - b.questionText.length)
-      .map((q) => (multi ? { ...q, tag: `${group.certName} · ${group.examCode}` } : q))
+      .map((q) => (multi ? { ...q, tag: `${group.certName} (${group.examCode})` } : q))
   );
   const pathHref = page.certSlugs.length === 1 ? `/path/${page.certSlugs[0]}` : "/start";
   const examName = round?.examName ?? page.title.replace(/ practice test$/i, "");
-  const codes = examOutlines.map((e) => e.examCode).join(" · ");
+  const codes = examOutlines.map((e) => e.examCode).join(" and ");
+  // The exam as a sentence names it: "Security+ SY0-701".
+  const exam = `${examName} ${codes}`;
   const testMinutes = test ? REHEARSAL_FORMATS[test.size].minutes : 0;
   const fullTest = test?.size === "full";
+  const bank = `${count(data.totalQuestions)} questions`;
 
-  // Objectives as tiles, a group per domain (per exam and domain on a page with two exams).
+  // Objectives as rows, a group for each domain (for each exam and domain on a page with two exams).
   const groups = objectiveGroups(objectives, examOutlines, official);
 
-  // GEO/SEO: mark the page as a free educational practice resource so search
-  // and generative engines can identify and cite it for "free CompTIA … test".
+  // The opening sentences name who offers what, so that they can be quoted
+  // with their source: CertBench, the exam, and the terms.
+  const sub = test
+    ? `CertBench offers a free ${fullTest ? "full-length " : ""}practice exam for ${exam}. It has ${test.reps.length} questions and a time limit of ${testMinutes} minutes. You do not need an account to start, and a free account shows your score.${
+        round ? ` You can begin with ${round.reps.length} introductory questions.` : ""
+      }`
+    : round
+      ? `CertBench offers ${round.reps.length} free introductory questions for ${exam}. You do not need an account to answer them.`
+      : `CertBench offers free exam-style questions for ${exam}. Each one is explained as soon as you answer.`;
+
+  // The page's facts, each with its label.
+  const specs: Spec[] = test
+    ? [
+        { label: "Questions", value: String(test.reps.length) },
+        { label: "Time limit", value: `${testMinutes} minutes` },
+        { label: "Scoring", value: "By domain" },
+        { label: "Question bank", value: bank },
+      ]
+    : round
+      ? [
+          { label: "Introductory questions", value: String(round.reps.length) },
+          { label: "Question bank", value: bank },
+        ]
+      : [
+          { label: "Question bank", value: bank },
+          { label: "Explanations", value: "With every answer" },
+          { label: "Price", value: "Free" },
+        ];
+
+  // For search and AI answers: this page is a free practice resource for the exam.
   const learningResource = {
     "@context": "https://schema.org",
     "@type": "LearningResource",
@@ -119,60 +164,42 @@ export function PracticeTestLanding({
     <LanderPage>
       <JsonLd data={learningResource} />
       <LanderHero
-        eyebrow={`Free · ${codes}`}
+        // The exam's code stands over the title only where the title does not hold it.
+        eyebrow={examOutlines.every((e) => page.h1.includes(e.examCode)) ? undefined : codes}
         title={page.h1}
-        sub={
-          round
-            ? test
-              ? `Start with ${round.reps.length} quick questions, then sit a ${fullTest ? "full-length " : ""}timed exam. No account needed to start.`
-              : `Start with ${round.reps.length} quick questions. No account needed.`
-            : "Exam-style questions, each explained the moment you answer."
-        }
-        specs={
-          test
-            ? [
-                `${fullTest ? "Full-length " : ""}${test.reps.length}-question exam`,
-                `${testMinutes}-minute timer`,
-                "Scored by domain",
-                `${data.totalQuestions.toLocaleString()} in the bank`,
-              ]
-            : round
-              ? [`${round.reps.length}-question warm-up`, `${data.totalQuestions.toLocaleString()} in the bank`]
-              : [`${data.totalQuestions.toLocaleString()} questions`, "Full explanations", "Free"]
-        }
+        // An exam code is never broken across two lines.
+        sub={keepCodes(sub)}
+        specs={specs}
       >
-        {/* An exam taken in parts: each part's own practice test comes first. */}
+        {/* The exam is further down the page than its first screen: the way to
+            it, or back into a sitting left mid-way, is in the opening lines. */}
+        {test && <PracticeExamJump testId={test.testId} href={`#${EXAM_ANCHOR}`} />}
+        {/* An exam taken in parts: each part's own practice-test page comes first. */}
         {page.cores && (
-          <div className="mt-4 grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
-            {page.cores.map((core) => (
-              <Link
-                key={core.href}
-                href={core.href}
-                className="glass group grid gap-2 rounded-2xl p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_24px_60px_-30px_var(--primary)] sm:p-6"
-              >
-                <span className="flex items-center justify-between gap-3">
-                  <span className="text-xl font-semibold tracking-[-0.02em]">{core.name}</span>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
-                    <ArrowRight className="size-3.5" />
-                  </span>
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">{core.examCode}</span>
-                <span className="text-sm leading-relaxed text-muted-foreground">{core.blurb}</span>
-              </Link>
-            ))}
-          </div>
+          <TileGrid
+            details="always"
+            groups={[
+              {
+                tiles: page.cores.map((core) => ({
+                  href: core.href,
+                  title: `${core.name} practice test (${core.examCode})`,
+                  detail: core.blurb,
+                })),
+              },
+            ]}
+          />
         )}
       </LanderHero>
 
-      {/* A retired exam changes what this page is, so that's said first. */}
+      {/* A retired exam changes what this page is, so that is said first. */}
       {retired && (
-        <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+        <LanderBlock className="mt-8">
           <ExamVersionNote certSlugs={page.certSlugs} />
-        </div>
+        </LanderBlock>
       )}
 
-      {/* Lead with something to do: the exam's warm-up, the same quick round
-          the guided path opens with. */}
+      {/* Something to do comes first: the exam's introductory questions, which
+          are the first step of its study path. */}
       {round && (
         <LanderStage>
           <QuickRound
@@ -181,7 +208,7 @@ export function PracticeTestLanding({
             examName={round.examName}
             structure={round.structure}
             reps={round.reps}
-            label={`${round.examName} warm-up`}
+            label={`${round.examName} introductory questions`}
             surface="practice_test_page"
             unit={official ? "objectives" : "topics"}
           />
@@ -189,26 +216,24 @@ export function PracticeTestLanding({
       )}
 
       {!retired && (
-        <div className="mx-auto mt-8 max-w-2xl px-5 sm:px-6">
+        <LanderBlock className="mt-8">
           <ExamVersionNote certSlugs={page.certSlugs} />
-        </div>
+        </LanderBlock>
       )}
 
-      {/* What a "practice test" search is after: a full-length timed exam,
-          sat on the path's own exam player and scored by domain, then the way
-          on. A half-length sitting is cut from the same questions. */}
+      {/* What a search for a practice test is after: a full-length timed exam,
+          taken on the study path's own exam player and scored by domain, then
+          the way on. A half-length sitting is cut from the same questions. */}
       {test && (
         <LanderSection
-          id="practice-test"
-          eyebrow={`${fullTest ? "Full-length exam" : "Exam"} simulator · timed · scored by domain`}
+          id={EXAM_ANCHOR}
           title={`Free ${examName} practice exam`}
-          sub={
+          sub={keepCodes(
             fullTest
-              ? `${test.reps.length} questions in ${testMinutes} minutes, the real exam's limit, or a half exam of ${REHEARSAL_FORMATS.half.questions}. No answers until the end; every one is explained with your score.`
-              : "No answers until the end, as on the exam. Every one is explained with your score."
-          }
+              ? `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes, which is the limit of the real exam. You can also take a half-length exam of ${REHEARSAL_FORMATS.half.questions} questions. As in the real exam, answers are not shown until the end. Every question is then explained with your score.`
+              : `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes. As in the real exam, answers are not shown until the end. Every question is then explained with your score.`
+          )}
           width="md"
-          className="scroll-mt-20"
         >
           <PracticeExam
             testId={test.testId}
@@ -217,30 +242,28 @@ export function PracticeTestLanding({
             size={test.size}
             offerHalf
             headingLevel="h3"
+            listTitle={`All ${test.reps.length} questions, with answers`}
+            objectiveCodes={official}
             next={{
-              heading: `Your ${examName} study plan starts from this score`,
-              body: "On your path, this exam counts as your readiness checkpoint: everything you missed comes back, and every objective is laid out in short stops from here to exam day.",
-              primary: { href: `${pathHref}?from=practice-test`, label: "Open my study plan" },
+              heading: `Your ${examName} study path begins from this result`,
+              body: "On your study path, this exam counts as your readiness checkpoint. The questions that you missed are brought back for review, and every objective is set out in short steps.",
+              primary: { href: `${pathHref}?from=practice-test`, label: "Open the study path" },
             }}
           />
-          <div className="mt-4">
-            <QuestionList questions={testQuestions(test)} title={`All ${test.reps.length} questions, with answers`} />
-          </div>
         </LanderSection>
       )}
 
-      {/* The samples, one at a time on the path's own card. Every question and
-          answer is still in the page, in the deck's folded list. */}
+      {/* The samples, one at a time on the study path's own card. Every question
+          and answer is also in the page, in the deck's folded list. */}
       {deck.length > 0 && (
         <LanderSection
-          eyebrow="Exam style"
           title={round ? "Exam-style sample questions" : "Sample questions"}
-          sub={`${deck.length} questions · explained as you answer · ${data.totalQuestions.toLocaleString()} in the full bank`}
+          sub={`There are ${deck.length} sample questions here, and each one is explained as you answer. The full bank has ${bank}.`}
           width="md"
         >
           <QuestionDeck
             questions={deck}
-            label={`${examName} · sample questions`}
+            label={`${examName} sample questions`}
             surface="practice_test_page"
             path={pathHref}
             examName={examName}
@@ -248,36 +271,34 @@ export function PracticeTestLanding({
         </LanderSection>
       )}
 
-      {/* Domain weights, to scale: the exam at a glance. */}
-      <LanderSection eyebrow={codes} title="What the exam covers" sub="Each domain's share of the exam." width="xl">
+      {/* Each domain, and its share of the exam. */}
+      <LanderSection title="What the exam covers" sub="The table shows each domain's share of the exam." width="xl">
         <ExamOutline exams={examOutlines} />
       </LanderSection>
 
-      {/* Practice by objective — hub links to the programmatic pages */}
+      {/* Practice by objective: links to each objective's own page. */}
       {groups.length > 0 && (
         <LanderSection
           eyebrow={`${objectives.length} ${official ? "objectives" : "topics"}`}
           title={official ? "Practice by exam objective" : "Practice by topic"}
-          sub={`Each ${official ? "objective" : "topic"} has its own questions, explained.`}
+          sub={`Each ${official ? "objective" : "topic"} has its own practice questions, with explanations.`}
           width="xl"
         >
           <TileGrid groups={groups} />
         </LanderSection>
       )}
 
-      <div className="mx-auto w-full max-w-5xl px-3 pt-20 sm:px-6 sm:pt-28">
-        <PathCard
-          kicker={`Your ${examName} path`}
-          title="Study it one short stop at a time"
-          href={pathHref}
-          label="Start my path"
-          context="practice_test_page"
-          note="No account needed to start."
-        >
-          The guided path walks every exam objective in quick rounds like these, then a readiness checkpoint shows
-          where you&apos;d stand today.
-        </PathCard>
-      </div>
+      <PathCard
+        className="mt-20 sm:mt-28"
+        title={`Study for ${examName} in short steps`}
+        href={pathHref}
+        label="Start the study path"
+        context="practice_test_page"
+        note="You do not need an account to start."
+      >
+        The study path covers every exam objective in short sets of questions like these. A readiness checkpoint
+        then shows where you stand.
+      </PathCard>
 
       <LanderProse>
         {page.intro.map((p) => (
@@ -285,25 +306,24 @@ export function PracticeTestLanding({
         ))}
       </LanderProse>
 
-      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
+      <LanderBlock>
         <RelatedLinks links={page.related ?? []} />
         {otherHubs.length > 0 && (
-          <section className="mt-14">
-            <h2 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">Other CompTIA practice tests</h2>
+          <section className="mt-16 sm:mt-24">
+            <h2 className="cb-subsection border-t border-foreground/80 pt-5">Other CompTIA practice tests</h2>
             <TileGrid
-              className="mt-5"
-              columns={2}
+              className="mt-6"
               groups={[{ tiles: otherHubs.map((h) => ({ href: `/${h.path}`, title: h.title })) }]}
             />
           </section>
         )}
         <FaqSection faqs={page.faqs} />
-      </div>
+      </LanderBlock>
     </LanderPage>
   );
 }
 
-/** Objectives as tile groups: one per domain, labelled by exam too when a page has two. */
+/** Objectives as groups of rows: one for each domain, named by exam too when a page has two. */
 function objectiveGroups(
   objectives: ObjectiveLink[],
   exams: { name: string; examCode: string; domains: { number: string; title: string }[] }[],
@@ -327,9 +347,11 @@ function objectiveGroups(
       const examIndex = certs.indexOf(o.certSlug);
       const exam = exams[examIndex] ?? exams[0];
       const title = exam?.domains.find((d) => d.number === domain)?.title;
-      const prefix = certs.length > 1 && exam ? `${exam.examCode} · ` : "";
+      const prefix = certs.length > 1 && exam ? exam.examCode : "";
       byKey.set(key, {
-        label: official ? `${prefix}Domain ${domain.replace(/\.0$/, "")}${title ? ` · ${title}` : ""}` : prefix || undefined,
+        label: official
+          ? `${prefix ? `${prefix}, ` : ""}Domain ${domain.replace(/\.0$/, "")}${title ? `: ${title}` : ""}`
+          : prefix || undefined,
         tiles: [],
       });
     }
@@ -340,16 +362,4 @@ function objectiveGroups(
     );
   }
   return [...byKey.values()];
-}
-
-/** The timed test's questions for the folded list, each tagged with its objective. */
-function testQuestions(test: PublicTestData): DeckQuestion[] {
-  const titles = new Map(test.structure.domains.flatMap((d) => d.objectives.map((o) => [o.code, o.title] as const)));
-  return test.reps.map((rep) => ({
-    questionText: rep.prompt,
-    options: rep.options,
-    correctIndex: rep.answer,
-    explanation: [rep.takeaway, rep.explanation].filter(Boolean).join(" "),
-    tag: titles.has(rep.objective) ? `${rep.objective} · ${titles.get(rep.objective)}` : undefined,
-  }));
 }

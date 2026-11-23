@@ -36,7 +36,7 @@ const mixed = [
 ];
 
 describe("checkpointFollowUp", () => {
-  it("follows up a day after the checkpoint with the result, what's left, and the biggest gain", () => {
+  it("follows up a day after the checkpoint with the result, what is left, and the biggest gain", () => {
     const progress = tookCheckpoint(30, mixed);
     const followUp = checkpointFollowUp(plan, structure.domains, progress, NOW - 30 * HOUR, NOW);
     expect(followUp).toEqual({
@@ -47,7 +47,7 @@ describe("checkpointFollowUp", () => {
     });
   });
 
-  it("waits until they've had a day with it, and gives up after a week", () => {
+  it("waits until they have had a day with it, and gives up after a week", () => {
     const at = (h: number) => checkpointFollowUp(plan, structure.domains, tookCheckpoint(h, mixed), NOW - h * HOUR, NOW);
     expect(at(FOLLOW_UP_MIN_HOURS - 1)).toBeNull();
     expect(at(FOLLOW_UP_MIN_HOURS)).not.toBeNull();
@@ -55,7 +55,7 @@ describe("checkpointFollowUp", () => {
     expect(at(FOLLOW_UP_MAX_HOURS + 1)).toBeNull();
   });
 
-  it("holds off while they're still active on the path", () => {
+  it("holds off while they are still active on the path", () => {
     expect(checkpointFollowUp(plan, structure.domains, tookCheckpoint(48, mixed), NOW - 3 * HOUR, NOW)).toBeNull();
   });
 

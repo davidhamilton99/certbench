@@ -9,7 +9,7 @@ const SHARE_IMAGE = "/opengraph-image";
  * Title, description, canonical and social tags for one public page. The root
  * layout's openGraph and twitter describe the homepage, and Next keeps them
  * until a page sets its own, so without this every shared link reads as the
- * homepage. `title` is the base title: the layout's template adds " — CertBench"
+ * homepage. `title` is the base title: the layout's template adds " | CertBench"
  * to the <title> tag, and the social title gets the same suffix here.
  */
 export function pageMetadata({
@@ -23,7 +23,7 @@ export function pageMetadata({
   path: string;
   noindex?: boolean;
 }): Metadata {
-  const socialTitle = `${title} — ${SITE_NAME}`;
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,

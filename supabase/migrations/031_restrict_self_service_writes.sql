@@ -1,0 +1,98 @@
+-- Accounts stop writing the two rows that decide what they may open.
+--
+-- THIS FILE HAS NOT BEEN RUN. The owner runs it by hand in the Supabase SQL
+-- editor, once the two read-only queries below have shown that it is needed.
+-- The migration files and the live database have differed before, so the
+-- queries come first.
+--
+-- What the migration files allow today:
+--
+--   1. user_subscriptions carries the policy "Users insert own subscription"
+--      (005_subscriptions.sql). An account that has no subscription row yet can
+--      insert its own, with plan 'pro' and status 'active', through the public
+--      API and without paying.
+--   2. profiles carries the policy "Users update own profile"
+--      (001_complete_schema.sql) with no limit on columns, so an account can set
+--      its own role to 'admin'. An admin has Pro on every exam, reads and
+--      updates every question flag, and may approve testimonials.
+--
+-- What this migration does:
+--
+--   1. It drops the insert policy. An account can still read its own
+--      subscription row. Only the server writes that table, with the service
+--      role, which bypasses row level security: the Stripe webhook and the two
+--      checkout routes.
+--   2. It takes the table-wide UPDATE privilege on profiles away from signed-in
+--      accounts and gives it back for three columns only: display_name,
+--      onboarding_completed and updated_at. These are the only columns the
+--      application writes with an account's own session (updateProfile in
+--      src/server/data/profiles.ts, called when a display name is saved and
+--      when an exam is chosen). After this, role can be changed only with the
+--      service role or in the SQL editor. avatar_url is read by the application
+--      and never written by it, so it is not granted: add it to the grant when
+--      the application gains a setting for it.
+--
+-- No application code depends on what is removed, in the version that is live
+-- or in the one that follows it: no code inserts a subscription row, or writes
+-- any other profile column, with an account's own session. The migration can
+-- therefore be run before or after a deployment. Both tables must have row
+-- level security enabled for it to hold (migrations 001 and 005 enable it, and
+-- the table editor shows whether it is on).
+--
+-- Run these two read-only queries first. Neither changes anything.
+--
+-- Query 1: the policies on the two tables.
+--
+--   select tablename, policyname, cmd
+--   from pg_policies
+--   where schemaname = 'public'
+--     and tablename in ('user_subscriptions', 'profiles')
+--   order by tablename, policyname;
+--
+-- If "Users insert own subscription" is listed, part 1 is needed. The migration
+-- files expect three other rows: "Users read own subscription" (SELECT) on
+-- user_subscriptions, and "Users read own profile" (SELECT) and "Users update
+-- own profile" (UPDATE) on profiles. If any further policy is listed with the
+-- cmd INSERT, UPDATE, DELETE or ALL, it is not in the migration files and this
+-- file does not remove it: have it looked at before going on.
+--
+-- Query 2: who may update which column of profiles.
+--
+--   select grantee, column_name
+--   from information_schema.column_privileges
+--   where table_schema = 'public'
+--     and table_name = 'profiles'
+--     and privilege_type = 'UPDATE'
+--     and grantee in ('authenticated', 'anon', 'PUBLIC')
+--   order by grantee, column_name;
+--
+-- If the column role is listed for the grantee authenticated, part 2 is
+-- needed. If any row names the grantee PUBLIC, stop: every role then holds that
+-- privilege and this file does not take it away.
+--
+-- Afterwards, run both again. Query 1 should no longer list the insert policy.
+-- Query 2 should list, for authenticated, display_name, onboarding_completed
+-- and updated_at only. (A signed-out request, the grantee anon, cannot pass the
+-- row policy, so its privileges are left as they are.)
+--
+-- To check the application afterwards: save a display name on the profile
+-- page, and choose an exam with a new account. Both write profiles.
+--
+-- This file changes permissions only: no table, column or row is altered. If
+-- one of those two checks fails with "permission denied", part 2 is undone
+-- with one statement, which returns profiles to where it was:
+--
+--   grant update on public.profiles to authenticated;
+
+begin;
+
+-- 1. Subscription rows are written by the server only.
+drop policy if exists "Users insert own subscription" on public.user_subscriptions;
+
+-- 2. An account may change its own display name and onboarding flag, and
+--    nothing else on its profile. A table-wide revoke also removes any column
+--    grants, so the three columns are granted again after it.
+revoke update on public.profiles from authenticated;
+grant update (display_name, onboarding_completed, updated_at) on public.profiles to authenticated;
+
+commit;

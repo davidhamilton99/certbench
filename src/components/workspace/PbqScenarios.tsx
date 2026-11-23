@@ -1,232 +1,209 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import * as Tabs from "@radix-ui/react-tabs";
 import { Lock } from "lucide-react";
-import { Panel } from "@/components/ui/panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type {
-  PbqScenario,
-  SimulationScenario,
-  TopologyScenario,
-  ThreatHuntScenario,
-} from "@/data/pbq/types";
+import type { PbqScenario } from "@/data/pbq/types";
 import { PbqPlayer, type PbqUpsell } from "@/components/workspace/PbqPlayer";
+import { preloadLab } from "@/components/workspace/pbq-host";
+import { domainLabel, HANDS_ON_TYPES, LAB_TYPES } from "@/components/path/lab-types";
 import { track } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/** Where Pro is described and bought. */
+const PRO_HREF = "/upgrade?reason=pbq";
 
-/** Types shown under the hands-on "Exam Simulations" tab (vs concept drills). */
-const HANDS_ON_TYPES = new Set(["simulation", "topology", "threat-hunt"]);
+/**
+ * What Pro adds, in the terms of the pricing page: every lab, the whole study
+ * path and new timed practice exams. A free account's practice questions are
+ * limited each day and Pro's are not (src/server/services/subscription.ts).
+ */
+const PRO_INCLUDES =
+  "the whole study path and new timed practice exams, with no daily limit on practice questions";
 
-function truncate(text: string, maxLen: number): string {
-  if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen).trimEnd() + "…";
+type Kind = "labs" | "drills";
+
+/** The two lists' names and what each holds. */
+const KINDS: Record<Kind, { tab: string; empty: string }> = {
+  labs: { tab: "Exam-style labs", empty: "There are no exam-style labs for this certification yet." },
+  drills: { tab: "Short drills", empty: "There are no short drills for this certification yet." },
+};
+
+const TAB =
+  "rounded-md border border-input px-3.5 py-1.5 text-small font-medium transition-colors pointer-coarse:py-2.5 hover:border-primary hover:bg-tint-hover data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground";
+
+// On a phone a row's last part (what Pro includes) wraps under its text; from sm it sits at the row's end.
+const ROW =
+  "glass flex w-full min-w-0 flex-wrap items-center gap-x-3.5 gap-y-2 rounded-md p-3.5 text-left transition-[border-color] duration-200 hover:border-primary/60 sm:flex-nowrap sm:p-4";
+
+/**
+ * A briefing's first sentence, whole: what a lab is about in one line. A
+ * sentence ends at a full stop that is followed by a capital, so "Contoso
+ * Ltd. has hired" and "192.168.10.0/24" are not cut in two.
+ */
+export function firstSentence(text: string): string {
+  const match = text.trim().match(/^[\s\S]*?[.?!](?=\s+[A-Z"'(]|\s*$)/);
+  return match ? match[0] : text.trim();
 }
 
-function drillTypeLabel(t: string): string {
-  const map: Record<string, string> = {
-    ordering: "Ordering",
-    matching: "Matching",
-    categorization: "Categorization",
-  };
-  return map[t] || t;
+/** "Simulation, 5 minutes" or "Ordering drill": the kind of lab, and how long it takes where that is known. */
+function metaOf(scenario: PbqScenario): string {
+  const kind = LAB_TYPES[scenario.type].label;
+  if (!("estimatedMinutes" in scenario)) return kind;
+  const minutes = scenario.estimatedMinutes;
+  return `${kind}, ${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
 }
 
-function drillTypeVariant(t: string): "neutral" | "warning" | "success" {
-  const map: Record<string, "neutral" | "warning" | "success"> = {
-    ordering: "neutral",
-    matching: "warning",
-    categorization: "success",
-  };
-  return map[t] || "neutral";
+/** One sentence that says what the lab is about. */
+function summaryOf(scenario: PbqScenario): string {
+  return "briefing" in scenario ? firstSentence(scenario.briefing) : scenario.description;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Scenario List (grouped by domain)                                  */
+/*  A list of labs, by domain                                          */
 /* ------------------------------------------------------------------ */
 
 function ScenarioList({
   scenarios,
-  onSelect,
-  onLocked,
   lockedIds,
-  isSimulation,
+  empty,
+  onSelect,
+  rowRef,
 }: {
-  scenarios: PbqScenario[];
-  onSelect: (s: PbqScenario) => void;
-  onLocked: () => void;
+  scenarios: readonly PbqScenario[];
   lockedIds: ReadonlySet<string>;
-  isSimulation: boolean;
+  /** What to say when the list holds nothing. */
+  empty: string;
+  onSelect: (s: PbqScenario) => void;
+  /** Keeps each open row's button, so the focus can return to it. */
+  rowRef: (id: string, el: HTMLButtonElement | null) => void;
 }) {
-  const domainGroups = useMemo(() => {
-    const groups = new Map<string, PbqScenario[]>();
+  const domains = useMemo(() => {
+    const groups = new Map<string, { number: string; title: string; labs: PbqScenario[] }>();
     for (const s of scenarios) {
-      const key = `${s.domain_number} ${s.domain_title}`;
-      const group = groups.get(key) || [];
-      group.push(s);
-      groups.set(key, group);
+      const group = groups.get(s.domain_number) ?? { number: s.domain_number, title: s.domain_title, labs: [] };
+      group.labs.push(s);
+      groups.set(s.domain_number, group);
     }
-    return groups;
+    // In the order the labs are filed in: the first lab, which a free account can open, stays at the top.
+    return [...groups.values()];
   }, [scenarios]);
 
   if (scenarios.length === 0) {
-    return (
-      <Panel padding="lg">
-        <div className="flex flex-col items-center gap-3 py-6">
-          <svg
-            className="w-10 h-10 text-muted-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"
-            />
-          </svg>
-          <p className="text-[15px] text-muted-foreground text-center max-w-md">
-            {isSimulation
-              ? "No exam simulations available for this certification yet."
-              : "No concept drills available for this certification yet."}
-          </p>
-        </div>
-      </Panel>
-    );
+    return <p className="rounded-lg border border-dashed border-border p-6 text-small text-muted-foreground">{empty}</p>;
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {[...domainGroups.entries()].map(([domainLabel, group]) => (
-        <div key={domainLabel}>
-          <h2 className="text-[14px] font-semibold text-foreground mb-2">
-            {domainLabel}
+    <div className="grid gap-7">
+      {domains.map((domain) => (
+        <section key={domain.number} aria-labelledby={`pbq-domain-${domain.number}`} className="grid gap-2.5">
+          <h2 id={`pbq-domain-${domain.number}`} className="text-small font-semibold leading-snug">
+            Domain {domainLabel(domain.number)}: {domain.title}
           </h2>
-          <div className="flex flex-col gap-2">
-            {group.map((scenario) => {
+          <ul className="grid gap-2">
+            {domain.labs.map((scenario) => {
               const locked = lockedIds.has(scenario.id);
+              const { Icon } = LAB_TYPES[scenario.type];
+              const body = (
+                <>
+                  <span
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-md",
+                      locked ? "bg-foreground/[0.06] text-muted-foreground" : "bg-primary/[0.08] text-primary"
+                    )}
+                  >
+                    <Icon className="size-[18px]" aria-hidden />
+                  </span>
+                  {/* Titles and summaries wrap, never cut short: a cut title hides what the lab is. */}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium leading-snug">{scenario.title}</span>
+                    <span className="mt-1 block text-note text-muted-foreground">
+                      {metaOf(scenario)}. {summaryOf(scenario)}
+                    </span>
+                  </span>
+                  {locked && (
+                    // Under the text and in line with it on a phone, so the title keeps the row's width.
+                    <span className="inline-flex w-full items-center gap-1.5 pl-13.5 text-note font-medium text-muted-foreground sm:w-auto sm:shrink-0 sm:pl-0">
+                      <Lock className="size-3.5" aria-hidden />
+                      Included with Pro
+                    </span>
+                  )}
+                </>
+              );
               return (
-              <button
-                key={scenario.id}
-                onClick={() => (locked ? onLocked() : onSelect(scenario))}
-                className={`w-full text-left bg-card border border-border rounded-xl p-4 transition-all duration-150 ${
-                  locked ? "opacity-70 hover:border-border" : "hover:-translate-y-px hover:border-primary/40"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="flex items-center gap-1.5 text-[14px] font-medium text-foreground">
-                      {locked && <Lock className="size-3.5 text-muted-foreground" />}
-                      {scenario.title}
-                    </span>
-                    <span className="text-[13px] text-muted-foreground">
-                      {scenario.type === "simulation"
-                        ? truncate((scenario as SimulationScenario).briefing, 120)
-                        : scenario.type === "topology"
-                        ? truncate((scenario as TopologyScenario).briefing, 120)
-                        : scenario.type === "threat-hunt"
-                        ? truncate((scenario as ThreatHuntScenario).briefing, 120)
-                        : "description" in scenario
-                        ? (scenario as { description: string }).description
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {(scenario.type === "simulation" ||
-                      scenario.type === "topology" ||
-                      scenario.type === "threat-hunt") && (
-                      <span className="text-[12px] text-muted-foreground font-mono">
-                        ~{scenario.type === "simulation"
-                          ? (scenario as SimulationScenario).estimatedMinutes
-                          : scenario.type === "topology"
-                          ? (scenario as TopologyScenario).estimatedMinutes
-                          : (scenario as ThreatHuntScenario).estimatedMinutes} min
-                      </span>
-                    )}
-                    {locked ? (
-                      <Badge variant="neutral">Pro</Badge>
-                    ) : (
-                      <Badge
-                        variant={
-                          scenario.type === "simulation" ||
-                          scenario.type === "topology"
-                            ? "neutral"
-                            : scenario.type === "threat-hunt"
-                            ? "warning"
-                            : drillTypeVariant(scenario.type)
-                        }
-                      >
-                        {scenario.type === "simulation"
-                          ? "Simulation"
-                          : scenario.type === "topology"
-                          ? "Topology Lab"
-                          : scenario.type === "threat-hunt"
-                          ? "Threat Hunt"
-                          : drillTypeLabel(scenario.type)}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </button>
+                <li key={scenario.id} className="min-w-0">
+                  {locked ? (
+                    // A lab that Pro includes leads to where Pro is described: a link, since it goes to another page.
+                    <Link href={PRO_HREF} className={ROW}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      ref={(el) => rowRef(scenario.id, el)}
+                      onClick={() => onSelect(scenario)}
+                      // The large players are fetched when a lab is opened; a hover or the focus starts that early.
+                      onPointerEnter={() => preloadLab(scenario.type)}
+                      onFocus={() => preloadLab(scenario.type)}
+                      className={ROW}
+                    >
+                      {body}
+                    </button>
+                  )}
+                </li>
               );
             })}
-          </div>
-        </div>
+          </ul>
+        </section>
       ))}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Main Component                                                     */
+/*  The workspace's labs                                               */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Every lab an exam has, in two lists (the labs that work like the exam's
+ * performance-based questions, and the short drills), each by domain. A lab
+ * opens in place of the lists and takes the focus; leaving it brings the lists
+ * back with the focus on the row it was opened from.
+ */
 export function PbqScenarios({
   scenarios,
   isPro = true,
 }: {
   scenarios: PbqScenario[];
-  /** Free users get the first simulation + first drill; the rest lock. */
+  /** A free account opens the first exam-style lab and the first drill; Pro opens the rest. */
   isPro?: boolean;
 }) {
-  const router = useRouter();
-  const [activeScenario, setActiveScenario] = useState<PbqScenario | null>(
-    null
-  );
-  const [activeTab, setActiveTab] = useState<"drills" | "simulations">(
-    "simulations"
-  );
+  const [active, setActive] = useState<PbqScenario | null>(null);
+  const [kind, setKind] = useState<Kind>("labs");
+  const rows = useRef(new Map<string, HTMLButtonElement>());
+  const lastOpened = useRef<string | null>(null);
 
-  const drills = useMemo(
-    () => scenarios.filter((s) => !HANDS_ON_TYPES.has(s.type)),
-    [scenarios]
-  );
-  const simulations = useMemo(
-    () => scenarios.filter((s) => HANDS_ON_TYPES.has(s.type)),
-    [scenarios]
-  );
+  const labs = useMemo(() => scenarios.filter((s) => HANDS_ON_TYPES.has(s.type)), [scenarios]);
+  const drills = useMemo(() => scenarios.filter((s) => !HANDS_ON_TYPES.has(s.type)), [scenarios]);
 
   const lockedIds = useMemo(() => {
     if (isPro) return new Set<string>();
-    return new Set(
-      [...simulations.slice(1), ...drills.slice(1)].map((s) => s.id)
-    );
-  }, [isPro, simulations, drills]);
+    return new Set([...labs.slice(1), ...drills.slice(1)].map((s) => s.id));
+  }, [isPro, labs, drills]);
 
-  // Convert at the win — shown to free users after they finish a scenario.
-  const proUpsell: PbqUpsell = {
-    heading: "You've clearly got the hang of these.",
-    note: `Pro unlocks all ${scenarios.length} labs — every simulation, topology, and threat hunt — plus full practice exams and unlimited daily questions.`,
-    href: "/upgrade?reason=pbq",
-    label: "Unlock Pro →",
-    context: "authed_pbq",
-  };
+  // Back from a lab: the focus returns to the row that opened it, not to the top of the page.
+  useEffect(() => {
+    if (active || !lastOpened.current) return;
+    rows.current.get(lastOpened.current)?.focus();
+    lastOpened.current = null;
+  }, [active]);
+
+  function rowRef(id: string, el: HTMLButtonElement | null) {
+    if (el) rows.current.set(id, el);
+    else rows.current.delete(id);
+  }
 
   function openScenario(s: PbqScenario) {
     track("pbq_started", {
@@ -234,116 +211,93 @@ export function PbqScenarios({
       scenario_type: s.type,
       surface: "authed",
     });
-    setActiveScenario(s);
+    lastOpened.current = s.id;
+    setActive(s);
   }
-
-  // Default to drills tab if no simulations exist
-  const effectiveTab =
-    activeTab === "simulations" && simulations.length === 0 ? "drills" : activeTab;
 
   if (scenarios.length === 0) {
     return (
-      <Panel padding="lg">
-        <div className="flex flex-col items-center gap-3 py-6">
-          <svg
-            className="w-10 h-10 text-muted-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"
-            />
-          </svg>
-          <p className="text-[15px] text-muted-foreground text-center max-w-md">
-            No hands-on practice scenarios available for this certification yet.
-          </p>
-        </div>
-      </Panel>
+      <p className="rounded-lg border border-dashed border-border p-6 text-small text-muted-foreground">
+        There are no hands-on labs for this certification yet.
+      </p>
     );
   }
 
-  /* Active scenario — show the player */
-  if (activeScenario) {
+  if (active) {
+    // Shown to a free account once the lab is graded.
+    const upsell: PbqUpsell = {
+      heading: "You have completed this lab.",
+      note: `Pro includes all ${scenarios.length} labs for this exam, ${PRO_INCLUDES}.`,
+      href: PRO_HREF,
+      label: "See what Pro includes",
+      context: "authed_pbq",
+    };
     return (
       <PbqPlayer
-        scenario={activeScenario}
-        onBack={() => setActiveScenario(null)}
-        upsell={isPro ? undefined : proUpsell}
+        scenario={active}
+        backLabel="Return to the labs"
+        onBack={() => setActive(null)}
+        upsell={isPro ? undefined : upsell}
+        // The lab opens in answer to a press on this page: it takes the focus.
+        takeFocus
+        onStarted={() =>
+          track("pbq_first_move", { scenario_id: active.id, scenario_type: active.type, surface: "authed" })
+        }
       />
     );
   }
 
+  // The list in view: the other one when the chosen kind has nothing in it.
+  const shown: Kind = kind === "labs" && labs.length === 0 ? "drills" : kind === "drills" && drills.length === 0 ? "labs" : kind;
+  const both = labs.length > 0 && drills.length > 0;
+  const list = (which: Kind) => (
+    <ScenarioList
+      scenarios={which === "labs" ? labs : drills}
+      lockedIds={lockedIds}
+      empty={KINDS[which].empty}
+      onSelect={openScenario}
+      rowRef={rowRef}
+    />
+  );
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Sell at the lock — a real pitch, not just grey "Pro" badges */}
+    <div className="grid gap-6">
       {!isPro && lockedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <div className="min-w-0">
-            <p className="text-[14px] font-semibold text-foreground">
-              {lockedIds.size} more labs unlock with Pro
+        <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-lg p-4 sm:p-5">
+          <div className="min-w-0 flex-1 basis-64">
+            <p className="text-small font-semibold">
+              {lockedIds.size === 1 ? "1 more lab is" : `${lockedIds.size} more labs are`} included with Pro.
             </p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
-              Every simulation, topology, and threat hunt — the hands-on part
-              that decides pass/fail — plus full practice exams and unlimited
-              daily questions.
-            </p>
+            <p className="mt-1 text-note text-muted-foreground">Pro includes every lab on this page, {PRO_INCLUDES}.</p>
           </div>
           <Button asChild className="shrink-0">
-            <Link href="/upgrade?reason=pbq">Unlock Pro</Link>
+            <Link href={PRO_HREF}>See what Pro includes</Link>
           </Button>
         </div>
       )}
 
-      {/* Tab switcher */}
-      <div className="flex items-center gap-1 border-b border-border">
-        <button
-          onClick={() => setActiveTab("simulations")}
-          className={`
-            relative px-4 py-2.5 text-[14px] font-medium
-            transition-colors duration-150
-            ${
-              effectiveTab === "simulations"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }
-          `}
-        >
-          Exam Simulations ({simulations.length})
-          {effectiveTab === "simulations" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("drills")}
-          className={`
-            relative px-4 py-2.5 text-[14px] font-medium
-            transition-colors duration-150
-            ${
-              effectiveTab === "drills"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }
-          `}
-        >
-          Concept Drills ({drills.length})
-          {effectiveTab === "drills" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t" />
-          )}
-        </button>
-      </div>
-
-      {/* Scenario list */}
-      <ScenarioList
-        scenarios={effectiveTab === "simulations" ? simulations : drills}
-        onSelect={openScenario}
-        onLocked={() => router.push("/upgrade?reason=pbq")}
-        lockedIds={lockedIds}
-        isSimulation={effectiveTab === "simulations"}
-      />
+      {both ? (
+        // Real tabs: one stop for the Tab key, and the arrow keys move between the two lists.
+        <Tabs.Root value={shown} onValueChange={(next) => setKind(next as Kind)} className="grid gap-5">
+          <Tabs.List aria-label="Kind of lab" className="flex flex-wrap gap-1.5">
+            <Tabs.Trigger value="labs" className={TAB}>
+              {KINDS.labs.tab} ({labs.length})
+            </Tabs.Trigger>
+            <Tabs.Trigger value="drills" className={TAB}>
+              {KINDS.drills.tab} ({drills.length})
+            </Tabs.Trigger>
+          </Tabs.List>
+          {/* Each panel holds its own controls, so the panel itself is not a stop for the Tab key. */}
+          <Tabs.Content value="labs" tabIndex={-1}>
+            {list("labs")}
+          </Tabs.Content>
+          <Tabs.Content value="drills" tabIndex={-1}>
+            {list("drills")}
+          </Tabs.Content>
+        </Tabs.Root>
+      ) : (
+        list(shown)
+      )}
     </div>
   );
 }

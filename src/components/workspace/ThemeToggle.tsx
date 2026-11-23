@@ -20,8 +20,11 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useMounted();
 
+  // Until the theme is known, hold the button's place with something that
+  // cannot take the keyboard: an invisible real button was a tab stop with no
+  // name and nothing to do.
   if (!mounted) {
-    return <Button variant="ghost" size="icon" aria-hidden className="opacity-0" />;
+    return <span aria-hidden className="inline-block size-9 shrink-0" />;
   }
 
   const isDark = resolvedTheme === "dark";

@@ -1,16 +1,18 @@
 import "server-only";
 
 import { z } from "zod";
+import { afterResponse } from "@/server/api/after-response";
 import { createAnonClient } from "@/server/supabase/anon";
 import {
   getCertificationBySlug,
   listDomains,
   listSubObjectives,
 } from "@/server/data/certifications";
+import { allRows } from "@/server/data/paging";
 import { EXAM_NAMES, OBJECTIVE_TITLES } from "@/data/path/titles";
 import { pbqClosingLabs, pbqRegistry } from "@/data/pbq";
 import { domainLab, labLibrary } from "@/core/path/labs";
-import { wordCount } from "@/core/path/text";
+import { repairText, wordCount } from "@/core/path/text";
 import type { PathCert, PathStructure } from "@/core/path/types";
 
 /** One bank question, shaped for building path stops. */
@@ -38,8 +40,15 @@ export interface PathBank {
 
 const optionsSchema = z.array(z.object({ text: z.string() })).min(2).max(6);
 
-/** Supabase caps an unranged select at 1,000 rows; page through instead. */
-const PAGE = 1000;
+interface BankRow {
+  id: string;
+  domain_id: string;
+  sub_objective_id: string | null;
+  question_text: string;
+  options: unknown;
+  correct_index: number;
+  explanation: string;
+}
 
 async function fetchBank(slug: PathCert): Promise<PathBank | null> {
   const db = createAnonClient();
@@ -51,27 +60,16 @@ async function fetchBank(slug: PathCert): Promise<PathBank | null> {
     listSubObjectives(db, cert.id),
   ]);
 
-  const rows: {
-    id: string;
-    domain_id: string;
-    sub_objective_id: string | null;
-    question_text: string;
-    options: unknown;
-    correct_index: number;
-    explanation: string;
-  }[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await db
+  // More than one page for the largest bank: see allRows.
+  const rows = await allRows<BankRow>((from, to) =>
+    db
       .from("cert_questions")
       .select("id, domain_id, sub_objective_id, question_text, options, correct_index, explanation")
       .eq("certification_id", cert.id)
       .eq("is_active", true)
       .order("id")
-      .range(from, from + PAGE - 1);
-    if (error) throw new Error(`path bank: ${error.message}`);
-    rows.push(...(data ?? []));
-    if (!data || data.length < PAGE) break;
-  }
+      .range(from, to)
+  );
 
   const titles = OBJECTIVE_TITLES[slug] ?? {};
   const domainNumber = new Map(domains.map((d) => [d.id, d.domainNumber]));
@@ -98,17 +96,19 @@ async function fetchBank(slug: PathCert): Promise<PathBank | null> {
     const parsed = optionsSchema.safeParse(r.options);
     const domain = domainNumber.get(r.domain_id);
     if (!parsed.success || !domain) continue;
-    const options = parsed.data.map((o) => o.text);
+    // Shown as written, apart from the house style for dashes (see repairText).
+    const options = parsed.data.map((o) => repairText(o.text));
     if (r.correct_index < 0 || r.correct_index >= options.length) continue;
+    const text = repairText(r.question_text);
     questions.push({
       id: r.id,
       objective: (r.sub_objective_id && subCode.get(r.sub_objective_id)) || domain,
       domain,
-      text: r.question_text,
+      text,
       options,
       answer: r.correct_index,
-      explanation: r.explanation ?? "",
-      words: wordCount(r.question_text),
+      explanation: repairText(r.explanation ?? ""),
+      words: wordCount(text),
       optionWords: Math.max(...options.map(wordCount)),
     });
   }
@@ -122,19 +122,79 @@ async function fetchBank(slug: PathCert): Promise<PathBank | null> {
 }
 
 /**
- * Each instance keeps a bank for ten minutes. The bank is a few hundred
- * questions per exam — too big for Next's data cache, small enough for memory.
+ * Each server instance holds the bank of every exam it has been asked for. A
+ * bank is several hundred questions, about a megabyte: too big for an entry
+ * in Next's data cache, small enough to keep in memory.
+ *
+ * A held bank is always what a request is given, at once. When it is more
+ * than an hour old (the study path page's own lifetime) a fresh copy is read
+ * after the response has gone, and takes its place when it arrives. So only
+ * the first request on a new instance ever waits for the download, and a
+ * database fault during a refresh costs nothing: the bank already held stays.
+ * A first load that fails throws, so that a page being rebuilt keeps its last
+ * good copy instead of being rebuilt without its questions.
  */
-const TTL_MS = 10 * 60 * 1000;
-const cache = new Map<PathCert, { at: number; bank: Promise<PathBank | null> }>();
+const FRESH_FOR_MS = 60 * 60 * 1000;
+/** After a refresh that failed, how long before the next one is tried. */
+const RETRY_AFTER_MS = 60 * 1000;
+
+/** A bank in memory, and the time from which a fresh copy is due. */
+const held = new Map<PathCert, { bank: PathBank; refreshFrom: number }>();
+/** Loads in flight, so that requests arriving together share one download. */
+const loading = new Map<PathCert, Promise<PathBank | null>>();
+/** Exams whose refresh has been asked for and has not finished. */
+const refreshing = new Set<PathCert>();
 
 export function loadPathBank(slug: PathCert): Promise<PathBank | null> {
-  const hit = cache.get(slug);
-  if (hit && Date.now() - hit.at < TTL_MS) return hit.bank;
-  const bank = fetchBank(slug).catch((err) => {
-    cache.delete(slug);
-    throw err;
+  const hit = held.get(slug);
+  if (!hit) return load(slug);
+  if (Date.now() >= hit.refreshFrom) refreshLater(slug);
+  return Promise.resolve(hit.bank);
+}
+
+/** Reads the bank and holds it. An exam the database does not have (null) is not held. */
+function load(slug: PathCert): Promise<PathBank | null> {
+  const pending = loading.get(slug);
+  if (pending) return pending;
+
+  const started = Date.now();
+  const fresh = fetchBank(slug)
+    .then((bank) => {
+      if (bank) held.set(slug, { bank, refreshFrom: Date.now() + FRESH_FOR_MS });
+      else held.delete(slug);
+      // One line for each load, so the cost of a cold instance shows in the logs.
+      console.info(
+        `[path bank] ${slug}: ${bank ? `${bank.questions.length} questions` : "not found"}, read in ${Date.now() - started} ms`
+      );
+      return bank;
+    })
+    .finally(() => {
+      loading.delete(slug);
+    });
+  loading.set(slug, fresh);
+  return fresh;
+}
+
+/** Replaces a held bank once the response has gone. A failure keeps the bank already held. */
+function refreshLater(slug: PathCert): void {
+  if (refreshing.has(slug)) return;
+  refreshing.add(slug);
+  afterResponse(async () => {
+    try {
+      await load(slug);
+    } catch (err) {
+      console.warn(`[path bank] ${slug}: the refresh failed; the bank already held stays in use`, err);
+      const hit = held.get(slug);
+      if (hit) held.set(slug, { bank: hit.bank, refreshFrom: Date.now() + RETRY_AFTER_MS });
+    } finally {
+      refreshing.delete(slug);
+    }
   });
-  cache.set(slug, { at: Date.now(), bank });
-  return bank;
+}
+
+/** For tests: forget every held bank. */
+export function forgetPathBanks(): void {
+  held.clear();
+  loading.clear();
+  refreshing.clear();
 }

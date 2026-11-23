@@ -138,13 +138,13 @@ describe("Security+ SY0-801 content", () => {
       expect(byKey801.has(r.key) !== dropped, `${r.key} must be carried or dropped, not both`).toBe(true);
     }
     for (const [key, why] of [...Object.entries(SY0_701_DROPPED), ...Object.entries(SY0_701_REWORDED)]) {
-      expect(byKey701.has(key), `${key} isn't an SY0-701 rep`).toBe(true);
+      expect(byKey701.has(key), `${key} is not an SY0-701 rep`).toBe(true);
       expect(why.length, key).toBeGreaterThan(30);
     }
     for (const key of Object.keys(SY0_701_REWORDED)) expect(byKey801.has(key), key).toBe(true);
   });
 
-  it("keeps a carried rep's prompt and answer unless it's listed as reworded", () => {
+  it("keeps a carried rep's prompt and answer unless it is listed as reworded", () => {
     const same = (a: string, b: string) => a.toLowerCase().replace(/\s+/g, "") === b.toLowerCase().replace(/\s+/g, "");
     for (const r of sy0801) {
       const before = byKey701.get(r.key);

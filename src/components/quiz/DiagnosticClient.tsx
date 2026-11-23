@@ -35,8 +35,8 @@ export function DiagnosticClient({
         api(saveDiagnosticProgress, { attemptId, snapshot })
       }
       submit={(attemptId, answers) => api(submitDiagnostic, { attemptId, answers })}
-      submitLabel="Finish diagnostic"
-      resultsTitle="Diagnostic complete"
+      submitLabel="Finish the diagnostic"
+      resultsTitle="You have completed the diagnostic."
       backHref="/dashboard"
       backLabel="See your study plan"
       diagnosticCertId={certId}
