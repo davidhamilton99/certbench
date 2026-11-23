@@ -538,6 +538,7 @@ export function LabResult({
   rows,
   missCount = 0,
   misses,
+  missesSummary,
   explanation,
   upsell,
   backLabel,
@@ -550,6 +551,8 @@ export function LabResult({
   rows?: ResultRow[];
   missCount?: number;
   misses?: ReactNode;
+  /** The folded list's own title, where "The 2 answers to review" would not say what it holds. */
+  missesSummary?: string;
   explanation: string;
   upsell?: PbqUpsell;
   backLabel?: string;
@@ -594,7 +597,9 @@ export function LabResult({
       )}
 
       {missCount > 0 && misses && (
-        <Fold summary={missCount === 1 ? "The answer to review" : `The ${missCount} answers to review`}>{misses}</Fold>
+        <Fold summary={missesSummary ?? (missCount === 1 ? "The answer to review" : `The ${missCount} answers to review`)}>
+          {misses}
+        </Fold>
       )}
 
       <Fold summary="What this lab teaches">{explanation}</Fold>

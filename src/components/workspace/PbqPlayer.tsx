@@ -191,6 +191,7 @@ function OneMoveLab({
           summary={SUMMARY[scenario.type](graded.result.correctItems, graded.result.totalItems)}
           missCount={graded.result.totalItems - graded.result.correctItems}
           misses={<Misses scenario={scenario} answer={graded.answer} />}
+          missesSummary={scenario.type === "ordering" ? "The correct order" : undefined}
           explanation={scenario.explanation}
           upsell={upsell}
           backLabel={backLabel}
@@ -234,30 +235,32 @@ function OneMoveLab({
 function Misses({ scenario, answer }: { scenario: OneMoveScenario; answer: number[] }) {
   switch (scenario.type) {
     case "ordering":
-      // The right order, each place marked by whether it was put there.
+      // The right order. A place that was filled wrongly says what was put
+      // there: a visitor who saw only the right item beside a cross read the
+      // list as their own order marked, and placed the same order again.
       return (
-        <ol className="mt-1 grid gap-1.5">
+        <ol className="mt-1 grid gap-2">
           {scenario.correct_order.map((item, i) => {
-            const ok = answer[i] === item;
+            const placed = answer[i];
+            const ok = placed === item;
             return (
               <li key={i} className="flex items-baseline gap-2.5">
                 <span className="w-5 shrink-0 text-right text-note tabular-nums text-muted-foreground">{i + 1}.</span>
-                <span className={cn("min-w-0 flex-1", ok ? "text-foreground" : "font-medium text-success")}>
-                  {scenario.items[item]}
+                <span className="grid min-w-0 flex-1 gap-0.5">
+                  <span className={cn("text-foreground", !ok && "font-medium")}>{scenario.items[item]}</span>
+                  {!ok && placed !== undefined && (
+                    <span className="text-note text-muted-foreground">
+                      You placed{" "}
+                      <span className="line-through decoration-destructive/60">{scenario.items[placed]}</span> here.
+                    </span>
+                  )}
                 </span>
-                {/* Each mark is an image with a name, so it is read as part of its row. */}
-                {ok ? (
+                {/* The mark is an image with a name, so it is read as part of its row. */}
+                {ok && (
                   <Check
                     role="img"
                     aria-label="placed correctly"
                     className="size-3.5 shrink-0 translate-y-0.5 text-success"
-                    strokeWidth={3}
-                  />
-                ) : (
-                  <X
-                    role="img"
-                    aria-label="was in the wrong position"
-                    className="size-3.5 shrink-0 translate-y-0.5 text-destructive"
                     strokeWidth={3}
                   />
                 )}
