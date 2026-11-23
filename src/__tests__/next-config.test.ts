@@ -23,6 +23,11 @@ describe("next.config", () => {
     expect(nextConfig.images?.unoptimized).toBe(true);
   });
 
+  it("leaves Vercel's image optimizer, which ignores unoptimized, no local file or remote host", () => {
+    expect(nextConfig.images?.localPatterns).toEqual([]);
+    expect(nextConfig.images?.remotePatterns ?? []).toEqual([]);
+  });
+
   it("sends the security headers on every response", async () => {
     const everywhere = (await headerRules()).find((rule) => rule.source === "/:path*");
     const headers = Object.fromEntries((everywhere?.headers ?? []).map((h) => [h.key, h.value]));
