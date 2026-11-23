@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+import { ApiError } from "@/contracts/common";
 import { createAnonClient } from "@/server/supabase/anon";
 import {
   getCertificationBySlug,
@@ -14,6 +16,7 @@ import {
 import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
 import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import { UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 
 const CHECK_QUESTION_COUNT = 10;
 
@@ -48,10 +51,13 @@ const readable = (q: { question_text: string; options: { text: string }[] }) =>
  * readiness check, shortest and most readable first. Stable (ordered by
  * length, then id) so the page content doesn't churn between ISR
  * revalidations.
+ *
+ * Wrapped in React's cache: the page's metadata and its body ask for the same
+ * check in one render, and the second does not download the questions again.
  */
-export async function loadReadinessCheck(
+export const loadReadinessCheck = cache(async (
   certSlug: string
-): Promise<ReadinessCheckData | null> {
+): Promise<ReadinessCheckData | null> => {
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
   if (!cert) return null;
@@ -79,10 +85,13 @@ export async function loadReadinessCheck(
       );
     for (const q of domainPool.slice(0, slots[i])) {
       // The stored order puts the answer at B far more often than chance, so
-      // shuffle — stably per question, keeping the page static — unless the
-      // explanation names options by letter.
+      // the answers are shuffled, the same way every time for one question
+      // (the page stays static), unless the explanation names an answer by
+      // its letter. That is looked for in everything the page shows of the
+      // explanation: its first sentence, printed as the reason, and the rest.
       const stored = q.options.map((o) => o.text);
-      const order = mentionsOptionLetter(splitExplanation(q.explanation).rest)
+      const { takeaway, rest } = splitExplanation(q.explanation);
+      const order = mentionsOptionLetter(`${takeaway} ${rest}`)
         ? stored.map((_, k) => k)
         : shuffle(stored.map((_, k) => k), seededRng(seedFrom(q.id)));
       questions.push({
@@ -90,20 +99,23 @@ export async function loadReadinessCheck(
         options: order.map((k) => stored[k]),
         correctIndex: order.indexOf(q.correct_index),
         explanation: q.explanation,
-        domainTitle: domain.title,
+        // In sentence case, as the practice-test pages name the same domains.
+        domainTitle: domainName(domain.title),
         examWeight: domain.examWeight,
       });
     }
   });
 
-  // Sub-objective count for the CTA copy ("tracks all N objectives").
-  const { count } = await db
+  // Sub-objective count for the CTA copy ("tracks all N objectives"). A count
+  // that could not be read throws: the page must not be rebuilt saying zero.
+  const { count, error: countError } = await db
     .from("cert_sub_objectives")
     .select("id", { count: "exact", head: true })
     .in(
       "domain_id",
       domains.map((d) => d.id)
     );
+  if (countError) throw new ApiError("internal", countError.message);
 
   return {
     certSlug: cert.slug,
@@ -113,4 +125,4 @@ export async function loadReadinessCheck(
     objectiveCount: count ?? 0,
     questions,
   };
-}
+});

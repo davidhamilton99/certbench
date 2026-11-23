@@ -16,6 +16,19 @@ export const examQuestion = z.object({
    * applies the seeded permutation so resumes are deterministic. */
   options: z.array(z.string()).min(2),
   domain_id: z.uuid(),
+  /**
+   * Sent, and true, only with a question whose explanation names an answer by
+   * its letter ("option A is the only one that ..."). Such a question is shown
+   * in its stored order, in the attempt and in its review, so that the letter
+   * in the text names the answer shown under that letter. Every other question
+   * is shuffled.
+   *
+   * The flag does not say which answer is correct, and the explanation itself
+   * still stays on the server. What it costs is the shuffle: the bank's stored
+   * order puts the correct answer second more often than chance. The study
+   * path makes the same trade for the same questions (bankToRep).
+   */
+  keepOrder: z.boolean().optional(),
 });
 export type ExamQuestion = z.infer<typeof examQuestion>;
 
@@ -50,6 +63,14 @@ export const domainBreakdown = z.object({
 export type DomainBreakdown = z.infer<typeof domainBreakdown>;
 
 /**
+ * The most question ids a stored snapshot may hold. An attempt is started with
+ * at most 120 questions (startPracticeExam's questionCount), so a real
+ * snapshot is always within it; the progress routes store what the browser
+ * sends, and the submit routes grade only ids found here.
+ */
+export const MAX_SNAPSHOT_QUESTIONS = 200;
+
+/**
  * Serialized quiz-engine snapshot persisted in progress_state. Carries the
  * selected question ids so a resumed attempt serves the identical question
  * set, and the seed so option order reproduces exactly.
@@ -61,7 +82,7 @@ export const progressSnapshot = z.object({
   revealed: z.array(z.string()),
   startedAt: z.string(),
   seed: z.string(),
-  questionIds: z.array(z.uuid()),
+  questionIds: z.array(z.uuid()).max(MAX_SNAPSHOT_QUESTIONS),
 });
 export type ProgressSnapshot = z.infer<typeof progressSnapshot>;
 

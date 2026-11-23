@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { IntentLink } from "@/components/marketing/IntentLink";
 import { cn } from "@/lib/utils";
 
 export interface Tile {
@@ -8,59 +7,73 @@ export interface Tile {
   title: ReactNode;
   /** A code set in mono before the title: "1.2". */
   code?: string;
-  /** A short line under the title. */
+  /** One line beside the title. */
   detail?: ReactNode;
 }
 
 /**
- * Links as tiles: a grid of small cards instead of a column of full-width
- * rows, each lifting toward the light on hover. Groups get a small label.
+ * Links as ruled rows, the way a course outline lists its parts: a code where
+ * there is one, the title, and one line about it. Each row is one link. A
+ * group has its heading over a rule, as a domain has in the outline of the
+ * study path.
+ *
+ * (The name is from the grid of cards this replaced. Twenty-eight objectives
+ * were twenty-eight boxes; a list that is ruled needs none.)
  */
 export function TileGrid({
   groups,
-  columns = 3,
   details = "sm",
+  headingLevel = 3,
   className,
 }: {
   groups: { label?: ReactNode; tiles: Tile[] }[];
-  columns?: 2 | 3;
-  /** Where the detail line shows: from sm (phones get a compact list), or always. */
+  /** Where the line about each row shows: from the `sm` width (a phone gets a compact list), or always. */
   details?: "sm" | "always";
+  /** The level of a group's heading: 3 under a section's own heading, 2 where the groups are the sections. */
+  headingLevel?: 2 | 3;
   className?: string;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <div className={cn("grid gap-10", className)}>
       {groups.map((g, gi) => (
-        <div key={gi} className="grid gap-3">
-          {g.label && <p className="text-left text-sm font-medium">{g.label}</p>}
-          <ul className={cn("grid gap-2.5 sm:grid-cols-2", columns === 3 && "lg:grid-cols-3")}>
+        <div key={gi}>
+          {g.label && (
+            <Heading className="border-b border-foreground/70 pb-2 text-left text-small font-semibold">{g.label}</Heading>
+          )}
+          <ul className={cn("divide-y divide-border border-b border-border", !g.label && "border-t")}>
             {g.tiles.map((t) => (
-              <li key={t.href} className="min-w-0">
-                <Link
+              <li key={t.href}>
+                {/* The whole row is the link; its title carries the underline,
+                    which darkens when the pointer is anywhere on the row. The
+                    row sets the quiet colour of the code and the detail, and
+                    each part sets only its own size: a size and a colour
+                    passed through one cn() call can lose the size. */}
+                <IntentLink
                   href={t.href}
-                  className="glass group flex h-full min-w-0 items-start gap-3 rounded-2xl px-4 py-3.5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-[0_22px_50px_-30px_var(--primary)] sm:p-5"
-                >
-                  {t.code && (
-                    <span className="mt-0.5 shrink-0 font-mono text-xs font-medium tabular-nums text-primary">{t.code}</span>
+                  className={cn(
+                    "group grid items-baseline gap-x-4 gap-y-0.5 py-3 text-left text-muted-foreground",
+                    t.code && "grid-cols-[2.5rem_minmax(0,1fr)]",
+                    t.code && t.detail && "sm:grid-cols-[2.5rem_minmax(0,16rem)_minmax(0,1fr)]",
+                    !t.code && t.detail && "sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
                   )}
-                  <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="text-[15px] font-medium leading-snug">{t.title}</span>
-                    {t.detail && (
-                      <span
-                        className={cn(
-                          "text-[13px] leading-relaxed text-muted-foreground",
-                          details === "always" ? "line-clamp-2" : "hidden sm:line-clamp-2"
-                        )}
-                      >
-                        {t.detail}
-                      </span>
-                    )}
-                  </span>
-                  <ArrowUpRight
-                    aria-hidden
-                    className="mt-0.5 size-4 shrink-0 text-muted-foreground/60 transition-[color,transform] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground"
-                  />
-                </Link>
+                >
+                  {/* A space in the text between the parts: read without styles,
+                      or as the link's name, the row is words and not one run. */}
+                  {t.code && <span className="font-mono text-note">{t.code}</span>}{" "}
+                  <span className="cb-link min-w-0 text-small font-medium group-hover:decoration-current">{t.title}</span>{" "}
+                  {t.detail && (
+                    <span
+                      className={cn(
+                        "min-w-0 text-note",
+                        t.code && "col-start-2 sm:col-start-3",
+                        details === "sm" && "hidden sm:block"
+                      )}
+                    >
+                      {t.detail}
+                    </span>
+                  )}
+                </IntentLink>
               </li>
             ))}
           </ul>

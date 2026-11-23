@@ -1,19 +1,46 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, Check, X } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import { ArrowRight } from "lucide-react";
+import { AnswerOption, OPTION_LETTERS, type AnswerState } from "@/components/quiz/AnswerOption";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { normalizeAnswer } from "@/lib/recall/normalize";
-import { grade as gradeSubnet, type DrillQuestion } from "@/lib/tools/subnetting";
-import { wordCount } from "@/core/path/text";
+import { gradeAnswer } from "@/lib/tools/subnet-grade";
 import type { Rep } from "@/core/path/types";
 import { cn } from "@/lib/utils";
 
-/** How long a right answer stays on screen before moving on by itself. */
-const AUTO_ADVANCE_MS = 1400;
+/**
+ * The kind of question, printed above it only where it changes what to expect.
+ * "Recall" and "Quick scenario" are the bank's own filing and tell a learner
+ * nothing to act on, so they are not shown. Any other label (a tool's own, a
+ * tag) is shown as given.
+ */
+const KIND: Record<string, string | null> = {
+  Recall: null,
+  "Quick scenario": null,
+  "Exam style": "Exam-style question",
+};
 
-const LETTERS = ["A", "B", "C", "D", "E", "F"];
+/**
+ * The words for a question's kind, or null where the kind is not shown. For a
+ * page that prints a line of its own above the card (the study path's
+ * objective line) and wants the kind on that same line: it prints this there
+ * and gives the card `showKind={false}`, so the two never stand as two lines.
+ */
+export function kindOf(rep: Rep): string | null {
+  if (rep.tier === "exam") return "Exam-style question";
+  return rep.label in KIND ? KIND[rep.label] : rep.label;
+}
 
 export interface RepAnswer {
   correct: boolean;
@@ -22,12 +49,24 @@ export interface RepAnswer {
 }
 
 /**
- * One rep: the prompt, the options (or a box to type in), and — once answered —
- * the verdict and a one-line takeaway. Right answers on quick reps move on by
- * themselves; misses and exam-style questions wait for "Next", so there's time
- * to read why. Keyboard: 1–4 (or A–D) to answer, Enter to continue.
+ * One question: the prompt, its answers (or a field to type in) and, once
+ * answered, the verdict in a sentence with the reason. Mount one for each
+ * question (key it by id): its state is the question's state.
  *
- * Mount one per rep (key it by id): its state is the rep's state.
+ * The card answers the person and never the clock. After any answer it waits
+ * for "Continue", which takes the focus, so Enter or one tap moves on.
+ *
+ * Keyboard. The keys 1 to 4 (or A to D where the answers are lettered) answer
+ * the question, and they act only while the keyboard's focus is inside the
+ * card, never from elsewhere on the page. A card that follows another one on
+ * the same page (`takeFocus`) takes the focus as it arrives, so the keys work
+ * from one question to the next with no click, and a screen reader reads the
+ * new question.
+ *
+ * Screen readers. The answers are a group named by the question. A marked
+ * answer says so in words ("Correct answer: "), and the verdict is read with
+ * the Continue button as the focus moves to it. Where the explanation names
+ * the answers by their letters, each answer's letter is part of its name.
  */
 export function RepCard({
   rep,
@@ -37,28 +76,68 @@ export function RepCard({
   nextLabel,
   keyboard = true,
   explainMisses = false,
+  takeFocus = false,
+  layout = "flow",
+  preface,
+  restNote,
+  showKind = true,
 }: {
   rep: Rep;
   onAnswer: (answer: RepAnswer) => void;
   onNext: () => void;
-  /** "p" where the rep sits inside a public page, so a prompt isn't one of its headings. */
-  promptAs?: "h2" | "p";
-  /** What the button says once answered, where "Next" wouldn't say what follows. */
+  /** "p" where the card sits inside a public page, so a prompt is not one of its headings. */
+  promptAs?: "h2" | "h3" | "p";
+  /** What the button says once answered, where "Continue" would not say what follows. */
   nextLabel?: string;
-  /** Whether keys answer this card: false while another player on the page has the turn. */
+  /** False where the keys must not answer this card at all. */
   keyboard?: boolean;
-  /** Open "Why, in full" by itself after a wrong answer: the subnetting tool's worked steps. */
+  /** Open the full explanation by itself after a wrong answer: the subnetting tool's worked steps. */
   explainMisses?: boolean;
+  /**
+   * Take the keyboard's focus on arrival. True for a question that follows
+   * something the person did on this page (a previous answer, "Start"); false
+   * for the first thing on a page as it loads.
+   */
+  takeFocus?: boolean;
+  /**
+   * "sheet": the card fills the box it is given and keeps its verdict at the
+   * foot, so the box does not change size when an answer is given.
+   */
+  layout?: "flow" | "sheet";
+  /**
+   * A line above the question, for example why it is being asked again, or the
+   * objective it belongs to. It takes the place of the kind label.
+   */
+  preface?: ReactNode;
+  /** A sentence at the foot of a sheet before the question is answered: what to do. */
+  restNote?: ReactNode;
+  /**
+   * False where every question on the page is of one kind and the page says so
+   * itself (a readiness check, a practice-test page), so the label would only
+   * repeat it.
+   */
+  showKind?: boolean;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [typed, setTyped] = useState("");
   const [correct, setCorrect] = useState<boolean | null>(null);
-  const [whyOpen, setWhyOpen] = useState(false);
   const advanced = useRef(false);
+  const promptRef = useRef<HTMLElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
+  const promptId = useId();
+  const cueId = useId();
+  const verdictId = useId();
+  const hintId = useId();
+  // A recall fact printed as a bare term ("SMTP") with the question under it
+  // ("Which port?"): the question is part of the answers' name, and is read
+  // with the term when the term takes the focus. Without it, the direction of
+  // the question is lost to anyone who moves straight to the answers.
+  const cued = rep.type === "choice" && Boolean(rep.cue);
 
   const answered = correct !== null;
-  const autoAdvance = answered && correct && rep.tier !== "exam" && !whyOpen;
+  const sheet = layout === "sheet";
 
   const next = useCallback(() => {
     if (advanced.current) return;
@@ -83,164 +162,197 @@ export function RepCard({
     // Subnetting answers go to the subnetting grader: plain text matching
     // drops the dots, so "192.168.10" would pass for "192.168.1.0".
     const ok = rep.answerKind
-      ? gradeSubnet({ answerKind: rep.answerKind, answer: rep.accept[0] } as DrillQuestion, typed)
+      ? gradeAnswer(rep.answerKind, rep.accept[0], typed)
       : rep.accept.includes(normalizeAnswer(typed));
     setCorrect(ok);
     onAnswer({ correct: ok, picked: -1 });
   }
 
-  // Right answers on quick reps move on by themselves.
+  // A question that follows another takes the focus as it arrives: the prompt,
+  // so that it is read, or the field where the answer is typed. A touch screen
+  // never gets the field (its keyboard would cover the question).
   useEffect(() => {
-    if (!autoAdvance) return;
-    const t = window.setTimeout(next, AUTO_ADVANCE_MS);
-    return () => window.clearTimeout(t);
-  }, [autoAdvance, next]);
+    if (!takeFocus) return;
+    const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    if (rep.type === "typed" && !coarse) inputRef.current?.focus();
+    else promptRef.current?.focus();
+  }, [takeFocus, rep.type]);
 
-  // Once answered, Enter continues; keep focus on the button for keyboard users.
+  // Once answered, Continue takes the focus at once (Enter moves on), and the
+  // verdict is brought into view if it is not already there (a small phone, a
+  // page at 400%). It is measured on the next frame, when the verdict has been
+  // laid out at its real size: measured in the same tick, it can still have
+  // the size it had before it was filled.
   useEffect(() => {
-    if (answered) nextRef.current?.focus({ preventScroll: true });
+    if (!answered) return;
+    nextRef.current?.focus({ preventScroll: true });
+    if (typeof requestAnimationFrame !== "function") return;
+    const frame = requestAnimationFrame(() => {
+      const foot = footRef.current;
+      if (!foot || typeof foot.scrollIntoView !== "function") return;
+      const box = foot.getBoundingClientRect();
+      if (box.top >= 0 && box.bottom <= window.innerHeight) return;
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      foot.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [answered]);
 
-  useEffect(() => {
-    if (!keyboard) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
-      if (!answered && rep.type === "choice") {
-        const digit = Number(e.key);
-        if (Number.isInteger(digit) && digit >= 1 && digit <= rep.options.length) {
-          e.preventDefault();
-          choose(digit - 1);
-          return;
-        }
-        const letter = LETTERS.indexOf(e.key.toUpperCase());
-        if (rep.lettered && letter >= 0 && letter < rep.options.length) {
-          e.preventDefault();
-          choose(letter);
-        }
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (!keyboard || e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (!answered && rep.type === "choice") {
+      const digit = Number(e.key);
+      if (Number.isInteger(digit) && digit >= 1 && digit <= rep.options.length) {
+        e.preventDefault();
+        choose(digit - 1);
         return;
       }
-      if (answered && e.key === "Enter" && target?.tagName !== "BUTTON") {
+      const letter = (OPTION_LETTERS as readonly string[]).indexOf(e.key.toUpperCase());
+      if (rep.lettered && letter >= 0 && letter < rep.options.length) {
         e.preventDefault();
-        next();
+        choose(letter);
       }
+      return;
     }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [keyboard, answered, rep, choose, next]);
+    if (answered && e.key === "Enter" && tag !== "BUTTON" && tag !== "SUMMARY" && tag !== "A") {
+      e.preventDefault();
+      next();
+    }
+  }
 
   const isExam = rep.tier === "exam";
-  // A longer quick prompt steps down a size so it doesn't wrap to four lines.
-  const longPrompt = !isExam && wordCount(rep.prompt) > 14;
-  const compact =
-    rep.type === "choice" && !isExam && rep.options.every((o) => o.length <= 16);
-  // Two columns on a phone leave each answer ~90px, room for an 8-letter word:
-  // a longer one ("Operational") would break mid-word, so those answers stack
-  // there and only pair up from sm.
-  const pairOnPhones =
-    compact && rep.options.every((o) => o.split(/\s+/).every((w) => w.length <= 8));
+  // A longer quick prompt steps down a size so it does not wrap to four lines.
+  const longPrompt = !isExam && rep.prompt.trim().split(/\s+/).length > 14;
   const rightAnswer = rep.type === "choice" ? rep.options[rep.answer] : rep.answerText;
+  // One small line above a question at most: where the page gives the card a
+  // preface (a tag, a domain, the reason a question is back), that line stands
+  // alone and the kind is not printed under it. Nor is it printed where the
+  // page asks for none.
+  const kind = preface || !showKind ? null : kindOf(rep);
+
+  function stateOf(i: number): AnswerState {
+    if (rep.type !== "choice" || !answered) return "idle";
+    if (i === rep.answer) return "correct";
+    if (i === picked) return "incorrect";
+    return "dimmed";
+  }
+
+  /** The mark in words, for a screen reader, once the question is answered. */
+  function markOf(i: number): string {
+    if (rep.type !== "choice" || !answered) return "";
+    if (i === rep.answer) return i === picked ? "Your answer, which is correct: " : "Correct answer: ";
+    if (i === picked) return "Your answer, which is incorrect: ";
+    return "";
+  }
+
+  /**
+   * What a screen reader hears before an answer's words: its mark once the
+   * question is answered and, where the explanation names the answers by their
+   * letters (`keepsLetters`), the answer's letter, before and after marking
+   * ("A. ", then "Correct answer: A. "), as MultipleChoice says it. The key box
+   * that prints the letter is hidden from a screen reader. A shuffled
+   * question's letter is only its place for this learner, which the order the
+   * answers are read in already gives, so it is not said, as in MultipleChoice.
+   */
+  function srPrefixOf(i: number): string | undefined {
+    if (rep.type !== "choice") return undefined;
+    const letter = rep.lettered && rep.keepsLetters ? `${OPTION_LETTERS[i]}. ` : "";
+    return `${markOf(i)}${letter}` || undefined;
+  }
+
+  const lastKey = rep.type === "choice" ? (rep.lettered ? OPTION_LETTERS[rep.options.length - 1] : rep.options.length) : null;
 
   return (
-    <div className="path-rise grid gap-5">
-      <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-primary">
-        {rep.label}
-      </span>
+    <div
+      // Focusable by a press anywhere on the card, so the keys then act on it.
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className={cn("group/rep grid gap-5", sheet && "flex h-full min-h-0 flex-col")}
+    >
+      {(preface || kind) && (
+        <div className="grid gap-2">
+          {preface && <p className="text-small leading-relaxed text-muted-foreground">{preface}</p>}
+          {kind && <span className="cb-label w-fit text-muted-foreground">{kind}</span>}
+        </div>
+      )}
 
-      <div className="grid gap-2">
+      <div className={cn("grid gap-2", (preface || kind) && "-mt-2")}>
         <Prompt
+          id={promptId}
+          // Takes the focus so that it is read; it is not a control.
+          ref={promptRef as never}
+          tabIndex={-1}
+          aria-describedby={cued ? cueId : undefined}
           className={cn(
-            "text-balance",
+            "text-pretty",
             isExam
-              ? "text-[17px] font-medium leading-relaxed sm:text-lg"
+              ? "text-body font-medium sm:text-lg sm:leading-relaxed"
               : longPrompt
-                ? "font-display text-xl font-semibold leading-snug tracking-tight sm:text-[1.375rem]"
-                : "font-display text-2xl font-semibold leading-snug tracking-tight sm:text-[1.75rem]"
+                ? "text-xl font-semibold leading-snug tracking-[-0.01em] sm:text-[1.375rem]"
+                : "text-2xl font-semibold leading-snug tracking-[-0.015em] sm:text-[1.625rem]"
           )}
         >
           {rep.prompt}
         </Prompt>
-        {rep.cue && rep.type === "choice" && (
-          <p className="font-mono text-sm text-muted-foreground">{rep.cue}</p>
+        {cued && (
+          <p id={cueId} className="text-small text-muted-foreground">
+            {rep.cue}
+          </p>
         )}
       </div>
 
       {rep.type === "choice" ? (
-        <div
-          role="radiogroup"
-          aria-label="Answers"
-          className={cn("grid gap-2.5", compact && (pairOnPhones ? "grid-cols-2" : "sm:grid-cols-2"))}
-        >
-          {rep.options.map((option, i) => {
-            const isAnswer = i === rep.answer;
-            const isPicked = i === picked;
-            return (
-              <button
-                key={`${i}-${option}`}
-                type="button"
-                role="radio"
-                aria-checked={isPicked}
-                disabled={answered}
-                onClick={() => choose(i)}
-                className={cn(
-                  "group flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-[border-color,background-color,opacity,transform] duration-150",
-                  !answered && "hover:border-primary/60 hover:bg-primary/[0.03] active:scale-[0.99]",
-                  answered && isAnswer && "border-success bg-success/10",
-                  answered && isPicked && !isAnswer && "border-destructive bg-destructive/10",
-                  answered && !isAnswer && !isPicked && "opacity-45"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] text-muted-foreground transition-colors",
-                    answered && isAnswer && "border-success bg-success text-success-foreground",
-                    answered && isPicked && !isAnswer && "border-destructive bg-destructive text-white"
-                  )}
-                  aria-hidden
-                >
-                  {answered && isAnswer ? (
-                    <Check className="size-3.5" strokeWidth={3} />
-                  ) : answered && isPicked ? (
-                    <X className="size-3.5" strokeWidth={3} />
-                  ) : rep.lettered ? (
-                    LETTERS[i]
-                  ) : (
-                    i + 1
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "min-w-0 [overflow-wrap:anywhere]",
-                    rep.mono ? "font-mono text-lg font-medium" : isExam ? "text-[15px] leading-snug" : "text-base"
-                  )}
-                >
-                  {option}
-                </span>
-              </button>
-            );
-          })}
+        <div role="group" aria-labelledby={cued ? `${promptId} ${cueId}` : promptId} className="grid gap-2.5">
+          {rep.options.map((option, i) => (
+            <AnswerOption
+              key={`${i}-${option}`}
+              marker={rep.lettered ? OPTION_LETTERS[i] : String(i + 1)}
+              state={stateOf(i)}
+              srPrefix={srPrefixOf(i)}
+              mono={rep.mono}
+              dense={isExam}
+              // The explanation names the answers by their letters: each keeps its letter once marked.
+              keepMarker={rep.keepsLetters}
+              disabled={answered}
+              onClick={() => choose(i)}
+            >
+              {option}
+            </AnswerOption>
+          ))}
         </div>
       ) : (
         <form onSubmit={submitTyped} className="grid gap-2">
-          <label htmlFor={`typed-${rep.id}`} className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          <label htmlFor={`typed-${rep.id}`} className="cb-label text-muted-foreground">
             {rep.cue ?? "Type your answer"}
           </label>
+          {/* The form the answer takes, as a sentence that stays in view while
+              typing. Grey text inside the field would vanish at the first key
+              and is cut off beside the button on a phone. */}
+          {rep.placeholder && (
+            <p id={hintId} className="-mt-1 text-note text-muted-foreground">
+              For example, <span className="font-mono">{rep.placeholder}</span>.
+            </p>
+          )}
           <div className="flex gap-2.5">
             <Input
+              ref={inputRef}
               id={`typed-${rep.id}`}
-              autoFocus
+              aria-describedby={rep.placeholder ? `${promptId} ${hintId}` : promptId}
               autoComplete="off"
               autoCapitalize="off"
               spellCheck={false}
               inputMode={rep.answerKind === "dotted" ? "decimal" : rep.numeric ? "numeric" : "text"}
-              placeholder={rep.placeholder}
               value={typed}
-              disabled={answered}
+              // Once marked, the answer stays in full ink beside the verdict
+              // that it is compared with: read only, not disabled, which draws
+              // a field at half strength.
+              readOnly={answered}
               onChange={(e) => setTyped(e.target.value)}
               className={cn(
-                // A step down on phones, so an address placeholder isn't cut off beside Check.
-                "h-12 font-mono text-base sm:text-lg",
+                // A step down on phones, so a typed address is not cut off beside the button.
+                "h-12 font-mono text-base sm:text-lg md:text-lg pointer-coarse:h-12",
                 rep.answerKind === "dotted" ? "max-w-64" : "max-w-48",
                 answered && correct && "border-success bg-success/10",
                 answered && !correct && "border-destructive bg-destructive/10"
@@ -248,66 +360,85 @@ export function RepCard({
             />
             {!answered && (
               <Button type="submit" size="lg" className="h-12 px-4 sm:px-6" disabled={!typed.trim()}>
-                Check
+                Check answer
               </Button>
             )}
           </div>
         </form>
       )}
 
-      {answered && (
-        <div
-          className={cn(
-            "path-rise grid gap-3 rounded-xl px-4 py-3.5",
-            correct ? "bg-success/10" : "bg-destructive/[0.07]"
-          )}
-          role="status"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-            <p className="min-w-0 flex-1 basis-60 text-[15px] leading-relaxed">
-              <span className={cn("font-semibold", correct ? "text-success" : "text-destructive")}>
-                {correct ? "Right." : `It's ${rightAnswer}.`}
-              </span>{" "}
-              {rep.takeaway}
+      {/*
+        The foot: the verdict once answered. Ink on the paper under a hairline;
+        the two marked answers above carry the colour. On a sheet it is always
+        there, at the bottom, with room kept for the verdict.
+      */}
+      <div
+        ref={footRef}
+        className={cn(
+          "grid content-start gap-3",
+          // Below lg the sheet is as tall as its contents, so room is kept for
+          // the verdict; from lg its height comes from the row it stands in.
+          sheet && "mt-auto min-h-[9.25rem] border-t border-border pt-4 sm:min-h-24 lg:min-h-0",
+          !sheet && answered && "border-t border-border pt-4"
+        )}
+      >
+        {answered ? (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-3 sm:flex-nowrap">
+              <p id={verdictId} className="min-w-0 flex-1 basis-60 text-small leading-relaxed">
+                <span className={cn("font-semibold", correct ? "text-success" : "text-destructive")}>
+                  {correct ? "Correct." : `Incorrect. The correct answer is ${rightAnswer}.`}
+                </span>{" "}
+                {rep.takeaway}
+              </p>
+              <Button
+                ref={nextRef}
+                onClick={next}
+                aria-describedby={verdictId}
+                className="h-11 w-full shrink-0 sm:h-10 sm:w-auto"
+              >
+                {nextLabel ?? "Continue"}
+                <ArrowRight />
+              </Button>
+            </div>
+            {rep.explanation && (
+              <details
+                className="text-small text-muted-foreground"
+                // Opens by itself after a wrong answer where the card asks it to.
+                open={explainMisses && !correct ? true : undefined}
+              >
+                <summary className="cb-tap w-fit cursor-pointer select-none font-medium text-foreground marker:text-muted-foreground">
+                  Read the full explanation
+                </summary>
+                <p className="mt-2 leading-relaxed">{rep.explanation}</p>
+              </details>
+            )}
+          </>
+        ) : (
+          (restNote || (keyboard && lastKey !== null)) && (
+            <p className={cn("text-note text-muted-foreground", !restNote && "hidden group-focus-within/rep:block pointer-coarse:group-focus-within/rep:hidden")}>
+              {restNote}
+              {keyboard && lastKey !== null && (
+                // Said only while the keys would act: the focus is inside the
+                // card, on a device that has a keyboard.
+                <span className="hidden group-focus-within/rep:inline pointer-coarse:group-focus-within/rep:hidden">
+                  {restNote ? " " : ""}You can answer with the keys {rep.type === "choice" && rep.lettered ? "A" : "1"} to{" "}
+                  {lastKey}.
+                </span>
+              )}
             </p>
-            <Button
-              ref={nextRef}
-              size="sm"
-              variant={correct ? "outline" : "default"}
-              onClick={next}
-              className="shrink-0"
-            >
-              {nextLabel ?? (correct ? "Next" : "Got it")}
-              <ArrowRight />
-            </Button>
-          </div>
-          {autoAdvance && (
-            <span
-              aria-hidden
-              className="path-drain block h-0.5 rounded-full bg-success/60"
-              style={{ "--dur": `${AUTO_ADVANCE_MS}ms` } as CSSProperties}
-            />
-          )}
-          {rep.explanation && (
-            <details
-              className="group text-sm text-muted-foreground"
-              // Opens by itself after a miss where the card asks it to.
-              open={explainMisses && !correct ? true : undefined}
-              onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
-            >
-              <summary className="cursor-pointer select-none font-medium text-foreground marker:text-muted-foreground">
-                Why, in full
-              </summary>
-              <p className="mt-2 leading-relaxed">{rep.explanation}</p>
-            </details>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 }
 
-/** One segment per rep: done ones coloured by result, the current one lit. */
+/**
+ * Progress through a set of questions: one segment a question, filled once it
+ * is answered and outlined while it is the one in hand. It shows how far along,
+ * not how well: the verdict on each answer is given with the answer.
+ */
 export function StopProgress({
   results,
   current,
@@ -320,12 +451,13 @@ export function StopProgress({
       {results.map((r, i) => (
         <span
           key={i}
+          // Drawn in one quiet colour; the state is kept in the markup for tests and tools.
+          data-state={r === true ? "right" : r === false ? "wrong" : i === current ? "current" : "ahead"}
           className={cn(
-            "h-1.5 flex-1 rounded-full transition-colors duration-300",
-            r === true && "bg-success",
-            r === false && "bg-warning",
-            r === null && i === current && "bg-primary",
-            r === null && i !== current && "bg-muted"
+            "h-1.5 flex-1 rounded-xs transition-colors duration-200",
+            r !== null && "bg-primary",
+            r === null && i === current && "bg-primary/35",
+            r === null && i !== current && "bg-foreground/[0.12]"
           )}
         />
       ))}

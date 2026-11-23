@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { SimField, SimFieldAnswer, TopoDevice, TopologyScenario } from "@/data/pbq/types";
 import { gradeTopologyScenario } from "@/core/pbq/grade-topology";
 import { devicesToFix } from "@/core/pbq/sim-play";
@@ -10,6 +9,8 @@ import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { StagedLab, type LabStage } from "@/components/workspace/LabKit";
 import { EvidenceConsole, Ticket } from "@/components/workspace/SimCaseFile";
 import { TopologyDiagram, type DeviceMark } from "@/components/workspace/TopologyDiagram";
+import { domainLabel } from "@/components/path/lab-types";
+import { domainName } from "@/lib/seo/objective-meta";
 
 /**
  * A topology lab, played on its network map. Each device that needs fixing
@@ -25,8 +26,7 @@ export function TopologyPlayer({
   scenario,
   onBack,
   upsell,
-  onGraded,
-  backLabel,
+  ...host
 }: {
   scenario: TopologyScenario;
   onBack: () => void;
@@ -63,7 +63,7 @@ export function TopologyPlayer({
     <StagedLab
       scenarioId={scenario.id}
       title={scenario.title}
-      subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+      subtitle={`Domain ${domainLabel(scenario.domain_number)}: ${domainName(scenario.domain_title)}`}
       stages={stages}
       noun="Device"
       renderCase={({ stage, run, credit }) => (
@@ -73,15 +73,15 @@ export function TopologyPlayer({
       explanation={scenario.explanation}
       upsell={upsell}
       onBack={onBack}
-      onGraded={onGraded}
-      backLabel={backLabel}
+      // The result, the way out, word of the first move and the focus on arrival.
+      {...host}
     />
   );
 }
 
 /**
- * The ticket, the map with each device's mark, and the config of the device
- * being fixed, or of any device tapped on the map until "Back to" it.
+ * The ticket, the map with each device's mark, and the configuration of the
+ * device being fixed, or of any device chosen on the map until "Return to" it.
  */
 function NetworkCase({
   scenario,
@@ -94,6 +94,7 @@ function NetworkCase({
   active: number;
   credit: Readonly<Record<string, number>>;
 }) {
+  const box = useRef<HTMLDivElement>(null);
   const current = fixes[Math.min(active, fixes.length - 1)];
   // Which device's config is up, and for which device being fixed: when the
   // lab moves on to the next device, its own config comes back up.
@@ -124,8 +125,20 @@ function NetworkCase({
     setView({ during: current.id, id: id === current.id ? null : id });
   }
 
+  /**
+   * Back to the device being fixed. The link that was pressed goes away with
+   * the other device's configuration, so the focus moves to the button of the
+   * device now shown, under the map, and does not fall back to the top of the page.
+   */
+  function showCurrent() {
+    setView({ during: current.id, id: null });
+    requestAnimationFrame(() => {
+      box.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus({ preventScroll: true });
+    });
+  }
+
   return (
-    <div className="grid min-w-0 gap-3">
+    <div ref={box} className="grid min-w-0 gap-3">
       <Ticket text={scenario.briefing} />
       <TopologyDiagram
         devices={scenario.devices}
@@ -139,21 +152,16 @@ function NetworkCase({
       {shown.currentConfig ? (
         <EvidenceConsole
           key={shown.id}
-          evidence={[{ label: `${shown.label} · current config`, content: shown.currentConfig }]}
+          evidence={[{ label: `${shown.label}: current configuration`, content: shown.currentConfig }]}
         />
       ) : (
-        <p className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-          {shown.label} has no config to show.
+        <p className="rounded-lg border border-dashed border-border px-4 py-3 text-small text-muted-foreground">
+          {shown.label} has no configuration to show.
         </p>
       )}
       {viewing && (
-        <button
-          type="button"
-          onClick={() => setView({ during: current.id, id: null })}
-          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-        >
-          <ArrowLeft className="size-4" />
-          Back to {current.label}
+        <button type="button" onClick={showCurrent} className="cb-link cb-tap w-fit text-small font-medium">
+          Return to {current.label}
         </button>
       )}
     </div>

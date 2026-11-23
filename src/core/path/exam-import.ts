@@ -1,6 +1,6 @@
 import { CHECKPOINT_SIZE } from "./plan";
 import { finishStop, recordRep } from "./progress";
-import { addRehearsal } from "./rehearsal";
+import { addRehearsal, sanitizeRehearsalResult } from "./rehearsal";
 import { parseRepId } from "./rep-id";
 import type { ChoiceRep, PathProgress, RehearsalResult } from "./types";
 
@@ -14,16 +14,38 @@ export interface ExamAnswer {
 }
 
 /**
+ * Whether a practice exam kept on this device may be brought into an account.
+ * A public page stamps a finished exam with the account its score was shown to
+ * (`claimedBy`). On a shared computer the next person to sign in must not
+ * receive it: an exam is brought over only when nobody has claimed it yet, or
+ * when the account that claimed it is the one asking.
+ */
+export function examBelongsTo(run: { claimedBy?: string | null }, account: string): boolean {
+  return !run.claimedBy || run.claimedBy === account;
+}
+
+/**
  * The answers and result of a practice exam finished on a public page, when
  * they're worth bringing onto the path: enough answered to read readiness
  * from (at least a checkpoint's worth), and recent. Only answers the path can
  * place come along: bank questions and the path's own reps, by their ids.
+ * Given the account that is asking, an exam another account has claimed is
+ * left where it is.
  */
 export function examToImport(
-  run: { reps: readonly ChoiceRep[]; picks: readonly (number | null)[]; done: { result: RehearsalResult } | null },
-  now: number
+  run: {
+    reps: readonly ChoiceRep[];
+    picks: readonly (number | null)[];
+    done: { result: RehearsalResult } | null;
+    claimedBy?: string | null;
+  },
+  now: number,
+  account?: string | null
 ): { answers: ExamAnswer[]; result: RehearsalResult } | null {
-  const result = run.done?.result;
+  if (account && !examBelongsTo(run, account)) return null;
+  // The result comes from this device's storage: every figure is checked
+  // before the path scores a checkpoint from it.
+  const result = sanitizeRehearsalResult(run.done?.result);
   if (!result || result.answered < CHECKPOINT_SIZE) return null;
   if (now - result.at > EXAM_IMPORT_DAYS * 86_400_000 || result.at > now + 60_000) return null;
   const answers = run.reps.flatMap((rep, i) => {

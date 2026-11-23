@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "glass flex flex-col gap-6 rounded-xl py-6 text-card-foreground",
+        "glass flex flex-col gap-6 rounded-lg py-6 text-card-foreground",
         className
       )}
       {...props}
@@ -28,11 +28,22 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * A card's title. Pass `as` where the title is a heading of the page (the one
+ * title of a sign-in page is its `h1`; a plan's name on the pricing page is an
+ * `h2`): text that looks like a heading must be one, or a screen reader's
+ * list of headings is empty. It stays a `div` where the card is not a section
+ * of the page.
+ */
+function CardTitle({
+  className,
+  as: Tag = "div",
+  ...props
+}: React.ComponentProps<"div"> & { as?: "div" | "h1" | "h2" | "h3" | "h4" }) {
   return (
-    <div
+    <Tag
       data-slot="card-title"
-      className={cn("font-display font-semibold leading-none", className)}
+      className={cn("font-semibold leading-none tracking-[-0.01em]", className)}
       {...props}
     />
   );

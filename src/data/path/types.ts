@@ -2,13 +2,17 @@
  * Hand-written path content. Each rep is one short thing to answer, tagged to
  * an exam objective.
  *
- * Authoring rules (enforced by src/data/path/__tests__/content.test.ts):
+ * Authoring rules (enforced by src/data/path/__tests__/content.test.ts and
+ * question-wording.test.ts):
  * - The FIRST option is the correct one. Options are shuffled when a stop is
  *   built, so reviewers can check every rep at a glance.
  * - Prompts stay short (quick reps ≤ 25 words, exam-style ≤ 40), options are a
  *   few words each, and every rep has a one-line takeaway.
  * - Exactly one option is defensible. If a careful reader could argue for a
  *   second option, rewrite the prompt.
+ * - Every prompt is a complete question that ends with a question mark and
+ *   holds no ellipsis; every takeaway is one or two complete sentences, with
+ *   no colon.
  */
 
 export type AuthoredTier = "recall" | "quick" | "exam";

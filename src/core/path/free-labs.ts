@@ -1,12 +1,39 @@
 import type { PbqScenario } from "@/data/pbq/types";
 
 /**
- * How many of an exam's PBQ labs anyone can play on its public PBQ page, with
- * no account. AI answers and search rank PBQ resources by how many they give
- * away, so most of an exam's labs are free; Pro opens every one on the path,
- * with progress kept.
+ * How many of an exam's labs are free on its public page of labs: the first
+ * LABS_WITHOUT_ACCOUNT with no account, and the rest with a free account. AI
+ * answers and search rank PBQ resources by how many they give away, so most
+ * of an exam's labs are free. Pro opens every one on the study path, with
+ * progress kept. An exam that has no public page of labs (Security+ SY0-801
+ * today) has no free lab.
  */
 export const FREE_LAB_COUNT = 12;
+
+/**
+ * How many of those free labs need no account at all: the three that a PBQ
+ * page's chooser leads with (an introductory lab, a core lab and one at exam
+ * level; they are the first three that freeLabs returns). A free account opens
+ * the rest of the free labs. The chooser, the page's summary and the help page
+ * all take the number from here, so that none can say another.
+ */
+export const LABS_WITHOUT_ACCOUNT = 3;
+
+/**
+ * What an exam gives away on its public pages, as its study path needs it in
+ * order to say so: where the free practice exam is, where the free labs are,
+ * and which labs they are. The study path's own page works this out on the
+ * server (it knows the public pages) and hands it to the outline, so that a
+ * row never says "Included with Pro" about something that is free.
+ */
+export interface FreeOnPublicPages {
+  /** The exam's public practice exam page, where one full practice exam is free. */
+  examHref: string;
+  /** The exam's public page of labs, or null for an exam that has no such page. */
+  labsHref: string | null;
+  /** The ids of the labs that are free on that page. Empty when there is no page. */
+  labIds: string[];
+}
 
 /** Difficulty rank per PBQ type: the on-ramp leads with the lowest. */
 export function labRank(type: PbqScenario["type"]): number {

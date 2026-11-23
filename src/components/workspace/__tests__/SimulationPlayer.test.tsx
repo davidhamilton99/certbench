@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { SimDropdownField, SimFieldAnswer, SimulationScenario, SimZonePlacementField } from "@/data/pbq/types";
 import { gradeSimulationScenario } from "@/core/pbq/grade-simulation";
 import { pickOrder, sortOrder } from "@/core/pbq/sim-play";
@@ -9,7 +10,6 @@ const track = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics", () => ({ track }));
 
 import { SimulationPlayer } from "../SimulationPlayer";
-import { MOVE_ADVANCE_MS, STEP_ADVANCE_MS } from "../SimMoves";
 
 const cause: SimDropdownField = {
   type: "dropdown",
@@ -46,7 +46,7 @@ const lab: SimulationScenario = {
         { label: "ping 10.0.0.1", content: "Reply from 10.0.0.1: time=1ms" },
       ],
       fields: [cause, { type: "text", id: "gw", label: "Gateway address", acceptedValues: ["10.0.0.1"] }],
-      explanation: "Stage one: the panel shows an image, so it's the light behind it.",
+      explanation: "Stage one: the panel shows an image, so it is the light behind it.",
     },
     {
       id: "t2",
@@ -67,15 +67,21 @@ const lab: SimulationScenario = {
   ],
 };
 
-const status = () => screen.getByRole("status");
-const tile = (name: string) => screen.getByRole("radio", { name: new RegExp(name) });
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
+/** The button that moves a move on. Its description is the verdict on the answer just given. */
+const onward = () => button("Continue");
+/** The name of an answer once it is marked: what a screen reader is told, then the answer. */
+const marked = (said: string, answer: string) => new RegExp(`^${said}:\\s*${answer}$`);
+/** A move's answers: a group named by what is being asked. */
+const answers = (name: string) => within(screen.getByRole("group", { name }));
+const gateway = () => screen.getByRole("textbox", { name: "Gateway address" });
+const score = () => screen.getByRole("group", { name: "Your score" });
 
-/** Say yes or no to whatever card is up, right or wrong as asked. */
+/** Say yes or no to whatever card is up, correctly or not as asked. */
 function call(right: boolean) {
-  const card = screen.getByText(/Remove the battery|Use WD-40 on the hinges|Wear an ESD strap/);
+  const card = screen.getByText(/^(Remove the battery|Use WD-40 on the hinges|Wear an ESD strap)$/);
   const isYes = card.textContent !== "Use WD-40 on the hinges";
-  fireEvent.click(button(new RegExp(`^${isYes === right ? "Yes" : "No"}`)));
+  fireEvent.click(answers(card.textContent!).getByRole("button", { name: isYes === right ? "Yes" : "No" }));
 }
 
 /** Sort whatever item is up, into its bin or the other one. */
@@ -83,21 +89,16 @@ function sort(right: boolean) {
   const item = screen.getByText(/^(LED strip|GPU chip)$/);
   const home = item.textContent === "LED strip" ? "Lid" : "Motherboard";
   const other = home === "Lid" ? "Motherboard" : "Lid";
-  fireEvent.click(button(new RegExp(right ? home : other)));
+  fireEvent.click(answers(item.textContent!).getByRole("button", { name: right ? home : other }));
 }
 
 function playStageOne() {
-  fireEvent.click(tile("Backlight"));
-  fireEvent.click(button(/^Next/));
-  fireEvent.change(screen.getByRole("textbox", { name: "Gateway address" }), { target: { value: "10.0.0.1" } });
-  fireEvent.click(button("Check"));
-  fireEvent.click(button(/^Next/));
+  fireEvent.click(button("Backlight"));
+  fireEvent.click(onward());
+  fireEvent.change(gateway(), { target: { value: "10.0.0.1" } });
+  fireEvent.click(button("Check answer"));
+  fireEvent.click(onward());
 }
-
-// Right answers move on by themselves; fake time keeps that from racing the clicks.
-beforeEach(() => {
-  vi.useFakeTimers();
-});
 
 afterEach(() => {
   vi.useRealTimers();
@@ -105,50 +106,124 @@ afterEach(() => {
 });
 
 describe("simulation labs, played", () => {
-  it("opens on the first question as tiles, with the ticket and the evidence above it, and no form to submit", () => {
+  it("opens on the first question as answers to press, with the ticket and the evidence above it, and no form to submit", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
     expect(screen.getByText(/A user's laptop screen is dim/)).toBeInTheDocument();
-    expect(screen.getByText("Stage 1 of 2 · Diagnose")).toBeInTheDocument();
-    expect(screen.getByText("Which part failed?")).toBeInTheDocument();
-    expect(screen.getAllByRole("radio")).toHaveLength(4);
+    expect(screen.getByText("Stage 1 of 2: Diagnose")).toBeInTheDocument();
+    expect(screen.getByText("0 of 4 answered")).toBeInTheDocument();
+    expect(answers("Which part failed?").getAllByRole("button")).toHaveLength(4);
     expect(screen.queryByText(/Submit All Answers/i)).toBeNull();
     expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByRole("radio")).toBeNull();
+    // A lab that is on the page as it loads does not take the focus from the page.
+    expect(document.body).toHaveFocus();
   });
 
-  it("marks a pick the moment it's tapped, and a miss waits with the answer", () => {
+  it("marks an answer the moment it is pressed, in words as well as colour, and waits with the correct answer", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    fireEvent.click(tile("GPU"));
-    expect(status()).toHaveTextContent("It's Backlight.");
-    expect(tile("Backlight")).toBeDisabled();
-    fireEvent.click(button(/^Got it/));
-    expect(screen.getByRole("textbox", { name: "Gateway address" })).toBeInTheDocument();
+    fireEvent.click(button("GPU"));
+    expect(onward()).toHaveAccessibleDescription("Incorrect. The correct answer is Backlight.");
+    expect(onward()).toHaveFocus();
+    expect(button(marked("Your answer, which is incorrect", "GPU"))).toBeDisabled();
+    expect(button(marked("Correct answer", "Backlight"))).toBeDisabled();
+    expect(screen.getByText("1 of 4 answered")).toBeInTheDocument();
+    fireEvent.click(onward());
+    expect(gateway()).toBeInTheDocument();
+    // The move that follows takes the focus on what it asks, so that it is read.
+    expect(screen.getByText("Gateway address")).toHaveFocus();
   });
 
-  it("moves on by itself after a right answer", () => {
+  it("marks a missed move in red on the run's bar, as on the answer itself, and never in amber", () => {
+    const { container } = render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
+    fireEvent.click(button("GPU"));
+    // The bar's segments: the first is the move just missed, the rest are still to play.
+    const segments = [...container.querySelectorAll("span.h-1\\.5")];
+    expect(segments[0].className).toContain("bg-destructive");
+    expect(segments.some((s) => s.className.includes("bg-warning"))).toBe(false);
+  });
+
+  it("waits for Continue after a correct answer as well: nothing moves on by itself", () => {
+    vi.useFakeTimers();
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    fireEvent.click(tile("Backlight"));
-    expect(status()).toHaveTextContent("Right.");
-    act(() => vi.advanceTimersByTime(MOVE_ADVANCE_MS));
-    expect(screen.getByRole("textbox", { name: "Gateway address" })).toBeInTheDocument();
+    fireEvent.click(button("Backlight"));
+    expect(onward()).toHaveAccessibleDescription("Correct.");
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(button(marked("Your answer, which is correct", "Backlight"))).toBeDisabled();
+    expect(onward()).toHaveFocus();
+    fireEvent.click(onward());
+    expect(gateway()).toBeInTheDocument();
   });
 
   it("opens each clue in the console, marking the ones not opened yet", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    const tabs = within(screen.getByRole("tablist", { name: "Evidence" }));
-    expect(tabs.getByRole("tab", { name: /Test results/ })).toHaveAttribute("aria-selected", "true");
-    expect(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ })).toHaveTextContent("not opened yet");
+    const clues = within(screen.getByRole("group", { name: "Evidence" }));
+    expect(clues.getByRole("button", { name: /Test results/ })).toHaveAttribute("aria-pressed", "true");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).toHaveTextContent("not opened yet");
     expect(screen.getByText("No change")).toBeInTheDocument();
-    fireEvent.click(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ }));
+    fireEvent.click(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ }));
     expect(screen.getByText("Reply from")).toBeInTheDocument();
-    expect(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ })).not.toHaveTextContent("not opened yet");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).toHaveAttribute("aria-pressed", "true");
+    expect(clues.getByRole("button", { name: /Test results/ })).toHaveAttribute("aria-pressed", "false");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).not.toHaveTextContent("not opened yet");
+    // The evidence shown is named by its clue.
+    expect(screen.getByRole("group", { name: "ping 10.0.0.1" })).toHaveTextContent("Reply from");
   });
 
-  it("ends a stage on its score, with the explanation folded away, and tracks it", () => {
+  it("draws the clues as pressed buttons whose names wrap, and never as tabs whose keys do nothing", async () => {
+    const user = userEvent.setup();
+    const longLab: SimulationScenario = {
+      ...lab,
+      tasks: [
+        {
+          ...lab.tasks[0],
+          evidence: [
+            { label: "Test results", content: "Test 1: Brightness keys: no change" },
+            { label: "ping 8.8.8.8 (Google Public DNS)", content: "Reply from 8.8.8.8: time=12ms" },
+          ],
+        },
+        lab.tasks[1],
+      ],
+    };
+    render(<SimulationPlayer scenario={longLab} onBack={vi.fn()} />);
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+    const clues = within(screen.getByRole("group", { name: "Evidence" })).getAllByRole("button");
+    for (const clue of clues) {
+      // The whole name is on the button for everyone: nothing is cut short, and no tooltip holds the rest.
+      expect(clue).not.toHaveAttribute("title");
+      expect(clue.className).not.toMatch(/\btruncate\b|\bmax-w-/);
+      expect(clue.className).toContain("[overflow-wrap:anywhere]");
+    }
+    expect(clues[1]).toHaveTextContent("ping 8.8.8.8 (Google Public DNS)");
+    // Each clue is a stop for the Tab key, and Enter opens it.
+    clues[0].focus();
+    await user.tab();
+    expect(clues[1]).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(clues[1]).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Reply from")).toBeInTheDocument();
+  });
+
+  it("draws the console as dark paper in both themes, in the theme's own ink and marks", () => {
+    render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
+    const frame = screen.getByRole("group", { name: "Evidence" }).closest(".dark");
+    expect(frame).not.toBeNull();
+    // Nothing inside names a colour of its own: no fixed hex, no white, no palette colour.
+    const classes = [frame!, ...frame!.querySelectorAll("*")].map((el) => el.getAttribute("class") ?? "").join(" ");
+    expect(classes).not.toMatch(/#|\b(?:text|bg|border|fill|stroke|ring)-(?:white|black|amber|emerald|sky|rose|slate|zinc|gray)\b/);
+    // A failure reported in the evidence is the theme's red mark.
+    expect(screen.getByText("No change")).toHaveClass("text-destructive");
+  });
+
+  it("ends a stage on its score in a sentence, with the explanation folded away, and tracks it", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
     playStageOne();
-    expect(screen.getByText("Stage 1 of 2 done")).toBeInTheDocument();
-    expect(screen.getByText("All 2 right")).toBeInTheDocument();
-    expect(screen.getByText("Why these are the answers").closest("details")).not.toHaveAttribute("open");
+    expect(screen.getByText("Stage 1 of 2 complete")).toBeInTheDocument();
+    expect(screen.getByText("You answered all 2 questions correctly.")).toBeInTheDocument();
+    expect(screen.getByText("Why these answers are correct").closest("details")).not.toHaveAttribute("open");
     expect(track).toHaveBeenCalledWith("sim_stage_cleared", {
       scenario_id: "sim-test",
       stage: 1,
@@ -156,26 +231,31 @@ describe("simulation labs, played", () => {
       correct: 2,
       total: 2,
     });
+    // The way on has the focus, and the stage's score is read with it.
+    expect(button(/^Next stage/)).toHaveFocus();
+    expect(button(/^Next stage/)).toHaveAccessibleDescription(
+      /Stage 1 of 2 complete\s*You answered all 2 questions correctly\./
+    );
     fireEvent.click(button(/^Next stage/));
-    expect(screen.getByText("Stage 2 of 2 · Repair")).toBeInTheDocument();
+    expect(screen.getByText("Stage 2 of 2: Repair")).toBeInTheDocument();
     expect(screen.getByText("Safe steps")).toBeInTheDocument();
-    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.queryByRole("group", { name: "Evidence" })).toBeNull();
   });
 
-  it("asks a pick-all one option at a time, yes or no, marking each call", () => {
+  it("asks a pick-all one option at a time, yes or no, marking each answer", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
     playStageOne();
     fireEvent.click(button(/^Next stage/));
-    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(screen.getByText("Item 1 of 3")).toBeInTheDocument();
     call(true);
-    expect(status()).toHaveTextContent("Right.");
-    act(() => vi.advanceTimersByTime(STEP_ADVANCE_MS));
-    expect(screen.getByText("2 / 3")).toBeInTheDocument();
+    expect(onward()).toHaveAccessibleDescription("Correct.");
+    fireEvent.click(onward());
+    expect(screen.getByText("Item 2 of 3")).toBeInTheDocument();
     call(false);
-    expect(status()).toHaveTextContent(/That one's a (yes|no)\./);
-    fireEvent.click(button(/^Got it/));
+    expect(onward()).toHaveAccessibleDescription(/^Incorrect\. The correct answer is (Yes|No)\.$/);
+    fireEvent.click(onward());
     call(true);
-    expect(status()).toHaveTextContent("2 of 3 called right.");
+    expect(onward()).toHaveAccessibleDescription("Correct. 2 of 3 answered correctly.");
   });
 
   it("sorts each item into a bin, then grades the lab once with the grader's own score", () => {
@@ -185,17 +265,21 @@ describe("simulation labs, played", () => {
     fireEvent.click(button(/^Next stage/));
     for (let i = 0; i < 3; i++) {
       call(true);
-      fireEvent.click(button(/^Next/));
+      fireEvent.click(onward());
     }
     sort(true);
-    fireEvent.click(button(/^Next/));
+    fireEvent.click(onward());
     sort(false);
-    expect(status()).toHaveTextContent(/It goes in (Lid|Motherboard)\. 1 of 2 sorted right\./);
-    fireEvent.click(button(/^Got it/));
-    expect(screen.getByText("1 of 2 right")).toBeInTheDocument();
-    const score = button(/^See my score/);
-    fireEvent.click(score);
-    fireEvent.click(score);
+    expect(onward()).toHaveAccessibleDescription(
+      /^Incorrect\. The correct answer is (Lid|Motherboard)\. 1 of 2 sorted correctly\.$/
+    );
+    fireEvent.click(onward());
+    expect(
+      screen.getByText("You answered 1 of 2 questions correctly. One other answer earned partial credit.")
+    ).toBeInTheDocument();
+    const toScore = button(/^View my score/);
+    fireEvent.click(toScore);
+    fireEvent.click(toScore);
 
     // Graded once, by the grader, on exactly the answers given: the first item
     // up went in its bin, the second in the other one.
@@ -204,80 +288,147 @@ describe("simulation labs, played", () => {
     const placements = [-1, -1];
     placements[firstUp] = where.correctZones[firstUp];
     placements[secondUp] = 1 - where.correctZones[secondUp];
-    const answers: Record<string, SimFieldAnswer> = {
+    const given: Record<string, SimFieldAnswer> = {
       cause: { type: "dropdown", selectedIndex: 1 },
       gw: { type: "text", value: "10.0.0.1" },
       steps: { type: "select-many", selectedIndices: [0, 2] },
       where: { type: "zone-placement", placements },
     };
-    expect(onGraded.mock.calls[0][0]).toEqual(gradeSimulationScenario(lab, answers).result);
+    expect(onGraded.mock.calls[0][0]).toEqual(gradeSimulationScenario(lab, given).result);
     expect(onGraded.mock.calls[0][0]).toMatchObject({ score: 80, correctItems: 4, totalItems: 5 });
-    expect(screen.getByText("80%")).toBeInTheDocument();
-    expect(screen.getByText("Solved")).toBeInTheDocument();
-    expect(screen.getByText("The one to look at again")).toBeInTheDocument();
+    // The score is the figure, its verdict in words and a bar: no ring, and no sweep from empty.
+    expect(score()).toHaveFocus();
+    expect(score()).toHaveTextContent("80%");
+    expect(score()).toHaveTextContent("Solved");
+    expect(score()).toHaveTextContent("You earned 4 of 5 points, including partial credit.");
+    expect(score().querySelector("svg circle")).toBeNull();
+    expect(score().querySelector(".animate-gauge, .animate-bar")).toBeNull();
+    expect(screen.getByText("The answer to review")).toBeInTheDocument();
   });
 
-  it("plays from the keyboard: numbers pick, y and n call, numbers sort, Enter moves on", () => {
+  it("plays from the keyboard, and only while the focus is inside the lab", async () => {
+    const user = userEvent.setup();
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    const key = (k: string) => fireEvent.keyDown(document, { key: k });
-    // The tiles are shuffled; the backlight's number is wherever it landed.
-    key(String(pickOrder(cause).indexOf(1) + 1));
-    expect(status()).toHaveTextContent("Right.");
-    act(() => vi.advanceTimersByTime(MOVE_ADVANCE_MS));
-    fireEvent.change(screen.getByRole("textbox", { name: "Gateway address" }), { target: { value: "10.0.0.9" } });
-    fireEvent.submit(screen.getByRole("textbox", { name: "Gateway address" }).closest("form")!);
-    expect(status()).toHaveTextContent("It's 10.0.0.1.");
-    key("Enter");
-    expect(screen.getByText("1 of 2 right")).toBeInTheDocument();
-    key("Enter");
-    expect(screen.getByText("Safe steps")).toBeInTheDocument();
+    // The answers are shuffled; the backlight's number is wherever it landed.
+    const digit = String(pickOrder(cause).indexOf(1) + 1);
+
+    // With the focus elsewhere on the page, a number key is not an answer.
+    await user.keyboard(digit);
+    expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
+    button("Return to the scenarios").focus();
+    await user.keyboard(digit);
+    expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
+
+    // With the focus on one of the answers, it is.
+    answers("Which part failed?").getAllByRole("button")[0].focus();
+    await user.keyboard(digit);
+    expect(onward()).toHaveAccessibleDescription("Correct.");
+    // Continue has the focus, so Enter moves on.
+    await user.keyboard("{Enter}");
+
+    fireEvent.change(gateway(), { target: { value: "10.0.0.9" } });
+    fireEvent.submit(gateway().closest("form")!);
+    expect(onward()).toHaveAccessibleDescription("Incorrect. The correct answer is 10.0.0.1.");
+    // Enter also moves on from the question itself (a press on the move puts the focus there).
+    screen.getByText("Gateway address").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("You answered 1 of 2 questions correctly.")).toBeInTheDocument();
+    await user.keyboard("{Enter}");
+
+    // Each move that follows takes the focus, so the keys carry on with no click.
+    expect(screen.getByText("Safe steps")).toHaveFocus();
     for (let i = 0; i < 3; i++) {
-      const card = screen.getByText(/Remove the battery|Use WD-40 on the hinges|Wear an ESD strap/);
-      key(card.textContent === "Use WD-40 on the hinges" ? "n" : "y");
-      act(() => vi.advanceTimersByTime(STEP_ADVANCE_MS));
+      const card = screen.getByText(/^(Remove the battery|Use WD-40 on the hinges|Wear an ESD strap)$/);
+      await user.keyboard(card.textContent === "Use WD-40 on the hinges" ? "n" : "y");
+      expect(onward()).toHaveAccessibleDescription(/^Correct\./);
+      await user.keyboard("{Enter}");
     }
-    act(() => vi.advanceTimersByTime(MOVE_ADVANCE_MS));
     for (let i = 0; i < 2; i++) {
       const item = screen.getByText(/^(LED strip|GPU chip)$/);
-      key(item.textContent === "LED strip" ? "1" : "2");
-      act(() => vi.advanceTimersByTime(STEP_ADVANCE_MS));
+      await user.keyboard(item.textContent === "LED strip" ? "1" : "2");
+      expect(onward()).toHaveAccessibleDescription(/^Correct\./);
+      await user.keyboard("{Enter}");
     }
-    act(() => vi.advanceTimersByTime(MOVE_ADVANCE_MS));
-    expect(screen.getByText("All 2 right")).toBeInTheDocument();
-    key("Enter");
-    expect(screen.getByText("80%")).toBeInTheDocument();
+    expect(screen.getByText("You answered all 2 questions correctly.")).toBeInTheDocument();
+    await user.keyboard("{Enter}");
+    expect(score()).toHaveTextContent("80%");
   });
 
-  it("asks before leaving with answers given, and starts clean on Play again", () => {
-    const onBack = vi.fn();
-    render(<SimulationPlayer scenario={lab} onBack={onBack} backLabel="Pick another lab" />);
-    fireEvent.click(tile("Backlight"));
-    fireEvent.click(button("Pick another lab"));
-    expect(screen.getByRole("dialog", { name: "Leave this lab?" })).toBeInTheDocument();
-    expect(onBack).not.toHaveBeenCalled();
-    fireEvent.click(button("Stay"));
+  it("tells the host once that play has started, at the first answer and not before", () => {
+    const onStarted = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={vi.fn()} onStarted={onStarted} />);
+    // Reading the evidence is not a move.
+    fireEvent.click(screen.getByRole("button", { name: /ping 10\.0\.0\.1/ }));
+    expect(onStarted).not.toHaveBeenCalled();
+    fireEvent.click(button("GPU"));
+    expect(onStarted).toHaveBeenCalledTimes(1);
+    fireEvent.click(onward());
+    fireEvent.change(gateway(), { target: { value: "10.0.0.1" } });
+    fireEvent.click(button("Check answer"));
+    expect(onStarted).toHaveBeenCalledTimes(1);
+  });
 
-    fireEvent.click(button(/^Next/));
-    fireEvent.change(screen.getByRole("textbox", { name: "Gateway address" }), { target: { value: "10.0.0.1" } });
-    fireEvent.click(button("Check"));
-    fireEvent.click(button(/^Next/));
+  it("asks before leaving with answers given, and starts clean when the lab is repeated", () => {
+    const onBack = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={onBack} backLabel="Choose another lab" />);
+    fireEvent.click(button("Backlight"));
+    fireEvent.click(button("Choose another lab"));
+    expect(screen.getByRole("dialog", { name: "Do you want to leave this lab?" })).toBeInTheDocument();
+    expect(onBack).not.toHaveBeenCalled();
+    fireEvent.click(button("Stay in the lab"));
+
+    fireEvent.click(onward());
+    fireEvent.change(gateway(), { target: { value: "10.0.0.1" } });
+    fireEvent.click(button("Check answer"));
+    fireEvent.click(onward());
     fireEvent.click(button(/^Next stage/));
     for (let i = 0; i < 3; i++) {
       call(true);
-      fireEvent.click(button(/^Next/));
+      fireEvent.click(onward());
     }
     sort(true);
-    fireEvent.click(button(/^Next/));
+    fireEvent.click(onward());
     sort(true);
-    fireEvent.click(button(/^Next/));
-    fireEvent.click(button(/^See my score/));
-    expect(screen.getByText("100%")).toBeInTheDocument();
-    expect(screen.queryByText(/to look at again/)).toBeNull();
+    fireEvent.click(onward());
+    fireEvent.click(button(/^View my score/));
+    expect(score()).toHaveTextContent("100%");
+    expect(screen.queryByText(/to review/)).toBeNull();
 
-    fireEvent.click(button(/Play again/));
-    expect(screen.getByText("Which part failed?")).toBeInTheDocument();
-    expect(screen.getAllByRole("radio").every((r) => !r.hasAttribute("disabled"))).toBe(true);
-    fireEvent.click(button("Pick another lab"));
+    fireEvent.click(button(/Repeat the lab/));
+    expect(screen.getByText("Which part failed?")).toHaveFocus();
+    expect(
+      answers("Which part failed?")
+        .getAllByRole("button")
+        .every((b) => !b.hasAttribute("disabled"))
+    ).toBe(true);
+    fireEvent.click(button("Choose another lab"));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes the question as it leaves, also for a host whose way back does not close the lab", async () => {
+    const user = userEvent.setup();
+    // A way back that leaves the player on the page, as a public lab page's does.
+    const onBack = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={onBack} />);
+    fireEvent.click(button("Backlight"));
+    await user.click(button("Return to the scenarios"));
+    const dialog = screen.getByRole("dialog", { name: "Do you want to leave this lab?" });
+    expect(within(dialog).getByRole("button", { name: "Stay in the lab" })).toHaveFocus();
+    await user.tab();
+    expect(within(dialog).getByRole("button", { name: "Leave the lab" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("goes straight back with no question for a host whose way back keeps the lab and its answers", () => {
+    const onBack = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={onBack} confirmLeave={false} />);
+    fireEvent.click(button("Backlight"));
+    fireEvent.click(button("Return to the scenarios"));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Nothing is thrown away: the answer is still marked.
+    expect(button(marked("Your answer, which is correct", "Backlight"))).toBeDisabled();
   });
 });

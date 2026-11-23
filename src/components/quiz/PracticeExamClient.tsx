@@ -17,10 +17,11 @@ const PRACTICE_CONFIG: QuizConfig = {
   allowReview: true,
 };
 
+/** The result's heading, as a sentence. */
 const RESULT_TITLES: Record<ExamType, string> = {
-  full: "Practice exam complete",
-  domain_drill: "Domain drill complete",
-  weak_points: "Weak points review complete",
+  full: "You have completed the practice exam.",
+  domain_drill: "You have completed the domain drill.",
+  weak_points: "You have completed the weak points review.",
 };
 
 export function PracticeExamClient({
@@ -51,10 +52,11 @@ export function PracticeExamClient({
       submit={(attemptId, answers, flaggedQuestionIds) =>
         api(submitPracticeExam, { attemptId, answers, flaggedQuestionIds })
       }
-      submitLabel="Submit exam"
+      submitLabel="Submit your answers"
       resultsTitle={RESULT_TITLES[examType]}
       backHref="/dashboard"
-      backLabel="Back to your study plan"
+      backLabel="Return to your study plan"
+      fullExam={examType === "full"}
     />
   );
 }

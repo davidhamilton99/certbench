@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation";
-import { PartyPopper } from "lucide-react";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import {
   getCertificationBySlug,
-  listActiveCertifications,
 } from "@/server/data/certifications";
-import { listEnrollments } from "@/server/data/enrollments";
-import { getProfile } from "@/server/data/profiles";
 import { getSessionPlan } from "@/server/services/session-plan";
 import { getUserPlan } from "@/server/services/subscription";
 import { signShare, shareName } from "@/server/share/readiness-token";
@@ -33,13 +30,13 @@ const METERED_TYPES = new Set([
 ]);
 
 export const metadata = {
-  title: "Today",
+  title: "Study plan",
 };
 
 /**
- * The guided path card for the active exam: next stop and progress, from the
- * account's saved path. Never breaks the dashboard — any failure falls back to
- * a plain "open your path" card.
+ * The study path card for the active exam: the next step and the progress, from
+ * the account's saved path. It never breaks the page: any failure falls back to
+ * a plain card that opens the study path.
  */
 async function loadPathCard(db: Db, userId: string, slug: string) {
   if (!isPathCert(slug)) return null;
@@ -72,13 +69,9 @@ export default async function DashboardPage({
   searchParams: Promise<{ cert?: string }>;
 }) {
   const { cert: certSlug } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
-  const enrollments = await listEnrollments(db, user.id);
+  const enrollments = await pageEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
 
   // Resolve the active certification: ?cert= slug, else first enrollment.
@@ -88,7 +81,7 @@ export default async function DashboardPage({
     : undefined;
   if (!active || !enrollment) {
     enrollment = enrollments[0];
-    const certs = await listActiveCertifications(db);
+    const certs = await pageCertifications(db);
     active = certs.find((c) => c.id === enrollment!.certificationId) ?? null;
   }
   if (!active) redirect("/onboarding");
@@ -96,13 +89,13 @@ export default async function DashboardPage({
   const [plan, userPlan, profile] = await Promise.all([
     getSessionPlan(db, user.id, active.id, enrollment.examDate),
     getUserPlan(db, user.id),
-    getProfile(db, user.id),
+    pageProfile(db, user.id),
   ]);
 
   const pathCard = await loadPathCard(db, user.id, active.slug);
 
-  // First-run: before the diagnostic, the plan is a single diagnostic block.
-  // Show a focused "start here" gate instead of an empty readiness gauge.
+  // Before the diagnostic the plan is one block, the diagnostic itself. The
+  // page then shows what the diagnostic is, where an empty score would be.
   const needsDiagnostic =
     plan.blocks.length === 1 && plan.blocks[0].type === "diagnostic";
   if (needsDiagnostic) {
@@ -123,7 +116,7 @@ export default async function DashboardPage({
       ? Infinity
       : Math.max(0, userPlan.questionsLimitPerDay - userPlan.questionsUsedToday);
 
-  // Shareable readiness card — only once there's a real score to show.
+  // The link for sharing the score exists only once there is a score to show.
   let share: ShareReadinessProps | undefined;
   if (plan.totalQuestionsSeen > 0) {
     const token = signShare({
@@ -145,55 +138,43 @@ export default async function DashboardPage({
 
   return (
     <div className="relative mx-auto grid w-full max-w-5xl gap-8">
-      {/* Ambient glow behind the readiness column — depth without noise. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 right-0 -z-10 h-72 w-[32rem] rounded-full bg-primary/5 blur-3xl dark:bg-primary/10"
-      />
       {pathCard}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid gap-1">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            {active.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            <span className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-xs">
-              {active.examCode}
-            </span>{" "}
-            · today&apos;s plan, ordered by impact
-          </p>
-        </div>
-        {plan.daysUntilExam !== null && (
-          <span className="rounded-full border px-3 py-1 font-mono text-xs text-muted-foreground">
-            {plan.daysUntilExam} days to exam
-          </span>
-        )}
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Study plan for {active.name}</h1>
+        <p className="text-small text-muted-foreground">
+          This is your plan for exam <span className="font-mono text-xs">{active.examCode}</span>. Today&apos;s work
+          is listed in order of importance.
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="order-2 grid content-start gap-3 lg:order-1">
-          {plan.blocks.map((block, i) => (
-            <SessionBlockCard
-              key={`${block.type}-${i}`}
-              block={block}
-              certSlug={active.slug}
-              order={i + 1}
-              locked={
-                METERED_TYPES.has(block.type) &&
-                (block.questionCount ?? 0) > remainingToday
-              }
-            />
-          ))}
-          {plan.blocks.length === 0 && (
-            <div className="grid justify-items-center gap-2 rounded-xl border border-dashed p-10 text-center">
-              <PartyPopper className="size-6 text-muted-foreground" />
-              <p className="text-sm font-medium">You&apos;re all caught up</p>
-              <p className="text-sm text-muted-foreground">
-                Nothing due today — check back tomorrow.
-              </p>
+        <section aria-labelledby="todays-work" className="order-2 grid content-start gap-3 lg:order-1">
+          <h2 id="todays-work" className="text-base font-semibold">
+            Today&apos;s work
+          </h2>
+          {plan.blocks.length > 0 ? (
+            <ol className="grid gap-3">
+              {plan.blocks.map((block, i) => (
+                <li key={`${block.type}-${i}`}>
+                  <SessionBlockCard
+                    block={block}
+                    certSlug={active.slug}
+                    order={i + 1}
+                    locked={
+                      METERED_TYPES.has(block.type) &&
+                      (block.questionCount ?? 0) > remainingToday
+                    }
+                  />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="grid gap-1.5 rounded-lg border border-dashed border-input p-8 text-small">
+              <p className="font-medium">You have completed today&apos;s plan.</p>
+              <p className="text-muted-foreground">Nothing else is due today. Please return tomorrow.</p>
             </div>
           )}
-        </div>
+        </section>
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-8">
             <ReadinessPanel plan={plan} share={share} />

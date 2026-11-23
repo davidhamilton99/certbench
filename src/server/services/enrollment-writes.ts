@@ -73,10 +73,19 @@ export async function switchVersion(
 }
 
 /**
- * Make one exam the user's only active enrollment — a free account studies
- * one exam at a time, and that's the exam Pro unlocks when they buy. Other
+ * Make one exam the user's only active enrollment: a free account studies one
+ * exam at a time, and that is the exam Pro unlocks when they buy. Other
  * enrollments are deactivated, not deleted. `examDate` undefined keeps the
  * date the enrollment already had.
+ *
+ * This exam is switched on first and the others are switched off second. In
+ * the other order, two requests sent at once (two tabs, or a script) each
+ * switched "the others" off before either had switched its own exam on, so
+ * both exams stayed active and one plan then opened them all. In this order,
+ * every request switches its exam on before its own switch-off, so the
+ * switch-off that runs last of all comes after every switch-on and leaves at
+ * most one exam active. Requests that race can leave none active; the next
+ * enrollment puts that right.
  */
 export async function makeOnlyActiveEnrollment(
   userId: string,
@@ -84,14 +93,6 @@ export async function makeOnlyActiveEnrollment(
   examDate: string | null | undefined
 ): Promise<void> {
   const db = createAdminClient();
-  const { error: offErr } = await db
-    .from("user_enrollments")
-    .update({ is_active: false })
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .neq("certification_id", certificationId);
-  if (offErr) throw new ApiError("internal", offErr.message);
-
   const row: { user_id: string; certification_id: string; is_active: boolean; exam_date?: string | null } = {
     user_id: userId,
     certification_id: certificationId,
@@ -102,4 +103,12 @@ export async function makeOnlyActiveEnrollment(
     .from("user_enrollments")
     .upsert(row, { onConflict: "user_id,certification_id" });
   if (error) throw new ApiError("internal", error.message);
+
+  const { error: offErr } = await db
+    .from("user_enrollments")
+    .update({ is_active: false })
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .neq("certification_id", certificationId);
+  if (offErr) throw new ApiError("internal", offErr.message);
 }

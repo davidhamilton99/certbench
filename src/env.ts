@@ -26,7 +26,17 @@ export const publicEnv = publicSchema.parse({
   NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
 });
 
-/** Server-side secrets. Every name the app may need lives here. */
+/**
+ * Server-side secrets. Every name the app may need lives here.
+ *
+ * Which of them a deployment has is written to the log as a server instance
+ * starts and answered by /api/health, as true or false only
+ * (src/server/api/settings.ts).
+ *
+ * ADDON_CERTS is deliberately not one of them and MUST STAY UNSET: set to
+ * "true" it lets any account add an exam without paying
+ * (src/app/api/user/certifications/route.ts).
+ */
 type ServerKey =
   | "SUPABASE_SERVICE_ROLE_KEY"
   | "STRIPE_SECRET_KEY"
@@ -46,15 +56,26 @@ export function serverEnv(key: ServerKey): string {
   const value = process.env[key];
   if (!value) {
     throw new Error(
-      `Missing required environment variable ${key} — set it in .env.local (dev) or the Vercel environment.`
+      `Missing required environment variable ${key}: set it in .env.local (dev) or the Vercel environment.`
     );
   }
   return value;
 }
 
-/** Optional server config (no throw). */
+/**
+ * Optional server config (no throw). EMAIL_POSTAL_ADDRESS is the sender's
+ * postal address: the owner supplies it, and every email prints it in its
+ * footer once it is set (src/server/email/templates.ts).
+ *
+ * LINK_SIGNING_SECRET signs the shared readiness links and the story links in
+ * the post-exam email (src/server/share/readiness-token.ts,
+ * src/server/story/story-token.ts). Until it is set, SUPABASE_SERVICE_ROLE_KEY
+ * signs them, as it signed every link made before; once it is set, the links
+ * made before stop working, and the service role key can be rotated without
+ * breaking the links made after.
+ */
 export function serverEnvOptional(
-  key: "SENTRY_DSN" | "EMAIL_FROM"
+  key: "SENTRY_DSN" | "EMAIL_FROM" | "EMAIL_POSTAL_ADDRESS" | "LINK_SIGNING_SECRET"
 ): string | undefined {
   return process.env[key];
 }

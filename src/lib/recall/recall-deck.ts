@@ -54,6 +54,42 @@ export interface RecallDeckConfig {
    * reference table, just not in the drill.
    */
   only?: (row: Record<string, string>) => boolean;
+  /**
+   * How the deck explains an answer in sentences. A deck without it keeps the
+   * note form ("SSH: 22 (Secure Shell)").
+   */
+  explain?: RecallExplanation;
+}
+
+/**
+ * A deck's explanation of an answer, in sentences. The question card prints it
+ * straight after its verdict ("Correct." or "Incorrect. The correct answer is
+ * 22."), so it has to read on from either one: "SSH uses port 22." Plain data,
+ * like the rest of a deck's configuration, so it crosses from a server page to
+ * a client component with the deck.
+ */
+export interface RecallExplanation {
+  /**
+   * The sentence, or two, that a row gets. A column's key in braces is replaced
+   * by the row's cell as the table has it: "{protocol} uses port {port}." A
+   * cell that opens with a capital can be set inside a sentence:
+   * "{purpose:lowerFirst}" gives "list directory contents" for "List directory
+   * contents".
+   */
+  template: string;
+  /**
+   * Rows whose cells do not fit the template as they stand (a pair of ports
+   * written "67/68", a speed written "Up to 40 Gbps (TB4)", a purpose with a
+   * colon in it). Each has sentences of its own here, under its cell in the
+   * `by` column, and they are filled like the template. The reference table
+   * keeps its cells as they are, for where it is shown as a table.
+   */
+  rows?: Record<string, string>;
+  /**
+   * The column that names a row in `rows`: one whose cells differ from row to
+   * row. Left out, it is the cue column.
+   */
+  by?: string;
 }
 
 /** A data rate like "1 Gbps", "100+ Gbps" or "~550 MB/s", for decks that ask a speed. */
@@ -99,12 +135,27 @@ export interface RecallQuestion {
   answerLabel: string;
   /** Canonical answer, for display on reveal. */
   answer: string;
-  /** Normalized accepted forms — grades both typed answers and chosen options. */
+  /**
+   * Normalized accepted forms, which grade both typed answers and chosen options.
+   * Where the cue names more than one row (RADIUS has a row for its ports and a
+   * row for its legacy ports), the forms of every such row are accepted, with
+   * those of the row that was dealt first: a typed "1812" is a correct port
+   * for RADIUS whichever row the question drew.
+   */
   acceptable: string[];
   /** Up to four shuffled options (the answer plus distractors). */
   options: string[];
-  /** Context line shown on reveal ("" when the deck defines no detail). */
-  detail: string;
+  /**
+   * Context for the reveal: one entry for each detail column that has a value
+   * in this row, in the deck's order (none when the deck defines no detail).
+   */
+  details: string[];
+  /**
+   * The answer explained in sentences, for a deck that has an explanation
+   * template. Left out for every other deck, and for a row whose template
+   * names a cell the row does not have.
+   */
+  explanation?: string;
 }
 
 function shuffle<T>(arr: T[], rng: Rng): T[] {
@@ -281,9 +332,83 @@ export function autoDeckConfig(table: ReferenceTable): RecallDeckConfig | null {
   };
 }
 
-/** Whether {@link autoDeckConfig} can produce a drill for this table. */
-export function canAutoDrill(table: ReferenceTable): boolean {
-  return autoDeckConfig(table) !== null;
+/** A place in an explanation template: "{port}", or "{purpose:lowerFirst}". */
+const PLACE = /\{(\w+)(:lowerFirst)?\}/g;
+
+/**
+ * A cell that opens a line in its table, set inside a sentence: "List directory
+ * contents" becomes "list directory contents". A first word in capitals ("DNS
+ * records") is an acronym and stays as it is.
+ */
+function lowerFirst(cell: string): string {
+  return /^[A-Z][a-z]/.test(cell) ? cell[0].toLowerCase() + cell.slice(1) : cell;
+}
+
+const has = (record: object, key: string) => Object.prototype.hasOwnProperty.call(record, key);
+
+/**
+ * A row's explanation in sentences: the row's own sentences where the deck has
+ * written some, the deck's template otherwise, with every place filled from
+ * the row. Null for a deck that has no template, and for a row that lacks a
+ * cell its sentence names: the question card then keeps the note form, which
+ * is better than a sentence with a hole in it. A test holds every row of every
+ * deck that has a template to complete sentences (explanations.test.ts).
+ */
+export function explainRow(
+  config: Pick<RecallDeckConfig, "ask" | "explain">,
+  row: Record<string, string>
+): string | null {
+  const explain = config.explain;
+  if (!explain) return null;
+  const name = row[explain.by ?? config.ask.key];
+  const sentences =
+    explain.rows && name !== undefined && has(explain.rows, name) ? explain.rows[name] : explain.template;
+  // A brace that is not part of a place is a place written wrongly
+  // ("{port:plural}"): it would be printed as it stands.
+  let whole = !/[{}]/.test(sentences.replace(PLACE, ""));
+  const text = sentences.replace(PLACE, (_place, key: string, inside?: string) => {
+    const cell = has(row, key) && isValue(row[key]) ? row[key].trim() : "";
+    if (!cell) whole = false;
+    return inside ? lowerFirst(cell) : cell;
+  });
+  return whole ? text : null;
+}
+
+/**
+ * The other answers to a cue that names more than one row, in the table's
+ * order. A cue stands for one row in nearly every deck, and for two where the
+ * table has them: RADIUS has a row for its ports and a row for its legacy
+ * ports. `cue` and `answer` are the two cells a question showed, whichever way
+ * round it was asked, so a card can ask this of the question it holds. Empty
+ * when the cue has one row, and when the two cells are not a row of the deck.
+ */
+export function otherAnswers(deck: ResolvedDeck, cue: string, answer: string): string[] {
+  const { ask, answer: recalled, bidirectional } = deck.config;
+  const ways = [[ask.key, recalled.key], ...(bidirectional ? [[recalled.key, ask.key]] : [])];
+  for (const [cueKey, answerKey] of ways) {
+    const sameCue = deck.rows.filter((row) => row[cueKey] === cue);
+    if (sameCue.some((row) => row[answerKey] === answer)) {
+      return distinctValues(sameCue, answerKey).filter((value) => value !== answer);
+    }
+  }
+  return [];
+}
+
+/**
+ * What a card says after the explanation of the row it dealt, when its cue
+ * names other rows too: which answer the question asked for, and that the
+ * other is correct as well. A typed answer from any of the cue's rows is
+ * accepted, so without this a learner who types 1812 for RADIUS could be told
+ * "Correct." above two sentences about ports 1645 and 1646 and nothing else.
+ * Null when the cue has no other answer.
+ */
+export function otherAnswersSentence(cue: string, answer: string, others: readonly string[]): string | null {
+  if (others.length === 0) return null;
+  const also =
+    others.length === 1
+      ? `Another correct answer for ${cue} is ${others[0]}.`
+      : `Other correct answers for ${cue} are ${others.slice(0, -1).join(", ")} and ${others[others.length - 1]}.`;
+  return `This question asked for ${answer}. ${also}`;
 }
 
 /**
@@ -322,6 +447,12 @@ export function generateRecallQuestion(
       .filter((r) => r[askField.key] === promptValue)
       .map((r) => r[ansField.key])
   );
+  // A typed answer has no options to keep apart: an answer from any of the
+  // cue's rows is a correct answer to it, and is accepted. The dealt row's
+  // forms come first.
+  const acceptable = [
+    ...new Set([answer, ...alsoValid].flatMap((valid) => acceptableAnswers(valid, config.accept))),
+  ];
   const pool = distinctValues(rows, ansField.key).filter((v) => !alsoValid.has(v));
   // Prefer confusable distractors — same category as the answer — so the right
   // option can't be found by elimination ("the only crypto term"). Fall back to
@@ -344,15 +475,15 @@ export function generateRecallQuestion(
 
   // A bare number means nothing on its own, so it's named. A count reads
   // number first ("2 usable hosts"), an identifier label first ("port 49").
-  const detail = (config.detailKeys ?? [])
+  const details = (config.detailKeys ?? [])
     .map((k) => {
       const v = row[k];
       if (!v || !/^[\d,.]+$/.test(v)) return v;
       const label = noun(deck.labels?.[k] ?? k);
       return /[^sui]s$/i.test(label) ? `${v} ${label}` : `${label} ${v}`;
     })
-    .filter(Boolean)
-    .join(" · ");
+    .filter((v): v is string => Boolean(v));
+  const explanation = explainRow(config, row);
 
   return {
     deckId: config.id,
@@ -363,9 +494,10 @@ export function generateRecallQuestion(
     askLabel: askField.label,
     answerLabel: ansField.label,
     answer,
-    acceptable: acceptableAnswers(answer, config.accept),
+    acceptable,
     options,
-    detail,
+    details,
+    ...(explanation ? { explanation } : {}),
   };
 }
 

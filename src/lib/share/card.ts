@@ -1,3 +1,6 @@
+import { BAND_HEX, OG } from "@/lib/og/mark";
+import { bandFor } from "@/lib/readiness/band";
+
 /** Shared visual tokens for the readiness share card (OG image + HTML page). */
 
 export interface Band {
@@ -5,23 +8,27 @@ export interface Band {
   color: string;
 }
 
-/** Dignified band labels + refined (not neon) status colors. */
+/**
+ * The band a shared score falls into. The words and the thresholds are
+ * `bandFor`'s, so a score is described on the card as it is on the site. The
+ * card sets the score and its bar in one colour, so it takes the band's ink,
+ * which reads as text on paper (amber's fill is too pale for words).
+ */
 export function readinessBand(score: number): Band {
-  if (score >= 75) return { label: "Exam ready", color: "#2FBF71" };
-  if (score >= 40) return { label: "On track", color: "#E0A32E" };
-  return { label: "Getting started", color: "#E5484D" };
+  const band = bandFor(score);
+  return { label: band.long, color: BAND_HEX[band.key].ink };
 }
 
-/** Deep, cool, professional palette — matches the app's dark theme. */
+/** Paper and ink: the card is a score report, the same in a feed as on the site. */
 export const CARD = {
-  bg: "#0B0D12",
-  panel: "#12151C",
-  track: "#1B1F2A",
-  border: "#22262F",
-  text: "#F4F4F5",
-  sub: "#9CA3AF",
-  muted: "#6B7280",
-  brand: "#2563EB",
+  bg: OG.paper,
+  panel: OG.tint,
+  track: OG.track,
+  border: OG.rule,
+  text: OG.ink,
+  sub: OG.muted,
+  muted: OG.muted,
+  brand: OG.primary,
 } as const;
 
 export function truncate(value: string, max: number): string {

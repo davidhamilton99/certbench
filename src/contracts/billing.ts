@@ -13,7 +13,7 @@ export const createCheckout = {
     interval: z.enum(BILLING_INTERVALS).default("monthly"),
     /**
      * Where Stripe's back link returns a buyer who doesn't finish checkout. A
-     * guided path ("path/<exam>") also gets the buyer back there after paying;
+     * study path ("path/<exam>") also gets the buyer back there after paying;
      * from anywhere else, paying lands on /start, which opens their path.
      */
     returnTo: z

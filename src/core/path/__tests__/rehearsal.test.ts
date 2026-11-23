@@ -8,6 +8,8 @@ import {
   latestReading,
   MAX_REHEARSALS,
   REHEARSAL_FORMATS,
+  sanitizeReading,
+  sanitizeRehearsalResult,
   scoreRehearsal,
 } from "../rehearsal";
 import { pathProgressSchema } from "@/contracts/path";
@@ -37,12 +39,12 @@ const result = (score: number, at: number, extra?: Partial<RehearsalResult>): Re
   ...extra,
 });
 
-describe("the rehearsal on the plan", () => {
+describe("the practice exam on the plan", () => {
   it("ends every path, after the last domain's lab, and never in the free stretch", () => {
     const s = structure([4, 5, 4, 9, 6]);
     const plan = buildPlan(s);
     const last = plan.stops.at(-1)!;
-    expect(last).toMatchObject({ id: "rehearsal", kind: "rehearsal", title: "Exam rehearsal", domain: null });
+    expect(last).toMatchObject({ id: "rehearsal", kind: "rehearsal", title: "Practice exam", domain: null });
     expect(plan.stops.at(-2)?.id).toBe("lab5");
     expect(last.objectives).toHaveLength(28);
     expect(isFreeStop(plan, last.index)).toBe(false);
@@ -50,7 +52,7 @@ describe("the rehearsal on the plan", () => {
     expect(stopAt(plan, s, plan.stops.length)?.kind).toBe("review");
   });
 
-  it("comes up once every other stop is done, and the path goes on to review after it", () => {
+  it("comes up once every other step is done, and the path goes on to review after it", () => {
     const plan = buildPlan(structure([4, 5]));
     let progress = EMPTY_PATH_PROGRESS;
     for (const stop of plan.stops.slice(0, -1)) progress = finishStop(progress, stop.id, 3, 3, 1);
@@ -60,7 +62,7 @@ describe("the rehearsal on the plan", () => {
   });
 });
 
-describe("scoring a rehearsal", () => {
+describe("scoring a practice exam", () => {
   const domains = structure([2, 2], [25, 75]).domains;
 
   it("counts a blank as wrong and weights domains like the exam", () => {
@@ -88,8 +90,8 @@ describe("scoring a rehearsal", () => {
   });
 });
 
-describe("rehearsals kept with progress", () => {
-  it("reads the latest of the checkpoint and the rehearsals", () => {
+describe("practice exams kept with progress", () => {
+  it("reads the latest of the checkpoint and the practice exams", () => {
     const checkpoint = { score: 58, at: 10, domains: [] };
     expect(latestReading(EMPTY_PATH_PROGRESS)).toBeNull();
     expect(latestReading({ checkpoint, rehearsals: [] })).toEqual({ score: 58, at: 10, source: "checkpoint" });
@@ -120,7 +122,7 @@ describe("rehearsals kept with progress", () => {
     expect(mergePathProgress(b, a).rehearsals.map((r) => r.score)).toEqual([60, 72]);
   });
 
-  it("sanitizes stored rehearsals, and reads progress saved before they existed", () => {
+  it("sanitizes stored practice exams, and reads progress saved before they existed", () => {
     const clean = sanitizePathProgress({
       items: {},
       stops: {},
@@ -137,6 +139,49 @@ describe("rehearsals kept with progress", () => {
     // The API takes an older client's save, with no rehearsals at all.
     const parsed = pathProgressSchema.parse({ items: {}, stops: {}, checkpoint: null, goal: null });
     expect(parsed.rehearsals).toEqual([]);
+  });
+});
+
+describe("a result read back from the device", () => {
+  it("is returned as it was scored when every figure is in range", () => {
+    const stored = { ...result(71, 20), extra: "ignored" };
+    expect(sanitizeRehearsalResult(stored)).toEqual(result(71, 20));
+    expect(sanitizeRehearsalResult(JSON.parse(JSON.stringify(result(0, 0, { answered: 0, seconds: 0 }))))).toEqual(
+      result(0, 0, { answered: 0, seconds: 0 })
+    );
+  });
+
+  it("is refused when any part of it is out of range or missing", () => {
+    const bad: unknown[] = [
+      null,
+      "junk",
+      [],
+      { ...result(70, 1), score: 101 },
+      { ...result(70, 1), score: 70.5 },
+      { ...result(70, 1), at: -1 },
+      { ...result(70, 1), size: "quarter" },
+      { ...result(70, 1), answered: 91 },
+      { ...result(70, 1), total: 201, answered: 201 },
+      { ...result(70, 1), seconds: 86_401 },
+      { ...result(70, 1), domains: null },
+      { ...result(70, 1), domains: Array.from({ length: 13 }, () => ({ number: "1.0", correct: 1, total: 1 })) },
+      { ...result(70, 1), domains: [{ number: "", correct: 1, total: 1 }] },
+      { ...result(70, 1), domains: [{ number: "1.0", correct: 2, total: 1 }] },
+      { ...result(70, 1), domains: ["1.0"] },
+    ];
+    for (const raw of bad) expect(sanitizeRehearsalResult(raw)).toBeNull();
+  });
+
+  it("checks the reading a result is set against in the same way", () => {
+    expect(sanitizeReading({ score: 58, at: 10, source: "checkpoint", more: 1 })).toEqual({
+      score: 58,
+      at: 10,
+      source: "checkpoint",
+    });
+    expect(sanitizeReading({ score: 58, at: 10, source: "rehearsal" })?.source).toBe("rehearsal");
+    for (const raw of [null, 58, { score: 580, at: 10, source: "checkpoint" }, { score: 58, at: 10, source: "guess" }]) {
+      expect(sanitizeReading(raw)).toBeNull();
+    }
   });
 });
 

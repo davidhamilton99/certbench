@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CHECKPOINT_SIZE } from "../plan";
-import { checkpointFromExam, EXAM_IMPORT_DAYS, examToImport, importExam } from "../exam-import";
+import { checkpointFromExam, EXAM_IMPORT_DAYS, examBelongsTo, examToImport, importExam } from "../exam-import";
 import { finishStop } from "../progress";
 import { EMPTY_PATH_PROGRESS, type ChoiceRep, type RehearsalResult } from "../types";
 
@@ -59,10 +59,36 @@ describe("examToImport", () => {
     expect(examToImport(run([0, 0], result({ at: NOW - (EXAM_IMPORT_DAYS + 1) * DAY })), NOW)).toBeNull();
     expect(examToImport(run([0, 0], null), NOW)).toBeNull();
   });
+
+  it("on a shared computer, never brings one account's exam into another account", () => {
+    const mine = { ...run([0, 1, 0, 0]), claimedBy: "account-a" };
+    // The account its score was shown to may bring it over; the next person to sign in may not.
+    expect(examToImport(mine, NOW, "account-a")?.result.score).toBe(64);
+    expect(examToImport(mine, NOW, "account-b")).toBeNull();
+    expect(examBelongsTo(mine, "account-a")).toBe(true);
+    expect(examBelongsTo(mine, "account-b")).toBe(false);
+    // An exam nobody has claimed yet (finished signed out, the score not yet shown) goes to whoever asks.
+    const unclaimedRuns: Parameters<typeof examToImport>[0][] = [run([0, 1]), { ...run([0, 1]), claimedBy: null }];
+    for (const unclaimed of unclaimedRuns) {
+      expect(examBelongsTo(unclaimed, "account-b")).toBe(true);
+      expect(examToImport(unclaimed, NOW, "account-b")).not.toBeNull();
+    }
+  });
+
+  it("does not take a stored result on trust: one with a figure out of range is left behind", () => {
+    const bad = [
+      result({ score: 164 }),
+      result({ answered: 46 }),
+      result({ domains: [{ number: "1.0", correct: 17, total: 16 }] }),
+      { ...result(), size: "double" },
+      { ...result(), domains: undefined },
+    ] as RehearsalResult[];
+    for (const res of bad) expect(examToImport(run([0, 0], res), NOW)).toBeNull();
+  });
 });
 
 describe("importExam", () => {
-  it("makes the exam the checkpoint when there's none yet, and keeps it with the rehearsals", () => {
+  it("makes the exam the checkpoint when there is none yet, and keeps it with the practice exams", () => {
     const res = result();
     const { progress, asCheckpoint } = importExam(EMPTY_PATH_PROGRESS, [{ repId: "q|1.1|x", correct: false }], res);
     expect(asCheckpoint).toBe(true);

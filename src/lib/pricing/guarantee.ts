@@ -8,7 +8,5 @@ export const PASS_GUARANTEE_HREF = "/terms#pass-guarantee";
 
 /** The guarantee with its conditions, as one sentence. */
 export const PASS_GUARANTEE_TERMS =
-  "Study with Pro for 30+ days and don't pass? We refund your last payment.";
+  "If you study with Pro for 30 days or more and do not pass your exam, CertBench refunds your last payment.";
 
-/** Compact form for chips and other tight layouts. */
-export const PASS_GUARANTEE_SHORT = "30+ days on Pro and no pass? Last payment back.";

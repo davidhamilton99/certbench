@@ -26,18 +26,39 @@ vi.mock("@/lib/supabase-browser", () => ({
   }),
 }));
 
+// The page reads the session cookie before it loads the sign-in client: in
+// these tests the cookie is there exactly when someone is signed in.
+vi.mock("@/lib/supabase-lazy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/supabase-lazy")>()),
+  hasSessionCookie: () => auth.session !== null,
+}));
+
 const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
+/** Saves sent straight to an account (only a browser that keeps nothing sends one from here). */
+const saves = vi.hoisted(() => [] as { path: string; input: unknown }[]);
+vi.mock("@/lib/api-client", () => ({
+  api: async (contract: { path: string }, input: unknown) => {
+    saves.push({ path: contract.path, input });
+    return { ok: true, stored: true };
+  },
+}));
 
 import { QuickRound } from "../QuickRound";
 
 // Node's own experimental `localStorage` global shadows jsdom's.
 const store = new Map<string, string>();
+/** When true, the browser refuses every write, as it does with site data blocked. */
+const storage = { refuses: false };
 Object.defineProperty(window, "localStorage", {
   configurable: true,
   value: {
     getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    setItem: (k: string, v: string) => {
+      if (storage.refuses) throw new DOMException("The quota has been exceeded.", "QuotaExceededError");
+      store.set(k, String(v));
+    },
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
   },
@@ -45,6 +66,13 @@ Object.defineProperty(window, "localStorage", {
 
 const CERT = "security-plus-sy0-701";
 const KEY = `cb_path_${CERT}`;
+/** Work played beside an account's copy by someone who is not signed in as that account. */
+const GUEST = `cb_path_guest_${CERT}`;
+const CLAIM = `cb_path_guest_claim_${CERT}`;
+/** The study path's `path_started` is still owed for this device's copy (path-start.ts). */
+const OWED = `cb_path_start_owed_${CERT}`;
+/** The visitor's work was begun on a public page, and no save request has been shown since. */
+const BEGUN = `cb_path_begun_public_${CERT}`;
 
 const structure: PathStructure = {
   certSlug: CERT,
@@ -91,10 +119,13 @@ function renderRound() {
   );
 }
 
-/** Answer the question on screen and move on; the last one leads to the result. */
+/**
+ * Answer the question on screen and move on; the last one leads to the result.
+ * An answer is a plain button, and every answer waits for the button after it.
+ */
 function play(right: boolean, last = false) {
-  fireEvent.click(screen.getByRole("radio", { name: right ? /Right answer/ : /Wrong one/ }));
-  fireEvent.click(screen.getByRole("button", { name: last ? /See my result/ : right ? /^Next/ : /Got it/ }));
+  fireEvent.click(screen.getByRole("button", { name: right ? /Right answer/ : /Wrong one/ }));
+  fireEvent.click(screen.getByRole("button", { name: last ? /View my result/ : /^Continue/ }));
 }
 
 /** What a device holds before the visit. */
@@ -104,15 +135,18 @@ function seed(owner: string | null, progress: PathProgress) {
 
 /** Make an account with the save ask's email form. */
 function signUp() {
-  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@example.com" } });
-  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long-enough-pw" } });
+  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "new@example.com" } });
+  fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "long-enough-pw" } });
   fireEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 }
 
-const tile = (code: string) => screen.getByLabelText(new RegExp(`^${code.replace(".", "\\.")} `));
+/** The course outline's row for an objective. Its words are the code, the title and where the visitor stands. */
+const tile = (code: string) => screen.getByText(code, { selector: "li span" }).closest("li")!;
 
 beforeEach(() => {
   store.clear();
+  storage.refuses = false;
+  saves.length = 0;
   track.mockClear();
   identifyUser.mockClear();
   push.mockClear();
@@ -122,13 +156,13 @@ beforeEach(() => {
 });
 
 describe("QuickRound", () => {
-  it("plays the stop inline and counts it on the visitor's path", () => {
+  it("plays the step inline and counts it on the visitor's path", () => {
     renderRound();
     play(true);
     play(false, true);
 
     expect(screen.getByText("of 2")).toBeInTheDocument();
-    expect(screen.getByText("1 to revisit. It comes back in a later stop on your path.")).toBeInTheDocument();
+    expect(screen.getByText("1 question will be repeated in a later step of your study path.")).toBeInTheDocument();
     const saved = JSON.parse(store.get(KEY)!);
     expect(Object.keys(saved.progress.items)).toEqual(["a|1.1|x", "a|1.1|y"]);
     expect(saved.progress.stops["1.1"]).toMatchObject({ n: 1, c: 1, t: 2 });
@@ -141,14 +175,44 @@ describe("QuickRound", () => {
     });
   });
 
+  it("lets a long label wrap, and draws the question counter afresh for each question", () => {
+    renderRound();
+    const label = screen.getByText("Objective 1.1 · Security controls");
+    // Cut short with an ellipsis, a label cannot be read at high zoom.
+    expect(label.className).not.toMatch(/\btruncate\b/);
+    const counter = screen.getByText("Question 1 of 2");
+    // What a browser does when it translates the page.
+    counter.innerHTML = "<font>Frage 1 von 2</font>";
+    play(true);
+    expect(screen.getByText("Question 2 of 2")).not.toBe(counter);
+    expect(screen.queryByText("Frage 1 von 2")).toBeNull();
+    play(true, true);
+    expect(screen.getByText("Objective 1.1 · Security controls").className).not.toMatch(/\btruncate\b/);
+  });
+
+  it("gives the focus to each question that follows a press, and to the result, but not to the first question of a page", () => {
+    renderRound();
+    // The page has only just loaded: the round does not take the focus from its top.
+    expect(document.activeElement).toBe(document.body);
+    play(true);
+    expect(document.activeElement).toBe(screen.getByText("Prompt a|1.1|y"));
+    play(true, true);
+    // The result takes the focus, and it is named for a screen reader.
+    expect(document.activeElement).toBe(screen.getByRole("group", { name: "Objective 1.1 · Security controls: your result" }));
+
+    // Answering again follows a press, so its first question takes the focus too.
+    fireEvent.click(screen.getByRole("button", { name: /Answer the questions again/ }));
+    expect(document.activeElement).toBe(screen.getByText("Prompt a|1.1|x"));
+  });
+
   it("says where the last answer leads", () => {
     renderRound();
-    fireEvent.click(screen.getByRole("radio", { name: /Right answer/ }));
-    expect(screen.getByRole("button", { name: /^Next/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
-    fireEvent.click(screen.getByRole("radio", { name: /Wrong one/ }));
-    expect(screen.getByRole("button", { name: /See my result/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Got it/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+    expect(screen.getByRole("button", { name: /^Continue/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Wrong one/ }));
+    expect(screen.getByRole("button", { name: /View my result/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Continue/ })).toBeNull();
   });
 
   it("ends on the path's save ask and the visitor's map, with nowhere else to go first", () => {
@@ -157,21 +221,26 @@ describe("QuickRound", () => {
     play(false, true);
 
     // The ask, with the signup in place: no button to another page stands in for it.
-    expect(screen.getByRole("heading", { name: "Save your map" })).toBeInTheDocument();
-    expect(screen.getByText(/A free account saves your map and opens your Security\+ path/)).toBeInTheDocument();
-    expect(screen.getByText(/Until then, your map is kept on this device only\./)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Save your progress" })).toBeInTheDocument();
+    // What a free account opens, in the pricing page's words: not the whole study path.
+    expect(
+      screen.getByText(
+        /A free account saves your progress and opens the first study step and the readiness checkpoint of your Security\+ study path\. The checkpoint shows where you stand on the whole exam\./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Until then, your progress is kept on this device only\./)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Start my Security\+ path/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Start the Security\+ study path/ })).toBeNull();
     expect(track).toHaveBeenCalledWith("path_save_viewed", { cert: CERT, surface: "objective_page" });
 
     // Their map, with this objective lit as the miss it holds.
-    expect(screen.getByRole("heading", { name: "Your Security+ map" })).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 objectives started")).toBeInTheDocument();
-    expect(tile("1.1")).toHaveAccessibleName("1.1 Security controls: a miss to revisit");
-    expect(tile("1.2")).toHaveAccessibleName("1.2 Core security concepts: not started");
+    expect(screen.getByRole("heading", { name: "Security+ objectives" })).toBeInTheDocument();
+    expect(screen.getByText("You have started 1 of 3 objectives.")).toBeInTheDocument();
+    expect(tile("1.1")).toHaveTextContent("1.1 Security controls, To review");
+    expect(tile("1.2")).toHaveTextContent("1.2 Core security concepts, Not started");
   });
 
-  it("shows everything the device has played, and names the stop an account opens next", () => {
+  it("shows everything the device has played, and names the step an account opens next", () => {
     // The warm-up and a round on 2.1 from earlier visits, still anonymous.
     seed(
       null,
@@ -181,12 +250,16 @@ describe("QuickRound", () => {
     play(true);
     play(true, true);
 
-    expect(screen.getByText("Every one right.")).toBeInTheDocument();
-    expect(screen.getByText("2 of 3 objectives started")).toBeInTheDocument();
-    expect(tile("2.1")).toHaveAccessibleName("2.1 Threat actors: covered");
+    expect(screen.getByText("You answered every question correctly.")).toBeInTheDocument();
+    expect(screen.getByText("You have started 2 of 3 objectives.")).toBeInTheDocument();
+    // The objective whose own step was just played, with nothing to review, is
+    // complete. One that only an earlier question touched is started: an
+    // instructor who checks the outline must not find it marked complete.
+    expect(tile("1.1")).toHaveTextContent("1.1 Security controls, Complete");
+    expect(tile("2.1")).toHaveTextContent("2.1 Threat actors, Started");
     // Warm-up and 1.1 done: the readiness checkpoint is next on their path, as the path's own card would say.
-    expect(screen.getByRole("heading", { name: "Next up: your readiness checkpoint" })).toBeInTheDocument();
-    expect(screen.getByText(/12 exam-style questions, then your score by domain\./)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your next step: the readiness checkpoint" })).toBeInTheDocument();
+    expect(screen.getByText(/It has 12 exam-style questions and gives you a score for each domain\./)).toBeInTheDocument();
     expect(screen.queryByText(/kept on this device only/)).toBeNull();
   });
 
@@ -204,7 +277,10 @@ describe("QuickRound", () => {
       />
     );
     play(true, true);
-    expect(screen.getByText("1 of 3 topics started")).toBeInTheDocument();
+    expect(screen.getByText("You have started 1 of 3 topics.")).toBeInTheDocument();
+    // Network+'s topics are CertBench's own, never called its objectives.
+    expect(screen.getByRole("heading", { level: 2, name: "Network+ topics" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /objectives/ })).toBeNull();
   });
 
   it("hands the round to the account they make, counts it once, and opens their path", async () => {
@@ -212,7 +288,7 @@ describe("QuickRound", () => {
     play(true);
     play(true, true);
 
-    expect(screen.getByText(/Free account, no card\./)).toBeInTheDocument();
+    expect(screen.getByText(/The account is free, and no payment card is required\./)).toBeInTheDocument();
     expect(screen.queryByText(/You stay right here/)).toBeNull();
     signUp();
 
@@ -225,15 +301,52 @@ describe("QuickRound", () => {
     expect(saved.progress.stops["1.1"].n).toBe(1);
   });
 
-  it("never hands another account's copy on a shared device to the one just made", async () => {
-    seed("user-1", EMPTY_PATH_PROGRESS);
+  it("on a shared computer, keeps a signed-out visitor's round out of the previous account's copy and hands it to the account they make", async () => {
+    // Someone else's study path is on this device, and they have signed out.
+    seed("user-1", recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
+    const before = store.get(KEY);
     renderRound();
     play(true);
     play(true, true);
-    signUp();
 
+    // The account's copy is exactly as it was: the round is kept beside it.
+    expect(store.get(KEY)).toBe(before);
+    const guest = JSON.parse(store.get(GUEST)!);
+    expect(Object.keys(guest.items)).toEqual(["a|1.1|x", "a|1.1|y"]);
+    expect(guest.stops["1.1"]).toMatchObject({ n: 1, c: 2, t: 2 });
+
+    signUp();
     await waitFor(() => expect(push).toHaveBeenCalledWith(`/path/${CERT}`));
-    expect(JSON.parse(store.get(KEY)!).owner).toBe("user-1");
+    // The copy stays the other account's, and the round is marked as the new
+    // account's, so the study path adds it to that account when it opens.
+    expect(store.get(KEY)).toBe(before);
+    expect(store.get(CLAIM)).toBe("new-user");
+    expect(Object.keys(JSON.parse(store.get(GUEST)!).items)).toEqual(["a|1.1|x", "a|1.1|y"]);
+    // The device kept the round, so nothing had to be sent from this page.
+    expect(saves).toHaveLength(0);
+  });
+
+  it("sends the round to the new account from the page when the browser keeps nothing", async () => {
+    storage.refuses = true;
+    renderRound();
+    play(true);
+    play(false, true);
+
+    expect(store.size).toBe(0);
+    // It does not say that the device keeps the progress, because it does not.
+    expect(screen.queryByText(/kept on this device only/)).toBeNull();
+    expect(screen.getByText(/This browser is not saving your progress\. Create a free account to keep it\./)).toBeInTheDocument();
+    // Their map is this round alone.
+    expect(screen.getByText("You have started 1 of 3 objectives.")).toBeInTheDocument();
+
+    signUp();
+    await waitFor(() => expect(push).toHaveBeenCalledWith(`/path/${CERT}`));
+    expect(saves).toHaveLength(1);
+    expect(saves[0].path).toBe("/api/path/progress");
+    const sent = saves[0].input as { cert: string; progress: PathProgress };
+    expect(sent.cert).toBe(CERT);
+    expect(Object.keys(sent.progress.items)).toEqual(["a|1.1|x", "a|1.1|y"]);
+    expect(sent.progress.stops["1.1"]).toMatchObject({ n: 1, c: 1, t: 2 });
   });
 
   it("gives someone signed in the way back to their path, not a signup", async () => {
@@ -247,9 +360,9 @@ describe("QuickRound", () => {
 
     expect(screen.queryByRole("button", { name: "Save and continue" })).toBeNull();
     expect(track).not.toHaveBeenCalledWith("path_save_viewed", expect.anything());
-    expect(screen.getByText("This round counts on your path")).toBeInTheDocument();
+    expect(screen.getByText("These questions count toward your study path.")).toBeInTheDocument();
     // Their own map, the earlier work on this device included.
-    expect(screen.getByText("2 of 3 objectives started")).toBeInTheDocument();
+    expect(screen.getByText("You have started 2 of 3 objectives.")).toBeInTheDocument();
 
     const on = screen.getByRole("link", { name: /Continue/ });
     expect(on).toHaveAttribute("href", `/path/${CERT}`);
@@ -267,27 +380,83 @@ describe("QuickRound", () => {
     play(true);
     play(true, true);
 
-    expect(screen.getByText("1 of 3 objectives started")).toBeInTheDocument();
-    expect(tile("2.1")).toHaveAccessibleName("2.1 Threat actors: not started");
-    // Their path can't pick this round up from another account's copy, so it doesn't say it will.
-    expect(screen.queryByText("This round counts on your path")).toBeNull();
+    expect(screen.getByText("You have started 1 of 3 objectives.")).toBeInTheDocument();
+    expect(tile("2.1")).toHaveTextContent("2.1 Threat actors, Not started");
+    // The round is kept beside the other account's copy, never in it, and their
+    // own study path takes it up when it opens: so the page can say that it counts.
+    expect(JSON.parse(store.get(KEY)!).owner).toBe("user-1");
+    expect(Object.keys(JSON.parse(store.get(KEY)!).progress.items)).toEqual(["a|2.1|z"]);
+    expect(Object.keys(JSON.parse(store.get(GUEST)!).items)).toEqual(["a|1.1|x", "a|1.1|y"]);
+    // It is marked as theirs, so their study path does not count them as a new account.
+    expect(store.get(CLAIM)).toBe("user-2");
+    expect(screen.getByText("These questions count toward your study path.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Continue/ })).toHaveAttribute("href", `/path/${CERT}`);
   });
 
-  it("keeps an account's map off a device that's signed out", () => {
+  // The study path's page records `path_started` at a visitor's first answer
+  // there, when the device's copy has not started. A round's answers begin
+  // that copy, so the round leaves the start owed (path-start.ts).
+  it("leaves the study path's start owed when its first answer begins the visitor's work, and only then", () => {
+    renderRound();
+    play(true);
+    expect(store.get(OWED)).toBe("1");
+    store.delete(OWED);
+    play(true, true);
+    expect(store.has(OWED)).toBe(false);
+  });
+
+  it("owes nothing when the visitor's work had begun already", () => {
+    seed(null, recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
+    renderRound();
+    play(true);
+    expect(store.has(OWED)).toBe(false);
+    expect(store.has(BEGUN)).toBe(false);
+  });
+
+  // An account made anywhere else must not be counted as one that the save
+  // request made. Once the request has been shown, it may have made it.
+  it("marks the visitor's work as begun on a public page until the save request is shown", () => {
+    renderRound();
+    play(true);
+    expect(store.get(BEGUN)).toBe("1");
+    play(true, true);
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(store.has(BEGUN)).toBe(false);
+  });
+
+  // A member's first answer can come before the sign-in client has said who is
+  // here. Kept at once, it would be kept as an anonymous visitor's, which the
+  // next person at the keyboard would be shown as their own.
+  it("keeps an answer given before the page knows who is signed in, once it knows, as that account's", async () => {
+    auth.session = { user: { id: "user-1", email: "a@b.co" } };
+    renderRound();
+    play(true);
+    expect(auth.reads).toBe(0);
+    expect(store.has(KEY)).toBe(false);
+    expect(store.has(GUEST)).toBe(false);
+
+    await waitFor(() => expect(store.has(KEY)).toBe(true));
+    const saved = JSON.parse(store.get(KEY)!);
+    expect(saved.owner).toBe("user-1");
+    expect(Object.keys(saved.progress.items)).toEqual(["a|1.1|x"]);
+    expect(store.has(GUEST)).toBe(false);
+  });
+
+  it("keeps an account's map off a device that is signed out", () => {
     seed("user-1", recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
     renderRound();
     play(true);
     play(true, true);
 
     // Only this round shows; the account's own work stays out of sight.
-    expect(screen.getByText("1 of 3 objectives started")).toBeInTheDocument();
-    expect(tile("2.1")).toHaveAccessibleName("2.1 Threat actors: not started");
-    expect(screen.getByRole("heading", { name: "Save your map" })).toBeInTheDocument();
-    // The round still joins the account's copy, as before.
+    expect(screen.getByText("You have started 1 of 3 objectives.")).toBeInTheDocument();
+    expect(tile("2.1")).toHaveTextContent("2.1 Threat actors, Not started");
+    expect(screen.getByRole("heading", { name: "Save your progress" })).toBeInTheDocument();
+    // The round does not join the account's copy: it may be someone else at the keyboard.
     const saved = JSON.parse(store.get(KEY)!);
     expect(saved.owner).toBe("user-1");
-    expect(Object.keys(saved.progress.items)).toEqual(["a|2.1|z", "a|1.1|x", "a|1.1|y"]);
+    expect(Object.keys(saved.progress.items)).toEqual(["a|2.1|z"]);
+    expect(Object.keys(JSON.parse(store.get(GUEST)!).items)).toEqual(["a|1.1|x", "a|1.1|y"]);
   });
 
   it("picks the result back up after a Google sign-in they backed out of", async () => {
@@ -298,7 +467,7 @@ describe("QuickRound", () => {
     // Not the first question again: the score they left, and the ask that says what happened.
     expect(await screen.findByText("of 2")).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|x")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Save your map" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Save your progress" })).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("google_signin_cancelled", {
       page: "/objectives/security-plus-sy0-701/1-1",
       via: "google",
@@ -310,31 +479,49 @@ describe("QuickRound", () => {
     renderRound();
     play(true);
     play(true, true);
-    fireEvent.click(screen.getByRole("button", { name: /Play again/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Answer the questions again/ }));
 
     expect(screen.getByText("Prompt a|1.1|x")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Your Security+ map" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Security+ objectives" })).toBeNull();
     play(true);
     play(false, true);
     expect(JSON.parse(store.get(KEY)!).progress.stops["1.1"]).toMatchObject({ n: 2, c: 1, t: 2 });
   });
 
-  it("keeps an existing owner when adding to a signed-in device's path", () => {
+  it("adds to an account's copy on the device only while that account is signed in", async () => {
+    const warmupRound = () =>
+      render(
+        <QuickRound
+          cert={CERT}
+          stopId="warmup"
+          examName="Security+"
+          structure={structure}
+          reps={[rep("a|4.5|w1", "4.5")]}
+          label="Security+ introductory questions"
+          surface="practice_test_page"
+        />
+      );
+
+    // Signed in as the account that owns the copy: the round joins it.
+    auth.session = { user: { id: "user-1", email: "a@b.co" } };
     seed("user-1", EMPTY_PATH_PROGRESS);
-    render(
-      <QuickRound
-        cert={CERT}
-        stopId="warmup"
-        examName="Security+"
-        structure={structure}
-        reps={[rep("a|4.5|w1", "4.5")]}
-        label="Security+ warm-up"
-        surface="practice_test_page"
-      />
-    );
+    const signedIn = warmupRound();
+    await waitFor(() => expect(auth.reads).toBe(1));
     play(true, true);
-    const saved = JSON.parse(store.get(KEY)!);
+    let saved = JSON.parse(store.get(KEY)!);
     expect(saved.owner).toBe("user-1");
     expect(saved.progress.stops.warmup.n).toBe(1);
+    expect(store.has(GUEST)).toBe(false);
+    signedIn.unmount();
+
+    // Signed out on the same device: the copy keeps its owner and is not added to.
+    auth.session = null;
+    seed("user-1", EMPTY_PATH_PROGRESS);
+    warmupRound();
+    play(true, true);
+    saved = JSON.parse(store.get(KEY)!);
+    expect(saved.owner).toBe("user-1");
+    expect(saved.progress.stops.warmup).toBeUndefined();
+    expect(JSON.parse(store.get(GUEST)!).stops.warmup.n).toBe(1);
   });
 });

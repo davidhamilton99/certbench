@@ -1,7 +1,8 @@
 import { getRecallDecks } from "@/data/recall";
 import { acronyms } from "@/data/reference/security-plus-sy0-701/acronyms";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
-import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
+import { LanderBlock, LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { AcronymDrill } from "@/components/marketing/AcronymDrill";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -10,85 +11,100 @@ import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { SECURITY_PLUS_VERSIONS_PATH } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 
 const COUNT = acronyms.entries.length;
 
 export const metadata = pageMetadata({
-  title: "Free Security+ Acronyms List & Quiz (SY0-701)",
-  description: `The full list of ${COUNT} CompTIA Security+ SY0-701 acronyms, with a drill that gives instant feedback. Start free with no signup; a free account saves your progress.`,
+  title: "Free Security+ acronyms list and quiz (SY0-701)",
+  description: `This page lists ${COUNT} Security+ SY0-701 acronyms, with one meaning for each, and a quiz that marks each answer as you give it. The first round is free and needs no account. A free account saves your progress.`,
   path: "/tools/security-plus-acronyms-quiz",
 });
 
 const FAQS = [
   {
-    question: "How many acronyms are on the Security+ SY0-701 exam?",
-    answer: `CompTIA's official objectives list around ${COUNT} acronyms — from the everyday (CIA, AAA, MFA, PKI) to the obscure (SASE, TAXII, OVAL). This quiz drills the full set in both directions: expand the acronym, and name the acronym from its meaning.`,
+    // CompTIA's own count of its acronyms is not in the facts file, so the answer gives the list's count and says what it holds.
+    question: "How many acronyms are in this list?",
+    answer: `The list has ${COUNT} Security+ SY0-701 acronyms, from the common (CIA, AAA, MFA and PKI) to the less common (SASE, TAXII and OVAL), and the quiz asks each one in both directions. It gives one meaning for each acronym: where an acronym has more than one, it gives the one that CertBench judged most useful for the exam.`,
   },
   {
-    question: "What's the best way to memorize Security+ acronyms?",
+    question: "What is the best way to memorize Security+ acronyms?",
     answer:
-      "Short, frequent drills beat one long cram. Do a round here every day — with a free account, each one opens with the acronyms you missed last time. Focus on the high-frequency families — access control (DAC/MAC/RBAC/ABAC), the AAA protocols (RADIUS/TACACS+), and the detection stack (IDS/IPS/EDR/XDR/SIEM/SOAR).",
+      "Short, frequent practice works better than one long session. Complete a round each day. With a free account, each round begins with the acronyms that you missed in the last one. It helps to learn related acronyms together: access control (DAC, MAC, RBAC and ABAC), the authentication protocols (RADIUS and TACACS+), and detection and response (IDS, IPS, EDR, XDR, SIEM and SOAR).",
   },
   {
     question: "Do I need to know every acronym for the exam?",
+    // CompTIA does not publish what its exams ask (facts file), so the answer makes no claim about the exam's questions.
     answer:
-      "You won't be asked to define all of them, but the exam uses acronyms constantly in both questions and answer choices — recognizing them cold saves time and prevents avoidable mistakes. The high-frequency ones (CIA, PKI, MFA, EDR, SIEM, SOAR, IAM) show up everywhere.",
+      "CompTIA's exam questions are confidential, so CertBench does not say which acronyms an exam uses or how it asks about them. An acronym that you recognize at once saves time wherever you meet it, and the quiz builds that recognition in both directions.",
   },
 ];
 
 export default function AcronymsQuizPage() {
-  const deck = getRecallDecks("security-plus-sy0-701").find(
-    (d) => d.config.tableId === "acronyms"
-  );
+  const deck = getRecallDecks("security-plus-sy0-701").find((d) => d.config.tableId === "acronyms");
 
   return (
     <LanderPage>
       <LanderHero
         eyebrow="Security+ SY0-701"
         title="Security+ acronyms list and quiz"
-        sub={`All ${COUNT} SY0-701 acronyms, asked both ways round.`}
-        specs={[`Round 1 of ${ROUND_SIZE} free`, "No signup", "Number keys answer"]}
+        sub={`This quiz covers ${COUNT} SY0-701 acronyms, asked in both directions.`}
+        specs={[
+          { label: "First round", value: `${ROUND_SIZE} questions` },
+          { label: "Account", value: "Not required for the first round" },
+          { label: "Marking", value: "After each answer" },
+        ]}
       />
       <LanderStage width="md">
         {deck ? (
           <AcronymDrill deck={deck} />
         ) : (
-          <p className="glass rounded-3xl p-6 text-sm text-muted-foreground">
-            The drill is unavailable right now. The full list is below.
+          <p className="glass rounded-lg p-6 text-small text-muted-foreground">
+            The quiz is not available at present. The list of acronyms is on this page.
           </p>
         )}
       </LanderStage>
-      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
-        <p className="mt-10 leading-relaxed text-muted-foreground">
-          The Security+ SY0-701 exam leans hard on acronyms. This drill covers all {COUNT} on CompTIA&apos;s
-          list in both directions: expand the acronym, or name it from its meaning. Answer with the number keys.
-          A free account saves your progress and builds every round after the first from the ones you miss.
-        </p>
 
+      <LanderProse className="pt-10 sm:pt-12">
+        <p>
+          This quiz covers the {COUNT} acronyms in CertBench&apos;s SY0-701 list in both directions: you expand the
+          acronym, or you name it from its meaning. The list gives one meaning for each acronym, and where an acronym
+          has more than one, it gives the one that CertBench judged most useful for the exam. You can answer with the
+          number keys. A free account saves your progress and builds every round after the first from the acronyms that you
+          missed.
+        </p>
+      </LanderProse>
+
+      <LanderBlock className="mt-8">
         <ReferenceFold
-          className="mt-8"
-          title="The full Security+ acronym list"
+          title="The Security+ acronyms in this quiz"
           summary={
             <>
-              All {COUNT} from {acronyms.entries[0]?.columns.acronym} to {acronyms.entries.at(-1)?.columns.acronym},
-              each with what it stands for.
+              The list runs from {acronyms.entries[0]?.columns.acronym} to {acronyms.entries.at(-1)?.columns.acronym},
+              with one meaning for each of its {COUNT} acronyms.
             </>
           }
         >
-          <table className="w-full text-sm">
+          <table className="w-full text-small">
             <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="px-3 py-2 font-medium">Acronym</th>
-                <th className="px-3 py-2 font-medium">Expansion</th>
-                <th className="hidden px-3 py-2 font-medium sm:table-cell">Category</th>
+              <tr className="text-left text-note text-muted-foreground">
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Acronym
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Expansion
+                </th>
+                <th scope="col" className="hidden px-3 py-2 font-medium sm:table-cell">
+                  Category
+                </th>
               </tr>
             </thead>
             <tbody>
               {acronyms.entries.map((e) => (
-                <tr key={e.columns.acronym} className="border-t border-border/60 align-baseline">
-                  <td className="px-3 py-1.5 font-mono text-xs font-medium">{e.columns.acronym}</td>
+                <tr key={e.columns.acronym} className="border-t border-border align-baseline">
+                  <td className="px-3 py-1.5 font-mono text-note font-medium">{e.columns.acronym}</td>
                   <td className="px-3 py-1.5">{e.columns.expansion}</td>
-                  <td className="hidden px-3 py-1.5 text-xs text-muted-foreground sm:table-cell">
+                  <td className="hidden px-3 py-1.5 text-note text-muted-foreground sm:table-cell">
                     {e.columns.category}
                   </td>
                 </tr>
@@ -96,23 +112,24 @@ export default function AcronymsQuizPage() {
             </tbody>
           </table>
         </ReferenceFold>
+      </LanderBlock>
 
-        <PathCard
-          className="mt-10"
-          kicker="Your Security+ path"
-          title="Acronyms are the easy part"
-          href="/path/security-plus-sy0-701"
-          label="Start my Security+ path"
-          context="acronym_quiz_page"
-        >
-          The rest of the exam is scenarios. Your Security+ path walks every objective in short rounds like this one,
-          up to a readiness checkpoint that shows where you stand.
-        </PathCard>
+      <PathCard
+        className="mt-16 sm:mt-24"
+        title="Study for Security+ in short steps"
+        href="/path/security-plus-sy0-701"
+        label="Start the Security+ study path"
+        context="acronym_quiz_page"
+      >
+        The Security+ study path covers every objective in short sets of questions like this one, up to a readiness
+        checkpoint that shows where you stand.
+      </PathCard>
 
-        <section className="mt-10">
-          <ToolEmailCapture source="security-plus-acronyms-quiz" />
-        </section>
+      <LanderBlock className="mt-12 sm:mt-16">
+        <ToolEmailCapture source="security-plus-acronyms-quiz" />
+      </LanderBlock>
 
+      <LanderBlock>
         <RelatedLinks
           links={[
             {
@@ -123,7 +140,7 @@ export default function AcronymsQuizPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, 3 with no account",
+              note: `${FREE_LAB_COUNT} free hands-on labs, three of them with no account`,
             },
             {
               href: SECURITY_PLUS_VERSIONS_PATH,
@@ -133,13 +150,13 @@ export default function AcronymsQuizPage() {
             {
               href: "/tools/port-numbers-quiz",
               label: "Port numbers quiz",
-              note: "Drill the ports Security+ loves to test",
+              note: `A quiz on ${PORT_ENTRIES.length} port numbers and their protocols`,
             },
           ]}
         />
 
         <FaqSection faqs={FAQS} />
-      </div>
+      </LanderBlock>
     </LanderPage>
   );
 }

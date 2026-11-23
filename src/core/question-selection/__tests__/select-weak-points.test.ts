@@ -61,7 +61,7 @@ describe("selectWeakPointsQuestions", () => {
     expect(result).toHaveLength(5);
   });
 
-  it("prioritises lowest accuracy first before shuffling within the slice", () => {
+  it("prioritizes lowest accuracy first before shuffling within the slice", () => {
     // 20 weak questions — 5 terrible (0%), 15 mediocre (50%). Selecting 5
     // must always take the terrible ones first regardless of shuffle order.
     const terrible = Array.from({ length: 5 }, (_, i) => q(`bad${i}`));

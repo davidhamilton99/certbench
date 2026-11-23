@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import {
   SECURITY_PLUS_VERSIONS_PATH,
@@ -6,6 +5,7 @@ import {
   SY0_801_PATH,
   SY0_801_PRACTICE_PATH,
 } from "@/lib/seo/exam-versions";
+import { IntentLink } from "./IntentLink";
 
 /** Every free page, grouped the way people look for them. */
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -52,6 +52,8 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     title: "CertBench",
     links: [
       { href: "/pricing", label: "Pricing" },
+      { href: "/about", label: "About CertBench" },
+      { href: "/educators", label: "For educators" },
       { href: "/help", label: "Help" },
       { href: "/contact", label: "Contact" },
       { href: "/terms", label: "Terms" },
@@ -62,30 +64,46 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/70">
-      <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-12 pt-16">
+    <footer className="border-t border-border bg-muted/60">
+      <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 pb-10 pt-14 sm:px-6">
         <nav aria-label="Free resources" className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
           {COLUMNS.map((col) => (
-            <div key={col.title} className="grid content-start gap-3">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground/80">{col.title}</p>
-              <ul className="grid gap-2.5">
+            <div key={col.title} className="grid content-start gap-1.5">
+              <p className="text-small font-semibold">{col.title}</p>
+              <ul className="grid">
                 {col.links.map((l) => (
                   <li key={l.href}>
-                    <Link
+                    {/* The padding is the link's own, so a thumb has 36 pixels
+                        of link to land on and the next link begins where this
+                        one ends. */}
+                    <IntentLink
                       href={l.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      className="inline-block py-1.5 text-small text-muted-foreground transition-colors hover:text-foreground hover:underline hover:underline-offset-4"
                     >
                       {l.label}
-                    </Link>
+                    </IntentLink>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </nav>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/60 pt-8 text-sm text-muted-foreground">
-          <Logo />
-          <span>© {new Date().getFullYear()} CertBench</span>
+        <div className="grid gap-5 border-t border-border pt-8 text-small text-muted-foreground md:grid-cols-[auto_minmax(0,1fr)] md:gap-10">
+          <div className="grid content-start gap-2">
+            <Logo className="justify-self-start text-foreground" />
+            <span>© {new Date().getFullYear()} CertBench</span>
+            <a href="mailto:support@certbench.dev" className="cb-link justify-self-start">
+              support@certbench.dev
+            </a>
+          </div>
+          {/* Said on every page, not only in the terms: who this is not. It is
+              the paragraph a college's reviewer reads, so it is set at the
+              size of a table and no wider than its measure. */}
+          <p className="cb-measure-sm md:justify-self-end">
+            CertBench is an independent study program. It is not affiliated with, endorsed by or sponsored by CompTIA.
+            CompTIA, Security+, Network+ and A+ are trademarks of CompTIA, Inc., and are used here only to identify the
+            exams. Every question on CertBench is written for CertBench. No question is taken from a real exam.
+          </p>
         </div>
       </div>
     </footer>

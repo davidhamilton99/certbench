@@ -1,28 +1,54 @@
 /**
  * Turning bank explanations into the path's two layers: a one-line takeaway
- * shown right after answering, and the rest folded behind "Why, in full".
+ * shown right after answering, and the rest folded behind "Read the full
+ * explanation".
  */
+
+import { plainDashes } from "@/core/text/dashes";
+import { americanSpelling } from "@/core/text/spelling";
 
 /**
  * Some stored explanations lost a dash or apostrophe to a bad encoding and
  * carry U+FFFD instead. Spaced on both sides it was a dash; inside a word, an
  * apostrophe.
  */
-export function repairText(text: string): string {
+function fixEncoding(text: string): string {
   return text
-    .replace(/\s�\s/g, " — ")
-    .replace(/(\w)�(\w)/g, "$1’$2")
-    .replace(/�/g, "—");
+    .replace(/\s\ufffd\s/g, " \u2014 ")
+    .replace(/(\w)\ufffd(\w)/g, "$1\u2019$2")
+    .replace(/\ufffd/g, "\u2014");
 }
 
-/** "Why B is correct:" — bank explanations open by naming the option letter. */
-const LEAD = /^\s*why\s+(?:option\s+)?[a-d]\s+is\s+(?:the\s+)?correct(?:\s+answer)?\s*[:.\-—]\s*/i;
+/**
+ * Stored text made fit to show: its encoding repaired, its spelling made
+ * American like the rest of the site, and its dashes between words replaced by
+ * the punctuation CertBench's own copy uses.
+ */
+export function repairText(text: string): string {
+  return plainDashes(americanSpelling(fixEncoding(text)));
+}
+
+/** "Why B is correct:". Bank explanations open by naming the option letter. */
+const LEAD = /^\s*why\s+(?:option\s+)?[a-d]\s+is\s+(?:the\s+)?correct(?:\s+answer)?\s*[:.,\-\u2014]\s*/i;
 
 /** Sentence breaks: end punctuation, then whitespace, then a capital or digit. */
-const SENTENCE = /(?<=[.!?])\s+(?=[A-Z0-9“"(])/;
+const SENTENCE = /(?<=[.!?])\s+(?=[A-Z0-9\u201c"(])/;
+
+/**
+ * An explanation without the lead that names the answer by its letter ("Why B
+ * is correct:"). The letter is the answer's place in the stored order. Most
+ * screens show the answers in another order, or with no letters at all, and
+ * there the lead points at the wrong answer or at nothing. So the bank's
+ * readers drop it as they read (src/server/data/questions.ts and
+ * src/server/path/bank.ts), and no screen prints it. Text that does not open
+ * with such a lead is returned exactly as it is.
+ */
+export function withoutAnswerLead(text: string): string {
+  return text.replace(LEAD, "");
+}
 
 export function splitExplanation(explanation: string): { takeaway: string; rest: string } {
-  const text = repairText(explanation).replace(LEAD, "").trim();
+  const text = plainDashes(withoutAnswerLead(americanSpelling(fixEncoding(explanation))).trim());
   if (!text) return { takeaway: "", rest: "" };
   const [first, ...more] = text.split(SENTENCE);
   return { takeaway: first.trim(), rest: more.join(" ").trim() };

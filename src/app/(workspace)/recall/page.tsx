@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
-import { listEnrollments } from "@/server/data/enrollments";
+import { requireProPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments } from "@/server/page-reads";
 import {
   getCertificationBySlug,
-  listActiveCertifications,
 } from "@/server/data/certifications";
 import { getRecallDecks } from "@/data/recall";
 import { RecallSurface } from "@/components/recall/RecallSurface";
@@ -18,18 +17,14 @@ export default async function RecallPage({
   searchParams: Promise<{ cert?: string; deck?: string }>;
 }) {
   const { cert: certSlug, deck } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
-  const enrollments = await listEnrollments(db, user.id);
+  const enrollments = await pageEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
 
   let active = certSlug ? await getCertificationBySlug(db, certSlug) : null;
   if (!active || !enrollments.some((e) => e.certificationId === active!.id)) {
-    const certs = await listActiveCertifications(db);
+    const certs = await pageCertifications(db);
     active = certs.find((c) => c.id === enrollments[0].certificationId) ?? null;
   }
   if (!active) redirect("/onboarding");
@@ -38,11 +33,11 @@ export default async function RecallPage({
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Recall</h1>
-        <p className="text-sm text-muted-foreground">
-          {active.name} · speed-drill the facts you have to know cold. Answer
-          with the number keys — correct answers fly by, misses come back.
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Recall</h1>
+        <p className="text-small text-muted-foreground">
+          Recall asks you {active.name} facts to answer from memory. A fact that you answer incorrectly is asked
+          again later in the session.
         </p>
       </div>
       <RecallSurface

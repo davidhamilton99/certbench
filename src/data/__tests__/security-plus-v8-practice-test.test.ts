@@ -20,7 +20,7 @@ describe("the SY0-801 practice test", () => {
     }
   });
 
-  it("has at least one question on every objective, and none on an objective SY0-801 doesn't have", () => {
+  it("has at least one question on every objective, and none on an objective SY0-801 does not have", () => {
     const codes = SY0_801_DOMAINS.flatMap((d) => d.objectives.map((o) => o.code));
     const asked = new Set(SY0_801_PRACTICE_TEST.map((q) => q.objective));
     for (const code of codes) expect(asked.has(code), code).toBe(true);

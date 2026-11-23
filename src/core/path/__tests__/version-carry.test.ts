@@ -46,7 +46,7 @@ describe("carryProgress", () => {
     expect(answers).toBe(4);
   });
 
-  it("carries the labs it still plays and the goal, but no stops, checkpoint or rehearsal", () => {
+  it("carries the labs it still plays and the goal, but no steps, checkpoint or practice exam", () => {
     expect(progress.labs).toEqual({ "firewall-acl-configuration": run(4) });
     expect(labs).toBe(1);
     expect(progress.goal).toEqual(from.goal);

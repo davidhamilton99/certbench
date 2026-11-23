@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
- * A long reference list folded away under its heading, on the path's glass:
- * every row is in the page from the start, for search and for anyone who
- * opens it, without standing between a visitor and the next thing to do.
+ * A long reference list folded away under its heading: every row is in the
+ * page from the start, for search and for anyone who opens it, without
+ * standing between a visitor and the next thing to do. It is a sheet with an
+ * edge because it is operated: pressing its heading opens it.
  */
 export function ReferenceFold({
   title,
@@ -19,19 +21,19 @@ export function ReferenceFold({
   className?: string;
 }) {
   return (
-    <details className={`group glass rounded-[1.75rem] text-left ${className ?? ""}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[1.75rem] p-5 sm:p-7 [&::-webkit-details-marker]:hidden">
+    <details className={cn("group glass rounded-lg text-left", className)}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg p-5 sm:p-7 [&::-webkit-details-marker]:hidden">
         <span className="grid min-w-0 gap-1">
-          <h2 className="text-balance text-xl font-semibold tracking-[-0.02em]">{title}</h2>
-          <span className="text-sm leading-relaxed text-muted-foreground">{summary}</span>
+          <h2 className="text-lede font-semibold">{title}</h2>
+          <span className="text-small text-muted-foreground">{summary}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground group-hover:text-foreground">
+        <span className="flex shrink-0 items-center gap-1.5 text-small font-medium text-muted-foreground group-hover:text-foreground">
           <span className="hidden group-open:hidden sm:inline">Show all</span>
           <span className="hidden sm:group-open:inline">Hide</span>
           <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
         </span>
       </summary>
-      <div className="border-t border-border/70 p-3 sm:p-4">{children}</div>
+      <div className="border-t border-border p-3 sm:p-4">{children}</div>
     </details>
   );
 }

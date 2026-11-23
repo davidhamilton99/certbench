@@ -81,7 +81,7 @@ describe("buildStop — Security+", () => {
     expectValid(reps);
   });
 
-  it("builds a learn stop from its seven hand-written reps plus the shortest exam question", () => {
+  it("builds a learn step from its seven hand-written reps plus the shortest exam question", () => {
     const { stop, reps } = build(secPlus, secPlan, 1);
     expect(stop.id).toBe("1.1");
     expect(reps).toHaveLength(LEARN_NEW_REPS + 1);
@@ -123,7 +123,16 @@ describe("buildStop — Security+", () => {
       const bank = { ...secPlus, questions: [lettered], byId: new Map([[q.id, lettered]]) };
       const closer = build(bank, secPlan, 1).reps.at(-1)!;
       expect(closer.type === "choice" && closer.order, explanation).toEqual([0, 1, 2, 3]);
+      // And once it is marked, each answer keeps its letter, so "option A" can still be found.
+      expect(closer.type === "choice" && closer.keepsLetters, explanation).toBe(true);
     }
+  });
+
+  it("marks no other bank question to keep its letters: only the stored lead named one, and it is not shown", () => {
+    const { reps } = build(secPlus, secPlan, secPlan.freeThrough);
+    const bankReps = reps.filter((r) => r.type === "choice" && r.id.startsWith("q|"));
+    expect(bankReps.length).toBeGreaterThan(0);
+    for (const r of bankReps) expect(r.type === "choice" && "keepsLetters" in r, r.id).toBe(false);
   });
 
   it("still shuffles when letters are only names, like USB-C or an A record", () => {
@@ -135,6 +144,8 @@ describe("buildStop — Security+", () => {
       return closer.type === "choice" ? closer.order!.join() : "";
     });
     expect(orders.some((o) => o !== "0,1,2,3")).toBe(true);
+    const closer = build(bank, secPlan, 1).reps.at(-1)!;
+    expect(closer.type === "choice" && closer.keepsLetters).toBeFalsy();
   });
 
   it("brings earlier misses back first, from any source", () => {
@@ -160,14 +171,14 @@ describe("buildStop — Security+", () => {
     expectValid(reps);
   });
 
-  it("prefers checkpoint questions that haven't been seen", () => {
+  it("prefers checkpoint questions that have not been seen", () => {
     const seen = secPlus.questions.filter((q) => q.domain === "4.0").slice(0, 80).map((q) => `q|${q.objective}|${q.id}`);
     const { reps } = build(secPlus, secPlan, secPlan.freeThrough, { seen });
     const seenSet = new Set(seen);
     expect(reps.filter((r) => seenSet.has(r.id))).toHaveLength(0);
   });
 
-  it("fills a domain practice stop from that domain, spread across its objectives", () => {
+  it("fills a domain practice step from that domain, spread across its objectives", () => {
     const index = secPlan.stops.findIndex((s) => s.id === "d2");
     const { reps } = build(secPlus, secPlan, index);
     expect(reps).toHaveLength(PRACTICE_SIZE);
@@ -175,7 +186,7 @@ describe("buildStop — Security+", () => {
     expect(new Set(reps.map((r) => r.objective)).size).toBe(5);
   });
 
-  it("keeps going past the last stop with review rounds", () => {
+  it("keeps going past the last step with review rounds", () => {
     const missed = secPlus.questions.slice(0, 3).map((q) => `q|${q.objective}|${q.id}`);
     const { stop, reps } = build(secPlus, secPlan, secPlan.stops.length, { missed });
     expect(stop.kind).toBe("review");
@@ -184,7 +195,7 @@ describe("buildStop — Security+", () => {
     expectValid(reps);
   });
 
-  it("serves a lab stop's scenario in place of reps", () => {
+  it("serves a lab step's scenario in place of reps", () => {
     const withLabs = {
       ...secPlus,
       structure: {
@@ -202,7 +213,7 @@ describe("buildStop — Security+", () => {
     expect(lab?.id).toBe(withLabs.structure.domains[2].lab?.id);
   });
 
-  it("builds the same stop from the same seed, and a different shuffle from another", () => {
+  it("builds the same step from the same seed, and a different shuffle from another", () => {
     const a = build(secPlus, secPlan, 1, { seed: 7 }).reps;
     const b = build(secPlus, secPlan, 1, { seed: 7 }).reps;
     expect(a).toEqual(b);
@@ -239,7 +250,7 @@ describe("buildStop — Network+", () => {
     expect(reps[0].id).toBe(first.id);
   });
 
-  it("reports a missed recall fact that's been taken out of its deck, but not a missing bank question", () => {
+  it("reports a missed recall fact that has been taken out of its deck, but not a missing bank question", () => {
     // T568B is a pin-out standard: it has no "max speed", so the cable deck no longer asks.
     const withdrawn = recallRepId("1.3", "net-cables", "T568B wiring");
     const absentQuestion = "q|1.1|00000000-0000-4000-8000-999999999999";
@@ -267,14 +278,14 @@ describe("buildStop — Network+", () => {
     for (let seed = 1; seed <= 20; seed++) {
       for (const r of build(netPlus, netPlan, index, { seed }).reps) {
         if (!r.id.startsWith("r|1.4|auto-subnetting-chart|")) continue;
-        expect(r.takeaway).toMatch(/ · [\d,]+ usable hosts$/);
+        expect(r.takeaway).toMatch(/ \([\d,]+ usable hosts\)$/);
         checked++;
       }
     }
     expect(checked).toBeGreaterThan(0);
   });
 
-  it("makes the subnetting stop hands-on: one fresh problem per skill", () => {
+  it("makes the subnetting step hands-on: one fresh problem per skill", () => {
     const index = netPlan.stops.findIndex((s) => s.id === "1.4");
     const { reps } = build(netPlus, netPlan, index);
     const subnet = reps.filter((r) => r.id.startsWith("r|1.4|subnet|"));

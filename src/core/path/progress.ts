@@ -88,6 +88,16 @@ export function isStopDone(progress: PathProgress, stopId: string): boolean {
 }
 
 /**
+ * The ids of the steps that are finished. An objective's own step has the
+ * objective's code as its id, so the course outline can tell an objective that
+ * has been studied from one that only other questions (the introductory
+ * questions, the checkpoint, a practice exam) have touched.
+ */
+export function doneStopIds(progress: PathProgress): Set<string> {
+  return new Set(Object.keys(progress.stops).filter((id) => isStopDone(progress, id)));
+}
+
+/**
  * The stop to play next: the first one in path order not yet finished.
  * Past the end it's `plan.stops.length` — the open-ended review rounds.
  */
@@ -103,6 +113,19 @@ export function stopsDone(plan: PathPlan, progress: PathProgress): number {
 
 export function hasStarted(progress: PathProgress): boolean {
   return Object.keys(progress.items).length > 0 || Object.keys(progress.stops).length > 0;
+}
+
+/**
+ * How each question of a stop was last answered, in the stop's own order: true
+ * (correctly), false (incorrectly) or null (not answered yet). A stop that was
+ * left part-way, or whose questions were answered on another page, continues
+ * from the first null instead of starting again.
+ */
+export function answersSoFar(progress: PathProgress, repIds: readonly string[]): (boolean | null)[] {
+  return repIds.map((id) => {
+    const status = itemStatus(progress.items[id]);
+    return status === "new" ? null : status === "got";
+  });
 }
 
 /**
@@ -194,6 +217,29 @@ function mergeRuns(a: Record<string, StopRecord>, b: Record<string, StopRecord>)
     if (!ra || rb.n > ra.n || (rb.n === ra.n && rb.at > ra.at)) out[id] = rb;
   }
   return out;
+}
+
+/**
+ * Whether merging `other` into `base` would change `base`: `other` holds an
+ * answer, a finished stop or lab, a result or a goal that `base` lacks or that
+ * wins by the rules of mergePathProgress. It lets a page skip a render, and a
+ * save, when a second copy has nothing new.
+ */
+export function addsTo(base: PathProgress, other: PathProgress): boolean {
+  for (const [id, rb] of Object.entries(other.items)) {
+    const ra = base.items[id];
+    if (!ra || rb.a > ra.a || (rb.a === ra.a && rb.t > ra.t)) return true;
+  }
+  const runsAdd = (a: Record<string, StopRecord>, b: Record<string, StopRecord>) =>
+    Object.entries(b).some(([id, rb]) => {
+      const ra = a[id];
+      return !ra || rb.n > ra.n || (rb.n === ra.n && rb.at > ra.at);
+    });
+  if (runsAdd(base.stops, other.stops) || runsAdd(base.labs, other.labs)) return true;
+  const later = (x: { at: number } | null, y: { at: number } | null) => !!y && (!x || y.at > x.at);
+  if (later(base.checkpoint, other.checkpoint) || later(base.goal, other.goal)) return true;
+  const have = new Set(base.rehearsals.map((r) => r.at));
+  return other.rehearsals.some((r) => !have.has(r.at));
 }
 
 const isCount = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0;

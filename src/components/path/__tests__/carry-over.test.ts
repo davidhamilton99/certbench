@@ -44,7 +44,7 @@ describe("carrying a device's A+ path over to 220-1201", () => {
     expect([pathStorageKey(OLD), pathUnlockedKey(OLD), pathRehearsalKey(OLD)].some((k) => store.has(k))).toBe(false);
   });
 
-  it("merges into what's already saved under the new slug", async () => {
+  it("merges into what has already saved under the new slug", async () => {
     save(NEW, "u1", { "q|2.1|a": rec(5) });
     save(OLD, "u1", { "r|2.1|ports-protocols|1a2b3c4d": rec(1) });
 

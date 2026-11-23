@@ -13,7 +13,7 @@ describe("an exam date to plan toward", () => {
     expect(isPlannableExamDate(isoInDays(EXAM_DATE_HORIZON_DAYS, now), now)).toBe(true);
   });
 
-  it("is never a mistyped year, a day gone by or beyond, or a day that doesn't exist", () => {
+  it("is never a mistyped year, a day gone by or beyond, or a day that does not exist", () => {
     // What a browser's date input reports when 12092026 is typed into the year first.
     expect(isPlannableExamDate("120920-02-06", now)).toBe(false);
     expect(isPlannableExamDate("2026-11-12", now)).toBe(false);
@@ -23,7 +23,7 @@ describe("an exam date to plan toward", () => {
   });
 });
 
-describe("a saved goal whose dates can't be right", () => {
+describe("a saved goal whose dates cannot be right", () => {
   const bad = { ...EMPTY_PATH_PROGRESS, goal: { examDate: "120920-02-06", target: "2026-1-9", minutes: 20, at: 1 } };
   const repaired = { examDate: null, target: null, minutes: 20, at: 1 };
 
@@ -31,7 +31,7 @@ describe("a saved goal whose dates can't be right", () => {
     expect(sanitizePathProgress(bad).goal).toEqual(repaired);
   });
 
-  it("doesn't get the whole save refused by the account", () => {
+  it("does not get the whole save refused by the account", () => {
     const parsed = pathProgressSchema.safeParse(bad);
     expect(parsed.success).toBe(true);
     expect(parsed.data?.goal).toEqual(repaired);

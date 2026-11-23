@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.gen";
 import { publicEnv } from "@/env";
 import type { Db } from "./server";
+import { fetchWithTimeLimit } from "./time-limit";
 
 /**
  * Cookie-free anonymous client for PUBLIC marketing/SEO pages. Unlike the
@@ -16,6 +17,10 @@ export function createAnonClient(): Db {
   return createSupabaseClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    { auth: { persistSession: false, autoRefreshToken: false } }
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+      // Every request has a time limit: see ./time-limit.
+      global: { fetch: fetchWithTimeLimit() },
+    }
   );
 }

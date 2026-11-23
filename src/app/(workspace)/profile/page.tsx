@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { requireProPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import {
   ProfileSettings,
   type AvailableCert,
@@ -14,16 +12,12 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
   if (!profile) redirect("/onboarding");
 
@@ -49,7 +43,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">Profile</h1>
+      <h1 className="cb-subsection">Profile</h1>
       <ProfileSettings
         initialDisplayName={profile.displayName}
         email={user.email ?? ""}

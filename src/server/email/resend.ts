@@ -1,8 +1,15 @@
 import "server-only";
 
 import { serverEnvOptional } from "@/env";
+import { SUPPORT_EMAIL } from "@/lib/errors/user-message";
 
 const DEFAULT_FROM = "CertBench <hello@certbench.dev>";
+
+/** How long one request to the mail service may take before it counts as failed. */
+export const SEND_TIMEOUT_MS = 10_000;
+
+/** How long to wait before the second and last attempt. */
+export const RETRY_AFTER_MS = 1_000;
 
 export interface SendEmailInput {
   to: string;
@@ -11,13 +18,28 @@ export interface SendEmailInput {
   text: string;
   /** Extra headers, e.g. List-Unsubscribe for lifecycle mail. */
   headers?: Record<string, string>;
+  /**
+   * Names this one email to the mail service (its Idempotency-Key header),
+   * built by the caller from the claim it made for the email. Resend keeps a
+   * key for 24 hours: a request sent again with the same key and the same
+   * email is answered as the first was, without a second send, and one with
+   * the same key and another email is refused (409). So the second attempt
+   * after a fault at the service, and a later attempt on the same day after a
+   * request that received no answer, cannot deliver the email twice.
+   */
+  idempotencyKey?: string;
 }
 
 /**
- * Sends one email through the Resend REST API (raw fetch — same idiom as
- * the Anthropic client). Degrades gracefully: with no RESEND_API_KEY the
- * send is skipped and logged, never thrown, so email being unconfigured
- * can't break onboarding or crons.
+ * Sends one email through the Resend REST API (raw fetch). It answers true
+ * only when the mail service accepted the email, and it never throws: with no
+ * RESEND_API_KEY, after a refusal, or when the service cannot be reached, it
+ * logs the reason and answers false, so that the caller can tell a sent email
+ * from one that was not sent.
+ *
+ * A rate limit (429) or a fault at the service (5xx) is tried once more after
+ * one second. A request that received no answer is not tried again: the email
+ * may have been accepted, and a second attempt could deliver it twice.
  */
 export async function sendEmail(input: SendEmailInput): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -26,26 +48,48 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
     return false;
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: serverEnvOptional("EMAIL_FROM") ?? DEFAULT_FROM,
-      to: [input.to],
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-      headers: input.headers,
-    }),
+  const body = JSON.stringify({
+    from: serverEnvOptional("EMAIL_FROM") ?? DEFAULT_FROM,
+    to: [input.to],
+    // A reply, a question or a "stop", goes to the address that every footer
+    // and every page names. Without it, replies went to the sending address,
+    // which the site names nowhere.
+    reply_to: SUPPORT_EMAIL,
+    subject: input.subject,
+    html: input.html,
+    text: input.text,
+    headers: input.headers,
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`resend send failed (${res.status}): ${body.slice(0, 300)}`);
-    return false;
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}),
+  };
+
+  const first = await attempt(headers, body);
+  if (first !== "retry") return first === "sent";
+  await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS));
+  return (await attempt(headers, body)) === "sent";
+}
+
+/** One request. "retry" means the service answered that it could not take the email just now. */
+async function attempt(headers: Record<string, string>, body: string): Promise<"sent" | "retry" | "failed"> {
+  let res: Response;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers,
+      body,
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+    });
+  } catch (err) {
+    console.error("resend send failed (no answer):", err instanceof Error ? `${err.name}: ${err.message}` : err);
+    return "failed";
   }
-  return true;
+
+  if (res.ok) return "sent";
+  const detail = await res.text().catch(() => "");
+  console.error(`resend send failed (${res.status}): ${detail.slice(0, 300)}`);
+  return res.status === 429 || res.status >= 500 ? "retry" : "failed";
 }

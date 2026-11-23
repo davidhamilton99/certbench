@@ -1,24 +1,17 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-  type RefObject,
-} from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Flame, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ScoreLevel } from "@/components/instrument/ScoreLevel";
 import type { PbqGradeResult, SimField, SimFieldAnswer } from "@/data/pbq/types";
-import { answerText, callPrompt, fieldCredit, stageTally } from "@/core/pbq/sim-play";
-import { useKeyboardTurn } from "@/components/path/keyboard-turn";
+import { answerText, callPrompt, fieldCredit, stageSentence, stageTally } from "@/core/pbq/sim-play";
 import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell";
+import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { SimMove } from "@/components/workspace/SimMoves";
 import { track } from "@/lib/analytics";
+import { bandFor } from "@/lib/readiness/band";
 import { cn } from "@/lib/utils";
 
 /**
@@ -39,25 +32,38 @@ export function LabHeader({
   subtitle,
   onBack,
   backLabel,
+  takeFocus = false,
 }: {
   title: string;
   subtitle: string;
   onBack: () => void;
   backLabel?: string;
+  /** Put the keyboard's focus on the title as the lab opens (see PbqHostProps). */
+  takeFocus?: boolean;
 }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (takeFocus) heading.current?.focus();
+  }, [takeFocus]);
+
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-1">
       <button
         type="button"
         onClick={onBack}
-        aria-label={backLabel ?? "Back to scenarios"}
-        className="mt-1 text-muted-foreground transition-colors hover:text-foreground"
+        aria-label={backLabel ?? "Return to the scenarios"}
+        // The only way back to the list: a full-size target, the arrow at its centre.
+        className="cb-tap -ml-2 flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="size-5" />
+        <ArrowLeft className="size-5" aria-hidden />
       </button>
-      <div className="min-w-0">
-        <h2 className="text-lg font-semibold leading-snug">{title}</h2>
-        <p className="text-[13px] text-muted-foreground">{subtitle}</p>
+      <div className="min-w-0 pt-1">
+        {/* Takes the focus so that it is read when the lab opens; it is not a control. */}
+        <h2 ref={heading} tabIndex={-1} className="text-lg font-semibold leading-snug">
+          {title}
+        </h2>
+        <p className="text-note text-muted-foreground">{subtitle}</p>
       </div>
     </div>
   );
@@ -111,6 +117,9 @@ export function StagedLab({
   onBack,
   onGraded,
   backLabel,
+  onStarted,
+  takeFocus,
+  confirmLeave = true,
 }: {
   scenarioId: string;
   title: string;
@@ -124,26 +133,22 @@ export function StagedLab({
   explanation: string;
   upsell?: PbqUpsell;
   onBack: () => void;
-  onGraded?: (result: PbqGradeResult) => void;
-  backLabel?: string;
-}) {
-  const turnId = useId();
+} & PbqHostProps) {
   const root = useRef<HTMLDivElement>(null);
   const hud = useRef<HTMLDivElement>(null);
   const play = useRef<HTMLDivElement>(null);
-  const keyboard = useKeyboardTurn(turnId, root);
 
   const [run, setRun] = useState(0);
   const [spot, setSpot] = useState<Spot>(START);
   const [answers, setAnswers] = useState<Record<string, SimFieldAnswer>>({});
   const [credit, setCredit] = useState<Record<string, number>>({});
-  const [streak, setStreak] = useState(0);
   const [graded, setGraded] = useState<{ result: PbqGradeResult; stages: StageScore[] } | null>(null);
-  const [confirmLeave, setConfirmLeave] = useState(false);
-  // Handlers read these rather than render state: a move can move on from a timer.
+  const [askingToLeave, setAskingToLeave] = useState(false);
+  // Handlers read these rather than render state, so a second press in the same frame sees the first.
   const spotRef = useRef<Spot>(START);
   const answersRef = useRef<Record<string, SimFieldAnswer>>({});
   const creditRef = useRef<Record<string, number>>({});
+  const started = useStarted(onStarted);
 
   const moveTo = useCallback((next: Spot) => {
     spotRef.current = next;
@@ -156,7 +161,6 @@ export function StagedLab({
     creditRef.current = { ...creditRef.current, [field.id]: c };
     setAnswers(answersRef.current);
     setCredit(creditRef.current);
-    setStreak((s) => (c >= 1 ? s + 1 : 0));
   }, []);
 
   const onNext = useCallback(() => {
@@ -193,15 +197,21 @@ export function StagedLab({
     creditRef.current = {};
     setAnswers({});
     setCredit({});
-    setStreak(0);
     setGraded(null);
     moveTo(START);
     setRun((r) => r + 1);
   }
 
   function leave() {
-    if (Object.keys(answersRef.current).length > 0 && !graded) setConfirmLeave(true);
+    if (confirmLeave && Object.keys(answersRef.current).length > 0 && !graded) setAskingToLeave(true);
     else onBack();
+  }
+
+  // The question closes before the lab is left: a host that keeps the lab on
+  // its page would otherwise leave it open, with the focus held inside it.
+  function leaveAfterAsking() {
+    setAskingToLeave(false);
+    onBack();
   }
 
   // Keep what changed in view: a new stage from its top (its case is new), a
@@ -216,22 +226,22 @@ export function StagedLab({
   const missed = stages.flatMap((s) => s.fields.filter((f) => (credit[f.id] ?? 0) < 1));
 
   return (
-    <div ref={root} className="flex min-w-0 scroll-mt-24 flex-col gap-4 sm:gap-5">
+    <div ref={root} className="flex min-w-0 flex-col gap-4 sm:gap-5">
       <ConfirmDialog
-        open={confirmLeave}
-        title="Leave this lab?"
-        message="Your answers so far won't be kept."
-        confirmLabel="Leave"
-        cancelLabel="Stay"
-        onConfirm={onBack}
-        onCancel={() => setConfirmLeave(false)}
+        open={askingToLeave}
+        title="Do you want to leave this lab?"
+        message="Your answers so far will not be kept."
+        confirmLabel="Leave the lab"
+        cancelLabel="Stay in the lab"
+        onConfirm={leaveAfterAsking}
+        onCancel={() => setAskingToLeave(false)}
       />
-      <LabHeader title={title} subtitle={subtitle} onBack={leave} backLabel={backLabel} />
+      <LabHeader title={title} subtitle={subtitle} onBack={leave} backLabel={backLabel} takeFocus={takeFocus} />
 
       {graded ? (
         <LabResult
           result={graded.result}
-          unit="points, partial credit included"
+          summary={`You earned ${graded.result.correctItems} of ${graded.result.totalItems} points, including partial credit.`}
           rows={stages.map((s, i) => ({
             id: s.id,
             title: s.title,
@@ -249,11 +259,11 @@ export function StagedLab({
         />
       ) : (
         <>
-          <div ref={hud} className="scroll-mt-24">
-            <Hud stages={stages} spot={spot} credit={credit} streak={streak} noun={noun} />
+          <div ref={hud}>
+            <Hud stages={stages} spot={spot} credit={credit} noun={noun} />
           </div>
           {renderCase({ stage: spot.stage, done: spot.done, run, credit })}
-          <div ref={play} className="min-w-0 scroll-mt-24 pt-1">
+          <div ref={play} className="min-w-0 pt-1">
             {spot.done ? (
               <StageCard
                 key={`${run}-${spot.stage}-done`}
@@ -263,15 +273,14 @@ export function StagedLab({
                 count={stages.length}
                 credit={credit}
                 last={spot.stage === stages.length - 1}
-                keyboard={keyboard}
                 onNext={onStageNext}
               />
             ) : (
               <SimMove
                 key={`${run}-${field.id}`}
                 field={field}
-                keyboard={keyboard}
                 takeFocus={!(run === 0 && spot.stage === 0 && spot.move === 0)}
+                onStep={started}
                 onAnswer={(answer) => onAnswer(field, answer)}
                 onNext={onNext}
               />
@@ -281,6 +290,23 @@ export function StagedLab({
       )}
     </div>
   );
+}
+
+/**
+ * Tells the host that play has started, once for each lab that is opened: the
+ * returned function may be called at every answer and passes only the first on.
+ */
+export function useStarted(onStarted: (() => void) | undefined): () => void {
+  const told = useRef(false);
+  const latest = useRef(onStarted);
+  useEffect(() => {
+    latest.current = onStarted;
+  }, [onStarted]);
+  return useCallback(() => {
+    if (told.current) return;
+    told.current = true;
+    latest.current?.();
+  }, []);
 }
 
 /**
@@ -309,20 +335,18 @@ export function useKeepInView(at: string, target: () => HTMLElement | null) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Where the run is: the stage, a streak once three in a row are right, and a
- * segment per move, grouped by stage and filled by the credit it earned.
+ * Where the run is: the stage, and a segment per move, grouped by stage and
+ * filled by the credit it earned.
  */
 export function Hud({
   stages,
   spot,
   credit,
-  streak,
   noun,
 }: {
   stages: readonly LabStage[];
   spot: Spot;
   credit: Readonly<Record<string, number>>;
-  streak: number;
   noun: string;
 }) {
   const stage = stages[spot.stage];
@@ -330,25 +354,14 @@ export function Hud({
   const answered = stages.reduce((n, s) => n + s.fields.filter((f) => credit[f.id] !== undefined).length, 0);
   return (
     <div className="grid gap-2.5">
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-          {noun} {spot.stage + 1} of {stages.length} · {stage.title}
+      <div className="flex min-w-0 items-baseline justify-between gap-3">
+        {/* The stage's name wraps: cut short, it could not be read at a large zoom. */}
+        <p className="cb-label min-w-0 text-muted-foreground">
+          {noun} {spot.stage + 1} of {stages.length}: {stage.title}
         </p>
-        <div className="flex shrink-0 items-center gap-2.5">
-          {streak >= 3 && (
-            <span
-              key={streak}
-              className="path-pop inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[11px] font-medium text-amber-700 dark:text-amber-300"
-            >
-              <Flame className="size-3.5" aria-hidden />
-              {streak} in a row
-            </span>
-          )}
-          <span className="font-mono text-xs tabular-nums text-muted-foreground">
-            {answered}/{moves}
-            <span className="sr-only"> answered</span>
-          </span>
-        </div>
+        <span className="shrink-0 text-note tabular-nums text-muted-foreground">
+          {answered} of {moves} answered
+        </span>
       </div>
       <div className="flex gap-2" aria-hidden>
         {stages.map((s, i) => (
@@ -363,20 +376,21 @@ export function Hud({
   );
 }
 
-/** A move's segment: lit while it's being played, then filled green by the share it earned. */
+/**
+ * A move's segment: the page's blue while it is being played, then green for
+ * the share of credit it earned over red for the share it missed, the colours
+ * its answer was marked in. A rule drawn thick, with square ends, at its final
+ * length: nothing here grows or sweeps.
+ */
 export function Segment({ credit, current = false }: { credit: number | undefined; current?: boolean }) {
   if (credit === undefined) {
-    return (
-      <span
-        className={cn("h-1.5 min-w-0 flex-1 rounded-full transition-colors duration-300", current ? "bg-primary" : "bg-muted")}
-      />
-    );
+    return <span className={cn("h-1.5 min-w-0 flex-1 rounded-xs", current ? "bg-primary" : "bg-foreground/[0.12]")} />;
   }
   return (
-    <span className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-warning">
+    <span className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-xs bg-destructive">
       <span
-        className="absolute inset-y-0 left-0 rounded-full bg-success"
-        style={{ width: `${Math.round(Math.max(0, Math.min(1, credit)) * 100)}%` }}
+        className="absolute inset-0 origin-left bg-success"
+        style={{ transform: `scaleX(${Math.max(0, Math.min(1, credit))})` }}
       />
     </span>
   );
@@ -386,7 +400,7 @@ export function Segment({ credit, current = false }: { credit: number | undefine
 /*  End of a stage                                                     */
 /* ------------------------------------------------------------------ */
 
-/** A stage's score, its explanation folded away, and the way on. */
+/** A stage's score in a sentence, its explanation folded away, and the way on. */
 export function StageCard({
   stage,
   noun,
@@ -394,7 +408,6 @@ export function StageCard({
   count,
   credit,
   last,
-  keyboard,
   onNext,
 }: {
   stage: LabStage;
@@ -403,12 +416,11 @@ export function StageCard({
   count: number;
   credit: Readonly<Record<string, number>>;
   last: boolean;
-  keyboard: boolean;
   onNext: () => void;
 }) {
   const tally = stageTally(stage, credit);
-  const perfect = tally.right === tally.moves;
   const button = useRef<HTMLButtonElement>(null);
+  const scoreId = useId();
   // Once only: a double click mustn't skip a stage or grade the lab twice.
   const went = useRef(false);
   const go = useCallback(() => {
@@ -417,54 +429,49 @@ export function StageCard({
     onNext();
   }, [onNext]);
 
+  // The way on takes the focus, and the stage's score is its description, so
+  // a screen reader reads the score with the button.
   useEffect(() => {
     button.current?.focus({ preventScroll: true });
   }, []);
 
-  // Enter moves on from anywhere but a control (a button clicks itself, the fold toggles).
-  useEffect(() => {
-    if (!keyboard) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== "Enter" || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "BUTTON" || tag === "SUMMARY" || tag === "A" || tag === "INPUT") return;
-      e.preventDefault();
-      go();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [keyboard, go]);
+  // Enter moves on while the focus is on the card itself. On a control it does
+  // what the control does (a button presses itself, the fold opens).
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Enter" || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "BUTTON" || tag === "SUMMARY" || tag === "A" || tag === "INPUT") return;
+    e.preventDefault();
+    go();
+  }
 
   return (
-    <div className="path-rise grid gap-4 rounded-2xl border border-border bg-card/80 p-5 sm:p-6">
-      <div className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className={cn(
-            "path-pop flex size-11 shrink-0 items-center justify-center rounded-full",
-            perfect ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
-          )}
-        >
-          {perfect ? <Check className="size-5" strokeWidth={3} /> : <span className="font-mono text-sm font-semibold">{index + 1}</span>}
-        </span>
-        <div className="grid min-w-0 gap-0.5" role="status">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            {noun} {index + 1} of {count} done
-          </p>
-          <p className="font-display text-xl font-semibold tracking-tight">
-            {perfect && tally.moves > 1 ? `All ${tally.moves} right` : `${tally.right} of ${tally.moves} right`}
-            {tally.partly > 0 && <span className="text-muted-foreground"> · {tally.partly} partly</span>}
-          </p>
-        </div>
+    <div
+      // Focusable by a press anywhere on the card, so Enter then acts on it.
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="path-rise grid gap-4 rounded-lg border border-border bg-card p-5 sm:p-6"
+    >
+      <div id={scoreId} className="grid min-w-0 gap-1">
+        <p className="cb-label text-muted-foreground">
+          {noun} {index + 1} of {count} complete
+        </p>
+        <p className="cb-statement">{stageSentence(tally)}</p>
       </div>
       <div className="flex gap-1" aria-hidden>
         {stage.fields.map((f) => (
           <Segment key={f.id} credit={credit[f.id]} />
         ))}
       </div>
-      <Fold summary="Why these are the answers">{stage.explanation}</Fold>
-      <Button ref={button} size="lg" className="h-12 w-full px-6 text-base sm:w-auto sm:justify-self-start" onClick={go}>
-        {last ? "See my score" : `Next ${noun.toLowerCase()}`}
+      <Fold summary="Why these answers are correct">{stage.explanation}</Fold>
+      <Button
+        ref={button}
+        size="lg"
+        aria-describedby={scoreId}
+        className="w-full sm:w-auto sm:justify-self-start"
+        onClick={go}
+      >
+        {last ? "View my score" : `Next ${noun.toLowerCase()}`}
         <ArrowRight />
       </Button>
     </div>
@@ -474,6 +481,42 @@ export function StageCard({
 /* ------------------------------------------------------------------ */
 /*  End of a lab                                                       */
 /* ------------------------------------------------------------------ */
+
+/** A lab's verdict in each band of its score, in the lab's own words. */
+export interface LabVerdicts {
+  ready: string;
+  close: string;
+  work: string;
+}
+
+const SOLVED: LabVerdicts = { ready: "Solved", close: "Partly solved", work: "Not yet solved" };
+
+/**
+ * A lab's score, drawn the way every score on CertBench is: the figure, its
+ * verdict and a bar at its final length (ScoreLevel). The bands are the
+ * site's own (`bandFor`), so a lab and a practice exam agree on where they
+ * fall; the words are the lab's. There is no readiness target on the bar: one
+ * lab is too small a sample to call anyone ready for an exam.
+ */
+export function LabScore({
+  score,
+  verdicts = SOLVED,
+  summary,
+}: {
+  score: number;
+  verdicts?: LabVerdicts;
+  /** A sentence saying what the score counts: "You earned 7 of 9 points, including partial credit." */
+  summary: string;
+}) {
+  const band = bandFor(score);
+  const label = band.key === "ready" ? verdicts.ready : band.key === "close" ? verdicts.close : verdicts.work;
+  return (
+    <div className="grid gap-3 rounded-lg border border-border bg-card p-5 sm:p-6">
+      <ScoreLevel score={score} band={{ ...band, label }} caption="Lab score" readyMark={false} />
+      <p className="text-small text-muted-foreground">{summary}</p>
+    </div>
+  );
+}
 
 export interface ResultRow {
   id: string;
@@ -485,13 +528,13 @@ export interface ResultRow {
 }
 
 /**
- * A lab's score: a ring that sweeps up to it, each stage's line, then what to
- * look at again and what the lab teaches, both folded away, the offer where
- * the host passes one, and the way to play again.
+ * The end of a lab: its score, each stage's line, then what to look at again
+ * and what the lab teaches, both folded away, the offer where the host passes
+ * one, and the way to play again.
  */
 export function LabResult({
   result,
-  unit,
+  summary,
   rows,
   missCount = 0,
   misses,
@@ -502,8 +545,8 @@ export function LabResult({
   onBack,
 }: {
   result: PbqGradeResult;
-  /** Under "7 of 9": "points, partial credit included", "pairs matched"… */
-  unit: string;
+  /** A sentence saying what the score counts (see LabScore). */
+  summary: string;
   rows?: ResultRow[];
   missCount?: number;
   misses?: ReactNode;
@@ -513,45 +556,29 @@ export function LabResult({
   onRetry: () => void;
   onBack: () => void;
 }) {
-  const tone = result.score >= 75 ? "success" : result.score >= 40 ? "warning" : "danger";
-  const verdict = result.score >= 75 ? "Solved" : result.score >= 40 ? "Partly solved" : "Not solved yet";
   const top = useRef<HTMLDivElement>(null);
 
+  // The score takes the focus so that it is read; it is not a control.
   useEffect(() => {
     top.current?.focus({ preventScroll: true });
   }, []);
 
   return (
-    <div ref={top} tabIndex={-1} role="group" aria-label="Your score" className="path-rise grid gap-5 outline-none">
-      <div className="flex items-center gap-5 rounded-2xl border border-border bg-card/80 p-5 sm:p-6">
-        <ScoreRing score={result.score} tone={tone} />
-        <div className="grid min-w-0 gap-1">
-          <p
-            className={cn(
-              "font-mono text-[11px] font-semibold uppercase tracking-[0.16em]",
-              tone === "success" ? "text-success" : tone === "warning" ? "text-amber-700 dark:text-amber-300" : "text-destructive"
-            )}
-          >
-            {verdict}
-          </p>
-          <p className="font-display text-3xl font-semibold tracking-tight">
-            {result.correctItems} <span className="text-muted-foreground">of {result.totalItems}</span>
-          </p>
-          <p className="text-sm text-muted-foreground">{unit}</p>
-        </div>
-      </div>
+    <div ref={top} tabIndex={-1} role="group" aria-label="Your score" className="path-rise grid gap-5">
+      <LabScore score={result.score} summary={summary} />
 
       {rows && rows.length > 0 && (
         <ul className="grid gap-3">
           {rows.map((r, i) => (
             <li key={r.id} className="grid min-w-0 gap-1.5">
-              <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate">
-                  <span className="mr-2 font-mono text-xs text-muted-foreground">{i + 1}</span>
+              <div className="flex min-w-0 items-baseline justify-between gap-3 text-small">
+                <span className="min-w-0">
+                  <span className="mr-2 text-note tabular-nums text-muted-foreground">{i + 1}</span>
                   {r.title}
                 </span>
-                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                  {r.correct}/{r.total}
+                <span className="shrink-0 text-note tabular-nums text-muted-foreground">
+                  {r.correct} of {r.total}
+                  <span className="sr-only"> points</span>
                 </span>
               </div>
               {r.credits && (
@@ -567,7 +594,7 @@ export function LabResult({
       )}
 
       {missCount > 0 && misses && (
-        <Fold summary={missCount === 1 ? "The one to look at again" : `The ${missCount} to look at again`}>{misses}</Fold>
+        <Fold summary={missCount === 1 ? "The answer to review" : `The ${missCount} answers to review`}>{misses}</Fold>
       )}
 
       <Fold summary="What this lab teaches">{explanation}</Fold>
@@ -577,10 +604,10 @@ export function LabResult({
       <div className="flex flex-wrap gap-3">
         <Button onClick={onRetry}>
           <RotateCcw />
-          Play again
+          Repeat the lab
         </Button>
-        <Button variant="secondary" onClick={onBack}>
-          {backLabel ?? "Back to scenarios"}
+        <Button variant="outline" onClick={onBack}>
+          {backLabel ?? "Return to the scenarios"}
         </Button>
       </div>
     </div>
@@ -598,7 +625,7 @@ export function FieldMisses({
   return (
     <ol className="mt-1 grid gap-2.5">
       {fields.map((f) => (
-        <li key={f.id} className="grid gap-1.5 rounded-xl border border-border/70 bg-card/60 p-3">
+        <li key={f.id} className="grid gap-1.5 rounded-lg border border-border p-3">
           <p className="font-medium leading-snug text-foreground">{f.type === "select-many" ? callPrompt(f.label) : f.label}</p>
           <MissDetail field={f} answer={answers[f.id]} />
         </li>
@@ -623,7 +650,12 @@ function MissDetail({ field, answer }: { field: SimField; answer: SimFieldAnswer
       return (
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <Should>{answerText(field)}</Should>
-          {yours && <span className="text-muted-foreground line-through decoration-destructive/60">{yours}</span>}
+          {yours && (
+            <span className="min-w-0 text-muted-foreground line-through decoration-destructive/60 [overflow-wrap:anywhere]">
+              <span className="sr-only">Your answer: </span>
+              {yours}
+            </span>
+          )}
         </p>
       );
     }
@@ -652,7 +684,7 @@ function MissDetail({ field, answer }: { field: SimField; answer: SimFieldAnswer
   }
 }
 
-/** "This → that" lines, the right side ticked: a sort's or a match's misses. */
+/** Each missed item beside what it belongs with: a sort's or a match's misses. */
 export function PairList({ pairs }: { pairs: readonly (readonly [string, string])[] }) {
   return (
     <ul className="grid gap-1">
@@ -666,10 +698,17 @@ export function PairList({ pairs }: { pairs: readonly (readonly [string, string]
   );
 }
 
+/**
+ * The correct answer, ticked, and said to be so to a screen reader. It is
+ * never wider than its row: a long answer ("CVE-2024-38428 (OpenSSL RCE,
+ * 9.8)") wraps inside its card on a phone. A short one ("Yes") keeps its width
+ * beside a long line.
+ */
 export function Should({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex shrink-0 items-baseline gap-1 font-medium text-success">
+    <span className="inline-flex max-w-full shrink-0 items-baseline gap-1 font-medium text-success [overflow-wrap:anywhere]">
       <Check className="size-3.5 translate-y-0.5" strokeWidth={3} aria-hidden />
+      <span className="sr-only">Correct answer: </span>
       {children}
     </span>
   );
@@ -678,50 +717,13 @@ export function Should({ children }: { children: ReactNode }) {
 /** Text that's there for whoever wants it, folded away for whoever doesn't. */
 export function Fold({ summary, children }: { summary: string; children: ReactNode }) {
   return (
-    <details className="group rounded-xl border border-border/70 bg-card/40 px-4 py-3 text-sm text-muted-foreground">
-      <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-3 font-medium text-foreground [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-lg border border-border px-4 py-3 text-small text-muted-foreground">
+      {/* The summary fills the box's height, so the whole row opens it under a thumb. */}
+      <summary className="-my-3 flex cursor-pointer select-none list-none items-center justify-between gap-3 py-3 font-medium text-foreground [&::-webkit-details-marker]:hidden">
         {summary}
         <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
       </summary>
       <div className="mt-2.5 leading-relaxed">{children}</div>
     </details>
   );
-}
-
-/** The score as a ring that sweeps up to it. */
-export function ScoreRing({ score, tone }: { score: number; tone: "success" | "warning" | "danger" }) {
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  const stroke = tone === "success" ? "var(--success)" : tone === "warning" ? "var(--warning)" : "var(--destructive)";
-  return (
-    <div className="relative size-20 shrink-0 sm:size-24" role="img" aria-label={`${score}%`}>
-      <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
-        <circle cx="40" cy="40" r={r} fill="none" strokeWidth="7" className="stroke-muted" />
-        <circle
-          cx="40"
-          cy="40"
-          r={r}
-          fill="none"
-          strokeWidth="7"
-          strokeLinecap="round"
-          stroke={stroke}
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - Math.max(0, Math.min(100, score)) / 100)}
-          className="animate-gauge"
-          style={{ "--gauge-track": c } as CSSProperties}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-mono text-lg font-semibold tabular-nums sm:text-xl">
-        {score}%
-      </span>
-    </div>
-  );
-}
-
-/** A one-move lab's root: keys for its turn, and the score kept in view once it's up. */
-export function useLabTurn(): { root: RefObject<HTMLDivElement | null>; keyboard: boolean } {
-  const turnId = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const keyboard = useKeyboardTurn(turnId, root);
-  return { root, keyboard };
 }

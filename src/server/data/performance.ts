@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { Db } from "@/server/supabase/server";
-import { ApiError } from "@/contracts/common";
+import { allRows } from "@/server/data/paging";
+import { listQuestionDomains } from "@/server/data/questions";
 
 /** question_performance row joined with its question's domain. */
 export interface PerformanceWithDomain {
@@ -14,6 +15,15 @@ export interface PerformanceWithDomain {
   suspended_at: string | null;
 }
 
+/*
+ * A member's history for one exam is a row for each question answered, so it
+ * can run past the 1,000 rows one select answers with. Every select here that
+ * takes the whole history is read a page at a time (allRows), in question
+ * order, and asks for the exact count with each page, so that a history that
+ * fits in one page is one request. src/__tests__/whole-exam-selects.test.ts
+ * keeps it so.
+ */
+
 /**
  * All performance rows for a user+cert with the owning question's domain id
  * attached (question_performance itself doesn't store domain_id).
@@ -23,30 +33,27 @@ export async function listPerformanceWithDomains(
   userId: string,
   certId: string
 ): Promise<PerformanceWithDomain[]> {
-  const [perfResult, questionsResult] = await Promise.all([
-    db
-      .from("question_performance")
-      .select(
-        "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at, suspended_at"
-      )
-      .eq("user_id", userId)
-      .eq("certification_id", certId),
-    db
-      .from("cert_questions")
-      .select("id, domain_id")
-      .eq("certification_id", certId),
+  const [performance, questions] = await Promise.all([
+    allRows<Omit<PerformanceWithDomain, "domain_id">>((from, to) =>
+      db
+        .from("question_performance")
+        .select(
+          "question_id, times_seen, times_correct, last_seen_at, srs_next_review_at, suspended_at",
+          { count: "exact" }
+        )
+        .eq("user_id", userId)
+        .eq("certification_id", certId)
+        .order("question_id")
+        .range(from, to)
+    ),
+    listQuestionDomains(db, certId),
   ]);
-  if (perfResult.error) throw new ApiError("internal", perfResult.error.message);
-  if (questionsResult.error)
-    throw new ApiError("internal", questionsResult.error.message);
 
-  const domainByQuestion = new Map(
-    (questionsResult.data ?? []).map((q) => [q.id, q.domain_id])
-  );
+  const domainByQuestion = new Map(questions.map((q) => [q.id, q.domain_id]));
 
-  return (perfResult.data ?? []).flatMap((p) => {
+  return performance.flatMap((p) => {
     const domainId = domainByQuestion.get(p.question_id);
-    if (!domainId) return []; // question deleted/deactivated — skip
+    if (!domainId) return []; // the question was deleted: skip
     return [
       {
         question_id: p.question_id,
@@ -61,24 +68,27 @@ export async function listPerformanceWithDomains(
   });
 }
 
+/** One member's answer counts for one question. */
+export interface PerformanceRow {
+  question_id: string;
+  times_seen: number;
+  times_correct: number;
+  last_seen_at: string | null;
+}
+
 /** Bare performance rows (selection algorithms don't need domain ids). */
 export async function listPerformance(
   db: Db,
   userId: string,
   certId: string
-): Promise<
-  {
-    question_id: string;
-    times_seen: number;
-    times_correct: number;
-    last_seen_at: string | null;
-  }[]
-> {
-  const { data, error } = await db
-    .from("question_performance")
-    .select("question_id, times_seen, times_correct, last_seen_at")
-    .eq("user_id", userId)
-    .eq("certification_id", certId);
-  if (error) throw new ApiError("internal", error.message);
-  return data ?? [];
+): Promise<PerformanceRow[]> {
+  return allRows<PerformanceRow>((from, to) =>
+    db
+      .from("question_performance")
+      .select("question_id, times_seen, times_correct, last_seen_at", { count: "exact" })
+      .eq("user_id", userId)
+      .eq("certification_id", certId)
+      .order("question_id")
+      .range(from, to)
+  );
 }

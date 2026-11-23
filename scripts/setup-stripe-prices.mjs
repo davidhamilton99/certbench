@@ -55,7 +55,7 @@ async function main() {
     product = await stripe.products.create({
       name: "CertBench Pro",
       description:
-        "Unlimited practice questions, exams, PBQs, and AI generation",
+        "The whole study path, every hands-on lab and new timed practice exams, for one exam.",
     });
     console.log(`product created: ${product.id}`);
   }

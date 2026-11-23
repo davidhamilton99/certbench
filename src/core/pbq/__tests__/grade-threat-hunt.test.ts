@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gradeThreatHunt } from "@/core/pbq/grade-threat-hunt";
+import { gradeThreatHunt, huntSentence, huntTally } from "@/core/pbq/grade-threat-hunt";
 import type { ThreatHuntScenario } from "@/data/pbq/types";
 
 const scenario: ThreatHuntScenario = {
@@ -86,5 +86,34 @@ describe("gradeThreatHunt", () => {
     expect(r.score).toBe(expected);
     expect(r.score).toBeGreaterThan(65);
     expect(r.score).toBeLessThan(100);
+  });
+});
+
+describe("a hunt's tally, in words", () => {
+  it("counts the evidence flagged, the flags that were wrong and the question", () => {
+    expect(huntTally(scenario, { flagged: [0, 1, 3], attackChoice: 0 })).toEqual({
+      evidence: 3,
+      caught: 2,
+      falseAlarms: 1,
+      identified: true,
+    });
+    expect(huntTally(scenario, { flagged: [], attackChoice: -1 })).toEqual({
+      evidence: 3,
+      caught: 0,
+      falseAlarms: 0,
+      identified: false,
+    });
+  });
+
+  it("says it in two whole sentences, and leaves out the wrong flags when there are none", () => {
+    expect(huntSentence({ evidence: 3, caught: 3, falseAlarms: 0, identified: true })).toBe(
+      "You flagged 3 of the 3 lines of evidence. Your answer to the question was correct."
+    );
+    expect(huntSentence({ evidence: 3, caught: 2, falseAlarms: 1, identified: false })).toBe(
+      "You flagged 2 of the 3 lines of evidence and 1 line that was not evidence. Your answer to the question was incorrect."
+    );
+    expect(huntSentence({ evidence: 1, caught: 0, falseAlarms: 4, identified: true })).toBe(
+      "You flagged 0 of the 1 line of evidence and 4 lines that were not evidence. Your answer to the question was correct."
+    );
   });
 });

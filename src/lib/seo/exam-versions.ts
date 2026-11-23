@@ -1,21 +1,38 @@
 /**
  * What CompTIA says about exam versions, in one place so pages can't drift.
- * Checked against CompTIA's exam pages on the date below: on Nov 21, 2026
- * CompTIA's Security+ page called V8 (SY0-801) "the recommended version" and
- * kept V7 (SY0-701) open until June 11, 2027 in English. It gives no exact
- * launch date for V8, so pages say it was scheduled for on or around Nov 17.
- * Re-check these when a date passes.
+ * All five of CompTIA's exam pages (the five addresses in COMPTIA_URLS that
+ * are not blog posts) were read on the date below. Each page gave its
+ * exam's launch date, question limit (a maximum of 90), time limit (90
+ * minutes), passing score and domain weights.
+ *
+ * Security+ V7 (SY0-701) launched on November 7, 2023 and stays open until
+ * June 11, 2027 in English. Security+ V8 (SY0-801) launched on November 17,
+ * 2026, and CompTIA's Security+ page calls V8 "the recommended version".
+ * Network+ V9 (N10-009) launched on June 20, 2024. A+ Core 1 and Core 2 V15
+ * (220-1201 and 220-1202) launched on March 25, 2025. Passing scores: 750 for
+ * both Security+ versions and 720 for Network+, each on a scale of 100 to 900;
+ * 675 for A+ Core 1 and 700 for A+ Core 2, which CompTIA states on a scale of
+ * 900. Re-check these when a date passes.
+ *
+ * The retirement of the previous A+ series (V14: 220-1101 and 220-1102) on
+ * September 25, 2025, and the rule that both A+ exams must come from one
+ * series, are not on the exam pages. CompTIA states both in the blog post at
+ * COMPTIA_URLS.aPlusSeries, read on the same date: a sentence that gives that
+ * date cites that post, and not an exam page.
  */
-export const EXAM_FACTS_CHECKED = "November 21, 2026";
-export const EXAM_FACTS_CHECKED_ISO = "2026-11-21";
+export const EXAM_FACTS_CHECKED = "November 22, 2026";
+export const EXAM_FACTS_CHECKED_ISO = "2026-11-22";
 
 export const COMPTIA_URLS = {
   securityV7: "https://www.comptia.org/en-us/certifications/security/v7/",
   securityV8: "https://www.comptia.org/en-us/certifications/security/v8/",
   securityValidity:
     "https://www.comptia.org/en-us/blog/how-long-does-the-comptia-security-certification-last/",
+  networkPlus: "https://www.comptia.org/en-us/certifications/network/",
   aPlusCore1: "https://www.comptia.org/en-us/certifications/a/core-1-v15/",
   aPlusCore2: "https://www.comptia.org/en-us/certifications/a/core-2-v15/",
+  /** "CompTIA A+ Has Two Exams": when the V14 series retired, and that both exams must come from one series. */
+  aPlusSeries: "https://www.comptia.org/en-us/blog/comptia-a-has-two-exams-what-you-need-to-know/",
 };
 
 export const SECURITY_PLUS_VERSIONS_PATH = "/security-plus-sy0-801-vs-sy0-701";
@@ -27,8 +44,8 @@ export const SY0_801_AI_PATH = "/security-plus-sy0-801-ai-practice-questions";
 export const SY0_801_PRACTICE_PATH = "/security-plus-sy0-801-practice-test";
 /** When the first SY0-801 pages went up. */
 export const SY0_801_PUBLISHED_ISO = "2026-11-08";
-/** When the SY0-801 pages last changed, for the sitemap. */
-export const SY0_801_UPDATED_ISO = "2026-11-21";
+/** When the SY0-801 pages last changed, for the sitemap and their structured data. */
+export const SY0_801_UPDATED_ISO = "2026-11-22";
 /** When the practice test went up, and when its questions were checked against CompTIA's SY0-801 objectives. */
 export const SY0_801_PRACTICE_PUBLISHED_ISO = "2026-11-14";
 export const SY0_801_PRACTICE_CHECKED = "November 14, 2026";

@@ -7,12 +7,12 @@ export const networkPlusTopologies: TopologyScenario[] = [
   {
     type: "topology",
     id: "np-topo-vlan-trunk",
-    title: "VLAN Configuration & Inter-Switch Trunking",
+    title: "VLAN Configuration and Inter-Switch Trunking",
     briefing:
       "Brightline Manufacturing has expanded their office with a new access switch (SW-Access2). Hosts connected to SW-Access2 cannot communicate with hosts on the same VLAN connected to SW-Access1. The network engineer suspects a trunking or VLAN misconfiguration between the switches. Review the topology, identify the misconfigured devices, and fix the VLAN/trunk setup. Engineering is on VLAN 100 (10.10.100.0/24), Sales is on VLAN 200 (10.10.200.0/24), and Management is on VLAN 300 (10.10.30.0/24). Do not modify devices that are already correctly configured.",
     domain_number: "2.0",
     domain_title: "Network Implementation",
-    diagramTitle: "Brightline Manufacturing — LAN Topology",
+    diagramTitle: "Brightline Manufacturing: LAN Topology",
     estimatedMinutes: 12,
     devices: [
       {
@@ -121,7 +121,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
         preConfigured: true,
         fields: [],
         explanation:
-          "Engineering workstation on SW-Access2 — once the switch is fixed, this PC will reach VLAN 100.",
+          "Engineering workstation on SW-Access2: once the switch is fixed, this PC will reach VLAN 100.",
       },
       {
         id: "pc-sales",
@@ -143,7 +143,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
       { from: "sw-access2", to: "pc-sales", label: "Fa0/2 (VLAN 200)" },
     ],
     explanation:
-      "When adding a new access switch, you must configure the uplink as a trunk port, create all required VLANs on the local switch, and assign access ports to the correct VLANs. The distribution switch and existing access switch were already correct — the only issues were on the new SW-Access2.",
+      "When adding a new access switch, you must configure the uplink as a trunk port, create all required VLANs on the local switch, and assign access ports to the correct VLANs. The distribution switch and existing access switch were already correct: the only issues were on the new SW-Access2.",
   },
 
   /* ================================================================ */
@@ -152,12 +152,12 @@ export const networkPlusTopologies: TopologyScenario[] = [
   {
     type: "topology",
     id: "np-topo-ip-addressing",
-    title: "IP Addressing & Connectivity Troubleshooting",
+    title: "IP Addressing and Connectivity Troubleshooting",
     briefing:
       "Crestview Media's new branch office has intermittent connectivity issues. Some workstations cannot reach the internet while others work fine. The ISP has assigned the WAN block 203.0.113.0/30 and the branch uses 10.20.1.0/24 internally. Review each device's IP configuration, identify the errors, and fix only the misconfigured devices.",
     domain_number: "1.0",
-    domain_title: "Networking Fundamentals",
-    diagramTitle: "Crestview Media — Branch Office",
+    domain_title: "Networking Concepts",
+    diagramTitle: "Crestview Media: Branch Office",
     estimatedMinutes: 10,
     devices: [
       {
@@ -184,13 +184,13 @@ export const networkPlusTopologies: TopologyScenario[] = [
           {
             type: "text",
             id: "router-default-gw",
-            label: "Default route next-hop (currently set to 203.0.113.3 — correct it if wrong)",
+            label: "Default route next-hop (currently set to 203.0.113.3: correct it if wrong)",
             acceptedValues: ["203.0.113.1"],
             placeholder: "Enter the correct next-hop IP",
           },
         ],
         explanation:
-          "The branch router had an incorrect default route pointing to 203.0.113.3, which doesn't exist in the /30 WAN subnet (203.0.113.0/30 has usable IPs .1 and .2 only). The correct ISP gateway is 203.0.113.1.",
+          "The branch router had an incorrect default route pointing to 203.0.113.3, which does not exist in the /30 WAN subnet (203.0.113.0/30 has usable IPs .1 and .2 only). The correct ISP gateway is 203.0.113.1.",
       },
       {
         id: "branch-switch",
@@ -272,12 +272,12 @@ export const networkPlusTopologies: TopologyScenario[] = [
   {
     type: "topology",
     id: "np-topo-wireless-channels",
-    title: "Wireless Channel & AP Configuration",
+    title: "Wireless Channel and AP Configuration",
     briefing:
       "Summit Events is setting up Wi-Fi for a conference center. Attendees are reporting slow speeds and frequent disconnections in the main hall. A site survey shows severe co-channel interference between APs. The three APs in the main hall area must use non-overlapping 2.4 GHz channels (1, 6, 11) and appropriate power levels. The controller and uplink switch are already configured. Identify which APs need channel changes and fix them.",
     domain_number: "2.0",
     domain_title: "Network Implementation",
-    diagramTitle: "Summit Events — Conference Center Wireless",
+    diagramTitle: "Summit Events: Conference Center Wireless",
     estimatedMinutes: 8,
     devices: [
       {
@@ -324,7 +324,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
           {
             type: "dropdown",
             id: "ap-c-channel",
-            label: "2.4 GHz Channel (currently Channel 1 — same as AP-Hall-L)",
+            label: "2.4 GHz Channel (currently Channel 1: same as AP-Hall-L)",
             options: ["Channel 1", "Channel 3", "Channel 6", "Channel 9", "Channel 11"],
             correctIndex: 2,
           },
@@ -351,7 +351,7 @@ export const networkPlusTopologies: TopologyScenario[] = [
           {
             type: "dropdown",
             id: "ap-r-channel",
-            label: "2.4 GHz Channel (currently Channel 3 — overlapping channel)",
+            label: "2.4 GHz Channel (currently Channel 3: overlapping channel)",
             options: ["Channel 1", "Channel 3", "Channel 6", "Channel 9", "Channel 11"],
             correctIndex: 4,
           },

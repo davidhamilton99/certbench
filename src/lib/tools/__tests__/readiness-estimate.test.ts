@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { bandFor } from "@/lib/readiness/band";
 import {
   allocateSlots,
   estimateReadiness,
@@ -14,21 +15,23 @@ describe("estimateReadiness", () => {
       { domainTitle: "Light", examWeight: 10, correct: false },
     ]);
     expect(r.score).toBe(75);
-    expect(r.band).toBe("ready");
+    // The estimate carries no wording of its own: the one band function describes it.
+    expect(r).not.toHaveProperty("band");
+    expect(bandFor(r.score).label).toBe("Target met");
   });
 
-  it("maps scores to bands at the 75/40 thresholds", () => {
+  it("gives scores that the shared bands describe at the 75 and 40 thresholds", () => {
     const all = (correct: boolean) => [
       { domainTitle: "D", examWeight: 100, correct },
     ];
-    expect(estimateReadiness(all(true)).band).toBe("ready");
-    expect(estimateReadiness(all(false)).band).toBe("start");
+    expect(bandFor(estimateReadiness(all(true)).score).key).toBe("ready");
+    expect(bandFor(estimateReadiness(all(false)).score).key).toBe("work");
     const half = estimateReadiness([
       { domainTitle: "D", examWeight: 100, correct: true },
       { domainTitle: "D", examWeight: 100, correct: false },
     ]);
     expect(half.score).toBe(50);
-    expect(half.band).toBe("close");
+    expect(bandFor(half.score).key).toBe("close");
   });
 
   it("reports per-domain tallies", () => {

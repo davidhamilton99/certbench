@@ -1,182 +1,100 @@
 import Link from "next/link";
-import { Footer } from "@/components/marketing/Footer";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
+import type { ReactNode } from "react";
+import { ArticleBody, ArticleHero } from "@/components/marketing/lander/Article";
+import { LanderPage } from "@/components/marketing/lander/Lander";
+import { COLUMN } from "@/components/marketing/lander/layout";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { cn } from "@/lib/utils";
 
 export const metadata = pageMetadata({
   title: "Contact",
   description:
-    "Get in touch with the CertBench team. Bug reports, feature requests, feedback — we read and respond to everything.",
+    "How to contact CertBench by email, how quickly to expect a reply, and what to include when you report a problem or an incorrect question.",
   path: "/contact",
 });
 
+/**
+ * One subject: its name at the left, and what there is to say about it at the
+ * width of its measure. Set as the rows of the other reading pages are, with
+ * the name as a heading, so the page can be read by its headings.
+ */
+function Topic({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-1.5 border-b border-border py-5 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:gap-8">
+      <h2 className="text-body font-semibold">{title}</h2>
+      <div className="cb-measure grid gap-3 text-body text-muted-foreground">{children}</div>
+    </section>
+  );
+}
+
 export default function ContactPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden aurora-bg text-foreground">
-      <MarketingHeader />
+    // The page is set like every reading page: on the page's one left edge,
+    // inside the public frame, which draws the header and the footer.
+    <LanderPage className="pb-16 sm:pb-24">
+      <ArticleBody>
+        <ArticleHero title="Contact CertBench">
+          <p>You can reach CertBench by email. Every message is read and answered.</p>
+        </ArticleHero>
 
-      <main className="mx-auto max-w-2xl px-5 pb-16 pt-12 sm:px-6 sm:pt-20">
-        <div className="text-center mb-12">
-          <h1 className="cb-display text-[2.35rem] sm:text-6xl">
-            Get in touch
-          </h1>
-          <p className="text-[17px] text-muted-foreground mt-3 max-w-md mx-auto">
-            Bug reports, feature requests, exam questions, feedback — I read
-            and respond to everything personally.
+        <div className={cn(COLUMN, "mt-12 border-t border-foreground/80 sm:mt-16")}>
+          <Topic title="Email">
+            <p>
+              <a href="mailto:support@certbench.dev" className="cb-link">
+                support@certbench.dev
+              </a>
+            </p>
+            <p>
+              Email is the best way to report a problem, to send feedback, or to ask a question about your account.
+            </p>
+          </Topic>
+
+          <Topic title="Response time">
+            <p>
+              CertBench aims to reply to every message within 24 hours. If a problem is preventing you from studying,
+              please say so in the subject line so that it can be dealt with first.
+            </p>
+          </Topic>
+
+          <Topic title="Reporting a problem">
+            <p>Please include the following information, so that the problem can be corrected quickly.</p>
+            <ol className="grid list-decimal gap-1.5 pl-5">
+              <li>What you were doing when the problem occurred.</li>
+              <li>What you expected to happen.</li>
+              <li>What happened instead.</li>
+              <li>A screenshot, if you are able to provide one.</li>
+            </ol>
+            <p>Please also name the certification that you are studying and the browser that you are using.</p>
+          </Topic>
+
+          <Topic title="Reporting an incorrect question">
+            <p>
+              Reports of this kind are the most valuable feedback that CertBench receives. If you believe that a
+              question has the wrong answer or a misleading explanation, please send the text of the question, or a
+              screenshot, together with your reasoning. CertBench aims to review each report within 24 hours, and the
+              question is corrected where the report is right.
+            </p>
+          </Topic>
+
+          <Topic title="Colleges and training providers">
+            <p>
+              If you teach a CompTIA course and would like to use CertBench with a class, please read the{" "}
+              <Link href="/educators" className="cb-link">
+                information for educators
+              </Link>
+              , or write to the address above.
+            </p>
+          </Topic>
+
+          <p className="cb-measure pt-6 text-body text-muted-foreground">
+            Answers to common questions are in the{" "}
+            <Link href="/help" className="cb-link">
+              Help center
+            </Link>
+            .
           </p>
         </div>
-
-        {/* Contact options */}
-        <div className="flex flex-col gap-6">
-          {/* Email */}
-          <div className="border border-border rounded-lg bg-card p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-[17px] font-semibold text-foreground">
-                  Email
-                </h2>
-                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
-                  Best for bug reports with screenshots, detailed feedback, or
-                  anything that needs a back-and-forth conversation.
-                </p>
-                <a
-                  href="mailto:support@certbench.dev"
-                  className="inline-block mt-3 text-[15px] text-primary hover:underline font-medium"
-                >
-                  support@certbench.dev
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Response time */}
-          <div className="border border-border rounded-lg bg-card p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-[17px] font-semibold text-foreground">
-                  Response time
-                </h2>
-                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
-                  CertBench is built and maintained by one person. I aim to
-                  respond to every message within 24 hours. If
-                  something is broken and blocking your study session, say so in
-                  the subject line and I&apos;ll prioritise it.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* What to include */}
-          <div className="border border-border rounded-lg bg-card p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 text-warning"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-[17px] font-semibold text-foreground">
-                  Reporting a bug?
-                </h2>
-                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
-                  To help me fix it fast, include: (1) what you were doing when
-                  it happened, (2) what you expected to happen, (3) what
-                  actually happened, and (4) a screenshot if you can. Mention
-                  which certification and browser you&apos;re using.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Question accuracy */}
-          <div className="border border-border rounded-lg bg-card p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 text-danger"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-[17px] font-semibold text-foreground">
-                  Found an incorrect question or answer?
-                </h2>
-                <p className="text-[14px] text-muted-foreground mt-1 leading-relaxed">
-                  This is the most important feedback you can give me. If you
-                  believe a question has the wrong correct answer or a
-                  misleading explanation, email me with the question text (or a
-                  screenshot) and your reasoning. I take accuracy seriously and
-                  will review and correct it within 24 hours.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Help centre link */}
-        <div className="mt-12 text-center">
-          <p className="text-[15px] text-muted-foreground">
-            Looking for answers to common questions?
-          </p>
-          <Link
-            href="/help"
-            className="inline-block mt-2 text-[15px] text-primary hover:underline font-medium"
-          >
-            Visit the Help Centre &rarr;
-          </Link>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </ArticleBody>
+    </LanderPage>
   );
 }

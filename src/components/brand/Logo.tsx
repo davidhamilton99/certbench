@@ -2,22 +2,16 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * The CertBench mark: a route that turns toward its destination, lit blue at
- * the end — the path to exam day, at badge size. Solid ink, so it reads in
- * both themes.
+ * The CertBench mark: a bench mark, the sign a surveyor cuts into stone to fix
+ * a known height. A level bar, and a broad arrow pointing up to it. Here the
+ * bar is the pass mark and the arrow is you. Drawn in the current ink, so it
+ * reads on paper, on the blue sheet and in both themes.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 28 28" aria-hidden className={cn("size-7 shrink-0", className)}>
-      <rect width="28" height="28" rx="8" className="fill-foreground" />
-      <path
-        d="M8.5 20.5v-5.25a5 5 0 0 1 5-5h4"
-        fill="none"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        className="stroke-background"
-      />
-      <circle cx="20.25" cy="10.25" r="2.75" className="fill-primary" />
+    <svg viewBox="0 0 28 28" aria-hidden className={cn("size-7 shrink-0", className)} fill="none" stroke="currentColor">
+      <path d="M3.5 6.6h21" strokeWidth="2.8" />
+      <path d="M14 8.6v14.2M14 8.6 7.55 21.25M14 8.6l6.45 12.65" strokeWidth="2.3" strokeLinecap="round" />
     </svg>
   );
 }
@@ -37,12 +31,15 @@ export function Logo({
     <Link
       href={href}
       aria-label="CertBench home"
-      className={cn("flex shrink-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+      className={cn("cb-tap flex shrink-0 items-center gap-2 rounded-md", className)}
     >
-      <LogoMark />
+      <LogoMark className="size-[1.625rem]" />
       <span
         className={cn(
-          "text-[15px] font-semibold tracking-[-0.02em]",
+          // Below 380px (a small phone, or a page at 400%) there is no room for
+          // the word beside the header's buttons: the mark stands for it, and
+          // the link keeps its name.
+          "font-serif text-[1.1875rem] font-semibold leading-none tracking-[-0.01em] max-[379px]:hidden",
           wordmark === "sm" && "hidden sm:inline"
         )}
       >

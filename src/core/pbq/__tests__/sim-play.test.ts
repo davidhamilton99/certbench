@@ -21,6 +21,7 @@ import {
   pickOrder,
   playableStages,
   sortOrder,
+  stageSentence,
   stageTally,
   stageTitle,
 } from "@/core/pbq/sim-play";
@@ -208,5 +209,22 @@ describe("marks", () => {
     const repair = lab.tasks[1];
     const credit = { [repair.fields[0].id]: 1, [repair.fields[1].id]: 5 / 6, [repair.fields[2].id]: 0 };
     expect(stageTally(repair, credit)).toMatchObject({ right: 1, partly: 1, moves: 3 });
+  });
+
+  it("say how a stage went in a whole sentence", () => {
+    expect(stageSentence({ right: 3, partly: 0, moves: 3 })).toBe("You answered all 3 questions correctly.");
+    expect(stageSentence({ right: 1, partly: 0, moves: 3 })).toBe("You answered 1 of 3 questions correctly.");
+    expect(stageSentence({ right: 1, partly: 1, moves: 3 })).toBe(
+      "You answered 1 of 3 questions correctly. One other answer earned partial credit."
+    );
+    expect(stageSentence({ right: 0, partly: 2, moves: 3 })).toBe(
+      "You answered 0 of 3 questions correctly. 2 other answers earned partial credit."
+    );
+  });
+
+  it("do not count a stage of one question out of one", () => {
+    expect(stageSentence({ right: 1, partly: 0, moves: 1 })).toBe("You answered the question correctly.");
+    expect(stageSentence({ right: 0, partly: 1, moves: 1 })).toBe("Your answer earned partial credit.");
+    expect(stageSentence({ right: 0, partly: 0, moves: 1 })).toBe("You did not answer the question correctly.");
   });
 });

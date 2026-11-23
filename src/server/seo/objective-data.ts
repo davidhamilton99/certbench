@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createAnonClient } from "@/server/supabase/anon";
 import {
   getCertificationBySlug,
@@ -13,6 +14,7 @@ import {
 } from "@/server/data/questions";
 import { codeToSlug, slugToCode } from "@/lib/seo/objective-code";
 import { OBJECTIVE_HUB_CERTS, UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
 
 /**
@@ -118,11 +120,15 @@ export interface ObjectivePageData {
   siblings: ObjectiveLink[];
 }
 
-/** Everything an objective page renders, or null if the page shouldn't exist. */
-export async function loadObjectivePage(
+/**
+ * Everything an objective page renders, or null if the page shouldn't exist.
+ * Wrapped in React's cache: the page's metadata and its body ask for the same
+ * objective in one render, and the second asks the database nothing.
+ */
+export const loadObjectivePage = cache(async (
   certSlug: string,
   codeSlug: string
-): Promise<ObjectivePageData | null> {
+): Promise<ObjectivePageData | null> => {
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
   if (!cert) return null;
@@ -159,7 +165,8 @@ export async function loadObjectivePage(
     title: sub.title,
     topic: OBJECTIVE_TITLES[cert.slug]?.[sub.code] ?? sub.title,
     domainNumber: domain?.domainNumber ?? null,
-    domainTitle: domain?.title ?? null,
+    // In sentence case, as the practice-test pages name the same domains.
+    domainTitle: domain ? domainName(domain.title) : null,
     domainWeight: domain?.examWeight ?? null,
     samples: questions.map((q) => ({
       questionText: q.question_text,
@@ -169,7 +176,7 @@ export async function loadObjectivePage(
     })),
     siblings,
   };
-}
+});
 
 export interface ObjectiveHubData {
   certSlug: string;
@@ -185,10 +192,13 @@ export interface ObjectiveHubData {
   }[];
 }
 
-/** One exam's objectives by domain, for its index page; null if it has none. */
-export async function loadObjectiveHub(
+/**
+ * One exam's objectives by domain, for its index page; null if it has none.
+ * Wrapped in React's cache, for the same reason as loadObjectivePage.
+ */
+export const loadObjectiveHub = cache(async (
   certSlug: string
-): Promise<ObjectiveHubData | null> {
+): Promise<ObjectiveHubData | null> => {
   if (!OBJECTIVE_HUB_CERTS.includes(certSlug)) return null;
   const db = createAnonClient();
   const cert = await getCertificationBySlug(db, certSlug);
@@ -209,11 +219,11 @@ export async function loadObjectiveHub(
     objectiveCount: withPages.length,
     domains: domains.map((d) => ({
       number: d.domainNumber,
-      title: d.title,
+      title: domainName(d.title),
       weight: d.examWeight,
       objectives: withPages
         .filter((s) => s.domain_id === d.id)
         .map((s) => objectiveLink(cert.slug, s)),
     })),
   };
-}
+});

@@ -4,25 +4,41 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.gen";
 import { publicEnv, serverEnv } from "@/env";
 import type { Db } from "./server";
+import { fetchWithTimeLimit } from "./time-limit";
 
 /**
- * Service-role client — BYPASSES Row-Level Security.
+ * The service-role client. It BYPASSES row-level security, so every use is a
+ * place where the code, and not the database, decides who may do what.
  *
- * Permitted call sites only:
- *   - Stripe webhook sync (server/services/stripe-webhook.ts)
- *   - Rate limiter RPC (server/rate-limit.ts)
- *   - Admin flag actions
- *   - Account deletion / e2e teardown
- *   - Lifecycle + tool-lead email (server/services/lifecycle-email, tool-leads)
- *   - Enrollment writes (server/services/enrollment-writes.ts) — accounts can
- *     only read enrollments, since they decide which exams Pro unlocks
+ * The call sites, each with the check that stands in for the database's:
+ *   - Billing: the Stripe webhook (app/api/stripe/webhook: a verified
+ *     signature) and the two checkout routes (app/api/stripe/checkout and
+ *     cert-checkout: the signed-in account's own row only). Subscription rows
+ *     are written here and nowhere else.
+ *   - Enrollment writes (server/services/enrollment-writes.ts): an account can
+ *     only read its enrollments, because they decide which exams Pro opens.
+ *   - Account deletion (server/services/delete-account.ts): the signed-in
+ *     account's own data only.
+ *   - The rate limiter (server/rate-limit.ts).
+ *   - Email: the daily lifecycle run and the tool study-plan email
+ *     (server/services/lifecycle-email.ts, tool-leads.ts), and the unsubscribe
+ *     route (app/api/email/unsubscribe: a signed token).
+ *   - Testimonials and the story form (server/data/testimonials.ts,
+ *     app/api/story, app/story: a signed token; app/api/admin/testimonials and
+ *     app/(workspace)/admin/testimonials: after the administrator check).
  *
- * Never pass this client into repository functions that serve user requests.
+ * A guard test (src/lib/billing/__tests__/self-service-writes.test.ts) fails
+ * if subscription rows are written with any other client. Never pass this
+ * client into a function that serves an ordinary request for a user's data.
  */
 export function createAdminClient(): Db {
   return createSupabaseClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     serverEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      // Every request has a time limit: see ./time-limit.
+      global: { fetch: fetchWithTimeLimit() },
+    }
   );
 }

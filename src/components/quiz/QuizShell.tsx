@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef } from "react";
-import { ChevronLeft, ChevronRight, Flag, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useId, useReducer, useRef, type KeyboardEvent } from "react";
+import { Flag } from "lucide-react";
 import {
   initQuizState,
   isComplete,
@@ -17,8 +17,11 @@ import type {
   QuizState,
 } from "@/core/quiz-engine/types";
 import type { AnswerInput, ExamQuestion } from "@/contracts/quiz";
+import { userMessage } from "@/lib/errors/user-message";
+import { OPTION_LETTERS } from "@/components/quiz/AnswerOption";
+import { answerOrder } from "@/components/quiz/answer-order";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { MultipleChoice } from "./renderers/MultipleChoice";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +40,19 @@ export interface QuizShellProps {
   submitLabel?: string;
 }
 
+/**
+ * The player for a set of questions that is graded at the end (the diagnostic,
+ * a practice exam, a domain drill).
+ *
+ * Keyboard. The keys A to D (or 1 to 4) choose an answer and the left and
+ * right arrow keys change the question. They act only while the keyboard's
+ * focus is inside the player, never from elsewhere on the page. On an answer,
+ * the arrow keys move between the answers, as they do in any group of radio
+ * buttons; from anywhere else in the player they change the question.
+ *
+ * Focus. When the question changes, its text takes the focus, so a screen
+ * reader reads the new question and the keys go on working.
+ */
 export function QuizShell({
   questions,
   config,
@@ -44,7 +60,7 @@ export function QuizShell({
   resume,
   onPersist,
   onSubmit,
-  submitLabel = "Submit",
+  submitLabel = "Submit your answers",
 }: QuizShellProps) {
   const total = questions.length;
   const boundReducer = useCallback(
@@ -57,12 +73,18 @@ export function QuizShell({
     resume ?? null,
     (snap) => (snap ? restoreQuizState(snap) : initQuizState(new Date().toISOString()))
   );
+  const promptId = useId();
 
   // ---------- persistence (debounced + flush on hide) ----------
+  // The latest callback and state, for the listeners and timers below. They are
+  // written after each render and not during it; this effect is declared first,
+  // so the effects that follow read the values of the render they belong to.
   const persistRef = useRef(onPersist);
-  persistRef.current = onPersist;
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    persistRef.current = onPersist;
+    stateRef.current = state;
+  });
 
   useEffect(() => {
     if (!persistRef.current) return;
@@ -82,6 +104,28 @@ export function QuizShell({
     return () => document.removeEventListener("visibilitychange", flush);
   }, [seed]);
 
+  // ---------- focus ----------
+  // Nothing takes the focus as the page loads. Once the person has moved
+  // (another question, the review, back from it), the new view's heading does.
+  const moved = useRef(false);
+  const promptRef = useRef<HTMLHeadingElement>(null);
+  const reviewRef = useRef<HTMLHeadingElement>(null);
+  const retryRef = useRef<HTMLButtonElement>(null);
+  const status = state.status;
+  const index = "index" in state ? state.index : 0;
+  useEffect(() => {
+    if (!moved.current) return;
+    if (status === "review") reviewRef.current?.focus();
+    else if (status === "active") promptRef.current?.focus();
+    // A failed submit replaces the button that was pressed: "Try again" takes its place.
+    else if (status === "error") retryRef.current?.focus();
+  }, [index, status]);
+
+  function go(event: QuizEvent) {
+    moved.current = true;
+    dispatch(event);
+  }
+
   // ---------- submit ----------
   const submitting = state.status === "submitting";
   async function handleSubmit() {
@@ -93,6 +137,7 @@ export function QuizShell({
           ? [{ questionId, selectedIndex: response.value.selectedIndex }]
           : []
     );
+    moved.current = true;
     dispatch({ type: "SUBMIT_START" });
     try {
       await onSubmit(answers, current.flagged);
@@ -100,100 +145,141 @@ export function QuizShell({
     } catch (err) {
       dispatch({
         type: "SUBMIT_FAILURE",
-        message: err instanceof Error ? err.message : "Submission failed",
+        message: userMessage(err, "Your answers could not be submitted. They are kept on this page. Please try again."),
       });
     }
   }
 
   // ---------- keyboard ----------
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const current = stateRef.current;
-      if (current.status !== "active") return;
-      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
-      if (e.key === "ArrowRight") dispatch({ type: "NEXT" });
-      else if (e.key === "ArrowLeft") dispatch({ type: "PREV" });
-      else if (/^[1-9]$/.test(e.key)) {
-        const question = questions[current.index];
-        const optionPos = Number(e.key) - 1;
-        if (question && optionPos < question.options.length) {
-          // Number keys map to DISPLAY order; renderer handles the mapping,
-          // so replicate it here via the same permutation.
-          import("@/core/quiz-engine/shuffle").then(({ seededPermutation }) => {
-            const perm = seededPermutation(seed, question.id, question.options.length);
-            dispatch({
-              type: "ANSWER",
-              questionId: question.id,
-              value: { kind: "single", selectedIndex: perm[optionPos] },
-            });
-          });
-        }
-      }
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const current = stateRef.current;
+    if (current.status !== "active" || e.metaKey || e.ctrlKey || e.altKey) return;
+    const target = e.target as HTMLElement;
+    const tag = target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      // On an answer, the arrow keys belong to the group of answers.
+      if (target.getAttribute("role") === "radio") return;
+      e.preventDefault();
+      go({ type: e.key === "ArrowRight" ? "NEXT" : "PREV" });
+      return;
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [questions, seed]);
+
+    const question = questions[current.index];
+    if (!question) return;
+    // The keys name an answer by its place on screen; the answer recorded is
+    // the stored one at that place. The order is the one the answers are drawn
+    // in, whether the question is shuffled or keeps its stored order.
+    const digit = Number(e.key);
+    const place =
+      e.key.length === 1 && Number.isInteger(digit) && digit >= 1
+        ? digit - 1
+        : (OPTION_LETTERS as readonly string[]).indexOf(e.key.toUpperCase());
+    if (place < 0 || place >= question.options.length) return;
+    e.preventDefault();
+    const order = answerOrder(seed, question.id, question.options.length, question.keepOrder);
+    dispatch({
+      type: "ANSWER",
+      questionId: question.id,
+      value: { kind: "single", selectedIndex: order[place] },
+    });
+  }
 
   // ---------- render ----------
   if (state.status === "results") return null; // parent renders results
 
   if (state.status === "error") {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-          <p className="text-sm text-destructive">{state.message}</p>
-          <Button onClick={() => dispatch({ type: "RETRY" })}>Try again</Button>
-        </CardContent>
-      </Card>
+      <div className="glass mx-auto grid w-full max-w-2xl gap-4 rounded-lg p-5 sm:p-8">
+        <p role="alert" className="cb-measure text-small">
+          {state.message}
+        </p>
+        <Button ref={retryRef} onClick={() => go({ type: "RETRY" })} className="justify-self-start">
+          Try again
+        </Button>
+      </div>
     );
   }
 
-  const index = state.status === "submitting" ? state.index : state.index;
   const question = questions[index];
   const answered = Object.keys(state.responses).length;
   const complete = isComplete(state, total);
   const response = question ? state.responses[question.id] : undefined;
   const flagged = question ? state.flagged.includes(question.id) : false;
 
-  // Review screen: answer map + unanswered warnings before final submit.
+  // The review: every question as a numbered cell, before the final submit.
   if (state.status === "review") {
-    const unanswered = unansweredIndexes(state, questions.map((q) => q.id));
+    const unanswered = unansweredIndexes(state, questions.map((q) => q.id)).length;
+    const flaggedCount = state.flagged.length;
     return (
       <div className="mx-auto grid w-full max-w-2xl gap-4">
-        <h2 className="font-display text-lg font-semibold">Review before submitting</h2>
-        <p className="text-sm text-muted-foreground">
-          {answered} of {total} answered
-          {unanswered.length > 0 && (
-            <> · {unanswered.length} unanswered (marked grey)</>
-          )}
-          {state.flagged.length > 0 && <> · {state.flagged.length} flagged</>}
+        <h2 ref={reviewRef} tabIndex={-1} className="text-lg font-semibold">
+          Review your answers before you submit
+        </h2>
+        <p className="cb-measure text-small text-muted-foreground">
+          You have answered {answered} of {total} {total === 1 ? "question" : "questions"}.
+          {unanswered > 0 && ` ${unanswered} ${unanswered === 1 ? "question is" : "questions are"} not answered.`}
+          {flaggedCount > 0 &&
+            ` ${flaggedCount} ${flaggedCount === 1 ? "question is" : "questions are"} flagged for review.`}{" "}
+          Choose a question number to return to it.
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <ul aria-label="Questions" className="flex flex-wrap gap-1.5">
           {questions.map((q, i) => {
             const has = !!state.responses[q.id];
             const isFlagged = state.flagged.includes(q.id);
             return (
-              <button
-                key={q.id}
-                type="button"
-                onClick={() => {
-                  dispatch({ type: "EXIT_REVIEW" });
-                  dispatch({ type: "NAVIGATE", to: i });
-                }}
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-lg border border-border font-mono text-xs transition-colors hover:border-foreground/30",
-                  has ? "border-primary/50 bg-primary/15 text-foreground" : "text-muted-foreground",
-                  isFlagged && "ring-1 ring-warning"
-                )}
-              >
-                {i + 1}
-              </button>
+              <li key={q.id}>
+                <button
+                  type="button"
+                  // The name begins with the number that is shown.
+                  aria-label={`${i + 1}: ${has ? "answered" : "not answered"}${isFlagged ? ", flagged" : ""}`}
+                  onClick={() => {
+                    moved.current = true;
+                    dispatch({ type: "EXIT_REVIEW" });
+                    dispatch({ type: "NAVIGATE", to: i });
+                  }}
+                  className={cn(
+                    // Answered and not answered differ in lightness, not in hue alone.
+                    "relative flex size-9 items-center justify-center rounded-md border font-medium tabular-nums transition-colors pointer-coarse:size-11",
+                    has
+                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border-input bg-card text-foreground hover:border-primary hover:bg-tint-hover"
+                  )}
+                >
+                  {/* The size is set on the figure itself: the class merger takes the
+                      type scale's sizes for colours and would drop it beside one. */}
+                  <span className="text-note">{i + 1}</span>
+                  {isFlagged && (
+                    <span
+                      aria-hidden
+                      className="absolute -right-1 -top-1 size-2.5 rounded-xs bg-warning-ink ring-2 ring-background"
+                    />
+                  )}
+                </button>
+              </li>
             );
           })}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => dispatch({ type: "EXIT_REVIEW" })}>
-            Keep answering
+        </ul>
+        <p className="flex flex-wrap gap-x-5 gap-y-1 text-note text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="size-3 rounded-xs border border-primary bg-primary" />
+            Answered
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="size-3 rounded-xs border border-input bg-card" />
+            Not answered
+          </span>
+          {config.allowFlagging && (
+            <span className="inline-flex items-center gap-1.5">
+              <span aria-hidden className="size-2.5 rounded-xs bg-warning-ink" />
+              Flagged for review
+            </span>
+          )}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => go({ type: "EXIT_REVIEW" })}>
+            Return to the questions
           </Button>
           <Button onClick={handleSubmit} disabled={answered === 0}>
             {submitLabel}
@@ -203,91 +289,89 @@ export function QuizShell({
     );
   }
 
+  const lastKey = question ? OPTION_LETTERS[Math.min(question.options.length, OPTION_LETTERS.length) - 1] : null;
+
   return (
-    <div className="mx-auto grid w-full max-w-2xl gap-4">
-      {/* Header: progress + flag */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-baseline justify-between text-sm">
-            <span className="font-mono tracking-wide">
-              {String(index + 1).padStart(2, "0")}
-              <span className="text-muted-foreground"> / {total}</span>
+    <div
+      // Focusable by a press anywhere on the player, so the keys then act on it.
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="group/quiz mx-auto grid w-full max-w-2xl gap-4"
+    >
+      {/* Where the learner is, and how much is answered. */}
+      <div className="flex items-end justify-between gap-4">
+        <div className="grid flex-1 gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-small">
+            <span className="font-medium">
+              Question {index + 1} of {total}
             </span>
-            <span className="font-mono text-xs text-muted-foreground">
-              {answered} answered
+            <span className="text-note text-muted-foreground">
+              {answered} of {total} answered
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/[0.06]">
-            <div
-              className="h-full rounded-full bg-primary shadow-[0_0_12px_var(--color-primary)] transition-all duration-300"
-              style={{ width: `${(answered / total) * 100}%` }}
-            />
-          </div>
+          {/* The figure is printed beside it, so the bar itself is not read out. */}
+          <ProgressBar value={total > 0 ? (answered / total) * 100 : 0} />
         </div>
         {config.allowFlagging && (
           <Button
-            variant={flagged ? "secondary" : "ghost"}
-            size="icon"
-            aria-label={flagged ? "Unflag question" : "Flag question for review"}
+            variant="outline"
+            size="sm"
+            // One name, whatever the state: the state is "pressed".
             aria-pressed={flagged}
-            onClick={() =>
-              question && dispatch({ type: "TOGGLE_FLAG", questionId: question.id })
-            }
+            onClick={() => question && dispatch({ type: "TOGGLE_FLAG", questionId: question.id })}
+            className="aria-pressed:border-primary aria-pressed:bg-tint-selected"
           >
-            <Flag className={cn(flagged && "fill-warning text-warning")} />
+            <Flag aria-hidden className={cn(flagged && "fill-warning-ink text-warning-ink")} />
+            Flag for review
           </Button>
         )}
       </div>
 
-      {/* Question */}
       {question && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7">
-          <div className="grid gap-5">
-            <p className="text-[15px] leading-relaxed text-foreground">
-              {question.question_text}
-            </p>
-            <MultipleChoice
-              questionId={question.id}
-              options={question.options}
-              seed={seed}
-              value={response?.value}
-              onChange={(value) =>
-                dispatch({ type: "ANSWER", questionId: question.id, value })
-              }
-            />
-          </div>
+        <div className="glass grid gap-5 rounded-lg p-5 sm:p-8">
+          <h2
+            id={promptId}
+            // Takes the focus so that it is read; it is not a control.
+            ref={promptRef}
+            tabIndex={-1}
+            className="text-pretty text-body font-medium"
+          >
+            {question.question_text}
+          </h2>
+          <MultipleChoice
+            questionId={question.id}
+            options={question.options}
+            seed={seed}
+            keepOrder={question.keepOrder}
+            value={response?.value}
+            labelledBy={promptId}
+            onChange={(value) => dispatch({ type: "ANSWER", questionId: question.id, value })}
+          />
+          {/* Said only while the keys would act: the focus is inside the player, on a
+              device with a keyboard. Its line is always kept, so nothing moves. */}
+          <p className="invisible text-note text-muted-foreground group-focus-within/quiz:visible pointer-coarse:hidden">
+            You can answer with the keys A to {lastKey}. The left and right arrow keys change the question.
+          </p>
         </div>
       )}
 
-      {/* Footer nav */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => dispatch({ type: "PREV" })}
-          disabled={index === 0 || submitting}
-        >
-          <ChevronLeft />
-          Previous
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="outline" onClick={() => go({ type: "PREV" })} disabled={index === 0 || submitting}>
+          Back
         </Button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {config.allowReview && (
-            <Button
-              variant="secondary"
-              onClick={() => dispatch({ type: "ENTER_REVIEW" })}
-              disabled={submitting}
-            >
-              Review
+            <Button variant="secondary" onClick={() => go({ type: "ENTER_REVIEW" })} disabled={submitting}>
+              Review your answers
             </Button>
           )}
           {index === total - 1 || complete ? (
-            <Button onClick={handleSubmit} disabled={answered === 0 || submitting}>
-              {submitting && <Loader2 className="animate-spin" />}
+            <Button onClick={handleSubmit} loading={submitting} disabled={answered === 0}>
               {submitLabel}
             </Button>
           ) : (
-            <Button onClick={() => dispatch({ type: "NEXT" })} disabled={submitting}>
+            <Button onClick={() => go({ type: "NEXT" })} disabled={submitting}>
               Next
-              <ChevronRight />
             </Button>
           )}
         </div>

@@ -1,28 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, RotateCcw } from "lucide-react";
 import { track } from "@/lib/analytics";
-import { splitExplanation } from "@/core/path/text";
+import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import type { ChoiceRep } from "@/core/path/types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
-import { useKeyboardTurn } from "@/components/path/keyboard-turn";
+import { QuestionList, type DeckQuestion } from "@/components/marketing/QuestionList";
 import { RepCard, StopProgress, type RepAnswer } from "@/components/path/RepCard";
 import { Button } from "@/components/ui/button";
+import { LinkArrow } from "@/components/ui/link-arrow";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 
-/** A bank question as a public page shows it. */
-export interface SampleQuestionData {
-  questionText: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-export interface DeckQuestion extends SampleQuestionData {
-  /** The question's tag, e.g. "4.1 · Mitigating controls". "Exam style" when absent. */
-  tag?: string;
-}
+// The question types live with the list, which is not a client module; they
+// are exported from here as before for the pages and data files that use them.
+export type { DeckQuestion, SampleQuestionData } from "@/components/marketing/QuestionList";
 
 /** What the score offers next. */
 export interface DeckNext {
@@ -32,12 +24,36 @@ export interface DeckNext {
   label: string;
 }
 
-const LETTERS = ["A", "B", "C", "D", "E", "F"];
-
 /** Room for the public pages' sticky header when the score scrolls into view. */
 const HEADER_CLEARANCE = 72;
 
-/** The questions as the path's reps: lettered like the exam, the explanation's first line as the takeaway. */
+/** The exam whose study path an address opens ("/path/network-plus-n10-009"), or null for the list of exams. */
+function examOf(path: string): string | null {
+  const match = /^\/path\/([a-z0-9-]+)/.exec(path);
+  return match ? match[1] : null;
+}
+
+/**
+ * What the score says the study path does. Where the deck leads to one exam's
+ * study path, it covers every objective if that exam's steps follow CompTIA's
+ * objectives, and every topic if the exam is set out by CertBench's own topics
+ * (Network+). Where the deck leads to the list of exams, the sentence is the
+ * one that is true of every exam.
+ */
+function pathCovers(path: string): string {
+  const cert = examOf(path);
+  return cert
+    ? `covers every ${usesOfficialObjectiveNumbers(cert) ? "objective" : "topic"}`
+    : "works through your exam topic by topic,";
+}
+
+/**
+ * The questions as the study path's own: lettered like the exam, the
+ * explanation's first line as the takeaway. The answers come in their stored
+ * order, so an explanation that names them by their letters ("Option A
+ * describes") names the answer under that letter, and such a question keeps
+ * its letters once it is marked, as it does on the study path.
+ */
 function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
   return questions.map((q, k) => {
     const { takeaway, rest } = splitExplanation(q.explanation);
@@ -53,16 +69,18 @@ function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
       takeaway,
       ...(rest ? { explanation: rest } : {}),
       lettered: true,
+      ...(mentionsOptionLetter(`${takeaway} ${rest}`) ? { keepsLetters: true } : {}),
     };
   });
 }
 
 /**
- * A page's sample questions, played one at a time on the path's own card:
- * the same tiles, keys and verdict people meet on their path, then a score
- * that leads to it. Every question, its answer and its explanation are also in
- * the page from the start, in a list folded away below, so anyone who came to
- * read and every search engine have them without playing.
+ * A page's sample questions, played one at a time on the study path's own
+ * card: the same answers, keys and verdict people meet on their study path,
+ * then a score that leads to it. Every question, its answer and its
+ * explanation are also in the page from the start, in a list folded away
+ * below, so anyone who came to read and every search engine have them without
+ * playing.
  */
 export function QuestionDeck({
   questions,
@@ -74,23 +92,20 @@ export function QuestionDeck({
   next,
 }: {
   questions: DeckQuestion[];
-  /** Eyebrow over the deck, e.g. "Security+ · exam style". */
+  /** The line over the deck, e.g. "Security+ sample questions". */
   label: string;
   /** Analytics surface, e.g. "practice_test_page". */
   surface: string;
-  /** Where the score sends them: the exam's path, or /start to pick one. */
+  /** Where the score sends them: the exam's study path, or /start to choose one. */
   path: string;
-  /** For "Your Security+ path". */
+  /** For "Security+ study path". */
   examName: string;
   /** The folded list's summary line. */
   listTitle?: string;
-  /** Where the score leads instead of the path, when the path isn't the next step. */
+  /** Where the score leads instead of the study path, when that is not the next step. */
   next?: DeckNext;
 }) {
   const reps = useMemo(() => toReps(questions), [questions]);
-  const turnId = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const keyboard = useKeyboardTurn(turnId, root);
   const userId = useSessionUserId();
   const [run, setRun] = useState(0);
   const [i, setI] = useState(0);
@@ -137,14 +152,15 @@ export function QuestionDeck({
   const rep = reps[i];
   const signedIn = Boolean(userId);
   const cta: DeckNext = next ?? {
-    title: `Your ${examName} path`,
-    body: "Every objective in short stops like these, up to a readiness checkpoint that shows where you stand.",
+    title: `${examName} study path`,
+    body: `The study path ${pathCovers(path)} in short steps like these, up to a readiness checkpoint that shows where you stand.`,
     href: path,
-    label: signedIn ? "Continue my path" : "Start my path",
+    // The list of exams has one name wherever a page links to it.
+    label: path === "/start" ? "Choose your exam" : signedIn ? "Continue the study path" : "Start the study path",
   };
 
   return (
-    <div ref={root} className="grid min-w-0 gap-4">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
       {ended ? (
         <DeckScore
           label={label}
@@ -155,14 +171,12 @@ export function QuestionDeck({
           onReplay={playAgain}
         />
       ) : (
-        <div className="glass min-w-0 rounded-3xl p-5 sm:p-8">
+        <div className="glass min-w-0 rounded-lg p-5 sm:p-8">
           <div className="mb-6 grid gap-3">
-            <div className="flex min-w-0 items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                {label}
-              </p>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                {i + 1} / {reps.length}
+            <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p className="cb-label min-w-0 text-muted-foreground">{label}</p>
+              <span className="shrink-0 text-note tabular-nums text-muted-foreground">
+                Question {i + 1} of {reps.length}
               </span>
             </div>
             <StopProgress results={results} current={i} />
@@ -173,8 +187,12 @@ export function QuestionDeck({
             onAnswer={onAnswer}
             onNext={onNext}
             promptAs="p"
-            keyboard={keyboard}
-            nextLabel={i === reps.length - 1 ? "See my score" : undefined}
+            // The first card is there as the page loads and leaves the focus
+            // alone. Every card after it follows a press on this page.
+            takeFocus={run > 0 || i > 0}
+            // What the question belongs to (its objective, or its exam on a page with two).
+            preface={questions[i]?.tag}
+            nextLabel={i === reps.length - 1 ? "View my score" : undefined}
           />
         </div>
       )}
@@ -183,7 +201,7 @@ export function QuestionDeck({
   );
 }
 
-/** The deck's end: the score, and the way into the path it was a taste of. */
+/** The deck's end: the score, and the way onto the study path it was a sample of. */
 function DeckScore({
   label,
   result,
@@ -217,90 +235,46 @@ function DeckScore({
   return (
     <div
       ref={top}
+      // Takes the focus so that it is read; it is not a control.
       tabIndex={-1}
       role="group"
       aria-label={`${label}: your score`}
-      className="glass path-rise grid min-w-0 scroll-mt-24 gap-5 rounded-3xl p-6 outline-none sm:p-8"
+      className="glass path-rise grid min-w-0 gap-5 rounded-lg p-5 sm:p-8"
     >
       <div className="grid min-w-0 gap-1.5">
-        <div className="flex min-w-0 items-baseline justify-between gap-3">
-          <span className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            {label}
-          </span>
-          <button
-            type="button"
-            onClick={onReplay}
-            className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <RotateCcw className="size-3.5" />
-            Play again
+        <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="cb-label min-w-0 text-muted-foreground">{label}</span>
+          <button type="button" onClick={onReplay} className="cb-link cb-tap shrink-0 text-small">
+            Answer the questions again
           </button>
         </div>
-        <p className="font-display text-4xl font-semibold tracking-tight">
+        <p className="cb-display text-4xl">
           {result.correct} <span className="text-muted-foreground">of {result.total}</span>
         </p>
-        <p className="text-muted-foreground">
+        <p className="text-body text-muted-foreground">
           {missed === 0
-            ? "Every one right."
-            : `${missed} to look at again. Every answer is explained in the full list below.`}
+            ? "You answered every question correctly."
+            : `${missed} ${missed === 1 ? "question was" : "questions were"} answered incorrectly. Every answer is explained in the full list below.`}
         </p>
       </div>
 
-      <div className="grid gap-4 border-t border-border/70 pt-5 sm:flex sm:items-center sm:justify-between">
+      <div className="grid gap-4 border-t border-border pt-5 sm:flex sm:items-center sm:justify-between">
         <div className="grid min-w-0 max-w-sm gap-1">
-          <p className="font-display text-xl font-semibold tracking-tight">{cta.title}</p>
-          <p className="text-sm leading-relaxed text-muted-foreground">{cta.body}</p>
+          <p className="cb-statement">{cta.title}</p>
+          <p className="text-small text-muted-foreground">{cta.body}</p>
         </div>
         <div className="grid shrink-0 gap-1.5 sm:justify-items-end">
-          <Button asChild size="lg" className="h-12 w-full px-6 text-base sm:w-auto">
+          <Button asChild size="lg" className="h-auto min-h-12 w-full whitespace-normal py-2.5 sm:w-auto">
             <Link href={cta.href} onClick={() => track("upsell_clicked", { context: `${surface}_deck`, href: cta.href })}>
               {cta.label}
-              <ArrowRight />
+              <LinkArrow />
             </Link>
           </Button>
-          {!signedIn && <p className="text-center text-xs text-muted-foreground">Free, no account needed to start.</p>}
+          {!signedIn && (
+            <p className="text-note text-muted-foreground">It is free, and you do not need an account to start.</p>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-/** Every question with its answer and explanation, folded away until someone opens it. */
-/** Every question with its answer, folded: in the page for readers and search, out of the way of play. */
-export function QuestionList({ questions, title }: { questions: DeckQuestion[]; title?: string }) {
-  return (
-    <details className="group rounded-2xl border border-border/70 bg-card/40 px-5 py-4">
-      <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
-        <span>{title ?? `All ${questions.length} questions, with answers`}</span>
-        <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-      </summary>
-      <ol className="mt-4 grid gap-5">
-        {questions.map((q, k) => (
-          <li key={k} className="grid gap-2 border-t border-border/60 pt-5 first:border-t-0 first:pt-1">
-            {q.tag && (
-              <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{q.tag}</p>
-            )}
-            <p className="leading-relaxed">
-              <span className="mr-2 font-mono text-sm text-muted-foreground">{k + 1}.</span>
-              {q.questionText}
-            </p>
-            <ul className="grid gap-1 text-sm text-muted-foreground">
-              {q.options.map((option, j) => (
-                <li key={j} className="flex gap-2">
-                  <span className="font-mono">{LETTERS[j]}.</span>
-                  <span>{option}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm leading-relaxed">
-              <span className="font-medium text-success">
-                Answer: {LETTERS[q.correctIndex]}. {q.options[q.correctIndex].replace(/\.$/, "")}.
-              </span>{" "}
-              <span className="text-muted-foreground">{q.explanation}</span>
-            </p>
-          </li>
-        ))}
-      </ol>
-    </details>
   );
 }

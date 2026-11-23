@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 /**
- * The old goal-setting flow now lives inside the guided path: the exam is
+ * The old goal-setting flow now lives inside the study path: the exam is
  * picked on /start and the goal questions come one at a time between stops.
  * This route stays for old links, emails and in-flight checkouts, and sends
  * everyone to their path, Pro members included: the path is home, and the

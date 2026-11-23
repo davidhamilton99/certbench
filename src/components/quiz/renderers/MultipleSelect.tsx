@@ -1,12 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import { Check, Square, SquareCheck, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { seededPermutation } from "@/core/quiz-engine/shuffle";
 import type { ResponseValue } from "@/core/quiz-engine/types";
 import { cn } from "@/lib/utils";
 
-/** Controlled multi-select renderer (select all that apply). */
+/**
+ * The answers to a question with more than one correct answer: each can be
+ * pressed on and off. The frame, the edge and the press are the shared answer
+ * control's (components/quiz/AnswerOption), with a check box in place of its
+ * key box, because here several answers are chosen at once.
+ *
+ * Once revealed, a mark is carried three ways, never by colour alone: the
+ * frame, the box (a check or a cross) and words for a screen reader.
+ */
 export function MultipleSelect({
   questionId,
   options,
@@ -15,15 +23,18 @@ export function MultipleSelect({
   value,
   onChange,
   revealed = false,
+  labelledBy,
 }: {
   questionId: string;
   options: string[];
-  /** Original indexes of correct options — used only when revealed. */
+  /** Original indexes of the correct answers. Used only when revealed. */
   correctIndexes: number[];
   seed: string;
   value: ResponseValue | undefined;
   onChange: (value: ResponseValue) => void;
   revealed?: boolean;
+  /** The id of the question's text, which names the group of answers. */
+  labelledBy?: string;
 }) {
   const permutation = useMemo(
     () => seededPermutation(seed, questionId, options.length),
@@ -40,48 +51,72 @@ export function MultipleSelect({
   }
 
   return (
-    <div role="group" aria-label="Select all that apply" className="grid gap-2">
-      {permutation.map((originalIndex) => {
-        const isSelected = selected.has(originalIndex);
-        const isCorrect = revealed && correct.has(originalIndex);
-        const isWrongPick = revealed && isSelected && !correct.has(originalIndex);
-        return (
-          <button
-            key={originalIndex}
-            type="button"
-            aria-pressed={isSelected}
-            disabled={revealed}
-            onClick={() => toggle(originalIndex)}
-            className={cn(
-              "flex items-start gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-3.5 text-left text-sm transition-all duration-150",
-              !revealed &&
-                isSelected &&
-                "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-[0_10px_28px_-16px_var(--color-primary)]",
-              !revealed && !isSelected && "hover:-translate-y-px hover:border-primary/40 hover:bg-foreground/[0.05]",
-              isCorrect && "border-success/60 bg-success/10",
-              isWrongPick && "border-danger/60 bg-danger/10",
-              revealed && "cursor-default"
-            )}
-          >
-            <span className="mt-0.5 shrink-0">
-              {revealed ? (
-                isCorrect ? (
-                  <Check className="size-4 text-success" />
-                ) : isWrongPick ? (
-                  <X className="size-4 text-danger" />
-                ) : (
-                  <Square className="size-4 text-muted-foreground" />
-                )
-              ) : isSelected ? (
-                <SquareCheck className="size-4 text-primary" />
-              ) : (
-                <Square className="size-4 text-muted-foreground" />
+    <div className="grid gap-2.5">
+      <p id={`${questionId}-how`} className="text-note text-muted-foreground">
+        Choose every answer that applies.
+      </p>
+      <div
+        role="group"
+        {...(labelledBy ? { "aria-labelledby": labelledBy } : { "aria-label": "Answers" })}
+        aria-describedby={`${questionId}-how`}
+        className="grid gap-2.5"
+      >
+        {permutation.map((originalIndex) => {
+          const isSelected = selected.has(originalIndex);
+          const isCorrect = revealed && correct.has(originalIndex);
+          const isWrongPick = revealed && isSelected && !correct.has(originalIndex);
+          const srPrefix = !revealed
+            ? null
+            : isCorrect
+              ? isSelected
+                ? "Your answer, which is correct: "
+                : "Correct answer, which you did not choose: "
+              : isWrongPick
+                ? "Your answer, which is incorrect: "
+                : null;
+          return (
+            <button
+              key={originalIndex}
+              type="button"
+              aria-pressed={isSelected}
+              disabled={revealed}
+              onClick={() => toggle(originalIndex)}
+              className={cn(
+                "group/option flex min-h-12 w-full min-w-0 items-center gap-3 rounded-md border bg-card px-3.5 py-3 text-left",
+                // A hover answers at once; a mark is not animated at all.
+                revealed ? "transition-none" : "transition-[border-color,background-color] duration-100",
+                !revealed && !isSelected && "border-input hover:border-primary hover:bg-tint-hover active:bg-tint-press",
+                !revealed && isSelected && "border-primary bg-tint-selected",
+                isCorrect && "border-success bg-success/10",
+                isWrongPick && "border-destructive bg-destructive/10",
+                revealed && !isCorrect && !isWrongPick && "border-border text-muted-foreground"
               )}
-            </span>
-            <span className="leading-relaxed">{options[originalIndex]}</span>
-          </button>
-        );
-      })}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "flex size-6 shrink-0 items-center justify-center rounded-xs border",
+                  !revealed && !isSelected && "border-input group-hover/option:border-primary",
+                  !revealed && isSelected && "border-primary bg-primary text-primary-foreground",
+                  isCorrect && "border-success bg-success text-success-foreground",
+                  isWrongPick && "border-destructive bg-destructive text-destructive-foreground",
+                  revealed && !isCorrect && !isWrongPick && "border-border"
+                )}
+              >
+                {isWrongPick ? (
+                  <X className="size-3.5" strokeWidth={3} />
+                ) : isCorrect || isSelected ? (
+                  <Check className="size-3.5" strokeWidth={3} />
+                ) : null}
+              </span>
+              <span className="min-w-0 text-small leading-snug [overflow-wrap:anywhere]">
+                {srPrefix && <span className="sr-only">{srPrefix}</span>}
+                {options[originalIndex]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 /**
- * Pure IPv4 subnet calculator — powers the free /tools/subnet-calculator page.
- * Reuses the IP-math primitives from the subnetting drill engine so the two
- * tools can never disagree. No side effects; fully unit-tested.
+ * The arithmetic behind the free page /tools/subnet-calculator. It reuses the
+ * address functions of the subnetting drill, so the two tools can never
+ * disagree. It has no side effects, and every result is unit-tested.
  */
 import {
   ipToInt,
@@ -19,10 +19,11 @@ export interface SubnetResult {
   wildcard: string;
   maskBinary: string;
   network: string;
-  /** "—" for /31 and /32, where there is no broadcast address. */
+  /** "None" for /31 and /32, where there is no broadcast address. */
   broadcast: string;
   firstHost: string;
   lastHost: string;
+  /** The first and last usable host as words, "10.0.0.1 to 10.0.0.254", or the one host of a /32. */
   hostRange: string;
   usableHosts: number;
   totalAddresses: number;
@@ -40,6 +41,31 @@ export function parseIpv4(raw: string): number[] | null {
   if (parts.length !== 4) return null;
   if (!parts.every((p) => OCTET.test(p))) return null;
   return parts.map(Number);
+}
+
+/**
+ * What the calculator's address field says about the prefix length, as the
+ * visitor types: no slash ("none"), a slash with nothing after it yet
+ * ("unfinished"), a prefix length from 0 to 32, or anything else after the
+ * slash ("invalid", for example "/33" or "/2a").
+ */
+export type TypedPrefix = number | "none" | "unfinished" | "invalid";
+
+/**
+ * The address field read whole, at every keystroke: the address before any
+ * slash, and the prefix length after it. Typed key by key, "10.1.1.1/16"
+ * passes through "10.1.1.1/" and "10.1.1.1/1", and the digits after the slash
+ * are never read as part of the address.
+ */
+export function readAddressField(text: string): { address: string; prefix: TypedPrefix } {
+  const slash = text.indexOf("/");
+  if (slash < 0) return { address: text.trim(), prefix: "none" };
+  const address = text.slice(0, slash).trim();
+  const after = text.slice(slash + 1).trim();
+  if (after === "") return { address, prefix: "unfinished" };
+  if (!/^\d+$/.test(after)) return { address, prefix: "invalid" };
+  const n = Number(after);
+  return { address, prefix: n <= 32 ? n : "invalid" };
 }
 
 function classify(octets: number[]): { ipClass: string; addressType: string } {
@@ -105,8 +131,9 @@ export function calculateSubnet(ipRaw: string, prefix: number): SubnetResult | n
     usableHosts = total - 2;
   }
 
-  const hostRange =
-    firstHost === lastHost ? firstHost : `${firstHost} – ${lastHost}`;
+  // A range is written in words. (A colon between two addresses reads as a
+  // label and its value, not as a range.)
+  const hostRange = firstHost === lastHost ? firstHost : `${firstHost} to ${lastHost}`;
   const { ipClass, addressType } = classify(octets);
 
   return {
@@ -116,7 +143,7 @@ export function calculateSubnet(ipRaw: string, prefix: number): SubnetResult | n
     wildcard,
     maskBinary: maskBinary(mask),
     network: intToIp(netInt),
-    broadcast: prefix >= 31 ? "—" : intToIp(bcInt),
+    broadcast: prefix >= 31 ? "None" : intToIp(bcInt),
     firstHost,
     lastHost,
     hostRange,

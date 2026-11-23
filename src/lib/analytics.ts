@@ -32,6 +32,8 @@ type EventMap = {
   google_signin_clicked: { page: string };
   google_signin_cancelled: { page: string; via: "google" | "back" };
   pbq_started: { scenario_id: string; scenario_type: string; surface: Surface };
+  /** The first move made in a lab. `pbq_started` is recorded when a lab is shown, so it counts views too. */
+  pbq_first_move: { scenario_id: string; scenario_type: string; surface: Surface };
   // The path's map is tappable: what was opened, and what was done from it.
   path_map_tile_opened: { cert: string; tile: string; state: string };
   path_map_action: { cert: string; tile: string; action: string };
@@ -57,7 +59,7 @@ type EventMap = {
     tool: string;
     method: "email_signup" | "email_login" | "redirect";
   };
-  // Guided path: pick an exam, play short stops, checkpoint, then the offer.
+  // Study path: pick an exam, play short stops, checkpoint, then the offer.
   path_exam_picked: { cert: string; surface: string };
   /** The picker's tile for an exam taught in two versions (Security+) was opened to choose one. */
   path_versions_opened: { exam: string; surface: string };

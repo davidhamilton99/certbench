@@ -1,6 +1,6 @@
 import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
-import { LanderHero, LanderPage, LanderStage } from "@/components/marketing/lander/Lander";
+import { LanderBlock, LanderHero, LanderPage, LanderProse, LanderStage } from "@/components/marketing/lander/Lander";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PortQuiz } from "@/components/marketing/PortQuiz";
 import { PathCard } from "@/components/marketing/PathCard";
@@ -10,31 +10,30 @@ import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = pageMetadata({
-  title: "Free CompTIA Port Numbers Quiz",
-  description:
-    "Drill the port numbers every CompTIA exam tests — Security+, Network+, and A+. Start free with no signup; a free account saves your progress and targets your misses.",
+  title: "Free CompTIA port numbers quiz",
+  description: `Practice ${PORT_ENTRIES.length} port numbers and their protocols for the CompTIA Security+, Network+ and A+ exams. The first round is free and needs no account. A free account saves your progress and begins each round with the ports that you missed.`,
   path: "/tools/port-numbers-quiz",
 });
 
 const FAQS = [
   {
     question: "Which port numbers do I need to memorize for CompTIA exams?",
-    answer:
-      `The core set is about ${PORT_ENTRIES.length} ports: the classics (SSH 22, DNS 53, HTTP 80, HTTPS 443, RDP 3389), the email family (SMTP 25/587, POP3 110/995, IMAP 143/993), and infrastructure protocols (DHCP 67/68, SNMP 161/162, LDAP 389/636). Network+ leans hardest on ports; Security+ loves asking which secure variant replaces which insecure one.`,
+    // CompTIA's own objectives were read only for A+ Core 1 (facts file, 23 November 2026), so only that exam is named.
+    answer: `For A+ Core 1 (220-1201), CompTIA's exam objectives list the ports and protocols under objective 2.1. This quiz covers ${PORT_ENTRIES.length} ports, among them the best-known ports (SSH 22, DNS 53, HTTP 80, HTTPS 443 and RDP 3389), the email protocols (SMTP 25 and 587, POP3 110 and 995, IMAP 143 and 993) and the infrastructure protocols (DHCP 67 and 68, SNMP 161 and 162, LDAP 389 and 636).`,
   },
   {
-    question: "What's the best way to memorize port numbers?",
+    question: "What is the best way to memorize port numbers?",
     answer:
-      "Short, frequent drills beat one long cram. Do a round here daily, and pay attention to the pairs — secure vs insecure versions (HTTP 80 → HTTPS 443, LDAP 389 → LDAPS 636, Telnet 23 → SSH 22) are the most-tested pattern. With a free account, every round opens with the ports you missed last time, so your reps go where they're needed.",
+      "Short, frequent practice works better than one long session. Complete a round each day, and learn the pairs of insecure and secure protocols: HTTP 80 and HTTPS 443, LDAP 389 and LDAPS 636, Telnet 23 and SSH 22. With a free account, every round begins with the ports that you missed in the last one.",
   },
   {
-    question: "Do I need to know TCP vs UDP for each port?",
+    question: "Do I need to know whether each port uses TCP or UDP?",
     answer:
-      "Yes — especially for Network+. The commonly tested UDP ones: DHCP (67/68), TFTP (69), NTP (123), SNMP (161/162), and syslog (514). DNS famously uses both: UDP for queries, TCP for zone transfers.",
+      "For A+ Core 1 (220-1201), CompTIA's exam objectives include it: objective 2.1 covers TCP and UDP ports and protocols. The list on this page gives the transport of every port. The protocols that use UDP include DHCP (67 and 68), TFTP (69), NTP (123), SNMP (161 and 162) and syslog (514). DNS uses both: UDP for queries and TCP for zone transfers.",
   },
 ];
 
-/** The best-known ports, named in the folded list's summary (those the list has). */
+/** The best-known ports, named in the folded list's summary (those that the list has). */
 const HEADLINERS = [
   ["SSH", "22"],
   ["DNS", "53"],
@@ -51,64 +50,81 @@ export default function PortQuizPage() {
   return (
     <LanderPage>
       <LanderHero
-        eyebrow="A+ · Network+ · Security+"
+        eyebrow="A+, Network+ and Security+"
         title="CompTIA port numbers quiz"
-        sub={`The ${PORT_ENTRIES.length} ports CompTIA tests, asked both ways round.`}
-        specs={[`Round 1 of ${ROUND_SIZE} free`, "No signup", "Marked as you tap"]}
+        sub={`This quiz covers ${PORT_ENTRIES.length} ports for the CompTIA exams, asked in both directions.`}
+        specs={[
+          { label: "First round", value: `${ROUND_SIZE} questions` },
+          { label: "Account", value: "Not required for the first round" },
+          { label: "Marking", value: "After each answer" },
+        ]}
       />
       <LanderStage width="md">
         <PortQuiz entries={PORT_ENTRIES} />
       </LanderStage>
-      <div className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-6">
-        <p className="mt-10 leading-relaxed text-muted-foreground">
-          Every CompTIA exam expects you to know your ports cold. This drill covers the {PORT_ENTRIES.length}{" "}
-          they actually test, in both directions: name the port, and name the protocol. A free account saves
-          your progress and builds every round after the first from the ports you miss.
-        </p>
 
-        {/* The full list stays in the page for anyone searching "port numbers",
-            folded under the drill rather than standing in front of it. */}
+      <LanderProse className="pt-10 sm:pt-12">
+        <p>
+          This quiz covers {PORT_ENTRIES.length} port numbers in both directions: you name the port, and you name the
+          protocol. A free account saves your progress and builds every round after the first from the ports that you
+          missed.
+        </p>
+      </LanderProse>
+
+      {/* The full list stays in the page for anyone who searches for the port
+          numbers themselves. It is folded under the quiz and not in front of it. */}
+      <LanderBlock className="mt-8">
         <ReferenceFold
-          className="mt-8"
-          title="The full CompTIA port numbers list"
-          summary={<>{headliners.join(", ")} and {PORT_ENTRIES.length - headliners.length} more, each with TCP or UDP.</>}
+          title="The port numbers in this quiz"
+          summary={
+            <>
+              {headliners.join(", ")} and {PORT_ENTRIES.length - headliners.length} more, each with TCP or UDP.
+            </>
+          }
         >
-          <table className="w-full text-sm">
+          <table className="w-full text-small">
             <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="px-3 py-2 font-medium">Port</th>
-                <th className="px-3 py-2 font-medium">Protocol</th>
-                <th className="px-3 py-2 font-medium">Transport</th>
+              <tr className="text-left text-note text-muted-foreground">
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Port
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Protocol
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Transport
+                </th>
               </tr>
             </thead>
             <tbody>
               {PORT_ENTRIES.map((e) => (
-                <tr key={e.port} className="border-t border-border/60">
-                  <td className="px-3 py-2 font-mono text-xs font-medium tabular-nums">{e.port}</td>
+                <tr key={e.port} className="border-t border-border">
+                  <td className="px-3 py-2 font-mono text-note font-medium tabular-nums">{e.port}</td>
                   <td className="px-3 py-2">{e.protocol}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{e.transport}</td>
+                  <td className="px-3 py-2 font-mono text-note text-muted-foreground">{e.transport}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </ReferenceFold>
+      </LanderBlock>
 
-        <PathCard
-          className="mt-10"
-          kicker="Your exam's path"
-          title="Ports are the easy 5%"
-          href="/start"
-          label="Start my exam path"
-          context="port_quiz_page"
-        >
-          The rest of the exam is scenarios. Pick your exam and its path walks every objective in short rounds like
-          this one, up to a readiness checkpoint that shows where you stand.
-        </PathCard>
+      <PathCard
+        className="mt-16 sm:mt-24"
+        title="Study for your exam in short steps"
+        href="/start"
+        label="Choose your exam"
+        context="port_quiz_page"
+      >
+        Choose your exam, and its study path works through the exam topic by topic, in short sets of questions like
+        this one, up to a readiness checkpoint that shows where you stand.
+      </PathCard>
 
-        <section className="mt-10">
-          <ToolEmailCapture source="port-numbers-quiz" />
-        </section>
+      <LanderBlock className="mt-12 sm:mt-16">
+        <ToolEmailCapture source="port-numbers-quiz" />
+      </LanderBlock>
 
+      <LanderBlock>
         <RelatedLinks
           links={[
             {
@@ -129,13 +145,13 @@ export default function PortQuizPage() {
             {
               href: "/tools/subnetting-practice",
               label: "Subnetting practice",
-              note: "Rapid CIDR and subnet-mask drills",
+              note: "Timed drills on prefixes, masks and addresses",
             },
           ]}
         />
 
         <FaqSection faqs={FAQS} />
-      </div>
+      </LanderBlock>
     </LanderPage>
   );
 }

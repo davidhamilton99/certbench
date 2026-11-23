@@ -31,7 +31,7 @@ describe("SY0-801's Incident Response Process lab", () => {
     expect(lab.explanation).toMatch(/notification/i);
   });
 
-  it("takes the place of SY0-701's version on the SY0-801 path, in domain 4.0", () => {
+  it("takes the place of SY0-701's version on the SY0-801 study path, in domain 4.0", () => {
     const sy0801 = pbqRegistry["security-plus-sy0-801"] ?? [];
     expect(sy0801.filter((s) => s.id === lab.id)).toHaveLength(1);
     expect(sy0801.some((s) => s.id === "incident-response-steps")).toBe(false);

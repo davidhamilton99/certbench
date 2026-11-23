@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { BankQuestion, PathBank } from "./bank";
 import { bankToRep, groupBy, roundRobin } from "./build-stop";
 import { allocate, seededRng, shuffle } from "@/core/path/compose";

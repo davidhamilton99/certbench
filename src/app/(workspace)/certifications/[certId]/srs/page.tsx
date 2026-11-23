@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { getCertificationBySlug } from "@/server/data/certifications";
 import { canAccessCert } from "@/server/data/enrollments";
 import { SrsReviewClient } from "@/components/quiz/SrsReviewClient";
@@ -14,11 +14,7 @@ export default async function SrsPage({
   params: Promise<{ certId: string }>;
 }) {
   const { certId: slug } = await params;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const cert = await getCertificationBySlug(db, slug);
   if (!cert) notFound();
@@ -28,12 +24,11 @@ export default async function SrsPage({
 
   return (
     <div className="grid gap-6">
-      <div className="mx-auto w-full max-w-2xl">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
-          Spaced repetition
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {cert.name} · answer to reschedule each card
+      <div className="mx-auto grid w-full max-w-2xl gap-1.5">
+        <h1 className="cb-subsection">Spaced repetition</h1>
+        <p className="text-small text-muted-foreground">
+          These are the {cert.name} questions that are due for review. Each answer sets when the question is shown
+          again.
         </p>
       </div>
       <SrsReviewClient certId={cert.id} />

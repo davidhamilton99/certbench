@@ -1,5 +1,5 @@
 /**
- * Where a buyer lands after paying: back on the guided path they bought from,
+ * Where a buyer lands after paying: back on the study path they bought from,
  * or /start, which opens their exam's path. Never the workspace: a buyer who
  * lands somewhere unfamiliar right after paying thinks something went wrong.
  * `upgraded=1` tells the path to wait for Stripe's confirmation and then open

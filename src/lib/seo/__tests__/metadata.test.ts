@@ -10,7 +10,14 @@ import { pageMetadata } from "../metadata";
  */
 const MARKETING = join(process.cwd(), "src", "app", "(marketing)");
 // The homepage is the one page the root layout's tags are about.
-const EXEMPT = new Set(["page.tsx"]);
+const HOME = "page.tsx";
+/**
+ * A page that is never shared and never indexed: its address carries a
+ * personal token, so it sets its own robots line (no index, no follow) and
+ * needs no canonical or social tags. Each one named here must keep itself out
+ * of search, which the last test checks.
+ */
+const PRIVATE = new Set(["unsubscribe/page.tsx"]);
 
 function pages(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -25,13 +32,20 @@ describe("pageMetadata", () => {
     const meta = pageMetadata({ title: "Port quiz", description: "Drill ports.", path: "/tools/port-quiz" });
     expect(meta.alternates?.canonical).toBe("/tools/port-quiz");
     expect(meta.openGraph).toMatchObject({
-      title: "Port quiz — CertBench",
+      title: "Port quiz | CertBench",
       description: "Drill ports.",
       url: "/tools/port-quiz",
       images: ["/opengraph-image"],
     });
-    expect(meta.twitter).toMatchObject({ title: "Port quiz — CertBench", description: "Drill ports." });
+    expect(meta.twitter).toMatchObject({ title: "Port quiz | CertBench", description: "Drill ports." });
     expect(meta.robots).toBeUndefined();
+  });
+
+  it("sets a whole title tag as it is, with nothing added, when the page builds it to a length", () => {
+    const meta = pageMetadata({ title: "Displays: 220-1201 3.1 practice questions", description: "x", path: "/x", absoluteTitle: true });
+    expect(meta.title).toEqual({ absolute: "Displays: 220-1201 3.1 practice questions" });
+    expect(meta.openGraph).toMatchObject({ title: "Displays: 220-1201 3.1 practice questions" });
+    expect(meta.twitter).toMatchObject({ title: "Displays: 220-1201 3.1 practice questions" });
   });
 
   it("keeps links followable on a page left out of search", () => {
@@ -42,9 +56,16 @@ describe("pageMetadata", () => {
   it("is used by every public marketing page", () => {
     const missing = pages(MARKETING)
       .map((path) => ({ path: relative(MARKETING, path).replace(/\\/g, "/"), text: readFileSync(path, "utf8") }))
-      .filter(({ path }) => !EXEMPT.has(path))
+      .filter(({ path }) => path !== HOME && !PRIVATE.has(path))
       .filter(({ text }) => !text.includes("pageMetadata("))
       .map(({ path }) => path);
     expect(missing).toEqual([]);
+  });
+
+  it("lets a page set its own tags only when it keeps itself out of search", () => {
+    for (const path of PRIVATE) {
+      const text = readFileSync(join(MARKETING, path), "utf8");
+      expect(text, path).toMatch(/robots:\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}/);
+    }
   });
 });

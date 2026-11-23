@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { resolveQuestionFlag } from "@/contracts/flags";
-import { ApiError } from "@/contracts/common";
+import { userMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 export interface FlagRow {
   id: string;
@@ -17,18 +15,30 @@ export interface FlagRow {
   questionText: string | null;
 }
 
+/** A date as it is written in the rest of the site: "November 22, 2026". Fixed to UTC, so the server and the browser print the same day. */
+function longDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** The owner's queue of questions that members have reported. */
 export function AdminFlagsList({ flags }: { flags: FlagRow[] }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ id: string; status: "actioned" | "dismissed" } | null>(null);
 
   async function resolve(flagId: string, status: "actioned" | "dismissed") {
-    setBusy(flagId);
+    if (busy) return;
+    setBusy({ id: flagId, status });
     try {
       await api(resolveQuestionFlag, { flagId, status, adminNotes: null });
-      toast.success(status === "actioned" ? "Marked actioned" : "Dismissed");
+      toast.success(status === "actioned" ? "The report has been marked as actioned." : "The report has been dismissed.");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong");
+      toast.error(userMessage(err, "The report could not be updated. Please try again."));
     } finally {
       setBusy(null);
     }
@@ -36,53 +46,44 @@ export function AdminFlagsList({ flags }: { flags: FlagRow[] }) {
 
   if (flags.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        No pending flags — the queue is clear.
+      <p className="rounded-lg border border-dashed border-input p-8 text-small text-muted-foreground">
+        No reports are waiting for review.
       </p>
     );
   }
 
   return (
-    <div className="grid gap-3">
-      {flags.map((flag) => (
-        <Card key={flag.id} className="py-4">
-          <CardContent className="grid gap-2 text-sm">
-            <p className="leading-relaxed">
-              {flag.questionText ?? "(question no longer exists)"}
+    <ul className="grid gap-3">
+      {flags.map((flag, i) => (
+        <li key={flag.id} className="glass grid gap-2 rounded-lg p-5 text-small">
+          <p>{flag.questionText ?? "This question no longer exists."}</p>
+          {flag.reason && (
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Reported problem: </span>
+              {flag.reason}
             </p>
-            {flag.reason && (
-              <p className="text-muted-foreground">“{flag.reason}”</p>
-            )}
-            <div className="flex items-center gap-2 pt-1">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy === flag.id}
-                onClick={() => resolve(flag.id, "actioned")}
-              >
-                {busy === flag.id ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Check className="size-3.5" />
-                )}
-                Actioned
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={busy === flag.id}
-                onClick={() => resolve(flag.id, "dismissed")}
-              >
-                <X className="size-3.5" />
-                Dismiss
-              </Button>
-              <span className="ml-auto text-xs text-muted-foreground">
-                {new Date(flag.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+          <p className="text-note text-muted-foreground">Reported on {longDate(flag.createdAt)}.</p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Button
+              size="sm"
+              variant="outline"
+              loading={busy?.id === flag.id && busy.status === "actioned"}
+              onClick={() => resolve(flag.id, "actioned")}
+            >
+              Mark as actioned<span className="sr-only">: report {i + 1}</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              loading={busy?.id === flag.id && busy.status === "dismissed"}
+              onClick={() => resolve(flag.id, "dismissed")}
+            >
+              Dismiss<span className="sr-only">: report {i + 1}</span>
+            </Button>
+          </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

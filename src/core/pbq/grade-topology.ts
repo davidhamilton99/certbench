@@ -62,7 +62,7 @@ export function gradeTopologyScenario(
         const correctCount = fieldCount - touchedCount;
         totalScore += correctCount;
         devFeedback.push(
-          `${device.label} was already correctly configured — you should not have modified it`
+          `${device.label} was already correctly configured: you should not have modified it`
         );
         allFeedback.push(
           `${device.label}: already correctly configured, should not have been modified`

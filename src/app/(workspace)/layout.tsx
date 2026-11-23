@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { getPageSession } from "@/server/auth";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 import { WelcomeV2Modal } from "@/components/workspace/WelcomeV2Modal";
 import { AnalyticsIdentify } from "@/components/analytics/AnalyticsIdentify";
+import { Toaster } from "@/components/ui/sonner";
 import { CERTBENCH_V2_LAUNCH } from "@/lib/launch";
 
 export default async function WorkspaceLayout({
@@ -13,16 +12,16 @@ export default async function WorkspaceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
+  // One session check for the whole render: the page under this layout asks
+  // for the same session (requireProPage, requireUserPage) and is given this
+  // one, where the layout and the page each used to make their own.
+  const { db, user } = await getPageSession();
   if (!user) redirect("/login");
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
 
   if (!profile?.onboardingCompleted || enrollments.length === 0) {
@@ -47,6 +46,8 @@ export default async function WorkspaceLayout({
       {children}
       <WelcomeV2Modal enabled={isReturning} />
       <AnalyticsIdentify userId={user.id} email={user.email} />
+      {/* Short confirmations ("Saved."). Only the signed-in screens raise them, so only they load it. */}
+      <Toaster />
     </WorkspaceShell>
   );
 }

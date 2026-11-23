@@ -2,8 +2,10 @@ import { defineEndpoint } from "@/server/api/define-endpoint";
 import { startSrsReview } from "@/contracts/srs";
 import { ApiError } from "@/contracts/common";
 import { listDueCards } from "@/server/data/srs";
+import { requireCertAccess } from "@/server/data/enrollments";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { SRS_MAX_CARDS_PER_SESSION } from "@/core/constants";
+import { mentionsOptionLetter } from "@/core/path/text";
 
 const DAY_MS = 86_400_000;
 
@@ -12,6 +14,8 @@ export const POST = defineEndpoint(startSrsReview, {
   rateLimit: { limit: 20, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
+    // Pro is granted for each exam: this one must be in the member's plan.
+    await requireCertAccess(db, user.id, input.certId);
 
     const { cards, totalDue } = await listDueCards(
       db,
@@ -40,6 +44,10 @@ export const POST = defineEndpoint(startSrsReview, {
               0,
               Math.floor((now - new Date(c.srs_next_review_at).getTime()) / DAY_MS)
             ),
+            // The explanation is printed whole under the answers once the card
+            // is answered. Where it names an answer by its letter, the answers
+            // keep their stored order, as they do on the study path.
+            ...(mentionsOptionLetter(q.explanation) ? { keepOrder: true } : {}),
           },
         ];
       }),

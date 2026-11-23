@@ -29,7 +29,7 @@ const played = (...stops: string[]): PathProgress =>
   );
 
 describe("pathNudge", () => {
-  it("names the next stop and how far away the checkpoint is", () => {
+  it("names the next step and how far away the checkpoint is", () => {
     expect(pathNudge(plan, played("warmup"), DAYS_AGO_3, NOW)).toEqual({
       done: 1,
       total: plan.stops.length,
@@ -44,13 +44,13 @@ describe("pathNudge", () => {
     });
   });
 
-  it("points at the checkpoint itself once every stop before it is done", () => {
+  it("points at the checkpoint itself once every step before it is done", () => {
     const nudge = pathNudge(plan, played("warmup", "1.1"), DAYS_AGO_3, NOW);
     expect(nudge?.next).toEqual({ title: "Readiness checkpoint", kind: "checkpoint" });
     expect(nudge?.toCheckpoint).toBe(0);
   });
 
-  it("starts from the first stop not played, even when a later one was", () => {
+  it("starts from the first step not played, even when a later one was", () => {
     const nudge = pathNudge(plan, played("warmup", "1.2"), DAYS_AGO_3, NOW);
     expect(nudge?.next.title).toBe("Obj 1.1");
     expect(nudge?.toCheckpoint).toBe(1);
@@ -65,7 +65,7 @@ describe("pathNudge", () => {
     expect(at(NUDGE_MAX_HOURS + 1)).toBeNull();
   });
 
-  it("is never for someone who hasn't started, or who has reached the checkpoint", () => {
+  it("is never for someone who has not started, or who has reached the checkpoint", () => {
     expect(pathNudge(plan, EMPTY_PATH_PROGRESS, DAYS_AGO_3, NOW)).toBeNull();
     const reached = played("warmup", "1.1", "checkpoint");
     expect(pathNudge(plan, reached, DAYS_AGO_3, NOW)).toBeNull();
@@ -75,14 +75,14 @@ describe("pathNudge", () => {
     const progress = recordRep(EMPTY_PATH_PROGRESS, "a|4.5|w1", true, 0);
     expect(pathNudge(plan, progress, DAYS_AGO_3, NOW)).toMatchObject({
       done: 0,
-      next: { title: "Warm-up", kind: "warmup" },
+      next: { title: "Introductory questions", kind: "warmup" },
       toCheckpoint: 2,
     });
   });
 });
 
 describe("pathStanding", () => {
-  it("counts the free stops left, the checkpoint included", () => {
+  it("counts the free steps left, the checkpoint included", () => {
     expect(pathStanding(plan, EMPTY_PATH_PROGRESS)).toEqual({
       done: 0,
       total: plan.stops.length,

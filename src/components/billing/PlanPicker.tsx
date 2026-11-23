@@ -1,154 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
-import { api } from "@/lib/api-client";
-import {
-  createCheckout,
-  getRegionPricing,
-  type BillingInterval,
-} from "@/contracts/billing";
-import type { ContractOutput } from "@/contracts/common";
-import { ApiError } from "@/contracts/common";
+import { useEffect } from "react";
+import type { BillingInterval } from "@/contracts/billing";
+import type { RegionPricing } from "@/lib/pricing/ppp";
 import { track } from "@/lib/analytics";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-type RegionPricing = ContractOutput<typeof getRegionPricing>;
-
-const OPTIONS: {
-  interval: BillingInterval;
-  key: keyof RegionPricing["prices"];
-  label: string;
-  per: string;
-  note?: string;
-}[] = [
-  { interval: "monthly", key: "monthly", label: "Monthly", per: "/month" },
-  { interval: "quarterly", key: "quarterly", label: "3 months", per: "every 3 months" },
-  { interval: "annual", key: "annual", label: "Annual", per: "/year", note: "Best value" },
-];
-
-/** Fallback list prices shown before the region lookup resolves. */
-const FALLBACK: RegionPricing = {
-  discountPercent: null,
-  prices: {
-    monthly: { original: "$19", discounted: "$19" },
-    quarterly: { original: "$39", discounted: "$39" },
-    annual: { original: "$99", discounted: "$99" },
-  },
-};
+import { PlanChooser } from "./PlanChooser";
+import { BILLING_PERIODS, registerThenPay } from "./plans";
 
 /**
- * Interval picker + checkout. Prices are regionally adjusted (purchasing
- * power) and shown plainly as THE price — no strikethroughs or discount
- * banners; big companies treat regional pricing as invisible, and so do we.
- * A single muted footnote explains the adjustment. The authoritative price
- * is derived server-side at checkout from the request IP.
+ * The plan chooser as the pricing page and the billing page show it: all
+ * three billing periods, with three months chosen first.
  *
- * `initialPricing` is the region price computed on the server from the
- * request's country header, so the first paint already shows the correct
- * price — no flash of the full list price before a client fetch resolves.
- * When it's provided the client lookup is skipped entirely.
+ * `initialPricing` is the regional price worked out on the server from the
+ * request's country, so the first paint already shows the visitor's own
+ * price. `initialPlan` is the period a visitor chose before they were sent to
+ * create an account: it is chosen again when they come back.
  */
 export function PlanPicker({
-  ctaLabel = "Upgrade to Pro",
   initialPricing,
+  initialPlan,
   surface = "upgrade",
 }: {
-  ctaLabel?: string;
   initialPricing?: RegionPricing;
-  /** Which page the picker is on — labels the pricing_viewed funnel step. */
+  initialPlan?: BillingInterval;
+  /** Which page the chooser is on: it labels the pricing_viewed step. */
   surface?: "upgrade" | "pricing";
 }) {
-  const [interval, setInterval] = useState<BillingInterval>("quarterly");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [region, setRegion] = useState<RegionPricing>(initialPricing ?? FALLBACK);
-
   useEffect(() => {
     track("pricing_viewed", { surface });
   }, [surface]);
 
-  useEffect(() => {
-    // Server already resolved the region price → no fetch, no swap, no flicker.
-    if (initialPricing) return;
-    let active = true;
-    api(getRegionPricing, {})
-      .then((r) => active && setRegion(r))
-      .catch(() => {
-        /* list-price fallback already set */
-      });
-    return () => {
-      active = false;
-    };
-  }, [initialPricing]);
-
-  async function checkout() {
-    setBusy(true);
-    setError("");
-    track("checkout_started", { interval });
-    try {
-      // Backing out of checkout returns to the page they chose a plan on.
-      const { url } = await api(createCheckout, { interval, returnTo: surface });
-      window.location.href = url;
-    } catch (err) {
-      if (err instanceof ApiError && err.code === "unauthorized") {
-        window.location.href = "/register";
-        return;
-      }
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
-      setBusy(false);
-    }
-  }
-
-  const regional = region.discountPercent !== null;
-
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-2">
-        {OPTIONS.map((o) => (
-          <button
-            key={o.interval}
-            type="button"
-            role="radio"
-            aria-checked={interval === o.interval}
-            onClick={() => setInterval(o.interval)}
-            className={cn(
-              "flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left text-[15px] transition-[border-color,background-color,box-shadow] duration-150",
-              interval === o.interval
-                ? "border-primary bg-primary/[0.07] ring-1 ring-primary/60 shadow-[0_16px_40px_-26px_var(--primary)]"
-                : "border-border hover:border-foreground/25"
-            )}
-          >
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
-              {o.label}
-              {o.note && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                  {o.note}
-                </span>
-              )}
-            </span>
-            <span className="shrink-0 text-right leading-tight">
-              <span className="cb-display text-2xl">
-                {region.prices[o.key].discounted}
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                {o.per}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
-      <Button size="lg" onClick={checkout} disabled={busy} className="w-full">
-        {busy ? <Loader2 className="animate-spin" /> : <Sparkles />}
-        {ctaLabel}
-      </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        {regional
-          ? "Prices shown in USD, adjusted for your region. Cancel anytime."
-          : "Prices in USD. Cancel anytime from your billing portal."}
-      </p>
-    </div>
+    <PlanChooser
+      plans={BILLING_PERIODS}
+      defaultPlan={initialPlan ?? "quarterly"}
+      initialPricing={initialPricing}
+      // Backing out of the payment page returns to the page the plan was chosen on.
+      returnTo={surface}
+      // The billing page is only shown to someone who is signed in, so a press
+      // there that finds nobody signed in is a session that has ended.
+      signInHref={surface === "upgrade" ? () => "/login?next=/upgrade" : registerThenPay}
+    />
   );
 }

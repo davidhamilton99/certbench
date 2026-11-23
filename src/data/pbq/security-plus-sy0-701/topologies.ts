@@ -7,12 +7,12 @@ export const securityPlusTopologies: TopologyScenario[] = [
   {
     type: "topology",
     id: "sp-topo-network-segmentation",
-    title: "Network Segmentation & Firewall Rules",
+    title: "Network Segmentation and Firewall Rules",
     briefing:
       "Apex Financial has reported unauthorized traffic between their guest wireless network and the internal server VLAN. You have been asked to review the network topology, identify misconfigured devices, and correct the segmentation issues. The guest network (VLAN 50, 10.0.50.0/24) must be isolated from the server VLAN (VLAN 10, 10.0.10.0/24). Do not modify devices that are already configured correctly.",
     domain_number: "3.0",
     domain_title: "Security Architecture",
-    diagramTitle: "Apex Financial — Corporate Network",
+    diagramTitle: "Apex Financial: Corporate Network",
     estimatedMinutes: 12,
     devices: [
       {
@@ -85,7 +85,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
           {
             type: "dropdown",
             id: "core-sw1-acl-direction",
-            label: "Apply ACL to VLAN 50 interface — direction",
+            label: "Apply ACL to VLAN 50 interface: direction",
             options: ["Inbound (in)", "Outbound (out)"],
             correctIndex: 0,
           },
@@ -94,8 +94,8 @@ export const securityPlusTopologies: TopologyScenario[] = [
             id: "core-sw1-acl-type",
             label: "Which ACL type is required to match both source AND destination?",
             options: [
-              "Standard ACL (1–99) — matches source only",
-              "Extended ACL (100–199) — matches source and destination",
+              "Standard ACL (1–99): matches source only",
+              "Extended ACL (100–199): matches source and destination",
             ],
             correctIndex: 1,
           },
@@ -172,7 +172,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
       { from: "core-sw1", to: "pc-workstation", label: "Fa0/20 (VLAN 20)" },
     ],
     explanation:
-      "Network segmentation requires both Layer 3 ACLs and proper VLAN isolation. The firewall had an overly permissive ACL allowing guest-to-server traffic. The core switch also needed an ACL on the VLAN 50 SVI. The guest AP, database server, and workstation were already correctly configured — identifying which devices need changes and which to leave alone is a key exam skill.",
+      "Network segmentation requires both Layer 3 ACLs and proper VLAN isolation. The firewall had an overly permissive ACL allowing guest-to-server traffic. The core switch also needed an ACL on the VLAN 50 SVI. The guest AP, database server, and workstation were already correctly configured: identifying which devices need changes and which to leave alone is a key exam skill.",
   },
 
   /* ================================================================ */
@@ -186,7 +186,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
       "A penetration test at Meridian Healthcare revealed that the corporate wireless network is vulnerable to deauthentication attacks and a rogue AP was detected. You must review the wireless infrastructure, identify misconfigured components, and apply the correct security settings. The corporate SSID should use WPA3-Enterprise with 802.1X authentication via the RADIUS server. The guest SSID should use WPA3-Personal with a PSK. Do not modify devices that are already correctly configured.",
     domain_number: "3.0",
     domain_title: "Security Architecture",
-    diagramTitle: "Meridian Healthcare — Wireless Infrastructure",
+    diagramTitle: "Meridian Healthcare: Wireless Infrastructure",
     estimatedMinutes: 10,
     devices: [
       {
@@ -201,21 +201,21 @@ export const securityPlusTopologies: TopologyScenario[] = [
           {
             type: "dropdown",
             id: "wlc-corp-security",
-            label: "Corporate SSID — Security Protocol",
+            label: "Corporate SSID: Security Protocol",
             options: ["WPA2-Personal", "WPA2-Enterprise", "WPA3-Personal", "WPA3-Enterprise"],
             correctIndex: 3,
           },
           {
             type: "dropdown",
             id: "wlc-corp-auth",
-            label: "Corporate SSID — Authentication Method",
+            label: "Corporate SSID: Authentication Method",
             options: ["PSK", "802.1X (RADIUS)", "Open", "SAE"],
             correctIndex: 1,
           },
           {
             type: "dropdown",
             id: "wlc-corp-pmf",
-            label: "Corporate SSID — Protected Management Frames (PMF)",
+            label: "Corporate SSID: Protected Management Frames (PMF)",
             options: ["Disabled", "Optional", "Required"],
             correctIndex: 2,
           },
@@ -254,7 +254,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
         position: { x: 25, y: 68 },
         preConfigured: true,
         currentConfig:
-          "Mode: Local (FlexConnect)\nRogue Detection: Enabled — Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
+          "Mode: Local (FlexConnect)\nRogue Detection: Enabled: Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
         fields: [],
         explanation:
           "AP-Floor1 is correctly set to Local mode for normal client connectivity.",
@@ -279,12 +279,12 @@ export const securityPlusTopologies: TopologyScenario[] = [
             type: "dropdown",
             id: "ap2-rogue-detection",
             label: "Rogue AP Detection",
-            options: ["Disabled", "Enabled — Alert Only", "Enabled — Auto-Contain"],
+            options: ["Disabled", "Enabled: Alert Only", "Enabled: Auto-Contain"],
             correctIndex: 1,
           },
         ],
         explanation:
-          "AP-Floor2 needed its operation mode set to Local and rogue AP detection enabled. Auto-contain should generally be avoided in healthcare due to potential interference with medical devices — alert-only is the correct choice.",
+          "AP-Floor2 needed its operation mode set to Local and rogue AP detection enabled. Auto-contain should generally be avoided in healthcare due to potential interference with medical devices: alert-only is the correct choice.",
       },
       {
         id: "ap-floor3",
@@ -293,7 +293,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
         position: { x: 75, y: 68 },
         preConfigured: true,
         currentConfig:
-          "Mode: Local (FlexConnect)\nRogue Detection: Enabled — Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
+          "Mode: Local (FlexConnect)\nRogue Detection: Enabled: Alert Only\nSSIDs: Corp-Meridian, Guest-Meridian",
         fields: [],
         explanation:
           "AP-Floor3 is correctly configured with no changes needed.",
@@ -321,7 +321,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
       "Sterling Corp's public-facing web application was recently compromised via an SQL injection attack. A forensic review found that the web server in the DMZ had direct database access to the internal network and was running unnecessary services. You must review the topology, harden the DMZ configuration, and ensure proper network segmentation between the DMZ (172.16.1.0/24), internal network (192.168.1.0/24), and the internet. Fix only the devices that require changes.",
     domain_number: "3.0",
     domain_title: "Security Architecture",
-    diagramTitle: "Sterling Corp — DMZ Architecture",
+    diagramTitle: "Sterling Corp: DMZ Architecture",
     estimatedMinutes: 14,
     devices: [
       {
@@ -410,7 +410,7 @@ export const securityPlusTopologies: TopologyScenario[] = [
           },
         ],
         explanation:
-          "The web server should only run HTTPS and SSH (for secure admin access via a jump box). FTP, Telnet, SNMP, and local MySQL are unnecessary attack surfaces. Database access must go through an application proxy in the internal zone — never direct from DMZ to the internal database.",
+          "The web server should only run HTTPS and SSH (for secure admin access via a jump box). FTP, Telnet, SNMP, and local MySQL are unnecessary attack surfaces. Database access must go through an application proxy in the internal zone, never direct from DMZ to the internal database.",
       },
       {
         id: "fw-internal",

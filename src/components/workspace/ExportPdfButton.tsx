@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { StudyQuestion } from "@/contracts/study-sets";
 import { Button } from "@/components/ui/button";
 
+/** Saves the study set as a PDF file. The code that makes the file is loaded when the button is pressed. */
 export function ExportPdfButton({
   title,
   category,
@@ -18,21 +18,21 @@ export function ExportPdfButton({
   const [busy, setBusy] = useState(false);
 
   async function download() {
+    if (busy) return;
     setBusy(true);
     try {
       const { exportPdf } = await import("@/lib/export/study-set-pdf");
       await exportPdf({ title, category }, questions);
     } catch {
-      toast.error("Couldn't generate the PDF");
+      toast.error("The PDF file could not be made. Please try again.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={download} disabled={busy}>
-      {busy ? <Loader2 className="animate-spin" /> : <FileDown className="size-3.5" />}
-      PDF
+    <Button variant="outline" size="sm" onClick={download} loading={busy}>
+      Download as a PDF
     </Button>
   );
 }

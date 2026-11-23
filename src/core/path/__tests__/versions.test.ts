@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { PATH_CERTS } from "../types";
-import { EXAM_CODES, LAST_EXAM_DAY, examVersions, longDate, newerVersion, otherVersions } from "../versions";
+import {
+  EXAM_CODES,
+  LAST_EXAM_DAY,
+  examVersions,
+  longDate,
+  newerVersion,
+  otherVersions,
+  studyPathTitle,
+} from "../versions";
 
 describe("exam versions", () => {
   it("knows every path exam's code", () => {
@@ -24,5 +32,15 @@ describe("exam versions", () => {
     expect(newerVersion("security-plus-sy0-801")).toBeNull();
     expect(newerVersion("network-plus-n10-009")).toBeNull();
     expect(longDate("2027-06-11")).toBe("June 11, 2027");
+  });
+
+  it("titles a study path with its exam code only where the exam has two versions", () => {
+    // Two tabs, two bookmarks or two history entries for Security+ must not read the same.
+    expect(studyPathTitle("security-plus-sy0-801", "Security+")).toBe("Security+ SY0-801 study path");
+    expect(studyPathTitle("security-plus-sy0-701", "Security+")).toBe("Security+ SY0-701 study path");
+    expect(studyPathTitle("network-plus-n10-009", "Network+")).toBe("Network+ study path");
+    expect(studyPathTitle("a-plus-core1-220-1201", "A+ Core 1")).toBe("A+ Core 1 study path");
+    // An address that is not an exam's still gets a title, with no code.
+    expect(studyPathTitle("nonsense", "CompTIA")).toBe("CompTIA study path");
   });
 });

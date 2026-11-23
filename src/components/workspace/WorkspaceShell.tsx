@@ -26,12 +26,12 @@ export interface ShellCert {
 }
 
 /**
- * The guided path comes first — it's how CertBench is meant to be studied.
- * The rest of the workspace is the Pro toolkit around it; the least-used
- * pages sit under More.
+ * The study path comes first: it is how CertBench is meant to be studied. The
+ * rest of the workspace is the set of Pro tools around it, and the pages used
+ * least sit under More.
  */
 const TOOLKIT = [
-  { href: "/pbq", label: "PBQ lab", icon: FlaskConical },
+  { href: "/pbq", label: "Hands-on labs", icon: FlaskConical },
   { href: "/recall", label: "Recall", icon: Brain },
   { href: "/review", label: "Review", icon: ListChecks },
   { href: "/reference", label: "Reference", icon: Table2 },
@@ -43,10 +43,12 @@ const MORE = [
   { href: "/community", label: "Community", icon: Users },
 ];
 
-const NAV_ITEMS = [{ href: "/dashboard", label: "Today", icon: LayoutDashboard }, ...TOOLKIT, ...MORE];
+const PLAN = { href: "/dashboard", label: "Study plan", icon: LayoutDashboard };
+
+const NAV_ITEMS = [PLAN, ...TOOLKIT, ...MORE];
 
 /**
- * The active certification from `?cert=`, read on the client only. It's `null`
+ * The active certification from `?cert=`, read on the client only. It is `null`
  * on the server and the first client render, so the nav hydrates identically
  * and never mismatches; the cert is applied right after mount and whenever the
  * route changes. Reading `window.location` deliberately avoids Next's
@@ -70,14 +72,15 @@ function CertSwitcher({ certs }: { certs: ShellCert[] }) {
 
   if (certs.length <= 1) return null;
   return (
-    <div className="flex flex-col gap-1 border-b px-3 pb-3">
-      <span className="px-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+    <nav aria-label="Certification" className="flex flex-col gap-1 border-b px-3 pb-3">
+      <span aria-hidden className="cb-label px-1 text-muted-foreground">
         Certification
       </span>
       {certs.map((cert) => (
         <Link
           key={cert.slug}
           href={`/dashboard?cert=${cert.slug}`}
+          aria-current={cert.slug === activeSlug ? "true" : undefined}
           className={cn(
             "rounded-md px-2 py-1.5 text-sm transition-colors",
             cert.slug === activeSlug
@@ -88,7 +91,7 @@ function CertSwitcher({ certs }: { certs: ShellCert[] }) {
           {cert.name}
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -115,6 +118,8 @@ function NavLink({
   return (
     <Link
       href={href}
+      // The page in hand is said, as well as shown by its fill and weight.
+      aria-current={active ? "page" : undefined}
       className={cn(
         "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
         active
@@ -122,7 +127,7 @@ function NavLink({
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
       )}
     >
-      <Icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
+      <Icon aria-hidden className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
       {label}
     </Link>
   );
@@ -132,31 +137,22 @@ function DesktopNav({ pathHref }: { pathHref: string | null }) {
   const pathname = usePathname();
   const cert = useCertParam();
   return (
-    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
+    <nav aria-label="Workspace" className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
       {pathHref && (
         <Link
           href={pathHref}
-          className="mb-1.5 flex items-center gap-2.5 rounded-md bg-primary px-2.5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-[filter] hover:brightness-110"
+          className="mb-1.5 flex items-center gap-2.5 rounded-md bg-primary px-2.5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          <Route className="size-4" />
-          Your path
+          <Route aria-hidden className="size-4" />
+          Your study path
         </Link>
       )}
-      <NavLink
-        href={withCert("/dashboard", cert)}
-        label="Today"
-        icon={LayoutDashboard}
-        active={pathname.startsWith("/dashboard")}
-      />
-      <p className="mt-4 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        Toolkit
-      </p>
+      <NavLink {...PLAN} href={withCert(PLAN.href, cert)} active={pathname.startsWith(PLAN.href)} />
+      <p className="cb-label mt-4 px-2.5 pb-1 text-muted-foreground">Toolkit</p>
       {TOOLKIT.map((item) => (
         <NavLink key={item.href} {...item} href={withCert(item.href, cert)} active={pathname.startsWith(item.href)} />
       ))}
-      <p className="mt-4 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        More
-      </p>
+      <p className="cb-label mt-4 px-2.5 pb-1 text-muted-foreground">More</p>
       {MORE.map((item) => (
         <NavLink key={item.href} {...item} href={withCert(item.href, cert)} active={pathname.startsWith(item.href)} />
       ))}
@@ -167,30 +163,35 @@ function DesktopNav({ pathHref }: { pathHref: string | null }) {
 function MobileNav({ pathHref }: { pathHref: string | null }) {
   const pathname = usePathname();
   const cert = useCertParam();
+  // On a touch screen each link is 44 pixels tall: this row is the only way
+  // around the workspace on a phone. The text size is set once, on the row:
+  // the class merger takes the type scale's sizes for colours and would drop
+  // one beside a colour on the links themselves.
+  const link = "whitespace-nowrap rounded-md px-3 py-1.5 pointer-coarse:py-3";
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
+    <nav aria-label="Workspace" className="flex gap-1 overflow-x-auto border-b px-3 py-2 text-note md:hidden">
       {pathHref && (
-        <Link
-          href={pathHref}
-          className="whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-        >
-          Your path
+        <Link href={pathHref} className={cn(link, "bg-primary font-medium text-primary-foreground")}>
+          Your study path
         </Link>
       )}
-      {NAV_ITEMS.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={withCert(href, cert)}
-          className={cn(
-            "whitespace-nowrap rounded-full px-3 py-1 text-xs transition-colors",
-            pathname.startsWith(href)
-              ? "bg-accent font-medium"
-              : "text-muted-foreground hover:bg-accent/50"
-          )}
-        >
-          {label}
-        </Link>
-      ))}
+      {NAV_ITEMS.map(({ href, label }) => {
+        const active = pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={withCert(href, cert)}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              link,
+              "transition-colors",
+              active ? "bg-accent font-medium" : "text-muted-foreground hover:bg-accent/50"
+            )}
+          >
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
@@ -209,10 +210,9 @@ export function WorkspaceShell({
   const pathHref = activeSlug ? `/path/${activeSlug}` : null;
 
   return (
-    // Theme-aware workspace on the soft aurora field; the readiness instrument
-    // panels stay dark islands within it (see ReadinessPanel).
+    // The workspace lies on the desk colour; each panel on it is a sheet of paper.
     <div className="flex min-h-svh aurora-bg text-foreground">
-      {/* Sidebar (desktop) */}
+      {/* The side bar, from tablet widths up. */}
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center px-4 py-4">
           <Logo href="/dashboard" />
@@ -224,10 +224,16 @@ export function WorkspaceShell({
             href="/profile"
             className="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[11px] uppercase">
+            <span
+              aria-hidden
+              className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-xs uppercase"
+            >
               {displayName.trim().charAt(0) || "?"}
             </span>
-            <span className="truncate">{displayName}</span>
+            <span className="truncate">
+              <span className="sr-only">Profile: </span>
+              {displayName}
+            </span>
           </Link>
           <div className="flex shrink-0 items-center">
             <ThemeToggle />
@@ -236,9 +242,9 @@ export function WorkspaceShell({
         </div>
       </aside>
 
-      {/* Mobile top bar + content */}
+      {/* On a phone: a bar at the top, the row of links, then the page. */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-2.5 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-2.5 md:hidden">
           <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
             CertBench
           </Link>
@@ -248,7 +254,10 @@ export function WorkspaceShell({
           </div>
         </header>
         <MobileNav pathHref={pathHref} />
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        {/* The skip link at the top of the document leads here (see the root layout). */}
+        <main id="main-content" tabIndex={-1} className="flex-1 px-4 py-6 outline-none md:px-8 md:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );

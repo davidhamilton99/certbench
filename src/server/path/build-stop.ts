@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { BankQuestion, PathBank } from "./bank";
 import { PATH_CONTENT } from "@/data/path";
 import type { AuthoredRep } from "@/data/path/types";
@@ -71,13 +73,14 @@ export function authoredToRep(a: AuthoredRep, rng: Rng): Rep {
  * A bank question as a rep. Options are shuffled (the stored order favours B)
  * unless the explanation names options by letter, anywhere in it; `order` maps
  * each displayed option back to its stored position for recording the answer.
+ * Such a question also keeps its letters once it is marked (`keepsLetters`),
+ * so that the answer the explanation calls B can still be found.
  */
 export function bankToRep(q: BankQuestion, tier: "quick" | "exam", rng: Rng): ChoiceRep {
   const { takeaway, rest } = splitExplanation(q.explanation);
   const stored = q.options.map(repairText);
-  const order = mentionsOptionLetter(`${takeaway} ${rest}`)
-    ? stored.map((_, i) => i)
-    : shuffle(stored.map((_, i) => i), rng);
+  const keepsLetters = mentionsOptionLetter(`${takeaway} ${rest}`);
+  const order = keepsLetters ? stored.map((_, i) => i) : shuffle(stored.map((_, i) => i), rng);
   return {
     id: bankRepId(q.objective, q.id),
     type: "choice",
@@ -90,6 +93,7 @@ export function bankToRep(q: BankQuestion, tier: "quick" | "exam", rng: Rng): Ch
     takeaway,
     explanation: rest || undefined,
     lettered: true,
+    ...(keepsLetters ? { keepsLetters: true } : {}),
     order,
   };
 }

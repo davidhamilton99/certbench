@@ -8,6 +8,8 @@ import type { PbqUpsell } from "@/components/workspace/pbq-upsell";
 import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { CaseFile } from "@/components/workspace/SimCaseFile";
 import { StagedLab, type LabStage } from "@/components/workspace/LabKit";
+import { domainLabel } from "@/components/path/lab-types";
+import { domainName } from "@/lib/seo/objective-meta";
 
 /**
  * A simulation lab, played rather than filled in. Each task is a stage and
@@ -26,8 +28,7 @@ export function SimulationPlayer({
   scenario,
   onBack,
   upsell,
-  onGraded,
-  backLabel,
+  ...host
 }: {
   scenario: SimulationScenario;
   onBack: () => void;
@@ -58,7 +59,7 @@ export function SimulationPlayer({
     <StagedLab
       scenarioId={scenario.id}
       title={scenario.title}
-      subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+      subtitle={`Domain ${domainLabel(scenario.domain_number)}: ${domainName(scenario.domain_title)}`}
       stages={stages}
       noun="Stage"
       renderCase={({ stage, run }) => (
@@ -68,8 +69,8 @@ export function SimulationPlayer({
       explanation={scenario.explanation}
       upsell={upsell}
       onBack={onBack}
-      onGraded={onGraded}
-      backLabel={backLabel}
+      // The result, the way out, word of the first move and the focus on arrival.
+      {...host}
     />
   );
 }

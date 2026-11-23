@@ -11,8 +11,7 @@ import { domain5 } from "./domain-5";
  * for each of its 27 objectives, checked against CompTIA's SY0-801 exam
  * objectives (document version 2.0) and written in our own words.
  *
- * Not in PATH_CONTENT yet. The switch-over PR adds it there, with the exam in
- * PATH_CERTS, once migration 030 has created the SY0-801 exam.
+ * It is in PATH_CONTENT (src/data/path/index.ts) beside SY0-701.
  *
  * Keys: a rep whose key is one of SY0-701's (1.1a, 2.2e, w3…) is that SY0-701
  * rep, carried over, often to a different objective. So a learner who switches
@@ -47,22 +46,22 @@ export const SY0_701_REWORDED: Record<string, string> = {
   "5.1b": "PR 1's SY0-801 copy of the bank calls a phishing email's exact steps a runbook, so this asks about a playbook as the prepared response to an incident type (4.7).",
   "5.1g": "The answer is SY0-801's deprovisioning, not offboarding.",
   "5.4c": "SY0-801 lists acknowledgements apart from attestations, and confirming you read a policy is an acknowledgement.",
-  "5.6c": "It asks about situational awareness, which SY0-801 names; unintentional behavior isn't a SY0-801 topic.",
+  "5.6c": "It asks about situational awareness, which SY0-801 names; unintentional behavior is not a SY0-801 topic.",
   "5.6g": "It asks about personnel behavior risk scoring, which SY0-801 names, instead of reporting an insider.",
 };
 
 /** SY0-701 reps SY0-801 has no place for, by key: why. */
 export const SY0_701_DROPPED: Record<string, string> = {
   w2: "Port 443 gives its warm-up place to an AI rep (w-ai), since AI is what SY0-801 adds.",
-  "1.2d": "SY0-801 doesn't name Zero Trust's control-plane parts, like the policy engine.",
-  "3.1f": "SY0-801 doesn't name real-time operating systems.",
-  "3.1g": "SY0-801 doesn't name software-defined networking.",
-  "3.4e": "SY0-801 doesn't name geographic dispersion.",
-  "4.1b": "SY0-801 doesn't name mobile deployment models like COPE.",
-  "4.1c": "SY0-801 doesn't name Wi-Fi site surveys or heat maps.",
-  "4.1d": "SY0-801 doesn't name WPA3 or its SAE handshake.",
-  "4.7e": "SY0-801's automation considerations don't name a single point of failure.",
-  "4.7f": "SY0-801's automation considerations don't name technical debt.",
-  "5.4f": "SY0-801 doesn't name a data inventory.",
-  "5.4g": "SY0-801 doesn't name internal and external compliance reporting.",
+  "1.2d": "SY0-801 does not name Zero Trust's control-plane parts, like the policy engine.",
+  "3.1f": "SY0-801 does not name real-time operating systems.",
+  "3.1g": "SY0-801 does not name software-defined networking.",
+  "3.4e": "SY0-801 does not name geographic dispersion.",
+  "4.1b": "SY0-801 does not name mobile deployment models like COPE.",
+  "4.1c": "SY0-801 does not name Wi-Fi site surveys or heat maps.",
+  "4.1d": "SY0-801 does not name WPA3 or its SAE handshake.",
+  "4.7e": "SY0-801's automation considerations do not name a single point of failure.",
+  "4.7f": "SY0-801's automation considerations do not name technical debt.",
+  "5.4f": "SY0-801 does not name a data inventory.",
+  "5.4g": "SY0-801 does not name internal and external compliance reporting.",
 };

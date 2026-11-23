@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildPlan, isFreeStop, LEARN_BEFORE_CHECKPOINT, stopAt } from "../plan";
 import {
+  doneStopIds,
   finishStop,
   mergePathProgress,
   missedIds,
@@ -43,7 +44,7 @@ const rep = (id: string, objective = "1.1"): ChoiceRep => ({
 });
 
 describe("buildPlan", () => {
-  it("puts the checkpoint right after the warm-up and the first learn stop", () => {
+  it("puts the checkpoint right after the warm-up and the first learn step", () => {
     // Security+ shape: domain 1 has four objectives, and the rest of it follows the checkpoint.
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(plan.stops.slice(0, 7).map((s) => s.id)).toEqual([
@@ -64,7 +65,7 @@ describe("buildPlan", () => {
     expect(ids.at(-1)).toBe("rehearsal");
   });
 
-  it("gives every stop a unique id and its own index", () => {
+  it("gives every step a unique id and its own index", () => {
     const plan = buildPlan(structure([4, 5, 4, 9, 6]));
     expect(new Set(plan.stops.map((s) => s.id)).size).toBe(plan.stops.length);
     plan.stops.forEach((s, i) => expect(s.index).toBe(i));
@@ -129,7 +130,7 @@ describe("labs on the path", () => {
     for (const s of plan.stops) expect(s.id.length).toBeLessThanOrEqual(32);
   });
 
-  it("adds no stop for a domain without a lab", () => {
+  it("adds no step for a domain without a lab", () => {
     expect(buildPlan(structure([4, 5])).stops.some((s) => s.kind === "lab")).toBe(false);
   });
 
@@ -158,7 +159,7 @@ describe("rep ids", () => {
 });
 
 describe("progress", () => {
-  it("finds the next stop and counts what's done", () => {
+  it("finds the next step and counts what is done", () => {
     const plan = buildPlan(structure([4, 5]));
     let p = EMPTY_PATH_PROGRESS;
     expect(nextStopIndex(plan, p)).toBe(0);
@@ -168,6 +169,19 @@ describe("progress", () => {
     expect(stopsDone(plan, p)).toBe(2);
     for (const s of plan.stops) p = finishStop(p, s.id, 8, 8, 3000);
     expect(nextStopIndex(plan, p)).toBe(plan.stops.length);
+  });
+
+  it("lists the steps that are finished, which is how the outline knows an objective has been studied", () => {
+    let p = EMPTY_PATH_PROGRESS;
+    expect([...doneStopIds(p)]).toEqual([]);
+    // An answer to a question on objective 1.2 does not finish objective 1.2's own step.
+    p = recordRep(p, authoredRepId("1.2", "w"), true, 1);
+    p = finishStop(p, "warmup", 7, 8, 1000);
+    p = finishStop(p, "1.1", 6, 8, 2000);
+    expect([...doneStopIds(p)].sort()).toEqual(["1.1", "warmup"]);
+    expect(doneStopIds(p).has("1.2")).toBe(false);
+    // A stored run that was never finished does not count.
+    expect(doneStopIds({ ...p, stops: { ...p.stops, "1.3": { n: 0, c: 0, t: 0, at: 1 } } }).has("1.3")).toBe(false);
   });
 
   it("rolls answers up into objective statuses", () => {
@@ -310,8 +324,8 @@ describe("explanations", () => {
     expect(rest).toBe("It has current data. Failover takes minutes.");
   });
 
-  it("repairs lost dashes and apostrophes", () => {
-    expect(repairText("physical layer � it has")).toBe("physical layer — it has");
+  it("repairs lost dashes and apostrophes, and sets a dash as the punctuation the site uses", () => {
+    expect(repairText("physical layer � it has")).toBe("physical layer: it has");
     expect(repairText("the user�s account")).toBe("the user’s account");
   });
 

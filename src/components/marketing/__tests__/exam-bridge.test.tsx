@@ -37,10 +37,18 @@ import { HeaderAccountLinks } from "@/components/marketing/HeaderAccountLinks";
 import { ReadinessCheck } from "@/components/marketing/ReadinessCheck";
 import { EXAMS, PathLead, RoundComplete } from "@/components/marketing/DrillRound";
 import type { DrillRounds } from "@/components/marketing/useDrillRounds";
+import { loadBrowserClient } from "@/lib/supabase-lazy";
+
+/**
+ * The cookie the sign-in client keeps its session in. A public page looks for
+ * a session only when this cookie is there, so a signed-in visitor has one.
+ */
+const SESSION_COOKIE = "sb-test-auth-token";
 
 beforeEach(() => {
   auth.session = null;
   auth.listeners = [];
+  document.cookie = `${SESSION_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   track.mockClear();
 });
 
@@ -49,14 +57,15 @@ describe("HeaderAccountLinks", () => {
     render(<HeaderAccountLinks />);
     await act(async () => {});
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: "Start free" })).toHaveAttribute("href", "/start");
+    expect(screen.getByRole("link", { name: "Start for free" })).toHaveAttribute("href", "/start");
   });
 
   it("becomes a way into the app once signed in", async () => {
     auth.session = { user: { id: "u1" } };
+    document.cookie = `${SESSION_COOKIE}=1; path=/`;
     render(<HeaderAccountLinks />);
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "Your path" })).toHaveAttribute("href", "/start")
+      expect(screen.getByRole("link", { name: "Your study path" })).toHaveAttribute("href", "/start")
     );
     expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   });
@@ -64,9 +73,13 @@ describe("HeaderAccountLinks", () => {
   it("switches the moment an inline signup creates a session", async () => {
     render(<HeaderAccountLinks />);
     await act(async () => {});
-    expect(screen.getByRole("link", { name: "Start free" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start for free" })).toBeInTheDocument();
+    // The sign-up form on the page is what loads the sign-in client; the header hears of the session through it.
+    await act(async () => {
+      await loadBrowserClient();
+    });
     act(() => auth.listeners.forEach((l) => l("SIGNED_IN", { user: { id: "u1" } })));
-    expect(screen.getByRole("link", { name: "Your path" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Your study path" })).toBeInTheDocument();
   });
 });
 
@@ -92,12 +105,14 @@ describe("ReadinessCheck result", () => {
       />
     );
     await act(async () => {});
-    fireEvent.click(screen.getByRole("radio", { name: /53/ }));
-    fireEvent.click(screen.getByRole("button", { name: /See my estimate/ }));
-    return screen.getByRole("link", { name: /Network\+ path/i });
+    // The check is played on the study path's question card: an answer is a
+    // plain button, and the card then waits for its button.
+    fireEvent.click(screen.getByRole("button", { name: "53" }));
+    fireEvent.click(screen.getByRole("button", { name: /View my estimate/ }));
+    return screen.getByRole("link", { name: /Network\+ study path/i });
   }
 
-  it("sends everyone on to this exam's guided path", async () => {
+  it("sends everyone on to this exam's study path", async () => {
     const cta = await finish();
     expect(cta).toHaveAttribute("href", "/path/network-plus-n10-009");
     fireEvent.click(cta);
@@ -129,7 +144,7 @@ describe("PathLead", () => {
       "href",
       "/path/a-plus-core1-220-1201"
     );
-    expect(screen.getByText("Free, no account needed to start.")).toBeInTheDocument();
+    expect(screen.getByText("It is free, and you do not need an account to start.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("link", { name: "Network+" }));
     expect(track).toHaveBeenCalledWith("upsell_clicked", {
       context: "drill_bridge_ports",
@@ -141,13 +156,13 @@ describe("PathLead", () => {
     const { rerender } = render(
       <PathLead tool="acronyms" title="Acronyms." body="See where you stand." exams={[EXAMS.securityPlus]} signedIn={false} />
     );
-    expect(screen.getByRole("link", { name: "Start my Security+ path" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start the Security+ study path" })).toBeInTheDocument();
     rerender(
       <PathLead tool="acronyms" title="Acronyms." body="See where you stand." exams={[EXAMS.securityPlus]} signedIn />
     );
-    expect(screen.getByRole("link", { name: "Open my Security+ path" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open the Security+ study path" })).toBeInTheDocument();
     // Someone signed in already has an account: no "no account needed" line.
-    expect(screen.queryByText("Free, no account needed to start.")).toBeNull();
+    expect(screen.queryByText("It is free, and you do not need an account to start.")).toBeNull();
   });
 });
 
@@ -169,11 +184,57 @@ function roundEnd(rounds: DrillRounds) {
         { id: "80", label: "80", status: "new" },
       ]}
       variant="labels"
-      mapTitle="Your port map"
+      mapTitle="Your ports"
       lead={LEAD}
     />
   );
 }
+
+// The acronym deck has more than 300 entries. Its result drew every one as an
+// unlabelled square, which could not be read on a phone, and a screen reader
+// listed all of them.
+describe("RoundComplete for a large deck", () => {
+  const rounds = {
+    tool: "acronyms",
+    signedIn: true,
+    gated: false,
+    roundNumber: 1,
+    roundCorrect: 1,
+    size: 2,
+    linked: false,
+    account: "saved",
+    startNextRound: vi.fn(),
+  } as unknown as DrillRounds;
+  const tiles = [
+    { id: "aaa", label: "AAA", status: "got" as const },
+    { id: "ids", label: "IDS", status: "missed" as const },
+    ...Array.from({ length: 305 }, (_, i) => ({ id: `n${i}`, label: `N${i}`, status: "new" as const })),
+  ];
+
+  it("draws only the acronyms already seen, the missed first, and counts the rest in a sentence", () => {
+    render(
+      <RoundComplete
+        rounds={rounds}
+        label="Acronyms"
+        noun={["acronym", "acronyms"]}
+        tiles={tiles}
+        variant="dots"
+        mapTitle="Your acronyms"
+        lead={LEAD}
+      />
+    );
+    const map = screen.getByRole("list", { name: "Your progress" });
+    const items = Array.from(map.querySelectorAll("li"));
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("IDS");
+    expect(items[0]).toHaveTextContent("missed");
+    expect(items[1]).toHaveTextContent("AAA");
+    expect(screen.getByText("The other 305 acronyms have not been asked yet.")).toBeInTheDocument();
+    expect(screen.getByText("2 of 307 seen")).toBeInTheDocument();
+    const legend = screen.getByRole("list", { name: "What the marks mean" });
+    expect(legend).not.toHaveTextContent("Not seen yet");
+  });
+});
 
 describe("RoundComplete for a signed-in visitor", () => {
   const rounds = {
@@ -192,8 +253,8 @@ describe("RoundComplete for a signed-in visitor", () => {
     roundEnd(rounds);
     const result = screen.getByRole("group", { name: "Port numbers: round 2 result" });
     expect(result).toHaveTextContent("14 of 20");
-    expect(result).toHaveTextContent("Round 3 starts with your 1 miss, then the 1 you haven't seen yet.");
-    const path = screen.getByRole("link", { name: /Network\+ path/ });
+    expect(result).toHaveTextContent("Round 3 starts with the 1 that you missed, then the 1 you have not seen yet.");
+    const path = screen.getByRole("link", { name: /Network\+ study path/ });
     const next = screen.getByRole("button", { name: /Start round 3/ });
     // The path comes first in reading order; the round button follows it.
     expect(path.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -220,14 +281,14 @@ describe("RoundComplete for a visitor with no account", () => {
 
   it("leads with the exam's path, then saves their map with an account to play round 2", () => {
     roundEnd(rounds);
-    const path = screen.getByRole("link", { name: /Start my Network\+ path/ });
+    const path = screen.getByRole("link", { name: /Start the Network\+ study path/ });
     expect(path).toHaveAttribute("href", "/path/network-plus-n10-009");
     expect(track).toHaveBeenCalledWith("upsell_viewed", { context: "drill_bridge_ports" });
 
     // No round 2 without an account: the map is what one saves.
     expect(screen.queryByRole("button", { name: /^Start round 2/ })).toBeNull();
-    const map = screen.getByRole("heading", { name: "Your port map" });
-    const save = screen.getByRole("heading", { name: "Save your map and play round 2" });
+    const map = screen.getByRole("heading", { name: "Your ports" });
+    const save = screen.getByRole("heading", { name: "Save your progress and start round 2" });
     const submit = screen.getByRole("button", { name: "Save and start round 2" });
     expect(path.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(map.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

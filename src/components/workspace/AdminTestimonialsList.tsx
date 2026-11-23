@@ -2,33 +2,40 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
 import { moderateTestimonial } from "@/contracts/testimonials";
-import { ApiError } from "@/contracts/common";
+import { userMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface Item {
   id: string;
+  /** Whether the person passed. A comment from someone who did not pass is never published. */
+  passed: boolean;
   quote: string;
   displayName: string;
   certName: string | null;
 }
 
+/**
+ * The owner's queue of stories that members have sent after their exam. Each
+ * row says whether the person passed. A comment from someone who did not pass
+ * (what they found difficult) can only be hidden: it is never published, and
+ * the server refuses to approve it.
+ */
 export function AdminTestimonialsList({ items }: { items: Item[] }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ id: string; status: "approved" | "hidden" } | null>(null);
 
   async function moderate(id: string, status: "approved" | "hidden") {
-    setBusy(id);
+    if (busy) return;
+    setBusy({ id, status });
     try {
       await api(moderateTestimonial, { id, status });
-      toast.success(status === "approved" ? "Approved — now live" : "Hidden");
+      toast.success(status === "approved" ? "The testimonial has been approved." : "The testimonial has been hidden.");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong");
+      toast.error(userMessage(err, "The testimonial could not be updated. Please try again."));
     } finally {
       setBusy(null);
     }
@@ -36,48 +43,43 @@ export function AdminTestimonialsList({ items }: { items: Item[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        No testimonials waiting for review.
+      <p className="rounded-lg border border-dashed border-input p-8 text-small text-muted-foreground">
+        No testimonials are waiting for review.
       </p>
     );
   }
 
   return (
-    <div className="grid gap-3">
+    <ul className="grid gap-3">
       {items.map((t) => (
-        <Card key={t.id}>
-          <CardContent className="grid gap-3">
-            <p className="text-sm leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-            <p className="text-xs text-muted-foreground">
-              — {t.displayName}
-              {t.certName && <> · {t.certName}</>}
-            </p>
-            <div className="flex gap-2">
+        <li key={t.id} className="glass grid gap-3 rounded-lg p-5 text-small">
+          <p className="text-note font-medium">{t.passed ? "Passed" : "Did not pass"}</p>
+          <blockquote className="cb-measure">{t.quote}</blockquote>
+          <p className="text-note text-muted-foreground">
+            {t.displayName}
+            {t.certName && <>, {t.certName}</>}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {t.passed && (
               <Button
                 size="sm"
-                disabled={busy === t.id}
+                loading={busy?.id === t.id && busy.status === "approved"}
                 onClick={() => moderate(t.id, "approved")}
               >
-                {busy === t.id ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Check />
-                )}
-                Approve
+                Approve<span className="sr-only">: the testimonial from {t.displayName}</span>
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy === t.id}
-                onClick={() => moderate(t.id, "hidden")}
-              >
-                <X />
-                Hide
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              loading={busy?.id === t.id && busy.status === "hidden"}
+              onClick={() => moderate(t.id, "hidden")}
+            >
+              Hide<span className="sr-only">: the testimonial from {t.displayName}</span>
+            </Button>
+          </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

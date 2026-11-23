@@ -25,7 +25,7 @@ describe("the pass guarantee", () => {
       .map((path) => ({ path: relative(SRC, path).replace(/\\/g, "/"), text: readFileSync(path, "utf8") }))
       .filter(({ path }) => !EXEMPT.has(path))
       .filter(({ text }) => /pass guarantee|money[- ]back/i.test(text))
-      .filter(({ text }) => !/PASS_GUARANTEE_(?:TERMS|SHORT)\b/.test(text))
+      .filter(({ text }) => !/PASS_GUARANTEE_TERMS\b/.test(text))
       .map(({ path }) => path);
     expect(bare).toEqual([]);
   });

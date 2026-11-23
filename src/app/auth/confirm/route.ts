@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/server/supabase/server";
+import { returnPath } from "@/components/auth/return-path";
 
 /**
  * Email OTP confirmation. Verifies a `token_hash` from a Supabase email link
@@ -21,8 +22,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const nextParam = searchParams.get("next") ?? "/start";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/start";
+  const next = returnPath(searchParams.get("next"), origin) ?? "/start";
 
   if (tokenHash && type) {
     const supabase = await createClient();
@@ -35,6 +35,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Invalid or expired link — send them to sign in with an error flag.
+  // The link is not valid or has expired: the sign-in page says so and offers a new one.
   return NextResponse.redirect(`${origin}/login?error=auth`);
 }

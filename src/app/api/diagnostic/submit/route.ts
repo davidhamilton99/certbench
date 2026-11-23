@@ -5,6 +5,7 @@ import type { DomainBreakdown, GradedResponse } from "@/contracts/quiz";
 import { getQuestionsByIds } from "@/server/data/questions";
 import { listDomains } from "@/server/data/certifications";
 import { completeAttempt, getAttempt } from "@/server/data/diagnostics";
+import { requireCertAccess } from "@/server/data/enrollments";
 import {
   recomputeAndSnapshotReadiness,
   updateQuestionPerformanceForAnswers,
@@ -16,22 +17,34 @@ export const POST = defineEndpoint(submitDiagnostic, {
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
 
+    // The member reads these sentences as they are written.
     const attempt = await getAttempt(db, user.id, input.attemptId);
-    if (!attempt) throw new ApiError("not_found", "Attempt not found");
+    if (!attempt) throw new ApiError("not_found", "This diagnostic could not be found. Please start it again.");
+    // The attempt's exam must be in the member's plan: nothing is graded, and
+    // no answer or explanation is returned, for an exam that is not.
+    await requireCertAccess(db, user.id, attempt.certificationId);
     if (attempt.isComplete)
-      throw new ApiError("conflict", "Attempt already submitted");
+      throw new ApiError("conflict", "This diagnostic has already been submitted.");
 
     // Only grade answers for questions that belong to this attempt.
     const allowedIds = new Set(attempt.progressState?.questionIds ?? []);
-    const answers = input.answers.filter((a) => allowedIds.has(a.questionId));
-    if (answers.length === 0)
-      throw new ApiError("validation_failed", "No valid answers for this attempt");
+    const offered = input.answers.filter((a) => allowedIds.has(a.questionId));
 
-    const questions = await getQuestionsByIds(
-      db,
-      answers.map((a) => a.questionId)
-    );
+    // The snapshot's ids were sent by the member's own browser (the progress
+    // route stores the snapshot as sent), so they do not prove that a question
+    // belongs to this attempt. Only questions of the attempt's own exam are
+    // graded: no other exam's answers or explanations are returned, and no
+    // answer is filed under the wrong exam.
+    const questions = (
+      await getQuestionsByIds(
+        db,
+        offered.map((a) => a.questionId)
+      )
+    ).filter((q) => q.certification_id === attempt.certificationId);
     const questionById = new Map(questions.map((q) => [q.id, q]));
+    const answers = offered.filter((a) => questionById.has(a.questionId));
+    if (answers.length === 0)
+      throw new ApiError("validation_failed", "None of the answers that were sent belong to this diagnostic.");
 
     // Grade server-side against correct_index.
     const graded: GradedResponse[] = answers.flatMap((a) => {

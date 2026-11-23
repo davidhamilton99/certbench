@@ -54,7 +54,7 @@ describe("computeReadinessTrend", () => {
     expect(trend?.delta).toBe(9.7);
   });
 
-  it("ignores snapshots newer than the clock (skew defence)", () => {
+  it("ignores snapshots newer than the clock (skew defense)", () => {
     const snapshots = [
       {
         overall_score: 90,

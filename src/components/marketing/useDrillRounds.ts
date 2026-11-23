@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { createClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api-client";
+import { hasSessionCookie, loadBrowserClient } from "@/lib/supabase-lazy";
 import { identifyUser, track } from "@/lib/analytics";
-import { getDrillProgress, saveDrillProgress } from "@/contracts/tools";
+// The endpoints by name only: their schemas arrive with the first request, so
+// a drill page does not carry the schema library in its first load.
+import { getDrillProgress, saveDrillProgress } from "@/contracts/client";
 import {
   EMPTY_PROGRESS,
   mergeProgress,
@@ -52,6 +54,12 @@ export type LinkMethod = "email_signup" | "email_login";
 
 /** Save to the account after this many unsaved answers (plus at round end). */
 const SAVE_EVERY = 5;
+
+/**
+ * Browsers allow a request to outlive its page only while the bodies of all
+ * such requests stay under 64 KB. This keeps well inside that.
+ */
+const KEEPALIVE_MAX_BYTES = 60_000;
 
 const storageKey = (tool: DrillTool) => `cb_drill_${tool}`;
 
@@ -109,6 +117,26 @@ function freshRound(ids: readonly string[], progress: DrillProgress, size: numbe
 }
 
 /**
+ * Who is signed in on this browser, or null for a visitor. A browser that
+ * holds no session cookie has nobody signed in, and is answered at once: the
+ * sign-in client is a large script, and most visitors to a free drill would
+ * fetch it only to learn that they are signed out. It is loaded when a cookie
+ * is there to read.
+ */
+async function readSession(): Promise<{ uid: string; email?: string } | null> {
+  if (!hasSessionCookie()) return null;
+  try {
+    const supabase = await loadBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    return user ? { uid: user.id, email: user.email } : null;
+  } catch {
+    // The sign-in service could not be read: the round is played as a visitor's.
+    return null;
+  }
+}
+
+/**
  * Drives a free drill in rounds. Anonymous visitors get one round; after it,
  * `gated` is true and the drill shows the round reveal with an inline signup.
  * Signed-in visitors get unlimited rounds, each planned from their misses, with
@@ -136,6 +164,12 @@ export function useDrillRounds({
   const [account, setAccount] = useState<AccountSave>("none");
   /** Progress was just carried into the account (shown once as a confirmation). */
   const [linked, setLinked] = useState(false);
+  /**
+   * The round in play was started by a press on this page ("Start round 2", or
+   * an account made at the end of round 1), not found in progress as the page
+   * loaded. Its first question may then take the keyboard's focus.
+   */
+  const [startedHere, setStartedHere] = useState(false);
 
   // The source of truth for every handler, updated synchronously: a drill can
   // record then advance in one click, or advance from a timer set before the
@@ -153,11 +187,16 @@ export function useDrillRounds({
   );
 
   const saveToAccount = useCallback(
-    async (p: DrillProgress) => {
+    async (p: DrillProgress, leaving = false) => {
       unsaved.current = 0;
       setAccount("saving");
       try {
-        await api(saveDrillProgress, { tool, progress: p });
+        const input = { tool, progress: p };
+        // A save made as the tab is hidden may be the last thing the page
+        // does. The browser lets a request outlive the page only when its
+        // body is small, so it is asked for only then.
+        const keepalive = leaving && JSON.stringify(input).length < KEEPALIVE_MAX_BYTES;
+        await api(saveDrillProgress, input, keepalive ? { keepalive: true } : undefined);
         setAccount("saved");
       } catch {
         setAccount("error");
@@ -194,15 +233,9 @@ export function useDrillRounds({
     let cancelled = false;
     (async () => {
       const local = readLocal(tool);
-      let uid: string | null = null;
-      let email: string | undefined;
-      try {
-        const { data } = await createClient().auth.getSession();
-        uid = data.session?.user.id ?? null;
-        email = data.session?.user.email;
-      } catch {
-        /* auth unreachable — treat as anonymous */
-      }
+      const person = await readSession();
+      const uid = person?.uid ?? null;
+      const email = person?.email;
 
       if (!uid) {
         if (cancelled) return;
@@ -252,7 +285,7 @@ export function useDrillRounds({
     function onHide() {
       if (document.visibilityState !== "hidden") return;
       const { userId, progress } = cur.current;
-      if (userId && unsaved.current > 0) void saveToAccount(progress);
+      if (userId && unsaved.current > 0) void saveToAccount(progress, true);
     }
     document.addEventListener("visibilitychange", onHide);
     return () => document.removeEventListener("visibilitychange", onHide);
@@ -315,6 +348,7 @@ export function useDrillRounds({
     if (!enabled || !uid) return;
     commit({ ...cur.current, round: freshRound(ids, p, size) });
     setLinked(false);
+    setStartedHere(true);
   }, [enabled, ids, size, commit]);
 
   /**
@@ -329,6 +363,7 @@ export function useDrillRounds({
       const { merged } = await adopt(uid, { v: 1, owner, progress: p, round: r });
       commit({ userId: uid, owner: uid, progress: merged, round: freshRound(ids, merged, size) });
       setLinked(true);
+      setStartedHere(true);
       await saveToAccount(merged);
     },
     [tool, adopt, commit, ids, size, saveToAccount]
@@ -351,6 +386,8 @@ export function useDrillRounds({
     progress,
     account,
     linked,
+    /** The round in play was started by a press on this page, not found in progress at load. */
+    startedHere,
     nextItem,
     record,
     advance,

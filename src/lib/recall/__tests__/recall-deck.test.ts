@@ -6,9 +6,12 @@ import { acceptableAnswers, normalizeAnswer } from "../normalize";
 import {
   autoDeckConfig,
   buildDeck,
+  explainRow,
   generateRecallQuestion,
   gradeRecall,
   isDataRate,
+  otherAnswers,
+  otherAnswersSentence,
   type RecallDeckConfig,
   type Rng,
 } from "../recall-deck";
@@ -84,7 +87,7 @@ describe("buildDeck validation", () => {
     answer: { key: "def", label: "definition" },
   };
 
-  it("throws on a column that isn't in the table", () => {
+  it("throws on a column that is not in the table", () => {
     expect(() =>
       buildDeck({ ...base, answer: { key: "nope", label: "x" } }, synthetic)
     ).toThrow(/not in table/);
@@ -175,10 +178,137 @@ describe("detail line", () => {
   );
 
   it("names a bare number by its column: a count number-first, an identifier label-first", () => {
-    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).detail).toBe(
-      "2 usable hosts · default AD 1 · port 49 · Point-to-point links"
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.255.252" }).details).toEqual([
+      "2 usable hosts",
+      "default AD 1",
+      "port 49",
+      "Point-to-point links",
+    ]);
+    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).details[0]).toBe("1,022 usable hosts");
+  });
+
+  it("lists one detail for each detail column that has a value, and none for a deck without details", () => {
+    const sparse: ReferenceTable = {
+      ...subnets,
+      entries: [...subnets.entries, { columns: { cidr: "/28", mask: "255.255.255.240", hosts: "14", ad: "", port: "", note: "" } }],
+    };
+    const some = buildDeck({ ...deck.config, id: "sparse" }, sparse);
+    expect(generateRecallQuestion(some, seeded(1), { itemId: "255.255.255.240" }).details).toEqual(["14 usable hosts"]);
+    const none = buildDeck({ ...deck.config, id: "plain", detailKeys: undefined }, subnets);
+    expect(generateRecallQuestion(none, seeded(1), { itemId: "255.255.255.252" }).details).toEqual([]);
+  });
+});
+
+describe("explanation in sentences", () => {
+  const ports: ReferenceTable = {
+    id: "ports",
+    title: "Ports",
+    description: "",
+    columnHeaders: [
+      { key: "port", label: "Port" },
+      { key: "protocol", label: "Protocol" },
+      { key: "service", label: "Service / Use" },
+      { key: "purpose", label: "Purpose" },
+    ],
+    entries: [
+      { columns: { port: "22", protocol: "SSH", service: "Secure Shell: encrypted remote access", purpose: "Remote shell access" } },
+      { columns: { port: "67/68", protocol: "DHCP", service: "Dynamic Host Configuration Protocol (server/client)", purpose: "DNS and gateway settings" } },
+      { columns: { port: "443", protocol: "HTTPS", service: "", purpose: "Secure web browsing" } },
+      { columns: { port: "3389", protocol: "RDP", service: "N/A (see the notes)", purpose: "Windows remote desktop" } },
+    ],
+  };
+  const base: RecallDeckConfig = {
+    id: "p",
+    label: "p",
+    tableId: "ports",
+    mode: "choice",
+    ask: { key: "protocol", label: "protocol" },
+    answer: { key: "port", label: "port" },
+    bidirectional: true,
+    detailKeys: ["service"],
+  };
+  const row = (protocol: string) => ports.entries.find((e) => e.columns.protocol === protocol)!.columns;
+
+  it("fills the deck's template from the row", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}." } };
+    expect(explainRow(config, row("SSH"))).toBe("SSH uses port 22.");
+    expect(explainRow(config, row("HTTPS"))).toBe("HTTPS uses port 443.");
+  });
+
+  it("gives a row its own sentences where its cells do not fit the template", () => {
+    const config: RecallDeckConfig = {
+      ...base,
+      explain: {
+        template: "{protocol} uses port {port}.",
+        rows: { DHCP: "{protocol} uses ports 67 and 68. The server uses port 67, and the client uses port 68." },
+      },
+    };
+    expect(explainRow(config, row("DHCP"))).toBe(
+      "DHCP uses ports 67 and 68. The server uses port 67, and the client uses port 68."
     );
-    expect(generateRecallQuestion(deck, seeded(1), { itemId: "255.255.252.0" }).detail).toMatch(/^1,022 usable hosts/);
+    // The other rows keep the template.
+    expect(explainRow(config, row("SSH"))).toBe("SSH uses port 22.");
+  });
+
+  it("names a row by the column the deck says, the cue column when it does not say", () => {
+    const rows = { "22": "Port 22 belongs to SSH." };
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}.", rows, by: "port" } }, row("SSH"))).toBe(
+      "Port 22 belongs to SSH."
+    );
+    // By the cue column (the protocol), "22" names no row.
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}.", rows } }, row("SSH"))).toBe(
+      "SSH uses port 22."
+    );
+  });
+
+  it("sets a cell that opens with a capital inside a sentence, and leaves an acronym as it is", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} provides {purpose:lowerFirst}." } };
+    expect(explainRow(config, row("SSH"))).toBe("SSH provides remote shell access.");
+    expect(explainRow(config, row("DHCP"))).toBe("DHCP provides DNS and gateway settings.");
+    // Only where the template asks for it.
+    expect(explainRow({ ...base, explain: { template: "{purpose} is what {protocol} provides." } }, row("SSH"))).toBe(
+      "Remote shell access is what SSH provides."
+    );
+  });
+
+  it("gives no explanation when the deck has no template", () => {
+    expect(explainRow(base, row("SSH"))).toBeNull();
+  });
+
+  it("gives no explanation, rather than a sentence with a hole, when a cell it names is missing", () => {
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}. It is {service}." } };
+    // A blank cell, a placeholder cell and a column the table does not have.
+    expect(explainRow(config, row("HTTPS"))).toBeNull();
+    expect(explainRow(config, row("RDP"))).toBeNull();
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses {transport}." } }, row("SSH"))).toBeNull();
+    // A place written wrongly would be printed with its braces.
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses {port:plural}." } }, row("SSH"))).toBeNull();
+    expect(explainRow({ ...base, explain: { template: "{protocol} uses port {port}}." } }, row("SSH"))).toBeNull();
+  });
+
+  it("does not take a name that every object carries for a cell or for a row's own sentences", () => {
+    expect(explainRow({ ...base, explain: { template: "{protocol} is {constructor}." } }, row("SSH"))).toBeNull();
+    const config: RecallDeckConfig = { ...base, explain: { template: "{protocol} uses port {port}.", rows: {}, by: "purpose" } };
+    expect(explainRow(config, { ...row("SSH"), purpose: "toString" })).toBe("SSH uses port 22.");
+  });
+
+  it("puts the explanation on the question, the same one whichever way round it is asked", () => {
+    const explained = buildDeck({ ...base, explain: { template: "{protocol} uses port {port}." } }, ports);
+    const asked = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      const q = generateRecallQuestion(explained, seeded(seed), { itemId: "SSH" });
+      asked.add(q.askLabel);
+      expect(q.explanation).toBe("SSH uses port 22.");
+    }
+    expect(asked).toEqual(new Set(["protocol", "port"]));
+    expect(generateRecallQuestion(explained, seeded(1), { itemId: "SSH", noSwap: true }).explanation).toBe("SSH uses port 22.");
+  });
+
+  it("leaves the explanation off the question for a deck without a template", () => {
+    const plain = buildDeck(base, ports);
+    const q = generateRecallQuestion(plain, seeded(1), { itemId: "SSH" });
+    expect(q).not.toHaveProperty("explanation");
+    expect(q.details).toEqual(["Secure Shell: encrypted remote access"]);
   });
 });
 
@@ -229,7 +359,8 @@ describe("generateRecallQuestion (choice)", () => {
 
   it("surfaces detail on the chosen row", () => {
     const q = generateRecallQuestion(deck, seeded(4));
-    expect(["crypto", "network", "iam"]).toContain(q.detail);
+    expect(q.details).toHaveLength(1);
+    expect(["crypto", "network", "iam"]).toContain(q.details[0]);
   });
 
   it("tags each question with a stable item id from the cue column", () => {
@@ -355,6 +486,155 @@ describe("duplicate-cue safety", () => {
   });
 });
 
+describe("a cue that names more than one row", () => {
+  // RADIUS has a row for its ports and a row for its legacy ports, as the
+  // Security+ ports table has. The question deals one of the two.
+  const table: ReferenceTable = {
+    id: "two-rows",
+    title: "Two rows",
+    description: "",
+    columnHeaders: [
+      { key: "protocol", label: "Protocol" },
+      { key: "port", label: "Port" },
+    ],
+    entries: [
+      { columns: { protocol: "RADIUS", port: "1645/1646" } },
+      { columns: { protocol: "RADIUS", port: "1812/1813" } },
+      { columns: { protocol: "SSH", port: "22" } },
+      { columns: { protocol: "HTTPS", port: "443" } },
+      { columns: { protocol: "TACACS+", port: "49" } },
+    ],
+  };
+  const config: RecallDeckConfig = {
+    id: "two",
+    label: "Two",
+    tableId: "two-rows",
+    mode: "choice",
+    ask: { key: "protocol", label: "protocol" },
+    answer: { key: "port", label: "port" },
+    bidirectional: true,
+    accept: "numeric-parts",
+  };
+  const deck = buildDeck(config, table);
+
+  /** One typed question about RADIUS for each of its rows (a typed answer is asked the deck's own way). */
+  function radiusQuestions() {
+    const dealt = new Map<string, ReturnType<typeof generateRecallQuestion>>();
+    for (let seed = 0; seed < 60; seed++) {
+      const q = generateRecallQuestion(deck, seeded(seed), { itemId: "RADIUS", noSwap: true });
+      dealt.set(q.answer, q);
+    }
+    return dealt;
+  }
+
+  it("accepts a typed answer from any of the cue's rows, whichever row was dealt", () => {
+    const dealt = radiusQuestions();
+    expect([...dealt.keys()].sort()).toEqual(["1645/1646", "1812/1813"]);
+    for (const [answer, q] of dealt) {
+      // The port that every candidate learns, and the legacy one, whole or as one of the pair.
+      for (const typed of ["1812", "1813", "1812/1813", "1645", "1646", "1645/1646", " 1812 "]) {
+        expect(gradeRecall(q, typed), `dealt ${answer}, typed ${typed}`).toBe(true);
+      }
+      for (const typed of ["49", "22", "1814", ""]) {
+        expect(gradeRecall(q, typed), `dealt ${answer}, typed ${typed}`).toBe(false);
+      }
+      // The row that was dealt is still the one the question shows as its answer.
+      expect(q.acceptable[0]).toBe(answer);
+    }
+  });
+
+  it("accepts nothing more for a cue that names one row", () => {
+    const q = generateRecallQuestion(deck, seeded(1), { itemId: "SSH", noSwap: true });
+    expect(q.acceptable).toEqual(["22"]);
+    expect(gradeRecall(q, "1812")).toBe(false);
+  });
+
+  it("accepts only the whole answers of the cue's rows where the deck grades exactly", () => {
+    const exact = buildDeck({ ...config, id: "exact", accept: "exact" }, table);
+    const q = generateRecallQuestion(exact, seeded(1), { itemId: "RADIUS", noSwap: true });
+    expect([...q.acceptable].sort()).toEqual(["1645/1646", "1812/1813"]);
+  });
+
+  it("names the other answers of a cue from the two cells a question showed", () => {
+    expect(otherAnswers(deck, "RADIUS", "1645/1646")).toEqual(["1812/1813"]);
+    expect(otherAnswers(deck, "RADIUS", "1812/1813")).toEqual(["1645/1646"]);
+    // One row for the cue: nothing else is correct.
+    expect(otherAnswers(deck, "SSH", "22")).toEqual([]);
+    // Asked the other way round, the port is the cue, and one protocol has it.
+    expect(otherAnswers(deck, "1645/1646", "RADIUS")).toEqual([]);
+    // Two cells that are not a row of the deck.
+    expect(otherAnswers(deck, "RADIUS", "22")).toEqual([]);
+    expect(otherAnswers(deck, "LDAP", "389")).toEqual([]);
+  });
+
+  it("reads the other way round only where the deck asks both ways", () => {
+    const shared: ReferenceTable = {
+      ...table,
+      entries: [
+        { columns: { protocol: "SSH", port: "22" } },
+        { columns: { protocol: "SFTP", port: "22" } },
+        { columns: { protocol: "HTTPS", port: "443" } },
+      ],
+    };
+    expect(otherAnswers(buildDeck(config, shared), "22", "SSH")).toEqual(["SFTP"]);
+    expect(otherAnswers(buildDeck({ ...config, bidirectional: false }, shared), "22", "SSH")).toEqual([]);
+  });
+
+  it("says which answer the question asked for, and that the other is correct too", () => {
+    expect(otherAnswersSentence("RADIUS", "1645/1646", ["1812/1813"])).toBe(
+      "This question asked for 1645/1646. Another correct answer for RADIUS is 1812/1813."
+    );
+    expect(otherAnswersSentence("22", "SSH", ["SCP", "SFTP"])).toBe(
+      "This question asked for SSH. Other correct answers for 22 are SCP and SFTP."
+    );
+    expect(otherAnswersSentence("22", "SSH", ["SCP", "SFTP", "Telnet"])).toBe(
+      "This question asked for SSH. Other correct answers for 22 are SCP, SFTP and Telnet."
+    );
+    expect(otherAnswersSentence("SSH", "22", [])).toBeNull();
+  });
+
+  it("holds for every such cue in every deck of every exam, RADIUS in the Security+ ports among them", () => {
+    const slugs = ["security-plus-sy0-701", "network-plus-n10-009", "a-plus-core1-220-1201", "a-plus-core2-220-1202"];
+    const found: string[] = [];
+    for (const slug of slugs) {
+      for (const real of getRecallDecks(slug)) {
+        const { ask, answer } = real.config;
+        for (const cue of new Set(real.rows.map((row) => row[ask.key]))) {
+          const answers = [...new Set(real.rows.filter((row) => row[ask.key] === cue).map((row) => row[answer.key]))];
+          if (answers.length < 2) continue;
+          found.push(`${slug}/${real.config.id}: ${cue}`);
+          for (const dealt of answers) {
+            const others = otherAnswers(real, cue, dealt);
+            expect([dealt, ...others].sort(), `${cue}: ${dealt}`).toEqual([...answers].sort());
+            expect(otherAnswersSentence(cue, dealt, others), `${cue}: ${dealt}`).toMatch(
+              /^This question asked for .+\. (?:Another correct answer for .+ is|Other correct answers for .+ are) .+\.$/
+            );
+          }
+          // Whichever row a typed question deals, the answer of every row is accepted.
+          for (let seed = 0; seed < 40; seed++) {
+            const q = generateRecallQuestion(real, seeded(seed), { itemId: cue, noSwap: true });
+            for (const valid of answers) expect(gradeRecall(q, valid), `${cue}: dealt ${q.answer}, typed ${valid}`).toBe(true);
+          }
+        }
+      }
+    }
+    expect(found).toContain("security-plus-sy0-701/sec-ports: RADIUS");
+  });
+
+  it("marks a typed 1812 correct for RADIUS on the real Security+ ports deck, whichever row is dealt", () => {
+    const ports = getRecallDecks("security-plus-sy0-701").find((d) => d.config.id === "sec-ports")!;
+    const dealt = new Set<string>();
+    for (let seed = 0; seed < 60; seed++) {
+      const q = generateRecallQuestion(ports, seeded(seed), { itemId: "RADIUS", noSwap: true });
+      dealt.add(q.answer);
+      expect(gradeRecall(q, "1812"), `dealt ${q.answer}`).toBe(true);
+      expect(gradeRecall(q, "1645"), `dealt ${q.answer}`).toBe(true);
+      expect(gradeRecall(q, "49"), `dealt ${q.answer}`).toBe(false);
+    }
+    expect([...dealt].sort()).toEqual(["1645/1646", "1812/1813"]);
+  });
+});
+
 describe("confusable distractors", () => {
   it("draws distractors from the answer's category when grouped", () => {
     const table: ReferenceTable = {
@@ -444,6 +724,23 @@ describe("all recall decks (every cert)", () => {
     );
   });
 
+  it("names every deck and every table in sentence case, with 'and' written out", () => {
+    // These names are the tabs of the Recall and Reference pages.
+    const names = slugs.flatMap((slug) => [
+      ...referenceRegistry[slug].map((table) => table.title),
+      ...getRecallDecks(slug).map((deck) => deck.config.label),
+    ]);
+    expect(names.length).toBeGreaterThanOrEqual(48);
+    // A proper name keeps its capital wherever it stands; an abbreviation (OSI, AAA, CIDR, CLI) is all capitals.
+    const PROPER = /^(?:Windows|Linux|Wi-Fi)$/;
+    for (const name of names) {
+      expect(name, name).toMatch(/^[A-Z]/);
+      expect(name, name).not.toMatch(/[&/]/);
+      const capitalized = name.split(" ").slice(1).filter((word) => /^[A-Z][a-z]/.test(word) && !PROPER.test(word));
+      expect(capitalized, name).toEqual([]);
+    }
+  });
+
   it("no deck in any cert drills a placeholder like N/A", () => {
     for (const slug of slugs) {
       for (const deck of getRecallDecks(slug)) {
@@ -503,7 +800,7 @@ describe("all recall decks (every cert)", () => {
     const deck = getRecallDecks("a-plus-core2-220-1202").find((d) => d.config.tableId === "windows-tools")!;
     expect(deck.config.id).toBe("a2-tools");
     const q = generateRecallQuestion(deck, seeded(3), { itemId: "View system, application, and security event logs" });
-    expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", detail: "eventvwr.msc" });
+    expect(q).toMatchObject({ answer: "Event Viewer", answerLabel: "tool", details: ["eventvwr.msc"] });
   });
 
   it("drills OSI layers by name and number, both ways", () => {
@@ -562,6 +859,17 @@ describe("acronyms data integrity", () => {
   it("acronyms are unique, so the drill is never ambiguous", () => {
     const acronyms = table.entries.map((e) => e.columns.acronym);
     expect(new Set(acronyms).size).toBe(acronyms.length);
+  });
+
+  it("names its study groupings in sentence case, with 'and' written out", () => {
+    // The grouping is printed in the Category column of the public acronym list and of the Reference page.
+    const groupings = [...new Set(table.entries.map((e) => e.columns.category))];
+    expect(groupings.length).toBeGreaterThanOrEqual(10);
+    for (const name of groupings) {
+      expect(name, name).toMatch(/^[A-Z]/);
+      expect(name, name).not.toMatch(/&/);
+      expect(name.split(" ").slice(1).filter((word) => /^[A-Z][a-z]/.test(word)), name).toEqual([]);
+    }
   });
 
   it("expansions are unique too", () => {

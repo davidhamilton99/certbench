@@ -7,10 +7,10 @@ export interface RelatedLink {
   note: string;
 }
 
-/** Links to related free pages, as tiles: useful next steps, and they spread link equity. */
+/** Links to related free pages, as ruled rows: the page's name, and one line about it. */
 export function RelatedLinks({
   links,
-  title = "Keep practising — free",
+  title = "More free practice",
   className,
 }: {
   links: RelatedLink[];
@@ -19,11 +19,10 @@ export function RelatedLinks({
 }) {
   if (links.length === 0) return null;
   return (
-    <section className={cn("mt-14", className)}>
-      <h2 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">{title}</h2>
+    <section className={cn("mt-16 sm:mt-24", className)}>
+      <h2 className="cb-subsection border-t border-foreground/80 pt-5">{title}</h2>
       <TileGrid
-        className="mt-5"
-        columns={2}
+        className="mt-6"
         groups={[{ tiles: links.map((r) => ({ href: r.href, title: r.label, detail: r.note })) }]}
       />
     </section>

@@ -22,7 +22,7 @@ export const securityPlusScenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "The NIST incident response lifecycle follows: Preparation → Detection & Analysis → Containment → Eradication → Recovery → Post-Incident Activity (Lessons Learned). Preparation is always first as it involves establishing the response capability before incidents occur.",
+      "The NIST incident response lifecycle runs in this order: Preparation, Detection and Analysis, Containment, Eradication, Recovery, and Post-Incident Activity (Lessons Learned). Preparation is always first as it involves establishing the response capability before incidents occur.",
   },
   {
     type: "ordering",
@@ -36,13 +36,13 @@ export const securityPlusScenarios: PbqScenario[] = [
       "Identify assets and their value",
       "Identify threats to those assets",
       "Identify vulnerabilities",
-      "Analyse likelihood and impact",
+      "Analyze likelihood and impact",
       "Determine risk level",
       "Select risk treatment option",
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "Risk assessment follows a logical progression: first identify what you're protecting (assets), then what could harm them (threats), then how they could be exploited (vulnerabilities), analyse probability and impact, determine the risk level, and finally decide how to handle the risk (accept, mitigate, transfer, or avoid).",
+      "Risk assessment follows a logical progression: first identify what you are protecting (assets), then what could harm them (threats), then how they could be exploited (vulnerabilities), analyze probability and impact, determine the risk level, and finally decide how to handle the risk (accept, mitigate, transfer, or avoid).",
   },
   {
     type: "ordering",
@@ -123,11 +123,11 @@ export const securityPlusScenarios: PbqScenario[] = [
       "Injecting client-side scripts into web pages",
       "Intercepting communications between two parties",
       "Corrupting DNS cache with false records",
-      "Gaining higher access than originally authorised",
+      "Gaining higher access than originally authorized",
     ],
     correct_map: [0, 1, 2, 3, 4],
     explanation:
-      "SQL Injection targets database queries through unsanitised input. XSS injects scripts into web content viewed by other users. MITM intercepts and potentially alters communications. DNS Poisoning corrupts cached DNS records to redirect traffic. Privilege escalation exploits flaws to gain elevated permissions.",
+      "SQL Injection targets database queries through unsanitized input. XSS injects scripts into web content viewed by other users. MITM intercepts and potentially alters communications. DNS Poisoning corrupts cached DNS records to redirect traffic. Privilege escalation exploits flaws to gain elevated permissions.",
   },
 
   /* ================================================================ */
@@ -165,7 +165,7 @@ export const securityPlusScenarios: PbqScenario[] = [
     id: "security-controls",
     title: "Classify Security Controls",
     description:
-      "Categorise each security measure by its control type.",
+      "Categorize each security measure by its control type.",
     domain_number: "5.0",
     domain_title: "Security Program Management and Oversight",
     categories: ["Preventive", "Detective", "Corrective"],
@@ -215,7 +215,7 @@ export const securityPlusScenarios: PbqScenario[] = [
     id: "sp-log-types-to-tools",
     title: "Match Log Types to Analysis Tools",
     description:
-      "Match each log type to the tool or system most commonly used to collect and analyse it.",
+      "Match each log type to the tool or system most commonly used to collect and analyze it.",
     domain_number: "4.0",
     domain_title: "Security Operations",
     left: [
@@ -226,14 +226,14 @@ export const securityPlusScenarios: PbqScenario[] = [
       "Flow/NetFlow records",
     ],
     right: [
-      "SIEM (centralised correlation and alerting)",
+      "SIEM (centralized correlation and alerting)",
       "Directory service / RADIUS server logs",
       "DNS sinkhole or passive DNS monitoring",
       "EDR console (CrowdStrike, Defender for Endpoint)",
-      "Network traffic analyser (SolarWinds, ntopng)",
+      "Network traffic analyzer (SolarWinds, ntopng)",
     ],
     correct_map: [0, 1, 2, 3, 4],
     explanation:
-      "Firewall logs are typically fed into a SIEM for centralised correlation across multiple sources. Authentication events are found in directory service or RADIUS logs. DNS query logs are analysed with DNS sinkholes or passive DNS tools to detect C2 callbacks. EDR platforms collect and surface endpoint-level threat data. NetFlow and flow records are analysed by dedicated traffic analysers to identify bandwidth anomalies, DDoS patterns, and lateral movement.",
+      "Firewall logs are typically fed into a SIEM for centralized correlation across multiple sources. Authentication events are found in directory service or RADIUS logs. DNS query logs are analyzed with DNS sinkholes or passive DNS tools to detect C2 callbacks. EDR platforms collect and surface endpoint-level threat data. NetFlow and flow records are analyzed by dedicated traffic analyzers to identify bandwidth anomalies, DDoS patterns, and lateral movement.",
   },
 ];

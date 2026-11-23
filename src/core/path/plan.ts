@@ -51,7 +51,7 @@ export function buildPlan(structure: PathStructure): PathPlan {
     });
   };
 
-  push({ id: "warmup", kind: "warmup", title: "Warm-up", domain: null, objectives: [] });
+  push({ id: "warmup", kind: "warmup", title: "Introductory questions", domain: null, objectives: [] });
 
   let learned = 0;
   let freeThrough = -1;
@@ -100,7 +100,7 @@ export function buildPlan(structure: PathStructure): PathPlan {
   push({
     id: "rehearsal",
     kind: "rehearsal",
-    title: "Exam rehearsal",
+    title: "Practice exam",
     domain: null,
     objectives: allObjectives,
   });

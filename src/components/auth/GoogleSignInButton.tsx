@@ -4,11 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { loadBrowserClient } from "@/lib/supabase-lazy";
 import { SIGNIN_CANCELLED_PARAM } from "@/lib/google-signin";
+import { AUTH_UNREACHABLE, authMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/button";
+import { returnPath } from "./return-path";
+
+/** Shown when Google sign-in could not begin and the service gave no more exact reason. */
+const GOOGLE_NOT_STARTED = "Google sign-in could not be started. Please try again, or use your email address below.";
 
 export function GoogleSignInButton({ next }: { next?: string }) {
   const [loading, setLoading] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [error, setError] = useState("");
   const leaving = useRef(false);
 
   // Sent back from Google without signing in: say so here, and tidy the address.
@@ -37,37 +43,43 @@ export function GoogleSignInButton({ next }: { next?: string }) {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
+  /** The trip to Google did not begin: the button is ready again, and the page says why. */
+  function stay(message: string) {
+    leaving.current = false;
+    setLoading(false);
+    setError(message);
+  }
+
   async function handleGoogleSignIn() {
     leaving.current = true;
     setLoading(true);
     setCancelled(false);
+    setError("");
     track("google_signin_clicked", { page: window.location.pathname });
     const supabase = await loadBrowserClient().catch(() => null);
     if (!supabase) {
-      leaving.current = false;
-      setLoading(false);
+      stay(AUTH_UNREACHABLE);
       return;
     }
 
-    const redirect = next && next.startsWith("/") ? next : "/start";
+    const redirect = returnPath(next, window.location.origin) ?? "/start";
     const back = window.location.pathname + window.location.search;
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}&back=${encodeURIComponent(back)}`,
-      },
-    });
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}&back=${encodeURIComponent(back)}`,
+        },
+      });
+      if (oauthError) stay(authMessage(oauthError, GOOGLE_NOT_STARTED));
+    } catch (err) {
+      stay(authMessage(err, GOOGLE_NOT_STARTED));
+    }
   }
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleGoogleSignIn}
-        disabled={loading}
-        className="w-full"
-      >
+      <Button type="button" variant="outline" onClick={handleGoogleSignIn} loading={loading} className="w-full">
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path
             d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
@@ -86,11 +98,16 @@ export function GoogleSignInButton({ next }: { next?: string }) {
             fill="#EA4335"
           />
         </svg>
-        {loading ? "Redirecting…" : "Continue with Google"}
+        Continue with Google
       </Button>
-      {cancelled && (
-        <p role="status" className="text-sm text-muted-foreground">
-          Google sign-in didn&apos;t finish, and nothing&apos;s lost. Try again, or use your email
+      {error && (
+        <p role="alert" className="text-small text-destructive">
+          {error}
+        </p>
+      )}
+      {cancelled && !error && (
+        <p role="status" className="text-small text-muted-foreground">
+          Google sign-in was not completed, and nothing has been lost. Please try again, or use your email address
           below.
         </p>
       )}

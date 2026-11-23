@@ -5,20 +5,20 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 
-/** Post-result CTA — "convert at the win", shown after a scenario is graded. */
+/** What a page may offer once a lab is graded: a sentence, a note and one way on. */
 export interface PbqUpsell {
   heading: string;
   note: string;
   href: string;
   label: string;
-  /** Analytics label for the funnel, e.g. "public_pbq" / "authed_pbq". */
+  /** The analytics label for the funnel, for example "public_pbq" or "authed_pbq". */
   context?: string;
 }
 
 /**
- * The convert-at-the-win card. Rendered after any PBQ / simulation / topology /
- * threat-hunt is graded, just above the retry/back actions, so the pitch lands
- * on the success — not buried in a pricing page the user never opens.
+ * The offer shown under a lab's score, above the buttons that repeat the lab
+ * or leave it. It is a plain sheet like the others on the page: the one
+ * coloured thing in it is the button.
  */
 export function PbqUpsellCard({ upsell }: { upsell: PbqUpsell }) {
   const context = upsell.context ?? upsell.href;
@@ -28,18 +28,11 @@ export function PbqUpsellCard({ upsell }: { upsell: PbqUpsell }) {
   }, [context]);
 
   return (
-    <div className="rounded-xl border border-primary/40 bg-primary/5 p-5">
-      <h3 className="text-[15px] font-semibold text-foreground">
-        {upsell.heading}
-      </h3>
-      <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-        {upsell.note}
-      </p>
+    <div className="glass rounded-lg p-5">
+      <h3 className="text-base font-semibold leading-snug">{upsell.heading}</h3>
+      <p className="cb-measure-sm mt-1 text-small text-muted-foreground">{upsell.note}</p>
       <Button asChild className="mt-3">
-        <Link
-          href={upsell.href}
-          onClick={() => track("upsell_clicked", { context, href: upsell.href })}
-        >
+        <Link href={upsell.href} onClick={() => track("upsell_clicked", { context, href: upsell.href })}>
           {upsell.label}
         </Link>
       </Button>

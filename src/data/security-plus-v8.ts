@@ -96,7 +96,7 @@ export const SY0_701_OBJECTIVES_PER_DOMAIN = [4, 5, 4, 9, 6];
 
 export interface AiTopic {
   term: string;
-  /** One line, in our words. */
+  /** One sentence that defines the term, in our words. The pages print these as a glossary. */
   gist: string;
 }
 
@@ -104,55 +104,55 @@ export interface AiTopic {
 export const SY0_801_AI_TOPICS: AiTopic[] = [
   {
     term: "Model manipulation",
-    gist: "Tampering with a trained model itself, its weights, parameters or files, so it behaves the way an attacker wants.",
+    gist: "Model manipulation is tampering with a trained model itself (its weights, parameters or files) so that it behaves as an attacker wants.",
   },
   {
     term: "Poisoning",
-    gist: "Slipping corrupted samples into the data a model learns from, so it learns the wrong lesson, often with a hidden trigger.",
+    gist: "Poisoning is the insertion of corrupted samples into the data that a model learns from, so that it learns the wrong lesson, often with a hidden trigger.",
   },
   {
     term: "Prompt injection",
-    gist: "Crafted input, typed in or hidden in content the AI reads, that overrides the instructions it was given.",
+    gist: "Prompt injection is crafted input, typed in or hidden in content that the AI reads, which overrides the instructions that the AI was given.",
   },
   {
     term: "Data loss",
-    gist: "Sensitive data leaving the organization through AI use: pasted into a public tool, kept in its history or exposed in its answers.",
+    gist: "Data loss is sensitive data leaving the organization through the use of AI: pasted into a public tool, kept in its history or exposed in its answers.",
   },
   {
     term: "Bias",
-    gist: "Skewed training data or design that makes a model's results unfair to some people.",
+    gist: "Bias is a skew in a model's training data or design that makes its results unfair to some people.",
   },
   {
     term: "Explainability",
-    gist: "Whether anyone can tell why a model produced its output. Without it, a decision can't be audited or challenged.",
+    gist: "Explainability is the degree to which people can tell why a model produced its output, without which a decision cannot be audited or challenged.",
   },
   {
     term: "Hallucinations",
-    gist: "Confident output that is false, such as an invented package name, citation or vulnerability.",
+    gist: "Hallucinations are confident outputs that are false, such as an invented package name, citation or vulnerability.",
   },
   {
     term: "Jailbreaking",
-    gist: "Prompts built to talk a model out of its safety rules, so it produces what it's meant to refuse.",
+    gist: "Jailbreaking is the use of prompts built to talk a model out of its safety rules, so that it produces what it is meant to refuse.",
   },
   {
     term: "Evasion",
-    gist: "Inputs crafted at use time to slip past an AI-based control, such as malware altered until a detector calls it clean.",
+    gist: "Evasion is the crafting of inputs at the time of use to get past an AI-based control, such as malware altered until a detector calls it clean.",
   },
   {
     term: "Privacy",
-    gist: "Personal data a model was trained on or is given, and whether it can be drawn back out.",
+    gist: "Privacy concerns the personal data that a model was trained on or is given, and whether that data can be drawn back out.",
   },
   {
     term: "Ethical considerations",
-    gist: "Whether a use of AI is fair, transparent and accountable to the people it affects, beyond whether it's legal or secure.",
+    gist: "Ethical considerations are the questions of whether a use of AI is fair, transparent and accountable to the people it affects, beyond whether it is legal or secure.",
   },
   {
     term: "Session hijacking",
-    gist: "Taking over someone's authenticated session with an AI service, to read their history or act as them.",
+    gist: "Session hijacking is taking over someone's authenticated session with an AI service, in order to read their history or act as them.",
   },
   {
     term: "Code execution",
-    gist: "An AI tool or agent that runs code or commands, so a manipulated prompt or output becomes code running on a real system.",
+    gist: "Code execution is the running of code or commands by an AI tool or agent, so that a manipulated prompt or output becomes code running on a real system.",
   },
 ];
 
@@ -214,7 +214,7 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Model manipulation", "Data loss", "Evasion", "Bias"],
     correctIndex: 1,
     explanation:
-      "Sensitive data has left the company's control and may be kept or used for training: data loss. Typical controls are an approved AI service that doesn't retain data, data loss prevention rules and a clear acceptable use policy.",
+      "Sensitive data has left the company's control and may be kept or used for training: data loss. Typical controls are an approved AI service that does not retain data, data loss prevention rules and a clear acceptable use policy.",
   },
   {
     topic: "Hallucinations",
@@ -232,16 +232,16 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Bias", "Hallucinations", "Poisoning", "Privacy"],
     correctIndex: 0,
     explanation:
-      "The model learned the skew in its historical training data and repeats it: bias. Nobody attacked the data, so it isn't poisoning; the history itself was skewed. Test outputs across groups and review training data before deployment.",
+      "The model learned the skew in its historical training data and repeats it: bias. Nobody attacked the data, so it is not poisoning; the history itself was skewed. Test outputs across groups and review training data before deployment.",
   },
   {
     topic: "Explainability",
     questionText:
-      "A bank's AI model declines a customer's loan. The customer and a regulator ask why, and the bank's team can't say which factors drove the decision. Which concern does this BEST describe?",
+      "A bank's AI model declines a customer's loan. The customer and a regulator ask why, and the bank's team cannot say which factors drove the decision. Which concern does this BEST describe?",
     options: ["Data loss", "Evasion", "Code execution", "Explainability"],
     correctIndex: 3,
     explanation:
-      "Explainability is whether people can tell why a model reached its output. Without it, a decision can't be audited, challenged or shown to be fair.",
+      "Explainability is whether people can tell why a model reached its output. Without it, a decision cannot be audited, challenged or shown to be fair.",
   },
   {
     topic: "Privacy",
@@ -259,7 +259,7 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
     options: ["Evasion", "Session hijacking", "Ethical considerations", "Poisoning"],
     correctIndex: 2,
     explanation:
-      "Fairness, transparency and accountability to the people affected are ethical considerations, and they apply even when a use is legal. They're why many organizations review a use of AI before it makes decisions about people.",
+      "Fairness, transparency and accountability to the people affected are ethical considerations, and they apply even when a use is legal. They are why many organizations review a use of AI before it makes decisions about people.",
   },
   {
     topic: "Session hijacking",
@@ -285,12 +285,12 @@ export const SY0_801_AI_QUESTIONS: AiQuestion[] = [
       "After finding staff pasting customer records into public AI tools, a security manager wants to cut the risk while still letting staff use AI. Which of the following would BEST do that?",
     options: [
       "Block all outbound HTTPS traffic from the network",
-      "Provide an approved AI service that doesn't retain data, and add DLP rules for public AI sites",
+      "Provide an approved AI service that does not retain data, and add DLP rules for public AI sites",
       "Retrain the company's own models every month",
       "Require an explainability report for every prompt",
     ],
     correctIndex: 1,
     explanation:
-      "A sanctioned tool that doesn't keep their data, plus data loss prevention on unsanctioned AI sites, cuts the risk while keeping AI useful. Blocking all HTTPS would stop the business, and the other options don't address data leaving through prompts.",
+      "A sanctioned tool that does not keep their data, plus data loss prevention on unsanctioned AI sites, cuts the risk while keeping AI useful. Blocking all HTTPS would stop the business, and the other options do not address data leaving through prompts.",
   },
 ];

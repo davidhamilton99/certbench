@@ -81,9 +81,9 @@ const DEFENSIBLE: Record<string, readonly string[]> = {
 const parse = (option: string) =>
   option
     .replace(/\u00a0/g, " ")
-    .split(" · ")
+    .split("; ")
     .map((pair) => {
-      const [step, control, ...rest] = pair.split(" → ");
+      const [step, control, ...rest] = pair.split(": ");
       return { step, control, extra: rest.length };
     });
 
@@ -99,10 +99,10 @@ describe("the SY0-801 AI threat hunt's question", () => {
     }
   });
 
-  it("wraps on a phone only after an arrow or between pairs, never inside a label", () => {
+  it("wraps on a phone only after a colon or between pairs, never inside a label", () => {
     for (const option of hunt.options) {
       const pieces = option.split(" ");
-      for (const piece of pieces.slice(0, -1)) expect(piece, option).toMatch(/[→·]$/);
+      for (const piece of pieces.slice(0, -1)) expect(piece, option).toMatch(/[:;]$/);
     }
   });
 

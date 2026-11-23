@@ -3,15 +3,17 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type FormEvent,
+  type KeyboardEvent,
   type ReactNode,
   type RefObject,
 } from "react";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { AnswerOption, type AnswerState } from "@/components/quiz/AnswerOption";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
@@ -37,30 +39,40 @@ import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
 import { wordCount } from "@/core/path/text";
 import { cn } from "@/lib/utils";
 
-/** How long a right answer stays up before the lab moves on by itself. */
-export const MOVE_ADVANCE_MS = 1200;
-/** Within a run of yes/no calls or a sort, a right one moves on quicker. */
-export const STEP_ADVANCE_MS = 650;
-
 export interface MoveProps {
   /** The field's answer, once it's final: marked by the player straight away. */
   onAnswer: (answer: SimFieldAnswer) => void;
   /** On to the next move. Called once. */
   onNext: () => void;
-  /** Whether keys play this move: false while another player on the page has them. */
-  keyboard: boolean;
-  /** Take focus when shown (every move after a run's first), so keys and screen readers follow. */
+  /**
+   * Take the keyboard's focus on arrival. True for every move that follows
+   * something the player did (the move before it, "Repeat the lab"); false for
+   * the first move of a lab that is on the page as it loads.
+   */
   takeFocus: boolean;
   /** Each answer given inside the move, the first included: the host knows play has started. */
   onStep?: () => void;
 }
 
 /**
- * One field of a simulation lab as a move: a pick is tiles, a pick-all is a
- * yes or no on each option in turn, a placement is a sort into bins, and a
- * typed answer is a box. Each is marked the moment it's answered; right
- * answers move on by themselves and misses wait, so there's time to see why.
+ * One field of a simulation lab as a move: a pick is a set of answers, a
+ * pick-all is a yes or no on each option in turn, a placement is a sort into
+ * bins, and a typed answer is a box. Each is marked the moment it is answered.
  * Mount one per field (key it by id): its state is the move's state.
+ *
+ * A move answers the player and never the clock: after every answer, right or
+ * wrong, it waits for "Continue", which takes the focus, so Enter or one tap
+ * moves on.
+ *
+ * Keyboard. The keys printed in the answers' boxes (1 to 4, or Y and N) answer
+ * the move, and they act only while the keyboard's focus is inside the move,
+ * never from elsewhere on the page. A move that follows another takes the
+ * focus as it arrives, so the keys carry from one move to the next with no
+ * click, and a screen reader reads the new question.
+ *
+ * Screen readers. The answers are a group named by what is being asked. A
+ * marked answer says so in words ("Correct answer: "), and the verdict is read
+ * with the Continue button as the focus moves to it.
  */
 export function SimMove({ field, ...props }: MoveProps & { field: SimField }) {
   switch (field.type) {
@@ -76,12 +88,13 @@ export function SimMove({ field, ...props }: MoveProps & { field: SimField }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Pick: tiles                                                        */
+/*  Pick: one of a set of answers                                      */
 /* ------------------------------------------------------------------ */
 
-function PickMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimDropdownField }) {
-  const root = useRef<HTMLDivElement>(null);
-  useTakeFocus(root, takeFocus);
+function PickMove({ field, onAnswer, onNext, onStep, takeFocus }: MoveProps & { field: SimDropdownField }) {
+  const prompt = useRef<HTMLParagraphElement>(null);
+  const promptId = useId();
+  useTakeFocus(prompt, takeFocus);
   const order = useMemo(() => pickOrder(field), [field]);
   const [picked, setPicked] = useState<number | null>(null);
   const answered = picked !== null;
@@ -96,63 +109,40 @@ function PickMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
     onAnswer({ type: "dropdown", selectedIndex: option });
   }
 
-  useKeys(keyboard, (e) => {
-    if (!answered) {
-      const digit = Number(e.key);
-      if (!Number.isInteger(digit) || digit < 1 || digit > order.length) return false;
-      choose(order[digit - 1]);
-      return true;
-    }
-    return enterTo(e, next);
-  });
+  function onKey(e: KeyboardEvent) {
+    if (answered) return enterTo(e, next);
+    const digit = Number(e.key);
+    if (!Number.isInteger(digit) || digit < 1 || digit > order.length) return false;
+    choose(order[digit - 1]);
+    return true;
+  }
 
   return (
-    <MoveFrame rootRef={root} kind="Pick one" prompt={field.label}>
-      <div
-        role="radiogroup"
-        aria-label="Answers"
-        className={cn("grid gap-2.5", isShortSet(field.options) && "grid-cols-2")}
-      >
-        {order.map((option, pos) => {
-          const isAnswer = option === field.correctIndex;
-          const isPicked = option === picked;
-          return (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={isPicked}
-              disabled={answered}
-              onClick={() => choose(option)}
-              className={cn(
-                "group flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-[border-color,background-color,opacity,transform] duration-150",
-                !answered && "hover:border-primary/60 hover:bg-primary/[0.03] active:scale-[0.99]",
-                answered && isAnswer && "border-success bg-success/10",
-                answered && isPicked && !isAnswer && "border-destructive bg-destructive/10",
-                answered && !isAnswer && !isPicked && "opacity-45"
-              )}
-            >
-              <Mark n={pos + 1} right={answered && isAnswer} wrong={answered && isPicked && !isAnswer} />
-              <span
-                className={cn(
-                  "min-w-0 [overflow-wrap:anywhere]",
-                  numbers ? "font-mono text-lg font-medium" : "text-[15px] leading-snug"
-                )}
-              >
-                {field.options[option]}
-              </span>
-            </button>
-          );
-        })}
+    <MoveFrame
+      kind="Choose one answer"
+      prompt={field.label}
+      promptId={promptId}
+      promptRef={prompt}
+      onKey={onKey}
+      keysNote={answered ? undefined : `You can answer with the keys 1 to ${order.length}.`}
+    >
+      <div role="group" aria-labelledby={promptId} className={cn("grid gap-2.5", isShortSet(field.options) && "grid-cols-2")}>
+        {order.map((option, pos) => (
+          <AnswerOption
+            key={option}
+            marker={String(pos + 1)}
+            {...markOf(answered, option === field.correctIndex, option === picked)}
+            mono={numbers}
+            dense={!numbers}
+            disabled={answered}
+            onClick={() => choose(option)}
+          >
+            {field.options[option]}
+          </AnswerOption>
+        ))}
       </div>
       {answered && (
-        <Verdict ok={ok} onNext={next} auto={ok} ms={MOVE_ADVANCE_MS} focusButton>
-          {ok ? (
-            <Right />
-          ) : (
-            <TickedMiss answer={answerText(field)} />
-          )}
-        </Verdict>
+        <Verdict onNext={next}>{ok ? <Right /> : <Wrong answer={answerText(field)} mono={numbers} />}</Verdict>
       )}
     </MoveFrame>
   );
@@ -162,10 +152,12 @@ function PickMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
 /*  Pick-all: a yes or no on each option                               */
 /* ------------------------------------------------------------------ */
 
-function CallMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimSelectManyField }) {
-  const root = useRef<HTMLDivElement>(null);
+function CallMove({ field, onAnswer, onNext, onStep, takeFocus }: MoveProps & { field: SimSelectManyField }) {
+  const prompt = useRef<HTMLParagraphElement>(null);
   const card = useRef<HTMLDivElement>(null);
-  useTakeFocus(root, takeFocus);
+  const promptId = useId();
+  const itemId = useId();
+  useTakeFocus(prompt, takeFocus);
   const order = useMemo(() => callOrder(field), [field]);
   const isYes = useMemo(() => {
     const yes = new Set(field.correctIndices);
@@ -193,76 +185,57 @@ function CallMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
   }
 
   const step = useCallback(() => setPos((p) => Math.min(p + 1, order.length - 1)), [order.length]);
+  useCardFocus(card, pos);
 
-  // Each new card takes focus, so a screen reader reads it.
-  const shown = useRef(pos);
-  useEffect(() => {
-    if (shown.current === pos) return;
-    shown.current = pos;
-    card.current?.focus({ preventScroll: true });
-  }, [pos]);
-
-  useKeys(keyboard, (e) => {
-    if (!answered) {
-      const k = e.key.toLowerCase();
-      const yes = k === "y" || e.key === "ArrowRight";
-      if (!yes && k !== "n" && e.key !== "ArrowLeft") return false;
-      decide(yes);
-      return true;
-    }
-    return enterTo(e, finished ? next : step);
-  });
+  function onKey(e: KeyboardEvent) {
+    if (answered) return enterTo(e, finished ? next : step);
+    const k = e.key.toLowerCase();
+    const yes = k === "y" || e.key === "ArrowRight";
+    if (!yes && k !== "n" && e.key !== "ArrowLeft") return false;
+    decide(yes);
+    return true;
+  }
 
   return (
-    <MoveFrame rootRef={root} kind="Yes or no" count={`${pos + 1} / ${order.length}`} prompt={callPrompt(field.label)} lead>
-      <ItemCard cardRef={card} key={`card-${pos}`} state={answered ? (ok ? "right" : "wrong") : null}>
+    <MoveFrame
+      kind="Answer yes or no"
+      count={`Item ${pos + 1} of ${order.length}`}
+      prompt={callPrompt(field.label)}
+      promptId={promptId}
+      promptRef={prompt}
+      lead
+      onKey={onKey}
+      keysNote={answered ? undefined : "You can answer with the keys Y and N."}
+    >
+      <ItemCard cardRef={card} id={itemId} key={`card-${pos}`} state={answered ? (ok ? "right" : "wrong") : null}>
         {field.options[option]}
       </ItemCard>
-      <div className="grid grid-cols-2 gap-2.5">
-        {[false, true].map((yes) => {
-          const chosen = answered && call === yes;
-          const shouldBe = answered && isYes(option) === yes;
-          return (
-            <button
-              key={String(yes)}
-              type="button"
-              disabled={answered}
-              onClick={() => decide(yes)}
-              aria-keyshortcuts={yes ? "Y" : "N"}
-              className={cn(
-                "flex h-14 items-center justify-center gap-2 rounded-xl border bg-card text-base font-semibold transition-[border-color,background-color,opacity,transform] duration-150",
-                !answered && "hover:border-primary/60 hover:bg-primary/[0.04] active:scale-[0.98]",
-                chosen && ok && "border-success bg-success/10 text-success",
-                chosen && !ok && "border-destructive bg-destructive/10 text-destructive",
-                !chosen && shouldBe && "border-success/70 text-success",
-                !chosen && !shouldBe && answered && "opacity-45"
-              )}
-            >
-              {yes ? <Check className="size-5" strokeWidth={3} aria-hidden /> : <X className="size-5" strokeWidth={3} aria-hidden />}
-              {yes ? "Yes" : "No"}
-              <kbd className="hidden rounded border border-border px-1.5 font-mono text-[10px] font-normal text-muted-foreground sm:inline">
-                {yes ? "Y" : "N"}
-              </kbd>
-            </button>
-          );
-        })}
+      <div role="group" aria-labelledby={itemId} className="grid grid-cols-2 gap-2.5">
+        {[false, true].map((yes) => (
+          <AnswerOption
+            key={String(yes)}
+            marker={yes ? "Y" : "N"}
+            {...markOf(answered, isYes(option) === yes, call === yes)}
+            aria-keyshortcuts={yes ? "Y" : "N"}
+            disabled={answered}
+            onClick={() => decide(yes)}
+          >
+            {yes ? "Yes" : "No"}
+          </AnswerOption>
+        ))}
       </div>
       <Pips
         count={order.length}
         current={pos}
         result={(p) => (calls[p] === null ? null : calls[p] === isYes(order[p]))}
       />
-      {answered &&
-        (finished ? (
-          <Verdict ok={ok} onNext={next} auto={right === order.length} ms={MOVE_ADVANCE_MS} focusButton>
-            {ok ? <Right /> : <Correction>That one&apos;s a {isYes(option) ? "yes" : "no"}.</Correction>}{" "}
-            <Tally n={right} of={order.length} what="called right" />
-          </Verdict>
-        ) : (
-          <Verdict key={`step-${pos}`} ok={ok} onNext={step} auto={ok} ms={STEP_ADVANCE_MS} focusButton={!ok}>
-            {ok ? <Right /> : <Correction>That one&apos;s a {isYes(option) ? "yes" : "no"}.</Correction>}
-          </Verdict>
-        ))}
+      {answered && (
+        // Keyed by the item, so each verdict takes the focus as it arrives.
+        <Verdict key={pos} onNext={finished ? next : step}>
+          {ok ? <Right /> : <Wrong answer={isYes(option) ? "Yes" : "No"} />}
+          {finished && <Tally n={right} of={order.length} what="answered correctly" />}
+        </Verdict>
+      )}
     </MoveFrame>
   );
 }
@@ -271,10 +244,12 @@ function CallMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
 /*  Placement: sort each item into its bin                             */
 /* ------------------------------------------------------------------ */
 
-function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimZonePlacementField }) {
-  const root = useRef<HTMLDivElement>(null);
+function SortMove({ field, onAnswer, onNext, onStep, takeFocus }: MoveProps & { field: SimZonePlacementField }) {
+  const prompt = useRef<HTMLParagraphElement>(null);
   const card = useRef<HTMLDivElement>(null);
-  useTakeFocus(root, takeFocus);
+  const promptId = useId();
+  const itemId = useId();
+  useTakeFocus(prompt, takeFocus);
   const order = useMemo(() => sortOrder(field), [field]);
   const [placed, setPlaced] = useState<number[]>(() => field.items.map(() => -1));
   const [pos, setPos] = useState(0);
@@ -296,31 +271,34 @@ function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
   }
 
   const step = useCallback(() => setPos((p) => Math.min(p + 1, order.length - 1)), [order.length]);
+  useCardFocus(card, pos);
 
-  const shown = useRef(pos);
-  useEffect(() => {
-    if (shown.current === pos) return;
-    shown.current = pos;
-    card.current?.focus({ preventScroll: true });
-  }, [pos]);
-
-  useKeys(keyboard, (e) => {
-    if (!answered) {
-      const digit = Number(e.key);
-      if (!Number.isInteger(digit) || digit < 1 || digit > field.zones.length) return false;
-      drop(digit - 1);
-      return true;
-    }
-    return enterTo(e, finished ? next : step);
-  });
+  function onKey(e: KeyboardEvent) {
+    if (answered) return enterTo(e, finished ? next : step);
+    const digit = Number(e.key);
+    if (!Number.isInteger(digit) || digit < 1 || digit > field.zones.length) return false;
+    drop(digit - 1);
+    return true;
+  }
 
   const bins = field.zones.length;
   return (
-    <MoveFrame rootRef={root} kind="Sort it" count={`${pos + 1} / ${order.length}`} prompt={field.label} lead>
-      <ItemCard cardRef={card} key={`card-${pos}`} state={answered ? (ok ? "right" : "wrong") : null}>
+    <MoveFrame
+      kind="Sort the item"
+      count={`Item ${pos + 1} of ${order.length}`}
+      prompt={field.label}
+      promptId={promptId}
+      promptRef={prompt}
+      lead
+      onKey={onKey}
+      keysNote={answered ? undefined : `You can answer with the keys 1 to ${bins}.`}
+    >
+      <ItemCard cardRef={card} id={itemId} key={`card-${pos}`} state={answered ? (ok ? "right" : "wrong") : null}>
         {field.items[item]}
       </ItemCard>
       <div
+        role="group"
+        aria-labelledby={itemId}
         className={cn(
           "grid gap-2.5",
           bins === 2 || bins === 4 ? "grid-cols-2" : bins === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
@@ -328,30 +306,23 @@ function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
       >
         {field.zones.map((name, z) => {
           const count = placed.filter((p) => p === z).length;
-          const isRight = answered && z === field.correctZones[item];
-          const isPicked = answered && z === zone;
           return (
-            <button
+            <AnswerOption
               key={z}
-              type="button"
+              marker={String(z + 1)}
+              {...markOf(answered, z === field.correctZones[item], z === zone)}
+              dense
               disabled={answered}
               onClick={() => drop(z)}
-              className={cn(
-                "grid min-h-[4.5rem] min-w-0 content-between gap-2 rounded-xl border bg-card p-3 text-left transition-[border-color,background-color,opacity,transform] duration-150",
-                !answered && "hover:border-primary/60 hover:bg-primary/[0.04] active:scale-[0.98]",
-                isRight && "border-success bg-success/10",
-                isPicked && !isRight && "border-destructive bg-destructive/10",
-                answered && !isRight && !isPicked && "opacity-45"
-              )}
             >
-              <span className="flex items-center justify-between gap-2">
-                <Mark n={z + 1} right={isRight} wrong={isPicked && !isRight} />
-                <span aria-hidden className="font-mono text-xs tabular-nums text-muted-foreground">
-                  {count > 0 ? `×${count}` : ""}
+              {name}
+              {count > 0 && (
+                // How many items have gone into this bin so far, right or wrong.
+                <span aria-hidden className="ml-2 whitespace-nowrap text-note text-muted-foreground">
+                  {count} placed
                 </span>
-              </span>
-              <span className="text-sm font-medium leading-snug [overflow-wrap:anywhere]">{name}</span>
-            </button>
+              )}
+            </AnswerOption>
           );
         })}
       </div>
@@ -360,17 +331,12 @@ function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
         current={pos}
         result={(p) => (placed[order[p]] === -1 ? null : placed[order[p]] === field.correctZones[order[p]])}
       />
-      {answered &&
-        (finished ? (
-          <Verdict ok={ok} onNext={next} auto={right === order.length} ms={MOVE_ADVANCE_MS} focusButton>
-            {ok ? <Right /> : <Correction>It goes in {field.zones[field.correctZones[item]]}.</Correction>}{" "}
-            <Tally n={right} of={order.length} what="sorted right" />
-          </Verdict>
-        ) : (
-          <Verdict key={`step-${pos}`} ok={ok} onNext={step} auto={ok} ms={STEP_ADVANCE_MS} focusButton={!ok}>
-            {ok ? <Right /> : <Correction>It goes in {field.zones[field.correctZones[item]]}.</Correction>}
-          </Verdict>
-        ))}
+      {answered && (
+        <Verdict key={pos} onNext={finished ? next : step}>
+          {ok ? <Right /> : <Wrong answer={field.zones[field.correctZones[item]]} />}
+          {finished && <Tally n={right} of={order.length} what="sorted correctly" />}
+        </Verdict>
+      )}
     </MoveFrame>
   );
 }
@@ -379,21 +345,23 @@ function SortMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
 /*  Typed: a box                                                       */
 /* ------------------------------------------------------------------ */
 
-function TypeMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: MoveProps & { field: SimTextInputField }) {
-  const root = useRef<HTMLDivElement>(null);
+function TypeMove({ field, onAnswer, onNext, onStep, takeFocus }: MoveProps & { field: SimTextInputField }) {
+  const prompt = useRef<HTMLParagraphElement>(null);
   const box = useRef<HTMLInputElement>(null);
+  const promptId = useId();
   const [typed, setTyped] = useState("");
   const [ok, setOk] = useState<boolean | null>(null);
   const answered = ok !== null;
   const next = useOnce(onNext);
   const mode = inputModeFor(field);
 
-  // Into the box where there's a keyboard to type with; on a phone, a tap
-  // opens it, so the evidence isn't buried under the keyboard first.
+  // Into the box where there's a keyboard to type with; on a phone the focus
+  // goes to the question, and a tap opens the box, so the evidence isn't
+  // buried under the keyboard first.
   useEffect(() => {
     if (!takeFocus) return;
     const fine = window.matchMedia?.("(pointer: fine)").matches;
-    (fine ? box.current : root.current)?.focus({ preventScroll: true });
+    (fine ? box.current : prompt.current)?.focus({ preventScroll: true });
   }, [takeFocus]);
 
   function submit(e: FormEvent) {
@@ -405,26 +373,30 @@ function TypeMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
     onAnswer(answer);
   }
 
-  useKeys(keyboard, (e) => (answered ? enterTo(e, next) : false));
-
   return (
-    <MoveFrame rootRef={root} kind="Type it" prompt={field.label}>
+    <MoveFrame
+      kind="Type the answer"
+      prompt={field.label}
+      promptId={promptId}
+      promptRef={prompt}
+      onKey={(e) => (answered ? enterTo(e, next) : false)}
+    >
       <form onSubmit={submit} className="flex gap-2.5">
         <Input
           ref={box}
-          aria-label={field.label}
+          aria-labelledby={promptId}
           autoComplete="off"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
           inputMode={mode}
-          placeholder={field.placeholder ?? (mode === "text" ? "Type it here" : "")}
+          placeholder={field.placeholder ?? (mode === "text" ? "Type your answer" : "")}
           value={typed}
           readOnly={answered}
           aria-invalid={answered && !ok ? true : undefined}
           onChange={(e) => setTyped(e.target.value)}
           className={cn(
-            "h-12 font-mono text-base sm:text-lg",
+            "h-12 font-mono text-base sm:text-lg md:text-lg pointer-coarse:h-12",
             mode === "text" ? "flex-1" : "max-w-64",
             answered && ok && "border-success bg-success/10",
             answered && !ok && "border-destructive bg-destructive/10"
@@ -432,34 +404,24 @@ function TypeMove({ field, onAnswer, onNext, onStep, keyboard, takeFocus }: Move
         />
         {!answered && (
           <Button type="submit" size="lg" className="h-12 shrink-0 px-4 sm:px-6" disabled={!typed.trim()}>
-            Check
+            Check answer
           </Button>
         )}
       </form>
-      {answered && (
-        <Verdict ok={Boolean(ok)} onNext={next} auto={Boolean(ok)} ms={MOVE_ADVANCE_MS} focusButton>
-          {ok ? (
-            <Right />
-          ) : (
-            <Correction>
-              It&apos;s <code className="font-mono">{answerText(field)}</code>.
-            </Correction>
-          )}
-        </Verdict>
-      )}
+      {answered && <Verdict onNext={next}>{ok ? <Right /> : <Wrong answer={answerText(field)} mono />}</Verdict>}
     </MoveFrame>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Matching: one item at a time, its partner from tiles               */
+/*  Matching: one item at a time, its partner from a set               */
 /* ------------------------------------------------------------------ */
 
 /**
  * A matching lab as a run of picks: each item comes up on its own and its
- * partner is a tile. A partner that has been matched (or shown after a miss)
- * drops out, the way pairs leave a matching game, while every tile keeps its
- * place so nothing moves under a finger.
+ * partner is chosen from the set. A partner that has been matched (or shown
+ * after a miss) drops out, the way pairs leave a matching game, while every
+ * partner keeps its place so nothing moves under a finger.
  */
 export function MatchMove({
   prompt,
@@ -470,7 +432,6 @@ export function MatchMove({
   onAnswer,
   onNext,
   onStep,
-  keyboard,
   takeFocus,
 }: Omit<MoveProps, "onAnswer"> & {
   prompt: string;
@@ -478,14 +439,16 @@ export function MatchMove({
   right: readonly string[];
   /** correctMap[leftIndex] = rightIndex. */
   correctMap: readonly number[];
-  /** Seeds the order the items come up in and the tiles' places. */
+  /** Seeds the order the items come up in and the partners' places. */
   seed: string;
   /** Each item's pick by its index, once every item is matched. */
   onAnswer: (map: number[]) => void;
 }) {
-  const root = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLParagraphElement>(null);
   const card = useRef<HTMLDivElement>(null);
-  useTakeFocus(root, takeFocus);
+  const promptId = useId();
+  const itemId = useId();
+  useTakeFocus(promptRef, takeFocus);
   const order = useMemo(() => shuffleSeeded(left.length, seedFromString(`${seed}:match-items`)), [left.length, seed]);
   const tiles = useMemo(() => shuffleSeeded(right.length, seedFromString(`${seed}:match-tiles`)), [right.length, seed]);
   const [picks, setPicks] = useState<number[]>(() => left.map(() => -1));
@@ -510,69 +473,56 @@ export function MatchMove({
   }
 
   const step = useCallback(() => setPos((p) => Math.min(p + 1, order.length - 1)), [order.length]);
+  useCardFocus(card, pos);
 
-  const shown = useRef(pos);
-  useEffect(() => {
-    if (shown.current === pos) return;
-    shown.current = pos;
-    card.current?.focus({ preventScroll: true });
-  }, [pos]);
-
-  useKeys(keyboard, (e) => {
-    if (!answered) {
-      const digit = Number(e.key);
-      if (!Number.isInteger(digit) || digit < 1 || digit > tiles.length || gone.has(tiles[digit - 1])) return false;
-      choose(tiles[digit - 1]);
-      return true;
-    }
-    return enterTo(e, finished ? next : step);
-  });
+  function onKey(e: KeyboardEvent) {
+    if (answered) return enterTo(e, finished ? next : step);
+    const digit = Number(e.key);
+    if (!Number.isInteger(digit) || digit < 1 || digit > tiles.length || gone.has(tiles[digit - 1])) return false;
+    choose(tiles[digit - 1]);
+    return true;
+  }
 
   const numbers = isNumberSet(right);
-  const partner = right[correctMap[item]];
   return (
-    <MoveFrame rootRef={root} kind="Match it" count={`${pos + 1} / ${order.length}`} prompt={prompt} lead>
+    <MoveFrame
+      kind="Match the item"
+      count={`Item ${pos + 1} of ${order.length}`}
+      prompt={prompt}
+      promptId={promptId}
+      promptRef={promptRef}
+      lead
+      onKey={onKey}
+      keysNote={answered ? undefined : `You can answer with the keys 1 to ${tiles.length}.`}
+    >
       <ItemCard
         cardRef={card}
+        id={itemId}
         key={`card-${pos}`}
         state={answered ? (ok ? "right" : "wrong") : null}
         mono={isNumberSet(left)}
       >
         {left[item]}
       </ItemCard>
-      <div role="radiogroup" aria-label="Partners" className={cn("grid gap-2.5", isShortSet(right) && "grid-cols-2")}>
+      <div role="group" aria-labelledby={itemId} className={cn("grid gap-2.5", isShortSet(right) && "grid-cols-2")}>
         {tiles.map((r, n) => {
           const out = gone.has(r);
-          const isAnswer = answered && r === correctMap[item];
-          const isPicked = answered && r === picked;
           return (
-            <button
+            <AnswerOption
               key={r}
-              type="button"
-              role="radio"
-              aria-checked={isPicked}
+              marker={String(n + 1)}
+              {...(out
+                ? { state: "dimmed" as const, srPrefix: "No longer available: " }
+                : markOf(answered, r === correctMap[item], r === picked))}
+              mono={numbers}
+              dense={!numbers}
               disabled={answered || out}
+              // A partner that is out of play keeps its place, drawn as an empty slot.
+              className={out ? "border-dashed" : undefined}
               onClick={() => choose(r)}
-              className={cn(
-                "group flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-[border-color,background-color,opacity,transform] duration-150",
-                !answered && !out && "hover:border-primary/60 hover:bg-primary/[0.03] active:scale-[0.99]",
-                out && "border-dashed opacity-30",
-                isAnswer && "border-success bg-success/10",
-                isPicked && !isAnswer && "border-destructive bg-destructive/10",
-                answered && !out && !isAnswer && !isPicked && "opacity-45"
-              )}
             >
-              <Mark n={n + 1} right={isAnswer} wrong={isPicked && !isAnswer} />
-              <span
-                className={cn(
-                  "min-w-0 [overflow-wrap:anywhere]",
-                  numbers ? "font-mono text-lg font-medium" : "text-[15px] leading-snug",
-                  out && "line-through"
-                )}
-              >
-                {right[r]}
-              </span>
-            </button>
+              {out ? <span className="line-through">{right[r]}</span> : right[r]}
+            </AnswerOption>
           );
         })}
       </div>
@@ -581,16 +531,12 @@ export function MatchMove({
         current={pos}
         result={(p) => (picks[order[p]] === -1 ? null : picks[order[p]] === correctMap[order[p]])}
       />
-      {answered &&
-        (finished ? (
-          <Verdict ok={ok} onNext={next} auto={matched === order.length} ms={MOVE_ADVANCE_MS} focusButton>
-            {ok ? <Right /> : <TickedMiss answer={partner} />} <Tally n={matched} of={order.length} what="matched right" />
-          </Verdict>
-        ) : (
-          <Verdict key={`step-${pos}`} ok={ok} onNext={step} auto={ok} ms={STEP_ADVANCE_MS} focusButton={!ok}>
-            {ok ? <Right /> : <TickedMiss answer={partner} />}
-          </Verdict>
-        ))}
+      {answered && (
+        <Verdict key={pos} onNext={finished ? next : step}>
+          {ok ? <Right /> : <Wrong answer={right[correctMap[item]]} mono={numbers} />}
+          {finished && <Tally n={matched} of={order.length} what="matched correctly" />}
+        </Verdict>
+      )}
     </MoveFrame>
   );
 }
@@ -599,57 +545,110 @@ export function MatchMove({
 /*  Shared pieces                                                      */
 /* ------------------------------------------------------------------ */
 
-/** The move's chip (what kind of move it is), its count, and its ask. */
+/**
+ * How an answer is drawn and announced once the move is marked: the correct
+ * one, the one that was chosen, and the rest.
+ */
+function markOf(marked: boolean, isAnswer: boolean, isPicked: boolean): { state: AnswerState; srPrefix?: string } {
+  if (!marked) return { state: "idle" };
+  if (isAnswer) {
+    return { state: "correct", srPrefix: isPicked ? "Your answer, which is correct: " : "Correct answer: " };
+  }
+  if (isPicked) return { state: "incorrect", srPrefix: "Your answer, which is incorrect: " };
+  return { state: "dimmed" };
+}
+
+/**
+ * The frame of a move: what kind of move it is, where it stands in a run, and
+ * what it asks. The frame listens for the move's keys, so they act only while
+ * the keyboard's focus is inside it.
+ */
 function MoveFrame({
-  rootRef,
   kind,
   count,
   prompt,
+  promptId,
+  promptRef,
   lead = false,
+  onKey,
+  keysNote,
   children,
 }: {
-  rootRef: RefObject<HTMLDivElement | null>;
   kind: string;
   count?: string;
   prompt: string;
-  /** The ask leads into cards (a yes/no run, a sort): set smaller, the card is the thing to read. */
+  promptId: string;
+  promptRef: RefObject<HTMLParagraphElement | null>;
+  /** The ask leads into cards (a yes or no run, a sort): set smaller, the card is the thing to read. */
   lead?: boolean;
+  /** The move's keys. Returns true when it used the key. */
+  onKey: (e: KeyboardEvent) => boolean;
+  /** A sentence saying which keys answer, shown only while they would act. */
+  keysNote?: string;
   children: ReactNode;
 }) {
   const long = wordCount(prompt) > 14;
+
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+    const target = e.target as HTMLElement;
+    // Typing in a box is typing, not a shortcut.
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable) {
+      return;
+    }
+    if (onKey(e)) e.preventDefault();
+  }
+
   return (
-    <div ref={rootRef} tabIndex={-1} className="path-rise grid min-w-0 gap-4 outline-none sm:gap-5">
-      <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-primary">
-          {kind}
-        </span>
-        {count && <span className="font-mono text-xs tabular-nums text-muted-foreground">{count}</span>}
+    <div
+      // Focusable by a press anywhere on the move, so its keys then act on it.
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="group/move grid min-w-0 gap-4 sm:gap-5"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="cb-label text-muted-foreground">{kind}</span>
+        {count && <span className="shrink-0 text-note tabular-nums text-muted-foreground">{count}</span>}
       </div>
       <p
-        className={cn(
-          "text-balance",
+        id={promptId}
+        // Takes the focus so that it is read; it is not a control.
+        ref={promptRef}
+        tabIndex={-1}
+        className={
           lead
-            ? "text-[15px] font-medium leading-relaxed text-muted-foreground"
+            ? "text-pretty text-small font-medium text-muted-foreground"
             : long
-              ? "text-[17px] font-medium leading-relaxed sm:text-lg"
-              : "font-display text-xl font-semibold leading-snug tracking-tight sm:text-2xl"
-        )}
+              ? "text-pretty text-body font-medium sm:text-lg sm:leading-relaxed"
+              : "text-pretty text-xl font-semibold leading-snug sm:text-2xl"
+        }
       >
         {prompt}
       </p>
       {children}
+      {keysNote && (
+        // Said only while the keys would act: the focus is inside the move, on
+        // a device with a keyboard. Its line is kept on such a device, so
+        // nothing below moves when the focus arrives.
+        <p className="invisible -mt-1 text-note text-muted-foreground group-focus-within/move:visible pointer-coarse:hidden">
+          {keysNote}
+        </p>
+      )}
     </div>
   );
 }
 
-/** The thing being called or sorted, big, one at a time. */
+/** The thing being called, sorted or matched, set large, one at a time. */
 function ItemCard({
   cardRef,
+  id,
   state,
   mono = false,
   children,
 }: {
   cardRef: RefObject<HTMLDivElement | null>;
+  /** Names the group of answers under the card. */
+  id: string;
   state: "right" | "wrong" | null;
   /** A code or a number (a port, a RAID level): set large in mono. */
   mono?: boolean;
@@ -658,15 +657,17 @@ function ItemCard({
   return (
     <div
       ref={cardRef}
+      // Takes the focus so that each new item is read; it is not a control.
       tabIndex={-1}
       className={cn(
-        "path-rise grid min-h-24 place-items-center rounded-2xl border-2 bg-card px-5 py-6 text-center outline-none transition-colors duration-150",
+        "grid min-h-24 place-items-center rounded-lg border bg-card px-5 py-6 text-center",
         state === null && "border-border",
-        state === "right" && "border-success bg-success/[0.06]",
-        state === "wrong" && "border-destructive bg-destructive/[0.05]"
+        state === "right" && "border-success bg-success/10",
+        state === "wrong" && "border-destructive bg-destructive/10"
       )}
     >
       <p
+        id={id}
         className={cn(
           "text-balance leading-snug [overflow-wrap:anywhere]",
           mono ? "font-mono text-2xl font-semibold sm:text-3xl" : "text-lg font-medium sm:text-xl"
@@ -678,23 +679,12 @@ function ItemCard({
   );
 }
 
-/** A tile's number, turning into a tick or a cross once it's marked. */
-function Mark({ n, right, wrong }: { n: number; right: boolean; wrong: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] text-muted-foreground transition-colors",
-        right && "path-pop border-success bg-success text-success-foreground",
-        wrong && "border-destructive bg-destructive text-white"
-      )}
-    >
-      {right ? <Check className="size-3.5" strokeWidth={3} /> : wrong ? <X className="size-3.5" strokeWidth={3} /> : n}
-    </span>
-  );
-}
-
-/** One pip per card in a run: the marked ones by result, the current one lit. */
+/**
+ * One mark per item in a run: the answered ones by result, the one in hand in
+ * the page's blue. A miss is red here as it is on the answer itself: amber
+ * means something else on the site (a step to review, a line that is not
+ * evidence).
+ */
 function Pips({ count, current, result }: { count: number; current: number; result: (p: number) => boolean | null }) {
   return (
     <div className="flex flex-wrap justify-center gap-1.5" aria-hidden>
@@ -704,10 +694,10 @@ function Pips({ count, current, result }: { count: number; current: number; resu
           <span
             key={p}
             className={cn(
-              "size-2 rounded-full transition-colors duration-300",
+              "size-2 rounded-xs",
               r === true && "bg-success",
-              r === false && "bg-warning",
-              r === null && (p === current ? "bg-primary" : "bg-muted")
+              r === false && "bg-destructive",
+              r === null && (p === current ? "bg-primary" : "bg-foreground/[0.12]")
             )}
           />
         );
@@ -717,87 +707,79 @@ function Pips({ count, current, result }: { count: number; current: number; resu
 }
 
 function Right() {
-  return <span className="font-semibold text-success">Right.</span>;
+  return <span className="font-semibold text-success">Correct.</span>;
 }
 
-function Correction({ children }: { children: ReactNode }) {
-  return <span className="font-semibold text-destructive">{children}</span>;
-}
-
-/** A miss whose answer is already ticked on its tile: spelling it out again would be a sentence to read. */
-function TickedMiss({ answer }: { answer: string }) {
+/** "Incorrect. The correct answer is X.", in the words every question on the site uses. */
+function Wrong({ answer, mono = false }: { answer: string; mono?: boolean }) {
+  // An answer that is itself a sentence brings its own full stop.
+  const text = answer.replace(/\.$/, "");
   return (
-    <>
-      <Correction>Not quite.</Correction> <span className="text-muted-foreground">The answer is ticked.</span>
-      <span className="sr-only"> It&apos;s {answer}.</span>
-    </>
-  );
-}
-
-function Tally({ n, of, what }: { n: number; of: number; what: string }) {
-  return (
-    <span className="text-muted-foreground">
-      {n} of {of} {what}.
+    <span className="font-semibold text-destructive">
+      Incorrect. The correct answer is {mono ? <code className="font-mono">{text}</code> : text}.
     </span>
   );
 }
 
+/** How the whole run went, said after its last item's verdict. */
+function Tally({ n, of, what }: { n: number; of: number; what: string }) {
+  return (
+    <>
+      {/* The space stands between the two sentences, not inside the second: read out, they stay two. */}{" "}
+      <span className="text-muted-foreground">
+        {n} of {of} {what}.
+      </span>
+    </>
+  );
+}
+
 /**
- * The mark under a move: right or the correction, and the way on. Right
- * answers move on by themselves after `ms` (the bar drains to show it).
+ * The mark under a move and the way on. It waits for the player after every
+ * answer, right or wrong. "Continue" takes the focus as the verdict arrives and
+ * is described by it, so a screen reader reads the verdict with the button,
+ * and Enter or Space moves on.
  */
-function Verdict({
-  ok,
-  onNext,
-  auto,
-  ms,
-  focusButton,
-  children,
-}: {
-  ok: boolean;
-  onNext: () => void;
-  auto: boolean;
-  ms: number;
-  /** Put focus on the way on, so Enter or Space continues. */
-  focusButton: boolean;
-  children: ReactNode;
-}) {
+function Verdict({ onNext, children }: { onNext: () => void; children: ReactNode }) {
+  const foot = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const verdictId = useId();
 
+  // The verdict is brought into view if it is not already (a small phone, a
+  // page at 400%), so the button that takes the focus is never off the screen.
   useEffect(() => {
-    if (focusButton) button.current?.focus({ preventScroll: true });
-  }, [focusButton]);
-
-  useEffect(() => {
-    if (!auto) return;
-    const t = window.setTimeout(onNext, ms);
-    return () => window.clearTimeout(t);
-  }, [auto, ms, onNext]);
+    const box = foot.current;
+    if (box && typeof box.scrollIntoView === "function") {
+      const at = box.getBoundingClientRect();
+      if (at.top < 0 || at.bottom > window.innerHeight) {
+        const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+        box.scrollIntoView({ block: "nearest", behavior: still ? "auto" : "smooth" });
+      }
+    }
+    button.current?.focus({ preventScroll: true });
+  }, []);
 
   return (
     <div
-      role="status"
-      className={cn("path-rise grid gap-3 rounded-xl px-4 py-3.5", ok ? "bg-success/10" : "bg-destructive/[0.07]")}
+      ref={foot}
+      className="flex flex-wrap items-start justify-between gap-x-5 gap-y-3 border-t border-border pt-4 sm:flex-nowrap"
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <p className="min-w-0 flex-1 basis-56 text-[15px] leading-relaxed">{children}</p>
-        <Button ref={button} size="sm" variant={ok ? "outline" : "default"} onClick={onNext} className="shrink-0">
-          {ok ? "Next" : "Got it"}
-          <ArrowRight />
-        </Button>
-      </div>
-      {auto && (
-        <span
-          aria-hidden
-          className="path-drain block h-0.5 rounded-full bg-success/60"
-          style={{ "--dur": `${ms}ms` } as CSSProperties}
-        />
-      )}
+      <p id={verdictId} className="min-w-0 flex-1 basis-60 text-small leading-relaxed">
+        {children}
+      </p>
+      <Button
+        ref={button}
+        onClick={onNext}
+        aria-describedby={verdictId}
+        className="h-11 w-full shrink-0 sm:h-10 sm:w-auto"
+      >
+        Continue
+        <ArrowRight />
+      </Button>
     </div>
   );
 }
 
-/** `fn`, callable once: a timer and a click can both try to move on. */
+/** `fn`, callable once: a second press of Continue (or Enter held down) must not skip a move. */
 function useOnce(fn: () => void): () => void {
   const done = useRef(false);
   const latest = useRef(fn);
@@ -811,36 +793,24 @@ function useOnce(fn: () => void): () => void {
   }, []);
 }
 
-/** Focus the move when it's shown, for keyboards and screen readers. Scrolling is the player's call. */
-function useTakeFocus(root: RefObject<HTMLElement | null>, takeFocus: boolean) {
+/** Focus the move's question when it arrives, for keyboards and screen readers. Scrolling is the player's call. */
+function useTakeFocus(target: RefObject<HTMLElement | null>, takeFocus: boolean) {
   useEffect(() => {
-    if (takeFocus) root.current?.focus({ preventScroll: true });
-  }, [root, takeFocus]);
+    if (takeFocus) target.current?.focus({ preventScroll: true });
+  }, [target, takeFocus]);
 }
 
-/**
- * Keys for the move while it holds the page's turn. The handler returns true
- * when it used the key. Typing in a box and shortcuts with a modifier pass.
- */
-function useKeys(enabled: boolean, handler: (e: KeyboardEvent) => boolean) {
-  const latest = useRef(handler);
+/** Each new item in a run takes the focus (never the first), so a screen reader reads it and the keys stay with the move. */
+function useCardFocus(card: RefObject<HTMLElement | null>, pos: number) {
+  const shown = useRef(pos);
   useEffect(() => {
-    latest.current = handler;
-  });
-  useEffect(() => {
-    if (!enabled) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
-      if (latest.current(e)) e.preventDefault();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [enabled]);
+    if (shown.current === pos) return;
+    shown.current = pos;
+    card.current?.focus({ preventScroll: true });
+  }, [card, pos]);
 }
 
-/** Enter moves on, unless it's on a button (which clicks itself). */
+/** Enter moves on, unless it is on a button (which presses itself). */
 function enterTo(e: KeyboardEvent, go: () => void): boolean {
   if (e.key !== "Enter" || (e.target as HTMLElement | null)?.tagName === "BUTTON") return false;
   go();

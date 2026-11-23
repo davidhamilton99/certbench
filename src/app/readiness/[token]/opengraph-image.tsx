@@ -1,13 +1,20 @@
 import { ImageResponse } from "next/og";
 import { verifyShare, type SharePayload } from "@/server/share/readiness-token";
 import { CARD, readinessBand, truncate } from "@/lib/share/card";
+import { ogFonts, OG_SANS, OG_SERIF } from "@/lib/og/fonts";
 import { OgMark } from "@/lib/og/mark";
 
-export const alt = "CompTIA exam readiness — CertBench";
+export const alt = "A CompTIA exam readiness score, measured on CertBench";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Dynamic social card: a refined dark data-report, never a gamified badge. */
+/**
+ * Dynamic social card: a score report on paper, never a badge. It is set in
+ * the site's own two faces, as the site-wide card is (src/app/opengraph-image.tsx),
+ * so the two images a link preview can show read as one publication. Only
+ * those two weights are loaded: the serif at 600 for the wordmark, the score
+ * and the exam's name, and the sans at 500 for everything else.
+ */
 export default async function Image({
   params,
 }: {
@@ -15,16 +22,16 @@ export default async function Image({
 }) {
   const { token } = await params;
   const payload = verifyShare(token);
-  return new ImageResponse(<Card payload={payload} />, { ...size });
+  return new ImageResponse(<Card payload={payload} />, { ...size, fonts: await ogFonts() });
 }
+
+const SERIF = { fontFamily: OG_SERIF, fontWeight: 600 } as const;
 
 function Brandmark() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <OgMark size={44} />
-      <div style={{ color: CARD.text, fontSize: 26, fontWeight: 600 }}>
-        CertBench
-      </div>
+      <OgMark size={44} color={CARD.text} />
+      <div style={{ display: "flex", color: CARD.text, fontSize: 28, ...SERIF }}>CertBench</div>
     </div>
   );
 }
@@ -37,7 +44,8 @@ function Card({ payload }: { payload: SharePayload | null }) {
     height: "100%",
     background: CARD.bg,
     padding: 64,
-    fontFamily: "sans-serif",
+    fontFamily: OG_SANS,
+    fontWeight: 500,
   };
 
   // Fallback (invalid/forged token): still a clean, branded card.
@@ -46,14 +54,14 @@ function Card({ payload }: { payload: SharePayload | null }) {
       <div style={{ ...base, justifyContent: "space-between" }}>
         <Brandmark />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ color: CARD.text, fontSize: 56, fontWeight: 700 }}>
-            One short stop at a time
+          <div style={{ display: "flex", color: CARD.text, fontSize: 60, lineHeight: 1.1, ...SERIF }}>
+            One short step at a time
           </div>
-          <div style={{ color: CARD.sub, fontSize: 28 }}>
-            Every objective of CompTIA Security+, Network+, and A+, as a guided path.
+          <div style={{ display: "flex", color: CARD.sub, fontSize: 28 }}>
+            A study path for CompTIA Security+, Network+ and A+, topic by topic.
           </div>
         </div>
-        <div style={{ color: CARD.muted, fontSize: 22 }}>certbench.dev</div>
+        <div style={{ display: "flex", color: CARD.muted, fontSize: 22 }}>certbench.dev</div>
       </div>
     );
   }
@@ -73,16 +81,8 @@ function Card({ payload }: { payload: SharePayload | null }) {
         }}
       >
         <Brandmark />
-        <div
-          style={{
-            color: CARD.muted,
-            fontSize: 15,
-            letterSpacing: 3,
-            fontWeight: 600,
-          }}
-        >
-          EXAM READINESS
-        </div>
+        {/* A label in sentence case, as every label on the site is: no spaced capitals. */}
+        <div style={{ display: "flex", color: CARD.muted, fontSize: 22 }}>Exam readiness</div>
       </div>
 
       {/* Body */}
@@ -94,38 +94,39 @@ function Card({ payload }: { payload: SharePayload | null }) {
               display: "flex",
               alignItems: "baseline",
               color: band.color,
-              fontSize: 150,
-              fontWeight: 800,
+              fontSize: 140,
               lineHeight: 1,
-              letterSpacing: -4,
+              letterSpacing: -3,
+              ...SERIF,
             }}
           >
             {score}
-            <span style={{ fontSize: 64, fontWeight: 700 }}>%</span>
+            <span style={{ fontSize: 60 }}>%</span>
           </div>
           <div
             style={{
+              display: "flex",
               color: band.color,
               fontSize: 30,
-              fontWeight: 600,
               marginTop: 10,
             }}
           >
-            {`${band.label}${payload.p === 1 ? " · preliminary" : ""}`}
+            {`${band.label}${payload.p === 1 ? " (preliminary)" : ""}`}
           </div>
-          <div style={{ color: CARD.text, fontSize: 30, fontWeight: 600, marginTop: 22 }}>
+          <div style={{ display: "flex", color: CARD.text, fontSize: 32, marginTop: 22, ...SERIF }}>
             {truncate(payload.c, 34)}
           </div>
-          <div style={{ color: CARD.muted, fontSize: 20, marginTop: 6 }}>
-            {`${truncate(payload.n, 24)} · ${payload.x}`}
+          <div style={{ display: "flex", color: CARD.muted, fontSize: 20, marginTop: 6 }}>
+            {`${truncate(payload.n, 24)}, ${payload.x}`}
           </div>
-          {/* Readiness bar */}
+          {/* Readiness bar: a rule drawn thick, with square ends. */}
           <div
             style={{
               display: "flex",
               width: 460,
               height: 12,
-              borderRadius: 6,
+              borderRadius: 2,
+              overflow: "hidden",
               background: CARD.track,
               marginTop: 30,
             }}
@@ -134,7 +135,6 @@ function Card({ payload }: { payload: SharePayload | null }) {
               style={{
                 width: (460 * score) / 100,
                 height: 12,
-                borderRadius: 6,
                 background: band.color,
               }}
             />
@@ -151,20 +151,11 @@ function Card({ payload }: { payload: SharePayload | null }) {
               gap: 16,
               background: CARD.panel,
               border: `1px solid ${CARD.border}`,
-              borderRadius: 16,
+              borderRadius: 6,
               padding: 28,
             }}
           >
-            <div
-              style={{
-                color: CARD.muted,
-                fontSize: 14,
-                letterSpacing: 2,
-                fontWeight: 600,
-              }}
-            >
-              DOMAIN BREAKDOWN
-            </div>
+            <div style={{ display: "flex", color: CARD.muted, fontSize: 18 }}>Domain breakdown</div>
             {domains.map(([label, dScore], i) => {
               const s = Math.max(0, Math.min(100, Math.round(dScore)));
               return (
@@ -172,7 +163,7 @@ function Card({ payload }: { payload: SharePayload | null }) {
                   key={i}
                   style={{ display: "flex", alignItems: "center", gap: 14 }}
                 >
-                  <div style={{ display: "flex", flex: 1, color: "#C7CBD1", fontSize: 19 }}>
+                  <div style={{ display: "flex", flex: 1, color: CARD.sub, fontSize: 19 }}>
                     {truncate(label, 22)}
                   </div>
                   <div
@@ -180,7 +171,8 @@ function Card({ payload }: { payload: SharePayload | null }) {
                       display: "flex",
                       width: 150,
                       height: 8,
-                      borderRadius: 4,
+                      borderRadius: 2,
+                      overflow: "hidden",
                       background: CARD.track,
                     }}
                   >
@@ -188,7 +180,6 @@ function Card({ payload }: { payload: SharePayload | null }) {
                       style={{
                         width: (150 * s) / 100,
                         height: 8,
-                        borderRadius: 4,
                         background: readinessBand(s).color,
                       }}
                     />
@@ -221,11 +212,9 @@ function Card({ payload }: { payload: SharePayload | null }) {
           paddingTop: 24,
         }}
       >
-        <div style={{ color: CARD.text, fontSize: 22, fontWeight: 600 }}>
-          certbench.dev
-        </div>
-        <div style={{ color: CARD.muted, fontSize: 18 }}>
-          Guided CompTIA exam prep · readiness score
+        <div style={{ display: "flex", color: CARD.text, fontSize: 22 }}>certbench.dev</div>
+        <div style={{ display: "flex", color: CARD.muted, fontSize: 18 }}>
+          Readiness score for a CompTIA exam
         </div>
       </div>
     </div>

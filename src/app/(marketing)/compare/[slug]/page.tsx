@@ -1,20 +1,14 @@
 import { notFound } from "next/navigation";
 import { Check } from "lucide-react";
-import { ROUNDUPS, VS_PAGES } from "@/lib/seo/comparison-pages";
+import { longDate } from "@/core/path/versions";
+import { COMPARISON_PAGES_UPDATED_ISO, ROUNDUPS, VS_PAGES } from "@/lib/seo/comparison-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
-import { LanderPage } from "@/components/marketing/lander/Lander";
-import {
-  ArticleBand,
-  ArticleBody,
-  ArticleHero,
-  ArticleSection,
-  ArticleTail,
-  TickWell,
-} from "@/components/marketing/lander/Article";
+import { LanderBlock, LanderPage } from "@/components/marketing/lander/Lander";
+import { ArticleBody, ArticleHero, ArticleSection, TickWell } from "@/components/marketing/lander/Article";
 import { pageMetadata } from "@/lib/seo/metadata";
-import { cn } from "@/lib/utils";
+import { keepCodes } from "@/lib/keep-codes";
 
 export const dynamicParams = false;
 
@@ -37,29 +31,18 @@ export async function generateMetadata({
   });
 }
 
-/** One side of the verdict: when to pick that tool. */
+/** One side of the verdict: when to choose that product. A ruled list, with CertBench's own side marked in ink. */
 function Verdict({ title, items, ours = false }: { title: string; items: string[]; ours?: boolean }) {
   return (
-    <div
-      className={cn(
-        "glass relative isolate overflow-hidden rounded-[1.75rem] p-6 sm:p-7",
-        ours && "border-primary/45 shadow-[0_30px_80px_-44px_var(--primary)]"
-      )}
-    >
-      {ours && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-1/2 -z-10 h-full [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_16%,transparent),transparent)]"
-        />
-      )}
-      <h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2>
-      <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed text-muted-foreground">
+    <div className="border-t border-foreground/80 pt-5">
+      <h2 className="cb-subsection">{title}</h2>
+      <ul className="mt-5 grid gap-3 text-small text-muted-foreground">
         {items.map((item) => (
           <li key={item} className="flex items-start gap-3">
             <TickWell lit={ours}>
               <Check strokeWidth={3} />
             </TickWell>
-            {item}
+            <span className="min-w-0">{keepCodes(item)}</span>
           </li>
         ))}
       </ul>
@@ -67,9 +50,9 @@ function Verdict({ title, items, ours = false }: { title: string; items: string[
   );
 }
 
-// On phones each row stacks: the feature, then each tool's answer under its name.
+// On a phone each row stacks: the feature, then each product's answer under its name.
 const CELL =
-  "px-6 py-4 align-top max-sm:block max-sm:p-0 max-sm:before:mb-0.5 max-sm:before:block max-sm:before:text-[11px] max-sm:before:font-medium max-sm:before:uppercase max-sm:before:tracking-[0.14em] max-sm:before:text-muted-foreground/80 max-sm:before:content-[attr(data-label)]";
+  "py-3.5 pr-6 align-top text-muted-foreground last:pr-0 max-sm:block max-sm:p-0 max-sm:before:mb-0.5 max-sm:before:block max-sm:before:text-note max-sm:before:font-medium max-sm:before:text-muted-foreground max-sm:before:content-[attr(data-label)]";
 
 export default async function VsPage({
   params,
@@ -81,78 +64,99 @@ export default async function VsPage({
   if (!page) notFound();
 
   const guide = ROUNDUPS.find((r) => r.path === "best-security-plus-practice-tests");
+  // Only a price can be read at the vendor's source (the facts file holds prices and nothing else), so
+  // every other entry in the competitor's column is said to be CertBench's own assessment.
+  const priceRead = Boolean(page.priceSource && page.priceChecked);
+  const attribution = `The ${page.competitorName} column is CertBench's own assessment${
+    priceRead ? ", except for the price, which CertBench read on the vendor's own page" : ""
+  }.`;
 
   return (
     <LanderPage>
       <ArticleBody>
-        <ArticleHero eyebrow="Comparison" title={page.h1}>
+        <ArticleHero
+          eyebrow="Comparison"
+          title={page.h1}
+          // The day the comparison's words last changed, kept beside them in the copy table.
+          above={
+            <p className="text-note text-muted-foreground">
+              This comparison was last updated on {longDate(COMPARISON_PAGES_UPDATED_ISO)}.
+            </p>
+          }
+        >
           {page.intro.map((p) => (
             <p key={p.slice(0, 32)}>{p}</p>
           ))}
         </ArticleHero>
 
-        {/* The verdict, both directions */}
-        <section className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2">
+        {/* The verdict, in both directions. */}
+        <section className="mt-12 grid gap-10 sm:mt-16 sm:grid-cols-2">
           <Verdict title={`Choose ${page.competitorName} if`} items={page.chooseThem} />
           <Verdict title="Choose CertBench if" items={page.chooseUs} ours />
         </section>
 
-        <ArticleSection title="Side by side">
-          <div className="glass overflow-hidden rounded-[1.75rem]">
-            <table className="w-full text-left text-[15px] leading-relaxed max-sm:block">
-              <thead className="max-sm:sr-only">
-                <tr className="border-b border-foreground/[0.08]">
-                  <th scope="col" className="w-[24%] px-6 py-4 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                    Feature
+        <ArticleSection title="Side by side" wide>
+          <table className="w-full border-collapse text-left text-small max-sm:block">
+            {/* The table's name says whose words the competitor's column holds, before any row is read. */}
+            <caption className="pb-4 text-left text-note text-muted-foreground max-sm:block">{attribution}</caption>
+            <thead className="max-sm:sr-only">
+              <tr className="border-y border-foreground/70 text-note text-muted-foreground">
+                <th scope="col" className="w-[22%] py-2.5 pr-6 font-medium">
+                  Feature
+                </th>
+                <th scope="col" className="w-[39%] py-2.5 pr-6 font-medium">
+                  CertBench
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  {page.competitorName}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="max-sm:block max-sm:border-t max-sm:border-foreground/70">
+              {page.rows.map((row) => (
+                <tr key={row.feature} className="border-b border-border max-sm:grid max-sm:gap-3 max-sm:py-5">
+                  <th scope="row" className="py-3.5 pr-6 align-top font-semibold max-sm:block max-sm:p-0 max-sm:text-body">
+                    {row.feature}
                   </th>
-                  <th scope="col" className="px-6 py-4 font-semibold">
-                    CertBench
-                  </th>
-                  <th scope="col" className="px-6 py-4 font-semibold">
-                    {page.competitorName}
-                  </th>
+                  <td data-label="CertBench" className={CELL}>
+                    {keepCodes(row.certbench)}
+                  </td>
+                  <td data-label={page.competitorName} className={CELL}>
+                    {keepCodes(row.competitor)}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="max-sm:block">
-                {page.rows.map((row) => (
-                  <tr
-                    key={row.feature}
-                    className="border-b border-foreground/[0.06] last:border-0 max-sm:grid max-sm:gap-3 max-sm:px-5 max-sm:py-5"
-                  >
-                    <th scope="row" className="px-6 py-4 align-top font-medium max-sm:block max-sm:p-0 max-sm:text-base">
-                      {row.feature}
-                    </th>
-                    <td data-label="CertBench" className={cn(CELL, "text-muted-foreground")}>
-                      {row.certbench}
-                    </td>
-                    <td data-label={page.competitorName} className={cn(CELL, "text-muted-foreground")}>
-                      {row.competitor}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Competitor details and prices are approximate as of mid-2026 — always check their site for current offers.
+              ))}
+            </tbody>
+          </table>
+          {/* A date is printed only for a price that was read at its source on that day. */}
+          <p className="cb-measure-xs mt-4 text-note text-muted-foreground">
+            {page.priceSource && page.priceChecked && (
+              <>
+                CertBench read the price of {page.competitorName} on{" "}
+                <a href={page.priceSource} target="_blank" rel="noopener noreferrer" className="cb-link">
+                  the vendor&apos;s own page
+                </a>{" "}
+                on {page.priceChecked}.{" "}
+              </>
+            )}
+            The details and prices of other products change. Please check the vendor&apos;s own site for its current
+            offer.
           </p>
         </ArticleSection>
       </ArticleBody>
 
-      <ArticleBand>
-        <PathCard
-          kicker="Your exam path"
-          title="The fastest way to decide"
-          href="/start"
-          label="Start my exam path"
-          context="compare_page"
-        >
-          Start the guided path for your exam. The first stops are free, and the readiness checkpoint shows where you
-          stand.
-        </PathCard>
-      </ArticleBand>
+      <PathCard
+        className="mt-20 sm:mt-28"
+        title="The fastest way to decide"
+        href="/start"
+        label="Choose your exam"
+        context="compare_page"
+      >
+        Choose your exam to start its study path. The first steps are free, and the readiness checkpoint shows where
+        you stand.
+      </PathCard>
 
-      <ArticleTail>
+      <LanderBlock>
         <RelatedLinks
           title="Other comparisons"
           links={[
@@ -165,15 +169,15 @@ export default async function VsPage({
               ? [
                   {
                     href: `/${guide.path}`,
-                    label: "The full 2026 Security+ guide",
-                    note: "Every practice test worth a look, side by side, CertBench included",
+                    label: "The 2026 guide to Security+ practice tests",
+                    note: "Security+ practice tests side by side, with CertBench among them",
                   },
                 ]
               : []),
           ]}
         />
         <FaqSection faqs={page.faqs} />
-      </ArticleTail>
+      </LanderBlock>
     </LanderPage>
   );
 }

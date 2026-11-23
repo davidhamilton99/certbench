@@ -92,13 +92,13 @@ describe("buildRehearsal", () => {
     expect(count(ids, "4.0")).toBe(10);
   });
 
-  it("draws the same rehearsal from the same seed, and a new one from another", () => {
+  it("draws the same practice exam from the same seed, and a new one from another", () => {
     const ids = (seed: number) => buildRehearsal({ bank, size: "half", seen: [], seed }).map((r) => r.id);
     expect(ids(7)).toEqual(ids(7));
     expect(ids(8)).not.toEqual(ids(7));
   });
 
-  it("isn't built as a stop: it's drawn on its own, at the size picked", () => {
+  it("is not built as a step: it is drawn on its own, at the size picked", () => {
     const plan = buildPlan(bank.structure);
     const index = plan.stops.findIndex((s) => s.kind === "rehearsal");
     expect(buildStop({ bank, plan, index, seen: [], missed: [], seed: 1 })).toBeNull();

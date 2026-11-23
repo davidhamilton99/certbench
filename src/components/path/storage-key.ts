@@ -9,6 +9,21 @@ export const pathStorageKey = (cert: string) => `cb_path_${cert}`;
  */
 export const pathGuestKey = (cert: string) => `cb_path_guest_${cert}`;
 
+/**
+ * The account that the guest work is known to belong to: the account someone
+ * made or signed in to on a public page, or the account that was signed in
+ * while the work was played. The study path then adds the work to that account
+ * without counting the account as newly linked.
+ */
+export const pathGuestClaimKey = (cert: string) => `cb_path_guest_claim_${cert}`;
+
+/**
+ * What became of the practice exam that was last finished on the exam's public
+ * page on this device: which account took it onto its study path, or that it
+ * was set aside because the device held another account's study path.
+ */
+export const pathExamTakenKey = (cert: string) => `cb_path_exam_taken_${cert}`;
+
 /** Set once this device has shown Pro opening one exam's path. */
 export const pathUnlockedKey = (cert: string) => `cb_path_unlocked_${cert}`;
 

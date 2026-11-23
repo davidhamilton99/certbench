@@ -12,6 +12,28 @@ export const TOOL_SOURCES = [
 export type ToolSource = (typeof TOOL_SOURCES)[number];
 
 /**
+ * Limits on the optional context a tool sends with a lead. The route is public,
+ * so without them anyone could store rows of any size.
+ */
+export const LEAD_CONTEXT_MAX_KEYS = 8;
+export const LEAD_CONTEXT_MAX_KEY_LENGTH = 32;
+export const LEAD_CONTEXT_MAX_VALUE_LENGTH = 64;
+
+/**
+ * What happened to the study plan email, so that the form can say so:
+ *  - "sent": the mail service accepted the email.
+ *  - "skipped": no email was sent, on purpose. The address was sent the study
+ *    plan from this tool in the last 24 hours, or it has unsubscribed.
+ *  - "failed": the email could not be sent. The visitor may try again in a few
+ *    minutes: a failed attempt does not count toward the 24 hours.
+ *  - "test": the address is one that CertBench's own tests use. Nothing is
+ *    stored or sent.
+ */
+export const LEAD_DELIVERIES = ["sent", "skipped", "failed", "test"] as const;
+
+export type LeadDelivery = (typeof LEAD_DELIVERIES)[number];
+
+/**
  * Capture an email lead from an anonymous free-tool user, in exchange for a
  * study-plan email. Public + rate-limited; the write and send happen server
  * side via the service role.
@@ -23,9 +45,18 @@ export const captureToolLead = {
     email: z.email().max(254),
     source: z.enum(TOOL_SOURCES),
     /** Small, optional signal for the email (e.g. { answered, accuracy }). */
-    context: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+    context: z
+      .record(
+        z.string().min(1).max(LEAD_CONTEXT_MAX_KEY_LENGTH),
+        z.union([z.string().max(LEAD_CONTEXT_MAX_VALUE_LENGTH), z.number()])
+      )
+      .refine((context) => Object.keys(context).length <= LEAD_CONTEXT_MAX_KEYS, {
+        message: `At most ${LEAD_CONTEXT_MAX_KEYS} context entries`,
+      })
+      .optional(),
   }),
-  output: z.object({ ok: z.literal(true) }),
+  /** `ok` says the request was handled; `delivery` says whether an email went out. */
+  output: z.object({ ok: z.literal(true), delivery: z.enum(LEAD_DELIVERIES) }),
 } satisfies EndpointContract;
 
 const count = z.number().int().min(0);

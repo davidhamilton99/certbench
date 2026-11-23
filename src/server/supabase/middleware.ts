@@ -1,7 +1,12 @@
+import "server-only";
+
 import { createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "@/env";
+import { afterResponse } from "@/server/api/after-response";
+import { reportServerError, type ErrorPlace } from "@/server/api/report-error";
+import { fetchWithTimeLimit, SESSION_CHECK_LIMIT_MS, withDeadline } from "./time-limit";
 
 /** Route prefixes that require an authenticated session. */
 const PROTECTED_PREFIXES = [
@@ -29,41 +34,118 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 /**
  * Protected routes an authenticated non-Pro user may still reach:
  *   - /upgrade    pricing and the plan page (paying itself lands on the path)
- *   - /onboarding forwards to the guided path (kept for old links)
+ *   - /onboarding forwards to the study path (kept for old links)
  * Everything else in the signed-in app is Pro-only. The free experience is the
- * guided path (/path/*, /start) and the public pages, which are never protected.
+ * study path (/path/*, /start) and the public pages, which are never protected.
  */
 const PRO_EXEMPT_PREFIXES = ["/upgrade", "/onboarding"];
 
 /**
  * Where a signed-in visitor on an auth page goes when the link was taking them
- * back to the guided path (an email's path link, the path's own "Sign in"):
- * straight there instead of the toolkit. Same-site path pages only.
+ * back to the study path (an email's path link, the path's own "Sign in"):
+ * straight there instead of the toolkit. Same-site path pages only, and one
+ * more address: the pricing page with the plan the visitor chose there. A
+ * visitor who pressed a payment button while signed out is sent to create an
+ * account with that address (src/components/auth/return-path.ts, chosenPlan);
+ * someone who turns out to be signed in already must not lose the choice.
  */
 export function guidedNext(next: string | null): string | null {
-  return next && /^\/(?:path\/[a-z0-9-]+|start)(?:\?|$)/.test(next) ? next : null;
+  if (!next) return null;
+  if (/^\/(?:path\/[a-z0-9-]+|start)(?:\?|$)/.test(next)) return next;
+  if (/^\/pricing\?plan=(?:monthly|quarterly|annual)$/.test(next)) return next;
+  return null;
+}
+
+/**
+ * The cookie the Supabase client keeps a session in: "sb-<project>-auth-token",
+ * whole or split into numbered parts. Without one there is no session to
+ * refresh and nobody to recognize.
+ */
+const SESSION_COOKIE = /^sb-.+-auth-token(?:\.\d+)?$/;
+
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some(({ name }) => SESSION_COOKIE.test(name));
+}
+
+/**
+ * The gate in front of the Pro pages, as an error report names it. The place
+ * and nothing else: the proxy sees every address, those that hold a token
+ * included, and the report is about the server, not about a visitor.
+ */
+const PRO_GATE: ErrorPlace = { route: "proxy:pro-gate", kind: "proxy" };
+
+/**
+ * Tells the owner that a request was let into the Pro pages without its plan
+ * or its role having been read. A gate that stands open looks from outside
+ * like one that is working, so a line in the log is not enough. The report is
+ * a `server_error` in words of its own: the database's words stay in the log.
+ * It is sent once the response has gone, or beside the response where nothing
+ * can be scheduled after one, so the visitor never waits for it.
+ */
+function reportOpenGate(what: "plan" | "role"): void {
+  afterResponse(() =>
+    reportServerError(new Error(`The Pro gate let a request through: the ${what} could not be read.`), PRO_GATE)
+  );
+}
+
+/** A page fetched ahead of a press, by Next's router or by the browser itself. */
+function isPrefetch(request: NextRequest): boolean {
+  const { headers } = request;
+  return (
+    headers.has("next-router-prefetch") ||
+    headers.get("purpose") === "prefetch" ||
+    (headers.get("sec-purpose") ?? "").startsWith("prefetch")
+  );
 }
 
 /**
  * Session refresh + redirect matrix. Runs on every matched request:
  *   - refreshes the Supabase auth token (cookie rotation)
  *   - unauthenticated user on a protected route -> /login?next=<path>
- *   - authenticated user on an auth page         -> /start, their guided path
+ *   - authenticated user on an auth page         -> /start, their study path
  *                                                   (or where guidedNext says)
- *   - authenticated non-Pro user in the app      -> /start (their guided path)
+ *   - authenticated non-Pro user in the app      -> /start (their study path)
  *
- * Onboarding completeness is checked in the (workspace) layout, not here —
+ * A request to a page that is neither protected nor an auth page leaves
+ * before any of that when it has no session to refresh, is a prefetch, or is
+ * for the API (see the three cases below). Protected pages and auth pages
+ * always take the whole route, prefetches included, so who may open what is
+ * decided exactly as before.
+ *
+ * Onboarding completeness is checked in the (workspace) layout, not here:
  * it needs a profile row read on every protected route. The paywall gate does
  * read the subscription row, but only once the cheaper checks have passed and
  * only on protected, non-exempt routes.
  */
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
+  const isAuthPage = AUTH_PAGES.includes(pathname);
+
+  // A page outside the gate is the same whoever asks for it, so the request
+  // goes straight through, with no client built and no call to the sign-in
+  // service, when:
+  //   - it carries no session cookie: there is nothing to refresh;
+  //   - it is a prefetch: one page view prefetches a hundred links or more,
+  //     and each of them would otherwise be a call to the sign-in service;
+  //   - it is for the API: every handler checks the session itself and can
+  //     write the refreshed cookies, so the check here was a second one.
+  if (!isProtected && !isAuthPage) {
+    if (!hasSessionCookie(request) || isPrefetch(request) || pathname.startsWith("/api/")) {
+      return NextResponse.next();
+    }
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      global: { fetch: fetchWithTimeLimit() },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -81,47 +163,54 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // A transient auth-token validation error — most notably "JWT issued at
-  // future" from clock skew between the token issuer and this instance — must
-  // never take down a page load. Fail closed to "no session" for this one
-  // request: auth pages still render, protected routes fall back to /login,
-  // and the rotated cookie validates cleanly on the very next request.
+  /**
+   * A redirect that carries the cookies the session refresh has just written.
+   * A refresh rotates the tokens; a redirect built without them would send the
+   * browser on with tokens that have already been replaced.
+   */
+  const redirectTo = (url: URL) => {
+    const redirect = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    return redirect;
+  };
+
+  // A transient auth-token validation error (most notably "JWT issued at
+  // future" from clock skew between the token issuer and this instance) must
+  // never take down a page load, and a sign-in service that has stopped
+  // answering must not hold every page for the half minute its client keeps
+  // retrying. Either way this one request continues as signed out: auth pages
+  // still render, protected routes fall back to /login, and the next request
+  // checks again.
   let user: User | null = null;
   try {
-    const result = await supabase.auth.getUser();
+    const result = await withDeadline(supabase.auth.getUser(), SESSION_CHECK_LIMIT_MS, "The session check");
     user = result.data.user;
   } catch (err) {
-    console.warn("[proxy] auth.getUser failed; continuing unauthenticated", err);
+    console.warn("[proxy] the session check failed or ran out of time; continuing as signed out", err);
   }
-
-  const { pathname } = request.nextUrl;
-
-  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix)
-  );
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
     url.searchParams.set("next", pathname + request.nextUrl.search);
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
 
-  if (user && AUTH_PAGES.includes(pathname)) {
+  if (user && isAuthPage) {
     const back = guidedNext(request.nextUrl.searchParams.get("next"));
-    if (back) return NextResponse.redirect(new URL(back, request.url));
-    // Home is the guided path, Pro or not: /start opens their exam's path.
+    if (back) return redirectTo(new URL(back, request.url));
+    // Home is the study path, Pro or not: /start opens their exam's path.
     const url = request.nextUrl.clone();
     url.pathname = "/start";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
 
   // The signed-in toolkit is Pro-only. Send authenticated non-Pro users to
-  // their guided path for any protected route except the exempt ones (pricing
+  // their study path for any protected route except the exempt ones (pricing
   // and the onboarding forward). Admins (the owner) always pass, Pro or
-  // not — so a comp-free owner account is never locked out of its own app.
+  // not, so a comp-free owner account is never locked out of its own app.
   // Checked here, not in the layout, because the redirect decision needs the
   // pathname. The subscription read only runs for signed-in users navigating
   // a protected, non-exempt route, and Pro users cost a single query.
@@ -137,9 +226,11 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle();
     // Fail open on a transient read error: never wall a paying user over our
     // own infra blip. The leak (a free user slipping through during an outage)
-    // is rare and still bounded by the data-layer quotas.
+    // is rare and still bounded by the data-layer quotas. It is reported, once
+    // for the request: this return and the one below never both run.
     if (subErr) {
       console.warn("[proxy] subscription read failed; allowing through", subErr);
+      reportOpenGate("plan");
       return response;
     }
     const isPro =
@@ -154,16 +245,17 @@ export async function updateSession(request: NextRequest) {
         .maybeSingle();
       if (profErr) {
         console.warn("[proxy] profile read failed; allowing through", profErr);
+        reportOpenGate("role");
         return response;
       }
       if (profile?.role !== "admin") {
         const url = request.nextUrl.clone();
         url.search = "";
-        // Without Pro, the place to be is the guided path: /start opens the
+        // Without Pro, the place to be is the study path: /start opens the
         // exam they're enrolled in, or lets them pick one. The offer lives
         // inside the path, after the readiness checkpoint.
         url.pathname = "/start";
-        return NextResponse.redirect(url);
+        return redirectTo(url);
       }
     }
   }

@@ -3,6 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 import { aPlusV14Redirects } from "./src/data/a-plus-v15/redirects";
 
 const nextConfig: NextConfig = {
+  // Do not name the framework in a response header.
+  poweredByHeader: false,
+  // No page uses next/image, so the image optimizer endpoint (/_next/image)
+  // is switched off: with this set it answers 404 instead of resizing files
+  // for anyone who asks.
+  images: { unoptimized: true },
   // PostHog through our own domain, so ad blockers that block posthog.com
   // don't silently drop a visitor's events and session recording. Library,
   // recorder and remote config come from the assets host; the rest is the API.
@@ -36,19 +42,6 @@ const nextConfig: NextConfig = {
   ],
   headers: async () => [
     {
-      source: "/sw.js",
-      headers: [
-        {
-          key: "Cache-Control",
-          value: "no-cache, no-store, must-revalidate",
-        },
-        {
-          key: "Service-Worker-Allowed",
-          value: "/",
-        },
-      ],
-    },
-    {
       // Fonts aren't pages, but Google fetches them while rendering and lists
       // them as "Crawled - currently not indexed", where they fail every
       // validation of that issue. noindex takes them out of it; Google still
@@ -62,13 +55,22 @@ const nextConfig: NextConfig = {
       // init, theme bootstrap, JSON-LD) and third-party origins (Stripe,
       // Supabase, Sentry) that a strict policy would break without nonces.
       // The CSP here is limited to the directives that are safe to enforce
-      // globally and add real value — anti-clickjacking, anti-base-tag
-      // injection, and blocking plugin/object embeds.
+      // globally and add real value: anti-clickjacking, anti-base-tag
+      // injection, blocking plugin/object embeds, and forms that may only be
+      // sent to this site.
+      //
+      // form-action 'self' is safe because nothing here leaves the site by
+      // posting a form. Google sign-in and the Stripe checkout and billing
+      // portal are plain navigations (window.location), and they come back
+      // with a GET. The two forms that a browser submits itself (the
+      // unsubscribe page and the community search) go to this site and are
+      // answered from it. A form that posts to another origin, or whose
+      // answer redirects to one, would be blocked: use a navigation instead.
       source: "/:path*",
       headers: [
         {
           key: "Content-Security-Policy",
-          value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+          value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
         },
         // Legacy equivalent of frame-ancestors for older browsers.
         { key: "X-Frame-Options", value: "DENY" },
@@ -108,7 +110,5 @@ export default sentryEnabled
       authToken: process.env.SENTRY_AUTH_TOKEN,
       silent: !process.env.CI,
       widenClientFileUpload: true,
-      disableLogger: true,
-      automaticVercelMonitors: false,
     })
   : nextConfig;

@@ -21,10 +21,3 @@ export interface MatchingOption {
   right: string;
 }
 
-export interface GeneratedQuestion {
-  question_type: QuestionType;
-  question_text: string;
-  options: unknown[];
-  correct_index: number;
-  explanation?: string;
-}

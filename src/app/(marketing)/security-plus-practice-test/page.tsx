@@ -10,7 +10,8 @@ const page = PRACTICE_TEST_PAGES.find(
   (p) => p.path === "security-plus-practice-test"
 )!;
 
-export const revalidate = 86400; // daily — question samples are stable
+// Rebuilt once a day: the questions change rarely.
+export const revalidate = 86400;
 
 export const metadata = pageMetadata({
   title: page.metaTitle,

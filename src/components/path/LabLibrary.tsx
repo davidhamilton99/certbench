@@ -2,16 +2,22 @@
 
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { preloadLab } from "@/components/workspace/pbq-host";
 import type { PathLabInfo, PathStructure, StopRecord } from "@/core/path/types";
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 import { domainLabel, handsOnCount, HANDS_ON_TYPES as HANDS_ON, LAB_TYPES, labMeta } from "./lab-types";
 
 export { labMeta } from "./lab-types";
 
 /**
- * Every lab an exam has, domain by domain: the one closing each domain on the
- * path and all the rest. Any of them opens in the path's own lab stage; each
- * shows its latest score once played.
+ * Every lab an exam has, domain by domain: the one that closes each domain on
+ * the study path and all the rest. Any of them opens on the study path's own
+ * lab screen; each shows its latest score once it has been completed.
+ *
+ * A row is named by the words printed on it, in the order they are printed, so
+ * that a person who is read the row by a screen reader, or who speaks its
+ * title to a voice control, gets the same words as a person who looks at it.
  */
 export function LabLibrary({
   structure,
@@ -33,15 +39,22 @@ export function LabLibrary({
   return (
     <div className="path-rise grid gap-6">
       <div className="grid gap-2">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Hands-on labs · {structure.examCode}
-        </span>
-        <h1 className="cb-display text-balance text-[2.35rem] sm:text-5xl">
-          Every lab for {structure.examName}
+        <p className="cb-label text-muted-foreground">{structure.examCode}</p>
+        {/* The screen's title. It takes the focus when the list opens. */}
+        <h1 tabIndex={-1} className="cb-section">
+          Hands-on labs for {structure.examName}
         </h1>
-        <p className="text-muted-foreground">
-          {handsOnCount(library)} that work like the exam&apos;s performance-based questions
-          {drills > 0 && <>, and {drills} quick drills</>}. {done} of {library.length} done.
+        {/* What the labs are, in CertBench's own terms: nothing is claimed of how the exam's questions work. */}
+        <p className="text-body text-muted-foreground">
+          The {handsOnCount(library)} {library.length - drills === 1 ? "is" : "are"} CertBench&apos;s practice for the
+          exam&apos;s performance-based questions.
+          {drills > 0 && (
+            <>
+              {" "}
+              There {drills === 1 ? "is" : "are"} also {drills} short {drills === 1 ? "drill" : "drills"}.
+            </>
+          )}{" "}
+          You have completed {done} of {library.length}.
         </p>
       </div>
 
@@ -52,18 +65,14 @@ export function LabLibrary({
           const played = labs.filter((l) => results.has(l.id)).length;
           return (
             <section key={d.number} aria-labelledby={`labs-${d.number}`} className="grid gap-2.5">
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <h2
-                  id={`labs-${d.number}`}
-                  aria-label={`Domain ${domainLabel(d.number)}: ${d.title}`}
-                  className="min-w-0 font-medium leading-snug"
-                >
-                  <span className="mr-2 font-mono text-xs text-muted-foreground">{domainLabel(d.number)}</span>
-                  {d.title}
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                {/* Set out as the course outline sets out a domain, in the same words. */}
+                <h2 id={`labs-${d.number}`} className="min-w-0 text-small font-semibold">
+                  Domain {domainLabel(d.number)}: {domainName(d.title)}
                 </h2>
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {played} of {labs.length} done
-                </span>
+                <p className="shrink-0 text-note tabular-nums text-muted-foreground">
+                  {played} of {labs.length} complete.
+                </p>
               </div>
               <ul className="grid gap-2">
                 {labs.map((lab) => {
@@ -74,42 +83,37 @@ export function LabLibrary({
                       <button
                         type="button"
                         onClick={() => onOpen(lab)}
-                        aria-label={[
-                          lab.title,
-                          labMeta(lab),
-                          closing.has(lab.id) && "closes the domain",
-                          result && `done, ${result.c} of ${result.t}`,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                        className="glass group flex w-full min-w-0 items-center gap-3.5 rounded-2xl p-3.5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-[0_22px_50px_-30px_var(--primary)] sm:p-4"
+                        // A simulation, a topology and a threat hunt each have a large
+                        // player: its fetch starts as the row is hovered or takes the
+                        // focus, so that it is usually there when the lab opens.
+                        onPointerEnter={() => preloadLab(lab.type)}
+                        onFocus={() => preloadLab(lab.type)}
+                        className="glass flex w-full min-w-0 items-center gap-3.5 rounded-md p-3.5 text-left transition-[border-color,background-color] duration-150 hover:border-primary hover:bg-tint-hover active:bg-tint-press sm:p-4"
                       >
                         <span
+                          aria-hidden
                           className={cn(
-                            "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                            result ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                            "flex size-10 shrink-0 items-center justify-center rounded-xs",
+                            result ? "bg-success/15 text-success" : "bg-tint-selected text-primary"
                           )}
                         >
-                          <Icon className="size-[18px]" aria-hidden />
+                          <Icon className="size-[18px]" />
                         </span>
-                        {/* Titles wrap, never truncate: on a phone a cut-off title hides what the lab is. */}
+                        {/* Titles wrap and are never cut short: on a phone a cut title hides what the lab is. */}
                         <span className="min-w-0 flex-1">
-                          <span className="block text-balance font-medium leading-snug">{lab.title}</span>
-                          <span className="mt-1 block font-mono text-[11px] uppercase leading-relaxed tracking-wider text-muted-foreground">
-                            {labMeta(lab)}
-                            {closing.has(lab.id) && " · closes the domain"}
+                          <span className="block text-small font-medium">{lab.title}</span>
+                          {/* Read between the title and the line under it, which a screen reader does not see as two lines. */}
+                          <span className="sr-only">. </span>
+                          <span className="mt-1 block text-note text-muted-foreground">
+                            {labMeta(lab)}.{closing.has(lab.id) && " This lab ends the domain on your study path."}
                           </span>
                         </span>
-                        {result ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 font-mono text-xs font-semibold tabular-nums text-success">
+                        {result && (
+                          <span className="inline-flex shrink-0 items-center gap-1 text-note font-medium tabular-nums text-success">
                             <Check className="size-3.5" strokeWidth={3} aria-hidden />
-                            {result.c}/{result.t}
+                            <span className="sr-only"> Completed, with a score of </span>
+                            {result.c} of {result.t}
                           </span>
-                        ) : (
-                          <ArrowRight
-                            className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                            aria-hidden
-                          />
                         )}
                       </button>
                     </li>
@@ -121,36 +125,41 @@ export function LabLibrary({
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="justify-self-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-      >
-        Back to my map
+      <button type="button" onClick={onBack} className="cb-link cb-tap justify-self-center text-small">
+        Return to the study path
       </button>
     </div>
   );
 }
 
-/** After a lab from the library: the next one not played yet. */
+/**
+ * After a lab from the list: the next one that has not been completed yet.
+ *
+ * The icon says which kind of lab it is, as it does in the list. Here it is
+ * drawn in the ink of the line beside it, with no tinted tile: this card is
+ * not pressed, its button is, and the pressable colour is kept for the button.
+ * (In the list the whole row is pressed, so its tile keeps that colour.)
+ */
 export function NextLabCard({ lab, onOpen }: { lab: PathLabInfo; onOpen: () => void }) {
   const { Icon } = LAB_TYPES[lab.type];
   return (
-    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
+    <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Icon className="size-5" aria-hidden />
-        </span>
+        <Icon aria-hidden className="size-5 shrink-0 text-muted-foreground" />
         <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Next lab · {labMeta(lab)}
-          </p>
-          <p className="mt-1 text-balance font-display text-lg font-semibold leading-snug tracking-tight">{lab.title}</p>
+          <p className="text-small text-muted-foreground">Your next lab. {labMeta(lab)}.</p>
+          <h2 className="cb-statement mt-1">{lab.title}</h2>
         </div>
       </div>
-      <Button size="lg" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onOpen}>
-        Open
-        <ArrowRight />
+      <Button
+        size="lg"
+        className="w-full sm:w-auto"
+        onClick={onOpen}
+        onPointerEnter={() => preloadLab(lab.type)}
+        onFocus={() => preloadLab(lab.type)}
+      >
+        Open the lab
+        <ArrowRight aria-hidden />
       </Button>
     </div>
   );

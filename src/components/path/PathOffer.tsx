@@ -1,43 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Check } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { track } from "@/lib/analytics";
-import { addCertCheckout, createCheckout, getRegionPricing } from "@/contracts/billing";
-import { enrollInPath } from "@/contracts/path";
-import { ApiError } from "@/contracts/common";
+import { addCertCheckout, enrollInPath } from "@/contracts/client";
+import type { BillingInterval } from "@/contracts/billing";
+import { ApiError } from "@/contracts/errors";
+import { userMessage } from "@/lib/errors/user-message";
+import { PAYMENT_PAGE_FAILED } from "@/lib/billing/messages";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
+import type { RegionPricing } from "@/lib/pricing/ppp";
+import { PRO_PRICE_REGION_NOTE, proAddonTerms } from "@/lib/pricing/terms";
 import { Button } from "@/components/ui/button";
+import { PlanChooser, REGIONAL_PRICE_NOTE } from "@/components/billing/PlanChooser";
+import { leaveFor } from "@/components/billing/leave";
+import { useRegionPricing } from "@/components/billing/useRegionPricing";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { PathCert } from "@/core/path/types";
-import { cn } from "@/lib/utils";
 
-/** The plans the offer sells. Monthly comes first: it's the smaller first payment. */
-const PLANS = ["monthly", "quarterly"] as const;
-type Plan = (typeof PLANS)[number];
-
-const PLAN_COPY: Record<Plan, { name: string; per: string; renews: string }> = {
-  monthly: { name: "Monthly", per: "a month", renews: "Renews monthly. Cancel anytime." },
-  quarterly: { name: "3 months", per: "every 3 months", renews: "Renews every 3 months. Cancel anytime." },
-};
-
-interface Price {
-  now: string;
-  /** The price before the regional discount, when there is one. */
-  was: string | null;
-}
-
-/** "$39" → 39, or null when the string isn't a plain amount. */
-function amount(price: string): number | null {
-  const n = Number.parseFloat(price.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
+/**
+ * The billing periods the study path offers, and the one chosen first. Monthly
+ * comes first: it is the smaller first payment. The pricing page also sells a
+ * year; which periods are sold where is the owner's decision.
+ */
+const OFFER_PLANS = ["monthly", "quarterly"] as const satisfies readonly BillingInterval[];
+const OFFER_DEFAULT = "monthly" satisfies (typeof OFFER_PLANS)[number];
 
 /**
  * The one ask on the path, made after the readiness checkpoint: the rest of
  * the path, monthly or for a three-month exam cycle. A Pro member who hasn't
  * added this exam yet is offered the exam instead of a second plan.
+ *
+ * The offer never shows a button that cannot be pressed. When the account has
+ * not been reached (`certId` is null), it says so and offers to try again.
  */
 export function PathOffer({
   cert,
@@ -49,8 +46,11 @@ export function PathOffer({
   examDate,
   context,
   labCount,
+  initialPricing,
+  onRetry,
 }: {
   cert: PathCert;
+  /** The exam's id on the account, or null while the account has not been reached. */
   certId: string | null;
   examName: string;
   remainingStops: number;
@@ -60,14 +60,14 @@ export function PathOffer({
   context: "reveal" | "home";
   /** Labs in the exam's library, when it has one. */
   labCount?: number;
+  /**
+   * The learner's regional prices, where the page already has them. Without
+   * them the offer asks for them and prints no figure until it has the answer.
+   */
+  initialPricing?: RegionPricing;
+  /** Ask for the account again. Without it, "Try again" loads the page again. */
+  onRetry?: () => void | Promise<unknown>;
 }) {
-  const [prices, setPrices] = useState<Record<Plan, Price>>({
-    monthly: { now: "$19", was: null },
-    quarterly: { now: "$39", was: null },
-  });
-  const [plan, setPlan] = useState<Plan>("monthly");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const viewed = useRef(false);
 
   useEffect(() => {
@@ -76,206 +76,232 @@ export function PathOffer({
     track("path_offer_viewed", { cert, context });
   }, [cert, context]);
 
-  // Region pricing for display; checkout applies the same discount itself.
+  // The learner pressed "Try again" here, where the plans would be. When the
+  // account then answers, the plans take the place of that button, which held
+  // the keyboard's focus: the focus moves to the offer's title, so that the
+  // offer is read from its top and is not lost to the top of the page. It is
+  // moved only when nothing else has taken it meanwhile.
+  const title = useRef<HTMLHeadingElement>(null);
+  const askedHere = useRef(false);
   useEffect(() => {
-    let live = true;
-    api(getRegionPricing, {})
-      .then((r) => {
-        if (!live) return;
-        const read = (p: { original: string; discounted: string } | undefined, fallback: Price): Price =>
-          p ? { now: p.discounted, was: r.discountPercent ? p.original : null } : fallback;
-        setPrices((prev) => ({
-          monthly: read(r.prices.monthly, prev.monthly),
-          quarterly: read(r.prices.quarterly, prev.quarterly),
-        }));
-      })
-      .catch(() => {});
-    return () => {
-      live = false;
-    };
-  }, []);
+    if (!certId || !askedHere.current) return;
+    askedHere.current = false;
+    if (document.activeElement && document.activeElement !== document.body) return;
+    title.current?.focus({ preventScroll: true });
+  }, [certId]);
 
-  // Back from Stripe via the browser: re-arm the button.
-  useEffect(() => {
-    const onShow = (e: PageTransitionEvent) => {
-      if (e.persisted) setBusy(false);
-    };
-    window.addEventListener("pageshow", onShow);
-    return () => window.removeEventListener("pageshow", onShow);
-  }, []);
-
-  async function unlock() {
-    if (!certId) return;
-    setBusy(true);
-    setError("");
-    track("path_offer_clicked", proPlan ? { cert, context, offer: "add_exam" } : { cert, context, offer: "pro", interval: plan });
-    track("checkout_started", { interval: proPlan ? "cert_addon" : plan });
-    try {
-      if (proPlan) {
-        const { url } = await api(addCertCheckout, { certId });
-        window.location.href = url;
-        return;
-      }
-      // Pro access is per exam: make this the exam the purchase unlocks.
-      await api(enrollInPath, { cert, examDate });
-      const { url } = await api(createCheckout, { interval: plan, returnTo: `path/${cert}` });
-      window.location.href = url;
-    } catch (err) {
-      if (err instanceof ApiError && err.code === "unauthorized") {
-        window.location.href = `/login?next=/path/${cert}`;
-        return;
-      }
-      setError(err instanceof ApiError ? err.message : "Couldn't open checkout. Try again.");
-      setBusy(false);
-    }
-  }
-
+  // What the labs are, in CertBench's own terms: nothing is claimed of how the exam's questions work.
   const labs = labCount
-    ? `All ${labCount} hands-on PBQ labs, one closing every domain`
-    : "A hands-on PBQ lab closing every domain";
-  const rehearsals = `Timed exam rehearsals: ${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, any time`;
+    ? `All ${labCount} hands-on labs, CertBench's practice for the exam's performance-based questions`
+    : "A hands-on lab at the end of every domain";
+  const rehearsals = `Timed practice exams of ${REHEARSAL_FORMATS.full.questions} questions in ${REHEARSAL_FORMATS.full.minutes} minutes, as often as you wish`;
   const includes = proPlan
     ? [
-        `All ${remainingStops} remaining stops of your ${examName} path`,
+        `All ${remainingStops} remaining steps of your ${examName} study path`,
         labs,
         rehearsals,
-        "Uses your current Pro plan",
+        "Access through the Pro plan that you already have",
       ]
     : [
-        `All ${remainingStops} remaining stops of your ${examName} path`,
+        `All ${remainingStops} remaining steps of your ${examName} study path`,
         labs,
         rehearsals,
-        `All ${questionCount.toLocaleString()} ${examName} questions, with spaced review`,
+        `All ${questionCount.toLocaleString("en-US")} ${examName} questions, with spaced review`,
       ];
 
-  // What three months cost against three monthly payments, from the prices shown.
-  const monthly = amount(prices.monthly.now);
-  const quarterly = amount(prices.quarterly.now);
-  const saving = monthly && quarterly && quarterly < 3 * monthly ? Math.round((1 - quarterly / (3 * monthly)) * 100) : null;
-
   return (
-    <div className="glass relative isolate overflow-hidden rounded-[2rem] border-primary/35 p-6 sm:p-9">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[22rem] w-[38rem] max-w-[200%] -translate-x-1/2 [background:radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_26%,transparent),transparent)]"
-      />
-      <div className="relative grid gap-5">
+    // The rule along the top is straight, so the corners it meets are square.
+    <div className="glass rounded-lg rounded-t-none border-t-[3px] border-t-primary p-6 sm:p-9">
+      <div className="grid gap-5">
         <div className="grid gap-1.5">
-          <h3 className="cb-display text-balance text-[1.9rem] sm:text-[2.6rem]">
-            {proPlan ? `Add ${examName} to your plan` : "Unlock the rest of your path"}
-          </h3>
-          <p className="text-muted-foreground">
+          {/* It can take the focus (see above); it is not a control. */}
+          <h2 ref={title} tabIndex={-1} className="cb-subsection">
+            {proPlan ? `Add ${examName} to your plan` : "Continue your study path with Pro"}
+          </h2>
+          <p className="text-body text-muted-foreground">
             {proPlan
-              ? `One payment adds ${examName} to the Pro plan you already have.`
-              : "Everything from here to exam day, in the same short stops."}
+              ? `One payment adds ${examName} to the Pro plan that you already have. It includes:`
+              : `CertBench Pro opens the rest of your ${examName} study path, in the same short steps. It includes:`}
           </p>
         </div>
 
-        <ul className="grid gap-2.5 text-[15px]">
+        <ul className="grid gap-2.5 text-small">
           {includes.map((line) => (
             <li key={line} className="flex items-start gap-2.5">
-              <Check className="mt-0.5 size-4 shrink-0 text-primary" strokeWidth={2.5} />
+              <Check className="mt-1 size-4 shrink-0 text-muted-foreground" strokeWidth={2.5} aria-hidden />
               {line}
             </li>
           ))}
         </ul>
 
-        {proPlan ? (
-          <div className="flex items-end gap-2">
-            {prices.quarterly.was && (
-              <span className="pb-1 text-lg text-muted-foreground line-through">{prices.quarterly.was}</span>
-            )}
-            <span className="cb-display text-5xl">{prices.quarterly.now}</span>
-            <span className="pb-1.5 text-sm text-muted-foreground">one time</span>
-          </div>
+        {!certId ? (
+          <AccountNotReached
+            onRetry={
+              onRetry &&
+              (() => {
+                askedHere.current = true;
+                return onRetry();
+              })
+            }
+          />
+        ) : proPlan ? (
+          <AddExam cert={cert} certId={certId} examName={examName} context={context} initialPricing={initialPricing} />
         ) : (
-          <fieldset className="grid gap-2.5 sm:grid-cols-2">
-            <legend className="sr-only">Plan</legend>
-            {PLANS.map((p) => {
-              const selected = plan === p;
-              return (
-                <label
-                  key={p}
-                  className={cn(
-                    "relative grid cursor-pointer gap-1.5 rounded-2xl border bg-foreground/[0.02] px-4 py-4 transition-[border-color,background-color,box-shadow] duration-150",
-                    "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                    selected ? "border-primary bg-primary/[0.08] ring-1 ring-primary/40" : "hover:border-primary/50"
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name={`plan-${cert}-${context}`}
-                    value={p}
-                    checked={selected}
-                    onChange={() => setPlan(p)}
-                    className="sr-only"
-                  />
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "size-4 shrink-0 rounded-full border transition-[border-width,border-color] duration-150",
-                          selected ? "border-[5px] border-primary" : "border-muted-foreground/50"
-                        )}
-                      />
-                      {PLAN_COPY[p].name}
-                    </span>
-                    {p === "quarterly" && saving !== null && (
-                      <span className="rounded-full bg-success/15 px-2 py-0.5 font-mono text-[11px] font-medium text-success">
-                        Save {saving}%
-                      </span>
-                    )}
-                  </span>
-                  <span className="flex flex-wrap items-baseline gap-x-1.5">
-                    {prices[p].was && (
-                      <span className="text-sm text-muted-foreground line-through">{prices[p].was}</span>
-                    )}
-                    <span className="cb-display text-3xl">{prices[p].now}</span>
-                    <span className="text-sm text-muted-foreground">{PLAN_COPY[p].per}</span>
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
+          <PlanChooser
+            plans={OFFER_PLANS}
+            defaultPlan={OFFER_DEFAULT}
+            initialPricing={initialPricing}
+            returnTo={`path/${cert}`}
+            // The learner has an account: a press that finds nobody signed in is a session that has ended.
+            signInHref={() => `/login?next=/path/${cert}`}
+            // Pro access is granted for each exam: make this the exam the purchase opens.
+            beforeCheckout={() => api(enrollInPath, { cert, examDate })}
+            onPress={(plan) => track("path_offer_clicked", { cert, context, offer: "pro", interval: plan })}
+          />
         )}
-
-        <div className="grid gap-2">
-          <Button size="lg" className="h-12 w-full text-base" disabled={busy || !certId} onClick={unlock}>
-            {busy ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Opening secure checkout…
-              </>
-            ) : (
-              <>
-                {proPlan ? `Add ${examName}` : "Unlock my path"}
-                <ArrowRight />
-              </>
-            )}
-          </Button>
-          {error && (
-            <p role="alert" className="text-center text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          {!proPlan && <p className="text-center text-xs text-muted-foreground">{PLAN_COPY[plan].renews}</p>}
-        </div>
 
         {!proPlan && (
-          <p className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
-            <ShieldCheck className="mr-1 inline size-4 -translate-y-px align-middle text-success" />
-            <span className="font-medium text-success">Pass guarantee:</span> {PASS_GUARANTEE_TERMS}{" "}
-            <a
-              href={PASS_GUARANTEE_HREF}
-              target="_blank"
-              rel="noopener"
-              className="underline underline-offset-4 hover:text-foreground"
-            >
-              Terms
+          <p className="text-note text-muted-foreground">
+            <span className="font-medium text-foreground">Pass guarantee.</span> {PASS_GUARANTEE_TERMS}{" "}
+            <a href={PASS_GUARANTEE_HREF} target="_blank" rel="noopener" className="cb-link">
+              Read the guarantee terms
             </a>
+            , which open in a new tab.
           </p>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * In place of the offer, for a member whose last payment did not go through.
+ * Such a member has no Pro while the payment is owed, so the page used to
+ * offer them Pro, and the checkout refused the plan they pressed. What they
+ * need is the billing page, where the payment method is updated. The two
+ * sentences are the billing page's own (/upgrade).
+ */
+export function PathPaymentPastDue() {
+  return (
+    // A notice, not the offer: it has no rule in the pressable colour along its top.
+    <div className="glass grid gap-5 rounded-lg p-6 sm:p-9">
+      <div className="grid gap-1.5">
+        <h2 className="cb-subsection">Your last payment did not go through.</h2>
+        <p className="cb-measure text-body text-muted-foreground">
+          Please update your payment method to keep CertBench Pro.
+        </p>
+      </div>
+      <Button asChild size="lg" className="w-full justify-self-start sm:w-auto">
+        <Link href="/upgrade">Manage billing</Link>
+      </Button>
+    </div>
+  );
+}
+
+/** In place of a button that could not work: what is wrong, and the way to put it right. */
+function AccountNotReached({ onRetry }: { onRetry?: () => void | Promise<unknown> }) {
+  const [busy, setBusy] = useState(false);
+
+  async function retry() {
+    if (!onRetry) {
+      window.location.reload();
+      return;
+    }
+    setBusy(true);
+    try {
+      await onRetry();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-3">
+      <p role="status" className="text-small">
+        Your account could not be reached.
+      </p>
+      <Button variant="outline" className="justify-self-start" loading={busy} onClick={retry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
+/** A Pro member adds this exam to their plan: one price, one payment, no period to choose. */
+function AddExam({
+  cert,
+  certId,
+  examName,
+  context,
+  initialPricing,
+}: {
+  cert: PathCert;
+  certId: string;
+  examName: string;
+  context: "reveal" | "home";
+  initialPricing?: RegionPricing;
+}) {
+  const pricing = useRegionPricing(initialPricing);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  // Back from the payment page through the browser's own button: the page is
+  // shown as it was left, so the button is made ready again.
+  useEffect(() => {
+    const onShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setBusy(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
+  async function add() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    track("path_offer_clicked", { cert, context, offer: "add_exam" });
+    try {
+      const { url } = await api(addCertCheckout, { certId });
+      // Counted only once there is a payment page to go to.
+      track("checkout_started", { interval: "cert_addon" });
+      leaveFor(url);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "unauthorized") {
+        leaveFor(`/login?next=/path/${cert}`);
+        return;
+      }
+      setError(userMessage(err, PAYMENT_PAGE_FAILED));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-4">
+      <p className="grid gap-1">
+        {/* The figure's line keeps its height while the price is not yet known, so nothing moves when it arrives. */}
+        <span className="cb-display block h-12 text-5xl leading-[3rem]">{pricing?.prices.quarterly.discounted}</span>{" "}
+        <span className="text-small text-muted-foreground">as a single payment</span>
+      </p>
+      {/* What the payment buys and for how long, in the words of the pricing page and the billing page: the
+          exam is open only while the Pro plan is active. The study path sends the price with the account. */}
+      {pricing && (
+        <p className="text-small text-muted-foreground">{proAddonTerms(pricing.prices.quarterly.discounted)}</p>
+      )}
+      <div className="grid gap-2">
+        <Button size="lg" className="w-full" loading={busy} onClick={add}>
+          Add {examName}
+        </Button>
+        <span role="status" className="sr-only">
+          {busy ? "The payment page is opening." : ""}
+        </span>
+        {error && (
+          <p role="alert" className="text-small text-destructive">
+            {error}
+          </p>
+        )}
+        <p className="text-note text-muted-foreground">
+          {pricing && pricing.discountPercent !== null ? REGIONAL_PRICE_NOTE : PRO_PRICE_REGION_NOTE}
+        </p>
       </div>
     </div>
   );

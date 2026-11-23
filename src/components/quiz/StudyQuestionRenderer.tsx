@@ -19,12 +19,15 @@ export function StudyQuestionRenderer({
   value,
   onChange,
   revealed,
+  labelledBy,
 }: {
   question: StudyQuestion;
   seed: string;
   value: ResponseValue | undefined;
   onChange: (value: ResponseValue) => void;
   revealed: boolean;
+  /** The id of the question's text, which names its group of answers. */
+  labelledBy?: string;
 }) {
   switch (question.question_type) {
     case "multiple_choice":
@@ -39,6 +42,7 @@ export function StudyQuestionRenderer({
           onChange={onChange}
           revealed={revealed}
           correctIndex={options.findIndex((o) => o.is_correct)}
+          labelledBy={labelledBy}
         />
       );
     }
@@ -53,6 +57,7 @@ export function StudyQuestionRenderer({
           value={value}
           onChange={onChange}
           revealed={revealed}
+          labelledBy={labelledBy}
         />
       );
     }

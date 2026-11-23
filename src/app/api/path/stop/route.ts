@@ -4,27 +4,33 @@ import { ApiError } from "@/contracts/common";
 import { loadPathBank } from "@/server/path/bank";
 import { buildStop } from "@/server/path/build-stop";
 import { getPathAccess } from "@/server/path/access";
+import { accountNotChecked } from "@/server/data/account-errors";
 import { buildPlan, isFreeStop } from "@/core/path/plan";
 import { seedFrom } from "@/core/path/compose";
 
 /**
- * One stop of a guided path. The warm-up is open to anyone; later stops need
+ * One stop of a study path. The warm-up is open to anyone; later stops need
  * an account, and stops past the readiness checkpoint need Pro on this exam.
  * Gated here, at the data, not just in the page.
  */
 export const POST = defineEndpoint(getPathStop, {
   auth: "public",
   rateLimit: { limit: 600, windowSeconds: 3600 },
-  handler: async ({ input, user, db }) => {
+  handler: async ({ input, user, sessionChecked, db }) => {
     const bank = await loadPathBank(input.cert);
-    if (!bank) throw new ApiError("not_found", "That exam isn't available.");
+    if (!bank) throw new ApiError("not_found", "That exam is not available.");
     const plan = buildPlan(bank.structure);
 
     if (input.index > 0) {
-      if (!user) throw new ApiError("unauthorized", "Save your progress with a free account to keep going.");
+      if (!user) {
+        // Nobody could be asked who is signed in: that is not "nobody is". A
+        // member in the middle of a step must not be sent to the save request.
+        if (!sessionChecked) throw accountNotChecked("session", { message: "the session check did not complete" });
+        throw new ApiError("unauthorized", "Save your progress with a free account to keep going.");
+      }
       if (!isFreeStop(plan, input.index)) {
         const { level } = await getPathAccess(db, user, bank.certId);
-        if (level !== "pro") throw new ApiError("quota_exceeded", "The rest of the path is part of Pro.");
+        if (level !== "pro") throw new ApiError("quota_exceeded", "The rest of the study path is included with Pro.");
       }
     }
 
@@ -37,7 +43,7 @@ export const POST = defineEndpoint(getPathStop, {
       seed: seedFrom(user?.id ?? "visitor", input.cert, input.index, input.run),
       focus: input.focus,
     });
-    if (!built) throw new ApiError("not_found", "That stop doesn't exist.");
+    if (!built) throw new ApiError("not_found", "That step does not exist.");
     return built;
   },
 });

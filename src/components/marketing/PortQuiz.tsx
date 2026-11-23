@@ -12,15 +12,24 @@ import { EXAMS, RoundComplete } from "./DrillRound";
 const LABEL = "Port numbers";
 
 /**
- * A port question as the path asks a recall fact: the cue big, the ask under
- * it, ports set in mono, and the pairing with its transport and service as
- * the line to remember.
+ * A port question as the study path asks a recall fact: the cue big, the ask
+ * under it, and ports set in mono.
+ *
+ * After the verdict the card prints the entry's explanation: the sentences
+ * that the exam's own ports deck gives the row, the same ones the study path
+ * and the Recall page print ("FTP uses ports 20 and 21. The File Transfer
+ * Protocol uses port 20 for data and port 21 for control."). The server works
+ * them out with the list (src/lib/tools/port-quiz-data.ts) and hands them over
+ * as data, so this file, which runs in the browser, loads no deck and no
+ * table. A port that no deck explains gets one plain sentence. The table's
+ * "Service / Use" cell is a note and is never printed as if it were a
+ * sentence.
  */
 export function portRep(q: QuizQuestion): ChoiceRep {
   const { answer, options } = q;
   const asksPort = q.direction === "port";
   const cue = asksPort ? answer.protocol : answer.port;
-  const reply = asksPort ? answer.port : answer.protocol;
+  const plain = `${answer.protocol} uses port ${answer.port}${answer.transport ? ` over ${answer.transport}` : ""}.`;
   return {
     id: `port|${answer.port}`,
     type: "choice",
@@ -31,7 +40,7 @@ export function portRep(q: QuizQuestion): ChoiceRep {
     cue: asksPort ? "Which port?" : "Which protocol?",
     options: options.map((o) => (asksPort ? o.port : o.protocol)),
     answer: options.indexOf(answer),
-    takeaway: `${cue} → ${reply} over ${answer.transport}${answer.service ? ` · ${answer.service}` : ""}`,
+    takeaway: answer.explanation ?? plain,
     mono: asksPort,
   };
 }
@@ -72,10 +81,14 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
         noun={["port", "ports"]}
         tiles={tiles}
         variant="labels"
-        mapTitle="Your port map"
+        mapTitle="Your ports"
         lead={{
-          title: "Ports are a small slice of the exam.",
-          body: "The rest decides whether you pass. Your path walks every exam objective in short rounds like this one, up to a readiness checkpoint that shows where you stand.",
+          // What CertBench offers next, and nothing about what an exam is made
+          // of: CompTIA does not publish that. The card names three exams,
+          // Network+ among them, whose topics are CertBench's own and not
+          // CompTIA's objectives, so it says what is true of every study path.
+          title: "Continue with your exam's study path",
+          body: "Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />
@@ -86,7 +99,7 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
     <DrillPlayer
       key={rounds.roundNumber}
       rounds={rounds}
-      label={`${LABEL} · round ${rounds.roundNumber}`}
+      label={`${LABEL}, round ${rounds.roundNumber}`}
       deal={deal}
     />
   );

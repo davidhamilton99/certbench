@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EndpointContract } from "@/contracts/common";
+import { getRegionPricing } from "./billing";
 import { PATH_CERTS } from "@/core/path/types";
 import type { PbqScenario } from "@/data/pbq/types";
 import {
@@ -33,6 +34,8 @@ export const repSchema = z.discriminatedUnion("type", [
     answer: count,
     explanation: z.string().optional(),
     lettered: z.boolean().optional(),
+    /** The explanation names options by letter: once marked, the key box keeps its letter. */
+    keepsLetters: z.boolean().optional(),
     order: z.array(count).optional(),
     mono: z.boolean().optional(),
   }),
@@ -189,6 +192,15 @@ export const getPathRehearsal = {
  * Load the signed-in user's saved path for one exam, plus how much of it they
  * can open: `pro` (the whole path) or `free` (through the checkpoint).
  * `proPlan` marks a Pro subscriber on an exam they haven't added yet.
+ *
+ * A read that failed is answered with an internal error, never with an empty
+ * path. `stored: false` means one thing: saving is not available in this
+ * database yet (the table does not exist), and the path works from the device.
+ *
+ * `paymentPastDue` is true for a member whose last payment did not go
+ * through. Such an account has no Pro while the payment is owed (`access` is
+ * "free"), and it is shown the way to the billing page where another account
+ * would be shown the offer. The server sends it only when it is true.
  */
 export const getPathProgress = {
   path: "/api/path/progress",
@@ -200,13 +212,19 @@ export const getPathProgress = {
     access: z.enum(["free", "pro"]),
     proPlan: z.boolean(),
     certId: z.string(),
+    paymentPastDue: z.boolean().default(false),
+    /** The offer's prices for the learner's region, sent with every answer. */
+    pricing: getRegionPricing.output.optional(),
   }),
 } as const satisfies EndpointContract;
 
 /**
  * Save path progress. The server merges it into what's stored (see
  * mergePathProgress), so a stale tab or second device can't erase newer work.
- * `stored: false` means saving isn't available yet; progress stays on the device.
+ * A save that the database refused, or did not answer, is an internal error:
+ * the page keeps the progress on the device, says so and sends it again.
+ * `stored: false` means one thing: saving is not available in this database
+ * yet (the table does not exist). Nothing failed, and nothing is sent again.
  */
 export const savePathProgress = {
   path: "/api/path/progress",

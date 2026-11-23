@@ -3,40 +3,51 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type { DrillTool, ItemStatus } from "@/core/drill-rounds/drill-rounds";
 import { track } from "@/lib/analytics";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 import { Button } from "@/components/ui/button";
+import { LinkArrow } from "@/components/ui/link-arrow";
 import { cn } from "@/lib/utils";
 import type { DrillRounds } from "./useDrillRounds";
 
 export interface MapTile {
   id: string;
-  /** Shown on the tile (labels/skills variants); always the tooltip. */
+  /** Shown on the tile (labels and skills); always in the tile's tooltip. */
   label: string;
-  /** Extra tooltip context, e.g. the protocol behind a port number. */
+  /** More for the tooltip, for example the protocol behind a port number. */
   name?: string;
   status: ItemStatus;
-  /** Secondary line on a skill tile, e.g. "8 / 10". */
+  /** The second line of a skill tile, for example "8 of 10 correct". */
   detail?: string;
 }
 
 /**
- * labels — short facts with visible labels (35 ports)
- * dots   — a large deck as a compact grid, labels on hover (300+ acronyms)
- * skills — a few skills with a label and a score each (subnetting)
+ * labels: short facts with visible labels (35 ports)
+ * dots:   a large deck (300 and more acronyms). It is not drawn whole: a grid
+ *         of 300 squares cannot be read on a phone, and a screen reader would
+ *         list every one. Only the facts already seen are drawn, as labels,
+ *         the missed ones first, and a sentence counts the rest.
+ * skills: a few skills with a label and a score each (subnetting)
  */
 export type MapVariant = "labels" | "dots" | "skills";
 
+/** How the progress map draws its tiles: a large deck is drawn as labels. */
+type TileStyle = Exclude<MapVariant, "dots">;
+
+/**
+ * A tile's mark. It is never carried by colour alone: a tile also shows a
+ * check or a cross, and says its status to a screen reader in words.
+ */
 const TILE_TONE: Record<ItemStatus, string> = {
-  got: "border-success/40 bg-success/10 text-success",
-  missed: "border-danger/40 bg-danger/10 text-danger",
-  new: "border-border text-muted-foreground/70",
+  got: "border-success/50 bg-success/10 text-success",
+  missed: "border-destructive/50 bg-destructive/10 text-destructive",
+  new: "border-border text-muted-foreground",
 };
 
 const STATUS_WORD: Record<ItemStatus, string> = {
-  got: "got it",
+  got: "answered correctly",
   missed: "missed",
   new: "not seen yet",
 };
@@ -44,44 +55,51 @@ const STATUS_WORD: Record<ItemStatus, string> = {
 /** Room for the public pages' sticky header when the result scrolls into view. */
 const HEADER_CLEARANCE = 72;
 
-export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: MapVariant }) {
-  // Stagger the entrance across ~0.6s however many tiles there are.
-  const step = Math.min(30, 600 / Math.max(1, tiles.length));
+/** The check or the cross on a tile that has words. Decoration for a screen reader: the status is said in words. */
+function StatusMark({ status, className }: { status: ItemStatus; className?: string }) {
+  if (status === "got") return <Check aria-hidden strokeWidth={3} className={cn("size-3 shrink-0", className)} />;
+  if (status === "missed") return <X aria-hidden strokeWidth={3} className={cn("size-3 shrink-0", className)} />;
+  return null;
+}
+
+export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: TileStyle }) {
   return (
     <ul
       aria-label="Your progress"
       className={cn(
         "grid",
-        variant === "labels" &&
-          "grid-cols-[repeat(auto-fill,minmax(3.6rem,1fr))] gap-1 sm:grid-cols-[repeat(auto-fill,minmax(4.75rem,1fr))] sm:gap-1.5",
-        variant === "dots" && "grid-cols-[repeat(auto-fill,minmax(0.75rem,1fr))] gap-1",
+        // Wide enough for the longest port ("1812/1813") beside its mark, with room to spare on each side.
+        variant === "labels" && "grid-cols-[repeat(auto-fill,minmax(5.75rem,1fr))] gap-1 sm:gap-1.5",
         variant === "skills" && "grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2"
       )}
     >
-      {tiles.map((t, i) => (
+      {tiles.map((t) => (
         <li
           key={t.id}
           title={`${t.label}${t.name ? ` ${t.name}` : ""}: ${STATUS_WORD[t.status]}`}
-          style={{ animationDelay: `${Math.round(i * step)}ms` }}
           className={cn(
-            "animate-tile border",
+            "rounded-xs border",
             TILE_TONE[t.status],
             variant === "labels" &&
-              "rounded-md py-1.5 text-center font-mono text-[10px] tracking-tight sm:py-2 sm:text-xs sm:tracking-normal",
-            variant === "dots" && "aspect-square rounded-[3px]",
-            variant === "dots" && t.status === "new" && "bg-foreground/[0.05]",
-            variant === "skills" && "grid gap-0.5 rounded-lg px-3 py-2.5"
+              "flex items-center justify-center gap-0.5 py-1.5 font-mono text-xs tracking-tight sm:gap-1 sm:py-2 sm:tracking-normal",
+            variant === "skills" && "grid gap-0.5 px-3 py-2.5"
           )}
         >
-          {variant === "labels" && t.label}
-          {variant === "skills" && (
+          {variant === "labels" && (
             <>
-              <span className="text-sm font-medium">{t.label}</span>
-              <span className="font-mono text-xs opacity-80">{t.detail ?? "not tried yet"}</span>
+              <StatusMark status={t.status} className="size-2.5 sm:size-3" />
+              {t.label}
+              <span className="sr-only">: {STATUS_WORD[t.status]}</span>
             </>
           )}
-          {variant === "dots" && (
-            <span className="sr-only">{`${t.label}: ${STATUS_WORD[t.status]}`}</span>
+          {variant === "skills" && (
+            <>
+              <span className="flex items-center gap-1.5 text-small font-medium">
+                <StatusMark status={t.status} />
+                {t.label}
+              </span>
+              <span className="text-note">{t.detail ?? "Not tried yet"}</span>
+            </>
           )}
         </li>
       ))}
@@ -90,25 +108,34 @@ export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: Map
 }
 
 const LEGEND: Record<"facts" | "skills", Record<ItemStatus, string>> = {
-  facts: { got: "Got it", missed: "Missed — comes back first", new: "Not seen yet" },
-  skills: { got: "Solid (80%+)", missed: "Needs work", new: "Not tried yet" },
+  facts: { got: "Answered correctly", missed: "Missed, and asked again first", new: "Not seen yet" },
+  skills: { got: "Secure (80% or more)", missed: "Needs more practice", new: "Not tried yet" },
 };
 
-function Legend({ variant }: { variant: MapVariant }) {
+function Legend({ variant, seenOnly = false }: { variant: TileStyle; seenOnly?: boolean }) {
   const words = LEGEND[variant === "skills" ? "skills" : "facts"];
+  const marks: ItemStatus[] = seenOnly ? ["got", "missed"] : ["got", "missed", "new"];
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      {(["got", "missed", "new"] as const).map((s) => (
-        <span key={s} className="flex items-center gap-1.5">
-          <span className={cn("size-2.5 rounded-[3px] border", TILE_TONE[s])} />
+    <ul aria-label="What the marks mean" className="flex flex-wrap gap-x-4 gap-y-1 text-note text-muted-foreground">
+      {marks.map((s) => (
+        <li key={s} className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className={cn(
+              "flex size-3.5 shrink-0 items-center justify-center rounded-xs border",
+              TILE_TONE[s]
+            )}
+          >
+            <StatusMark status={s} className="size-2.5" />
+          </span>
           {words[s]}
-        </span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
-/** Exams a drill can lead on to, by path slug. */
+/** Exams a drill can lead on to, by study path slug. */
 export const EXAMS = {
   securityPlus: { cert: "security-plus-sy0-701", label: "Security+" },
   networkPlus: { cert: "network-plus-n10-009", label: "Network+" },
@@ -117,7 +144,7 @@ export const EXAMS = {
 
 export type BridgeExam = (typeof EXAMS)[keyof typeof EXAMS];
 
-/** What a drill's round end says about the path: the drill is a slice, the path is the exam. */
+/** What the end of a drill's round says about the study path: the drill is a part, the study path is the exam. */
 export interface PathLeadCopy {
   title: string;
   body: ReactNode;
@@ -125,9 +152,9 @@ export interface PathLeadCopy {
 }
 
 /**
- * The way on from a free drill: the drilled facts are a small slice of the
- * exam, so lead with the guided path for the rest, one tap on their exam.
- * Everyone sees it, signed in or not: the path starts without an account.
+ * The way on from a free drill: the facts practiced are a small part of the
+ * exam, so the study path for the rest comes first, one press on the exam.
+ * Everyone sees it, signed in or not: the study path starts without an account.
  */
 export function PathLead({
   tool,
@@ -145,12 +172,12 @@ export function PathLead({
   const multi = exams.length > 1;
   return (
     <div className="grid gap-4">
-      <div className="grid gap-1">
-        <p className="text-balance font-display text-xl font-semibold tracking-tight">{title}</p>
-        <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <div className="grid gap-1.5">
+        <h3 className="text-base font-semibold">{title}</h3>
+        <p className="cb-measure-sm text-small text-muted-foreground">{body}</p>
       </div>
       <div className="grid gap-2">
-        {multi && <p className="text-xs font-medium text-muted-foreground">Which exam are you taking?</p>}
+        {multi && <p className="text-note font-medium text-muted-foreground">Which exam are you taking?</p>}
         <div
           className={cn(
             "grid gap-2",
@@ -165,15 +192,18 @@ export function PathLead({
                 key={e.cert}
                 asChild
                 size="lg"
-                className={cn("h-12 w-full text-base", multi ? "px-2" : "px-6 sm:w-auto sm:justify-self-start")}
+                className={cn(
+                  "h-auto min-h-12 w-full whitespace-normal py-2.5 text-base",
+                  multi ? "px-2" : "px-6 sm:w-auto sm:justify-self-start"
+                )}
               >
                 <Link href={href} onClick={() => track("upsell_clicked", { context, href })}>
                   {multi ? (
                     e.label
                   ) : (
                     <>
-                      {signedIn ? "Open" : "Start"} my {e.label} path
-                      <ArrowRight />
+                      {signedIn ? "Open" : "Start"} the {e.label} study path
+                      <LinkArrow />
                     </>
                   )}
                 </Link>
@@ -181,18 +211,18 @@ export function PathLead({
             );
           })}
         </div>
-        {!signedIn && <p className="text-xs text-muted-foreground">Free, no account needed to start.</p>}
+        {!signedIn && <p className="text-note text-muted-foreground">It is free, and you do not need an account to start.</p>}
       </div>
     </div>
   );
 }
 
 /**
- * The end of a round, the way a stop ends on the path: the score and the way
- * on, then the map of what the visitor built. The way on is their exam's path,
- * for everyone. The map is what an account keeps: a visitor with no account
- * saves it with one right there to play the next round, which opens with
- * their misses; someone signed in starts it straight away.
+ * The end of a round, the way a step ends on the study path: the score and the
+ * way on, then the record of what the visitor has answered. The way on is the
+ * exam's study path, for everyone. The record is what an account keeps: a
+ * visitor with no account saves it with one right there to play the next
+ * round, which begins with their misses; someone signed in starts it at once.
  */
 export function RoundComplete({
   rounds,
@@ -205,15 +235,15 @@ export function RoundComplete({
   lead,
 }: {
   rounds: DrillRounds;
-  /** What's drilled, e.g. "Port numbers": the result's eyebrow. */
+  /** What is practiced, for example "Port numbers": the line over the result. */
   label: string;
-  /** What's drilled, singular and plural: ["port", "ports"]. */
+  /** What is practiced, singular and plural: ["port", "ports"]. */
   noun: [string, string];
   tiles: MapTile[];
   variant: MapVariant;
-  /** e.g. "Your port map". */
+  /** For example "Your ports". */
   mapTitle: string;
-  /** Override the generated next-round line (skill drills). */
+  /** In place of the sentence about the next round (skill drills). */
   subline?: string;
   lead: PathLeadCopy;
 }) {
@@ -222,13 +252,20 @@ export function RoundComplete({
   const got = tiles.filter((t) => t.status === "got").length;
   const missed = tiles.filter((t) => t.status === "missed").length;
   const unseen = tiles.length - got - missed;
+  // A large deck draws only what has been seen, the missed first: see MapVariant.
+  const large = variant === "dots";
+  const style: TileStyle = large ? "labels" : variant;
+  const shown = large
+    ? [...tiles.filter((t) => t.status === "missed"), ...tiles.filter((t) => t.status === "got")]
+    : tiles;
 
   useEffect(() => {
     if (gated) track("drill_gate_viewed", { tool: rounds.tool });
   }, [gated, rounds.tool]);
 
   // The result replaces a question that was a different height, and may have
-  // been scrolled past: bring its top back under the header, and focus with it.
+  // been scrolled past: its top is brought back under the header, and it takes
+  // the focus so that it is read.
   const top = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = top.current;
@@ -241,18 +278,18 @@ export function RoundComplete({
   }, []);
 
   const parts = [
-    missed > 0 && `your ${missed} ${missed === 1 ? "miss" : "misses"}`,
-    unseen > 0 && (missed + unseen > size ? "new ones" : `the ${unseen} you haven't seen yet`),
+    missed > 0 && `the ${missed} that you missed`,
+    unseen > 0 && (missed + unseen > size ? "new ones" : `the ${unseen} you have not seen yet`),
   ].filter(Boolean);
   const next =
     subline ??
     (parts.length > 0
       ? `Round ${n + 1} starts with ${parts.join(", then ")}.`
-      : `Round ${n + 1} goes back over the ones you know least.`);
+      : `Round ${n + 1} returns to the ones that you know least well.`);
   const saves =
     variant === "skills"
-      ? "A free account keeps your scores and opens every round on your weakest skill."
-      : `A free account keeps your map and opens every round with the ${noun[1]} you miss.`;
+      ? "A free account keeps your scores and begins every round with your weakest skill."
+      : `A free account keeps your progress and begins every round with the ${noun[1]} that you missed.`;
 
   return (
     <div
@@ -260,23 +297,20 @@ export function RoundComplete({
       tabIndex={-1}
       role="group"
       aria-label={`${label}: round ${n} result`}
-      className="grid min-w-0 scroll-mt-24 gap-4 outline-none"
+      className="grid min-w-0 gap-4"
     >
-      <div className="glass path-rise grid min-w-0 gap-5 rounded-3xl p-6 sm:p-8">
-        <div className="grid min-w-0 gap-1.5">
-          <span className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            {label} · round {n}
-          </span>
-          <p className="font-display text-4xl font-semibold tracking-tight">
-            {roundCorrect} <span className="text-muted-foreground">of {size}</span>
+      <div className="glass path-rise grid min-w-0 gap-5 rounded-lg p-5 sm:p-8">
+        <div className="grid min-w-0 gap-2">
+          <p className="cb-label min-w-0 text-muted-foreground">
+            {label}, round {n}
           </p>
-          <p className="text-muted-foreground">
-            {roundCorrect === size && "Every one right. "}
-            {next}
-          </p>
+          <h2 className="cb-statement">
+            You answered {roundCorrect} of {size} questions correctly.
+          </h2>
+          <p className="cb-measure-sm text-small text-muted-foreground">{next}</p>
         </div>
 
-        <div className="grid gap-4 border-t border-border/70 pt-5">
+        <div className="grid gap-4 border-t border-border pt-5">
           <PathLead tool={rounds.tool} signedIn={rounds.signedIn} {...lead} />
           {!gated && (
             <Button
@@ -286,31 +320,35 @@ export function RoundComplete({
               className="h-12 w-full px-6 text-base sm:w-auto sm:justify-self-start"
             >
               Start round {n + 1}
-              <ArrowRight />
             </Button>
           )}
         </div>
       </div>
 
-      <div className="glass grid min-w-0 gap-5 rounded-3xl p-5 sm:p-6">
+      <div className="glass grid min-w-0 gap-5 rounded-lg p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display font-semibold tracking-tight">{mapTitle}</h2>
-          <span className="font-mono text-xs text-muted-foreground">
+          <h3 className="text-base font-semibold">{mapTitle}</h3>
+          <span className="text-note text-muted-foreground">
             {variant === "skills"
-              ? `${got} of ${tiles.length} solid`
+              ? `${got} of ${tiles.length} secure`
               : `${got + missed} of ${tiles.length} seen`}
           </span>
         </div>
-        <ProgressMap tiles={tiles} variant={variant} />
-        <Legend variant={variant} />
+        {shown.length > 0 && <ProgressMap tiles={shown} variant={style} />}
+        {large && unseen > 0 && (
+          <p className="text-small text-muted-foreground">
+            {unseen === 1
+              ? `One ${noun[0]} has not been asked yet.`
+              : `The other ${unseen} ${noun[1]} have not been asked yet.`}
+          </p>
+        )}
+        <Legend variant={style} seenOnly={large} />
 
         {gated ? (
-          <div className="grid gap-4 border-t border-border/70 pt-5">
-            <div className="grid gap-1">
-              <h2 className="font-display text-xl font-semibold tracking-tight">
-                Save your map and play round {n + 1}
-              </h2>
-              <p className="text-sm text-muted-foreground">{saves}</p>
+          <div className="grid gap-4 border-t border-border pt-5">
+            <div className="grid gap-1.5">
+              <h3 className="text-base font-semibold">Save your progress and start round {n + 1}</h3>
+              <p className="cb-measure-sm text-small text-muted-foreground">{saves}</p>
             </div>
             <InlineSignup
               nextPath={pathname}
@@ -319,15 +357,19 @@ export function RoundComplete({
             />
           </div>
         ) : rounds.account === "error" ? (
-          <p className="border-t border-border/70 pt-4 text-sm text-muted-foreground">
-            Couldn&apos;t reach your account just now. Your progress is kept on this device and will sync next
-            time.
-          </p>
+          <div className="border-t border-border pt-4">
+            <p role="status" className="cb-measure-sm text-small text-muted-foreground">
+              Your account could not be reached. Your progress is kept on this device and will be saved to your
+              account next time.
+            </p>
+          </div>
         ) : rounds.linked && rounds.account === "saved" ? (
-          <p className="flex items-center gap-1.5 border-t border-border/70 pt-4 text-sm text-success">
-            <Check className="size-4" aria-hidden />
-            Saved to your account
-          </p>
+          <div className="border-t border-border pt-4">
+            <p role="status" className="flex items-center gap-1.5 text-small text-muted-foreground">
+              <Check className="size-4 shrink-0" aria-hidden />
+              Your progress is saved to your account.
+            </p>
+          </div>
         ) : null}
       </div>
     </div>

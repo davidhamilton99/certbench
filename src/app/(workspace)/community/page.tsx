@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Play, Search } from "lucide-react";
-import { createClient } from "@/server/supabase/server";
+import { requireProPage } from "@/server/auth";
 import { listPublicSets } from "@/server/data/community";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -17,54 +14,58 @@ export default async function CommunityPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db } = await requireProPage();
 
-  const sets = await listPublicSets(db, q?.trim() || null);
+  const query = q?.trim() || null;
+  const sets = await listPublicSets(db, query);
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Community</h1>
-        <p className="text-sm text-muted-foreground">
-          Public study sets shared by other learners
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">Community</h1>
+        <p className="text-small text-muted-foreground">
+          These are the study sets that other members have made public.
         </p>
       </div>
 
-      <form className="flex max-w-md gap-2" action="/community">
-        <Input name="q" defaultValue={q ?? ""} placeholder="Search sets…" />
-        <Button type="submit" variant="secondary" size="icon" aria-label="Search">
-          <Search />
-        </Button>
+      <form role="search" className="grid max-w-md gap-1.5" action="/community">
+        <label htmlFor="community-search" className="text-small font-medium">
+          Search the study sets
+        </label>
+        <div className="flex gap-2">
+          <Input id="community-search" name="q" type="search" defaultValue={q ?? ""} />
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
+        </div>
       </form>
 
       {sets.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          {q ? "No sets match that search." : "No public sets yet — be the first to share one."}
+        <p className="rounded-lg border border-dashed border-input p-8 text-small text-muted-foreground">
+          {query ? "No study sets match that search." : "No study sets have been made public yet."}
         </p>
       ) : (
-        <div className="grid gap-3">
+        <ul className="glass divide-y divide-border overflow-hidden rounded-lg">
           {sets.map((set) => (
-            <Link key={set.id} href={`/community/${set.id}`} className="group">
-              <Card className="py-4 transition-colors group-hover:bg-accent/40">
-                <CardContent className="flex items-center justify-between gap-4">
-                  <div className="grid gap-0.5">
-                    <span className="font-medium">{set.title}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {set.questionCount} questions
-                      {set.category && <> · {set.category}</>}
-                      {set.attemptCount > 0 && <> · played {set.attemptCount}×</>}
-                    </span>
-                  </div>
-                  <Play className="size-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
+            <li key={set.id}>
+              <Link
+                href={`/community/${set.id}`}
+                className="grid gap-0.5 px-5 py-4 transition-colors hover:bg-tint-hover focus-visible:-outline-offset-2"
+              >
+                <span className="font-medium">{set.title}</span>
+                <span className="text-small text-muted-foreground">
+                  {set.questionCount} {set.questionCount === 1 ? "question" : "questions"}
+                  {set.category && <>, {set.category}</>}
+                  {set.attemptCount > 0 && (
+                    <>
+                      , opened {set.attemptCount} {set.attemptCount === 1 ? "time" : "times"}
+                    </>
+                  )}
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

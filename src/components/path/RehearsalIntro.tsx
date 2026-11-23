@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Flag, Gauge, Timer } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clock, REHEARSAL_FORMATS, type Reading } from "@/core/path/rehearsal";
 import type { PathStructure, RehearsalSize } from "@/core/path/types";
+import { fmtDay } from "@/core/path/versions";
 import type { RehearsalRun } from "./rehearsal-run";
-
-const fmtDay = (at: number) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
 const FULL = REHEARSAL_FORMATS.full;
 const HALF = REHEARSAL_FORMATS.half;
 
-/** Before a rehearsal: what it is, how it runs, and its two lengths. */
+/**
+ * Before a practice exam on the study path: what it is, how it runs, and its
+ * two lengths. It opens in answer to a press, so its heading takes the focus
+ * and a screen reader reads it.
+ */
 export function RehearsalIntro({
   structure,
   stopNumber,
@@ -21,66 +24,67 @@ export function RehearsalIntro({
   onBack,
 }: {
   structure: PathStructure;
-  /** Its place on the path, when it's the path's last stop. */
+  /** Its place on the study path, when it is the last step. */
   stopNumber: number | null;
   /** The reading its score will be set against. */
   reading: Reading | null;
   onStart: (size: RehearsalSize) => void;
   onBack: () => void;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
-    <div className="glass path-rise grid gap-5 rounded-3xl p-6 sm:p-8">
-      <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-        {stopNumber ? `Stop ${stopNumber} · Exam rehearsal` : `Exam rehearsal · ${structure.examCode}`}
-      </span>
-      <h2 className="cb-display text-balance text-[2rem] sm:text-[2.6rem]">
-        Sit the whole exam, start to finish.
-      </h2>
-      <p className="max-w-prose text-muted-foreground">
-        {FULL.questions} questions in {FULL.minutes} minutes, the real {structure.examCode}&apos;s limits, drawn
-        from all {structure.domains.length} domains in the exam&apos;s weights. No answers until the end, as on the
-        exam.
+    <div className="glass path-rise grid gap-5 rounded-lg p-5 sm:p-8">
+      <div className="grid gap-2">
+        {/* Its place on the study path is a fact the heading does not hold. Opened
+            from anywhere else it has no line above it: the exam's code is in
+            the sentence below. */}
+        {stopNumber && <p className="cb-label text-muted-foreground">Step {stopNumber}: practice exam</p>}
+        {/* The screen's title: on the study path this is a screen of its own. */}
+        <h1 ref={headingRef} tabIndex={-1} className="cb-subsection">
+          Take a full-length practice exam.
+        </h1>
+      </div>
+      <p className="cb-measure text-body text-muted-foreground">
+        The practice exam has {FULL.questions} questions and a time limit of {FULL.minutes} minutes, which are the
+        limits of the real {structure.examCode} exam. The questions are drawn from all {structure.domains.length}{" "}
+        domains in the same proportions as the exam. No answer is shown until you finish.
       </p>
-      <ul className="grid gap-2.5 text-sm">
-        <li className="flex gap-2.5">
-          <Flag className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          Flag anything to come back to before you finish.
-        </li>
-        <li className="flex gap-2.5">
-          <Timer className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          The clock stops if you leave, and you pick up where you left off.
-        </li>
-        <li className="flex gap-2.5">
-          <Gauge className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          <span>
-            Your score lands on the readiness dial
-            {reading
-              ? `, set against your ${reading.source}'s ${reading.score}% from ${fmtDay(reading.at)}.`
-              : ", with every answer explained."}
-          </span>
+      <ul className="grid list-disc gap-2 pl-5 text-small text-muted-foreground">
+        <li>You can flag any question and return to it before you finish.</li>
+        <li>The clock stops if you leave, and you can continue from where you stopped.</li>
+        <li>
+          Your score is compared with the readiness target
+          {reading
+            ? ` and with your ${reading.source === "rehearsal" ? "last practice exam" : "checkpoint"} result of ${reading.score}% from ${fmtDay(reading.at)}.`
+            : ", and every answer is explained."}
         </li>
       </ul>
       <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">
-        <Button size="lg" className="h-12 w-full text-base sm:w-auto" onClick={() => onStart("full")}>
-          Start the full rehearsal
-          <ArrowRight />
+        <Button size="lg" className="w-full sm:w-auto" onClick={() => onStart("full")}>
+          Start the full practice exam
+          <ArrowRight aria-hidden />
         </Button>
-        <Button size="lg" variant="outline" className="h-12 w-full text-base sm:w-auto" onClick={() => onStart("half")}>
-          Half: {HALF.questions} questions, {HALF.minutes} min
+        <Button
+          size="lg"
+          variant="outline"
+          className="h-auto min-h-12 w-full whitespace-normal py-2.5 sm:w-auto"
+          onClick={() => onStart("half")}
+        >
+          Half-length exam: {HALF.questions} questions in {HALF.minutes} minutes
         </Button>
       </div>
-      <button
-        type="button"
-        onClick={onBack}
-        className="justify-self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-      >
-        Back to my map
+      <button type="button" onClick={onBack} className="cb-link cb-tap justify-self-start text-small">
+        Return to the study path
       </button>
     </div>
   );
 }
 
-/** On the home, a rehearsal left mid-way: back to it, or throw it away. */
+/** On the study path's home, a practice exam left mid-way: back to it, or discard it. */
 export function RehearsalResumeCard({
   run,
   onResume,
@@ -91,42 +95,65 @@ export function RehearsalResumeCard({
   onDiscard: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const discardRef = useRef<HTMLButtonElement>(null);
+  const keepRef = useRef<HTMLButtonElement>(null);
+  // True once the person has opened or closed the question about discarding.
+  const asked = useRef(false);
   const answered = run.picks.filter((pick) => pick !== null).length;
+
+  // The question opens on the choice that loses nothing, and closing it
+  // returns the focus to the control that opened it.
+  useEffect(() => {
+    if (!asked.current) return;
+    if (confirming) keepRef.current?.focus();
+    else discardRef.current?.focus();
+  }, [confirming]);
+
+  function ask(open: boolean) {
+    asked.current = true;
+    setConfirming(open);
+  }
+
   return (
-    <div className="glass grid gap-4 rounded-3xl p-5 ring-1 ring-primary/40 sm:p-6">
+    // The card's edge is the ordinary rule, as every card's is. The pressable
+    // colour is kept for what can be pressed: here, the button that resumes.
+    <div className="glass grid gap-4 rounded-lg p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">Exam rehearsal · in progress</p>
-          <p className="mt-1 font-display text-xl font-semibold tracking-tight">
-            {answered} of {run.reps.length} answered
+          <p className="text-small text-muted-foreground">You have a practice exam in progress.</p>
+          <p className="mt-1 text-xl font-semibold">
+            {answered} of {run.reps.length} questions answered
           </p>
-          <p className="mt-0.5 inline-flex items-center gap-1.5 font-mono text-sm tabular-nums text-muted-foreground">
+          <p className="mt-0.5 inline-flex items-center gap-1.5 text-small tabular-nums text-muted-foreground">
             <Timer className="size-3.5" aria-hidden />
-            {clock(run.limitMs - run.spentMs)} left
+            {clock(run.limitMs - run.spentMs)} remaining
           </p>
         </div>
-        <Button size="lg" className="h-12 w-full px-6 text-base sm:w-auto" onClick={onResume}>
-          Resume
-          <ArrowRight />
+        <Button size="lg" className="w-full sm:w-auto" onClick={onResume}>
+          Resume the exam
+          <ArrowRight aria-hidden />
         </Button>
       </div>
       {confirming ? (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Throw it away? Its answers won&apos;t count.</span>
+        <div className="flex flex-wrap items-center gap-2 text-small">
+          <span className="text-muted-foreground">
+            Do you want to discard this practice exam? Its answers will not be counted.
+          </span>
           <Button size="sm" variant="destructive" onClick={onDiscard}>
-            Discard it
+            Discard the exam
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>
-            Keep it
+          <Button ref={keepRef} size="sm" variant="ghost" onClick={() => ask(false)}>
+            Keep the exam
           </Button>
         </div>
       ) : (
         <button
+          ref={discardRef}
           type="button"
-          onClick={() => setConfirming(true)}
-          className="justify-self-start text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          onClick={() => ask(true)}
+          className="cb-link cb-tap justify-self-start text-small"
         >
-          Discard this rehearsal
+          Discard this practice exam
         </button>
       )}
     </div>

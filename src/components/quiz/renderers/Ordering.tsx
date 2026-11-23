@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Controlled ordering renderer: move items up/down into the right sequence.
- * value.order[displayPos] = original option index at that position.
+ * Controlled ordering renderer: items are moved up and down into the right
+ * sequence. value.order[displayPos] = original option index at that position.
  */
 export function Ordering({
   questionId,
@@ -52,29 +52,33 @@ export function Ordering({
           <li
             key={originalIndex}
             className={cn(
-              "flex items-center gap-3 rounded-xl border border-border bg-foreground/[0.02] px-4 py-2.5 text-sm",
-              isRight && "border-success/60 bg-success/10",
-              revealed && !isRight && "border-danger/60 bg-danger/10"
+              "flex items-center gap-3 rounded-md border border-border bg-card px-4 py-2.5 text-small",
+              isRight && "border-success bg-success/10",
+              revealed && !isRight && "border-destructive bg-destructive/10"
             )}
           >
-            <span className="font-mono text-xs text-muted-foreground">
-              {position + 1}
-            </span>
-            <span className="flex-1 leading-relaxed">{items[originalIndex]}</span>
+            <span className="text-note tabular-nums text-muted-foreground">{position + 1}</span>
+            <span className="flex-1">{items[originalIndex]}</span>
             {revealed ? (
-              isRight ? (
-                <Check className="size-4 shrink-0 text-success" />
-              ) : (
-                <X className="size-4 shrink-0 text-danger" />
-              )
+              <>
+                {isRight ? (
+                  <Check aria-hidden className="size-4 shrink-0 text-success" />
+                ) : (
+                  <X aria-hidden className="size-4 shrink-0 text-destructive" />
+                )}
+                {/* The mark in words, for a reader who does not see the colour or the icon. */}
+                <span className="sr-only">
+                  {isRight ? "This item is in the correct position." : "This item is not in the correct position."}
+                </span>
+              </>
             ) : (
               <span className="flex shrink-0 gap-1">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7"
-                  aria-label="Move up"
+                  className="size-8"
+                  aria-label={`Move up: ${items[originalIndex]}`}
                   disabled={position === 0}
                   onClick={() => move(position, -1)}
                 >
@@ -84,8 +88,8 @@ export function Ordering({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7"
-                  aria-label="Move down"
+                  className="size-8"
+                  aria-label={`Move down: ${items[originalIndex]}`}
                   disabled={position === order.length - 1}
                   onClick={() => move(position, 1)}
                 >

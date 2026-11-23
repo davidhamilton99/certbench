@@ -1,8 +1,5 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/server/supabase/server";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { requireProPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import { FeedbackClient } from "@/components/workspace/FeedbackClient";
 
 export const metadata = {
@@ -15,16 +12,12 @@ export default async function FeedbackPage({
   searchParams: Promise<{ r?: string }>;
 }) {
   const { r } = await searchParams;
-  const db = await createClient();
-  const {
-    data: { user },
-  } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  const { db, user } = await requireProPage();
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
 
   const certById = new Map(certifications.map((c) => [c.id, c]));
@@ -35,13 +28,11 @@ export default async function FeedbackPage({
 
   return (
     <div className="mx-auto grid w-full max-w-lg gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
-          How did your exam go?
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          We&apos;d love to hear how it went — and if you passed, your story
-          helps the next person decide to start.
+      <div className="grid gap-1.5">
+        <h1 className="cb-subsection">How did your exam go?</h1>
+        <p className="text-small text-muted-foreground">
+          If you passed, you can write a few sentences about how you prepared, which may help another candidate
+          decide to begin.
         </p>
       </div>
       <FeedbackClient
