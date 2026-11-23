@@ -127,16 +127,28 @@ describe("ordering PBQs", () => {
     expect(out.className).not.toContain("bg-foreground/[0.07]");
   });
 
-  it("grades a partly wrong order with partial credit, and names each mark in the list to review", () => {
+  it("grades a partly wrong order with partial credit, and shows the correct order beside what was placed", () => {
     render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);
     tap("Discover", "Request", "Offer", "Acknowledge");
     fireEvent.click(check());
     expect(score()).toHaveTextContent("50%");
     expect(score()).toHaveTextContent("You placed 2 of 4 items in the correct position.");
-    expect(screen.getByText("The 2 answers to review")).toBeInTheDocument();
-    // A mark is an image with a name, not a bare icon (hidden: the list is folded away).
+    // The folded list is the right order, called that, not "answers to review":
+    // a visitor read the old list as their own order marked and repeated it.
+    expect(screen.getByText("The correct order")).toBeInTheDocument();
+    expect(screen.queryByText(/answers to review/)).toBeNull();
+    const rows = within(screen.getByText("The correct order").closest("details")!).getAllByRole("listitem", {
+      hidden: true,
+    });
+    expect(rows.map((r) => r.textContent)).toEqual([
+      "1.Discover",
+      "2.OfferYou placed Request here.",
+      "3.RequestYou placed Offer here.",
+      "4.Acknowledge",
+    ]);
+    // A right place is marked with an image that has a name; a wrong one says what was put there instead.
     expect(screen.getAllByRole("img", { name: "placed correctly", hidden: true })).toHaveLength(2);
-    expect(screen.getAllByRole("img", { name: "was in the wrong position", hidden: true })).toHaveLength(2);
+    expect(screen.queryByRole("img", { name: "was in the wrong position", hidden: true })).toBeNull();
   });
 
   it("asks before leaving once something is placed", () => {
