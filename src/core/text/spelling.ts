@@ -79,6 +79,12 @@ function likeCase(from: string, to: string): string {
   return to;
 }
 
+/**
+ * Names that keep their own spelling: the storage protocol is "Fibre Channel"
+ * in its standards and in CompTIA's objectives, although the cable is "fiber".
+ */
+const PROPER_NAME = /^Fibre Channel\b/;
+
 /** The same text in American spelling. Text already in it comes back unchanged. */
 export function americanSpelling(text: string): string {
   if (!text) return text;
@@ -86,5 +92,7 @@ export function americanSpelling(text: string): string {
     .replace(IZE, (_m, stem: string, suffix: string) => `${stem}${suffix[0] === suffix[0].toUpperCase() && /[A-Z]/.test(suffix[0]) ? "Z" : "z"}${suffix}`)
     .replace(OUR, (_m, stem: string) => `${stem}${stem === stem.toUpperCase() && stem.length > 1 ? "OR" : "or"}`)
     .replace(METRE, (_m, prefix: string, s: string) => `${prefix}meter${s}`)
-    .replace(WORD, (m) => likeCase(m, WORDS[m.toLowerCase()]));
+    .replace(WORD, (m: string, _word: string, at: number, whole: string) =>
+      PROPER_NAME.test(whole.slice(at)) ? m : likeCase(m, WORDS[m.toLowerCase()])
+    );
 }

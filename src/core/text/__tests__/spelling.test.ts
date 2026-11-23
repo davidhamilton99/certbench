@@ -33,6 +33,10 @@ describe("americanSpelling", () => {
     expect(americanSpelling("A fibre run of 100 metres needs a licence; defence in depth applies.")).toBe(
       "A fiber run of 100 meters needs a license; defense in depth applies."
     );
+    // The storage protocol's name is "Fibre Channel" in its standards and in CompTIA's objectives.
+    expect(americanSpelling("A Fibre Channel SAN runs over multimode fibre, unlike FCoE.")).toBe(
+      "A Fibre Channel SAN runs over multimode fiber, unlike FCoE."
+    );
     expect(americanSpelling("The programme was cancelled while they analysed the artefacts.")).toBe(
       "The program was canceled while they analyzed the artifacts."
     );

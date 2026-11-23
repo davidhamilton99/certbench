@@ -24,6 +24,6 @@ export const cableTypes: ReferenceTable = {
     { columns: { cable: "Coaxial RG-59", category: "Coaxial copper", maxSpeed: "N/A (analog video, ~350 MHz)", maxDistance: "~230 m", connector: "F-type / BNC", use: "Analog CCTV and composite video; thinner than RG-6; higher signal loss at high frequency" } },
     { columns: { cable: "Direct Attach Copper", category: "Twinaxial copper (DAC)", maxSpeed: "10–100 Gbps", maxDistance: "7–15 m", connector: "SFP+ / QSFP", use: "Ultra-low latency data center rack connections; cheaper than optical transceiver + fiber" } },
     { columns: { cable: "T568A wiring", category: "RJ-45 pin-out standard", maxSpeed: "N/A", maxDistance: "N/A", connector: "RJ-45", use: "Pairs: G-W/G, O-W/O, Bl-W/Bl, Br-W/Br; preferred by TIA/EIA for residential; used in crossover cables (one end T568A, one T568B)" } },
-    { columns: { cable: "T568B wiring", category: "RJ-45 pin-out standard", maxSpeed: "N/A", maxDistance: "N/A", connector: "RJ-45", use: "Pairs: O-W/O, G-W/G, Bl-W/Bl, Br-W/Br; most common in commercial installations; straight-through cables use T568B on both ends" } },
+    { columns: { cable: "T568B wiring", category: "RJ-45 pin-out standard", maxSpeed: "N/A", maxDistance: "N/A", connector: "RJ-45", use: "Pairs: O-W/O, G-W/G, Bl-W/Bl, Br-W/Br; most common in commercial installations; a straight-through cable uses the same standard on both ends, most often T568B" } },
   ],
 };
