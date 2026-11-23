@@ -141,7 +141,7 @@ export function PbqExampleLanding({ page }: { page: PbqExamplePage }) {
                           <li key={lab.id} className="flex min-w-0 items-center gap-3.5 py-3">
                             <span
                               aria-hidden
-                              className="flex size-8 shrink-0 items-center justify-center rounded-xs bg-primary/10 text-primary"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-xs bg-tint-selected text-primary"
                             >
                               <Icon className="size-4" />
                             </span>

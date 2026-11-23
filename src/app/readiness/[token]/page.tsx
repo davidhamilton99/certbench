@@ -24,7 +24,8 @@ export async function generateMetadata({
     };
   }
   const score = Math.round(payload.s);
-  const title = `${payload.n} is ${score}% ready for ${payload.c}`;
+  // The score is a readiness score and not a verdict: no learner is called ready for an exam.
+  const title = `${payload.n} has a readiness score of ${score}% for ${payload.c}`;
   const description = `This readiness score was measured on CertBench. You can measure your own ${payload.c} readiness in about 20 minutes.`;
   // The colocated opengraph-image is injected automatically; twitter card set
   // so X uses the large image too.
@@ -70,7 +71,7 @@ export default async function ReadinessSharePage({
           </p>
           <Button asChild size="lg" className="mt-1">
             <Link href="/start">
-              Start the study path for your exam
+              Choose your exam
               <LinkArrow />
             </Link>
           </Button>

@@ -4,15 +4,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Timer, X } from "lucide-react";
 import { OPTION_LETTERS } from "@/components/quiz/AnswerOption";
 import { biggestOpportunity } from "@/core/path/checkpoint";
+import { domainOf } from "@/core/path/rehearsal";
 import type { PathStructure } from "@/core/path/types";
 import { READINESS_TARGET } from "@/lib/readiness/band";
 import type { RehearsalRun } from "./rehearsal-run";
 import { OpportunityNote, ReadingCard } from "./PathReveal";
 import { cn } from "@/lib/utils";
-
-/** The domain an objective sits in: "4.2" is in "4.0". */
-export const domainOf = (objective: string) =>
-  objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
 
 /** The headline: how the score moved since the reading before. */
 function headline(score: number, before: NonNullable<RehearsalRun["done"]>["before"]): string {

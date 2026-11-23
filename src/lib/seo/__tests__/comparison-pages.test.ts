@@ -11,7 +11,8 @@ import { A_PLUS_ROUNDUP, NETWORK_PLUS_ROUNDUP, ROUNDUP, ROUNDUPS, VS_PAGES, type
  * price is the one wording of src/lib/pricing/terms.ts.
  */
 const LONG_DATE = /^(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}$/;
-const HEDGED = /^(?:Typically|Often) /;
+/** A price that was not read on the vendor's own page: where to find it, with no figure. */
+const WHERE_TO_FIND = /^See [A-Z][\w ]*'s own site for the current price$/;
 const tools = (guide: { tools: RoundupTool[] }) => guide.tools;
 const find = (guide: { tools: RoundupTool[] }, name: RegExp) => tools(guide).find((tool) => name.test(tool.name));
 
@@ -29,6 +30,8 @@ describe("the guides to practice tests", () => {
     expect(ROUNDUP.tools).toHaveLength(6);
     expect(A_PLUS_ROUNDUP.metaDescription).toContain("one of the six products");
     expect(A_PLUS_ROUNDUP.tools).toHaveLength(6);
+    expect(NETWORK_PLUS_ROUNDUP.metaDescription).toContain("one of the four products");
+    expect(NETWORK_PLUS_ROUNDUP.tools).toHaveLength(4);
   });
 
   // The publisher of a guide is in no position to place its own product, so
@@ -46,15 +49,17 @@ describe("the guides to practice tests", () => {
   it("name the products in the description in the order of the list", () => {
     expect(ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster, Dion Training, ExamCompass and Professor Messer.");
     expect(A_PLUS_ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster, Jason Dion, Professor Messer and TotalTester.");
-    expect(NETWORK_PLUS_ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster and Jason Dion, and covers subnetting practice.");
+    expect(NETWORK_PLUS_ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster and Jason Dion.");
   });
 
   it("say whose judgments the entries are, and which prices were read at the source", () => {
     for (const guide of ROUNDUPS) {
       const intro = guide.intro.join(" ");
-      expect(intro, guide.path).toContain("are CertBench's own assessment");
+      expect(intro, guide.path).toContain(
+        "What each product is most suitable for, and its strengths and limitations, are CertBench's own assessment."
+      );
       expect(intro, guide.path).toContain("CertBench read it on the vendor's own page on that date");
-      expect(intro, guide.path).toContain("The other prices are approximate and may have changed.");
+      expect(intro, guide.path).toContain("Where CertBench could not read a price, the guide says where to find it and gives no figure.");
     }
   });
 
@@ -78,9 +83,9 @@ describe("the guides to practice tests", () => {
           // A price that was read is stated exactly.
           expect(tool.price, where).toMatch(/\$\d/);
           expect(tool.price, where).not.toMatch(/typically|often|about|approximately|around/i);
-        } else if (!tool.isSelf && tool.price !== "Free") {
-          // A price that was not read is hedged, and has no date.
-          expect(tool.price, where).toMatch(HEDGED);
+        } else if (!tool.isSelf) {
+          // A price that was not read is given as where to find it: no figure, not even "Free", and no date.
+          expect(tool.price, where).toMatch(WHERE_TO_FIND);
         }
       }
     }
@@ -138,9 +143,16 @@ describe("the comparisons with one other product", () => {
     const price = (slug: string) => VS_PAGES.find((p) => p.slug === slug)!.rows.find((row) => row.feature === "Price")!.competitor;
     expect(price("certbench-vs-boson")).toBe("$99 a year for each exam");
     expect(price("certbench-vs-pocket-prep")).toContain("$20.99 a month, $49.99 every three months, or $124.99 a year");
-    // CertMaster's price could not be read, so it is hedged and undated.
-    expect(price("certbench-vs-certmaster")).toMatch(HEDGED);
+    // CertMaster's price could not be read, so the page says where to find it, with no figure and no date.
+    expect(price("certbench-vs-certmaster")).toBe("See CompTIA's own site for the current price");
     expect(VS_PAGES.find((p) => p.slug === "certbench-vs-certmaster")!.priceChecked).toBeUndefined();
+  });
+
+  it("state no competitor's free trial, which no vendor page read on that day described, and say where to find it", () => {
+    for (const page of VS_PAGES) {
+      const trial = page.rows.find((row) => row.feature === "Free to try")!.competitor;
+      expect(trial, page.slug).toMatch(/^See [A-Z][\w ]*'s own site for any free trial$/);
+    }
   });
 });
 
@@ -169,9 +181,59 @@ describe("CertBench's own price in the copy tables", () => {
   });
 });
 
+describe("the A+ cores as the copy tables summarize them", () => {
+  // CompTIA's exam pages give 220-1201 five domains and 220-1202 four (facts
+  // file). A summary names them all, so that it does not read as a full list
+  // that leaves out each core's largest or last domain.
+  const CORE1 = "mobile devices, networking, hardware, virtualization and cloud computing, and hardware and network troubleshooting";
+  const CORE2 = "operating systems, security, software troubleshooting and operational procedures";
+
+  it("names every domain of each core, in the guide and on the A+ practice-test page", () => {
+    const guide = [...A_PLUS_ROUNDUP.intro, ...A_PLUS_ROUNDUP.faqs.map((f) => f.answer)].join(" ");
+    expect(guide.split(`Core 1 (220-1201) covers ${CORE1}.`).length - 1).toBe(2);
+    expect(guide.split(`Core 2 (220-1202) covers ${CORE2}.`).length - 1).toBe(2);
+    const page = PRACTICE_TEST_PAGES.find((p) => p.path === "a-plus-practice-test")!.intro.join(" ");
+    expect(page).toContain(`Core 1 (${CORE1}) and Core 2 (${CORE2})`);
+    expect(JSON.stringify([A_PLUS_ROUNDUP, PRACTICE_TEST_PAGES])).not.toMatch(/hardware, networking, mobile devices and cloud computing/);
+  });
+});
+
+describe("the names of CertBench's own labs in running text", () => {
+  // "Hands-on lab" is the house word for CertBench's own labs. A PBQ is
+  // CompTIA's name for the exam's task, which the title tags keep for search.
+  // The lab that is drawn as a network is a "network diagram" on every page.
+  it("are hands-on labs and network diagrams, never interactive PBQs or network topologies", () => {
+    const running = [
+      ...[...PRACTICE_TEST_PAGES, ...PBQ_EXAMPLE_PAGES].flatMap((p) => [
+        p.metaDescription,
+        ...p.intro,
+        ...p.faqs.map((f) => f.answer),
+        ...(p.related ?? []).map((r) => r.note),
+      ]),
+      ...ROUNDUPS.flatMap((g) => [...g.intro, ...g.faqs.map((f) => f.answer), ...g.tools.flatMap((t) => [t.bestFor, ...t.strengths, ...t.weaknesses])]),
+      ...VS_PAGES.flatMap((p) => [...p.intro, ...p.faqs.map((f) => f.answer), ...p.rows.flatMap((r) => [r.certbench, r.competitor])]),
+    ];
+    expect(running.length).toBeGreaterThan(100);
+    // A topology as subject matter ("ports, protocols and network topology") is not a lab's name.
+    expect(running.filter((t) => /interactive PBQs?|\ba network topology\b|topology (?:labs?|scenarios)/i.test(t))).toEqual([]);
+  });
+});
+
 describe("claims the tables do not make", () => {
   it("say nothing about what most candidates do or recommend", () => {
     const copy = JSON.stringify([ROUNDUPS, VS_PAGES]);
     expect(copy).not.toMatch(/most people|most candidates|most often recommended|r\/CompTIA|commonly report|industry benchmark/i);
+  });
+
+  // The facts file holds the prices that were read at the source and nothing
+  // more, so no other price is estimated and no product is ranked by price.
+  it("estimate no price, and call no product the most or least expensive", () => {
+    const copy = JSON.stringify([ROUNDUPS, VS_PAGES]);
+    expect(copy).not.toMatch(/most expensive|least expensive|cheapest|typically (?:more|less) than|often \$|\$\d+ to \$\d+/i);
+  });
+
+  it("say nothing about other publishers' practices or about features of a product whose page could not be read", () => {
+    const copy = JSON.stringify([ROUNDUPS, VS_PAGES]);
+    expect(copy).not.toMatch(/every legitimate|offline mode works|with offline mode|sold separately|Udemy's (?:exam )?player|Subnetting\.org/i);
   });
 });

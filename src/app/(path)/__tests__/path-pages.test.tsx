@@ -83,7 +83,7 @@ import { FREE_LAB_COUNT, freeLabs } from "@/core/path/free-labs";
 import { PATH_CERTS } from "@/core/path/types";
 import { pbqRegistry } from "@/data/pbq";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
-import { freeOnPublicPages } from "../path/[cert]/free-parts";
+import { freeOnPublicPages } from "@/lib/path/free-parts";
 import * as pathPage from "../path/[cert]/page";
 import StartPage from "../start/page";
 
@@ -286,7 +286,7 @@ describe("the page where an exam is chosen", () => {
     // One title, and the first sentence under it.
     expect([...root.querySelectorAll("h1")].map(text)).toEqual(["Which exam are you preparing for?"]);
     expect(text(root)).toContain(
-      "This is the only choice that you need to make. After this, each step is set out for you in order."
+      "After you choose, your study path sets out each step for you in order."
     );
     // The page's frame: its bar and its main region, which the skip link leads to.
     expect(root.querySelector("header")).not.toBeNull();
@@ -304,6 +304,16 @@ describe("the page where an exam is chosen", () => {
     // Nothing on it says that anything is loading.
     expect(root.querySelector('[role="status"]')).toBeNull();
     expect(text(root)).not.toMatch(/loading/i);
+  });
+
+  // One left edge: the name in the bar stands over the title and the list.
+  it("sets the bar's contents in the same column as the title and the list", async () => {
+    const root = await startPage();
+    const bar = root.querySelector("header > div")!;
+    const main = root.querySelector("main")!;
+    const widthOf = (el: Element) => el.className.split(/\s+/).filter((c) => /^(?:mx-auto|w-full|max-w-|px-|sm:px-)/.test(c)).sort();
+    expect(widthOf(bar)).toEqual(widthOf(main));
+    expect(widthOf(main)).toContain("max-w-2xl");
   });
 
   it("sends a member who is enrolled in an exam straight to that exam's study path", async () => {

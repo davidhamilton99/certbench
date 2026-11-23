@@ -31,6 +31,8 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
+  // No page is ever on its way here.
+  useLinkStatus: () => ({ pending: false }),
 }));
 vi.mock("next-themes", () => ({ useTheme: () => ({ resolvedTheme: "light", setTheme: state.setTheme }) }));
 vi.mock("@/components/auth/useSignedIn", () => ({ useSignedIn: () => state.signedIn }));
@@ -98,6 +100,11 @@ describe("the menu", () => {
     const list = menuList()!;
     expect(within(list).getAllByRole("link").map((a) => a.textContent)).toEqual([...LINKS, "Sign in"]);
     expect(within(list).getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    // The sign-in page carries the sign-in client: it is fetched only once the row is reached.
+    const signIn = within(list).getByRole("link", { name: "Sign in" });
+    expect(signIn).toHaveAttribute("data-prefetch", "false");
+    fireEvent.focus(signIn);
+    expect(signIn).toHaveAttribute("data-prefetch", "null");
     expect(within(list).getByRole("link", { name: "Pricing" })).toHaveAttribute("aria-current", "page");
     expect(within(list).getByRole("button", { name: "Switch to dark mode" })).toBeInTheDocument();
     // A list, so a screen reader says how many links there are.
@@ -148,6 +155,23 @@ describe("the menu", () => {
     expect(menuButton()).toHaveAttribute("aria-expanded", "true");
     fireEvent.pointerDown(screen.getByText("The page"));
     expect(menuButton()).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes when the focus leaves the bar, and stays open while the focus moves inside it", () => {
+    render(
+      <>
+        <MarketingHeader />
+        <a href="/help#account">billing page</a>
+      </>
+    );
+    fireEvent.click(menuButton());
+    const about = within(menuList()!).getByRole("link", { name: "About" });
+    fireEvent.blur(menuButton(), { relatedTarget: about });
+    expect(menuButton()).toHaveAttribute("aria-expanded", "true");
+    // Tab from the last row to the page's first link: the list would cover it.
+    fireEvent.blur(about, { relatedTarget: screen.getByRole("link", { name: "billing page" }) });
+    expect(menuButton()).toHaveAttribute("aria-expanded", "false");
+    expect(menuList()).toBeNull();
   });
 
   it("closes when a page is opened from it", () => {

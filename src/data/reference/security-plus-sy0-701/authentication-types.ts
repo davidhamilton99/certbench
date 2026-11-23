@@ -5,7 +5,7 @@ export const authenticationTypes: ReferenceTable = {
   title: "Authentication and AAA",
   description: "This table lists authentication protocols, methods and identity frameworks for the Security+ SY0-701 exam with a description of each, and its port where it has one.",
   columnHeaders: [
-    { key: "method", label: "Method / Protocol" },
+    { key: "method", label: "Method / protocol" },
     { key: "category", label: "Category" },
     { key: "description", label: "Description" },
     { key: "port", label: "Port", mono: true },

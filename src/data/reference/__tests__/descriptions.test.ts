@@ -9,10 +9,11 @@ import { referenceRegistry } from "..";
  * block"). Each is now one complete sentence that says what the table holds
  * and which exam it is for, and nothing about what the exam asks.
  *
- * The column headings are not read here. They are still in title case and
- * some join two words with a slash; the Recall decks that are built from a
- * table take their question words from them, so changing a heading changes
- * how a question is asked.
+ * The column headings are not read here. heading-case.test.ts holds them in
+ * sentence case and shows that their case changes no Recall question. Some
+ * still join two words with a slash: the Recall decks that are built from a
+ * table take their question words from them, so rewording a heading would
+ * change how a question is asked.
  */
 const TABLES = Object.entries(referenceRegistry).flatMap(([cert, tables]) =>
   tables.map((table) => [cert, table.id, table.description, table.columnHeaders.map((column) => column.label)] as const)

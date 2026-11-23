@@ -213,7 +213,9 @@ describe("RecallPlayer, a choice of answers", () => {
   it("draws the answers as buttons in a group named by the question", () => {
     render(<RecallPlayer decks={[deck]} deckKey="ports-protocols" />);
     const group = screen.getByRole("group");
-    expect(group).toHaveAccessibleName(cue());
+    // Named by the fact asked first (the card may add what it asks for, "Which port?", after it).
+    const asked = cue().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    expect(group).toHaveAccessibleName(new RegExp(`^${asked}`));
     expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(2);
     // Choosing is answering here, so these are not radio buttons.
     expect(screen.queryByRole("radio")).toBeNull();

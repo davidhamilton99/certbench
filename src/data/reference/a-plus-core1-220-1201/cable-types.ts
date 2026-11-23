@@ -5,10 +5,10 @@ export const cableTypes: ReferenceTable = {
   title: "Cables and connectors",
   description: "This table lists cables for the CompTIA A+ 220-1201 exam with the category, the maximum speed, the maximum distance and the connectors of each.",
   columnHeaders: [
-    { key: "cable", label: "Cable / Standard" },
+    { key: "cable", label: "Cable / standard" },
     { key: "category", label: "Category" },
-    { key: "maxSpeed", label: "Max Speed", mono: true },
-    { key: "maxDistance", label: "Max Distance", mono: true },
+    { key: "maxSpeed", label: "Max speed", mono: true },
+    { key: "maxDistance", label: "Max distance", mono: true },
     { key: "connector", label: "Connector(s)" },
   ],
   entries: [

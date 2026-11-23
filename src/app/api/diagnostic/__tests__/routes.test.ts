@@ -297,6 +297,18 @@ describe("POST /api/diagnostic/submit", () => {
     expect((await call()).status).toBe(404);
   });
 
+  // A refusal's message is shown to the member as it is written, so each one is a sentence.
+  it("says in a sentence what is wrong with a submission", async () => {
+    const message = async (res: Response) => ((await res.json()) as { error: { message: string } }).error.message;
+    h.getAttempt.mockResolvedValue(null);
+    expect(await message(await call())).toBe("This diagnostic could not be found. Please start it again.");
+    h.getAttempt.mockResolvedValue({ id: ATTEMPT, certificationId: SEC_701, totalQuestions: 1, isComplete: true, progressState: snapshot });
+    expect(await message(await call())).toBe("This diagnostic has already been submitted.");
+    attemptOn(SEC_701);
+    h.getQuestionsByIds.mockResolvedValue([question(1, NETWORK)]);
+    expect(await message(await call())).toBe("None of the answers that were sent belong to this diagnostic.");
+  });
+
   // The progress route stores the snapshot as the browser sends it. Until
   // November 2026 an attempt on one exam could carry another exam's question
   // ids, and those questions were graded, with their answers and explanations

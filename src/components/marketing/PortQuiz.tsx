@@ -83,11 +83,12 @@ export function PortQuiz({ entries }: { entries: PortEntry[] }) {
         variant="labels"
         mapTitle="Your ports"
         lead={{
-          title: "Port numbers are a small part of the exam.",
-          // The card names three exams, Network+ among them, whose topics are
-          // CertBench's own and not CompTIA's objectives. So it says what is
-          // true of every exam, in the words the page under it uses.
-          body: "The rest of the exam decides whether you pass. Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
+          // What CertBench offers next, and nothing about what an exam is made
+          // of: CompTIA does not publish that. The card names three exams,
+          // Network+ among them, whose topics are CertBench's own and not
+          // CompTIA's objectives, so it says what is true of every study path.
+          title: "Continue with your exam's study path",
+          body: "Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus, EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />

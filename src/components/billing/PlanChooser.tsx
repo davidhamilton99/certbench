@@ -81,8 +81,6 @@ export function PlanChooser<P extends BillingInterval>({
   signInHref,
   beforeCheckout,
   onPress,
-  submitLabel = "Continue to payment",
-  className,
 }: {
   /** The billing periods this page sells, in the order they are listed. */
   plans: readonly P[];
@@ -102,8 +100,6 @@ export function PlanChooser<P extends BillingInterval>({
   beforeCheckout?: () => Promise<unknown>;
   /** Told of every press of the button, with the period chosen. */
   onPress?: (plan: P) => void;
-  submitLabel?: string;
-  className?: string;
 }) {
   const name = useId();
   const [plan, setPlan] = useState<P>(plans.includes(defaultPlan) ? defaultPlan : plans[0]);
@@ -147,7 +143,7 @@ export function PlanChooser<P extends BillingInterval>({
 
   return (
     <form
-      className={cn("grid gap-4", className)}
+      className="grid gap-4"
       onSubmit={(event) => {
         event.preventDefault();
         void checkout();
@@ -171,13 +167,17 @@ export function PlanChooser<P extends BillingInterval>({
                   chosen ? "border-primary bg-tint-selected" : "border-input hover:border-foreground/50"
                 )}
               >
+                {/* Drawn with the page's own tokens: in the dark theme the browser's
+                    radio filled the unchosen one with a grey disc that read as half
+                    chosen. A ring, and a dot in the pressable ink once chosen. A
+                    contrast theme gets the system's own radio back. */}
                 <input
                   type="radio"
                   name={name}
                   value={p}
                   checked={chosen}
                   onChange={() => setPlan(p)}
-                  className="size-[1.125rem] rounded-full accent-primary"
+                  className="size-[1.125rem] shrink-0 appearance-none rounded-full border border-input bg-card checked:border-primary checked:bg-primary checked:inset-ring-3 checked:inset-ring-card forced-colors:appearance-auto"
                 />
                 <span className="text-small font-medium">{PLAN[p].name}</span>{" "}
                 <span className="text-right">
@@ -197,8 +197,9 @@ export function PlanChooser<P extends BillingInterval>({
       </fieldset>
 
       <div className="grid gap-2">
+        {/* It says what the press does, on every page that sells a plan. */}
         <Button type="submit" size="lg" className="w-full" loading={busy}>
-          {submitLabel}
+          Continue to payment
         </Button>
         <span role="status" className="sr-only">
           {busy ? "The payment page is opening." : ""}

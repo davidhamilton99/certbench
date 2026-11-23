@@ -24,6 +24,15 @@ export interface PbqHostProps {
    * the page. False for a lab that is on the page as it loads.
    */
   takeFocus?: boolean;
+  /**
+   * Ask before leaving a lab that has answers in it ("Your answers so far will
+   * not be kept"). True by default, for a host whose way back closes the lab
+   * (the study path, the workspace's list of labs). False for a host whose way
+   * back keeps the lab open with its answers (a public lab page, where it only
+   * returns to the other labs): there the question would not be true, so the
+   * way back is taken at once.
+   */
+  confirmLeave?: boolean;
 }
 
 /**

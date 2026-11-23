@@ -9,8 +9,8 @@ export const routingProtocols: ReferenceTable = {
     { key: "type", label: "Type" },
     { key: "algorithm", label: "Algorithm" },
     { key: "metric", label: "Metric" },
-    { key: "ad", label: "Admin Dist.", mono: true },
-    { key: "features", label: "Key Features / Notes" },
+    { key: "ad", label: "Admin dist.", mono: true },
+    { key: "features", label: "Key features / notes" },
   ],
   entries: [
     { columns: { protocol: "Static Route", type: "Static", algorithm: "None: manually configured", metric: "None", ad: "1", features: "Manually entered by admin; no overhead; no automatic failover; used for stub networks and default routes" } },

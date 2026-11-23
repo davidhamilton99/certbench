@@ -17,13 +17,10 @@ import { BILLING_PERIODS, registerThenPay } from "./plans";
  * create an account: it is chosen again when they come back.
  */
 export function PlanPicker({
-  ctaLabel,
   initialPricing,
   initialPlan,
   surface = "upgrade",
 }: {
-  /** The button's words. Left out, it says what the press does: "Continue to payment". */
-  ctaLabel?: string;
   initialPricing?: RegionPricing;
   initialPlan?: BillingInterval;
   /** Which page the chooser is on: it labels the pricing_viewed step. */
@@ -43,7 +40,6 @@ export function PlanPicker({
       // The billing page is only shown to someone who is signed in, so a press
       // there that finds nobody signed in is a session that has ended.
       signInHref={surface === "upgrade" ? () => "/login?next=/upgrade" : registerThenPay}
-      submitLabel={ctaLabel}
     />
   );
 }

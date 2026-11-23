@@ -71,8 +71,8 @@ export default function ContactPage() {
             <p>
               Reports of this kind are the most valuable feedback that CertBench receives. If you believe that a
               question has the wrong answer or a misleading explanation, please send the text of the question, or a
-              screenshot, together with your reasoning. Each report is reviewed within 24 hours, and the question is
-              corrected where the report is right.
+              screenshot, together with your reasoning. CertBench aims to review each report within 24 hours, and the
+              question is corrected where the report is right.
             </p>
           </Topic>
 
@@ -89,7 +89,7 @@ export default function ContactPage() {
           <p className="cb-measure pt-6 text-body text-muted-foreground">
             Answers to common questions are in the{" "}
             <Link href="/help" className="cb-link">
-              Help Center
+              Help center
             </Link>
             .
           </p>

@@ -126,8 +126,14 @@ export function RepCard({
   const footRef = useRef<HTMLDivElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   const promptId = useId();
+  const cueId = useId();
   const verdictId = useId();
   const hintId = useId();
+  // A recall fact printed as a bare term ("SMTP") with the question under it
+  // ("Which port?"): the question is part of the answers' name, and is read
+  // with the term when the term takes the focus. Without it, the direction of
+  // the question is lost to anyone who moves straight to the answers.
+  const cued = rep.type === "choice" && Boolean(rep.cue);
 
   const answered = correct !== null;
   const sheet = layout === "sheet";
@@ -261,6 +267,7 @@ export function RepCard({
           // Takes the focus so that it is read; it is not a control.
           ref={promptRef as never}
           tabIndex={-1}
+          aria-describedby={cued ? cueId : undefined}
           className={cn(
             "text-pretty",
             isExam
@@ -272,11 +279,15 @@ export function RepCard({
         >
           {rep.prompt}
         </Prompt>
-        {rep.cue && rep.type === "choice" && <p className="text-small text-muted-foreground">{rep.cue}</p>}
+        {cued && (
+          <p id={cueId} className="text-small text-muted-foreground">
+            {rep.cue}
+          </p>
+        )}
       </div>
 
       {rep.type === "choice" ? (
-        <div role="group" aria-labelledby={promptId} className="grid gap-2.5">
+        <div role="group" aria-labelledby={cued ? `${promptId} ${cueId}` : promptId} className="grid gap-2.5">
           {rep.options.map((option, i) => (
             <AnswerOption
               key={`${i}-${option}`}
@@ -315,7 +326,10 @@ export function RepCard({
               spellCheck={false}
               inputMode={rep.answerKind === "dotted" ? "decimal" : rep.numeric ? "numeric" : "text"}
               value={typed}
-              disabled={answered}
+              // Once marked, the answer stays in full ink beside the verdict
+              // that it is compared with: read only, not disabled, which draws
+              // a field at half strength.
+              readOnly={answered}
               onChange={(e) => setTyped(e.target.value)}
               className={cn(
                 // A step down on phones, so a typed address is not cut off beside the button.

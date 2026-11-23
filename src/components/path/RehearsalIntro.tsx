@@ -5,10 +5,8 @@ import { ArrowRight, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clock, REHEARSAL_FORMATS, type Reading } from "@/core/path/rehearsal";
 import type { PathStructure, RehearsalSize } from "@/core/path/types";
+import { fmtDay } from "@/core/path/versions";
 import type { RehearsalRun } from "./rehearsal-run";
-
-/** "March 3": the page is in English, so its dates are too, whatever the browser's own language. */
-const fmtDay = (at: number) => new Date(at).toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
 const FULL = REHEARSAL_FORMATS.full;
 const HALF = REHEARSAL_FORMATS.half;
@@ -53,7 +51,7 @@ export function RehearsalIntro({
       <p className="cb-measure text-body text-muted-foreground">
         The practice exam has {FULL.questions} questions and a time limit of {FULL.minutes} minutes, which are the
         limits of the real {structure.examCode} exam. The questions are drawn from all {structure.domains.length}{" "}
-        domains in the same proportions as the exam. As in the real exam, answers are not shown until the end.
+        domains in the same proportions as the exam. No answer is shown until you finish.
       </p>
       <ul className="grid list-disc gap-2 pl-5 text-small text-muted-foreground">
         <li>You can flag any question and return to it before you finish.</li>

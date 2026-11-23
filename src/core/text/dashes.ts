@@ -131,5 +131,3 @@ export function plainDashes(text: string): string {
   return out;
 }
 
-/** {@link plainDashes} over each string of a list. */
-export const plainDashesAll = (texts: readonly string[]): string[] => texts.map(plainDashes);

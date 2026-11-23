@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RotateCcw } from "lucide-react";
@@ -9,16 +9,17 @@ import { api } from "@/lib/api-client";
 import { savePathProgress } from "@/contracts/client";
 import { SIGNIN_CANCELLED_PARAM } from "@/lib/google-signin";
 import { buildPlan, stopAt } from "@/core/path/plan";
-import { doneStopIds, finishStop, nextStopIndex, objectiveStatuses, recordRep } from "@/core/path/progress";
+import { doneStopIds, finishStop, hasStarted, nextStopIndex, objectiveStatuses, recordRep } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type PathCert, type PathProgress, type PathStructure, type Rep } from "@/core/path/types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
 import { ExamMap, objectiveStanding } from "./ExamMap";
-import { useKeyboardTurn } from "./keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { claimLocalPath, readVisitorPath, updateLocalPath } from "./local-path";
+import { markBegunOnPublicPage, oweStartEvent } from "./path-start";
+import { useWhenKnown } from "./useWhenKnown";
 
 /** A finished round: its score, and its own answers as path progress. */
 interface RoundResult {
@@ -70,11 +71,8 @@ export function QuickRound({
   const [ended, setEnded] = useState<RoundResult | null>(null);
   // Asked while the round is played, so its end never waits to know who's there.
   const userId = useSessionUserId();
-  // The keys are this round's until someone plays another player on the page.
-  const turnId = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const keyboard = useKeyboardTurn(turnId, root);
-  // Handlers read these, not render state: a right answer moves on by timer.
+  // Handlers read these, not render state, so that an answer and the press
+  // after it in one moment always see the question in hand.
   const current = useRef(0);
   const right = useRef(0);
   const own = useRef<PathProgress>(EMPTY_PATH_PROGRESS);
@@ -94,9 +92,9 @@ export function QuickRound({
 
   // The round is the work of whoever is at the keyboard. On a device that
   // holds another account's study path it is kept beside that copy, never in
-  // it (see local-path.ts). Until the session has been read, nobody is taken
-  // to be signed in.
-  const who = userId ?? null;
+  // it (see local-path.ts). Until the session has been read, an answer waits
+  // in memory, so that it is never kept as the wrong person's work.
+  const whenKnown = useWhenKnown(userId);
 
   const onAnswer = useCallback(
     (answer: RepAnswer) => {
@@ -106,14 +104,24 @@ export function QuickRound({
       if (answer.correct) right.current += 1;
       const now = Date.now();
       own.current = recordRep(own.current, rep.id, answer.correct, now);
-      if (!updateLocalPath(cert, (p) => recordRep(p, rep.id, answer.correct, now), who)) kept.current = false;
+      whenKnown((who) => {
+        // An answer that begins the visitor's work on this device: the path
+        // page still owes its `path_started`, and a signed-out visitor's work
+        // is marked as begun here (path-start.ts), as the home page does.
+        const before = readVisitorPath(cert, who);
+        if (!before || !hasStarted(before)) {
+          oweStartEvent(cert);
+          if (who === null) markBegunOnPublicPage(cert);
+        }
+        if (!updateLocalPath(cert, (p) => recordRep(p, rep.id, answer.correct, now), who)) kept.current = false;
+      });
       setResults((prev) => {
         const next = [...prev];
         next[index] = answer.correct;
         return next;
       });
     },
-    [cert, reps, who]
+    [cert, reps, whenKnown]
   );
 
   const onNext = useCallback(() => {
@@ -123,13 +131,14 @@ export function QuickRound({
       return;
     }
     const now = Date.now();
-    own.current = finishStop(own.current, stopId, right.current, reps.length, now);
-    if (!updateLocalPath(cert, (p) => finishStop(p, stopId, right.current, reps.length, now), who)) {
-      kept.current = false;
-    }
-    track("quick_round_completed", { cert, surface, correct: right.current, total: reps.length });
-    setEnded({ correct: right.current, total: reps.length, own: own.current, kept: kept.current });
-  }, [cert, stopId, surface, reps.length, who]);
+    const correct = right.current;
+    own.current = finishStop(own.current, stopId, correct, reps.length, now);
+    whenKnown((who) => {
+      if (!updateLocalPath(cert, (p) => finishStop(p, stopId, correct, reps.length, now), who)) kept.current = false;
+    });
+    track("quick_round_completed", { cert, surface, correct, total: reps.length });
+    setEnded({ correct, total: reps.length, own: own.current, kept: kept.current });
+  }, [cert, stopId, surface, reps.length, whenKnown]);
 
   function playAgain() {
     current.current = 0;
@@ -147,7 +156,7 @@ export function QuickRound({
   // long label would otherwise widen the card past a phone's screen. The label
   // wraps and is never cut short: at high zoom a cut label cannot be read.
   return (
-    <div ref={root} className="min-w-0">
+    <div className="min-w-0">
       {ended ? (
         <RoundEnd
           cert={cert}
@@ -181,7 +190,6 @@ export function QuickRound({
               onAnswer={onAnswer}
               onNext={onNext}
               promptAs="p"
-              keyboard={keyboard}
               // Every question after the one that the page loads with follows a
               // press (Continue, or "Answer the questions again"), so it takes
               // the focus and is read.
@@ -270,7 +278,7 @@ function RoundEnd({
       tabIndex={-1}
       role="group"
       aria-label={`${label}: your result`}
-      className="grid min-w-0 scroll-mt-24 gap-4"
+      className="grid min-w-0 gap-4"
     >
       <div className="glass path-rise grid min-w-0 gap-5 rounded-lg p-5 sm:p-8">
         <div className="grid min-w-0 gap-1.5">
@@ -345,7 +353,10 @@ function RoundEnd({
 
       <div className="glass grid min-w-0 gap-5 rounded-lg p-5 sm:p-8">
         <div className="grid gap-1.5">
-          <h2 className="cb-statement">{examName} objectives</h2>
+          {/* Named as the page names the map's tiles: Network+ goes by CertBench's own topics. */}
+          <h2 className="cb-statement">
+            {examName} {unit}
+          </h2>
           <p className="text-small text-muted-foreground">
             You have started {started} of {codes.length} {unit}.
           </p>

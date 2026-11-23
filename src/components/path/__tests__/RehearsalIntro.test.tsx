@@ -41,6 +41,9 @@ describe("the screen before a practice exam on the study path", () => {
       screen.getByText(/The practice exam has 90 questions and a time limit of 90 minutes, which are the limits of the real SY0-701 exam\./)
     ).toBeInTheDocument();
     expect(screen.getByText(/drawn from all 2 domains/)).toBeInTheDocument();
+    // What the practice exam does, and nothing about how the real exam behaves.
+    expect(screen.getByText(/in the same proportions as the exam\. No answer is shown until you finish\.$/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/as in the real exam/i);
   });
 
   it("says where it stands on the study path when it is the last step, and says nothing of it otherwise", () => {

@@ -6,11 +6,11 @@ export const wirelessStandards: ReferenceTable = {
   description: "This table lists the IEEE 802.11 Wi-Fi standards and short-range wireless technologies for the Network+ N10-009 exam with the frequency, the maximum speed and the typical range of each.",
   columnHeaders: [
     { key: "standard", label: "Standard", mono: true },
-    { key: "name", label: "Name / Gen" },
+    { key: "name", label: "Name / gen" },
     { key: "frequency", label: "Frequency" },
-    { key: "maxSpeed", label: "Max Speed", mono: true },
-    { key: "range", label: "Typical Range" },
-    { key: "features", label: "Key Features / Notes" },
+    { key: "maxSpeed", label: "Max speed", mono: true },
+    { key: "range", label: "Typical range" },
+    { key: "features", label: "Key features / notes" },
   ],
   entries: [
     { columns: { standard: "802.11a", name: "Wi-Fi 1 (legacy)", frequency: "5 GHz", maxSpeed: "54 Mbps", range: "~35 m indoor", features: "OFDM; less interference than 2.4 GHz but shorter range; not compatible with b/g" } },

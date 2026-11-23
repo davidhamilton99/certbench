@@ -119,6 +119,7 @@ export function StagedLab({
   backLabel,
   onStarted,
   takeFocus,
+  confirmLeave = true,
 }: {
   scenarioId: string;
   title: string;
@@ -142,7 +143,7 @@ export function StagedLab({
   const [answers, setAnswers] = useState<Record<string, SimFieldAnswer>>({});
   const [credit, setCredit] = useState<Record<string, number>>({});
   const [graded, setGraded] = useState<{ result: PbqGradeResult; stages: StageScore[] } | null>(null);
-  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [askingToLeave, setAskingToLeave] = useState(false);
   // Handlers read these rather than render state, so a second press in the same frame sees the first.
   const spotRef = useRef<Spot>(START);
   const answersRef = useRef<Record<string, SimFieldAnswer>>({});
@@ -202,8 +203,15 @@ export function StagedLab({
   }
 
   function leave() {
-    if (Object.keys(answersRef.current).length > 0 && !graded) setConfirmLeave(true);
+    if (confirmLeave && Object.keys(answersRef.current).length > 0 && !graded) setAskingToLeave(true);
     else onBack();
+  }
+
+  // The question closes before the lab is left: a host that keeps the lab on
+  // its page would otherwise leave it open, with the focus held inside it.
+  function leaveAfterAsking() {
+    setAskingToLeave(false);
+    onBack();
   }
 
   // Keep what changed in view: a new stage from its top (its case is new), a
@@ -218,15 +226,15 @@ export function StagedLab({
   const missed = stages.flatMap((s) => s.fields.filter((f) => (credit[f.id] ?? 0) < 1));
 
   return (
-    <div ref={root} className="flex min-w-0 scroll-mt-24 flex-col gap-4 sm:gap-5">
+    <div ref={root} className="flex min-w-0 flex-col gap-4 sm:gap-5">
       <ConfirmDialog
-        open={confirmLeave}
+        open={askingToLeave}
         title="Do you want to leave this lab?"
         message="Your answers so far will not be kept."
         confirmLabel="Leave the lab"
         cancelLabel="Stay in the lab"
-        onConfirm={onBack}
-        onCancel={() => setConfirmLeave(false)}
+        onConfirm={leaveAfterAsking}
+        onCancel={() => setAskingToLeave(false)}
       />
       <LabHeader title={title} subtitle={subtitle} onBack={leave} backLabel={backLabel} takeFocus={takeFocus} />
 
@@ -251,11 +259,11 @@ export function StagedLab({
         />
       ) : (
         <>
-          <div ref={hud} className="scroll-mt-24">
+          <div ref={hud}>
             <Hud stages={stages} spot={spot} credit={credit} noun={noun} />
           </div>
           {renderCase({ stage: spot.stage, done: spot.done, run, credit })}
-          <div ref={play} className="min-w-0 scroll-mt-24 pt-1">
+          <div ref={play} className="min-w-0 pt-1">
             {spot.done ? (
               <StageCard
                 key={`${run}-${spot.stage}-done`}
@@ -370,15 +378,16 @@ export function Hud({
 
 /**
  * A move's segment: the page's blue while it is being played, then green for
- * the share of credit it earned over amber for the rest. A rule drawn thick,
- * with square ends, at its final length: nothing here grows or sweeps.
+ * the share of credit it earned over red for the share it missed, the colours
+ * its answer was marked in. A rule drawn thick, with square ends, at its final
+ * length: nothing here grows or sweeps.
  */
 export function Segment({ credit, current = false }: { credit: number | undefined; current?: boolean }) {
   if (credit === undefined) {
     return <span className={cn("h-1.5 min-w-0 flex-1 rounded-xs", current ? "bg-primary" : "bg-foreground/[0.12]")} />;
   }
   return (
-    <span className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-xs bg-warning">
+    <span className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-xs bg-destructive">
       <span
         className="absolute inset-0 origin-left bg-success"
         style={{ transform: `scaleX(${Math.max(0, Math.min(1, credit))})` }}
@@ -597,7 +606,7 @@ export function LabResult({
           <RotateCcw />
           Repeat the lab
         </Button>
-        <Button variant="secondary" onClick={onBack}>
+        <Button variant="outline" onClick={onBack}>
           {backLabel ?? "Return to the scenarios"}
         </Button>
       </div>
@@ -642,7 +651,7 @@ function MissDetail({ field, answer }: { field: SimField; answer: SimFieldAnswer
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <Should>{answerText(field)}</Should>
           {yours && (
-            <span className="text-muted-foreground line-through decoration-destructive/60">
+            <span className="min-w-0 text-muted-foreground line-through decoration-destructive/60 [overflow-wrap:anywhere]">
               <span className="sr-only">Your answer: </span>
               {yours}
             </span>
@@ -689,10 +698,15 @@ export function PairList({ pairs }: { pairs: readonly (readonly [string, string]
   );
 }
 
-/** The correct answer, ticked, and said to be so to a screen reader. */
+/**
+ * The correct answer, ticked, and said to be so to a screen reader. It is
+ * never wider than its row: a long answer ("CVE-2024-38428 (OpenSSL RCE,
+ * 9.8)") wraps inside its card on a phone. A short one ("Yes") keeps its width
+ * beside a long line.
+ */
 export function Should({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex shrink-0 items-baseline gap-1 font-medium text-success">
+    <span className="inline-flex max-w-full shrink-0 items-baseline gap-1 font-medium text-success [overflow-wrap:anywhere]">
       <Check className="size-3.5 translate-y-0.5" strokeWidth={3} aria-hidden />
       <span className="sr-only">Correct answer: </span>
       {children}

@@ -100,7 +100,8 @@ describe("the shared readiness page", () => {
 
   it("leads on to the exam list", async () => {
     const link = (await served()).querySelector('main a[href="/start"]');
-    expect(text(link)).toBe("Start the study path for your exam");
+    // The one name that every page gives a link to the exam list.
+    expect(text(link)).toBe("Choose your exam");
   });
 
   it("says so when the link holds no card, and still leads on", async () => {
@@ -115,7 +116,9 @@ describe("the shared readiness page", () => {
 
   it("is kept out of search, with or without a card", async () => {
     expect((await generateMetadata({ params })).robots).toEqual({ index: false, follow: true });
-    expect((await generateMetadata({ params })).title).toBe("Sam R. is 72% ready for CompTIA Security+");
+    // A score, and never a verdict that the learner is ready for the exam.
+    expect((await generateMetadata({ params })).title).toBe("Sam R. has a readiness score of 72% for CompTIA Security+");
+    expect(String((await generateMetadata({ params })).title)).not.toMatch(/ready for/);
     share.payload = null;
     expect((await generateMetadata({ params })).robots).toEqual({ index: false, follow: true });
   });

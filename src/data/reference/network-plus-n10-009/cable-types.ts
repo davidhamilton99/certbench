@@ -6,11 +6,11 @@ export const cableTypes: ReferenceTable = {
   description: "This table lists copper, fiber and coaxial cables for the Network+ N10-009 exam with the maximum speed, the maximum distance and the connector of each, and the T568A and T568B wiring standards.",
   columnHeaders: [
     { key: "cable", label: "Cable", mono: true },
-    { key: "category", label: "Category / Type" },
-    { key: "maxSpeed", label: "Max Speed", mono: true },
-    { key: "maxDistance", label: "Max Distance", mono: true },
+    { key: "category", label: "Category / type" },
+    { key: "maxSpeed", label: "Max speed", mono: true },
+    { key: "maxDistance", label: "Max distance", mono: true },
     { key: "connector", label: "Connector" },
-    { key: "use", label: "Typical Use / Notes" },
+    { key: "use", label: "Typical use / notes" },
   ],
   entries: [
     { columns: { cable: "Cat 5e", category: "UTP / STP copper", maxSpeed: "1 Gbps", maxDistance: "100 m", connector: "RJ-45", use: "Gigabit Ethernet; enhanced Cat 5 with reduced crosstalk; most common legacy install" } },

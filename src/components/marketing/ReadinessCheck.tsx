@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { estimateReadiness, type CheckAnswer, type CheckQuestion } from "@/lib/tools/readiness-estimate";
 import { bandFor } from "@/lib/readiness/band";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { track } from "@/lib/analytics";
 import { splitExplanation } from "@/core/path/text";
 import type { ChoiceRep } from "@/core/path/types";
@@ -100,6 +101,8 @@ export function ReadinessCheck({
         total={total}
         shortCertName={shortCertName}
         objectiveCount={objectiveCount}
+        // Network+ is set out by CertBench's own topics, which are not CompTIA's objectives.
+        official={usesOfficialObjectiveNumbers(cert)}
         // The way on is the same for everyone: this exam's study path.
         pathHref={`/path/${cert}`}
         onRestart={restart}
@@ -148,6 +151,7 @@ function Estimate({
   total,
   shortCertName,
   objectiveCount,
+  official,
   pathHref,
   onRestart,
 }: {
@@ -155,6 +159,8 @@ function Estimate({
   total: number;
   shortCertName: string;
   objectiveCount: number;
+  /** Whether the exam's study path follows CompTIA's own objectives, so that its count may be called objectives. */
+  official: boolean;
   pathHref: string;
   onRestart: () => void;
 }) {
@@ -195,7 +201,7 @@ function Estimate({
         {result.domains.map((d) => (
           <li
             key={d.domainTitle}
-            className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-center gap-x-5 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]"
+            className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-x-5 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]"
           >
             <div className="flex min-w-0 items-baseline justify-between gap-3 text-small">
               <span className="min-w-0">{d.domainTitle}</span>
@@ -203,7 +209,9 @@ function Estimate({
                 {d.correct} of {d.total} correct
               </span>
             </div>
-            <ScoreBar value={d.pct} color={bandFor(d.pct).accent} />
+            {/* Beside the label from the sm width, the bar sits on the label's first line (24 pixels high, the bar 8),
+                so a domain whose name wraps keeps its count and its bar on one line. */}
+            <ScoreBar value={d.pct} color={bandFor(d.pct).accent} className="sm:mt-2" />
           </li>
         ))}
       </ul>
@@ -211,7 +219,7 @@ function Estimate({
       <div className="grid gap-4 border-t border-border pt-6">
         <p className="cb-measure-sm text-small text-muted-foreground">
           This is an estimate from {total} questions. The {shortCertName} study path covers all {objectiveCount}{" "}
-          objectives, one short step at a time, and shows where you stand as you progress.
+          {official ? "objectives" : "topics"}, one short step at a time, and shows where you stand as you progress.
         </p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <Button asChild size="lg" className="h-auto min-h-12 whitespace-normal py-2.5">

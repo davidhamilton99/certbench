@@ -188,10 +188,11 @@ export function InlineSignup({
         <Button type="submit" size="lg" loading={busy} className="w-full">
           {signup ? submitLabel : "Sign in and continue"}
         </Button>
-        {signup && <TermsNote className="text-center" />}
+        {signup && <TermsNote />}
       </form>
 
-      <p className="text-center text-note text-muted-foreground">
+      {/* Set on the card's left edge with the sentences around it: these forms sit in left-set cards. */}
+      <p className="text-note text-muted-foreground">
         {signup ? (
           <>
             The account is free, and no payment card is required.{staysOnPage && " You will stay on this page."} Do you

@@ -11,8 +11,7 @@ import { domain5 } from "./domain-5";
  * for each of its 27 objectives, checked against CompTIA's SY0-801 exam
  * objectives (document version 2.0) and written in our own words.
  *
- * Not in PATH_CONTENT yet. The switch-over PR adds it there, with the exam in
- * PATH_CERTS, once migration 030 has created the SY0-801 exam.
+ * It is in PATH_CONTENT (src/data/path/index.ts) beside SY0-701.
  *
  * Keys: a rep whose key is one of SY0-701's (1.1a, 2.2e, w3…) is that SY0-701
  * rep, carried over, often to a different objective. So a learner who switches

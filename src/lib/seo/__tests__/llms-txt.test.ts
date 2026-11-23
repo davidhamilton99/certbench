@@ -22,7 +22,7 @@ import {
  */
 const ROOT = process.cwd();
 const TEXT = readFileSync(join(ROOT, "public", "llms.txt"), "utf8");
-const LINES = TEXT.split("\n");
+const LINES = TEXT.split(/\r?\n/);
 const SITE = "https://certbench.dev";
 const CERTS = [SECURITY_PLUS_CERT, SY0_801_CERT, NETWORK_PLUS_CERT, A_PLUS_CORE1_CERT, A_PLUS_CORE2_CERT];
 const LINK_ITEM = /^- \[[^\]]+\]\((https:\/\/certbench\.dev[^)\s]*)\): \S.*\.$/;
@@ -85,7 +85,27 @@ describe("llms.txt", () => {
     expect(TEXT).toContain(
       "Each exam has a free full-length practice exam of 90 questions with a time limit of 90 minutes"
     );
-    expect(TEXT).toContain("each have 12 free interactive performance-based questions (PBQs)");
+    expect(TEXT).toContain("each have 12 free hands-on labs, graded with partial credit, and the first three need no account.");
+  });
+
+  // "Hands-on lab" is CertBench's name for its own labs; a PBQ is CompTIA's name
+  // for the exam's task. The tools are described by what they hold, and not by
+  // what an exam covers.
+  it("names CertBench's labs as hands-on labs, and describes the tools by what they hold", () => {
+    expect(TEXT).not.toMatch(/interactive (?:\S+ )?PBQs|interactive performance-based/);
+    expect(TEXT).toContain("The labs are CertBench's practice for the performance-based questions (PBQs) that the exams include.");
+    expect(TEXT).not.toMatch(/the full list|that the CompTIA exams cover/i);
+    expect(TEXT).toContain("A list of 307 acronyms for SY0-701, each with one meaning");
+    // Each A+ core is summarized by all of its domains, troubleshooting in both.
+    expect(TEXT).toContain("virtualization and cloud computing, and hardware and network troubleshooting.");
+    expect(TEXT).toContain("Operating systems, security, software troubleshooting and operational procedures.");
+  });
+
+  // CompTIA's exam pages say that the exams have performance-based questions and
+  // nothing about what they ask, so the summary says what the labs are.
+  it("says what the hands-on labs are, and not that they work like the exam's questions", () => {
+    expect(LINES[2]).toContain("hands-on labs in which you carry out tasks in the browser");
+    expect(TEXT).not.toMatch(/work like performance-based|works like/);
   });
 
   it("dates its exam facts with the day CompTIA's pages were read", () => {

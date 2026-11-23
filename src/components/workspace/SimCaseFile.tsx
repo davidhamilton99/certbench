@@ -144,9 +144,14 @@ export function Ticket({ text }: { text: string }) {
 }
 
 /**
- * The stage's evidence as a console: one tab per clue, a dot on the ones not
- * opened yet, line numbers, and colour so failures, successes and addresses
- * stand out before a word is read.
+ * The stage's evidence as a console: one button per clue, a dot on the ones
+ * not opened yet, line numbers, and colour so failures, successes and
+ * addresses stand out before a word is read.
+ *
+ * The clues are a group of buttons, each pressed or not, as the subnetting
+ * modes are: each is its own stop for the Tab key, which is what a button
+ * promises. (They were tabs, which promise arrow keys that did nothing.) A
+ * clue's name wraps and is never cut short, so it can be read at any width.
  */
 export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] }) {
   const [tab, setTab] = useState(0);
@@ -168,18 +173,16 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
       header={
         <>
           {tabs ? (
-            // Wrapping, not scrolling: every clue's tab stays in sight on a phone.
-            <div role="tablist" aria-label="Evidence" className="flex min-w-0 flex-1 flex-wrap gap-1">
+            // Wrapping, not scrolling: every clue stays in sight on a phone.
+            <div role="group" aria-label="Evidence" className="flex min-w-0 flex-1 flex-wrap gap-1">
               {evidence.map((e, i) => (
                 <button
                   key={i}
                   type="button"
-                  role="tab"
-                  aria-selected={i === tab}
-                  title={e.label}
+                  aria-pressed={i === tab}
                   onClick={() => pick(i)}
                   className={cn(
-                    "relative h-7 max-w-30 truncate rounded-md px-2.5 font-mono text-xs transition-colors sm:max-w-48",
+                    "relative min-h-7 min-w-0 rounded-md px-2.5 py-1 text-left font-mono text-xs leading-5 transition-colors [overflow-wrap:anywhere]",
                     i === tab
                       ? "bg-accent text-foreground"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -214,7 +217,7 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
     >
       {open && (
         <div
-          role={tabs ? "tabpanel" : "group"}
+          role="group"
           aria-label={active.label}
           // The evidence scrolls inside its box, so the box takes the keyboard:
           // the arrow keys then scroll it.

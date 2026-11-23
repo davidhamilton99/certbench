@@ -14,6 +14,7 @@ import { NETWORK_PLUS_CERT, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-
 import { pageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { calculateSubnet } from "@/lib/tools/subnet-calculator";
+import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 
 const TITLE = "Free subnet calculator (IPv4 and CIDR)";
 
@@ -180,7 +181,7 @@ export default function SubnetCalculatorPage() {
 
       <PathCard
         className="mt-16 sm:mt-24"
-        title="Subnetting is one part of the Network+ exam"
+        title="Subnetting is one topic of the Network+ study path"
         href="/path/network-plus-n10-009"
         label="Start the Network+ study path"
         context="subnet_calculator_page"
@@ -205,7 +206,7 @@ export default function SubnetCalculatorPage() {
             {
               href: "/tools/port-numbers-quiz",
               label: "Port numbers quiz",
-              note: "The port numbers that the Network+ exam expects you to know",
+              note: `A quiz on ${PORT_ENTRIES.length} port numbers and their protocols`,
             },
           ]}
         />

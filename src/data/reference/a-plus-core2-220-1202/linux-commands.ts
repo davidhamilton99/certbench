@@ -8,7 +8,7 @@ export const linuxCommands: ReferenceTable = {
     { key: "command", label: "Command", mono: true },
     { key: "purpose", label: "Purpose" },
     { key: "syntax", label: "Syntax", mono: true },
-    { key: "example", label: "Example / Key Flags" },
+    { key: "example", label: "Example / key flags" },
   ],
   entries: [
     // File management

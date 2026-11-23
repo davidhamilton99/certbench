@@ -95,7 +95,7 @@ const answers = () => within(answerGroup());
 function shown(): { entry: PortEntry; right: string } {
   const asksPort = screen.queryByText("Which port?") !== null;
   // The group is named by the prompt: a protocol, or a port.
-  const prompt = document.getElementById(answerGroup().getAttribute("aria-labelledby")!)!.textContent!;
+  const prompt = document.getElementById(answerGroup().getAttribute("aria-labelledby")!.split(" ")[0])!.textContent!;
   const entry = ENTRIES.find((e) => (asksPort ? e.protocol : e.port) === prompt)!;
   return { entry, right: asksPort ? entry.port : entry.protocol };
 }
@@ -239,7 +239,7 @@ describe("PortQuiz", () => {
       if (i < 19) {
         expect(screen.getByText(`Question ${i + 2} of 20`)).toBeInTheDocument();
         // A question that follows an answer takes the focus on its prompt, so it is read.
-        expect(document.getElementById(answerGroup().getAttribute("aria-labelledby")!)).toHaveFocus();
+        expect(document.getElementById(answerGroup().getAttribute("aria-labelledby")!.split(" ")[0])).toHaveFocus();
       }
       if (i === 3) expect(bar().slice(0, 5)).toBe("WRRWC");
     }
@@ -332,6 +332,6 @@ describe("PortQuiz", () => {
     expect(await screen.findByText("Port numbers, round 2")).toBeInTheDocument();
     expect(screen.getByText("Question 1 of 20")).toBeInTheDocument();
     // A round started by a press on this page gives its first question the focus.
-    expect(document.getElementById(answerGroup().getAttribute("aria-labelledby")!)).toHaveFocus();
+    expect(document.getElementById(answerGroup().getAttribute("aria-labelledby")!.split(" ")[0])).toHaveFocus();
   });
 });

@@ -86,6 +86,13 @@ function captureAfterResponse(
  *     a checkout delivered again and a renewal paid after it fell past due
  *     (a payment recovered, not a new buyer) report nothing.
  *
+ * An added exam, a one-time payment, is granted only when its money has
+ * arrived: at once for a card, and for a delayed method (a bank debit) by
+ * checkout.session.async_payment_succeeded, days later. That event reaches
+ * this handler only if the endpoint is subscribed to it in the Stripe
+ * Dashboard; until then an exam bought with a delayed method is not added,
+ * where before it was added before the money arrived and never taken back.
+ *
  * What rule 3 leaves open: two events for one customer handled at the same
  * moment each ask Stripe and then write, and the one that asked first can
  * write last. That takes a change of the subscription between two requests a
@@ -244,6 +251,14 @@ function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
 }
 
 /**
+ * Whether a payment page's money has arrived. A card is paid when the page is
+ * completed; a delayed method completes the page first and is paid later.
+ */
+function isPaid(session: Stripe.Checkout.Session): boolean {
+  return session.payment_status === "paid" || session.payment_status === "no_payment_required";
+}
+
+/**
  * Writes what an event means to the database. Returns the first database
  * call that failed, or null once everything the event asks for is recorded
  * (which includes an event that asks for nothing).
@@ -252,7 +267,8 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
   const supabase = createAdminClient();
 
   switch (event.type) {
-    case "checkout.session.completed": {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.supabase_user_id;
       if (!userId) return null;
@@ -260,9 +276,10 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
       // One-time cert add-on (mode=payment): grant/reactivate the enrollment
       // in the purchased cert. Access still requires active Pro, so this just
       // adds the cert to the user's plan. Upsert is idempotent on retries.
+      // Only once the money has arrived: see the note above POST.
       if (session.metadata?.kind === "cert_addon") {
         const certId = session.metadata.cert_id;
-        if (!certId) return null;
+        if (!certId || !isPaid(session)) return null;
 
         const { error } = await supabase.from("user_enrollments").upsert(
           { user_id: userId, certification_id: certId, is_active: true },
@@ -276,6 +293,9 @@ async function record(event: Stripe.Event): Promise<Failure | null> {
         return null;
       }
 
+      // A plan's first payment made with a delayed method is granted by the
+      // change that says it was paid (rule 2), not by this event.
+      if (event.type !== "checkout.session.completed") return null;
       if (!session.subscription) return null;
 
       const subscription = await getStripe().subscriptions.retrieve(

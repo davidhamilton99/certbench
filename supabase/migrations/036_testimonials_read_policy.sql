@@ -1,6 +1,8 @@
 -- Only an approved pass story can be read through the public API.
 --
--- THIS FILE HAS NOT BEEN RUN. The owner runs it by hand in the Supabase SQL
+-- RUN on the live database on 23 November 2026, after the read-only queries
+-- below had shown that it was needed, and checked afterwards with the same
+-- queries. On any other database, the owner runs it by hand in the Supabase SQL
 -- editor, once the read-only query below has shown that it is needed. The
 -- migration files and the live database have differed before, so the query
 -- comes first.

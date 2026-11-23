@@ -14,11 +14,11 @@ export const dynamicParams = false;
 const READINESS_RELATED: Record<string, RelatedLink[]> = {
   "security-plus-sy0-701": [
     { href: "/security-plus-practice-test", label: "Security+ practice test", note: "A free full-length SY0-701 exam: 90 questions, 90 minutes" },
-    { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples", note: `${FREE_LAB_COUNT} free interactive PBQs, three of them with no account` },
+    { href: "/security-plus-pbq-examples", label: "Security+ PBQ examples", note: `${FREE_LAB_COUNT} free hands-on labs, three of them with no account` },
   ],
   "network-plus-n10-009": [
     { href: "/network-plus-practice-test", label: "Network+ practice test", note: "A free full-length N10-009 exam: 90 questions, 90 minutes" },
-    { href: "/network-plus-pbq-examples", label: "Network+ PBQ examples", note: "Interactive topology and troubleshooting labs" },
+    { href: "/network-plus-pbq-examples", label: "Network+ PBQ examples", note: "Network diagram and troubleshooting labs" },
   ],
   "a-plus-core1-220-1201": [
     { href: "/a-plus-core-1-practice-test", label: "A+ Core 1 practice test", note: "A free full-length 220-1201 exam: 90 questions, 90 minutes" },

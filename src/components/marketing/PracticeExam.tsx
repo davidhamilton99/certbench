@@ -6,13 +6,13 @@ import { ArrowRight, RotateCcw } from "lucide-react";
 import { InlineSignup } from "@/components/auth/InlineSignup";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { QuestionList, type DeckQuestion } from "@/components/marketing/QuestionList";
-import { claimKeyboard, useKeyboardTurn } from "@/components/path/keyboard-turn";
+import { examOwner, readExamMark, type ExamMark } from "@/components/path/local-path";
 import { RehearsalPlayer } from "@/components/path/RehearsalPlayer";
-import { domainOf, RehearsalResult } from "@/components/path/RehearsalResult";
+import { RehearsalResult } from "@/components/path/RehearsalResult";
 import { clearRun, readRun, writeRun, type RehearsalRun } from "@/components/path/rehearsal-run";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
-import { clock, halfOfExam, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
+import { clock, domainOf, halfOfExam, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
 import type { ChoiceRep, PathStructure, RehearsalSize } from "@/core/path/types";
 import { identifyUser, track } from "@/lib/analytics";
 import { shuffled } from "@/lib/tools/practice-exam";
@@ -134,18 +134,23 @@ export function PracticeExam({
   // back to takes the focus only then, and never as the page loads.
   const [arrival, setArrival] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
-  // A deck further down the page also takes 1 to 4: the keys follow whichever was played last.
-  const turnId = useId();
-  const keyboard = useKeyboardTurn(turnId, rootRef);
 
-  // This device's sitting: one in progress, or the last one scored.
+  // This device's sitting: one in progress, or the last one scored. With it,
+  // what the study path did with the last one (see examOwner).
+  const [mark, setMark] = useState<ExamMark | null>(null);
   useEffect(() => {
+    // The device's storage can only be read after mount: the server's page has none.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStored(readRun(storageId, OWNER));
-  }, [storageId]);
+    setMark(readExamMark(testId));
+  }, [storageId, testId]);
 
-  // A finished exam is shown only to the account it was first shown to. On a
-  // shared computer, the next person to sign in starts from a clean card.
-  const foreign = Boolean(stored?.done && stored.claimedBy && account && stored.claimedBy !== account);
+  // A finished exam that belongs to an account (its score was shown to it, or
+  // the study path took it) is shown to that account alone. On a shared
+  // computer anyone else, signed in or not, starts from a clean card: a visitor
+  // is never asked to create an account for a score that is someone else's.
+  const owner = stored?.done ? examOwner({ at: stored.done.result.at, claimedBy: stored.claimedBy ?? null }, mark) : null;
+  const foreign = owner !== null && owner !== account;
   const run = foreign ? null : stored;
   const inProgress = run && !run.done ? run : null;
 
@@ -180,6 +185,8 @@ export function PracticeExam({
     url.searchParams.delete(SCORED);
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
     track("practice_test_account_linked", { test: testId, method: "redirect" });
+    // The address, and who is signed in, can only be read after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setView("result");
     toTop();
   }, [signedIn, run, testId, toTop]);
@@ -189,6 +196,9 @@ export function PracticeExam({
   // nobody else has claimed it (core/path/exam-import.ts).
   useEffect(() => {
     if (view !== "result" || !account || !run?.done || run.claimedBy) return;
+    // The account can be learned after the result is on screen (a session read
+    // a moment late, a sign-up at the score gate): the name is written then.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     save({ ...run, claimedBy: account });
   }, [view, account, run, save]);
 
@@ -215,7 +225,6 @@ export function PracticeExam({
       done: null,
     });
     track("practice_test_started", { test: testId, questions: drawn.length, resumed: false });
-    claimKeyboard(turnId);
     setView("test");
     toTop();
   }
@@ -231,10 +240,9 @@ export function PracticeExam({
     const cur = latest.current;
     if (!cur) return;
     track("practice_test_started", { test: testId, questions: cur.reps.length, resumed: true });
-    claimKeyboard(turnId);
     setView("test");
     toTop();
-  }, [testId, turnId, toTop]);
+  }, [testId, toTop]);
 
   function discard() {
     clearRun(storageId);
@@ -293,7 +301,6 @@ export function PracticeExam({
         examCode={structure.examCode}
         heading={headingLevel}
         scoreNeedsAccount={!signedIn}
-        keyboard={keyboard}
         onChange={save}
         onFinish={finish}
         onLeave={() => show("intro")}
@@ -321,7 +328,7 @@ export function PracticeExam({
       <RehearsalResult run={{ ...run, done: run.done }} structure={structure} takeFocus>
         <div className="glass grid gap-3 rounded-lg p-5 sm:p-6">
           <h3 className="cb-statement">{next.heading}</h3>
-          <p className="cb-measure text-small text-muted-foreground">{next.body}</p>
+          <p className="cb-measure-sm text-small text-muted-foreground">{next.body}</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <Button asChild size="lg" className="h-auto min-h-12 max-w-full whitespace-normal py-2.5">
               <Link
@@ -371,7 +378,7 @@ export function PracticeExam({
   }
 
   return (
-    <div ref={rootRef} className="grid scroll-mt-20 grid-cols-[minmax(0,1fr)] gap-4">
+    <div ref={rootRef} className="grid grid-cols-[minmax(0,1fr)] gap-4">
       {screen}
       {showList && listed && <QuestionList questions={listed} title={listTitle} />}
     </div>
@@ -559,8 +566,8 @@ function Intro({
       <div className="cb-measure grid gap-3 text-body">
         <p className="text-muted-foreground">
           {fullLength
-            ? "These are the limits of the real exam, so the practice exam is full length and at the real pace. As in the real exam, answers are not shown until the end."
-            : `This is half of the real exam's limit of ${FULL.questions} questions in ${FULL.minutes} minutes, so the pace is the same. As in the real exam, answers are not shown until the end.`}
+            ? "These are the limits of the real exam, so the practice exam is full length. No answer is shown until you finish."
+            : `This is half of the real exam's limits of ${FULL.questions} questions in ${FULL.minutes} minutes. No answer is shown until you finish.`}
         </p>
         {/* What it costs and what the score needs, in the card's own words and not in small print. */}
         <p>

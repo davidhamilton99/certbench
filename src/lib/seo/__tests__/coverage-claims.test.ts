@@ -165,15 +165,100 @@ function sources(dir: string): string[] {
   });
 }
 
+/**
+ * A count of an exam's objectives is the same claim when the count comes from
+ * the data ("covers all {objectiveCount} objectives"): the sentence is then
+ * printed for whichever exam is shown, Network+ included, whose 27 are
+ * CertBench's own topics. That was the readiness check's estimate (WF-04).
+ * One piece of text cannot show it, because the count is an expression between
+ * two pieces, so the sentences below are read whole, with every expression in
+ * them written as {n}. A word chosen by exam (`{official ? "objectives" :
+ * "topics"}`) is an expression too, so it never makes the claim.
+ */
+const COUNTED = /\ball \{n\}(?:\s+\{n\})*\s+(?:exam |official |CompTIA )?objectives\b/i;
+/**
+ * A count written as a figure belongs to one exam's page or link ("All 36
+ * objectives, each with its own practice questions" on an A+ link), so it is
+ * allowed unless it names Network+.
+ */
+const COUNTED_FIGURE = /\ball \d+ (?:exam |official |CompTIA )?objectives\b/i;
+const namesNetworkPlus = (piece: Piece) => /Network\+|\bN10-\d{3}\b/.test(piece.text) || /network-plus/.test(piece.rel);
+
+/**
+ * Files that print a counted sentence for one exam only by the way they are
+ * used, which this reader cannot see, each with where it is used. Each was
+ * reported to the lead with the change that makes it choose its word by exam
+ * (23 November 2026). When a file is changed, delete its line: a check below
+ * fails until the line is gone.
+ */
+const COUNT_WAITING: Record<string, string> = {
+  "src/components/home/SampleQuestions.tsx":
+    "shown only on the home page, which passes Security+ SY0-701, so its 'all {n} exam objectives' is true there today",
+};
+
+/** Each sentence a file prints whole: a JSX element's text, or a template, with every expression in it written as {n}. */
+function sentences(rel: string, source: string): Piece[] {
+  const file = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true, rel.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const found: Piece[] = [];
+  const visit = (node: ts.Node) => {
+    let text: string | null = null;
+    if (ts.isJsxElement(node) || ts.isJsxFragment(node)) {
+      text = node.children
+        .map((child) => {
+          if (ts.isJsxText(child)) return child.text;
+          if (ts.isJsxExpression(child)) {
+            const value = child.expression;
+            // An empty expression is a comment in markup, which is not copy.
+            if (!value) return "";
+            return ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value) ? value.text : "{n}";
+          }
+          // An element inside is read as a sentence of its own.
+          return "{e}";
+        })
+        .join("");
+    } else if (ts.isTemplateExpression(node)) {
+      text = node.head.text + node.templateSpans.map((span) => `{n}${span.literal.text}`).join("");
+    }
+    if (text !== null) {
+      found.push({ rel, line: file.getLineAndCharacterOfPosition(node.getStart()).line + 1, text: flat(text), branch: branchOf(node) });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+}
+
+/** Whether a whole sentence counts an exam's objectives from the data where that exam may not have CompTIA's own. */
+const countsWrongly = (sentence: Piece) => COUNTED.test(sentence.text) && !allowed(sentence);
+/** Whether a sentence or a piece of text gives Network+ a count of objectives as a figure. */
+const figureWrongly = (text: Piece) => COUNTED_FIGURE.test(text.text) && namesNetworkPlus(text) && text.branch !== "official";
+
+/** The offenders of both kinds, from whole sentences and from single pieces of text, each once. */
+function countOffenders(found: { sentences: Piece[]; pieces: Piece[] }): Piece[] {
+  const seen = new Set<string>();
+  return [...found.sentences.filter((s) => countsWrongly(s) || figureWrongly(s)), ...found.pieces.filter(figureWrongly)].filter(
+    (p) => {
+      const key = `${p.rel}:${p.line}:${p.text}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }
+  );
+}
+
 const FILES = sources(join(ROOT, "src")).map((path) => relative(ROOT, path).replace(/\\/g, "/"));
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 const PIECES = FILES.filter((rel) => !rel.startsWith(SUBJECT_MATTER) && !TABLES.includes(rel)).flatMap((rel) =>
   pieces(rel, read(rel))
 );
 const OFFENDERS = PIECES.filter((piece) => claims(piece.text) && !allowed(piece));
+const SENTENCES = FILES.filter((rel) => !rel.startsWith(SUBJECT_MATTER) && !TABLES.includes(rel)).flatMap((rel) =>
+  sentences(rel, read(rel))
+);
+const COUNT_OFFENDERS = countOffenders({ sentences: SENTENCES, pieces: PIECES });
 const where = ({ rel, line, text }: Piece) => `${rel}:${line}: ${text.trim().slice(0, 100)}`;
 
-const LLMS = read("public/llms.txt").split("\n");
+const LLMS = read("public/llms.txt").split(/\r?\n/);
 
 /** The exams of a guide to practice tests: those of the practice-test page that it leads to. */
 const guideExams = (practiceTestPath: string) =>
@@ -240,6 +325,40 @@ describe("the sentence that the study path covers every exam objective", () => {
   it("is in the summary for AI assistants only on a line about Security+ or A+", () => {
     const lines = LLMS.filter(claims);
     expect(lines.filter((line) => !aboutOneOfficialExam(line))).toEqual([]);
+  });
+});
+
+describe("a count of an exam's objectives", () => {
+  it("is read in whole sentences across the source tree", () => {
+    expect(SENTENCES.length).toBeGreaterThan(1000);
+    // Counts are still printed where they are true. If the check found none, it would be reading nothing.
+    expect(SENTENCES.filter((s) => COUNTED.test(s.text) && allowed(s)).length).toBeGreaterThanOrEqual(3);
+    expect(PIECES.filter((p) => COUNTED_FIGURE.test(p.text)).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("is printed for Network+ nowhere, and from the data only where the exam's objectives are CompTIA's own", () => {
+    const known = new Set(Object.keys(COUNT_WAITING));
+    expect(COUNT_OFFENDERS.filter((s) => !known.has(s.rel)).map(where)).toEqual([]);
+  });
+
+  it("is listed as waiting for a change only in files that still need one", () => {
+    const stillNeeded = new Set(COUNT_OFFENDERS.map((s) => s.rel));
+    expect(Object.keys(COUNT_WAITING).filter((rel) => !stillNeeded.has(rel))).toEqual([]);
+  });
+
+  it("is in no practice-test page, lab page or guide of an exam whose topics are CertBench's own", () => {
+    const count = (value: unknown) => COUNTED_FIGURE.test(JSON.stringify(value));
+    for (const page of PRACTICE_TEST_PAGES) {
+      if (!page.certSlugs.every(usesOfficialObjectiveNumbers)) expect(count(page), page.path).toBe(false);
+    }
+    for (const page of PBQ_EXAMPLE_PAGES) {
+      if (!usesOfficialObjectiveNumbers(page.certSlug)) expect(count(page), page.path).toBe(false);
+    }
+    for (const guide of ROUNDUPS) {
+      if (!guideExams(guide.practiceTestPath).every(usesOfficialObjectiveNumbers)) expect(count(guide), guide.path).toBe(false);
+    }
+    // The A+ pages do count their objectives, which are CompTIA's: the check reads the tables.
+    expect(count(PRACTICE_TEST_PAGES.filter((page) => page.certSlugs.every(usesOfficialObjectiveNumbers)))).toBe(true);
   });
 });
 
@@ -357,6 +476,31 @@ describe("the reader of these checks", () => {
     expect(offending('const a = "Every objective of CompTIA Security+, Network+, and A+, as a study path.";')).toHaveLength(1);
     expect(offending('const a = "The Network+ study path covers every objective.";')).toHaveLength(1);
     expect(offending('const a = "Your study path covers every exam objective.";')).toHaveLength(1);
+  });
+
+  /** What the tree-wide check would report for one file. */
+  const counted = (source: string) =>
+    countOffenders({ sentences: sentences("src/components/sample.tsx", source), pieces: texts(source) });
+
+  it("reads a count of objectives across the expression that holds it, and lets a word chosen by exam stand", () => {
+    // The readiness check's estimate before WF-04: the count and the word split the sentence into two pieces.
+    const estimate = 'const a = <p>The {shortCertName} study path covers all {objectiveCount}{" "}\n  objectives, one step at a time.</p>;';
+    expect(texts(estimate).filter((piece) => claims(piece.text))).toEqual([]);
+    expect(counted(estimate).map((s) => s.text)).toEqual(["The {n} study path covers all {n} objectives, one step at a time."]);
+    // The same sentence once its word is chosen by exam.
+    expect(counted('const a = <p>It covers all {objectiveCount} {official ? "objectives" : "topics"} in short steps.</p>;')).toEqual([]);
+    // A template, with the count and the exam's code as expressions.
+    expect(counted("const a = `The ${exam} study path covers all ${n} ${code} exam objectives.`;")).toHaveLength(1);
+    expect(counted("const a = official ? `It covers all ${n} objectives.` : `It covers all ${n} topics.`;")).toEqual([]);
+    // A sentence that names Security+ or A+ may count from the data.
+    expect(counted("const a = `Your Security+ study path covers all ${n} objectives.`;")).toEqual([]);
+  });
+
+  it("allows a count written as a figure unless it names Network+, in markup and in a string alike", () => {
+    expect(counted('const a = { note: "All 36 objectives, each with its own practice questions" };')).toEqual([]);
+    expect(counted("const a = <p>The Network+ study path covers all 27 objectives.</p>;")).toHaveLength(1);
+    expect(counted('const a = "The Network+ study path covers all 27 objectives.";')).toHaveLength(1);
+    expect(counted('const a = official ? "It covers all 27 objectives." : "It covers all 27 topics.";')).toEqual([]);
   });
 
   it("allows the sentence in a file of one exam that is not Network+, by the file's address", () => {

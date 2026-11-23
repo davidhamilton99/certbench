@@ -133,6 +133,15 @@ describe("simulation labs, played", () => {
     expect(screen.getByText("Gateway address")).toHaveFocus();
   });
 
+  it("marks a missed move in red on the run's bar, as on the answer itself, and never in amber", () => {
+    const { container } = render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
+    fireEvent.click(button("GPU"));
+    // The bar's segments: the first is the move just missed, the rest are still to play.
+    const segments = [...container.querySelectorAll("span.h-1\\.5")];
+    expect(segments[0].className).toContain("bg-destructive");
+    expect(segments.some((s) => s.className.includes("bg-warning"))).toBe(false);
+  });
+
   it("waits for Continue after a correct answer as well: nothing moves on by itself", () => {
     vi.useFakeTimers();
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
@@ -150,18 +159,57 @@ describe("simulation labs, played", () => {
 
   it("opens each clue in the console, marking the ones not opened yet", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    const tabs = within(screen.getByRole("tablist", { name: "Evidence" }));
-    expect(tabs.getByRole("tab", { name: /Test results/ })).toHaveAttribute("aria-selected", "true");
-    expect(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ })).toHaveTextContent("not opened yet");
+    const clues = within(screen.getByRole("group", { name: "Evidence" }));
+    expect(clues.getByRole("button", { name: /Test results/ })).toHaveAttribute("aria-pressed", "true");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).toHaveTextContent("not opened yet");
     expect(screen.getByText("No change")).toBeInTheDocument();
-    fireEvent.click(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ }));
+    fireEvent.click(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ }));
     expect(screen.getByText("Reply from")).toBeInTheDocument();
-    expect(tabs.getByRole("tab", { name: /ping 10\.0\.0\.1/ })).not.toHaveTextContent("not opened yet");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).toHaveAttribute("aria-pressed", "true");
+    expect(clues.getByRole("button", { name: /Test results/ })).toHaveAttribute("aria-pressed", "false");
+    expect(clues.getByRole("button", { name: /ping 10\.0\.0\.1/ })).not.toHaveTextContent("not opened yet");
+    // The evidence shown is named by its clue.
+    expect(screen.getByRole("group", { name: "ping 10.0.0.1" })).toHaveTextContent("Reply from");
+  });
+
+  it("draws the clues as pressed buttons whose names wrap, and never as tabs whose keys do nothing", async () => {
+    const user = userEvent.setup();
+    const longLab: SimulationScenario = {
+      ...lab,
+      tasks: [
+        {
+          ...lab.tasks[0],
+          evidence: [
+            { label: "Test results", content: "Test 1: Brightness keys: no change" },
+            { label: "ping 8.8.8.8 (Google Public DNS)", content: "Reply from 8.8.8.8: time=12ms" },
+          ],
+        },
+        lab.tasks[1],
+      ],
+    };
+    render(<SimulationPlayer scenario={longLab} onBack={vi.fn()} />);
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+    const clues = within(screen.getByRole("group", { name: "Evidence" })).getAllByRole("button");
+    for (const clue of clues) {
+      // The whole name is on the button for everyone: nothing is cut short, and no tooltip holds the rest.
+      expect(clue).not.toHaveAttribute("title");
+      expect(clue.className).not.toMatch(/\btruncate\b|\bmax-w-/);
+      expect(clue.className).toContain("[overflow-wrap:anywhere]");
+    }
+    expect(clues[1]).toHaveTextContent("ping 8.8.8.8 (Google Public DNS)");
+    // Each clue is a stop for the Tab key, and Enter opens it.
+    clues[0].focus();
+    await user.tab();
+    expect(clues[1]).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(clues[1]).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Reply from")).toBeInTheDocument();
   });
 
   it("draws the console as dark paper in both themes, in the theme's own ink and marks", () => {
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} />);
-    const frame = screen.getByRole("tablist", { name: "Evidence" }).closest(".dark");
+    const frame = screen.getByRole("group", { name: "Evidence" }).closest(".dark");
     expect(frame).not.toBeNull();
     // Nothing inside names a colour of its own: no fixed hex, no white, no palette colour.
     const classes = [frame!, ...frame!.querySelectorAll("*")].map((el) => el.getAttribute("class") ?? "").join(" ");
@@ -191,7 +239,7 @@ describe("simulation labs, played", () => {
     fireEvent.click(button(/^Next stage/));
     expect(screen.getByText("Stage 2 of 2: Repair")).toBeInTheDocument();
     expect(screen.getByText("Safe steps")).toBeInTheDocument();
-    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.queryByRole("group", { name: "Evidence" })).toBeNull();
   });
 
   it("asks a pick-all one option at a time, yes or no, marking each answer", () => {
@@ -310,7 +358,7 @@ describe("simulation labs, played", () => {
     const onStarted = vi.fn();
     render(<SimulationPlayer scenario={lab} onBack={vi.fn()} onStarted={onStarted} />);
     // Reading the evidence is not a move.
-    fireEvent.click(screen.getByRole("tab", { name: /ping 10\.0\.0\.1/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ping 10\.0\.0\.1/ }));
     expect(onStarted).not.toHaveBeenCalled();
     fireEvent.click(button("GPU"));
     expect(onStarted).toHaveBeenCalledTimes(1);
@@ -355,5 +403,32 @@ describe("simulation labs, played", () => {
     ).toBe(true);
     fireEvent.click(button("Choose another lab"));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes the question as it leaves, also for a host whose way back does not close the lab", async () => {
+    const user = userEvent.setup();
+    // A way back that leaves the player on the page, as a public lab page's does.
+    const onBack = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={onBack} />);
+    fireEvent.click(button("Backlight"));
+    await user.click(button("Return to the scenarios"));
+    const dialog = screen.getByRole("dialog", { name: "Do you want to leave this lab?" });
+    expect(within(dialog).getByRole("button", { name: "Stay in the lab" })).toHaveFocus();
+    await user.tab();
+    expect(within(dialog).getByRole("button", { name: "Leave the lab" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("goes straight back with no question for a host whose way back keeps the lab and its answers", () => {
+    const onBack = vi.fn();
+    render(<SimulationPlayer scenario={lab} onBack={onBack} confirmLeave={false} />);
+    fireEvent.click(button("Backlight"));
+    fireEvent.click(button("Return to the scenarios"));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Nothing is thrown away: the answer is still marked.
+    expect(button(marked("Your answer, which is correct", "Backlight"))).toBeDisabled();
   });
 });

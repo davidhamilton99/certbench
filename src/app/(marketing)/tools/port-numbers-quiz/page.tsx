@@ -11,15 +11,15 @@ import { pageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = pageMetadata({
   title: "Free CompTIA port numbers quiz",
-  description:
-    "Practice the port numbers that the CompTIA Security+, Network+ and A+ exams test. The first round is free and needs no account. A free account saves your progress and begins each round with the ports that you missed.",
+  description: `Practice ${PORT_ENTRIES.length} port numbers and their protocols for the CompTIA Security+, Network+ and A+ exams. The first round is free and needs no account. A free account saves your progress and begins each round with the ports that you missed.`,
   path: "/tools/port-numbers-quiz",
 });
 
 const FAQS = [
   {
     question: "Which port numbers do I need to memorize for CompTIA exams?",
-    answer: `The core set is about ${PORT_ENTRIES.length} ports. It includes the best-known ports (SSH 22, DNS 53, HTTP 80, HTTPS 443 and RDP 3389), the email protocols (SMTP 25 and 587, POP3 110 and 995, IMAP 143 and 993) and the infrastructure protocols (DHCP 67 and 68, SNMP 161 and 162, LDAP 389 and 636). Network+ tests ports most heavily. Security+ often asks which secure protocol replaces an insecure one.`,
+    // CompTIA's own objectives were read only for A+ Core 1 (facts file, 23 November 2026), so only that exam is named.
+    answer: `For A+ Core 1 (220-1201), CompTIA's exam objectives list the ports and protocols under objective 2.1. This quiz covers ${PORT_ENTRIES.length} ports, among them the best-known ports (SSH 22, DNS 53, HTTP 80, HTTPS 443 and RDP 3389), the email protocols (SMTP 25 and 587, POP3 110 and 995, IMAP 143 and 993) and the infrastructure protocols (DHCP 67 and 68, SNMP 161 and 162, LDAP 389 and 636).`,
   },
   {
     question: "What is the best way to memorize port numbers?",
@@ -29,7 +29,7 @@ const FAQS = [
   {
     question: "Do I need to know whether each port uses TCP or UDP?",
     answer:
-      "Yes, particularly for Network+. The protocols that use UDP include DHCP (67 and 68), TFTP (69), NTP (123), SNMP (161 and 162) and syslog (514). DNS uses both: UDP for queries and TCP for zone transfers.",
+      "For A+ Core 1 (220-1201), CompTIA's exam objectives include it: objective 2.1 covers TCP and UDP ports and protocols. The list on this page gives the transport of every port. The protocols that use UDP include DHCP (67 and 68), TFTP (69), NTP (123), SNMP (161 and 162) and syslog (514). DNS uses both: UDP for queries and TCP for zone transfers.",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function PortQuizPage() {
       <LanderHero
         eyebrow="A+, Network+ and Security+"
         title="CompTIA port numbers quiz"
-        sub={`This quiz covers the ${PORT_ENTRIES.length} ports that CompTIA tests, asked in both directions.`}
+        sub={`This quiz covers ${PORT_ENTRIES.length} ports for the CompTIA exams, asked in both directions.`}
         specs={[
           { label: "First round", value: `${ROUND_SIZE} questions` },
           { label: "Account", value: "Not required for the first round" },
@@ -65,8 +65,7 @@ export default function PortQuizPage() {
 
       <LanderProse className="pt-10 sm:pt-12">
         <p>
-          Every CompTIA exam expects you to know the port numbers from memory. This quiz covers the{" "}
-          {PORT_ENTRIES.length} ports that the exams test, in both directions: you name the port, and you name the
+          This quiz covers {PORT_ENTRIES.length} port numbers in both directions: you name the port, and you name the
           protocol. A free account saves your progress and builds every round after the first from the ports that you
           missed.
         </p>
@@ -76,7 +75,7 @@ export default function PortQuizPage() {
           numbers themselves. It is folded under the quiz and not in front of it. */}
       <LanderBlock className="mt-8">
         <ReferenceFold
-          title="The full CompTIA port numbers list"
+          title="The port numbers in this quiz"
           summary={
             <>
               {headliners.join(", ")} and {PORT_ENTRIES.length - headliners.length} more, each with TCP or UDP.
@@ -112,13 +111,13 @@ export default function PortQuizPage() {
 
       <PathCard
         className="mt-16 sm:mt-24"
-        title="Port numbers are a small part of the exam"
+        title="Study for your exam in short steps"
         href="/start"
-        label="Start the study path for my exam"
+        label="Choose your exam"
         context="port_quiz_page"
       >
-        Most of the exam consists of scenarios. Choose your exam, and its study path works through the exam topic by
-        topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.
+        Choose your exam, and its study path works through the exam topic by topic, in short sets of questions like
+        this one, up to a readiness checkpoint that shows where you stand.
       </PathCard>
 
       <LanderBlock className="mt-12 sm:mt-16">

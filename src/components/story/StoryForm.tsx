@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type Step = "ask" | "story" | "regroup" | "thanks";
+type Step = "ask" | "story" | "regroup" | "thanks" | "already";
 
 /** The shortest comment that is stored (the same limit as the endpoint's). */
 const MIN_COMMENT = 10;
@@ -89,8 +89,12 @@ export function StoryForm({
       else window.location.assign(pathHref);
     } catch (err) {
       // An answer was sent from this link already: that is a yes, not an error.
+      // For a pass, the server replaces an earlier comment that did not pass or
+      // is waiting for review, so a conflict means that a pass comment from
+      // this account was already reviewed: nothing new was stored, and the
+      // screen says so instead of promising a review.
       if (err instanceof ApiError && err.code === "conflict") {
-        if (passed) setStep("thanks");
+        if (passed) setStep("already");
         else window.location.assign(pathHref);
         return;
       }
@@ -123,14 +127,18 @@ export function StoryForm({
     );
   }
 
-  if (step === "thanks") {
+  if (step === "thanks" || step === "already") {
     return (
       <div className="grid justify-items-center gap-6 text-center">
         <Header
           headingRef={headingRef}
           center
           title="Thank you."
-          sub="Your comment helps other candidates to begin. It will be reviewed before it is published on CertBench."
+          sub={
+            step === "thanks"
+              ? "Your comment helps other candidates to begin. It will be reviewed before it is published on CertBench."
+              : "A comment about this exam was already received from your account, so this one was not stored."
+          }
         />
         <Button asChild size="lg">
           <Link href="/">Return to the home page</Link>

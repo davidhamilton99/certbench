@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { calculateSubnet, parseIpv4 } from "../subnet-calculator";
+import { calculateSubnet, parseIpv4, readAddressField } from "../subnet-calculator";
+
+describe("readAddressField", () => {
+  it("reads an address with no slash as the address alone", () => {
+    expect(readAddressField(" 10.1.1.1 ")).toEqual({ address: "10.1.1.1", prefix: "none" });
+  });
+
+  it("reads every stage of an address typed with its prefix, and never moves the digits into the address", () => {
+    expect(readAddressField("10.1.1.1/")).toEqual({ address: "10.1.1.1", prefix: "unfinished" });
+    expect(readAddressField("10.1.1.1/1")).toEqual({ address: "10.1.1.1", prefix: 1 });
+    expect(readAddressField("10.1.1.1/16")).toEqual({ address: "10.1.1.1", prefix: 16 });
+    expect(readAddressField("10.1.1.1 / 16")).toEqual({ address: "10.1.1.1", prefix: 16 });
+  });
+
+  it("accepts every prefix length from 0 to 32 and nothing else after the slash", () => {
+    expect(readAddressField("10.0.0.0/0").prefix).toBe(0);
+    expect(readAddressField("10.0.0.0/32").prefix).toBe(32);
+    expect(readAddressField("10.0.0.0/33").prefix).toBe("invalid");
+    expect(readAddressField("10.0.0.0/2a").prefix).toBe("invalid");
+    expect(readAddressField("10.0.0.0/2/4").prefix).toBe("invalid");
+  });
+});
 
 describe("parseIpv4", () => {
   it("accepts valid dotted quads", () => {

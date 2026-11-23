@@ -31,7 +31,7 @@ import {
 } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { examReps, examStructure } from "@/lib/tools/practice-exam";
-import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
+import { domainOf, REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { PublicTestData } from "@/core/path/types";
 import { loadPublicTest } from "@/server/path/public-test";
 
@@ -51,8 +51,8 @@ const TITLE = "Free Security+ SY0-801 practice test";
 /** What the page offers, as search and AI answers read it: the exam it serves, whichever that is. */
 function describe(exam: PublicTestData): string {
   return exam.size === "full"
-    ? `Free full-length Security+ SY0-801 practice exam: ${exam.reps.length} questions in ${FULL.minutes} minutes in the exam's domain weights, scored by domain, with every answer explained.`
-    : `Free ${exam.reps.length}-question Security+ SY0-801 practice test covering all ${OBJECTIVE_COUNT} objectives in the exam's weights. Timed, scored by domain, with every answer explained.`;
+    ? `CertBench offers a free full-length Security+ SY0-801 practice exam of ${exam.reps.length} questions in ${FULL.minutes} minutes, in the exam's domain weights, scored by domain, with every answer explained.`
+    : `CertBench offers a free ${exam.reps.length}-question Security+ SY0-801 practice exam that covers all ${OBJECTIVE_COUNT} objectives in the exam's weights. It is timed and scored by domain, and every answer is explained.`;
 }
 
 export async function generateMetadata() {
@@ -75,7 +75,6 @@ const FALLBACK: PublicTestData = { testId: SY0_801_CERT, structure: STRUCTURE, s
 const CODE = <span className="whitespace-nowrap">SY0-801</span>;
 
 /** The domain an objective sits in: "4.2" is in "4.0". */
-const domainOf = (objective: string) => `${objective.split(".")[0]}.0`;
 
 /** The page's questions under their domain and objective, numbered in page order. */
 const SECTIONS = (() => {
@@ -135,7 +134,7 @@ function faqs(fullTest: boolean) {
     {
       question: "What score do I need to pass SY0-801?",
       answer:
-        "You need 750 on a scale of 100 to 900. CompTIA does not publish how that scale maps to a share of questions answered correctly, so no practice exam can give you a scaled score. This one reports the percentage that you answered correctly, weighted by each domain's share of the exam.",
+        "You need 750 on a scale of 100 to 900. This practice exam reports the percentage that you answered correctly, weighted by each domain's share of the exam. It is not a score on CompTIA's scale.",
     },
     {
       question: "Are these real exam questions?",
@@ -148,7 +147,7 @@ function faqs(fullTest: boolean) {
     },
     {
       question: "Does this practice test include performance-based questions?",
-      answer: `No. Every question here is multiple-choice. The real exam also has performance-based questions, and the CertBench Security+ PBQ page has ${FREE_LAB_COUNT} interactive ones that are free to work through in the browser, the first three with no account.`,
+      answer: `No. Every question here is multiple-choice. The real exam also has performance-based questions. CertBench's Security+ PBQ page, written for SY0-701, has ${FREE_LAB_COUNT} free hands-on labs to work through in the browser, the first three with no account.`,
     },
   ];
 }
@@ -347,7 +346,7 @@ export default async function Sy0801PracticeTestPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: `${FREE_LAB_COUNT} free interactive PBQs, three of them with no account`,
+              note: `${FREE_LAB_COUNT} free hands-on labs for SY0-701, three of them with no account`,
             },
             {
               href: "/security-plus-practice-test",
@@ -357,7 +356,7 @@ export default async function Sy0801PracticeTestPage() {
             {
               href: "/tools/security-plus-acronyms-quiz",
               label: "Security+ acronyms quiz",
-              note: "Practice the acronyms that both exams use",
+              note: "The SY0-701 acronyms, with a quiz",
             },
           ]}
         />

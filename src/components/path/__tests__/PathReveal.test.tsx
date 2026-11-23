@@ -100,6 +100,14 @@ describe("the checkpoint result", () => {
     expect(screen.getByText("Practice exam result")).toBeInTheDocument();
   });
 
+  // Network+'s steps are CertBench's own topics, not CompTIA's objectives.
+  it("counts topics, not objectives, for an exam set out by CertBench's own topics", () => {
+    render(reveal(50, { studied: 1, structure: { ...structure, certSlug: "network-plus-n10-009" } }));
+    expect(screen.getByText("You have studied 1 of 5 topics.")).toBeInTheDocument();
+    expect(screen.getByText("There are 4 topics still to study.")).toBeInTheDocument();
+    expect(screen.queryByText(/objectives/)).toBeNull();
+  });
+
   it("draws how much has been studied with the one progress bar, at its final length", () => {
     const { container } = render(reveal(50, { studied: 1 }));
     expect(screen.getByText("You have studied 1 of 5 objectives.")).toBeInTheDocument();

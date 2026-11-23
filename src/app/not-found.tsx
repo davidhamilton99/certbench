@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { LinkPending } from "@/components/ui/link-arrow";
 
 // The page says what it is in the browser's tab, and names no canonical
 // address: without this it took the home page's title, and the root layout's
@@ -38,7 +39,9 @@ export default function NotFound() {
         </p>
         <div className="mt-3 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
-            <Link href="/start">Choose your exam</Link>
+            <Link href="/start">
+              <LinkPending>Choose your exam</LinkPending>
+            </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/">Return to the home page</Link>

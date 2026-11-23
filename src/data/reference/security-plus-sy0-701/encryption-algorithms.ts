@@ -7,9 +7,9 @@ export const encryptionAlgorithms: ReferenceTable = {
   columnHeaders: [
     { key: "algorithm", label: "Algorithm" },
     { key: "type", label: "Type" },
-    { key: "keySize", label: "Key Size", mono: true },
+    { key: "keySize", label: "Key size", mono: true },
     { key: "status", label: "Status" },
-    { key: "use", label: "Common Use" },
+    { key: "use", label: "Common use" },
   ],
   entries: [
     { columns: { algorithm: "AES", type: "Symmetric (block)", keySize: "128/192/256-bit", status: "Current standard", use: "Data encryption, disk encryption, TLS" } },

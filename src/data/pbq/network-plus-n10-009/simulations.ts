@@ -328,7 +328,7 @@ export const networkPlusSimulations: SimulationScenario[] = [
         id: "np-sim-vlan-t2",
         title: "Task 2: Port Assignment",
         instructions:
-          "Assign each switch port range to the correct VLAN by dragging the port labels into the appropriate VLAN zones. Fa0/24 will be configured as a trunk in the next task: assign it to Management for now.",
+          "Assign each switch port range to the correct VLAN. Fa0/24 will be configured as a trunk in the next task: assign it to Management for now.",
         evidence: [
           {
             label: "Desired Port-to-VLAN Mapping",
@@ -434,7 +434,7 @@ Trunking VLANs Enabled: ALL`,
               "VLAN 10 (Data)",
               "VLAN 20 (Voice)",
               "VLAN 99 (Management)",
-              "Any unused VLAN, e.g. VLAN 999",
+              "Any unused VLAN, such as 999",
             ],
             correctIndex: 4,
           },
@@ -659,7 +659,7 @@ Radio 1 (5 GHz)
             options: [
               "Increase to maximum to overpower the interference",
               "Leave at 100%: power has no effect on CCI",
-              "Reduce to a level that covers only Conference Room B (e.g. 25–50%)",
+              "Reduce to a level that covers only Conference Room B, such as 25–50%",
               "Set to 0% to disable the 2.4 GHz radio entirely",
               "Enable automatic power control and set maximum to 100%",
             ],
@@ -710,7 +710,7 @@ Radio 1 (5 GHz)
     id: "np-sim-cmd-troubleshoot",
     title: "Network Troubleshooting with Commands",
     briefing:
-      "A user at workstation WS-ACCT-04 (IP: 10.10.1.55, subnet: 10.10.1.0/24, gateway: 10.10.1.1) reports they cannot open any external websites (e.g. https://www.example.com) but can communicate normally with other machines on the local network. You have remote access to the workstation and have captured the command output shown in each task. Identify and fix the problem.",
+      "A user at workstation WS-ACCT-04 (IP: 10.10.1.55, subnet: 10.10.1.0/24, gateway: 10.10.1.1) reports they cannot open any external websites (for example, https://www.example.com) but can communicate normally with other machines on the local network. You have remote access to the workstation and have captured the command output shown in each task. Identify and fix the problem.",
     domain_number: "5.0",
     domain_title: "Network Troubleshooting",
     estimatedMinutes: 10,
@@ -899,7 +899,7 @@ Ping statistics for 10.10.1.254:
             type: "dropdown",
             id: "np-sim-cmd-t2-internal-dns",
             label:
-              "Can the internal DNS server resolve internal hostnames (e.g. intranet.corp.internal)?",
+              "Can the internal DNS server resolve internal hostnames (for example, intranet.corp.internal)?",
             options: [
               "No: the internal DNS server is completely non-functional",
               "Yes: internal resolution works; only external forwarding fails",

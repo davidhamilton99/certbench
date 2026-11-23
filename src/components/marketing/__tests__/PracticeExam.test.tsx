@@ -26,7 +26,7 @@ vi.mock("@/components/auth/InlineSignup", () => ({
 
 import { PracticeExam, PracticeExamJump } from "../PracticeExam";
 import { rehearsalQuestionsKey } from "@/components/path/rehearsal-run";
-import { pathRehearsalKey } from "@/components/path/storage-key";
+import { pathExamTakenKey, pathRehearsalKey } from "@/components/path/storage-key";
 import { examReps, examStructure } from "@/lib/tools/practice-exam";
 
 const STRUCTURE = examStructure({
@@ -140,7 +140,11 @@ describe("PracticeExam", () => {
   it("offers a full-length exam, or a half cut from it in the exam's weights", () => {
     mountFull();
     expect(screen.getByRole("heading", { name: "90 questions in 90 minutes" })).toBeInTheDocument();
-    expect(screen.getByText(/These are the limits of the real exam/)).toBeInTheDocument();
+    // What the practice exam does, and nothing about how the real exam behaves.
+    expect(
+      screen.getByText("These are the limits of the real exam, so the practice exam is full length. No answer is shown until you finish.")
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/as in the real exam|real pace/i);
     expect(screen.getByRole("button", { name: /^Start the full exam/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Half-length exam: 45 questions in 45 minutes" }));
@@ -212,10 +216,11 @@ describe("PracticeExam", () => {
   });
 
   it("does not show a signed-out visitor an earlier score, only the way to it", () => {
+    // Finished signed out: the score was shown to nobody, so nobody has claimed it.
+    session.userId = null;
     mount();
     sitIt();
     cleanup();
-    session.userId = null;
     mount();
     expect(screen.getByText(/You have already completed this practice exam\./)).toBeInTheDocument();
     expect(screen.queryByText(/Your last score was/)).toBeNull();
@@ -470,18 +475,48 @@ describe("PracticeExam", () => {
     expect(screen.getByText(LIST_TITLE)).toBeInTheDocument();
     expect(savedRun().claimedBy).toBe("u1");
 
-    // Signed out, nobody can tell whose it is: the way to the score is offered, and
-    // an account other than the one that claimed it is not shown it.
+    // Signed out, the exam is not offered either: a visitor is never asked to
+    // create an account for a score that belongs to another account.
     cleanup();
     session.userId = null;
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "View your score" }));
-    fireEvent.click(screen.getByRole("button", { name: "Show my score" }));
-    expect(screen.queryByText(/You scored/)).toBeNull();
+    expect(screen.queryByText(/already completed/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "View your score" })).toBeNull();
     expect(screen.getByRole("button", { name: /^Start the exam/ })).toBeInTheDocument();
     expect(savedRun().claimedBy).toBe("u1");
 
     // The account that claimed it still has it.
+    cleanup();
+    session.userId = "u1";
+    mount();
+    expect(screen.getByText(/Your last score was/)).toHaveTextContent("Your last score was 100%.");
+  });
+
+  it("on a shared computer, shows an exam that the study path took for an account to that account alone", () => {
+    // Finished signed out, so its score was shown to nobody.
+    session.userId = null;
+    mount();
+    sitIt();
+    expect(savedRun().claimedBy).toBeNull();
+    // The study path took it for u1 before it began to stamp the exams it
+    // takes, so only the device's mark says whose it is.
+    store.set(pathExamTakenKey("security-plus-sy0-801"), JSON.stringify({ at: savedRun().done.result.at, by: "u1" }));
+
+    // The next person signs in: a clean card, and the exam is not stamped as theirs.
+    cleanup();
+    session.userId = "u2";
+    mount();
+    expect(screen.queryByText(/Your last score was/)).toBeNull();
+    expect(screen.getByRole("button", { name: /^Start the exam/ })).toBeInTheDocument();
+    expect(savedRun().claimedBy).toBeNull();
+
+    // Nor is it offered to someone who is signed out.
+    cleanup();
+    session.userId = null;
+    mount();
+    expect(screen.queryByRole("button", { name: "View your score" })).toBeNull();
+
+    // The account it was given to still sees it.
     cleanup();
     session.userId = "u1";
     mount();

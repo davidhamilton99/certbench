@@ -8,7 +8,7 @@ export const securityConcepts: ReferenceTable = {
     { key: "concept", label: "Concept" },
     { key: "type", label: "Category" },
     { key: "description", label: "Description" },
-    { key: "example", label: "Example / Exam Notes" },
+    { key: "example", label: "Example / exam notes" },
   ],
   entries: [
     // MFA

@@ -27,7 +27,11 @@ const FRAME: Record<AnswerState, string> = {
 
 const KEY: Record<AnswerState, string> = {
   idle: "border-input text-muted-foreground group-hover/option:border-primary group-hover/option:text-primary",
-  chosen: "border-primary bg-primary text-primary-foreground",
+  // A contrast theme removes the fill, so there the key box is filled with the
+  // theme's own highlight colour, which it keeps; the frame is drawn by the
+  // forced-colours rule in globals.css.
+  chosen:
+    "border-primary bg-primary text-primary-foreground forced-colors:border-[Highlight] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:forced-color-adjust-none",
   correct: "border-success bg-success text-success-foreground",
   incorrect: "border-destructive bg-destructive text-destructive-foreground",
   dimmed: "border-border text-muted-foreground",

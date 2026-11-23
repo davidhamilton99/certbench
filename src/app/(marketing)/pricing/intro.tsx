@@ -15,11 +15,11 @@ export const PRICING_PLANS = "grid max-w-5xl gap-5 md:grid-cols-2 md:items-start
 
 /**
  * The page's title and opening paragraphs. Every word here is the same for
- * every visitor and every country, so it is also what is shown while the
- * plans are being worked out for the visitor (see loading.tsx), and it is the
- * sentence a search engine or an assistant can quote for what CertBench costs.
- * The list prices come from the price table, so they cannot drift from what
- * is charged.
+ * every visitor and every country, so the layout draws it once (layout.tsx)
+ * and it stands while the plans are being worked out for the visitor, and it
+ * is the sentence a search engine or an assistant can quote for what
+ * CertBench costs. The list prices come from the price table, so they cannot
+ * drift from what is charged.
  */
 export function PricingIntro() {
   return (

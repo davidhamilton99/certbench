@@ -35,7 +35,8 @@ describe("ExamVersionNote", () => {
     expect(screen.getByRole("link", { name: "SY0-801" })).toHaveAttribute("href", SY0_801_PATH);
     expect(screen.getByRole("link", { name: "which version to take" })).toHaveAttribute("href", SECURITY_PLUS_VERSIONS_PATH);
     expect(screen.getByRole("link", { name: "its own study path" })).toHaveAttribute("href", `/path/${SY0_801_CERT}`);
-    expect(screen.getByRole("link", { name: "free practice test" })).toHaveAttribute("href", SY0_801_PRACTICE_PATH);
+    // "Practice exam" in a sentence: "practice test" is kept for page titles.
+    expect(screen.getByRole("link", { name: "free practice exam" })).toHaveAttribute("href", SY0_801_PRACTICE_PATH);
   });
 
   it("underlines every link in the note, and opens CompTIA's pages in a new tab safely", () => {

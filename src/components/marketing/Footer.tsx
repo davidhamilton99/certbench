@@ -102,8 +102,7 @@ export function Footer() {
           <p className="cb-measure-sm md:justify-self-end">
             CertBench is an independent study program. It is not affiliated with, endorsed by or sponsored by CompTIA.
             CompTIA, Security+, Network+ and A+ are trademarks of CompTIA, Inc., and are used here only to identify the
-            exams. Every question on CertBench is written for CertBench against the published exam objectives. No
-            question is taken from a real exam.
+            exams. Every question on CertBench is written for CertBench. No question is taken from a real exam.
           </p>
         </div>
       </div>

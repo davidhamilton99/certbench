@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Logo } from "@/components/brand/Logo";
@@ -39,7 +38,9 @@ const MENU_ROW =
  * on a phone, where "Sign in" and the theme switch move into the list as
  * well, and the last two at tablet widths. The list is part of the page and
  * not a dialog, so it takes no focus and traps none: the Escape key closes it
- * and returns to the button, and so does opening a page from it.
+ * and returns to the button, and so does opening a page from it. Moving the
+ * focus out of the bar closes it too, so that the open list never covers the
+ * control that has the focus.
  */
 export function MarketingHeader() {
   const pathname = usePathname();
@@ -74,7 +75,16 @@ export function MarketingHeader() {
   }, [open]);
 
   return (
-    <header ref={header} className="glass-nav sticky top-0 z-40">
+    <header
+      ref={header}
+      className="glass-nav sticky top-0 z-40"
+      onBlur={(event) => {
+        // The focus has gone to something outside the bar. A press that moves
+        // the focus nowhere is left to the press handler above.
+        const next = event.relatedTarget;
+        if (next instanceof Node && !event.currentTarget.contains(next)) setOpenOn(null);
+      }}
+    >
       <div className="mx-auto flex h-[3.75rem] w-full max-w-6xl items-center justify-between gap-4 px-5 sm:px-6">
         <div className="flex min-w-0 items-center gap-8">
           <Logo />
@@ -148,9 +158,10 @@ export function MarketingHeader() {
               ))}
               {signedIn !== true && (
                 <li className="sm:hidden">
-                  <Link href="/login" className={MENU_ROW}>
+                  {/* Fetched only once it is reached: the sign-in page carries the sign-in client. */}
+                  <IntentLink href="/login" className={MENU_ROW}>
                     Sign in
-                  </Link>
+                  </IntentLink>
                 </li>
               )}
               <li className="sm:hidden">

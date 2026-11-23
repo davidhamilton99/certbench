@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireProPage } from "@/server/auth";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import {
   ProfileSettings,
   type AvailableCert,
@@ -17,9 +15,9 @@ export default async function ProfilePage() {
   const { db, user } = await requireProPage();
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
   if (!profile) redirect("/onboarding");
 

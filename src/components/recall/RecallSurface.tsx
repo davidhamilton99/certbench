@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as Tabs from "@radix-ui/react-tabs";
 import { X } from "lucide-react";
@@ -54,6 +54,15 @@ export function RecallSurface({
   const [session, setSession] = useState({ answered: 0, correct: 0 });
   const [reframeDismissed, setReframeDismissed] = useState(false);
   const [typed, setTyped] = useState(false);
+  const drill = useRef<HTMLDivElement>(null);
+
+  // The note goes with the button that was pressed, so the focus goes to the
+  // drill first: a keyboard or a screen reader carries on there, and does not
+  // start again from the top of the page.
+  function dismissReframe() {
+    drill.current?.focus();
+    setReframeDismissed(true);
+  }
 
   // Load saved mastery after mount (localStorage is client-only, so the server
   // and the first client render both start empty and hydration never mismatches).
@@ -150,7 +159,7 @@ export function RecallSurface({
 
       {/* The drill is the tabs' panel. It holds its own controls, so the panel
           itself is not a stop for the Tab key. */}
-      <Tabs.Content value={active} tabIndex={-1}>
+      <Tabs.Content ref={drill} value={active} tabIndex={-1}>
         {active === SUBNETTING_KEY ? (
           <SubnettingDrillLazy />
         ) : (
@@ -168,7 +177,7 @@ export function RecallSurface({
         <div className="glass relative grid gap-3 rounded-lg p-5 sm:p-6">
           <button
             type="button"
-            onClick={() => setReframeDismissed(true)}
+            onClick={dismissReframe}
             aria-label="Dismiss this note"
             className="cb-tap absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -176,7 +185,7 @@ export function RecallSurface({
           </button>
           <div className="grid gap-1.5">
             <h2 className="pr-8 text-base font-semibold">Recall is one part of the exam.</h2>
-            <p className="cb-measure text-small text-muted-foreground">
+            <p className="cb-measure-sm text-small text-muted-foreground">
               You have answered {session.answered} recall questions in this session, {sessionAccuracy}% of them
               correctly. The exam also sets scenario questions and performance-based questions. Your study plan
               shows where you stand in every domain.

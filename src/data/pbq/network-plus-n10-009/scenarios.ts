@@ -257,7 +257,7 @@ export const networkPlusScenarios: PbqScenario[] = [
       { text: "Partial variant reduces cost while improving redundancy", category: 1 },
     ],
     explanation:
-      "Star topology centralizes connections at a switch or hub: the most common LAN design, but the switch is a single point of failure. Bus topology uses a single shared backbone cable with terminators; any break disrupts all traffic. Mesh topology provides dedicated point-to-point links between nodes, offering maximum redundancy (full mesh) or balanced cost/redundancy (partial mesh), commonly used in WAN cores. Ring topology passes data around a loop using token passing (e.g., Token Ring, FDDI); a break disrupts the ring unless dual-ring redundancy is used.",
+      "Star topology centralizes connections at a switch or hub: the most common LAN design, but the switch is a single point of failure. Bus topology uses a single shared backbone cable with terminators; any break disrupts all traffic. Mesh topology provides dedicated point-to-point links between nodes, offering maximum redundancy (full mesh) or balanced cost/redundancy (partial mesh), commonly used in WAN cores. Ring topology passes data around a loop using token passing (for example, Token Ring and FDDI); a break disrupts the ring unless dual-ring redundancy is used.",
   },
   {
     type: "categorization",

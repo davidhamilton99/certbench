@@ -13,14 +13,17 @@ vi.mock("@/lib/api-client", () => ({ api: vi.fn() }));
 
 import { longDate } from "@/core/path/versions";
 import { PRICING_PAGE_UPDATED_ISO } from "@/lib/seo/page-dates";
+import PricingLayout from "../layout";
 import PricingLoading from "../loading";
 import PricingPage, { metadata } from "../page";
 
-/** The page as the server sends it to a visitor in `country`, with `plan` in the address. */
+/** The page in its layout, as the server sends it to a visitor in `country`, with `plan` in the address. */
 async function page(country: string | null, plan?: string): Promise<HTMLElement> {
   request.country = country;
   const root = document.createElement("div");
-  root.innerHTML = renderToString(await PricingPage({ searchParams: Promise.resolve(plan ? { plan } : {}) }));
+  root.innerHTML = renderToString(
+    <PricingLayout>{await PricingPage({ searchParams: Promise.resolve(plan ? { plan } : {}) })}</PricingLayout>
+  );
   return root;
 }
 
@@ -74,8 +77,10 @@ describe("the pricing page", () => {
     const pro = text(proCard(root));
     expect(pro).toContain("The complete study path for one exam.");
     expect(pro).toContain(
-      "Pro covers one exam. For A+, Core 1 and Core 2 are separate exams. For Security+, Pro covers both versions, SY0-801 and SY0-701. You can add another exam at any time for a single payment of $39."
+      "Pro covers one exam. For A+, Core 1 and Core 2 are separate exams. For Security+, Pro covers both versions, SY0-801 and SY0-701. You can add another exam for a single payment of $39. The exam stays open while your Pro plan is active."
     );
+    // An added exam is not bought outright: it is open only while Pro is.
+    expect(pro).not.toContain("at any time for a single payment");
   });
 
   // The page sells Pro for every exam at once. The Security+ and A+ steps follow
@@ -117,7 +122,9 @@ describe("the pricing page", () => {
     const root = await page("IN");
     const pro = proCard(root);
     expect(text(pro)).toContain("$7.60 a month, or $15.60 every three months, or $39.60 a year.");
-    expect(text(pro)).toContain("for a single payment of $15.60.");
+    expect(text(pro)).toContain(
+      "You can add another exam for a single payment of $15.60. The exam stays open while your Pro plan is active."
+    );
     expect(text(pro)).toContain("Prices are shown in US dollars and are adjusted for your region.");
     expect(text(pro)).not.toMatch(/\$19|\$39(?!\.)|\$99/);
     expect(pro?.innerHTML).not.toMatch(/line-through|text-success|bg-success/);
@@ -163,9 +170,13 @@ describe("the pricing page", () => {
 });
 
 describe("what is shown while the pricing page is on its way", () => {
-  it("is the page's own title and opening paragraphs, as real words, with the wait said to a screen reader", async () => {
+  it("is the page's own title and opening paragraphs, from the layout, with the plans' outlines and the wait said to a screen reader", async () => {
     const waiting = document.createElement("div");
-    waiting.innerHTML = renderToString(<PricingLoading />);
+    waiting.innerHTML = renderToString(
+      <PricingLayout>
+        <PricingLoading />
+      </PricingLayout>
+    );
     const ready = await page(null);
     expect(text(intro(waiting))).toBe(text(intro(ready)));
     expect(waiting.querySelector("h1")?.textContent).toBe("Plans and pricing");
@@ -173,5 +184,24 @@ describe("what is shown while the pricing page is on its way", () => {
     expect(text(status)).toBe("The plans are loading.");
     // Nothing spins, pulses or fades.
     expect(waiting.innerHTML).not.toMatch(/animate-|transition|opacity-0/);
+  });
+
+  it("is sent with one title and one opening: neither the loading frame nor the page draws them again", async () => {
+    // Next sends the layout with the loading frame in place, then the page, in one document.
+    request.country = null;
+    const sent = document.createElement("div");
+    sent.innerHTML =
+      renderToString(
+        <PricingLayout>
+          <PricingLoading />
+        </PricingLayout>
+      ) + renderToString(await PricingPage({ searchParams: Promise.resolve({}) }));
+    expect([...sent.querySelectorAll("h1")].map((h) => h.textContent)).toEqual(["Plans and pricing"]);
+    expect(text(sent).split("CertBench is a study program for the CompTIA").length - 1).toBe(1);
+    expect(text(sent).split("CertBench Pro costs $19 a month").length - 1).toBe(1);
+    // The loading frame is only the outlines and their sentence.
+    const frame = document.createElement("div");
+    frame.innerHTML = renderToString(<PricingLoading />);
+    expect(text(frame)).toBe("The plans are loading.");
   });
 });

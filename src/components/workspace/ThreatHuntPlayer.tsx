@@ -161,7 +161,7 @@ export function ThreatHuntPlayer({
   const count = flagged.size;
 
   return (
-    <div ref={root} className="flex min-w-0 scroll-mt-24 flex-col gap-4 sm:gap-5">
+    <div ref={root} className="flex min-w-0 flex-col gap-4 sm:gap-5">
       <LabHeader
         title={scenario.title}
         subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
@@ -188,8 +188,8 @@ export function ThreatHuntPlayer({
           {revealed
             ? "Each line that was evidence, and each line you flagged, is marked and explained in the log."
             : count === 0
-              ? "Select each line of the log that is evidence."
-              : `You have flagged ${count} ${count === 1 ? "line" : "lines"}. Select a flagged line again to remove its flag.`}
+              ? "Choose each line of the log that is evidence."
+              : `You have flagged ${count} ${count === 1 ? "line" : "lines"}. Choose a flagged line again to remove its flag.`}
         </p>
         <ConsoleFrame
           header={
@@ -294,7 +294,7 @@ export function ThreatHuntPlayer({
             <h3 id={whatId} className="text-base font-semibold leading-snug">
               What happened
             </h3>
-            <p className="cb-measure text-small text-muted-foreground">{scenario.explanation}</p>
+            <p className="cb-measure-sm text-small text-muted-foreground">{scenario.explanation}</p>
           </section>
 
           {upsell && <PbqUpsellCard upsell={upsell} />}
@@ -304,7 +304,7 @@ export function ThreatHuntPlayer({
               <RotateCcw />
               Repeat the lab
             </Button>
-            <Button variant="secondary" onClick={onBack}>
+            <Button variant="outline" onClick={onBack}>
               {backLabel ?? "Return to the scenarios"}
             </Button>
           </div>

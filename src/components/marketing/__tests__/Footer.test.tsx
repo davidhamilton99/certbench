@@ -61,6 +61,16 @@ describe("Footer", () => {
     expect(statement).toHaveClass("cb-measure-sm");
   });
 
+  // The Network+ questions are grouped into topics of CertBench's own, which are
+  // not CompTIA's objectives, so the sentence printed on every page says only
+  // where the questions come from.
+  it("says that every question is written for CertBench, and not that each follows a published objective", () => {
+    render(<Footer />);
+    const statement = screen.getByText(/CertBench is an independent study program\./);
+    expect(statement).toHaveTextContent("Every question on CertBench is written for CertBench. No question is taken from a real exam.");
+    expect(statement.textContent).not.toMatch(/objectives/);
+  });
+
   it("gives the support address as an underlined link", () => {
     render(<Footer />);
     const mail = screen.getByRole("link", { name: "support@certbench.dev" });

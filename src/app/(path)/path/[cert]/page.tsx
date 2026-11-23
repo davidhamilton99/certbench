@@ -11,7 +11,7 @@ import { PathApp } from "@/components/path/PathApp";
 import { holdScript } from "@/components/path/path-hold";
 import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
-import { freeOnPublicPages } from "./free-parts";
+import { freeOnPublicPages } from "@/lib/path/free-parts";
 
 // The page holds what every first-time visitor is given: the introductory
 // questions and the course outline. They change only with a deployment, which

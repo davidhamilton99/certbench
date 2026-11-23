@@ -23,6 +23,7 @@ import {
 import { warmContracts } from "@/contracts/lazy";
 import { ApiError, type ApiErrorCode } from "@/contracts/errors";
 import { PAGE_OUT_OF_DATE, userMessage } from "@/lib/errors/user-message";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { FREE_LAB_COUNT, type FreeOnPublicPages } from "@/core/path/free-labs";
 import { CHECKPOINT_SIZE, PRACTICE_SIZE, stopAt } from "@/core/path/plan";
 import {
@@ -38,11 +39,11 @@ import {
   seenIds,
   stopsDone,
 } from "@/core/path/progress";
-import { questionIdOf } from "@/core/path/rep-id";
+import { parseRepId, questionIdOf } from "@/core/path/rep-id";
 import { checkpointFromExam, examToImport } from "@/core/path/exam-import";
-import { EXAM_CODES, examVersions, LAST_EXAM_DAY, longDate, newerVersion } from "@/core/path/versions";
+import { EXAM_CODES, examVersions, fmtDay, LAST_EXAM_DAY, longDate, newerVersion } from "@/core/path/versions";
 import { scoreCheckpoint, type CheckpointAnswer } from "@/core/path/checkpoint";
-import { latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
+import { domainOf, latestReading, REHEARSAL_FORMATS, scoreRehearsal } from "@/core/path/rehearsal";
 import type {
   ChoiceRep,
   ObjectiveStatus,
@@ -191,9 +192,6 @@ type View =
   | { kind: "rehearsal-result" }
   | { kind: "error"; message: string; retry: () => void };
 
-const domainOf = (objective: string) =>
-  objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
-
 const domainLabel = (number: string | null) => (number ?? "").replace(/\.0$/, "");
 
 /**
@@ -237,8 +235,14 @@ function stopLabel(stop: PathStop, total: number): string {
   }
 }
 
-/** "March 3": the page is in English, so its dates are too, whatever the browser's own language. */
-const fmtDay = (at: number) => new Date(at).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+/**
+ * What the rows of an exam's outline are. A step teaches one of CompTIA's
+ * exam objectives, except on Network+, whose steps are CertBench's own topics
+ * and whose numbers are not CompTIA's (usesOfficialObjectiveNumbers): there
+ * the study path says "topic", and never cites a number as an objective's.
+ */
+type OutlineUnit = "objective" | "topic";
+const outlineUnit = (cert: string): OutlineUnit => (usesOfficialObjectiveNumbers(cert) ? "objective" : "topic");
 
 /** "1 is complete", "3 are to review": one part of the sentence that says what a step changed. */
 const standingClause = (n: number, words: string) => `${n} ${n === 1 ? "is" : "are"} ${words}`;
@@ -251,8 +255,13 @@ const inWords = (parts: string[]) =>
  * What a step changed in the outline, in the outline's own words: "This step
  * marked 6 objectives: 1 is complete and 5 are to review. " (with the space
  * that the next sentence follows). Empty when the step changed nothing.
+ * `unit`: what the outline's rows are, "objective" or (Network+) "topic".
  */
-function changeSentence(subject: string, counts: { complete: number; started: number; review: number }): string {
+function changeSentence(
+  subject: string,
+  counts: { complete: number; started: number; review: number },
+  unit: OutlineUnit
+): string {
   const words = [
     ["complete", counts.complete],
     ["started", counts.started],
@@ -261,8 +270,8 @@ function changeSentence(subject: string, counts: { complete: number; started: nu
   const changed = words.filter(([, n]) => n > 0);
   const marked = counts.complete + counts.started + counts.review;
   if (marked === 0) return "";
-  if (marked === 1) return `${subject} marked 1 objective: it is ${changed[0][0]}. `;
-  return `${subject} marked ${marked} objectives: ${inWords(changed.map(([word, n]) => standingClause(n, word)))}. `;
+  if (marked === 1) return `${subject} marked 1 ${unit}: it is ${changed[0][0]}. `;
+  return `${subject} marked ${marked} ${unit}s: ${inWords(changed.map(([word, n]) => standingClause(n, word)))}. `;
 }
 
 /**
@@ -385,6 +394,8 @@ export function PathApp({
 }) {
   const p = usePathProgress(cert);
   const total = plan.stops.length;
+  // "objective", or "topic" where the steps are CertBench's own topics (Network+).
+  const unit = outlineUnit(cert);
 
   // Whether the person has done anything on this page yet. A screen or a
   // question that arrives after that takes the keyboard's focus, so that it is
@@ -464,8 +475,8 @@ export function PathApp({
   // "Now" for what's due for review, fixed for the visit: due-ness moves in days.
   const [visitAt] = useState(() => Date.now());
   const [play, setPlayState] = useState<Play>(() => newPlay(warmup.stop, warmup.reps, new Map(), false));
-  // Handlers read the play through a ref, so a timer-driven "next" or an
-  // answer-then-advance in one tick always sees the current rep.
+  // Handlers read the play through a ref, so that an answer and the press of
+  // Continue in one moment always see the question in hand.
   const playRef = useRef(play);
   const setPlay = useCallback((next: Play) => {
     playRef.current = next;
@@ -775,15 +786,28 @@ export function PathApp({
   // it was being read, so that Continue has nothing to wait for.
   const ahead = useRef<{ key: string; request: Promise<BuiltStop>; built: BuiltStop | null } | null>(null);
 
-  /** What the server is sent to build a step, as every request for one sends it. */
+  /**
+   * What the server is sent to build a step, as every request for one sends
+   * it. A step on its own objectives (a learn step, a domain's practice) is
+   * built from their questions alone, and a seen id names its objective, so
+   * only those objectives' seen ids are sent: late in a study path the whole
+   * list is tens of kilobytes. The other steps draw from the whole exam, and
+   * are sent the whole list.
+   */
   const stopInput = useCallback(
-    (index: number, stop: PathStop, progress: PathProgress): StopInput => ({
-      cert,
-      index,
-      seen: seenIds(progress.items),
-      missed: missedIds(progress.items),
-      run: progress.stops[stop.id]?.n ?? 0,
-    }),
+    (index: number, stop: PathStop, progress: PathProgress): StopInput => {
+      const own = stop.kind === "learn" || stop.kind === "practice" ? new Set(stop.objectives) : null;
+      const items = own
+        ? Object.fromEntries(Object.entries(progress.items).filter(([id]) => own.has(parseRepId(id)?.objective ?? "")))
+        : progress.items;
+      return {
+        cert,
+        index,
+        seen: seenIds(items),
+        missed: missedIds(progress.items),
+        run: progress.stops[stop.id]?.n ?? 0,
+      };
+    },
     [cert]
   );
 
@@ -999,9 +1023,12 @@ export function PathApp({
       // visitor who answered one there arrives with a copy that has started:
       // the home page leaves a mark for that copy, and the event is recorded
       // once here (path-start.ts). The mark is taken first, whatever the copy
-      // holds, so that it never outlives the answer it was left for.
+      // holds, so that it never outlives the answer it was left for. A learner
+      // whose account had a study path already began it long ago: for them the
+      // mark counts for nothing.
       const owed = takeOwedStartEvent(cert);
-      if (!hasStarted(peek().progress) || owed) track("path_started", { cert });
+      const now = peek();
+      if (!hasStarted(now.progress) || (owed && !now.accountStarted)) track("path_started", { cert });
       record(rep.id, answer.correct);
       const results = [...cur.results];
       results[cur.i] = answer.correct;
@@ -1206,6 +1233,9 @@ export function PathApp({
     }
     const asCheckpoint = p.importExam(exam.answers, exam.result);
     writeExamMark(cert, { at: exam.result.at, by: p.userId });
+    // The exam is this account's now, on the public page as well: it shows a
+    // finished exam only to the account whose name it carries (PracticeExam).
+    if (run.claimedBy !== p.userId) writeRun(`${cert}-practice-test`, { ...run, claimedBy: p.userId });
     if (!asCheckpoint) return;
     // The bank answers go to the account too, as a stop's do.
     const answers = run.reps.flatMap((rep, i) => {
@@ -1216,6 +1246,10 @@ export function PathApp({
     });
     if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
     track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
+    // The reveal is what this visit opens on. The unlock check below runs in
+    // the same pass and would read the screen as it was before this one:
+    // it stands down, and the unlock moment waits for a later visit.
+    unlockChecked.current = true;
     setView({ kind: "reveal" });
     window.scrollTo({ top: 0 });
   }, [p, cert, setView]);
@@ -1340,7 +1374,17 @@ export function PathApp({
         }}
       />
     ) : (
-      <PathActivating examName={structure.examName} slow={slow} onCheck={() => void refreshAccess()} />
+      <PathActivating
+        examName={structure.examName}
+        slow={slow}
+        onCheck={() => void refreshAccess()}
+        onContinue={() => {
+          // As for a buyer who carries on without signing in: the screen under
+          // the wait follows a press, so it takes the focus.
+          setPlay({ ...playRef.current, takeFocus: true });
+          setLanding({ done: true });
+        }}
+      />
     );
   } else if (view.kind === "welcome") {
     screen = (
@@ -1398,7 +1442,7 @@ export function PathApp({
               keyed by both, so that it is a new element whenever its words change. */}
           {objective && (
             <p key={`${objective.code}|${kind ?? ""}`} className="text-small text-muted-foreground">
-              Objective {objective.code}: {objective.title}.{kind ? ` ${kind}.` : ""}
+              {unit === "objective" ? `Objective ${objective.code}` : "Topic"}: {objective.title}.{kind ? ` ${kind}.` : ""}
             </p>
           )}
           {rep && (
@@ -1673,6 +1717,8 @@ export function PathApp({
                 examDate={p.progress.goal?.examDate ?? null}
                 context="reveal"
                 labCount={library.length}
+                // The prices came with the account's answer: the offer asks for none of its own.
+                initialPricing={p.pricing ?? undefined}
                 // The server has refused a step, but the account itself may still
                 // be out of reach: the offer then asks for it again from here.
                 onRetry={askAgain}
@@ -1748,12 +1794,14 @@ export function PathApp({
 
         <div className="glass grid gap-6 rounded-lg p-5 sm:p-8">
           <div className="grid gap-1.5">
-            <h2 className="cb-statement">{structure.examName} objectives</h2>
+            <h2 className="cb-statement">
+              {structure.examName} {unit}s
+            </h2>
             {/* What this step changed in the outline below, in the outline's own
                 words, and then the running count on the same basis. */}
             <p className="text-small text-muted-foreground">
-              {endChange && changeSentence(ended.subject, endChange)}
-              In all, you have started {objectivesStarted} of {objectiveCodes.length} objectives.
+              {endChange && changeSentence(ended.subject, endChange, unit)}
+              In all, you have started {objectivesStarted} of {objectiveCodes.length} {unit}s.
             </p>
           </div>
           <ExamMap
@@ -2039,6 +2087,14 @@ export function PathApp({
         openLab(built.stop, built.lab);
         return;
       }
+      // A step with nothing to ask (no questions are left for its objective)
+      // is counted and passed, as `startStop` does: never a screen with no
+      // question and no way on.
+      if (built.reps.length === 0) {
+        finish(built.stop.id, 0, 0);
+        setView({ kind: "home" });
+        return;
+      }
       setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(peek().progress.items)));
       setView({ kind: "play" });
       window.scrollTo({ top: 0 });
@@ -2198,7 +2254,7 @@ export function PathApp({
       return {
         ...base,
         state: "anonymous",
-        line: "This objective is taught later in the study path. The steps after the readiness checkpoint are included with Pro.",
+        line: `This ${unit} is taught later in the study path. The steps after the readiness checkpoint are included with Pro.`,
       };
     }
     if (index < 0) return { ...base, state: "none" };
@@ -2224,8 +2280,8 @@ export function PathApp({
         ...base,
         state: "locked",
         line: result
-          ? "This objective is included with Pro."
-          : "This objective is included with Pro, which is offered after your readiness checkpoint.",
+          ? `This ${unit} is included with Pro.`
+          : `This ${unit} is included with Pro, which is offered after your readiness checkpoint.`,
         action: toOffer(),
       };
     }
@@ -2233,7 +2289,7 @@ export function PathApp({
       return {
         ...base,
         state: "next",
-        line: "This objective is taught in your next step.",
+        line: `This ${unit} is taught in your next step.`,
         action: { label: "Start", kind: "start", run: () => void startStop(index) },
       };
     }
@@ -2243,8 +2299,8 @@ export function PathApp({
       state: "later",
       line:
         stepsAway === 1
-          ? "This objective is taught in the step after your next one."
-          : `This objective is taught ${stepsAway} steps from now.`,
+          ? `This ${unit} is taught in the step after your next one.`
+          : `This ${unit} is taught ${stepsAway} steps from now.`,
     };
   }
 
@@ -2307,7 +2363,7 @@ export function PathApp({
               <ProgressBar value={(Math.min(next, total) / Math.max(1, total)) * 100} size="lg" still />
               <p className="text-small text-muted-foreground">
                 You have completed {Math.min(next, total)} of {total} steps and started {objectivesStarted} of{" "}
-                {objectiveCodes.length} objectives.
+                {objectiveCodes.length} {unit}s.
                 {reading && (
                   <>
                     {" "}
@@ -2347,12 +2403,12 @@ export function PathApp({
           )}
 
           {anonymousDone ? (
-            <div id="path-save" tabIndex={-1} className="scroll-mt-24">
+            <div id="path-save" tabIndex={-1}>
               <SaveCard cert={cert} next={nextStop} onSaved={onSaved} />
             </div>
           ) : offerOnHome ? (
             // It takes the focus when a row of the outline leads here, so that it is read.
-            <div id="path-offer" tabIndex={-1} className="scroll-mt-24">
+            <div id="path-offer" tabIndex={-1}>
               {p.paymentPastDue ? (
                 // In the offer's place for a member whose last payment did not go through.
                 <PathPaymentPastDue />
@@ -2367,6 +2423,7 @@ export function PathApp({
                   examDate={p.progress.goal?.examDate ?? null}
                   context="home"
                   labCount={library.length}
+                  initialPricing={p.pricing ?? undefined}
                   onRetry={askAgain}
                 />
               )}
@@ -2457,8 +2514,10 @@ export function PathApp({
 
         <div className="glass grid gap-6 rounded-lg p-5 sm:p-8">
           <div className="grid gap-1.5">
-            <h2 className="cb-statement">Exam objectives</h2>
-            <p className="text-small text-muted-foreground">Choose an objective to see where you stand on it.</p>
+            <h2 className="cb-statement">Exam {unit}s</h2>
+            <p className="text-small text-muted-foreground">
+              Choose {unit === "objective" ? "an objective" : "a topic"} to see where you stand on it.
+            </p>
           </div>
           <ExamMap
             structure={structure}

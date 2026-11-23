@@ -25,26 +25,25 @@ export interface MapTile {
 
 /**
  * labels: short facts with visible labels (35 ports)
- * dots:   a large deck as a compact grid, named in a tooltip (300 and more acronyms)
+ * dots:   a large deck (300 and more acronyms). It is not drawn whole: a grid
+ *         of 300 squares cannot be read on a phone, and a screen reader would
+ *         list every one. Only the facts already seen are drawn, as labels,
+ *         the missed ones first, and a sentence counts the rest.
  * skills: a few skills with a label and a score each (subnetting)
  */
 export type MapVariant = "labels" | "dots" | "skills";
 
+/** How the progress map draws its tiles: a large deck is drawn as labels. */
+type TileStyle = Exclude<MapVariant, "dots">;
+
 /**
- * A tile's mark. It is never carried by colour alone: a tile with words on it
- * also shows a check or a cross, and a dot is filled when answered correctly,
- * ringed when missed and faint when not seen yet.
+ * A tile's mark. It is never carried by colour alone: a tile also shows a
+ * check or a cross, and says its status to a screen reader in words.
  */
 const TILE_TONE: Record<ItemStatus, string> = {
   got: "border-success/50 bg-success/10 text-success",
   missed: "border-destructive/50 bg-destructive/10 text-destructive",
   new: "border-border text-muted-foreground",
-};
-
-const DOT_TONE: Record<ItemStatus, string> = {
-  got: "border-success bg-success",
-  missed: "border-2 border-destructive",
-  new: "border-border bg-foreground/[0.05]",
 };
 
 const STATUS_WORD: Record<ItemStatus, string> = {
@@ -63,7 +62,7 @@ function StatusMark({ status, className }: { status: ItemStatus; className?: str
   return null;
 }
 
-export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: MapVariant }) {
+export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: TileStyle }) {
   return (
     <ul
       aria-label="Your progress"
@@ -71,7 +70,6 @@ export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: Map
         "grid",
         // Wide enough for the longest port ("1812/1813") beside its mark, with room to spare on each side.
         variant === "labels" && "grid-cols-[repeat(auto-fill,minmax(5.75rem,1fr))] gap-1 sm:gap-1.5",
-        variant === "dots" && "grid-cols-[repeat(auto-fill,minmax(0.75rem,1fr))] gap-1",
         variant === "skills" && "grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2"
       )}
     >
@@ -81,10 +79,9 @@ export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: Map
           title={`${t.label}${t.name ? ` ${t.name}` : ""}: ${STATUS_WORD[t.status]}`}
           className={cn(
             "rounded-xs border",
-            variant === "dots" ? DOT_TONE[t.status] : TILE_TONE[t.status],
+            TILE_TONE[t.status],
             variant === "labels" &&
               "flex items-center justify-center gap-0.5 py-1.5 font-mono text-xs tracking-tight sm:gap-1 sm:py-2 sm:tracking-normal",
-            variant === "dots" && "aspect-square",
             variant === "skills" && "grid gap-0.5 px-3 py-2.5"
           )}
         >
@@ -104,7 +101,6 @@ export function ProgressMap({ tiles, variant }: { tiles: MapTile[]; variant: Map
               <span className="text-note">{t.detail ?? "Not tried yet"}</span>
             </>
           )}
-          {variant === "dots" && <span className="sr-only">{`${t.label}: ${STATUS_WORD[t.status]}`}</span>}
         </li>
       ))}
     </ul>
@@ -116,20 +112,21 @@ const LEGEND: Record<"facts" | "skills", Record<ItemStatus, string>> = {
   skills: { got: "Secure (80% or more)", missed: "Needs more practice", new: "Not tried yet" },
 };
 
-function Legend({ variant }: { variant: MapVariant }) {
+function Legend({ variant, seenOnly = false }: { variant: TileStyle; seenOnly?: boolean }) {
   const words = LEGEND[variant === "skills" ? "skills" : "facts"];
+  const marks: ItemStatus[] = seenOnly ? ["got", "missed"] : ["got", "missed", "new"];
   return (
     <ul aria-label="What the marks mean" className="flex flex-wrap gap-x-4 gap-y-1 text-note text-muted-foreground">
-      {(["got", "missed", "new"] as const).map((s) => (
+      {marks.map((s) => (
         <li key={s} className="flex items-center gap-1.5">
           <span
             aria-hidden
             className={cn(
               "flex size-3.5 shrink-0 items-center justify-center rounded-xs border",
-              variant === "dots" ? DOT_TONE[s] : TILE_TONE[s]
+              TILE_TONE[s]
             )}
           >
-            {variant !== "dots" && <StatusMark status={s} className="size-2.5" />}
+            <StatusMark status={s} className="size-2.5" />
           </span>
           {words[s]}
         </li>
@@ -255,6 +252,12 @@ export function RoundComplete({
   const got = tiles.filter((t) => t.status === "got").length;
   const missed = tiles.filter((t) => t.status === "missed").length;
   const unseen = tiles.length - got - missed;
+  // A large deck draws only what has been seen, the missed first: see MapVariant.
+  const large = variant === "dots";
+  const style: TileStyle = large ? "labels" : variant;
+  const shown = large
+    ? [...tiles.filter((t) => t.status === "missed"), ...tiles.filter((t) => t.status === "got")]
+    : tiles;
 
   useEffect(() => {
     if (gated) track("drill_gate_viewed", { tool: rounds.tool });
@@ -331,8 +334,15 @@ export function RoundComplete({
               : `${got + missed} of ${tiles.length} seen`}
           </span>
         </div>
-        <ProgressMap tiles={tiles} variant={variant} />
-        <Legend variant={variant} />
+        {shown.length > 0 && <ProgressMap tiles={shown} variant={style} />}
+        {large && unseen > 0 && (
+          <p className="text-small text-muted-foreground">
+            {unseen === 1
+              ? `One ${noun[0]} has not been asked yet.`
+              : `The other ${unseen} ${noun[1]} have not been asked yet.`}
+          </p>
+        )}
+        <Legend variant={style} seenOnly={large} />
 
         {gated ? (
           <div className="grid gap-4 border-t border-border pt-5">

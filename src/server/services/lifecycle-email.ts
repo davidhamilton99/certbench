@@ -25,12 +25,10 @@ import {
 } from "@/server/email/templates";
 import { buildPlan } from "@/core/path/plan";
 import { checkpointFollowUp, FOLLOW_UP_MAX_HOURS, FOLLOW_UP_MIN_HOURS } from "@/core/path/follow-up";
-import { freeLabs } from "@/core/path/free-labs";
 import { NUDGE_MAX_HOURS, NUDGE_MIN_HOURS, pathNudge, pathStanding } from "@/core/path/nudge";
 import { sanitizePathProgress } from "@/core/path/progress";
 import { isPathCert, type PathCert, type PathProgress } from "@/core/path/types";
-import { pbqRegistry } from "@/data/pbq";
-import { PBQ_EXAMPLE_PAGES } from "@/lib/seo/cert-pages";
+import { freeOnPublicPages } from "@/lib/path/free-parts";
 
 /** Exam-countdown days that trigger an email. */
 export const COUNTDOWN_DAYS = [14, 7, 3, 1] as const;
@@ -66,13 +64,11 @@ export function daysUntil(examDate: string, now: Date): number {
 /**
  * How many hands-on labs are free for an exam: the ones its public page of
  * labs offers, and none for an exam without such a page (Security+ SY0-801
- * today). It is worked out with the same calls as the study path's own page
- * (freeOnPublicPages in src/app/(path)/path/[cert]/free-parts.ts, which this
- * layer may not import), so that an email never says another number than the
- * outline the email leads to.
+ * today). It is the study path's own count (freeOnPublicPages), so that an
+ * email never says another number than the outline the email leads to.
  */
 export function freeLabCount(cert: PathCert): number {
-  return PBQ_EXAMPLE_PAGES.some((page) => page.certSlug === cert) ? freeLabs(pbqRegistry[cert] ?? []).length : 0;
+  return freeOnPublicPages(cert).labIds.length;
 }
 
 /** email_log type for the one-time path nudge: one per exam, ever. */

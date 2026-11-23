@@ -5,12 +5,12 @@ export const storageTypes: ReferenceTable = {
   title: "Storage devices",
   description: "This table lists storage devices and RAID levels for the CompTIA A+ 220-1201 exam with the interface, the maximum speed, the typical capacity and the use of each.",
   columnHeaders: [
-    { key: "type", label: "Storage Type" },
+    { key: "type", label: "Storage type" },
     { key: "interface", label: "Interface", mono: true },
-    { key: "formFactor", label: "Form Factor" },
-    { key: "maxSpeed", label: "Max Speed", mono: true },
-    { key: "capacity", label: "Typical Capacity" },
-    { key: "useCase", label: "Use Case" },
+    { key: "formFactor", label: "Form factor" },
+    { key: "maxSpeed", label: "Max speed", mono: true },
+    { key: "capacity", label: "Typical capacity" },
+    { key: "useCase", label: "Use case" },
   ],
   entries: [
     // HDDs

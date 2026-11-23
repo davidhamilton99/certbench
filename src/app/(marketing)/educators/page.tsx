@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LinkPending } from "@/components/ui/link-arrow";
 import { Inventory } from "@/components/home/Inventory";
 import { LanderPage } from "@/components/marketing/lander/Lander";
 import { ArticleBody, ArticleHero, ArticleRow, ArticleSection, CtaBand } from "@/components/marketing/lander/Article";
@@ -76,7 +77,8 @@ export default async function EducatorsPage() {
                 "Most of the Security+ SY0-801 questions are also in the SY0-701 bank, so the two Security+ rows should not be added together."
               )}{" "}
               The figures in this table are counted from the current question bank. Exam versions, domain weights and
-              retirement dates were last checked against CompTIA&apos;s exam pages on {EXAM_FACTS_CHECKED}.
+              retirement dates were last checked against CompTIA&apos;s exam pages, and its article on the two A+
+              exams, on {EXAM_FACTS_CHECKED}.
             </>
           }
         >
@@ -87,9 +89,10 @@ export default async function EducatorsPage() {
           <dl className="border-t border-border">
             <ArticleRow term="Practice by objective">
               <p>
-                Every question is linked to the exam objective that it tests. For Security+ SY0-701 and A+, each
-                objective has its own page of practice questions with explanations, and Network+ has a page for each
-                topic. The pages have fixed addresses, so you can assign them alongside your own teaching.
+                Every question is linked to the exam objective that it tests or, for Network+, to a topic of
+                CertBench&apos;s own. For Security+ SY0-701 and A+, each objective has its own page of practice
+                questions with explanations, and Network+ has a page for each topic. The pages have fixed addresses, so
+                you can assign them alongside your own teaching.
               </p>
             </ArticleRow>
             <ArticleRow term="A timed practice exam">
@@ -99,15 +102,19 @@ export default async function EducatorsPage() {
                 needs only a free account to see the score.
               </p>
               <p>
-                The free practice exam is the same for every student, and its questions and answers are published on
-                the practice-test page, so it is suited to practice and not to graded assessment.
+                The free practice exam is the same for every student, and for Security+ SY0-701, Network+ and A+ its
+                questions and answers are also published on the practice-test page, so it is suited to practice and
+                not to graded assessment.
               </p>
             </ArticleRow>
             <ArticleRow term="Hands-on practice">
               <p>
-                Each exam has hands-on labs that work like CompTIA&apos;s performance-based questions. They include
-                simulations, network diagrams, and ordering and matching tasks, and they are graded with partial
-                credit. For each of {keepCodes(EXAMS_WITH_FREE_LABS)}, {FREE_LAB_COUNT} labs are free.
+                The Security+, Network+ and A+ exams have performance-based questions as well as multiple-choice
+                questions, and CompTIA does not publish which topics they test. Each exam on CertBench has hands-on
+                labs as practice for them: in a lab, a student carries out a task in the browser instead of choosing an
+                answer. The labs include simulations, network diagrams, and ordering and matching tasks, and they are
+                graded with partial credit. For each of {keepCodes(EXAMS_WITH_FREE_LABS)}, {FREE_LAB_COUNT} labs are
+                free.
               </p>
             </ArticleRow>
             <ArticleRow term="Study in short steps">
@@ -131,9 +138,9 @@ export default async function EducatorsPage() {
           <dl className="border-t border-border">
             <ArticleRow term="Original questions">
               <p>
-                Every question is written for CertBench against the exam objectives that CompTIA publishes.{" "}
-                <strong>No question is taken from a real exam.</strong> CompTIA&apos;s policy prohibits the use of real
-                exam questions, and CertBench does not use or offer them.
+                Every question is written for CertBench. <strong>No question is taken from a real exam.</strong>{" "}
+                CompTIA&apos;s policy prohibits the use of real exam questions, and CertBench does not use or offer
+                them.
               </p>
             </ArticleRow>
             <ArticleRow term="Explanations">
@@ -173,7 +180,11 @@ export default async function EducatorsPage() {
             </li>
             <li>The first study step and the readiness checkpoint, with a free account.</li>
             <li>Practice drills for subnetting, port numbers and acronyms.</li>
-            <li>The practice pages for the exam objectives.</li>
+            <li>
+              {keepCodes(
+                "The page of practice questions for each objective of Security+ SY0-701 and A+, and for each Network+ topic."
+              )}
+            </li>
           </ul>
           {/* The price is stated here and not only on the pricing page: an
               instructor is asked what the program costs a student. */}
@@ -251,7 +262,9 @@ export default async function EducatorsPage() {
             <Link href={practicePageFor(SECURITY_PLUS_CERT)}>Open the Security+ practice exam</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link href="/start">Choose an exam</Link>
+            <Link href="/start">
+              <LinkPending>Choose your exam</LinkPending>
+            </Link>
           </Button>
         </div>
       </CtaBand>

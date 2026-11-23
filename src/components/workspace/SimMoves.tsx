@@ -679,7 +679,12 @@ function ItemCard({
   );
 }
 
-/** One mark per item in a run: the answered ones by result, the one in hand in the page's blue. */
+/**
+ * One mark per item in a run: the answered ones by result, the one in hand in
+ * the page's blue. A miss is red here as it is on the answer itself: amber
+ * means something else on the site (a step to review, a line that is not
+ * evidence).
+ */
 function Pips({ count, current, result }: { count: number; current: number; result: (p: number) => boolean | null }) {
   return (
     <div className="flex flex-wrap justify-center gap-1.5" aria-hidden>
@@ -691,7 +696,7 @@ function Pips({ count, current, result }: { count: number; current: number; resu
             className={cn(
               "size-2 rounded-xs",
               r === true && "bg-success",
-              r === false && "bg-warning",
+              r === false && "bg-destructive",
               r === null && (p === current ? "bg-primary" : "bg-foreground/[0.12]")
             )}
           />

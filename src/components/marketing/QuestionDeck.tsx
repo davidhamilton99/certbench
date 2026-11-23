@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { splitExplanation } from "@/core/path/text";
 import type { ChoiceRep } from "@/core/path/types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { QuestionList, type DeckQuestion } from "@/components/marketing/QuestionList";
-import { useKeyboardTurn } from "@/components/path/keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "@/components/path/RepCard";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
@@ -100,9 +99,6 @@ export function QuestionDeck({
   next?: DeckNext;
 }) {
   const reps = useMemo(() => toReps(questions), [questions]);
-  const turnId = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const keyboard = useKeyboardTurn(turnId, root);
   const userId = useSessionUserId();
   const [run, setRun] = useState(0);
   const [i, setI] = useState(0);
@@ -156,7 +152,7 @@ export function QuestionDeck({
   };
 
   return (
-    <div ref={root} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
       {ended ? (
         <DeckScore
           label={label}
@@ -183,7 +179,6 @@ export function QuestionDeck({
             onAnswer={onAnswer}
             onNext={onNext}
             promptAs="p"
-            keyboard={keyboard}
             // The first card is there as the page loads and leaves the focus
             // alone. Every card after it follows a press on this page.
             takeFocus={run > 0 || i > 0}
@@ -236,7 +231,7 @@ function DeckScore({
       tabIndex={-1}
       role="group"
       aria-label={`${label}: your score`}
-      className="glass path-rise grid min-w-0 scroll-mt-24 gap-5 rounded-lg p-5 sm:p-8"
+      className="glass path-rise grid min-w-0 gap-5 rounded-lg p-5 sm:p-8"
     >
       <div className="grid min-w-0 gap-1.5">
         <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

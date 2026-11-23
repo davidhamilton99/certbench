@@ -222,8 +222,9 @@ describe("migration 036, the public read policy", () => {
     expect(statements.match(/\b(?:drop|create|alter|insert|update|delete|grant|revoke)\b/gi)).toEqual(["drop", "create"]);
   });
 
-  it("says first that it has not been run, gives the read-only query, and how to undo it", () => {
-    expect(sql).toContain("THIS FILE HAS NOT BEEN RUN.");
+  it("says first when it was run on the live database, gives the read-only query, and how to undo it", () => {
+    expect(sql).toContain("RUN on the live database on 23 November 2026");
+    expect(sql).not.toContain("THIS FILE HAS NOT BEEN RUN.");
     expect(sql).toContain("from pg_policies");
     expect(sql).toContain(
       "--   create policy \"Anyone reads approved testimonials\" on public.testimonials for select using (status = 'approved');"

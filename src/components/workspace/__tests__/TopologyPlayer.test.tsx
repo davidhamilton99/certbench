@@ -140,6 +140,33 @@ describe("topology labs, played on the map", () => {
     expect(r1.getAttribute("aria-label")!.startsWith(r1.textContent!)).toBe(true);
   });
 
+  it("lists every link of the map in words, with the label drawn on its line, for a screen reader and a small screen", () => {
+    const labelled: TopologyScenario = {
+      ...net,
+      connections: [
+        { from: "isp", to: "r1", label: "WAN (203.0.113.0/30)" },
+        { from: "r1", to: "sw1", label: "Gi0/1" },
+        { from: "sw1", to: "pc1", label: "Fa0/1" },
+      ],
+    };
+    render(<TopologyPlayer scenario={labelled} onBack={vi.fn()} />);
+    const list = screen.getByRole("list", { name: "Connections" });
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent)
+    ).toEqual(["ISP to R1: WAN (203.0.113.0/30)", "R1 to SW1: Gi0/1", "SW1 to PC1: Fa0/1"]);
+  });
+
+  it("lists a link with no label by its two devices alone", () => {
+    render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
+    expect(
+      within(screen.getByRole("list", { name: "Connections" }))
+        .getAllByRole("listitem")
+        .map((li) => li.textContent)
+    ).toEqual(["ISP to R1", "R1 to SW1", "SW1 to PC1"]);
+  });
+
   it("shows any device's configuration when it is chosen, and goes back to the one being fixed", async () => {
     render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
     fireEvent.click(chip("SW1, correct as it is"));

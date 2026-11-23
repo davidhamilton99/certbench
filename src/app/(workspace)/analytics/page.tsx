@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireProPage } from "@/server/auth";
-import { listEnrollments } from "@/server/data/enrollments";
+import { pageCertifications, pageEnrollments } from "@/server/page-reads";
 import {
   getCertificationBySlug,
-  listActiveCertifications,
   listDomains,
   listSubObjectives,
 } from "@/server/data/certifications";
@@ -42,12 +41,12 @@ export default async function AnalyticsPage({
   const { cert: certSlug } = await searchParams;
   const { db, user } = await requireProPage();
 
-  const enrollments = await listEnrollments(db, user.id);
+  const enrollments = await pageEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
 
   let active = certSlug ? await getCertificationBySlug(db, certSlug) : null;
   if (!active || !enrollments.some((e) => e.certificationId === active!.id)) {
-    const certs = await listActiveCertifications(db);
+    const certs = await pageCertifications(db);
     active = certs.find((c) => c.id === enrollments[0].certificationId) ?? null;
   }
   if (!active) redirect("/onboarding");

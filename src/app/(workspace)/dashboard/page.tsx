@@ -1,11 +1,9 @@
 import { redirect } from "next/navigation";
 import { requireProPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import {
   getCertificationBySlug,
-  listActiveCertifications,
 } from "@/server/data/certifications";
-import { listEnrollments } from "@/server/data/enrollments";
-import { getProfile } from "@/server/data/profiles";
 import { getSessionPlan } from "@/server/services/session-plan";
 import { getUserPlan } from "@/server/services/subscription";
 import { signShare, shareName } from "@/server/share/readiness-token";
@@ -73,7 +71,7 @@ export default async function DashboardPage({
   const { cert: certSlug } = await searchParams;
   const { db, user } = await requireProPage();
 
-  const enrollments = await listEnrollments(db, user.id);
+  const enrollments = await pageEnrollments(db, user.id);
   if (enrollments.length === 0) redirect("/onboarding");
 
   // Resolve the active certification: ?cert= slug, else first enrollment.
@@ -83,7 +81,7 @@ export default async function DashboardPage({
     : undefined;
   if (!active || !enrollment) {
     enrollment = enrollments[0];
-    const certs = await listActiveCertifications(db);
+    const certs = await pageCertifications(db);
     active = certs.find((c) => c.id === enrollment!.certificationId) ?? null;
   }
   if (!active) redirect("/onboarding");
@@ -91,7 +89,7 @@ export default async function DashboardPage({
   const [plan, userPlan, profile] = await Promise.all([
     getSessionPlan(db, user.id, active.id, enrollment.examDate),
     getUserPlan(db, user.id),
-    getProfile(db, user.id),
+    pageProfile(db, user.id),
   ]);
 
   const pathCard = await loadPathCard(db, user.id, active.slug);

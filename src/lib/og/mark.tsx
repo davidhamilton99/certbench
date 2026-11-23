@@ -50,7 +50,7 @@ export const OG = {
   /** The unfilled part of a bar: the ink at 9% on paper, as the site's bars draw it. */
   track: "#eaeaeb",
   /**
-   * The three marks on a score (`--success`, `--warning`, `--danger`). Amber
+   * The three marks on a score (`--success`, `--warning`, `--destructive`). Amber
    * is too pale to read as text, so text takes `warningInk` (`--warning-ink`).
    */
   success: "#0c693f",

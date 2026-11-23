@@ -12,8 +12,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    // The way in: the wordmark, and one sheet of paper on the desk.
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-muted px-4 pb-10 pt-8 text-foreground">
+    // The way in: the wordmark, and one sheet of paper on the desk. The desk is
+    // the ground of every other page too: in the dark theme it is darker than
+    // the card, so the card stands on it and does not look sunk into it.
+    <div className="aurora-bg relative flex min-h-svh flex-col overflow-hidden px-4 pb-10 pt-8 text-foreground">
       {/* The wordmark stands at the top centre as the page's header. The form
           is centred in the space below it, so a tall page (the register page
           and its list of what happens next) does not push it adrift. */}

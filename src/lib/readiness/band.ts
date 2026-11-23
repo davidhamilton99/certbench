@@ -53,7 +53,7 @@ export const BUILDING_BAND: Band = {
 };
 
 const BANDS: Record<Exclude<BandKey, "building">, Band> = {
-  work: { key: "work", label: "Below target", long: "Below the readiness target", ...tone("danger") },
+  work: { key: "work", label: "Below target", long: "Below the readiness target", ...tone("destructive") },
   close: {
     key: "close",
     label: "Approaching target",

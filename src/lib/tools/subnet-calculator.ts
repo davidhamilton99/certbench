@@ -43,6 +43,31 @@ export function parseIpv4(raw: string): number[] | null {
   return parts.map(Number);
 }
 
+/**
+ * What the calculator's address field says about the prefix length, as the
+ * visitor types: no slash ("none"), a slash with nothing after it yet
+ * ("unfinished"), a prefix length from 0 to 32, or anything else after the
+ * slash ("invalid", for example "/33" or "/2a").
+ */
+export type TypedPrefix = number | "none" | "unfinished" | "invalid";
+
+/**
+ * The address field read whole, at every keystroke: the address before any
+ * slash, and the prefix length after it. Typed key by key, "10.1.1.1/16"
+ * passes through "10.1.1.1/" and "10.1.1.1/1", and the digits after the slash
+ * are never read as part of the address.
+ */
+export function readAddressField(text: string): { address: string; prefix: TypedPrefix } {
+  const slash = text.indexOf("/");
+  if (slash < 0) return { address: text.trim(), prefix: "none" };
+  const address = text.slice(0, slash).trim();
+  const after = text.slice(slash + 1).trim();
+  if (after === "") return { address, prefix: "unfinished" };
+  if (!/^\d+$/.test(after)) return { address, prefix: "invalid" };
+  const n = Number(after);
+  return { address, prefix: n <= 32 ? n : "invalid" };
+}
+
 function classify(octets: number[]): { ipClass: string; addressType: string } {
   const [a, b] = octets;
   const first = a;

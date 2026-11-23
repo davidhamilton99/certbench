@@ -87,6 +87,7 @@ vi.mock("@/server/services/enrollment-writes", () => ({
 vi.mock("@/server/services/lifecycle-email", () => ({ sendWelcome: h.sendWelcome }));
 
 import { GET as getProgress } from "../progress/route";
+import { regionPricing } from "@/lib/pricing/ppp";
 import { POST as enroll } from "../enroll/route";
 import { POST as getLab } from "../lab/route";
 import { POST as recordAnswers } from "../answers/route";
@@ -142,7 +143,14 @@ describe("GET /api/path/progress", () => {
     h.access = { level: "pro", proPlan: true };
     const res = await call();
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ...h.progress, access: "pro", proPlan: true, certId: "cert-701" });
+    // With the offer's prices for the learner's region (here no country: the list prices).
+    expect(await res.json()).toEqual({
+      ...h.progress,
+      access: "pro",
+      proPlan: true,
+      certId: "cert-701",
+      pricing: regionPricing(null),
+    });
     expect(h.getPathAccess).toHaveBeenCalledWith(db, user, "cert-701");
   });
 

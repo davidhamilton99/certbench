@@ -7,15 +7,17 @@ import { ThemeToggle } from "@/components/workspace/ThemeToggle";
  * them from here, around the list of exams.
  */
 
+/** The width and the side room of the page's column, which the bar at the top shares: one left edge for the name and the title. */
+const COLUMN_WIDTH = "mx-auto w-full max-w-2xl px-4 sm:px-6";
+
 /** The column that the page draws its contents in. */
-export const START_COLUMN =
-  "mx-auto grid w-full max-w-2xl flex-1 content-start gap-10 px-4 pb-20 pt-14 outline-none sm:px-6 sm:pt-24";
+export const START_COLUMN = `${COLUMN_WIDTH} grid flex-1 content-start gap-10 pb-20 pt-14 outline-none sm:pt-24`;
 
 /** The bar at the top: the name, which leads home, and the theme switch. */
 export function StartHeader() {
   return (
     <header className="glass-nav sticky top-0 z-40">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
+      <div className={`${COLUMN_WIDTH} flex h-14 items-center justify-between`}>
         <Logo />
         <ThemeToggle />
       </div>
@@ -32,7 +34,7 @@ export function StartLead({ paid }: { paid: boolean }) {
       <p className="cb-measure text-lede text-muted-foreground sm:text-xl">
         {paid
           ? "Choose the exam, and its whole study path will open. This includes every step, every hands-on lab and the timed practice exams."
-          : "This is the only choice that you need to make. After this, each step is set out for you in order."}
+          : "After you choose, your study path sets out each step for you in order."}
       </p>
     </div>
   );

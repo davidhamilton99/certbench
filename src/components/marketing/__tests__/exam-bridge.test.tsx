@@ -190,6 +190,52 @@ function roundEnd(rounds: DrillRounds) {
   );
 }
 
+// The acronym deck has more than 300 entries. Its result drew every one as an
+// unlabelled square, which could not be read on a phone, and a screen reader
+// listed all of them.
+describe("RoundComplete for a large deck", () => {
+  const rounds = {
+    tool: "acronyms",
+    signedIn: true,
+    gated: false,
+    roundNumber: 1,
+    roundCorrect: 1,
+    size: 2,
+    linked: false,
+    account: "saved",
+    startNextRound: vi.fn(),
+  } as unknown as DrillRounds;
+  const tiles = [
+    { id: "aaa", label: "AAA", status: "got" as const },
+    { id: "ids", label: "IDS", status: "missed" as const },
+    ...Array.from({ length: 305 }, (_, i) => ({ id: `n${i}`, label: `N${i}`, status: "new" as const })),
+  ];
+
+  it("draws only the acronyms already seen, the missed first, and counts the rest in a sentence", () => {
+    render(
+      <RoundComplete
+        rounds={rounds}
+        label="Acronyms"
+        noun={["acronym", "acronyms"]}
+        tiles={tiles}
+        variant="dots"
+        mapTitle="Your acronyms"
+        lead={LEAD}
+      />
+    );
+    const map = screen.getByRole("list", { name: "Your progress" });
+    const items = Array.from(map.querySelectorAll("li"));
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("IDS");
+    expect(items[0]).toHaveTextContent("missed");
+    expect(items[1]).toHaveTextContent("AAA");
+    expect(screen.getByText("The other 305 acronyms have not been asked yet.")).toBeInTheDocument();
+    expect(screen.getByText("2 of 307 seen")).toBeInTheDocument();
+    const legend = screen.getByRole("list", { name: "What the marks mean" });
+    expect(legend).not.toHaveTextContent("Not seen yet");
+  });
+});
+
 describe("RoundComplete for a signed-in visitor", () => {
   const rounds = {
     tool: "ports",

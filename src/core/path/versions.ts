@@ -63,3 +63,12 @@ export function longDate(iso: string): string {
     timeZone: "UTC",
   });
 }
+
+/**
+ * "March 3" for a moment the learner did something, on the learner's own
+ * calendar. The page is in English, so its dates are too, whatever the
+ * browser's own language.
+ */
+export function fmtDay(at: number): string {
+  return new Date(at).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+}

@@ -141,7 +141,10 @@ export function claimLocalPath(cert: string, owner: string): void {
  * `userId` is who is signed in. A caller that does not know passes nothing,
  * which means nobody is. When the device copy belongs to an account the
  * visitor is not signed in as, the change is applied to the guest work beside
- * it and the account's copy is left as it is.
+ * it and the account's copy is left as it is. Work played by someone who is
+ * signed in is that account's: a copy it begins or adds to is the account's
+ * copy, so that it is never left as an anonymous visitor's for the next person
+ * at the keyboard.
  *
  * Returns false when the browser refused to keep the change.
  */
@@ -161,7 +164,7 @@ export function updateLocalPath(
   }
   return writeLocalPath(cert, {
     v: 1,
-    owner: local?.owner ?? null,
+    owner: local?.owner ?? userId ?? null,
     progress: change(local?.progress ?? EMPTY_PATH_PROGRESS),
   });
 }
@@ -209,10 +212,13 @@ export function writeExamMark(cert: string, mark: ExamMark): void {
  * the device and not for a person, so on a shared computer it must not go to
  * whoever opens the study path next.
  *
+ *   - An exam that this device has already given to an account stays with
+ *     that account. This comes first: a public page that kept no name on the
+ *     exam (one finished before the study path stamped the exams it takes)
+ *     may since have shown it to the next account to sign in.
  *   - An exam that an account claimed (by creating an account or signing in to
  *     see the score) belongs to that account and to no other.
- *   - An exam that this device has already given to an account, or has set
- *     aside, stays where it is.
+ *   - An exam that this device has set aside stays set aside.
  *   - An exam that nobody claimed is taken only when the device did not hold
  *     another account's study path when this account arrived (`foreign`).
  */
@@ -221,7 +227,22 @@ export function mayTakeExam(
   exam: { at: number; claimedBy: string | null },
   device: { foreign: boolean; mark: ExamMark | null }
 ): boolean {
+  const marked = device.mark && device.mark.at === exam.at ? device.mark : null;
+  if (marked?.by) return marked.by === userId;
   if (exam.claimedBy) return exam.claimedBy === userId;
-  if (device.mark && device.mark.at === exam.at) return device.mark.by === userId;
+  if (marked) return false;
   return !device.foreign;
+}
+
+/**
+ * The account a practice exam finished on a public page of this device
+ * belongs to: the account its score was shown to, or the account the study
+ * path gave it to. Null while it belongs to nobody yet. The public page shows
+ * a finished exam to that account alone (see PracticeExam).
+ */
+export function examOwner(
+  exam: { at: number; claimedBy: string | null },
+  mark: ExamMark | null
+): string | null {
+  return exam.claimedBy ?? (mark && mark.at === exam.at ? mark.by : null);
 }

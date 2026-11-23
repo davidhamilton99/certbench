@@ -111,7 +111,7 @@ function ScenarioList({
                   <span
                     className={cn(
                       "flex size-10 shrink-0 items-center justify-center rounded-md",
-                      locked ? "bg-foreground/[0.06] text-muted-foreground" : "bg-primary/[0.08] text-primary"
+                      locked ? "bg-foreground/[0.06] text-muted-foreground" : "bg-tint-selected text-primary"
                     )}
                   >
                     <Icon className="size-[18px]" aria-hidden />

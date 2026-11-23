@@ -1,11 +1,11 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { requireUserPage } from "@/server/auth";
+import { pageCertifications, pageEnrollments } from "@/server/page-reads";
 import { regionPricing } from "@/lib/pricing/ppp";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { proAddonTerms } from "@/lib/pricing/terms";
 import { otherVersions } from "@/core/path/versions";
 import { FREE_DAILY_QUESTION_LIMIT, getUserPlan } from "@/server/services/subscription";
 import { ManageBillingButton } from "@/components/workspace/UpgradePanel";
@@ -63,7 +63,7 @@ export default async function UpgradePage({
   // A Pro member manages their exams here: access is for the exam that was
   // bought, so the page shows what the plan covers and the exams that can be added.
   const [enrollments, allCerts] = isPro
-    ? await Promise.all([listEnrollments(db, user.id), listActiveCertifications(db)])
+    ? await Promise.all([pageEnrollments(db, user.id), pageCertifications(db)])
     : [[], []];
   const certById = new Map(allCerts.map((c) => [c.id, c]));
   const enrolledCerts = enrollments.flatMap((e) => {
@@ -137,9 +137,8 @@ export default async function UpgradePage({
             <Card>
               <CardHeader>
                 <CardTitle as="h2">Add a certification</CardTitle>
-                <CardDescription>
-                  If you are studying for more than one exam, you can add another to your plan.
-                </CardDescription>
+                {/* What the purchase is and how long it lasts, in the words of the pricing page. */}
+                <CardDescription>{proAddonTerms(pricing.prices.quarterly.discounted)}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="grid gap-2">

@@ -12,8 +12,10 @@ import { SubnettingPractice } from "@/components/marketing/SubnettingPractice";
 import { PathCard } from "@/components/marketing/PathCard";
 import { ToolEmailCapture } from "@/components/marketing/ToolEmailCapture";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { PBQ_TOPICS_UNPUBLISHED } from "@/lib/seo/cert-pages";
 import { NETWORK_PLUS_CERT, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { PORT_ENTRIES } from "@/lib/tools/port-quiz-data";
 import { MODES, type DrillMode } from "@/lib/tools/subnetting";
 import { MIXED_MODE_NAME, modeName } from "@/lib/tools/subnet-mode-names";
 import { ROUND_SIZE } from "@/core/drill-rounds/drill-rounds";
@@ -54,9 +56,9 @@ const FAQS = [
       "Take the mask octet that is not 0 or 255 and subtract it from 256. The result is the block size. For /26 (mask 255.255.255.192), 256 − 192 = 64, so the subnets begin at 0, 64, 128 and 192. An address belongs to the subnet that begins at or below it: 192.168.1.154 is in the subnet that begins at 128, so the network address is 192.168.1.128, and the broadcast address is one below the start of the next subnet, 192.168.1.191. You do not need binary once you know the mask octets.",
   },
   {
+    // CompTIA does not publish what its exams ask (facts file), so the answer says what CertBench offers and nothing about the exams.
     question: "Do I need subnetting for Network+ and Security+?",
-    answer:
-      "Network+ (N10-009) tests subnetting directly, with questions on masks, prefixes and usable hosts, and it appears in performance-based questions. Security+ expects you to read CIDR notation and to recognize network boundaries in firewall rules and logs. CCNA relies on the same skills, so the practice carries over.",
+    answer: `${PBQ_TOPICS_UNPUBLISHED} CertBench does not say what an exam will ask. Its Network+ study path has a topic on IP addressing and subnets, and these drills practice the calculations one skill at a time.`,
   },
   {
     question: "Should I practice subnetting in binary or with shortcuts?",
@@ -146,7 +148,7 @@ export default function SubnettingPracticePage() {
 
       <PathCard
         className="mt-16 sm:mt-24"
-        title="Subnetting is one part of the Network+ exam"
+        title="Subnetting is one topic of the Network+ study path"
         href="/path/network-plus-n10-009"
         label="Start the Network+ study path"
         context="subnetting_page"
@@ -175,12 +177,12 @@ export default function SubnettingPracticePage() {
             {
               href: "/network-plus-pbq-examples",
               label: "Network+ PBQ examples",
-              note: "Interactive topology and troubleshooting labs",
+              note: "Network diagram and troubleshooting labs",
             },
             {
               href: "/tools/port-numbers-quiz",
               label: "Port numbers quiz",
-              note: "The port numbers that the Network+ exam expects you to know",
+              note: `A quiz on ${PORT_ENTRIES.length} port numbers and their protocols`,
             },
           ]}
         />

@@ -493,6 +493,19 @@ describe("pathCountdownEmail", () => {
     );
   });
 
+  // Advice to complete a few steps each day came right after the sentence
+  // that the remaining steps are included with Pro.
+  it("points an account without Pro that has completed its free steps to the free practice exam", () => {
+    for (const days of [14, 7, 3]) {
+      const email = countdown(days, { done: 6, total: 35, freeLeft: 0 });
+      expect(email.text).toContain(
+        "If you have not taken it yet, the free practice exam lets you rehearse the whole exam before the day."
+      );
+      expect(email.html + email.text).not.toMatch(/few steps/);
+    }
+    expect(countdown(7, { done: 6, total: 35, freeLeft: 0 }, true).text).toContain("This week, complete a few steps every day.");
+  });
+
   it("names no free lab for an exam that has none, and counts one lab as one", () => {
     const none = countdown(3, { done: 3, total: 35, freeLeft: 0 }, false, 0);
     expect(none.text).toContain("The remaining 32 steps are included with Pro. One practice exam is free.");

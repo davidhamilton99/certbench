@@ -63,7 +63,7 @@ export function ExamVersionNote({
         </Link>{" "}
         and a{" "}
         <Link href={SY0_801_PRACTICE_PATH} className="cb-link">
-          free practice test
+          free practice exam
         </Link>
         . These dates are from CompTIA&apos;s{" "}
         <Source href={COMPTIA_URLS.securityV7}>Security+ V7 page</Source> and{" "}

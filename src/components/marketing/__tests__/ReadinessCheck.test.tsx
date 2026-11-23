@@ -113,6 +113,50 @@ describe("ReadinessCheck", () => {
     });
   });
 
+  // The Network+ study path is set out by CertBench's own topics, which are not
+  // CompTIA's N10-009 objectives, so its count is never called objectives.
+  it("counts the Network+ study path in topics, and an exam with CompTIA's own objectives in objectives", () => {
+    const playToEstimate = () => {
+      fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "53" }));
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      fireEvent.click(answers("Which protocol encrypts a remote shell?").getByRole("button", { name: "SSH" }));
+      fireEvent.click(screen.getByRole("button", { name: "View my estimate" }));
+    };
+
+    const network = check();
+    playToEstimate();
+    const networkEstimate = screen.getByRole("region", { name: "Network+ readiness estimate" });
+    expect(networkEstimate).toHaveTextContent("The Network+ study path covers all 5 topics, one short step at a time");
+    expect(networkEstimate.textContent).not.toMatch(/objectives/);
+    network.unmount();
+
+    render(
+      <ReadinessCheck cert="security-plus-sy0-701" questions={QUESTIONS} shortCertName="Security+" objectiveCount={28} />
+    );
+    playToEstimate();
+    expect(screen.getByRole("region", { name: "Security+ readiness estimate" })).toHaveTextContent(
+      "The Security+ study path covers all 28 objectives, one short step at a time"
+    );
+  });
+
+  // On a two-line domain name the count sat on the first line and the bar was
+  // centred on both (DE-13): each row now sets its parts at the top, and the bar
+  // on the label's first line.
+  it("sets each domain's bar on the first line of its name, beside the count", () => {
+    check();
+    fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "53" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(answers("Which protocol encrypts a remote shell?").getByRole("button", { name: "SSH" }));
+    fireEvent.click(screen.getByRole("button", { name: "View my estimate" }));
+    const rows = within(screen.getByRole("list", { name: "Your answers by exam domain" })).getAllByRole("listitem");
+    for (const row of rows) {
+      expect(row.className).toContain("items-start");
+      expect(row.className).not.toContain("items-center");
+      // The bar is drawn only; its first-line offset applies where it stands beside the label.
+      expect(row.querySelector("[aria-hidden]")?.className).toContain("sm:mt-2");
+    }
+  });
+
   it("names the band from the shared readiness bands", () => {
     check();
     fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "53" }));

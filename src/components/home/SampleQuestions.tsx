@@ -6,8 +6,9 @@ import type { PathStructure, Rep } from "@/core/path/types";
 import { hasStarted, recordRep } from "@/core/path/progress";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { readVisitorPath, updateLocalPath } from "@/components/path/local-path";
-import { oweStartEvent } from "@/components/path/path-start";
+import { markBegunOnPublicPage, oweStartEvent } from "@/components/path/path-start";
 import { RepCard, StopProgress, type RepAnswer } from "@/components/path/RepCard";
+import { useWhenKnown } from "@/components/path/useWhenKnown";
 import { Button } from "@/components/ui/button";
 import { LinkArrow } from "@/components/ui/link-arrow";
 import { track } from "@/lib/analytics";
@@ -49,9 +50,9 @@ export function SampleQuestions({
   const [first, setFirst] = useState<(RepAnswer | null)[]>(() => reps.map(() => null));
   const [second, setSecond] = useState<(boolean | null)[]>(() => reps.map(() => null));
   const resultRef = useRef<HTMLParagraphElement>(null);
-  // Who is signed in, if anyone. Unknown for a moment on a signed-in visit, and
-  // treated as nobody until it is known.
-  const userId = useSessionUserId() ?? null;
+  // Who is signed in, if anyone. Unknown for a moment on a signed-in visit: an
+  // answer given in that moment is kept once it is known whose it is.
+  const whenKnown = useWhenKnown(useSessionUserId());
 
   const done = pos >= queue.length;
   const index = queue[pos];
@@ -84,14 +85,24 @@ export function SampleQuestions({
       // visitors), so that on a shared computer it never joins another
       // account's study path.
       const cert = structure.certSlug;
-      const before = readVisitorPath(cert, userId);
-      // An answer that begins the device's copy: the path page still owes its
-      // `path_started` for this visitor (see path-start.ts).
-      if (!before || !hasStarted(before)) oweStartEvent(cert);
-      updateLocalPath(cert, (p) => recordRep(p, current.id, answer.correct, Date.now()), userId);
-      track("sample_question_answered", { correct: answer.correct, surface: SURFACE, repeat: repeating });
+      const at = Date.now();
+      whenKnown((who) => {
+        const before = readVisitorPath(cert, who);
+        // An answer that begins the device's copy: the path page still owes its
+        // `path_started` for this visitor, and a signed-out visitor's work is
+        // marked as begun here, not by the study path's save request (see
+        // path-start.ts).
+        if (!before || !hasStarted(before)) {
+          oweStartEvent(cert);
+          if (who === null) markBegunOnPublicPage(cert);
+        }
+        updateLocalPath(cert, (p) => recordRep(p, current.id, answer.correct, at), who);
+      });
+      // Once for each question, as the event has always been sent: a question
+      // asked a second time after a miss is not counted again.
+      if (!repeating) track("sample_question_answered", { correct: answer.correct, surface: SURFACE });
     },
-    [index, repeating, reps, structure.certSlug, userId]
+    [index, repeating, reps, structure.certSlug, whenKnown]
   );
 
   const onNext = useCallback(() => {

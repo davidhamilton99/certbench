@@ -75,14 +75,12 @@ describe("Specs", () => {
     for (const cell of list.children) expect(cell.className).not.toMatch(/border/);
   });
 
-  it("still accepts plain strings, as a list of facts without labels", () => {
-    const { container } = render(<Specs items={["Marked as you answer", "No account is required"]} />);
-    expect(container.querySelector("dl")).toBeNull();
-    expect([...container.querySelectorAll("ul > li")].map((li) => li.textContent)).toEqual([
-      "Marked as you answer",
-      "No account is required",
-    ]);
-    expect(container.querySelector("ul")).toHaveClass("grid", "sm:grid-cols-2");
+  // A plain string was accepted as a fact without a label while pages still
+  // used them; every page now names its facts, so a fact is always a pair.
+  it("prints a fact whose label is empty as its value alone", () => {
+    const { container } = render(<Specs items={[{ label: "", value: "Marked as you answer" }]} />);
+    expect(container.querySelector("dt")).toBeNull();
+    expect(container.querySelector("dd")).toHaveTextContent("Marked as you answer");
   });
 });
 

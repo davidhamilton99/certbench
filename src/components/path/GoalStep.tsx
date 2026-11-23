@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EXAM_DATE_HORIZON_DAYS, isPlannableExamDate, isoInDays } from "@/core/path/checkpoint";
+import { longDate } from "@/core/path/versions";
 
 /** An answer to choose: pressed, so it has the edge and the tints that every pressed thing has. */
 const chip =
@@ -202,16 +203,6 @@ export function GoalStep({
       )}
     </div>
   );
-}
-
-/** "November 13, 2028" for an ISO date, the same in every time zone. */
-function longDate(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
 }
 
 /** The question: the title of its screen, which can take the focus so that it is read. */

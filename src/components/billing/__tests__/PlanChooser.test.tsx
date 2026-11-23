@@ -85,6 +85,20 @@ describe("the plan chooser", () => {
     expect(screen.getByRole("radio", { name: /Monthly/ })).not.toBeChecked();
   });
 
+  it("draws each radio button with the page's tokens, and gives a contrast theme the system's own", () => {
+    render(chooser());
+    for (const radio of screen.getAllByRole("radio")) {
+      const drawn = radio.className.split(/\s+/);
+      // The browser's own drawing filled the unchosen radio with a grey disc in the dark theme.
+      expect(drawn).toEqual(expect.arrayContaining(["appearance-none", "border-input", "bg-card"]));
+      expect(drawn).not.toContain("accent-primary");
+      // Chosen: a dot in the pressable ink inside a ring of the card's colour.
+      expect(drawn).toEqual(expect.arrayContaining(["checked:border-primary", "checked:bg-primary", "checked:inset-ring-card"]));
+      // A contrast theme removes fills and shadows, so there the system draws the radio.
+      expect(drawn).toContain("forced-colors:appearance-auto");
+    }
+  });
+
   it("lists only the periods the page sells, and chooses the first when the default is not one of them", () => {
     render(chooser({ plans: ["monthly", "quarterly"], defaultPlan: "annual" }));
     expect(screen.getAllByRole("radio")).toHaveLength(2);

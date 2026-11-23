@@ -22,11 +22,15 @@ import SubnettingPracticePage from "../subnetting-practice/page";
 
 const text = (el: Element | null | undefined) => (el?.textContent ?? "").replace(/\s+/g, " ").trim();
 
-/** The navy card at the foot of a tool page, which leads to the study path: its sentences and where its button goes. */
-function card(page: React.ReactElement): { said: string; href: string | null } {
+/** The navy card at the foot of a tool page, which leads to the study path: its title, its sentences and where its button goes. */
+function card(page: React.ReactElement): { title: string; said: string; href: string | null } {
   const doc = new DOMParser().parseFromString(renderToString(page), "text/html");
   const sheet = doc.querySelector("section.cb-sheet");
-  return { said: text(sheet?.querySelector("p")), href: sheet?.querySelector("a")?.getAttribute("href") ?? null };
+  return {
+    title: text(sheet?.querySelector("h2")),
+    said: text(sheet?.querySelector("p")),
+    href: sheet?.querySelector("a")?.getAttribute("href") ?? null,
+  };
 }
 
 /**
@@ -57,13 +61,24 @@ describe("the card that leads from a tool page to the study path", () => {
     const quiz = card(<PortQuizPage />);
     expect(quiz.href).toBe("/start");
     expect(quiz.said).toBe(
-      "Most of the exam consists of scenarios. Choose your exam, and its study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand."
+      "Choose your exam, and its study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand."
     );
   });
 
   it("still says every objective on the Security+ page, where it is true", () => {
     const quiz = card(<AcronymsQuizPage />);
     expect(quiz.href).toBe("/path/security-plus-sy0-701");
-    expect(quiz.said).toContain("The Security+ study path covers every objective in short sets of questions like this one");
+    expect(quiz.said).toBe(
+      "The Security+ study path covers every objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand."
+    );
+  });
+
+  // CompTIA does not publish what its exams are made of (facts file), so a
+  // card says what the study path does and nothing about the exam's content.
+  it("is titled by what the study path does, never by what the exam is made of", () => {
+    expect(card(<PortQuizPage />).title).toBe("Study for your exam in short steps");
+    expect(card(<AcronymsQuizPage />).title).toBe("Study for Security+ in short steps");
+    expect(card(<SubnetCalculatorPage />).title).toBe("Subnetting is one topic of the Network+ study path");
+    expect(card(<SubnettingPracticePage />).title).toBe("Subnetting is one topic of the Network+ study path");
   });
 });

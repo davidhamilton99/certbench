@@ -5,6 +5,7 @@ import { EMPTY_PATH_PROGRESS, type PathProgress } from "@/core/path/types";
 import {
   claimLocalPath,
   clearGuestPath,
+  examOwner,
   mayTakeExam,
   readExamMark,
   readGuestClaim,
@@ -102,6 +103,28 @@ describe("a change made on a public page", () => {
     refuses = true;
     expect(updateLocalPath(CERT, add("a|1.1|x"))).toBe(false);
     expect(readLocalPath(CERT)).toBeNull();
+  });
+
+  // A shared computer with no copy on it: a member answers on a public page,
+  // signs out, and someone else answers after them.
+  it("begins a copy that belongs to the account that is signed in, and never to the next person at the keyboard", () => {
+    updateLocalPath(CERT, add("a|1.1|member"), "user-1");
+    expect(readLocalPath(CERT)?.owner).toBe("user-1");
+    expect(store.has(GUEST)).toBe(false);
+
+    updateLocalPath(CERT, add("a|1.2|visitor"));
+    expect(items(readLocalPath(CERT)?.progress)).toEqual(["a|1.1|member"]);
+    expect(items(readGuestPath(CERT))).toEqual(["a|1.2|visitor"]);
+    // The next person is shown only their own answer, and the member keeps theirs.
+    expect(items(readVisitorPath(CERT))).toEqual(["a|1.2|visitor"]);
+    expect(items(readVisitorPath(CERT, "user-1"))).toEqual(["a|1.1|member", "a|1.2|visitor"]);
+  });
+
+  it("makes an anonymous copy the account's once that account adds to it", () => {
+    seed(null, answered("a|2.1|z"));
+    updateLocalPath(CERT, add("a|1.1|x"), "user-1");
+    expect(readLocalPath(CERT)?.owner).toBe("user-1");
+    expect(items(readLocalPath(CERT)?.progress)).toEqual(["a|1.1|x", "a|2.1|z"]);
   });
 });
 
@@ -216,6 +239,30 @@ describe("whose a practice exam from a public page is", () => {
     expect(mayTakeExam("user-1", exam(), device(false, { at: 500, by: null }))).toBe(false);
     // A mark for an earlier exam says nothing about this one.
     expect(mayTakeExam("user-2", exam(), device(false, { at: 100, by: "user-1" }))).toBe(true);
+  });
+
+  // An exam that the study path took before it began to stamp the exams it
+  // takes carries no name, and the public page may then have shown it to the
+  // next account to sign in, which stamped it with its own.
+  it("stays with the account the device gave it to, even when another account claimed it afterwards", () => {
+    const given = device(false, { at: 500, by: "user-1" });
+    expect(mayTakeExam("user-2", exam("user-2"), given)).toBe(false);
+    expect(mayTakeExam("user-1", exam("user-2"), given)).toBe(true);
+  });
+
+  it("goes to the account that claimed it after the device had set it aside", () => {
+    const setAside = device(true, { at: 500, by: null });
+    expect(mayTakeExam("user-1", exam("user-1"), setAside)).toBe(true);
+    expect(mayTakeExam("user-2", exam("user-1"), setAside)).toBe(false);
+  });
+
+  it("belongs to the account that claimed it, or to the account the device gave it to, and otherwise to nobody", () => {
+    expect(examOwner(exam("user-1"), null)).toBe("user-1");
+    expect(examOwner(exam(), { at: 500, by: "user-1" })).toBe("user-1");
+    expect(examOwner(exam("user-2"), { at: 500, by: "user-1" })).toBe("user-2");
+    expect(examOwner(exam(), { at: 500, by: null })).toBeNull();
+    expect(examOwner(exam(), { at: 100, by: "user-1" })).toBeNull();
+    expect(examOwner(exam(), null)).toBeNull();
   });
 
   it("remembers what became of the exam", () => {

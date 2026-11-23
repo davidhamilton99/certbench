@@ -96,6 +96,7 @@ vi.mock("@/server/path/cert-id", () => ({ certIdFor: async () => "cert-701" }));
 vi.mock("@/server/path/access", () => ({ getPathAccess: async () => h.access }));
 
 import { GET, POST } from "../route";
+import { regionPricing } from "@/lib/pricing/ppp";
 import { getUserPlan } from "@/server/services/subscription";
 import type { Db } from "@/server/supabase/server";
 
@@ -180,6 +181,20 @@ describe("GET /api/path/progress: reading the saved study path", () => {
     expect(await reported()).toEqual([
       { route: "/api/path/progress", path: "/api/path/progress", method: "GET", kind: "route" },
     ]);
+  });
+
+  // The offer on the study path showed no prices until a request of its own
+  // had answered. The prices come with the account's answer now, worked out
+  // from the same country header as GET /api/pricing/region.
+  it("answers with the offer's prices for the learner's region", async () => {
+    const inRegion = await GET(
+      new NextRequest(`https://certbench.dev/api/path/progress?cert=${CERT}`, { headers: { "x-vercel-ip-country": "IN" } })
+    );
+    const regional = (await inRegion.json()).pricing;
+    expect(regional).toEqual(regionPricing("IN"));
+    expect(regional.discountPercent).not.toBeNull();
+    // With no country, the list prices.
+    expect((await (await read()).json()).pricing).toEqual(regionPricing(null));
   });
 
   it.each(NO_TABLE)("answers 'not stored' only where the table does not exist ($code)", async (failure) => {

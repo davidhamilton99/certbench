@@ -48,11 +48,12 @@ const GUIDE: RoundupData = {
       isSelf: true,
     },
     {
+      // A price that was not read at the source says where to find it (comparison-pages.ts).
       name: "Unchecked Product",
-      price: "Typically more than $150 for each exam",
+      price: "See the vendor's own site for the current price",
       bestFor: "When an employer pays",
       strengths: ["The vendor's own content"],
-      weaknesses: ["The most expensive option in this guide"],
+      weaknesses: ["Practice tests rather than a study path"],
     },
     {
       // A date with no address behind it is not a check, and an address with no date is not one either.
@@ -98,17 +99,20 @@ describe("a product in the guide", () => {
     const facts = product.querySelector("dl")!;
     expect([...facts.querySelectorAll("dt")].map(text)).toEqual(["Price", "Most suitable for"]);
     expect([...facts.querySelectorAll("dd")].map(text)).toEqual([
-      "Typically more than $150 for each exam",
+      "See the vendor's own site for the current price",
       "When an employer pays",
     ]);
   });
 
-  it("prints the day a price was checked, and links the product, only where the price was read at its source", () => {
+  // Every product's heading is in ink. A heading that was a link only where a
+  // price had been read made some products look favoured (DE-07).
+  it("heads every product in plain text, and links the vendor's page from the price only where the price was read there", () => {
     const doc = served(GUIDE);
+    for (const tool of GUIDE.tools) expect(entry(doc, tool.name).querySelector("h2 a"), tool.name).toBeNull();
 
     const checked = entry(doc, "Checked Product");
-    expect(text(checked)).toContain("Price checked on November 22, 2026.");
-    const link = checked.querySelector("h2 a")!;
+    expect(text(checked)).toContain("Price checked on November 22, 2026, on the vendor's own page.");
+    const link = [...checked.querySelectorAll("dd a")].find((a) => text(a) === "the vendor's own page")!;
     expect(link.getAttribute("href")).toBe("https://vendor.example/product");
     expect(link.getAttribute("rel")).toContain("noopener");
     expect(link.className).toContain("cb-link");
@@ -116,7 +120,7 @@ describe("a product in the guide", () => {
     for (const name of ["Unchecked Product", "Half Checked", "CertBench"]) {
       const product = entry(doc, name);
       expect(text(product), name).not.toContain("Price checked on");
-      expect(product.querySelector("h2 a"), name).toBeNull();
+      expect(product.querySelector("dd a"), name).toBeNull();
     }
   });
 
@@ -144,7 +148,7 @@ describe("the products in brief", () => {
     const rows = [...table.querySelectorAll("tbody tr")];
     expect(rows.map((row) => text(row.querySelector("th")))).toEqual(GUIDE.tools.map((tool) => tool.name));
     for (const row of rows) expect(row.querySelector("th")?.getAttribute("scope")).toBe("row");
-    expect(text(rows[2].querySelectorAll("td")[0])).toBe("Typically more than $150 for each exam");
+    expect(text(rows[2].querySelectorAll("td")[0])).toBe("See the vendor's own site for the current price");
     expect(text(rows[2].querySelectorAll("td")[1])).toBe("When an employer pays");
     // On a phone a row stacks, and each cell carries its column's name.
     expect([...rows[0].querySelectorAll("td")].map((td) => td.getAttribute("data-label"))).toEqual([
@@ -153,10 +157,12 @@ describe("the products in brief", () => {
     ]);
   });
 
-  it("dates a price in the table by the same rule", () => {
+  it("dates a price in the table by the same rule, and leaves the link to the product's own section", () => {
     const rows = [...served(GUIDE).querySelectorAll("table tbody tr")];
     expect(text(rows[0])).toContain("Price checked on November 22, 2026.");
     for (const row of rows.slice(1)) expect(text(row)).not.toContain("Price checked on");
+    // One link to the vendor's page for each product, in its own section, and none in the table.
+    expect(served(GUIDE).querySelectorAll("table a")).toHaveLength(0);
   });
 });
 
@@ -186,7 +192,8 @@ describe("the guide", () => {
 
   it("ends on the study path, set left, and appends no arrow to a text link", () => {
     const doc = served(GUIDE);
-    const start = [...doc.querySelectorAll("a")].find((a) => text(a) === "Start the free steps");
+    // A guide for one exam names that exam's study path on its button.
+    const start = [...doc.querySelectorAll("a")].find((a) => text(a) === "Start the Security+ study path");
     expect(start?.getAttribute("href")).toBe("/path/security-plus-sy0-701");
     expect(doc.body.innerHTML).not.toMatch(/text-center/);
     // The one arrow on the page is on the button that starts the study path.
@@ -216,6 +223,19 @@ describe.each(ROUNDUPS.map((guide) => [guide.path, guide] as const))("%s", (_, g
     }
     // A date is never set without the page it was read on, and the other way round.
     for (const tool of guide.tools) expect(Boolean(tool.source), tool.name).toBe(Boolean(tool.checked));
+  });
+
+  // The A+ guide leads to the list of exams, which carries the one label that
+  // every page gives it; a guide for one exam names that exam's study path.
+  it("labels the way on by where it leads", () => {
+    const card = doc.querySelector("section.cb-sheet")!;
+    const link = card.querySelector("a")!;
+    const expected: Record<string, [string, string]> = {
+      "best-security-plus-practice-tests": ["/path/security-plus-sy0-701", "Start the Security+ study path"],
+      "best-network-plus-practice-tests": ["/path/network-plus-n10-009", "Start the Network+ study path"],
+      "best-a-plus-practice-tests": ["/start", "Choose your exam"],
+    };
+    expect([link.getAttribute("href"), text(link)]).toEqual(expected[guide.path]);
   });
 
   it("discloses that CertBench is its own entry", () => {

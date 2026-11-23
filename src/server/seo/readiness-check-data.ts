@@ -16,6 +16,7 @@ import {
 import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
 import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import { UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 
 const CHECK_QUESTION_COUNT = 10;
 
@@ -98,7 +99,8 @@ export const loadReadinessCheck = cache(async (
         options: order.map((k) => stored[k]),
         correctIndex: order.indexOf(q.correct_index),
         explanation: q.explanation,
-        domainTitle: domain.title,
+        // In sentence case, as the practice-test pages name the same domains.
+        domainTitle: domainName(domain.title),
         examWeight: domain.examWeight,
       });
     }

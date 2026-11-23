@@ -35,3 +35,21 @@ export const PRO_PRICE_TERMS = `${PRO_PRICE_SENTENCE} ${PRO_PRICE_REGION_NOTE}`;
  */
 export const PRO_SCOPE_TERMS =
   "Pro covers one exam. For A+, Core 1 and Core 2 are separate exams. For Security+, Pro covers both versions, SY0-801 and SY0-701.";
+
+/**
+ * What adding another exam to a Pro plan costs and how long it lasts. It is one
+ * payment at the three-month price, adjusted by region as Pro is (the add-on
+ * checkout charges BASE_PRICES_CENTS.quarterly with the same regional coupon),
+ * and the exam is open only while the Pro plan is active, because access needs
+ * both the plan and the exam (getPathAccess). A page that knows the visitor's
+ * country passes the regional figure from `regionPricing`.
+ */
+export function proAddonTerms(price: string): string {
+  return `You can add another exam for a single payment of ${price}. The exam stays open while your Pro plan is active.`;
+}
+
+/**
+ * The same at the list price, for a page that does not know the visitor's
+ * country. Such a page states PRO_PRICE_REGION_NOTE beside it.
+ */
+export const PRO_ADDON_TERMS = proAddonTerms(PRO_PRICES.quarterly);

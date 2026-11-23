@@ -6,9 +6,9 @@ export const windowsTools: ReferenceTable = {
   description: "This table lists built-in Windows administrative tools for the CompTIA A+ 220-1202 exam with how to open each one, its purpose and its key features.",
   columnHeaders: [
     { key: "tool", label: "Tool" },
-    { key: "accessMethod", label: "How to Open", mono: true },
+    { key: "accessMethod", label: "How to open", mono: true },
     { key: "purpose", label: "Purpose" },
-    { key: "keyFeatures", label: "Key Features / Exam Notes" },
+    { key: "keyFeatures", label: "Key features / exam notes" },
   ],
   entries: [
     { columns: { tool: "Task Manager", accessMethod: "Ctrl+Shift+Esc / taskmgr", purpose: "Monitor processes, performance, startup apps, and users", keyFeatures: "Kill unresponsive processes; check CPU/RAM/disk/GPU usage; manage startup items (Startup tab); see per-process resource usage" } },

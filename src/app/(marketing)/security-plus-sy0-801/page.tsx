@@ -39,7 +39,7 @@ const AT_A_GLANCE = [
   { label: "Questions", value: "Up to 90, multiple-choice and performance-based" },
   { label: "Time limit", value: "90 minutes" },
   { label: "Passing score", value: "750 on a scale of 100 to 900" },
-  { label: "Recommended experience", value: "Two years of hands-on security administration" },
+  { label: "Recommended experience", value: "Two years of hands-on experience as a security administrator" },
   { label: "Retirement", value: "Estimated three years after launch" },
   { label: "SY0-701 available until", value: "June 11, 2027 in English" },
 ];
@@ -57,7 +57,7 @@ const FAQS = [
   {
     question: "What is the new AI objective on SY0-801?",
     answer:
-      "Objective 2.6 covers the threats and vulnerabilities that come with using AI. It lists model manipulation, poisoning, prompt injection, data loss, bias, explainability, hallucinations, jailbreaking, evasion, privacy, ethical considerations, session hijacking and code execution. No SY0-701 material covers it.",
+      "Objective 2.6 covers the threats and vulnerabilities that come with using AI. It lists model manipulation, poisoning, prompt injection, data loss, bias, explainability, hallucinations, jailbreaking, evasion, privacy, ethical considerations, session hijacking and code execution. SY0-701 has no objective on AI.",
   },
   {
     question: "How many questions are on SY0-801, and what is the passing score?",
@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "Should I take SY0-801 or SY0-701?",
     answer:
-      "If you can take the exam by June 11, 2027, with time for a retake, SY0-701 has more study material behind it, and both lead to the same certification. If your date falls after that, or if you are starting now and have no date, plan for SY0-801.",
+      "If you can take the exam by June 11, 2027, with time for a retake, SY0-701 has more study material behind it, and CompTIA lists both exams as versions of Security+. If your date falls after that, or if you are starting now and have no date, plan for SY0-801.",
   },
 ];
 
@@ -171,8 +171,8 @@ export default function SecurityPlusV8Page() {
         <ArticleSection title="What changed from SY0-701">
           <ul className="cb-measure grid list-disc gap-2.5 pl-5 text-body text-muted-foreground [&_strong]:font-medium [&_strong]:text-foreground">
             <li>
-              <strong>A new AI objective, 2.6.</strong> It covers the threats and vulnerabilities of using AI, which
-              Security+ has not had an objective for before.
+              <strong>A new AI objective, 2.6.</strong> It covers the threats and vulnerabilities of using AI, and
+              SY0-701 has no objective on AI.
             </li>
             <li>
               <strong>
@@ -215,16 +215,16 @@ export default function SecurityPlusV8Page() {
         </ArticleSection>
       </ArticleBody>
 
-      <CtaBand title="Take the free SY0-801 practice test">
+      <CtaBand title="Take the free SY0-801 practice exam">
         {/* Only what holds for whichever exam that page serves: its questions are drawn from the bank when it is built. */}
         <p className="cb-measure text-body text-muted-foreground">
-          The practice test is timed and follows the exam&apos;s domain weights. It is scored by domain, and every
+          The practice exam is timed and follows the exam&apos;s domain weights. It is scored by domain, and every
           answer is explained. Anyone can take it, and a free account shows the score.
         </p>
         <Button asChild size="lg" className="mt-1">
-          <Link href={SY0_801_PRACTICE_PATH}>Take the practice test</Link>
+          <Link href={SY0_801_PRACTICE_PATH}>Take the practice exam</Link>
         </Button>
-        <p className="cb-measure text-small text-muted-foreground">
+        <p className="cb-measure-sm text-small text-muted-foreground">
           You can also{" "}
           <Link href={SY0_801_AI_PATH} className="cb-link">
             try the questions on the new AI objective
@@ -267,7 +267,7 @@ export default function SecurityPlusV8Page() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, three of them with no account",
+              note: "12 free hands-on labs, three of them with no account",
             },
           ]}
         />

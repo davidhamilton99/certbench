@@ -73,7 +73,7 @@ export function LanderHero({
   /** One or two sentences under the title. */
   sub?: ReactNode;
   /** The page's facts, as labelled pairs. A plain string is accepted as a fact without a label. */
-  specs?: (Spec | string)[];
+  specs?: Spec[];
   /** Above the eyebrow: a breadcrumb. */
   above?: ReactNode;
   /** Under it all: an action, or links to choose from. */
@@ -109,38 +109,21 @@ const SPEC_COLUMNS: Record<number, string> = {
  * columns on a phone, and from the `sm` width one equal column for each fact
  * up to four, so a fact can wrap inside its column and never falls to a row
  * by itself with a rule in front of it.
- *
- * A plain string is still accepted, as a fact without a label, for a page
- * that has not yet named its facts.
  */
-export function Specs({ items, className }: { items: (Spec | string)[]; className?: string }) {
+export function Specs({ items, className }: { items: Spec[]; className?: string }) {
   const layout = cn(
     "mt-1 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-border py-3.5 text-left",
     SPEC_COLUMNS[Math.min(items.length, 4)],
     className
   );
-  if (items.every((item): item is string => typeof item === "string")) {
-    return (
-      <ul className={layout}>
-        {items.map((item) => (
-          <li key={item} className="min-w-0 text-small text-muted-foreground">
-            {item}
-          </li>
-        ))}
-      </ul>
-    );
-  }
   return (
     <dl className={layout}>
-      {items.map((item) => {
-        const spec = typeof item === "string" ? { label: "", value: item } : item;
-        return (
-          <div key={spec.label || String(spec.value)} className="min-w-0">
-            {spec.label && <dt className="text-note text-muted-foreground">{spec.label}</dt>}
-            <dd className="text-small font-medium">{spec.value}</dd>
-          </div>
-        );
-      })}
+      {items.map((spec) => (
+        <div key={spec.label || String(spec.value)} className="min-w-0">
+          {spec.label && <dt className="text-note text-muted-foreground">{spec.label}</dt>}
+          <dd className="text-small font-medium">{spec.value}</dd>
+        </div>
+      ))}
     </dl>
   );
 }
@@ -189,8 +172,6 @@ export function LanderSection({
   children?: ReactNode;
   /** `xl` lets the section (a table, a long list) run to the container's right edge. */
   width?: "md" | "lg" | "xl";
-  /** Headings are set left everywhere; kept so that callers need not change. */
-  align?: "center" | "left";
   id?: string;
   className?: string;
   style?: CSSProperties;

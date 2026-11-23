@@ -83,7 +83,7 @@ describe("the hex table for images and emails", () => {
       success: token("success"),
       warning: token("warning"),
       warningInk: token("warning-ink"),
-      danger: token("danger"),
+      danger: token("destructive"),
     });
   });
 

@@ -55,8 +55,10 @@ export function AcronymDrill({ deck }: { deck: ResolvedDeck }) {
         variant="dots"
         mapTitle="Your acronyms"
         lead={{
-          title: "Acronyms are a small part of the exam.",
-          body: "Most of the exam consists of scenarios. Your Security+ study path covers every objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
+          // What CertBench offers next, and nothing about what the exam is made
+          // of: CompTIA does not publish that.
+          title: "Continue with the Security+ study path",
+          body: "Your Security+ study path covers every objective in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.securityPlus],
         }}
       />

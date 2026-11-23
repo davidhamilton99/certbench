@@ -7,7 +7,7 @@ export const portsProtocols: ReferenceTable = {
   columnHeaders: [
     { key: "port", label: "Port", mono: true },
     { key: "protocol", label: "Protocol" },
-    { key: "service", label: "Service / Use" },
+    { key: "service", label: "Service / use" },
     { key: "transport", label: "Transport" },
   ],
   entries: [

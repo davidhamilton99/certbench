@@ -14,6 +14,7 @@ import {
 } from "@/server/data/questions";
 import { codeToSlug, slugToCode } from "@/lib/seo/objective-code";
 import { OBJECTIVE_HUB_CERTS, UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 import { OBJECTIVE_TITLES } from "@/data/path/titles";
 
 /**
@@ -164,7 +165,8 @@ export const loadObjectivePage = cache(async (
     title: sub.title,
     topic: OBJECTIVE_TITLES[cert.slug]?.[sub.code] ?? sub.title,
     domainNumber: domain?.domainNumber ?? null,
-    domainTitle: domain?.title ?? null,
+    // In sentence case, as the practice-test pages name the same domains.
+    domainTitle: domain ? domainName(domain.title) : null,
     domainWeight: domain?.examWeight ?? null,
     samples: questions.map((q) => ({
       questionText: q.question_text,
@@ -217,7 +219,7 @@ export const loadObjectiveHub = cache(async (
     objectiveCount: withPages.length,
     domains: domains.map((d) => ({
       number: d.domainNumber,
-      title: d.title,
+      title: domainName(d.title),
       weight: d.examWeight,
       objectives: withPages
         .filter((s) => s.domain_id === d.id)

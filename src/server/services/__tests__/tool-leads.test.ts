@@ -358,9 +358,11 @@ describe("captureLead", () => {
     expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
-  it("skips a test address without touching the database", async () => {
-    expect(await captureLead("someone+e2e-1@example.com", "port-numbers-quiz", {}, NOON)).toBe("skipped");
-    expect(await captureLead("Someone+RB2@example.com", "port-numbers-quiz", {}, NOON)).toBe("skipped");
+  // A test address used to be answered "skipped", and the form then told its
+  // owner that the plan had been sent in the last 24 hours.
+  it("answers a test address with its own word, without touching the database", async () => {
+    expect(await captureLead("someone+e2e-1@example.com", "port-numbers-quiz", {}, NOON)).toBe("test");
+    expect(await captureLead("Someone+RB2@example.com", "port-numbers-quiz", {}, NOON)).toBe("test");
     expect(h.createAdminClient).not.toHaveBeenCalled();
     expect(h.sendEmail).not.toHaveBeenCalled();
   });

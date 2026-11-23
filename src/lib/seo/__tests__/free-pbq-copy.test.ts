@@ -26,7 +26,10 @@ describe("the free PBQs in public copy", () => {
 
   it(`says ${FREE_LAB_COUNT} wherever a page or llms.txt states how many PBQs are free`, () => {
     // "12 free interactive Security+ SY0-701 PBQs", "12 PBQs per exam"; not the 701 in "SY0-701 PBQs".
-    const counts = /(?<![\w-])(?<!Core )(\d+) (?:free (?:interactive )?(?:\S+ ){0,4}PBQs|interactive PBQs|PBQs per (?:exam|core))\b/g;
+    // In running text CertBench's own labs are "hands-on labs" ("12 free hands-on labs", "12 free
+    // SY0-701 hands-on labs"), the house word; the title tags keep "PBQs" for search.
+    const counts =
+      /(?<![\w-])(?<!Core )(\d+) (?:free (?:interactive )?(?:\S+ ){0,4}PBQs|interactive PBQs|PBQs per (?:exam|core)|free (?:\S+ ){0,2}hands-on labs)\b/g;
     const claims: string[] = [];
     for (const file of [...files(join(root, "src")), join(root, "public/llms.txt")]) {
       for (const m of readFileSync(file, "utf8").matchAll(counts)) claims.push(`${m[1]} in ${file}`);

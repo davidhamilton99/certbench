@@ -2,6 +2,7 @@ import { useId, type ReactNode } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import type { ObjectiveStatus, PathStructure } from "@/core/path/types";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
 /** The practice exam at the end of the outline: its state, format and latest score. */
@@ -142,6 +143,9 @@ export function ExamMap({
   const tap = onSelect ? (key: MapTile) => () => onSelect(selected === key ? null : key) : undefined;
   const standingOf = (code: string) =>
     objectiveStanding(statuses.get(code) ?? "new", doneStops ? doneStops.has(code) : null);
+  // A row cites its objective's number only where the numbers are CompTIA's.
+  // Network+ is set out by CertBench's own topics: its rows name the topic.
+  const codes = usesOfficialObjectiveNumbers(structure.certSlug);
   return (
     <div className={cn("grid gap-7", className)}>
       {structure.domains.map((d) => {
@@ -172,7 +176,11 @@ export function ExamMap({
                     detail={selected === o.code ? detail : null}
                     highlight={isCurrent}
                   >
-                    <span className="w-8 shrink-0 font-mono text-note tabular-nums text-muted-foreground">{o.code}</span>{" "}
+                    {codes && (
+                      <>
+                        <span className="w-8 shrink-0 font-mono text-note tabular-nums text-muted-foreground">{o.code}</span>{" "}
+                      </>
+                    )}
                     <span className={cn("min-w-0 flex-1 text-small", isCurrent && "font-semibold")}>{o.title}</span>
                     <Pause />
                     {next ? (
@@ -311,10 +319,24 @@ function Row({
   highlight?: boolean;
   children: ReactNode;
 }) {
-  // The tint reaches a little past the text on both sides, and the text keeps its edge.
-  const row = "-mx-2 flex items-baseline gap-3 px-3 py-2.5 text-left";
+  // The text keeps the domain heading's edge, and the rules between the rows
+  // run exactly as far as the heading's rule. A tint reaches a little past the
+  // text on both sides: a pressable row is that much wider than its item, and
+  // a row that cannot be pressed draws the overhang as two side shadows of the
+  // same tint, so that its item, and the rule above it, keep the list's width.
+  const row = "flex items-baseline gap-3 py-2.5 text-left";
   if (!onTap) {
-    return <li className={cn(row, highlight && "bg-tint-selected")}>{children}</li>;
+    return (
+      <li
+        className={cn(
+          row,
+          highlight &&
+            "bg-tint-selected shadow-[-0.5rem_0_var(--color-tint-selected),0.5rem_0_var(--color-tint-selected)]"
+        )}
+      >
+        {children}
+      </li>
+    );
   }
   return (
     <li>
@@ -326,7 +348,7 @@ function Row({
         onFocus={onIntent}
         className={cn(
           row,
-          "w-[calc(100%+1rem)] transition-[background-color] focus-visible:-outline-offset-2",
+          "-mx-2 w-[calc(100%+1rem)] px-2 transition-[background-color] focus-visible:-outline-offset-2",
           highlight || selected ? "bg-tint-selected hover:bg-tint-press" : "hover:bg-tint-hover"
         )}
       >

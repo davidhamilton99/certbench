@@ -269,7 +269,7 @@ export function RehearsalPlayer({
       // Focusable by a press anywhere on the card, so the keys then act on it.
       tabIndex={-1}
       onKeyDown={onKeyDown}
-      className="group/exam glass grid scroll-mt-20 grid-cols-[minmax(0,1fr)] gap-6 rounded-lg p-5 sm:p-8"
+      className="group/exam glass grid grid-cols-[minmax(0,1fr)] gap-6 rounded-lg p-5 sm:p-8"
     >
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">

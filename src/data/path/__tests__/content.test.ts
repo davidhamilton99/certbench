@@ -18,8 +18,8 @@ import { sy0801Codes } from "@/data/sy0-801";
 const SECURITY_PLUS_OBJECTIVES = Object.keys(OBJECTIVE_TITLES["security-plus-sy0-701"]);
 const SY0_801 = "security-plus-sy0-801";
 
-// Every exam on the path, plus Security+ SY0-801 until the switch-over puts it
-// in PATH_CONTENT: its reps meet the same rules before anyone can study them.
+// Every exam on the path. SY0-801 is added here as well if it is ever taken
+// out of PATH_CERTS, so that its reps still meet the same rules.
 const CONTENT: [string, PathContent][] = PATH_CERTS.map((cert) => [cert, PATH_CONTENT[cert]]);
 if (!CONTENT.some(([cert]) => cert === SY0_801)) CONTENT.push([SY0_801, SY0_801_PATH_CONTENT]);
 

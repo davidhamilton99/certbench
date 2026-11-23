@@ -8,7 +8,7 @@ export const osiModel: ReferenceTable = {
     { key: "layer", label: "Layer", mono: true },
     { key: "name", label: "Name" },
     { key: "function", label: "Function" },
-    { key: "protocols", label: "Protocols / Standards" },
+    { key: "protocols", label: "Protocols / standards" },
     { key: "devices", label: "Devices" },
     { key: "troubleshooting", label: "Troubleshooting" },
   ],

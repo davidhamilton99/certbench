@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { loadObjectiveHub } from "@/server/seo/objective-data";
+import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
 import { PathCard } from "@/components/marketing/PathCard";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
@@ -18,6 +19,7 @@ import {
   SECURITY_PLUS_CERT,
 } from "@/lib/seo/exam-versions";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { OBJECTIVES_IN_OWN_WORDS } from "@/lib/seo/objective-meta";
 import { breadcrumbList } from "@/lib/seo/structured-data";
 
 export const revalidate = 86400; // Once a day: the objectives of an exam rarely change.
@@ -29,7 +31,7 @@ const MORE_LINKS: Record<string, { href: string; label: string; note: string }[]
     {
       href: "/tools/security-plus-acronyms-quiz",
       label: "Security+ acronyms list and quiz",
-      note: "The acronyms that the exam uses most",
+      note: "The SY0-701 acronyms, with a quiz",
     },
   ],
   [A_PLUS_CORE1_CERT]: [
@@ -41,7 +43,7 @@ const MORE_LINKS: Record<string, { href: string; label: string; note: string }[]
     {
       href: "/tools/port-numbers-quiz",
       label: "Port numbers quiz",
-      note: "The ports that Core 1 networking requires",
+      note: "Practice port numbers and protocols for Core 1",
     },
   ],
   [A_PLUS_CORE2_CERT]: [
@@ -67,7 +69,8 @@ export async function generateMetadata({
   if (!data) return {};
   return pageMetadata({
     title: `${data.examCode} exam objectives with practice questions`,
-    description: `All ${data.objectiveCount} ${data.certName} ${data.examCode} exam objectives by domain and exam weight, each with original practice questions and full explanations. The pages are free, and no account is needed.`,
+    // The count is of the objectives that have a page, so it is not called "all" of the exam's objectives.
+    description: `This page lists ${data.objectiveCount} ${data.certName} ${data.examCode} exam objectives by domain and exam weight, each with original practice questions and full explanations. The pages are free, and no account is needed.`,
     path: `/objectives/${cert}`,
   });
 }
@@ -170,6 +173,12 @@ export default async function ObjectiveHubPage({
           </a>
           .
         </p>
+        {OBJECTIVES_IN_OWN_WORDS.includes(cert) && (
+          <p>
+            The objective names and descriptions on this page are CertBench&apos;s own wording, and CompTIA&apos;s
+            objectives document has the official wording.
+          </p>
+        )}
       </LanderProse>
 
       <LanderBlock>
@@ -185,7 +194,7 @@ export default async function ObjectiveHubPage({
                   {
                     href: `/${pbqPage.path}`,
                     label: `${data.shortCertName} PBQ examples`,
-                    note: "12 free interactive PBQs, three of them with no account",
+                    note: `${FREE_LAB_COUNT} free hands-on labs, three of them with no account`,
                   },
                 ]
               : []),

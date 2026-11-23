@@ -56,15 +56,30 @@ type Tool = RoundupTool;
 const CELL =
   "py-3 pr-6 align-top last:pr-0 max-sm:block max-sm:p-0 max-sm:before:block max-sm:before:text-note max-sm:before:text-muted-foreground max-sm:before:content-[attr(data-label)]";
 
-/** The price, and under it the day it was read on the vendor's page, where it was. */
-function Price({ tool }: { tool: Tool }) {
+/**
+ * The price, and under it the day it was read on the vendor's page, where it
+ * was. In the product's own section (`linked`) that page is linked from the
+ * note, so the product's heading stays in ink like every other heading.
+ */
+function Price({ tool, linked = false }: { tool: Tool; linked?: boolean }) {
   return (
     <>
       {tool.price}
       {tool.source && tool.checked && (
         <>
           {/* A space in the text itself: read without styles, the price and the note stay two phrases. */}{" "}
-          <span className="mt-0.5 block text-note text-muted-foreground">Price checked on {tool.checked}.</span>
+          <span className="mt-0.5 block text-note text-muted-foreground">
+            Price checked on {tool.checked}
+            {linked && (
+              <>
+                , on{" "}
+                <a href={tool.source} target="_blank" rel="noopener noreferrer" className="cb-link">
+                  the vendor&apos;s own page
+                </a>
+              </>
+            )}
+            .
+          </span>
         </>
       )}
     </>
@@ -94,20 +109,10 @@ function Points({ heading, items, lit = false }: { heading: string; items: strin
  * see the marks, and a program that reads the text, are told which is which.
  */
 function ToolEntry({ tool }: { tool: Tool }) {
-  const confirmed = tool.source && tool.checked;
+  // Every product's heading is in ink: a heading that is a link only where a price was read made
+  // some products look favoured. The vendor's page is linked from the note under the price.
   return (
-    <ArticleSection
-      className="mt-12 sm:mt-16"
-      title={
-        confirmed ? (
-          <a href={tool.source} target="_blank" rel="noopener noreferrer" className="cb-link">
-            {tool.name}
-          </a>
-        ) : (
-          tool.name
-        )
-      }
-    >
+    <ArticleSection className="mt-12 sm:mt-16" title={tool.name}>
       {tool.isSelf && (
         <p className="cb-measure mb-5 text-body text-muted-foreground">
           CertBench publishes this guide, and this is its own product.
@@ -117,7 +122,7 @@ function ToolEntry({ tool }: { tool: Tool }) {
       <dl className="grid gap-x-8 gap-y-1 text-small sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm:gap-y-3">
         <dt className="text-muted-foreground">Price</dt>
         <dd>
-          <Price tool={tool} />
+          <Price tool={tool} linked />
         </dd>
         <dt className="text-muted-foreground max-sm:mt-3">Most suitable for</dt>
         <dd>{keepCodes(tool.bestFor)}</dd>
@@ -141,7 +146,11 @@ function ToolEntry({ tool }: { tool: Tool }) {
 export function RoundupLanding({ data }: { data: RoundupData }) {
   const others = ROUNDUPS.filter((r) => r.path !== data.path);
   const exam = certLabel(data.path);
+  const examName = exam.replace(/^CompTIA\s+/, "");
   const official = followsOfficialObjectives(data);
+  const studyPath = pathFor(data.path);
+  // Every link to the list of exams carries the one label for it; a link to one exam's study path names the exam.
+  const startLabel = studyPath === "/start" ? "Choose your exam" : `Start the ${examName} study path`;
   const tools: Tool[] = data.tools;
 
   // The products as a list, for search and for AI answers. The list is marked
@@ -220,10 +229,10 @@ export function RoundupLanding({ data }: { data: RoundupData }) {
 
       <PathCard
         className="mt-20 sm:mt-28"
-        kicker={`${exam.replace(/^CompTIA\s+/, "")} study path`}
+        kicker={`${examName} study path`}
         title="Try CertBench before you buy anything"
-        href={pathFor(data.path)}
-        label="Start the free steps"
+        href={studyPath}
+        label={startLabel}
         context="roundup_page"
         note="You do not need a payment card or an account to start."
       >

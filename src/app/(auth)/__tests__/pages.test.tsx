@@ -109,6 +109,13 @@ describe("the registration page, for a visitor who chose a plan on the pricing p
 });
 
 describe("the account pages", () => {
+  it("lay their card on the desk that every other page uses, which the dark theme draws darker than the card", () => {
+    const ground = served(<LoginPage />).body.firstElementChild!;
+    expect(ground.classList.contains("aurora-bg")).toBe(true);
+    // The muted grey is lighter than a card in the dark theme, so the card looked sunk into the page.
+    expect(ground.classList.contains("bg-muted")).toBe(false);
+  });
+
   it("are kept out of search", () => {
     expect(metadata.robots).toEqual({ index: false, follow: true });
   });

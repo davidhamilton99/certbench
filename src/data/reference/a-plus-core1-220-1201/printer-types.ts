@@ -5,11 +5,11 @@ export const printerTypes: ReferenceTable = {
   title: "Printer types",
   description: "This table lists printer types for the CompTIA A+ 220-1201 exam with the technology, the consumables and the key maintenance steps of each.",
   columnHeaders: [
-    { key: "type", label: "Printer Type" },
+    { key: "type", label: "Printer type" },
     { key: "technology", label: "Technology" },
     { key: "consumables", label: "Consumables" },
-    { key: "maintenance", label: "Key Maintenance Steps" },
-    { key: "bestFor", label: "Best For / Exam Notes" },
+    { key: "maintenance", label: "Key maintenance steps" },
+    { key: "bestFor", label: "Best for / exam notes" },
   ],
   entries: [
     {

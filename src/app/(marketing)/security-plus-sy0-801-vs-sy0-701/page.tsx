@@ -45,7 +45,7 @@ const DATES = [
 const SAME = [
   "Up to 90 questions, a mix of multiple-choice and performance-based, in 90 minutes.",
   "A passing score of 750 on a scale of 100 to 900.",
-  "The certification you earn: CompTIA Security+, valid for three years from the day that you pass.",
+  "The certification: CompTIA lists both exams as versions of Security+, and a Security+ certification is valid for three years from the day that you pass.",
 ];
 
 const CHOICES = [
@@ -85,7 +85,7 @@ const FAQS = [
   {
     question: "Should I take SY0-701 or switch to SY0-801?",
     answer:
-      "Take SY0-701 if you can take it by June 11, 2027, with time for a retake. Both exams lead to the same certification, and SY0-701 has three years of study material behind it. Take SY0-801 if your exam date falls after that, or if you have no date and would rather learn the newest objectives from the start.",
+      "Take SY0-701 if you can take it by June 11, 2027, with time for a retake. CompTIA lists both exams as versions of Security+, and SY0-701 has three years of study material behind it. Take SY0-801 if your exam date falls after that, or if you have no date and would rather learn the newest objectives from the start.",
   },
   {
     question: "Will my Security+ expire early now that SY0-801 is out?",
@@ -105,14 +105,19 @@ const FAQS = [
   {
     question: "Does CertBench have SY0-801 questions?",
     answer:
-      "Yes. CertBench's SY0-801 study path covers all 27 objectives in short steps, the new AI objective (2.6) included, and there are two free sets: a timed SY0-801 practice test in the exam's domain weights, and questions on 2.6. The SY0-701 study path remains for anyone who is taking SY0-701, and Pro covers both.",
+      "Yes. CertBench's SY0-801 study path covers all 27 objectives in short steps, the new AI objective (2.6) included, and there are two free sets: a timed SY0-801 practice exam in the exam's domain weights, and questions on 2.6. The SY0-701 study path remains for anyone who is taking SY0-701, and Pro covers both.",
   },
 ];
 
-/** The change in a domain's share, in percentage points: "+4" or "−6" (a minus sign, not a hyphen). */
+/** The change in a domain's share, in percentage points: "+4", "−6" (a minus sign, not a hyphen) or "0". */
 function change(from: number, to: number): string {
   const diff = to - from;
-  return diff > 0 ? `+${diff}` : `−${Math.abs(diff)}`;
+  return diff > 0 ? `+${diff}` : diff < 0 ? `−${-diff}` : "0";
+}
+
+/** The unit that a screen reader hears after the change: "+1 percentage point", "−6 percentage points". */
+function points(from: number, to: number): string {
+  return Math.abs(to - from) === 1 ? " percentage point" : " percentage points";
 }
 
 // On a phone each row of a table stacks: the row's heading, then each cell
@@ -143,8 +148,8 @@ export default function SecurityPlusVersionsPage() {
       <ArticleBody>
         <ArticleHero eyebrow="CompTIA Security+" title="Security+ SY0-801 vs SY0-701: which should you take?">
           <p>
-            <strong>Choose SY0-701 if you can take it by June 11, 2027, with time for a retake.</strong> Both exams lead
-            to the same Security+ certification, and SY0-701 has three years of study material behind it.
+            <strong>Choose SY0-701 if you can take it by June 11, 2027, with time for a retake.</strong> CompTIA lists
+            both exams as versions of Security+, and SY0-701 has three years of study material behind it.
           </p>
           <p>
             <strong>Plan for SY0-801 if your exam date falls after that,</strong> or if you have no date yet and would
@@ -154,7 +159,7 @@ export default function SecurityPlusVersionsPage() {
             A disclosure: CertBench has a study path for each version, and Pro covers both, so the choice makes no
             difference to what CertBench sells you. There is also a free{" "}
             <Link href={SY0_801_PRACTICE_PATH} className="cb-link">
-              SY0-801 practice test
+              SY0-801 practice exam
             </Link>
             . Every date and weight on this page comes from CompTIA&apos;s own{" "}
             <a href={COMPTIA_URLS.securityV7} target="_blank" rel="noopener noreferrer" className="cb-link">
@@ -210,48 +215,58 @@ export default function SecurityPlusVersionsPage() {
         </ArticleSection>
 
         <ArticleSection title="What changes">
-          {/* Four short columns: the table stays a table on a phone. */}
-          <table className="w-full border-collapse text-left text-small">
-            <caption className="sr-only">The share of the exam for each domain, in SY0-701 and in SY0-801</caption>
-            <thead>
-              <tr className={HEAD_ROW}>
-                <th scope="col" className="py-2.5 pr-4 font-medium">
-                  Domain
-                </th>
-                <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-4 text-right font-medium">
-                  SY0-701
-                </th>
-                <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-4 text-right font-medium">
-                  SY0-801
-                </th>
-                <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-4 text-right font-medium">
-                  Change
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {SECURITY_PLUS_DOMAIN_CHANGES.map((d) => (
-                <tr key={d.name} className="border-b border-border">
-                  <th scope="row" className="py-3 pr-4 align-top font-normal">
-                    {keepCodes(d.name)}
+          {/*
+            Four short columns: the table stays a table on a phone. Below the sm
+            width its cells are set closer, and a domain's name may break inside
+            a word where nothing else would fit, so that the whole table, the
+            change included, fits a screen 320 pixels wide with room to spare.
+            At that width no word needs to break. Should the table ever be wider
+            than its box (with larger text), it scrolls inside the box and is
+            not cut off.
+          */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-small">
+              <caption className="sr-only">The share of the exam for each domain, in SY0-701 and in SY0-801</caption>
+              <thead>
+                <tr className={HEAD_ROW}>
+                  <th scope="col" className="py-2.5 pr-2 font-medium sm:pr-4">
+                    Domain
                   </th>
-                  <td className="py-3 pl-4 text-right align-top tabular-nums">{d.sy0701}%</td>
-                  <td className="py-3 pl-4 text-right align-top tabular-nums">{d.sy0801}%</td>
-                  <td className="whitespace-nowrap py-3 pl-4 text-right align-top tabular-nums">
-                    {change(d.sy0701, d.sy0801)}
-                    <span className="sr-only"> percentage points</span>
-                  </td>
+                  <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-2 text-right font-medium sm:pl-4">
+                    SY0-701
+                  </th>
+                  <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-2 text-right font-medium sm:pl-4">
+                    SY0-801
+                  </th>
+                  <th scope="col" className="w-px whitespace-nowrap py-2.5 pl-2 text-right font-medium sm:pl-4">
+                    Change
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {SECURITY_PLUS_DOMAIN_CHANGES.map((d) => (
+                  <tr key={d.name} className="border-b border-border">
+                    <th scope="row" className="py-3 pr-2 align-top font-normal max-sm:[overflow-wrap:anywhere] sm:pr-4">
+                      {keepCodes(d.name)}
+                    </th>
+                    <td className="py-3 pl-2 text-right align-top tabular-nums sm:pl-4">{d.sy0701}%</td>
+                    <td className="py-3 pl-2 text-right align-top tabular-nums sm:pl-4">{d.sy0801}%</td>
+                    <td className="whitespace-nowrap py-3 pl-2 text-right align-top tabular-nums sm:pl-4">
+                      {change(d.sy0701, d.sy0801)}
+                      <span className="sr-only">{points(d.sy0701, d.sy0801)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {/* An exam code is kept whole where a line could end inside it. */}
           <div className="cb-measure mt-6 grid gap-4 text-body text-muted-foreground sm:mt-8">
             <p>
               The largest change is to security program management, which falls by six points, and general security
               concepts rises by four.{" "}
               {keepCodes(
-                "SY0-801 also adds a new objective, 2.6, on the threats and vulnerabilities of AI usage, and CompTIA's page mentions AI-assisted automation and operational technology environments."
+                "SY0-801 also adds a new objective, 2.6, on the threats and vulnerabilities of AI usage, and CompTIA's page mentions AI-assisted workflows and operational technology environments."
               )}{" "}
               You can{" "}
               <Link href={SY0_801_PATH} className="cb-link">
@@ -265,7 +280,7 @@ export default function SecurityPlusVersionsPage() {
             </p>
             <p>
               {keepCodes(
-                "The recommended experience changes as well. SY0-701 recommends Network+ and two years in a security or systems administrator role, and SY0-801 recommends two years of hands-on security administration. Neither is a requirement to book the exam."
+                "The recommended experience changes as well. For SY0-701, CompTIA recommends Network+ and two years in a security or systems administrator role, and for SY0-801, two years of hands-on experience as a security administrator. CompTIA gives both as recommended experience and not as a requirement."
               )}
             </p>
           </div>
@@ -358,7 +373,7 @@ export default function SecurityPlusVersionsPage() {
             {
               href: "/security-plus-pbq-examples",
               label: "Security+ PBQ examples",
-              note: "12 free interactive PBQs, three of them with no account",
+              note: "12 free hands-on labs, three of them with no account",
             },
           ]}
         />

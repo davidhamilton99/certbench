@@ -332,11 +332,6 @@ export function autoDeckConfig(table: ReferenceTable): RecallDeckConfig | null {
   };
 }
 
-/** Whether {@link autoDeckConfig} can produce a drill for this table. */
-export function canAutoDrill(table: ReferenceTable): boolean {
-  return autoDeckConfig(table) !== null;
-}
-
 /** A place in an explanation template: "{port}", or "{purpose:lowerFirst}". */
 const PLACE = /\{(\w+)(:lowerFirst)?\}/g;
 

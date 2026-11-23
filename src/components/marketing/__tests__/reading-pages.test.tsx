@@ -108,7 +108,14 @@ import { longDate } from "@/core/path/versions";
 import { FREE_LAB_COUNT } from "@/core/path/free-labs";
 import { SY0_801_AI_QUESTIONS, SY0_801_AI_TOPICS, SY0_801_DOMAINS } from "@/data/security-plus-v8";
 import { PASS_GUARANTEE_HREF } from "@/lib/pricing/guarantee";
-import { PRO_PRICE_REGION_NOTE, PRO_PRICE_SHORT, PRO_PRICE_TERMS, PRO_PRICES, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
+import {
+  PRO_ADDON_TERMS,
+  PRO_PRICE_REGION_NOTE,
+  PRO_PRICE_SHORT,
+  PRO_PRICE_TERMS,
+  PRO_PRICES,
+  PRO_SCOPE_TERMS,
+} from "@/lib/pricing/terms";
 import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { COMPARISON_PAGES_UPDATED_ISO, VS_PAGES } from "@/lib/seo/comparison-pages";
 import {
@@ -180,13 +187,41 @@ describe("/about", () => {
       .parentElement!;
     expect(text(row)).toContain(`All five were read on ${EXAM_FACTS_CHECKED}`);
     const hrefs = [...row.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+    // The five exam pages, and the article that gave the day the previous A+ exams retired.
     expect(hrefs).toEqual([
       COMPTIA_URLS.securityV7,
       COMPTIA_URLS.securityV8,
       COMPTIA_URLS.networkPlus,
       COMPTIA_URLS.aPlusCore1,
       COMPTIA_URLS.aPlusCore2,
+      COMPTIA_URLS.aPlusSeries,
     ]);
+    expect(text(row)).toContain(
+      "The date on which the previous A+ exams retired is not on those pages: it is from CompTIA's article about the two A+ exams, which was read on the same day."
+    );
+  });
+
+  it("explains the missing scaled score with what CompTIA states and what CertBench does not know", () => {
+    const row = text([...doc.querySelectorAll("dt")].find((dt) => text(dt) === "Why it is not a score out of 900")?.parentElement);
+    expect(row).toContain("CompTIA states its passing scores on a scale of 100 to 900.");
+    expect(row).toContain("CertBench does not know how answers are converted to that scale");
+    expect(row).not.toMatch(/does not publish|No practice test can/);
+  });
+
+  // The Network+ questions are grouped into topics of CertBench's own, which are
+  // not CompTIA's objectives, and CompTIA publishes no rule for an unanswered
+  // question that the facts file holds: the page says what CertBench does.
+  it("says where the questions come from in words that hold for Network+, and claims no rule of the real exam", () => {
+    const row = (term: string) => text([...doc.querySelectorAll("dt")].find((dt) => text(dt) === term)?.parentElement);
+    expect(row("Written for CertBench")).toContain("Every question is written for CertBench. No question is taken from a real exam");
+    expect(row("Written for CertBench")).not.toContain("objectives");
+    const linked = row("Linked to an objective or a topic");
+    expect(linked).toContain("Each question is linked to the objective or topic that it tests");
+    expect(linked).toContain("Network+ is the exception. Its questions are grouped into topics of CertBench's own");
+    expect(row("What it measures")).toContain("A question left unanswered counts as incorrect.");
+    expect(text(doc.body)).not.toMatch(/as it does in the exam|linked to the exam objective that it tests/);
+    // A practice exam shows no answer until the end, so the explanation at once is the study path's.
+    expect(row("Explained")).toContain("On the study path, a short version is shown as soon as you answer.");
   });
 
   it("ends on the band, which starts the study path", () => {
@@ -263,22 +298,55 @@ describe("/educators", () => {
     expect(text(section)).toContain(
       "Most of the Security+ SY0-801 questions are also in the SY0-701 bank, so the two Security+ rows should not be added together."
     );
-    expect(text(section)).toContain(`were last checked against CompTIA's exam pages on ${EXAM_FACTS_CHECKED}.`);
+    expect(text(section)).toContain(
+      `were last checked against CompTIA's exam pages, and its article on the two A+ exams, on ${EXAM_FACTS_CHECKED}.`
+    );
     expect(text(section)).not.toContain("Each exam has its own question bank");
     expect(section.querySelectorAll('[data-testid="inventory"] tbody tr')).toHaveLength(INVENTORY.length);
   });
 
-  it("says what the free practice exam is not suited to", () => {
-    expect(text(doc.body)).toContain(
-      "The free practice exam is the same for every student, and its questions and answers are published on the practice-test page, so it is suited to practice and not to graded assessment."
+  // CompTIA's exam pages state that the exams have performance-based questions,
+  // and nothing about what they ask; the Network+ topics are CertBench's own.
+  it("says what the labs are, what CompTIA states of the exam's performance-based questions, and what a question is linked to", () => {
+    const row = (term: string) => text([...doc.querySelectorAll("dt")].find((dt) => text(dt) === term)?.parentElement);
+    const labs = row("Hands-on practice");
+    expect(labs).toContain(
+      "The Security+, Network+ and A+ exams have performance-based questions as well as multiple-choice questions, and CompTIA does not publish which topics they test."
     );
+    expect(labs).toContain("in a lab, a student carries out a task in the browser instead of choosing an answer.");
+    expect(labs).not.toMatch(/work like/);
+    expect(row("Practice by objective")).toContain(
+      "Every question is linked to the exam objective that it tests or, for Network+, to a topic of CertBench's own."
+    );
+    expect(row("Original questions")).toContain("Every question is written for CertBench. No question is taken from a real exam.");
+    expect(row("Original questions")).not.toContain("objectives");
+    // The objective pages by the name the page gives them above, with Network+'s topics.
+    expect(text(doc.body)).toContain(
+      "The page of practice questions for each objective of Security+ SY0-701 and A+, and for each Network+ topic."
+    );
+    expect(text(doc.body)).not.toContain("The practice pages for the exam objectives");
+  });
+
+  it("says what the free practice exam is not suited to, and names the exams whose page publishes its answers", () => {
+    expect(text(doc.body)).toContain(
+      "The free practice exam is the same for every student, and for Security+ SY0-701, Network+ and A+ its questions and answers are also published on the practice-test page, so it is suited to practice and not to graded assessment."
+    );
+    // The SY0-801 page lists 45 other questions with their answers, and not the
+    // exam's: its PracticeExam has no list. The other pages' exams list theirs.
+    const examElement = (file: string) =>
+      readFileSync(join(process.cwd(), file), "utf8").match(/<PracticeExam\s[\s\S]*?\/>/)?.[0] ?? "";
+    const sy0801 = examElement("src/app/(marketing)/security-plus-sy0-801-practice-test/page.tsx");
+    expect(sy0801).toContain("testId");
+    expect(sy0801).not.toContain("listTitle");
+    expect(examElement("src/components/marketing/PracticeTestLanding.tsx")).toContain("listTitle");
   });
 
   it("ends on the band, set outside the column, with no arrow on either button", () => {
     const sheet = band(doc);
     expect(sheet.previousElementSibling?.querySelector("h1")).not.toBeNull();
     const buttons = [...sheet.querySelectorAll("a")];
-    expect(buttons.map(text)).toEqual(["Open the Security+ practice exam", "Choose an exam"]);
+    // A link to the exam list inside a page has one name on every page.
+    expect(buttons.map(text)).toEqual(["Open the Security+ practice exam", "Choose your exam"]);
     expect(buttons.map((a) => a.getAttribute("href"))).toEqual(["/security-plus-practice-test", "/start"]);
     expect(arrows(doc)).toBe(0);
   });
@@ -332,9 +400,12 @@ describe("/help", () => {
     expect(answer).toContain(PRO_PRICE_TERMS);
     expect(answer).toContain(PRO_SCOPE_TERMS);
     expect(linkNamed(doc, "Read the guarantee terms")?.getAttribute("href")).toBe(PASS_GUARANTEE_HREF);
-    expect(answerTo("Can I study for more than one exam?")).toContain(
-      `a single payment of ${PRO_PRICES.quarterly}, which is adjusted by region`
-    );
+    // An added exam is one payment, and it stays open only while the Pro plan is
+    // active: the one wording of that, from the pricing terms, with the region note.
+    const added = answerTo("Can I study for more than one exam?");
+    expect(added).toContain(`${PRO_ADDON_TERMS} ${PRO_PRICE_REGION_NOTE}`);
+    expect(added).toContain(`a single payment of ${PRO_PRICES.quarterly}. The exam stays open while your Pro plan is active.`);
+    expect(added).not.toMatch(/for as long as you have Pro/);
     const source = readFileSync(join(process.cwd(), "src/app/(marketing)/help/page.tsx"), "utf8");
     expect(source).not.toMatch(/\$\d/);
   });
@@ -351,6 +422,39 @@ describe("/help", () => {
     expect(answerTo("What are PBQs, and how do the labs work?")).toContain(
       `${EXAMS_WITH_FREE_LABS} each have a PBQ page with ${FREE_LAB_COUNT} labs that are free: three with no account, and the rest with a free account.`
     );
+  });
+
+  // What CertBench does, in its own words: nothing about the real exam's wording
+  // or its rules, and of the exam's performance-based questions only what
+  // CompTIA's exam pages state.
+  it("says what CertBench does, and claims nothing about the real exam's wording or its rules", () => {
+    expect(answerTo("What is CertBench?")).toContain("A step begins with short questions and then moves to exam-style questions.");
+    expect(answerTo("How does the study path work?")).toContain(
+      "beginning with short questions and ending with an exam-style question."
+    );
+    expect(answerTo("Why did my score go down?")).toContain("Unanswered questions count as incorrect. Each practice exam result");
+    expect(answerTo("What is the practice exam?")).toContain("Unanswered questions count as incorrect. The practice exam is the last step");
+    expect(answerTo("What are PBQs, and how do the labs work?")).toContain(
+      "The Security+, Network+ and A+ exams have performance-based questions (PBQs) as well as multiple-choice questions, and CompTIA does not publish which topics they test."
+    );
+    expect(answerTo("Can I flag questions?")).toContain("you can move to any question from the question grid. If you leave");
+    // The checkpoint is weighted by the domains' published shares; nothing is said of how the real exam is scored.
+    expect(answerTo("What is the readiness checkpoint?")).toContain("weighted in the same way as the domains of the real exam");
+    expect(text(doc.body)).not.toMatch(
+      /wording of the real exam|as they do in the exam|hands-on tasks in real|as in the real exam|same way as the real exam/
+    );
+  });
+
+  // The answers speak for every exam, and a Network+ step is a topic of
+  // CertBench's own, so a step's subject is called a topic, which the page
+  // defines for each exam.
+  it("calls a step's subject a topic, which for Security+ and A+ is one of CompTIA's objectives", () => {
+    expect(answerTo("How does the study path work?")).toContain(
+      "For Security+ and A+, each topic is one of CompTIA’s exam objectives. The Network+ topics are CertBench’s own. Most steps cover one topic"
+    );
+    expect(answerTo("Where do I start?")).toContain("You then study your first topic and take the readiness checkpoint");
+    expect(answerTo("What is the readiness checkpoint?")).toContain("It follows your first topic");
+    expect(text(doc.body)).not.toMatch(/your first objective|one objective|each objective|an objective as/);
   });
 
   it("mentions nothing that CertBench no longer offers", () => {
@@ -442,7 +546,11 @@ describe("/security-plus-sy0-801", () => {
 
   it("ends on the band: one button to the practice test, and the other ways on in one sentence", () => {
     const sheet = band(doc);
-    expect(text(sheet.querySelector("h2"))).toBe("Take the free SY0-801 practice test");
+    // "Practice exam" in the band's words: "practice test" names the page in links and titles only.
+    expect(text(sheet.querySelector("h2"))).toBe("Take the free SY0-801 practice exam");
+    expect(text(sheet)).toContain("The practice exam is timed and follows the exam's domain weights.");
+    expect(text(sheet.querySelector("a"))).toBe("Take the practice exam");
+    expect(text(sheet)).not.toMatch(/practice test/);
     expect(text(sheet)).toContain("Anyone can take it, and a free account shows the score.");
     const links = [...sheet.querySelectorAll("a")];
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
@@ -455,6 +563,23 @@ describe("/security-plus-sy0-801", () => {
     // The practice test is not the study path, so its button has no arrow.
     expect(arrows(doc)).toBe(0);
     expect(sheet.previousElementSibling?.querySelector("h1")).not.toBeNull();
+  });
+
+  // Read at CompTIA's V8 page on 23 November 2026 (the facts file). No CompTIA
+  // page says that both exams lead to the same certification: they are listed
+  // as versions of Security+.
+  it("gives the recommended experience in CompTIA's words, and says only that CompTIA lists both exams as versions of Security+", () => {
+    const table = doc.querySelector("table")!;
+    const row = [...table.querySelectorAll("tbody tr")].find((r) => text(r.querySelector("th")) === "Recommended experience");
+    expect(text(row?.querySelector("td"))).toBe("Two years of hands-on experience as a security administrator");
+    expect(text(doc.body)).toContain("and CompTIA lists both exams as versions of Security+.");
+    expect(text(doc.body)).not.toMatch(/lead to the same certification|hands-on security administration/);
+    // What the SY0-701 objectives hold, and not a claim about every other course.
+    expect(text(doc.body)).toContain("SY0-701 has no objective on AI.");
+    expect(text(doc.body)).not.toMatch(/No SY0-701 material|has not had an objective/);
+    // CertBench's own labs are hands-on labs; a PBQ is CompTIA's name for the exam's task.
+    expect(text(doc.body)).toContain("12 free hands-on labs, three of them with no account");
+    expect(text(doc.body)).not.toMatch(/interactive PBQs/);
   });
 
   it("links the versions page in a whole sentence", () => {
@@ -516,6 +641,26 @@ describe("/security-plus-sy0-801-vs-sy0-701", () => {
     expect(text(weights)).toContain(`${String.fromCharCode(0x2212)}${falls[0].sy0701 - falls[0].sy0801}`);
     // Counts are set in the text face: the mono face is for codes.
     expect(weights.innerHTML).not.toContain("font-mono");
+    // At 320 pixels the table must fit its 280-pixel column (it was 312 wide and its
+    // last column was cut off): closer cells and breakable names below sm, measured
+    // in a browser at 245 pixels wide at the least, and a box that scrolls, and
+    // never cuts, should larger text make it wider still.
+    expect(weights.parentElement?.className).toBe("overflow-x-auto");
+    const domainCells = [weights.querySelector("thead th")!, ...weights.querySelectorAll("tbody th")];
+    for (const cell of domainCells) expect(cell.className).toMatch(/(?:^| )pr-2 .*sm:pr-4/);
+    for (const cell of weights.querySelectorAll("tbody th")) expect(cell.className).toContain("max-sm:[overflow-wrap:anywhere]");
+    const figureCells = [...weights.querySelectorAll("thead th")].slice(1).concat([...weights.querySelectorAll("td")]);
+    for (const cell of figureCells) {
+      expect(cell.className).toMatch(/(?:^| )pl-2 .*sm:pl-4/);
+      expect(cell.className).not.toMatch(/(?:^| )pl-4/);
+    }
+    // A change of one point is read aloud as one point, not "1 percentage points".
+    const ones = SECURITY_PLUS_DOMAIN_CHANGES.map((d, k) => [d, rows[k]] as const).filter(
+      ([d]) => Math.abs(d.sy0801 - d.sy0701) === 1
+    );
+    expect(ones.length).toBeGreaterThan(0);
+    for (const [, row] of ones) expect(text([...row.querySelectorAll("td")].at(-1))).toMatch(/1 percentage point$/);
+    expect(text(weights)).not.toMatch(/\b1 percentage points/);
   });
 
   it("sets the choice as a table: the situation, the version and the reason", () => {
@@ -540,6 +685,30 @@ describe("/security-plus-sy0-801-vs-sy0-701", () => {
     expect(arrows(doc)).toBe(1);
     expect(buttons[0].querySelector("svg.lucide-arrow-right")).not.toBeNull();
     expect(sheet.previousElementSibling?.querySelector("h1")).not.toBeNull();
+  });
+
+  // Each fact here was read at one of CompTIA's own pages (the facts file, 23
+  // November 2026). No CompTIA page says that passing either exam earns the same
+  // certification: its pages list both as versions of Security+.
+  it("states only what CompTIA's pages say: the versions, the recommended experience and how long the certification lasts", () => {
+    const page = text(doc.body);
+    expect(page).not.toMatch(/lead to the same/);
+    expect(text(doc.querySelector("header"))).toContain(
+      "CompTIA lists both exams as versions of Security+, and SY0-701 has three years of study material behind it."
+    );
+    expect(page).toContain(
+      "The certification: CompTIA lists both exams as versions of Security+, and a Security+ certification is valid for three years from the day that you pass."
+    );
+    expect(page).toContain(
+      "For SY0-701, CompTIA recommends Network+ and two years in a security or systems administrator role, and for SY0-801, two years of hands-on experience as a security administrator. CompTIA gives both as recommended experience and not as a requirement."
+    );
+    expect(page).toContain("CompTIA's page mentions AI-assisted workflows and operational technology environments.");
+    expect(page).not.toMatch(/AI-assisted automation|SY0-80?1 recommends|SY0-701 recommends|requirement to book/);
+    // The site's words: "practice exam" in a sentence, and "hands-on labs" for CertBench's own labs.
+    expect(text(doc.querySelector("header"))).toContain("There is also a free SY0-801 practice exam.");
+    expect(page).toContain("a timed SY0-801 practice exam in the exam's domain weights");
+    expect(page).toContain("12 free hands-on labs, three of them with no account");
+    expect(page).not.toMatch(/interactive PBQs/);
   });
 
   it("names its three sources in a sentence", () => {
@@ -575,7 +744,11 @@ describe("/security-plus-sy0-801-ai-practice-questions", () => {
 
   it("ends on the band: one button to the practice test, and the other ways on in one sentence", () => {
     const sheet = band(doc);
-    expect(text(sheet.querySelector("h2"))).toBe("Take the whole SY0-801 practice test");
+    expect(text(sheet.querySelector("h2"))).toBe("Take the whole SY0-801 practice exam");
+    expect(text(sheet)).not.toMatch(/practice test/);
+    // No claim about every other course: what the SY0-701 objectives hold.
+    expect(text(doc.querySelector("header"))).toContain("SY0-701 has no objective on AI.");
+    expect(text(doc.body)).not.toMatch(/No SY0-701 course|has never had/);
     expect([...sheet.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual([
       SY0_801_PRACTICE_PATH,
       SY0_801_PATH,
@@ -583,6 +756,20 @@ describe("/security-plus-sy0-801-ai-practice-questions", () => {
       `/path/${SECURITY_PLUS_CERT}`,
     ]);
     expect(arrows(doc)).toBe(0);
+  });
+});
+
+describe("the SY0-801 reading pages", () => {
+  // The measure for 17px text is cb-measure; text set at 15px takes the narrower
+  // cb-measure-sm, so that a line stays near 80 characters.
+  it("set small text at the measure made for it", () => {
+    for (const page of [<SecurityPlusV8Page key="v8" />, <SecurityPlusVersionsPage key="vs" />, <Sy0801AiQuestionsPage key="ai" />]) {
+      const doc = served(page);
+      const wide = [...doc.querySelectorAll(".cb-measure")].filter((el) => el.classList.contains("text-small"));
+      expect(wide.map(text)).toEqual([]);
+    }
+    expect(band(served(<SecurityPlusV8Page />)).querySelector("p.cb-measure-sm.text-small")).not.toBeNull();
+    expect(band(served(<Sy0801AiQuestionsPage />)).querySelector("p.cb-measure-sm.text-small")).not.toBeNull();
   });
 });
 

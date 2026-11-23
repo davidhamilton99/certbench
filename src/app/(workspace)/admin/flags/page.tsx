@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireProPage } from "@/server/auth";
-import { getProfile } from "@/server/data/profiles";
+import { pageProfile } from "@/server/page-reads";
 import { listPendingFlags } from "@/server/data/flags";
 import { AdminFlagsList } from "@/components/workspace/AdminFlagsList";
 
@@ -12,7 +12,7 @@ export default async function AdminFlagsPage() {
   // The owner's account passes the Pro check; the role is then checked here.
   const { db, user } = await requireProPage();
 
-  const profile = await getProfile(db, user.id);
+  const profile = await pageProfile(db, user.id);
   if (profile?.role !== "admin") notFound();
 
   const flags = await listPendingFlags(db);

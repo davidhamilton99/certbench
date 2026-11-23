@@ -42,7 +42,12 @@ const labWord = (n: number) => (n === 1 ? "lab" : "labs");
 
 /** A lab's tile or row: something pressed, with the edge and the tints every pressed thing has. */
 const TILE = "min-w-0 rounded-md border text-left transition-[border-color,background-color] duration-150";
-const TILE_CHOSEN = "border-primary bg-tint-selected";
+/**
+ * The open lab's tile has an edge twice as thick as the others (its border and
+ * a rule inside it), so it is told apart by more than its colour. On a phone
+ * the tiles print no titles, and the edge is what matches a tile to the lab.
+ */
+const TILE_CHOSEN = "border-primary bg-tint-selected ring-1 ring-inset ring-primary";
 const TILE_IDLE = "border-input bg-card hover:border-primary hover:bg-tint-hover active:bg-tint-press";
 
 /** The mark beside a lab: its kind, or a check once it has been completed. Words beside it say the same. */
@@ -55,7 +60,7 @@ function LabMark({ type, done, large = false }: { type: PbqScenario["type"]; don
       className={cn(
         "flex shrink-0 items-center justify-center rounded-xs",
         large ? "size-10" : "size-8",
-        done ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+        done ? "bg-success/15 text-success" : "bg-tint-selected text-primary"
       )}
     >
       {done ? <Check className={size} strokeWidth={3} /> : <Icon className={size} />}
@@ -199,7 +204,7 @@ export function PbqLab({
         ref={chooser}
         role="group"
         aria-label="Choose a lab"
-        className="grid scroll-mt-24 grid-cols-1 gap-2 min-[360px]:grid-cols-3"
+        className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-3"
       >
         {freeLabs.slice(0, FEATURED).map((lab, i) => {
           const isActive = i === selected;
@@ -237,7 +242,7 @@ export function PbqLab({
       </div>
 
       {/* min-w-0: a lab's row of tabs does not wrap, and would widen a phone's page. */}
-      <div ref={stage} className="glass min-w-0 scroll-mt-24 rounded-lg p-4 sm:p-6">
+      <div ref={stage} className="glass min-w-0 rounded-lg p-4 sm:p-6">
         {asking !== null && !signedIn ? (
           <LabAsk
             lab={freeLabs[asking]}
@@ -257,6 +262,9 @@ export function PbqLab({
             scenario={active.scenario}
             backLabel="Choose another lab"
             onBack={toChooser}
+            // The way back only returns to the tiles and keeps the lab, answers
+            // and all, so there is nothing to warn about: no question is asked.
+            confirmLeave={false}
             takeFocus={stageFocus}
             onStarted={() =>
               track("pbq_first_move", {
@@ -419,7 +427,7 @@ function NextOnPath({
           PBQs are one part of the {examName} exam. The study path covers{" "}
           {officialObjectives ? "all of it" : "every domain"}.
         </h2>
-        <p className="cb-measure text-small text-muted-foreground">
+        <p className="cb-measure-sm text-small text-muted-foreground">
           The study path covers every {examName} {officialObjectives ? "objective" : "topic"} in short steps, and a
           readiness checkpoint shows where you stand. Pro adds all {labCount} {examName} labs to it, with one at the end
           of each domain.

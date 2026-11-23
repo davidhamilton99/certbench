@@ -23,6 +23,9 @@ export const EMAIL_NOT_SENT = "The email could not be sent. Please try again in 
 export const EMAIL_NOT_REPEATED =
   "No new email was sent. The study plan was sent to this address in the last 24 hours, or the address has unsubscribed from CertBench email.";
 
+/** Said for an address that CertBench's own tests use: nothing is stored or sent. */
+export const EMAIL_TEST_ADDRESS = "No email was sent, because this address is used for CertBench's own tests.";
+
 type Notice = { kind: "error" | "info"; text: string; field?: boolean };
 
 /**
@@ -74,6 +77,7 @@ export function ToolEmailCapture({
       const { delivery } = await api(captureToolLead, { email: address, source, context });
       if (delivery === "sent") setSentTo(address);
       else if (delivery === "failed") setNotice({ kind: "error", text: EMAIL_NOT_SENT });
+      else if (delivery === "test") setNotice({ kind: "info", text: EMAIL_TEST_ADDRESS });
       else setNotice({ kind: "info", text: EMAIL_NOT_REPEATED });
     } catch (err) {
       // The one field is the email address, so a refused request names it.

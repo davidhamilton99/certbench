@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { otherAnswers, otherAnswersSentence, type ResolvedDeck } from "@/lib/recall/recall-deck";
+import type { ResolvedDeck } from "@/lib/recall/recall-deck";
 import { recallToRep } from "@/lib/path/fact-reps";
 import type { Rep } from "@/core/path/types";
 import { RepCard } from "@/components/path/RepCard";
@@ -10,20 +10,6 @@ import { RepCard } from "@/components/path/RepCard";
 export const MIXED_DECK_KEY = "__mixed__";
 /** How often a fact that was answered incorrectly is asked again in place of a new one. */
 const RESURFACE_RATE = 0.3;
-
-/**
- * A cue can name more than one row of its table: RADIUS has a row for its
- * ports and a row for its legacy ports, and the question deals one of them. A
- * typed port from either row is marked correct, so the card says, after the
- * sentences of the row it dealt, which answer it asked for and that the other
- * is correct too. Every other card is returned as it is.
- */
-function sayOtherAnswers(deck: ResolvedDeck, rep: Rep): Rep {
-  const answer = rep.type === "choice" ? rep.options[rep.answer] : rep.answerText;
-  const also = otherAnswersSentence(rep.prompt, answer, otherAnswers(deck, rep.prompt, answer));
-  // Said once: the card's own sentences may come to say it themselves.
-  return also && !rep.takeaway.includes(also) ? { ...rep, takeaway: `${rep.takeaway} ${also}` } : rep;
-}
 
 /** One fact from one deck: what to ask, and where its result is recorded. */
 interface Fact {
@@ -80,9 +66,11 @@ export function RecallPlayer({
       fact = { deck, itemId: row[deck.config.ask.key] };
     }
     // A typed answer is always asked in the deck's own direction (the port for
-    // a protocol), so nobody is asked to type a long name.
+    // a protocol), so nobody is asked to type a long name. A cue with more than
+    // one row (RADIUS) gets its sentence about the other correct answer from
+    // recallToRep, as it does on the study path.
     const rep = recallToRep(fact.deck, fact.itemId, "recall", Math.random, typed);
-    return { n, ...fact, rep: sayOtherAnswers(fact.deck, rep) };
+    return { n, ...fact, rep };
   }
 
   // The first question, after mount (random, so made on the client only).

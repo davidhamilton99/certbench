@@ -105,13 +105,21 @@ describe("a candidate who passed", () => {
     expect(screen.getByRole("link", { name: "Return to the home page" }).getAttribute("href")).toBe("/");
   });
 
-  it("treats an answer that was sent from this link already as sent", async () => {
+  // A conflict reaches the form only when a pass comment from this account
+  // was already reviewed. Nothing new is stored, so the screen promised a
+  // review that would never happen.
+  it("thanks them for a comment already received without promising to review this one", async () => {
     api.mockRejectedValueOnce(new ApiError("conflict", "Already submitted"));
     show(true);
     write("The labs showed me what to study.");
     await act(async () => void fireEvent.click(screen.getByRole("button", { name: "Send my comment" })));
     await waitFor(() => expect(heading().textContent).toBe("Thank you."));
+    expect(document.activeElement).toBe(heading());
     expect(screen.queryByRole("alert")).toBeNull();
+    expect(document.body.textContent).toContain(
+      "A comment about this exam was already received from your account, so this one was not stored."
+    );
+    expect(document.body.textContent).not.toContain("It will be reviewed");
   });
 });
 

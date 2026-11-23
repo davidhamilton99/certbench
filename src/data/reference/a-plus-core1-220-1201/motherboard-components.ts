@@ -7,8 +7,8 @@ export const motherboardComponents: ReferenceTable = {
   columnHeaders: [
     { key: "component", label: "Component" },
     { key: "description", label: "Description" },
-    { key: "formFactor", label: "Form Factor / Standard" },
-    { key: "notes", label: "Exam Notes" },
+    { key: "formFactor", label: "Form factor / standard" },
+    { key: "notes", label: "Exam notes" },
   ],
   entries: [
     // Form factors

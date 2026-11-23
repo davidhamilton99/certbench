@@ -44,7 +44,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
     ],
     correct_order: [0, 1, 2, 3, 4, 5],
     explanation:
-      "On power-on, POST runs first to verify hardware integrity, then BIOS/UEFI initializes and enumerates hardware devices. The firmware reads the MBR or GPT to locate the active partition, hands control to the bootloader (e.g. GRUB or Windows Boot Manager), which loads the OS kernel into memory. Once the kernel has initialized all drivers and services, the login prompt is presented to the user.",
+      "On power-on, POST runs first to verify hardware integrity, then BIOS/UEFI initializes and enumerates hardware devices. The firmware reads the MBR or GPT to locate the active partition, hands control to the bootloader (for example, GRUB or Windows Boot Manager), which loads the OS kernel into memory. Once the kernel has initialized all drivers and services, the login prompt is presented to the user.",
   },
   {
     type: "ordering",
@@ -223,7 +223,7 @@ export const aPlusCore1Scenarios: PbqScenario[] = [
       { text: "Client device and browser security", category: 2 },
     ],
     explanation:
-      "In IaaS (e.g. AWS EC2), the customer manages OS, virtual networking, and storage volumes; the provider manages physical hardware and the hypervisor. In PaaS (e.g. Heroku, Azure App Service), the customer manages their application code, database design, and runtime configuration; the provider handles OS and middleware. In SaaS (e.g. Microsoft 365), the customer is only responsible for user accounts, data they create, and client-side security.",
+      "In IaaS (for example, AWS EC2), the customer manages OS, virtual networking, and storage volumes; the provider manages physical hardware and the hypervisor. In PaaS (for example, Heroku or Azure App Service), the customer manages their application code, database design, and runtime configuration; the provider handles OS and middleware. In SaaS (for example, Microsoft 365), the customer is only responsible for user accounts, data they create, and client-side security.",
   },
   {
     type: "categorization",

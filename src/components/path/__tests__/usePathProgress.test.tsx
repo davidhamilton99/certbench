@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { finishStop, recordRep } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type PathProgress } from "@/core/path/types";
 import { ApiError } from "@/contracts/errors";
@@ -55,6 +55,8 @@ const server = vi.hoisted(() => ({
   proPlan: false,
   /** The account's last payment did not go through. The server says so only when it is true. */
   pastDue: false,
+  /** The offer's prices for the learner's region, when the answer carries them. */
+  pricing: null as null | object,
   /** Reading the account: it answers, it fails with this error, or it never answers. */
   read: "ok" as "ok" | "hang" | Error,
   /** Saving to the account: it works, or it fails with this error. */
@@ -83,6 +85,7 @@ vi.mock("@/lib/api-client", () => ({
         proPlan: server.proPlan,
         certId: "11111111-1111-4111-8111-111111111111",
         ...(server.pastDue ? { paymentPastDue: true } : {}),
+        ...(server.pricing ? { pricing: server.pricing } : {}),
       };
     }
     if (server.save instanceof Error) throw server.save;
@@ -155,6 +158,7 @@ beforeEach(() => {
   server.access = "free";
   server.proPlan = false;
   server.pastDue = false;
+  server.pricing = null;
   server.read = "ok";
   server.save = "ok";
   server.stored = true;
@@ -231,6 +235,41 @@ describe("opening the study path", () => {
     for (const name of ["peek", "record", "finish", "finishLab", "retire", "setGoal", "refreshAccess"] as const) {
       expect(result.current[name], name).toBe(first[name]);
     }
+  });
+});
+
+describe("the offer's prices", () => {
+  const REGIONAL = {
+    discountPercent: 40,
+    prices: {
+      monthly: { original: "$19", discounted: "$11.40" },
+      quarterly: { original: "$39", discounted: "$23.40" },
+      annual: { original: "$99", discounted: "$59.40" },
+    },
+  };
+
+  it("are the ones the account's answer carries, and are kept while a later request fails", async () => {
+    signIn();
+    server.pricing = REGIONAL;
+    const { result } = open();
+    await pass();
+    expect(result.current.pricing).toEqual(REGIONAL);
+    server.read = new ApiError("internal");
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    expect(result.current.pricing).toEqual(REGIONAL);
+  });
+
+  it("are not known for a visitor, or for an answer that carries none: the offer then asks for them itself", async () => {
+    const visitor = open();
+    await pass();
+    expect(visitor.result.current.pricing).toBeNull();
+    visitor.unmount();
+    signIn();
+    const learner = open();
+    await pass();
+    expect(learner.result.current.pricing).toBeNull();
   });
 });
 
@@ -536,6 +575,86 @@ describe("a shared computer", () => {
     act(() => result.current.record("a|1.1|w1", true));
     expect(store.get(KEY)).toBe(before);
     expect(Object.keys(JSON.parse(store.get(GUEST)!).items)).toEqual(["a|1.1|w1"]);
+  });
+});
+
+// `path_account_linked` with the method "redirect" counts an account that the
+// study path's save request made. Work begun on a public page, with no save
+// request shown since, can be carried into an account made anywhere else.
+describe("counting an account that the save request made", () => {
+  const BEGUN = `cb_path_begun_public_${CERT}`;
+  const linked = () => track.mock.calls.filter(([name]) => name === "path_account_linked");
+
+  it("does not count an account for a visitor's work that was begun on a public page, and carries the work all the same", async () => {
+    seed(null, answered("a|1.2|w3"));
+    store.set(BEGUN, "1");
+    signIn();
+    open();
+    await pass();
+    expect(linked()).toEqual([]);
+    expect(items(saves().at(-1)?.progress)).toEqual(["a|1.2|w3"]);
+    // The work is the account's now, and the mark goes with it.
+    expect(store.has(BEGUN)).toBe(false);
+  });
+
+  it("does not count it for guest work begun on a public page beside another account's copy", async () => {
+    seed("u1", answered("a|2.1|theirs"));
+    store.set(GUEST, JSON.stringify(answered("a|1.1|guest")));
+    store.set(BEGUN, "1");
+    signIn("u2");
+    open();
+    await pass();
+    expect(linked()).toEqual([]);
+    expect(items(saves().at(-1)?.progress)).toEqual(["a|1.1|guest"]);
+  });
+
+  it("counts it once for work whose save request was shown, as before", async () => {
+    seed(null, answered("a|1.2|w3"));
+    signIn();
+    open();
+    await pass();
+    expect(linked()).toEqual([["path_account_linked", { cert: CERT, method: "redirect" }]]);
+  });
+});
+
+// The home page's sample questions are SY0-701's. A first visit to SY0-801
+// carries their answers along, so that copy has started too.
+describe("a first visit to a newer exam version", () => {
+  const NEWER = "security-plus-sy0-801";
+  const OWED = (cert: string) => `cb_path_start_owed_${cert}`;
+  const openNewer = () => renderHook(() => usePathProgress(NEWER));
+  // The carry loads the newer version's content as a module, which takes real time.
+  beforeEach(() => vi.useRealTimers());
+  const carried = () => waitFor(() => expect(track).toHaveBeenCalledWith("path_version_carried", expect.anything()));
+
+  it("passes on a start that the earlier version's page still owes, and leaves that page its own", async () => {
+    seed(null, answered("a|1.2|w3"));
+    store.set(OWED(CERT), "1");
+    const { result } = openNewer();
+    await carried();
+    expect(result.current.ready).toBe(true);
+    expect(items(result.current.progress)).toEqual(["a|1.1|w3"]);
+    expect(track).toHaveBeenCalledWith("path_version_carried", expect.objectContaining({ from: CERT, to: NEWER, source: "device" }));
+    expect(store.get(OWED(NEWER))).toBe("1");
+    expect(store.get(OWED(CERT))).toBe("1");
+  });
+
+  it("owes nothing when the earlier version's page owes nothing", async () => {
+    seed(null, answered("a|1.2|w3"));
+    openNewer();
+    await carried();
+    expect(store.has(OWED(NEWER))).toBe(false);
+  });
+
+  it("owes nothing when an answer given on this page has already recorded the start", async () => {
+    seed(null, answered("a|1.2|w3"));
+    store.set(OWED(CERT), "1");
+    const { result } = openNewer();
+    // Answered before the carry has arrived: the page records the start then,
+    // because nothing on the page has started.
+    act(() => result.current.record("a|3.2|w1", true));
+    await carried();
+    expect(store.has(OWED(NEWER))).toBe(false);
   });
 });
 

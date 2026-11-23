@@ -72,17 +72,9 @@
   --warning: oklch(0.62 0.115 75);
   --warning-foreground: oklch(0.99 0 0);
   --warning-ink: oklch(0.46 0.085 72);
-  --danger: oklch(0.48 0.16 27);
-  --danger-foreground: oklch(0.99 0 0);
 
   --sidebar: oklch(0.985 0.003 258);
   --sidebar-foreground: oklch(0.21 0.03 262);
-  --sidebar-primary: oklch(0.44 0.14 257);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.955 0.008 258);
-  --sidebar-accent-foreground: oklch(0.24 0.03 262);
-  --sidebar-border: oklch(0.885 0.009 262);
-  --sidebar-ring: oklch(0.44 0.14 257);
 }
 
 .dark,
@@ -124,17 +116,9 @@
   --warning: oklch(0.76 0.1 84);
   --warning-foreground: oklch(0.22 0.04 70);
   --warning-ink: oklch(0.76 0.1 84);
-  --danger: oklch(0.72 0.115 25);
-  --danger-foreground: oklch(0.175 0.024 262);
 
   --sidebar: oklch(0.195 0.026 262);
   --sidebar-foreground: oklch(0.96 0.006 262);
-  --sidebar-primary: oklch(0.76 0.105 255);
-  --sidebar-primary-foreground: oklch(0.175 0.024 262);
-  --sidebar-accent: oklch(0.25 0.028 262);
-  --sidebar-accent-foreground: oklch(0.96 0.006 262);
-  --sidebar-border: oklch(1 0 0 / 13%);
-  --sidebar-ring: oklch(0.76 0.105 255);
 }
 
 @theme inline {
@@ -164,8 +148,6 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning-ink: var(--warning-ink);
-  --color-danger: var(--danger);
-  --color-danger-foreground: var(--danger-foreground);
 
   --color-sheet: var(--sheet);
   --color-sheet-raised: var(--sheet-raised);
@@ -180,12 +162,6 @@
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 
   /*
    * Three voices. Headings are set in STIX Two, the face scientific and
@@ -197,8 +173,6 @@
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-stix), "Times New Roman", ui-serif, serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
-  /* `font-display` was the old heading family; in-card titles stay sans. */
-  --font-display: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
 
   /*
    * Three corners, each with a job. 2px for a mark or a bar (`rounded-xs`).
@@ -221,7 +195,6 @@
    * press and a question arriving all feel like the same hand.
    */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
   --default-transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
   --default-transition-duration: 150ms;
 
@@ -240,15 +213,9 @@
   --text-lede: 1.125rem;
   --text-lede--line-height: 1.75rem;
 
-  /* Headings sized to be read, not to fill the screen. */
+  /* A figure sized to be read, not to fill the screen (a price, `cb-display text-5xl`). */
   --text-5xl: 2.625rem;
   --text-5xl--line-height: 1.08;
-  --text-6xl: 3.25rem;
-  --text-6xl--line-height: 1.05;
-  --text-7xl: 4rem;
-  --text-7xl--line-height: 1.03;
-  --text-8xl: 4.75rem;
-  --text-8xl--line-height: 1;
 }
 
 @layer base {
@@ -302,11 +269,6 @@
      cannot be pressed. */
   [tabindex="-1"]:focus-visible {
     outline: none;
-  }
-  /* A link reached from a table of contents lands below the bar at the top,
-     not underneath it. */
-  [id] {
-    scroll-margin-top: 5rem;
   }
   /* No wait for a second tap on anything you can press. */
   a,
@@ -387,7 +349,6 @@
     /* A mark set on the navy is drawn as it is on dark paper. */
     --success: oklch(0.74 0.115 158);
     --destructive: oklch(0.72 0.115 25);
-    --danger: oklch(0.72 0.115 25);
     --warning: oklch(0.76 0.1 84);
     --warning-ink: oklch(0.76 0.1 84);
     background-color: var(--sheet);
@@ -420,16 +381,19 @@
     text-transform: none;
   }
 
-  /* A link in running text. */
+  /* A link in running text. Its underline is drawn in the link's own colour,
+     which stands at well over 3:1 against the page in both themes, because the
+     underline and not the hue is what tells a link from the words around it.
+     A pointer over it thickens the line at once. */
   .cb-link {
     color: var(--primary);
     text-decoration: underline;
-    text-decoration-color: color-mix(in oklab, var(--primary) 35%, transparent);
+    text-decoration-color: currentColor;
+    text-decoration-thickness: from-font;
     text-underline-offset: 3px;
-    transition: text-decoration-color 0.15s;
   }
   .cb-link:hover {
-    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
   }
 }
 
@@ -528,131 +492,59 @@
  * fade from 0 reads as a blank page).
  * ========================================================================= */
 
-/* =========================================================================
- * The score report
- * A reading against the line: the score as a bar on a 0–100 scale, the ready
- * line ruled through it and through every domain's bar beneath. The count-up
- * is driven in JS (ScoreLevel); `--rv-accent*` carry the band's colour.
- * The `rv-` names are kept from the instrument this replaced.
- * ========================================================================= */
-.rv-stage {
-  --rv-ink: var(--foreground);
-  --rv-muted: var(--muted-foreground);
-  --rv-muted-2: var(--muted-foreground);
-  --rv-line: var(--border);
-  --rv-line-strong: var(--input);
-  --rv-surface: var(--card);
-  --rv-surface-2: var(--muted);
-  position: relative;
-  color: var(--foreground);
-  background: var(--background);
-}
-
-/* Entrance primitives: a short rise, readable at every frame. */
-.rv-rise {
-  transform: translateY(8px);
-  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.rv-revealed .rv-rise {
-  transform: none;
-}
-.rv-revealed .rv-rise[data-d="1"] { transition-delay: 0.03s; }
-.rv-revealed .rv-rise[data-d="2"] { transition-delay: 0.08s; }
-.rv-revealed .rv-rise[data-d="3"] { transition-delay: 0.14s; }
-.rv-revealed .rv-rise[data-d="4"] { transition-delay: 0.2s; }
-.rv-revealed .rv-rise[data-d="5"] { transition-delay: 0.26s; }
-.rv-revealed .rv-rise[data-d="6"] { transition-delay: 0.32s; }
-
-@keyframes rv-pop {
-  from { transform: translateY(8px); }
-  to { transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  [style*="rv-pop"] { animation: none !important; }
-}
-
-.rv-score {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  color: var(--foreground);
-  font-variant-numeric: lining-nums tabular-nums;
-  letter-spacing: -0.015em;
-}
-.rv-band {
-  font-family: var(--font-sans);
-  color: var(--rv-accent-ink, var(--foreground));
-}
-
-/* Domain bars: drawn at their full length and grown from the left by a
-   transform, which the compositor moves without laying the page out again. */
-.rv-fill {
-  width: var(--w);
-  border-radius: 1px;
-  background: var(--dc);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.rv-revealed .rv-fill { transform: none; }
-
-.rv-chip {
-  color: var(--rv-accent-ink, var(--foreground));
-  background: var(--rv-accent-dim);
-  border: 1px solid var(--rv-accent-soft);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rv-rise,
-  .rv-fill,
-  .rv-band {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* ─── Guided path ───────────────────────────────────────────────────────────
- * Motion for the player: a new screen rises a few pixels, and nothing else
- * moves. The stage is held until the client knows whether to resume or start
- * fresh, so a returning learner never sees the first question flash past.
- *
- * Entrances move, they don't fade from nothing: content must be readable at
- * every frame. A fade from opacity 0 left questions blank in session replays
- * (which freeze animations at their first frame) and anywhere an animation
- * stalls.
- */
-/* A learner meets this hundreds of times in a sitting, so it is short and
-   small: enough to say "this is new", never enough to wait for. */
+/* A new screen of the study path (and a lab's or a drill's next panel) rises
+   a few pixels, and nothing else moves. A learner meets this hundreds of times
+   in a sitting, so it is short and small: enough to say "this is new", never
+   enough to wait for. It moves and does not fade from nothing, so the screen
+   is readable at every frame, in a session replay too. */
 @keyframes path-rise {
   from { transform: translateY(4px); }
   to { transform: none; }
 }
-.path-rise { animation: path-rise 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
-/* The held stage. Only a returning learner (flagged before first paint by the
-   inline script in src/components/path/path-hold.ts) waits for the page's
-   scripts; a first visit shows the introductory questions straight from the
-   server.
+/* These classes live in the components layer, as the type classes do, so a
+   utility on the same element still wins over them. */
+@layer components {
+  /* A score's figure (ScoreLevel): the serif face with figures of one width,
+     so a count does not shift sideways. The `rv-` name is kept from the score
+     report this replaced. */
+  .rv-score {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--foreground);
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.015em;
+  }
 
-   While the stage is held its body is hidden with `visibility`, not with
-   opacity: the question under it can then be neither read by a screen reader,
-   focused nor pressed. Two sentences stand in for it. Each is shown by an
-   attribute that the same inline script sets on a clock, so they appear when
-   the page's scripts are slow and when they never arrive. Nothing here is
-   animated, so a session replay shows what the learner saw. */
-html[data-path-returning] .path-stage[data-ready="false"] > .path-stage-body { visibility: hidden; }
-.path-wait,
-.path-late { display: none; }
-/* After about half a second: "Your study path is loading." */
-html[data-path-returning][data-path-wait]:not([data-path-late]) .path-stage[data-ready="false"] > .path-wait { display: block; }
-/* The page's scripts have not started after ten seconds: the page says so and
-   offers to reload. A first visit keeps its question and reads the sentence
-   under it; a held stage has nothing to show, so its body gives up its room. */
-html[data-path-late] .path-stage[data-ready="false"] > .path-late { display: block; }
-html[data-path-returning][data-path-late] .path-stage[data-ready="false"] > .path-stage-body { display: none; }
+  .path-rise { animation: path-rise 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
-@media (prefers-reduced-motion: reduce) {
-  .path-rise {
-    animation: none !important;
+  /* The held stage. Only a returning learner (flagged before first paint by
+     the inline script in src/components/path/path-hold.ts) waits for the
+     page's scripts; a first visit shows the introductory questions straight
+     from the server.
+
+     While the stage is held its body is hidden with `visibility`, not with
+     opacity: the question under it can then be neither read by a screen
+     reader, focused nor pressed. Two sentences stand in for it. Each is shown
+     by an attribute that the same inline script sets on a clock, so they
+     appear when the page's scripts are slow and when they never arrive.
+     Nothing here is animated, so a session replay shows what the learner saw. */
+  html[data-path-returning] .path-stage[data-ready="false"] > .path-stage-body { visibility: hidden; }
+  .path-wait,
+  .path-late { display: none; }
+  /* After about half a second: "Your study path is loading." */
+  html[data-path-returning][data-path-wait]:not([data-path-late]) .path-stage[data-ready="false"] > .path-wait { display: block; }
+  /* The page's scripts have not started after ten seconds: the page says so
+     and offers to reload. A first visit keeps its question and reads the
+     sentence under it; a held stage has nothing to show, so its body gives up
+     its room. */
+  html[data-path-late] .path-stage[data-ready="false"] > .path-late { display: block; }
+  html[data-path-returning][data-path-late] .path-stage[data-ready="false"] > .path-stage-body { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .path-rise {
+      animation: none !important;
+    }
   }
 }
 
@@ -693,45 +585,85 @@ html[data-path-returning][data-path-late] .path-stage[data-ready="false"] > .pat
  * The first stop for a keyboard: past the bar at the top, to the page itself.
  * It stays out of sight until it has the focus, then sits on the navy band.
  * ========================================================================= */
-.cb-skip {
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 100;
-  padding: 0.625rem 0.875rem;
-  border-radius: calc(var(--radius) - 2px);
-  background: oklch(1 0 0);
-  color: oklch(0.21 0.03 262);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  box-shadow: 0 0 0 2px oklch(0.44 0.14 257), 0 6px 20px -8px oklch(0.21 0.03 262 / 45%);
-  transform: translateY(-200%);
-}
-.cb-skip:focus-visible,
-.cb-skip:focus {
-  transform: none;
-  outline: none;
+@layer components {
+  .cb-skip {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.625rem 0.875rem;
+    border-radius: calc(var(--radius) - 2px);
+    background: oklch(1 0 0);
+    color: oklch(0.21 0.03 262);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    box-shadow: 0 0 0 2px oklch(0.44 0.14 257), 0 6px 20px -8px oklch(0.21 0.03 262 / 45%);
+    transform: translateY(-200%);
+  }
+  .cb-skip:focus-visible,
+  .cb-skip:focus {
+    transform: none;
+    outline: none;
+  }
 }
 
 /* =========================================================================
  * Touch targets
  * A control that is drawn small for a mouse still takes a thumb: on a touch
  * screen its hit area is at least 44 by 44, without moving anything around it.
+ * In the components layer, so a control that is placed with a utility of its
+ * own (`absolute`, as the button that closes a note is) keeps its place: the
+ * hit area is laid out from any positioned box.
  * ========================================================================= */
-@media (pointer: coarse) {
-  .cb-tap {
-    position: relative;
+@layer components {
+  @media (pointer: coarse) {
+    .cb-tap {
+      position: relative;
+    }
+    .cb-tap::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      transform: translate(-50%, -50%);
+    }
   }
-  .cb-tap::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 2.75rem);
-    height: max(100%, 2.75rem);
-    transform: translate(-50%, -50%);
+}
+
+/* =========================================================================
+ * Windows contrast themes
+ * A contrast theme draws the page in a few colours of its own and removes
+ * fills, tints and shadows. A state drawn as a fill (the chosen answer, a
+ * pressed toggle, the open tab, the current question or page) would then look
+ * like every other control, so under such a theme it is drawn as a frame in
+ * the theme's highlight colour, which the theme keeps. The frame is an outline
+ * inside the control's own edge, so nothing moves and no parent clips it; the
+ * keyboard's ring then stands outside it, so a control can show both. It is
+ * outside every layer so that the utilities that draw these states in
+ * ordinary colours do not override it.
+ * ========================================================================= */
+@media (forced-colors: active) {
+  [aria-pressed="true"],
+  [aria-checked="true"],
+  [aria-selected="true"],
+  :is(a, button)[aria-current]:not([aria-current="false"]),
+  [data-state="chosen"] {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+  :is(
+      [aria-pressed="true"],
+      [aria-checked="true"],
+      [aria-selected="true"],
+      :is(a, button)[aria-current]:not([aria-current="false"]),
+      [data-state="chosen"]
+    ):focus-visible {
+    outline-offset: 2px;
   }
 }

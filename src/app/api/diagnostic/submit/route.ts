@@ -17,13 +17,14 @@ export const POST = defineEndpoint(submitDiagnostic, {
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
 
+    // The member reads these sentences as they are written.
     const attempt = await getAttempt(db, user.id, input.attemptId);
-    if (!attempt) throw new ApiError("not_found", "Attempt not found");
+    if (!attempt) throw new ApiError("not_found", "This diagnostic could not be found. Please start it again.");
     // The attempt's exam must be in the member's plan: nothing is graded, and
     // no answer or explanation is returned, for an exam that is not.
     await requireCertAccess(db, user.id, attempt.certificationId);
     if (attempt.isComplete)
-      throw new ApiError("conflict", "Attempt already submitted");
+      throw new ApiError("conflict", "This diagnostic has already been submitted.");
 
     // Only grade answers for questions that belong to this attempt.
     const allowedIds = new Set(attempt.progressState?.questionIds ?? []);
@@ -43,7 +44,7 @@ export const POST = defineEndpoint(submitDiagnostic, {
     const questionById = new Map(questions.map((q) => [q.id, q]));
     const answers = offered.filter((a) => questionById.has(a.questionId));
     if (answers.length === 0)
-      throw new ApiError("validation_failed", "No valid answers for this attempt");
+      throw new ApiError("validation_failed", "None of the answers that were sent belong to this diagnostic.");
 
     // Grade server-side against correct_index.
     const graded: GradedResponse[] = answers.flatMap((a) => {

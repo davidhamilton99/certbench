@@ -8,7 +8,7 @@ export const attackTypes: ReferenceTable = {
     { key: "attack", label: "Attack" },
     { key: "category", label: "Category" },
     { key: "description", label: "Description" },
-    { key: "mitigation", label: "Key Mitigation" },
+    { key: "mitigation", label: "Key mitigation" },
   ],
   entries: [
     { columns: { attack: "Phishing", category: "Social engineering", description: "Fraudulent email/message impersonating trusted entity to steal credentials", mitigation: "User training, email filtering, MFA" } },

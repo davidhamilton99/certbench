@@ -6,10 +6,10 @@ export const subnettingChart: ReferenceTable = {
   description: "This chart gives the subnet mask, the number of usable hosts and the network bits of each CIDR prefix from /8 to /30 for the Network+ N10-009 exam.",
   columnHeaders: [
     { key: "cidr", label: "CIDR", mono: true },
-    { key: "subnetMask", label: "Subnet Mask", mono: true },
-    { key: "hosts", label: "Usable Hosts", mono: true },
-    { key: "networkBits", label: "Network Bits", mono: true },
-    { key: "class", label: "Class / Notes" },
+    { key: "subnetMask", label: "Subnet mask", mono: true },
+    { key: "hosts", label: "Usable hosts", mono: true },
+    { key: "networkBits", label: "Network bits", mono: true },
+    { key: "class", label: "Class / notes" },
   ],
   entries: [
     { columns: { cidr: "/8", subnetMask: "255.0.0.0", hosts: "16,777,214", networkBits: "8", class: "Class A: 10.0.0.0/8 private range" } },

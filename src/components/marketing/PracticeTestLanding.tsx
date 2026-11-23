@@ -21,6 +21,7 @@ import type { PublicTestData, QuickRoundData } from "@/core/path/types";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { keepCodes } from "@/lib/keep-codes";
 import { replacedBy, usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
+import { domainName } from "@/lib/seo/objective-meta";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 
 export interface PracticeTestLandingData {
@@ -78,7 +79,8 @@ export function PracticeTestLanding({
   // The Network+ objective numbers are not CompTIA's yet, so that list goes by topic.
   const official = page.certSlugs.every(usesOfficialObjectiveNumbers);
   const retired = page.certSlugs.some((slug) => replacedBy(slug) !== null);
-  const examOutlines =
+  // The domains in sentence case whichever source names them, so that one exam's domains are not named two ways.
+  const examOutlines = (
     page.currentExams ??
     data.certs.map(({ cert, domains }) => ({
       name: cert.name,
@@ -88,7 +90,8 @@ export function PracticeTestLanding({
         title: d.title,
         weight: d.examWeight,
       })),
-    }));
+    }))
+  ).map((exam) => ({ ...exam, domains: exam.domains.map((d) => ({ ...d, title: domainName(d.title) })) }));
 
   // The samples as one deck, shortest first within each exam so that the first
   // question is an approachable one. A page with two exams says which exam
@@ -149,10 +152,10 @@ export function PracticeTestLanding({
     url: `https://certbench.dev/${page.path}`,
     // The day the page's words last changed: the day the sitemap gives for it.
     dateModified: CERT_PAGES_UPDATED_ISO,
-    learningResourceType: "Practice test",
+    // A page with no exam of its own (A+, which links to each core's) is not described as a practice test.
+    ...(test ? { learningResourceType: "Practice test", timeRequired: `PT${testMinutes}M` } : {}),
     educationalUse: "Practice",
     isAccessibleForFree: true,
-    ...(test ? { timeRequired: `PT${testMinutes}M` } : {}),
     inLanguage: "en",
     provider: {
       "@type": "Organization",
@@ -232,8 +235,8 @@ export function PracticeTestLanding({
           title={`Free ${examName} practice exam`}
           sub={keepCodes(
             fullTest
-              ? `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes, which is the limit of the real exam. You can also take a half-length exam of ${REHEARSAL_FORMATS.half.questions} questions. As in the real exam, answers are not shown until the end. Every question is then explained with your score.`
-              : `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes. As in the real exam, answers are not shown until the end. Every question is then explained with your score.`
+              ? `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes, which is the limit of the real exam. You can also take a half-length exam of ${REHEARSAL_FORMATS.half.questions} questions. Answers are not shown until you finish, and every question is then explained with your score.`
+              : `The CertBench practice exam for ${exam} has ${test.reps.length} questions and a time limit of ${testMinutes} minutes. Answers are not shown until you finish, and every question is then explained with your score.`
           )}
           width="md"
         >
@@ -274,8 +277,12 @@ export function PracticeTestLanding({
         </LanderSection>
       )}
 
-      {/* Each domain, and its share of the exam. */}
-      <LanderSection title="What the exam covers" sub="The table shows each domain's share of the exam." width="xl">
+      {/* Each domain, and its share of the exam. One exam's table is a column wide, so its rule is too; two tables side by side take the container. */}
+      <LanderSection
+        title="What the exam covers"
+        sub="The table shows each domain's share of the exam."
+        width={examOutlines.length > 1 ? "xl" : "md"}
+      >
         <ExamOutline exams={examOutlines} />
       </LanderSection>
 
@@ -295,7 +302,8 @@ export function PracticeTestLanding({
         className="mt-20 sm:mt-28"
         title={`Study for ${examName} in short steps`}
         href={pathHref}
-        label="Start the study path"
+        // A page for two exams leads to the list of exams, which every page labels the same way.
+        label={pathHref === "/start" ? "Choose your exam" : `Start the ${examName} study path`}
         context="practice_test_page"
         note="You do not need an account to start."
       >

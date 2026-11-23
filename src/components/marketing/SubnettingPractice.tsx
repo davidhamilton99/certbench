@@ -33,10 +33,10 @@ const RANGE_CHOSEN = "bg-primary text-primary-foreground";
 const RANGE_IDLE = "hover:bg-tint-hover hover:text-foreground";
 
 /**
- * The modes. On a phone they are one row that scrolls sideways under a
- * finger, so they do not stack above the drill. From the `sm` width, where a
- * hidden row could only be reached by scrolling sideways with a mouse, they
- * wrap onto a second line and every mode is in view.
+ * The modes. They wrap onto as many lines as they need at every width, so
+ * every mode is in view. (On a phone they were one row that scrolled sideways
+ * with its scroll bar hidden, and four of the seven sat off the screen with
+ * nothing to say that they were there.)
  */
 function ModePicker({
   mode,
@@ -48,11 +48,7 @@ function ModePicker({
   disabled?: boolean;
 }) {
   return (
-    <div
-      role="group"
-      aria-label="Drill mode"
-      className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden"
-    >
+    <div role="group" aria-label="Drill mode" className="flex min-w-0 flex-wrap gap-1.5">
       {PICKER.map((m) => (
         <button
           key={m.id}
@@ -140,8 +136,10 @@ export function SubnettingPractice() {
             : undefined
         }
         lead={{
-          title: "Subnetting is one skill in one domain.",
-          body: "The exam is decided by scenarios from every domain. Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
+          // What CertBench offers next, and nothing about what an exam is made
+          // of or where a topic sits in it: CompTIA does not publish that.
+          title: "Continue with your exam's study path",
+          body: "Your study path works through the exam topic by topic, in short sets of questions like this one, up to a readiness checkpoint that shows where you stand.",
           exams: [EXAMS.networkPlus, EXAMS.aPlusCore1],
         }}
       />

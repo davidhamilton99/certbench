@@ -49,7 +49,8 @@ function shown() {
   const asksExpansion = screen.queryByText("Which expansion?") !== null;
   // Asked the other way round, the card says so.
   if (!asksExpansion) expect(screen.getByText("Which acronym?")).toBeInTheDocument();
-  const prompt = document.getElementById(answerGroup().getAttribute("aria-labelledby")!)!.textContent!;
+  // The group is named by the prompt first (and may name the cue after it).
+  const prompt = document.getElementById(answerGroup().getAttribute("aria-labelledby")!.split(" ")[0])!.textContent!;
   const row = deck.rows.find((r) => (asksExpansion ? r.acronym : r.expansion) === prompt)!;
   return { row, right: asksExpansion ? row.expansion : row.acronym };
 }

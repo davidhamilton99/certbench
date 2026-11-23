@@ -12,11 +12,14 @@ import { PRO_PRICE_SHORT, PRO_PRICE_TERMS } from "@/lib/pricing/terms";
  * - CertBench publishes these pages. Each description says so, and so does
  *   each answer that could be quoted without the page around it.
  * - A competitor's price carries `source` and `checked` only when it was read
- *   on the vendor's own page on that day. Every other price is hedged
- *   ("typically", "often") and carries no date.
- * - A judgment is attributed to CertBench. Nothing is said about what most
- *   candidates do or recommend, because CertBench has no source for it. No
- *   ratings, user counts or quotations are invented.
+ *   on the vendor's own page on that day (SCRATCH facts file). A price that
+ *   was not read there is never given as a figure, hedged or not: the page
+ *   says where to find it. No product is called the most or least expensive.
+ * - A judgment is attributed to CertBench, and so is every description of a
+ *   competitor's features that no vendor page read on that day supports.
+ *   Nothing is said about what most candidates do or recommend, because
+ *   CertBench has no source for it. No ratings, user counts or quotations are
+ *   invented.
  */
 
 /** When the words in this file last changed, for the sitemap and for a "last updated" line. */
@@ -38,7 +41,14 @@ const VENDOR_PAGES = {
 } as const;
 
 const BOSON_PRICE = "$99 a year for each exam";
-const CERTMASTER_PRICE = "Typically more than $150 for each exam";
+
+/** Where to find a price that CertBench could not read on the vendor's own page: no figure, and no date. */
+const priceAt = (owner: string) => `See ${owner} own site for the current price`;
+/** The same for a free trial, which no vendor page read on that day described. */
+const trialAt = (owner: string) => `See ${owner} own site for any free trial`;
+
+/** CompTIA printed no price for CertMaster Practice on any of its pages that CertBench read. */
+const CERTMASTER_PRICE = priceAt("CompTIA's");
 
 /** What a visitor can use without paying, for the "Free to try" row of each comparison. */
 const CERTBENCH_FREE =
@@ -108,7 +118,7 @@ export const VS_PAGES: VsPage[] = [
       { feature: "Spaced repetition", certbench: "Built in for every question that you miss", competitor: "No" },
       { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed practice exams", competitor: "A score report for each exam" },
       { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "Limited" },
-      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: "Demo only" },
+      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: trialAt("Boson's") },
       { feature: "Price", certbench: PRO_PRICE_SHORT, competitor: BOSON_PRICE },
     ],
     faqs: [
@@ -139,7 +149,7 @@ export const VS_PAGES: VsPage[] = [
     h1: "CertBench and CertMaster compared",
     intro: [
       `${VS_DISCLOSURE} CertMaster is CompTIA's own product, and that brings real advantages: alignment with the objectives by the organization that writes them, integration with the official courseware, and the credibility of the exam vendor itself. If your employer or school provides it, you should use it.`,
-      "If you are paying for it yourself, the calculation is different. CertMaster Practice typically costs more than $150 for each exam, and it is built around practice tests and objective assessments with mastery scores, whereas CertBench is a study path that works through your exam topic by topic. The comparison below sets out what each one offers for its price.",
+      "If you are paying for it yourself, the calculation is different. CertBench found no price for CertMaster Practice on the CompTIA pages that it read, so check CompTIA's own site for the current price before you compare. In CertBench's assessment, CertMaster Practice is built around practice tests and objective assessments, whereas CertBench is a study path that works through your exam topic by topic. The comparison below sets out what each one offers.",
     ],
     chooseThem: [
       "Your employer, school or bootcamp already provides CertMaster, so the official content costs you nothing",
@@ -156,8 +166,8 @@ export const VS_PAGES: VsPage[] = [
       { feature: "Study path", certbench: STUDY_PATH_ANY_EXAM, competitor: "Practice tests and objective assessments that find gaps by domain" },
       { feature: "Spaced repetition", certbench: "Built in for every question that you miss", competitor: "No scheduled spaced repetition" },
       { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed practice exams", competitor: "Progress and topic mastery indicators" },
-      { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "In CertMaster Labs (sold separately)" },
-      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: "No" },
+      { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "In CertMaster Labs, a separate CompTIA product" },
+      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: trialAt("CompTIA's") },
       { feature: "Price", certbench: PRO_PRICE_SHORT, competitor: CERTMASTER_PRICE },
     ],
     faqs: [
@@ -169,12 +179,12 @@ export const VS_PAGES: VsPage[] = [
       {
         question: "Are CertBench questions aligned to the same objectives as CertMaster?",
         answer:
-          "Yes. Every CertBench question is written against the current official exam objectives (SY0-701 and SY0-801 for Security+) and is linked to a specific objective, with domain weighting that matches the real exam. The difference is authorship, not coverage. CompTIA writes CertMaster's questions. CertBench's questions are original and written independently, and every answer is explained.",
+          "For Security+, yes. Every CertBench Security+ question is written against CompTIA's SY0-701 or SY0-801 exam objectives and is linked to a specific objective, and the practice exams are weighted like the real exam's domains. CertMaster is CompTIA's own product. CertBench's questions are original and written independently, and every answer is explained.",
       },
       {
         question: "Does using unofficial practice material risk my certification?",
         answer:
-          "No. What violates CompTIA's policy is the use of braindumps, which are leaked copies of real exam questions. Every legitimate third-party publisher (Boson, Sybex, Dion, CertBench) writes original practice questions to the public exam objectives. CertBench contains no real exam content.",
+          "No. What violates CompTIA's policy is the use of braindumps, which are leaked copies of real exam questions. CertBench writes original practice questions and contains no real exam content.",
       },
     ],
   },
@@ -186,8 +196,8 @@ export const VS_PAGES: VsPage[] = [
       "CertBench's own comparison of CertBench and Pocket Prep for CompTIA Security+, Network+ and A+: the mobile experience, question depth, the study path, spaced repetition and price.",
     h1: "CertBench and Pocket Prep compared",
     intro: [
-      `${VS_DISCLOSURE} Pocket Prep's apps are good at what they are designed for, which is studying in short intervals during the day. The mobile experience is polished, the offline mode works, and answering ten questions in a waiting room is a real way to study.`,
-      "The trade-off is depth. Short-quiz apps are strongest at maintaining knowledge and weakest at building it systematically, and Pocket Prep has no hands-on PBQ practice. The comparison below sets out each product.",
+      `${VS_DISCLOSURE} Pocket Prep's apps are good at what they are designed for, which is studying in short intervals during the day. The mobile experience is polished, and answering ten questions in a waiting room is a real way to study.`,
+      "In CertBench's assessment, the trade-off is depth. Short-quiz apps are strongest at maintaining knowledge and weakest at building it systematically, and Pocket Prep offers no hands-on PBQ practice. The comparison below sets out each product.",
     ],
     chooseThem: [
       "You study mainly on a phone (on journeys, in breaks and in queues) and you want a native app",
@@ -200,20 +210,20 @@ export const VS_PAGES: VsPage[] = [
       "You want spaced repetition that schedules the questions that you missed automatically",
     ],
     rows: [
-      { feature: "Mobile experience", certbench: "A responsive web app that works well on a phone. There is no native app", competitor: "Polished native apps with offline mode" },
+      { feature: "Mobile experience", certbench: "A responsive web app that works well on a phone. There is no native app", competitor: "Polished native apps" },
       { feature: "Full-length weighted exams", certbench: "Yes, weighted like the real exam", competitor: "Mock Exam mode (premium), at the real exam's length and time limit" },
       { feature: "Study path", certbench: STUDY_PATH_ANY_EXAM, competitor: "Level Up mode (premium): each subject in levels that get harder" },
       { feature: "Spaced repetition", certbench: "Built in for every question that you miss", competitor: "A review of missed questions, without scheduled repetition" },
       { feature: "Interactive PBQ practice", certbench: "Hands-on labs in the browser", competitor: "No" },
       { feature: "Readiness score", certbench: "Domain-weighted, from a checkpoint and timed practice exams", competitor: "Average-score tracking" },
-      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: "Limited free question sample" },
+      { feature: "Free to try", certbench: CERTBENCH_FREE, competitor: trialAt("Pocket Prep's") },
       { feature: "Price", certbench: PRO_PRICE_SHORT, competitor: "Premium for Security+ costs $20.99 a month, $49.99 every three months, or $124.99 a year" },
     ],
     faqs: [
       {
         question: "Does CertBench work on a phone?",
         answer:
-          "Yes. CertBench is designed for phones first. It runs in the browser and not as a native app, so there is no offline mode. There is nothing to install, and progress that is saved to your account is available on every device.",
+          "Yes. CertBench works on a phone. It runs in the browser and not as a native app, so there is no offline mode. There is nothing to install, and progress that is saved to your account is available on every device.",
       },
       {
         question: "Is quick-quiz studying enough to pass Security+?",
@@ -274,7 +284,7 @@ const GUIDE_DISCLOSURE =
  * the publisher of a guide is in no position to place its own product.
  */
 const GUIDE_METHOD =
-  "The products are listed in alphabetical order. The strengths and limitations listed for each product are CertBench's own assessment. Where a price shows the date on which it was checked, CertBench read it on the vendor's own page on that date. The other prices are approximate and may have changed.";
+  "The products are listed in alphabetical order. What each product is most suitable for, and its strengths and limitations, are CertBench's own assessment. Where a price shows the date on which it was checked, CertBench read it on the vendor's own page on that date. Where CertBench could not read a price, the guide says where to find it and gives no figure.";
 
 /** A guide's products in the order the guide says they are in: alphabetical by the name printed. */
 const alphabetical = (tools: RoundupTool[]): RoundupTool[] =>
@@ -321,7 +331,7 @@ export const ROUNDUP: RoundupData = {
       strengths: [
         "A study path for each Security+ version, SY0-701 and SY0-801: every objective in short steps, a readiness checkpoint, then timed full-length practice exams",
         "Spaced repetition of every question that you miss, and a readiness score weighted the way the real exam weights its domains",
-        "Free: a full-length 90-question timed exam for each version and 12 interactive PBQs, with port, acronym and subnetting tools",
+        "Free: a full-length 90-question timed exam for each version, 12 hands-on labs for SY0-701, and port, acronym and subnetting tools",
       ],
       weaknesses: [WEB_APP_ONLY, "A newer question bank than the established products, covering CompTIA exams only"],
     },
@@ -333,10 +343,7 @@ export const ROUNDUP: RoundupData = {
         "The exam vendor's own content, aligned to the exam objectives",
         "Integrates with CompTIA courseware and instructor-led programs",
       ],
-      weaknesses: [
-        "Typically the most expensive option in this guide if you are paying for it yourself",
-        CERTMASTER_STYLE,
-      ],
+      weaknesses: [CERTMASTER_STYLE],
       compareSlug: "certbench-vs-certmaster",
     },
     {
@@ -357,18 +364,16 @@ export const ROUNDUP: RoundupData = {
       source: VENDOR_PAGES.dionTraining,
       checked: VENDOR_PRICES_CHECKED,
       bestFor: "Practice exams at a low price",
-      strengths: [
-        "A pack of practice exams at a low price",
-        "Jason Dion's practice exams are also sold on Udemy, whose exam player handles timing and basic review",
-      ],
+      strengths: ["A pack of practice exams at a low price"],
       weaknesses: ["No study system around the exams, so you manage your own review"],
     },
     {
+      // ExamCompass's page could not be read (facts file), so no price is given, not even "Free".
       name: "ExamCompass",
-      price: "Free",
-      bestFor: "Free topic quizzes",
+      price: priceAt("ExamCompass's"),
+      bestFor: "Topic quizzes alongside a course",
       strengths: [
-        "Free quizzes in the browser, organized by topic",
+        "Quizzes in the browser, organized by topic",
         "Suitable as light practice alongside a course",
       ],
       weaknesses: ["Quizzes by topic only, with no study path around them"],
@@ -385,7 +390,7 @@ export const ROUNDUP: RoundupData = {
     },
     {
       question: "Are free Security+ practice tests good enough?",
-      answer: `${GUIDE_ANSWER_DISCLOSURE} Free question banks, video courses and topic quizzes cover much of the knowledge. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 interactive PBQs for Security+. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
+      answer: `${GUIDE_ANSWER_DISCLOSURE} Free question banks, video courses and topic quizzes cover much of the knowledge. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 hands-on labs for Security+ SY0-701. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
     },
     {
       question: "Should I buy more than one practice test product?",
@@ -403,7 +408,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
   h1: "The best CompTIA A+ practice tests and exams in 2026",
   intro: [
     GUIDE_DISCLOSURE,
-    "A+ is two separate exams, and you pass them one at a time. Core 1 (220-1201) covers hardware, networking, mobile devices and cloud computing, and Core 2 (220-1202) covers operating systems, security and troubleshooting. These exams replaced 220-1101 and 220-1102, which retired on September 25, 2025, so check which version a product was written to before you buy it. CertBench recommends a practice tool that tracks readiness for the two exams separately, together with one realistic simulator for each core before you book.",
+    "A+ is two separate exams, and you pass them one at a time. Core 1 (220-1201) covers mobile devices, networking, hardware, virtualization and cloud computing, and hardware and network troubleshooting. Core 2 (220-1202) covers operating systems, security, software troubleshooting and operational procedures. These exams replaced 220-1101 and 220-1102, which retired on September 25, 2025, so check which version a product was written to before you buy it. CertBench recommends a practice tool that tracks readiness for the two exams separately, together with one realistic simulator for each core before you book.",
     GUIDE_METHOD,
   ],
   tools: alphabetical([
@@ -430,7 +435,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       strengths: [
         "A study path for each core, written to 220-1201 and 220-1202: every objective in short steps, a readiness checkpoint, then timed full-length practice exams",
         "Spaced repetition of every question that you miss, and hands-on labs in the browser",
-        "More than 1,300 A+ questions across the two cores. Free: a full-length 90-question exam and 12 interactive PBQs for each core",
+        "More than 1,300 A+ questions across the two cores. Free: a full-length 90-question exam and 12 hands-on labs for each core",
       ],
       weaknesses: [
         WEB_APP_ONLY,
@@ -451,13 +456,11 @@ export const A_PLUS_ROUNDUP: RoundupData = {
       weaknesses: [MESSER_FORMAT],
     },
     {
+      // The Udemy page could not be read (facts file), so no price, and no feature of Udemy's, is given.
       name: "Jason Dion A+ practice exams (Udemy)",
-      price: "Often $15 to $25 for each core in Udemy's sales",
-      bestFor: "Full-length exams at a low price",
-      strengths: [
-        "Full-length exams for each core with explanations at a low price",
-        "Udemy's player handles timing and basic review",
-      ],
+      price: priceAt("Udemy's"),
+      bestFor: "Full-length exams for each core",
+      strengths: ["Full-length exams for each core, with explanations"],
       weaknesses: ["No study system around the exams, so you manage your own review"],
     },
     {
@@ -475,16 +478,13 @@ export const A_PLUS_ROUNDUP: RoundupData = {
     },
     {
       name: "CompTIA CertMaster Practice for A+",
-      price: "Typically more than $150 for each core",
+      price: CERTMASTER_PRICE,
       bestFor: "When your employer or school pays",
       strengths: [
         "The exam vendor's own content, aligned to the current exam objectives",
         "Integrates with CompTIA courseware and instructor programs",
       ],
-      weaknesses: [
-        "Typically the most expensive option in this guide if you are paying for it yourself, and the price is for each core",
-        CERTMASTER_STYLE,
-      ],
+      weaknesses: [CERTMASTER_STYLE],
       compareSlug: "certbench-vs-certmaster",
     },
   ]),
@@ -500,11 +500,11 @@ export const A_PLUS_ROUNDUP: RoundupData = {
     {
       question: "Do I need separate practice for Core 1 and Core 2?",
       answer:
-        "Yes. They are different exams with different content (Core 1 covers hardware, networking, mobile devices and cloud computing, and Core 2 covers operating systems, security and troubleshooting), and you book and pass them separately. Track your readiness for each core separately so that you know which one you are ready to take. Being ready for Core 1 tells you little about Core 2.",
+        "Yes. They are different exams with different content, and you book and pass them separately. Core 1 (220-1201) covers mobile devices, networking, hardware, virtualization and cloud computing, and hardware and network troubleshooting. Core 2 (220-1202) covers operating systems, security, software troubleshooting and operational procedures. Track your readiness for each core separately so that you know which one you are ready to take. Being ready for Core 1 tells you little about Core 2.",
     },
     {
       question: "Are free A+ practice tests good enough?",
-      answer: `${GUIDE_ANSWER_DISCLOSURE} Free question banks, video courses and topic quizzes cover much of the A+ knowledge. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 interactive PBQs for each core. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
+      answer: `${GUIDE_ANSWER_DISCLOSURE} Free question banks, video courses and topic quizzes cover much of the A+ knowledge. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 hands-on labs for each core. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
     },
   ],
   practiceTestPath: "a-plus-practice-test",
@@ -512,13 +512,14 @@ export const A_PLUS_ROUNDUP: RoundupData = {
 
 export const NETWORK_PLUS_ROUNDUP: RoundupData = {
   path: "best-network-plus-practice-tests",
-  metaTitle: "Best CompTIA Network+ practice tests and exams in 2026",
+  // With the layout's " | CertBench" the title tag stays within the 60 characters a search result shows.
+  metaTitle: "Best Network+ practice tests and exams in 2026",
   metaDescription:
-    "CertBench publishes this guide to CompTIA Network+ (N10-009) practice tests in 2026 and is one of the products in it. The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster and Jason Dion, and covers subnetting practice.",
+    "CertBench publishes this guide to CompTIA Network+ (N10-009) practice tests in 2026 and is one of the four products in it. The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster and Jason Dion.",
   h1: "The best CompTIA Network+ practice tests and exams in 2026",
   intro: [
     GUIDE_DISCLOSURE,
-    "The Network+ (N10-009) exam objectives include subnetting, ports and protocols, which call for quick calculation and recall. CertBench therefore recommends more than a question bank: a question bank together with targeted practice in the calculations that you will do under time pressure, and one realistic simulator before you book.",
+    "CertBench's Network+ study path has topics on IP addressing and subnets and on ports and protocols, which call for quick calculation and recall. CertBench therefore recommends more than a question bank: a question bank together with targeted practice in those calculations, and one realistic simulator before you book.",
     GUIDE_METHOD,
   ],
   // There is no Professor Messer entry here. On November 22, 2026 his N10-009
@@ -532,8 +533,8 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
       isSelf: true,
       strengths: [
         "A study path written for N10-009: every topic in short steps, a readiness checkpoint, then timed full-length practice exams, with spaced repetition of every question that you miss",
-        "Free subnetting and port-number drills for the timed calculations that Network+ depends on, and hands-on network topology labs",
-        "More than 600 Network+ questions. Free: a full-length 90-question exam and 12 interactive PBQs",
+        "Free subnetting and port-number drills against the clock, and hands-on network diagram labs",
+        "More than 600 Network+ questions. Free: a full-length 90-question exam and 12 hands-on labs",
       ],
       weaknesses: [WEB_APP_ONLY, "A newer question bank than the established products"],
     },
@@ -552,12 +553,9 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
     },
     {
       name: "Jason Dion Network+ practice exams (Udemy)",
-      price: "Often $15 to $25 in Udemy's sales",
-      bestFor: "Full-length exams at a low price",
-      strengths: [
-        "Full-length exams with explanations at a low price",
-        "Udemy's player handles timing and basic review",
-      ],
+      price: priceAt("Udemy's"),
+      bestFor: "Full-length exams",
+      strengths: ["Full-length exams, with explanations"],
       weaknesses: ["No study system around the exams, and no dedicated subnetting practice"],
     },
     {
@@ -568,31 +566,21 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
         "The exam vendor's own content, aligned to the N10-009 objectives",
         "Integrates with CompTIA courseware and instructor programs",
       ],
-      weaknesses: [
-        "Typically the most expensive option in this guide if you are paying for it yourself",
-        CERTMASTER_STYLE,
-      ],
+      weaknesses: [CERTMASTER_STYLE],
       compareSlug: "certbench-vs-certmaster",
     },
-    {
-      name: "Subnetting.org and other free subnetting quizzes",
-      price: "Free",
-      bestFor: "Subnetting practice only",
-      strengths: ["Unlimited free subnetting practice, which is useful for building speed"],
-      weaknesses: [
-        "Subnetting only, with no coverage of the rest of the exam",
-        "No measure of readiness for the exam as a whole",
-      ],
-    },
+    // There is no entry for Subnetting.org or other subnetting quizzes: no page
+    // of theirs was read, and a guide must not describe a product it has no
+    // source for.
   ]),
   faqs: [
     {
       question: "What is the best Network+ practice test?",
-      answer: `${GUIDE_ANSWER_DISCLOSURE} CertBench recommends a combination: a study system with spaced repetition and dedicated subnetting drills, and one realistic simulator in the final week. CertBench is a product of the first kind, and in its assessment Boson is the most realistic simulator. Because Network+ tests subnetting and ports under time pressure, make sure that whatever you choose lets you practice those calculations until they are automatic.`,
+      answer: `${GUIDE_ANSWER_DISCLOSURE} CertBench recommends a combination: a study system with spaced repetition and dedicated subnetting drills, and one realistic simulator in the final week. CertBench is a product of the first kind, and in its assessment Boson is the most realistic simulator.`,
     },
     {
       question: "How important is subnetting on the Network+ exam?",
-      answer: `${GUIDE_ANSWER_DISCLOSURE} Subnetting, ports and protocols are part of the N10-009 exam objectives, and the calculations take time unless they have been practiced. CertBench recommends practicing them until they are automatic, with dedicated drills and not only mixed questions.`,
+      answer: `${GUIDE_ANSWER_DISCLOSURE} CompTIA's exam questions are confidential, so CertBench does not say how much of the exam is subnetting. CertBench's Network+ study path has a topic on IP addressing and subnets, and the calculations take time unless they have been practiced. CertBench recommends practicing them until they are automatic, with dedicated drills and not only mixed questions.`,
     },
     {
       question: "How many practice questions do I need for Network+?",
@@ -600,7 +588,7 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
     },
     {
       question: "Are free Network+ practice tests good enough?",
-      answer: `${GUIDE_ANSWER_DISCLOSURE} Free resources cover much of the knowledge, and free subnetting drills are valuable. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 interactive PBQs for Network+. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
+      answer: `${GUIDE_ANSWER_DISCLOSURE} Free resources cover much of the knowledge, and free subnetting drills are valuable. CertBench's own free plan includes a full-length practice exam of 90 questions and 12 hands-on labs for Network+. What free options rarely include is continued feedback: spaced repetition of the questions that you missed, and further full-length exams. It is possible to pass with no budget at all. If you are able to spend anything, CertBench recommends spending it on those two things.`,
     },
   ],
   practiceTestPath: "network-plus-practice-test",

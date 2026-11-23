@@ -46,13 +46,13 @@ describe("ordering PBQs", () => {
     render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);
     expect(check()).toBeDisabled();
     // The line that says what to do is the disabled button's description.
-    expect(check()).toHaveAccessibleDescription("Select the items in order, from first to last.");
+    expect(check()).toHaveAccessibleDescription("Choose the items in order, from first to last.");
     tap("Discover", "Offer", "Request");
     expect(order().getByRole("button", { name: /^1\. Discover/ })).toBeInTheDocument();
     expect(order().getByRole("button", { name: /^3\. Request/ })).toBeInTheDocument();
     expect(check()).toBeDisabled();
     tap("Acknowledge");
-    expect(check()).toHaveAccessibleDescription("Every item is placed. Select a row to remove it, or check your order.");
+    expect(check()).toHaveAccessibleDescription("Every item is placed. Choose a row to remove it, or check your order.");
     fireEvent.click(check());
     expect(score()).toHaveTextContent("100%");
     expect(score()).toHaveTextContent("You placed 4 of 4 items in the correct position.");
@@ -70,13 +70,25 @@ describe("ordering PBQs", () => {
     expect(choices().queryByRole("button", { name: "Offer" })).toBeNull();
     expect(screen.getByRole("group", { name: "Choices to place" }).children).toHaveLength(4);
     // The row says what a press does, in words that fit a keyboard as well as a finger.
-    fireEvent.click(order().getByRole("button", { name: "1. Offer. Select to remove it." }));
+    fireEvent.click(order().getByRole("button", { name: "1. Offer. Choose this row to remove it." }));
     expect(
       choices()
         .getAllByRole("button")
         .map((b) => b.textContent)
     ).toEqual(before);
     expect(order().queryByRole("button")).toBeNull();
+  });
+
+  it("keeps the mark on the row that the next press fills under a contrast theme, where tints are not drawn", () => {
+    render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);
+    tap("Discover");
+    const rows = order().getAllByRole("listitem");
+    const next = rows.find((li) => li.textContent?.includes("Choose the next item below."))!;
+    expect(next.className).toContain("forced-colors:border-[color:Highlight]");
+    // The other empty rows carry no mark.
+    const others = rows.filter((li) => li !== next && !li.querySelector("button"));
+    expect(others.length).toBeGreaterThan(0);
+    for (const li of others) expect(li.className).not.toContain("forced-colors:");
   });
 
   it("keeps the keyboard's focus with the work: the next choice, the check, a choice that comes back", async () => {
@@ -91,6 +103,18 @@ describe("ordering PBQs", () => {
     await waitFor(() => expect(check()).toHaveFocus());
     fireEvent.click(order().getByRole("button", { name: /^1\. Discover/ }));
     await waitFor(() => expect(choices().getByRole("button", { name: "Discover" })).toHaveFocus());
+  });
+
+  it("draws the way out after the score as an outline button, never a grey one that looks disabled", () => {
+    render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);
+    tap("Discover", "Offer", "Request", "Acknowledge");
+    fireEvent.click(check());
+    const ways = screen.getAllByRole("button", { name: "Return to the scenarios" });
+    // The last is the button under the score; the first is the arrow beside the title.
+    const out = ways[ways.length - 1];
+    expect(out).toHaveTextContent("Return to the scenarios");
+    expect(out.className).toContain("border-foreground/25");
+    expect(out.className).not.toContain("bg-foreground/[0.07]");
   });
 
   it("grades a partly wrong order with partial credit, and names each mark in the list to review", () => {
@@ -112,6 +136,34 @@ describe("ordering PBQs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Return to the scenarios" }));
     expect(onBack).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Do you want to leave this lab?" })).toBeInTheDocument();
+  });
+
+  it("closes the question as it leaves, also for a host whose way back does not close the lab", async () => {
+    const user = userEvent.setup();
+    // A way back that leaves the player on the page, as a public lab page's does.
+    const onBack = vi.fn();
+    render(<PbqPlayer scenario={dora} onBack={onBack} />);
+    tap("Discover");
+    await user.click(screen.getByRole("button", { name: "Return to the scenarios" }));
+    const dialog = screen.getByRole("dialog", { name: "Do you want to leave this lab?" });
+    // The question opens on the safe answer. The keyboard moves to "Leave the lab" and presses it.
+    expect(within(dialog).getByRole("button", { name: "Stay in the lab" })).toHaveFocus();
+    await user.tab();
+    expect(within(dialog).getByRole("button", { name: "Leave the lab" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("goes straight back with no question for a host whose way back keeps the lab and its answers", () => {
+    const onBack = vi.fn();
+    render(<PbqPlayer scenario={dora} onBack={onBack} confirmLeave={false} />);
+    tap("Discover");
+    fireEvent.click(screen.getByRole("button", { name: "Return to the scenarios" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Nothing is thrown away: the placed item is still in its row.
+    expect(order().getByRole("button", { name: /^1\. Discover/ })).toBeInTheDocument();
   });
 
   it("tells the host once that play has started: at the first press, not when the lab is shown or repeated", () => {
@@ -196,6 +248,17 @@ describe("matching PBQs, one item at a time", () => {
     expect(onGraded.mock.calls[0][0]).toEqual(gradeScenario(ports, map));
     expect(score()).toHaveTextContent("You matched 2 of 3 items correctly.");
     expect(screen.getByText("The answer to review")).toBeInTheDocument();
+  });
+
+  it("marks a miss in red on its pip under the list, as on the answer itself, and never in amber", () => {
+    const { container } = render(<PbqPlayer scenario={ports} onBack={vi.fn()} />);
+    const up = portUp();
+    const wrong = Object.values(PARTNER).find((s) => s !== PARTNER[up])!;
+    fireEvent.click(partners().getByRole("button", { name: wrong }));
+    const pips = [...container.querySelectorAll("span.size-2")];
+    expect(pips).toHaveLength(3);
+    expect(pips[0].className).toContain("bg-destructive");
+    expect(pips.some((p) => p.className.includes("bg-warning"))).toBe(false);
   });
 
   it("answers from the keyboard only while the focus is inside the lab, and asks before leaving mid-way", async () => {

@@ -130,7 +130,7 @@ type EventMap = {
   /** A path stop played on a public page (objective or practice-test page). */
   quick_round_completed: { cert: string; surface: string; correct: number; total: number };
   /** A sample question answered on a public page (the page is in $current_url). */
-  sample_question_answered: { correct: boolean; surface?: string; /** Asked a second time after a wrong answer (the home page). */ repeat?: boolean };
+  sample_question_answered: { correct: boolean; surface?: string };
   /** A public page's question deck played through to its score. */
   question_deck_completed: { surface: string; correct: number; total: number };
   /** A free timed practice test on a public page: started, or picked back up after leaving. */

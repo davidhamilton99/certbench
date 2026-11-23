@@ -80,12 +80,9 @@ export default function Sy0801AiQuestionsPage() {
           title="SY0-801 practice questions: AI threats and vulnerabilities"
         >
           <p>
-            <strong>
-              SY0-801 adds an objective that Security+ has never had: 2.6, on the threats and vulnerabilities of using
-              AI.
-            </strong>{" "}
-            No SY0-701 course or practice test covers it. This page has {SY0_801_AI_QUESTIONS.length} questions on it,
-            with at least one for every topic that CompTIA lists.
+            <strong>SY0-801 adds a new objective, 2.6, on the threats and vulnerabilities of using AI.</strong>{" "}
+            SY0-701 has no objective on AI. This page has {SY0_801_AI_QUESTIONS.length} questions on it, with at least
+            one for every topic that CompTIA lists.
           </p>
           <p>
             Choose an answer to see whether it is correct, and why. These are original questions written by CertBench.
@@ -114,16 +111,16 @@ export default function Sy0801AiQuestionsPage() {
         </ArticleSection>
       </ArticleBody>
 
-      <CtaBand title="Take the whole SY0-801 practice test">
+      <CtaBand title="Take the whole SY0-801 practice exam">
         {/* Only what holds for whichever exam that page serves: its questions are drawn from the bank when it is built. */}
         <p className="cb-measure text-body text-muted-foreground">
-          The free SY0-801 practice test is timed and follows the exam&apos;s domain weights. It is scored by domain,
+          The free SY0-801 practice exam is timed and follows the exam&apos;s domain weights. It is scored by domain,
           and every answer is explained. Anyone can take it, and a free account shows the score.
         </p>
         <Button asChild size="lg" className="mt-1">
-          <Link href={SY0_801_PRACTICE_PATH}>Take the practice test</Link>
+          <Link href={SY0_801_PRACTICE_PATH}>Take the practice exam</Link>
         </Button>
-        <p className="cb-measure text-small text-muted-foreground">
+        <p className="cb-measure-sm text-small text-muted-foreground">
           You can also{" "}
           <Link href={SY0_801_PATH} className="cb-link">
             read the SY0-801 exam objectives

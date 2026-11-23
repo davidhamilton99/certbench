@@ -41,6 +41,13 @@ describe("pageMetadata", () => {
     expect(meta.robots).toBeUndefined();
   });
 
+  it("sets a whole title tag as it is, with nothing added, when the page builds it to a length", () => {
+    const meta = pageMetadata({ title: "Displays: 220-1201 3.1 practice questions", description: "x", path: "/x", absoluteTitle: true });
+    expect(meta.title).toEqual({ absolute: "Displays: 220-1201 3.1 practice questions" });
+    expect(meta.openGraph).toMatchObject({ title: "Displays: 220-1201 3.1 practice questions" });
+    expect(meta.twitter).toMatchObject({ title: "Displays: 220-1201 3.1 practice questions" });
+  });
+
   it("keeps links followable on a page left out of search", () => {
     const meta = pageMetadata({ title: "Sign in", description: "x", path: "/x", noindex: true });
     expect(meta.robots).toEqual({ index: false, follow: true });

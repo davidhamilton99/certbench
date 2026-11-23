@@ -166,7 +166,7 @@ export const aPlusCore2Simulations: SimulationScenario[] = [
             options: [
               "CrystalDiskInfo: read SMART data from the drive for reallocated sector count",
               "chkdsk /f /r: check and repair file system errors and attempt bad sector recovery",
-              "Manufacturer's drive diagnostic utility (e.g. Seagate SeaTools, Western Digital Dashboard)",
+              "Manufacturer's drive diagnostic utility (for example, Seagate SeaTools or Western Digital Dashboard)",
               "mdsched.exe: Windows Memory Diagnostic (test RAM)",
               "SMART data via BIOS/UEFI self-test: check drive health from firmware",
               "sfc /scannow: system file checker",
@@ -353,7 +353,7 @@ export const aPlusCore2Simulations: SimulationScenario[] = [
               "Reconnect to the network, run Windows Update, and update all applications",
               "Verify no suspicious processes remain in Task Manager after reboot",
             ],
-            zones: ["Quarantine", "Disable System Restore", "Remediate", "Verify & Restore"],
+            zones: ["Quarantine", "Disable System Restore", "Remediate", "Verify and Restore"],
             correctZones: [0, 1, 2, 2, 2, 3, 3, 3],
           },
           {
@@ -554,9 +554,9 @@ export const aPlusCore2Simulations: SimulationScenario[] = [
           {
             type: "dropdown",
             id: "aplus-core2-sim-user-accounts-t2-f2",
-            label: "A Marketing-Staff member is also a member of All-Employees. If All-Employees has 'Deny Read' and Marketing-Staff has 'Allow Read & Write', what is the effective permission?",
+            label: "A Marketing-Staff member is also a member of All-Employees. If All-Employees has 'Deny Read' and Marketing-Staff has 'Allow Read and Write', what is the effective permission?",
             options: [
-              "Allow Read & Write: the most permissive group permission always wins",
+              "Allow Read and Write: the most permissive group permission always wins",
               "No access: Deny always overrides Allow in NTFS",
               "Read only: permissions are averaged across group memberships",
               "Modify: Active Directory group nesting elevates permissions",

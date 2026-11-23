@@ -108,6 +108,7 @@ function OneMoveLab({
   backLabel,
   onStarted,
   takeFocus,
+  confirmLeave = true,
 }: {
   scenario: OneMoveScenario;
   onBack: () => void;
@@ -149,22 +150,29 @@ function OneMoveLab({
   }, []);
 
   const handleBack = useCallback(() => {
-    if (hasInteracted && !graded) setShowBackConfirm(true);
+    if (confirmLeave && hasInteracted && !graded) setShowBackConfirm(true);
     else onBack();
-  }, [hasInteracted, graded, onBack]);
+  }, [confirmLeave, hasInteracted, graded, onBack]);
+
+  // The question closes before the lab is left: a host that keeps the lab on
+  // its page would otherwise leave it open, with the focus held inside it.
+  const leave = useCallback(() => {
+    setShowBackConfirm(false);
+    onBack();
+  }, [onBack]);
 
   // The score from its top, and a replay from the start.
   useKeepInView(`${run}:${Boolean(graded)}`, () => root.current);
 
   return (
-    <div ref={root} className="flex min-w-0 scroll-mt-24 flex-col gap-4 sm:gap-5">
+    <div ref={root} className="flex min-w-0 flex-col gap-4 sm:gap-5">
       <ConfirmDialog
         open={showBackConfirm}
         title="Do you want to leave this lab?"
         message="Your answers so far will not be kept."
         confirmLabel="Leave the lab"
         cancelLabel="Stay in the lab"
-        onConfirm={onBack}
+        onConfirm={leave}
         onCancel={() => setShowBackConfirm(false)}
       />
       <LabHeader
@@ -280,7 +288,7 @@ function Misses({ scenario, answer }: { scenario: OneMoveScenario; answer: numbe
 /* ------------------------------------------------------------------ */
 
 /**
- * Select the items in order: each press fills the next numbered row, and a
+ * Choose the items in order: each press fills the next numbered row, and a
  * press on a placed row sends it back. A placed item leaves its outline in the
  * pool, so the remaining choices never shift under a finger. (Sorting seven
  * items with up and down arrows took a dozen clicks, and replays showed people
@@ -344,8 +352,8 @@ function OrderingPlayer({
       </p>
       <p id={hintId} className="text-note text-muted-foreground">
         {done
-          ? "Every item is placed. Select a row to remove it, or check your order."
-          : "Select the items in order, from first to last."}
+          ? "Every item is placed. Choose a row to remove it, or check your order."
+          : "Choose the items in order, from first to last."}
       </p>
 
       <ol className="grid gap-1.5" aria-label="Your order">
@@ -358,13 +366,15 @@ function OrderingPlayer({
                 key={`slot-${pos}`}
                 className={cn(
                   "flex min-h-11 items-center gap-2 rounded-md border border-dashed px-3.5 py-2",
-                  isNext ? "border-primary bg-tint-selected" : "border-border"
+                  // Under a contrast theme the tint is gone and every edge is one colour: the
+                  // row the next press fills keeps its mark in the theme's highlight colour.
+                  isNext ? "border-primary bg-tint-selected forced-colors:border-[color:Highlight]" : "border-border"
                 )}
               >
                 <span className="w-6 shrink-0 text-note tabular-nums text-muted-foreground">{pos + 1}.</span>
                 {isNext && (
                   <span className="text-note text-muted-foreground">
-                    {pos === 0 ? "Select the first item below." : "Select the next item below."}
+                    {pos === 0 ? "Choose the first item below." : "Choose the next item below."}
                   </span>
                 )}
               </li>
@@ -375,7 +385,7 @@ function OrderingPlayer({
               <button
                 type="button"
                 onClick={() => takeBack(itemIdx)}
-                aria-label={`${pos + 1}. ${scenario.items[itemIdx]}. Select to remove it.`}
+                aria-label={`${pos + 1}. ${scenario.items[itemIdx]}. Choose this row to remove it.`}
                 className="group flex min-h-11 w-full items-center gap-2 rounded-md border border-input bg-card px-3.5 py-2 text-left transition-[border-color,background-color] duration-100 hover:border-primary hover:bg-tint-hover active:bg-tint-press"
               >
                 <span className="w-6 shrink-0 text-note tabular-nums text-muted-foreground">{pos + 1}.</span>

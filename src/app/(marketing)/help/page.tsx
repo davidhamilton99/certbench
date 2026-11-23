@@ -7,7 +7,7 @@ import { CHECKPOINT_SIZE, MAX_RESURFACED, PRACTICE_SIZE } from "@/core/path/plan
 import { REVIEW_AGAIN_DAYS } from "@/core/path/progress";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import { PASS_GUARANTEE_HREF, PASS_GUARANTEE_TERMS } from "@/lib/pricing/guarantee";
-import { PRO_PRICES, PRO_PRICE_TERMS, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
+import { PRO_ADDON_TERMS, PRO_PRICE_REGION_NOTE, PRO_PRICE_TERMS, PRO_SCOPE_TERMS } from "@/lib/pricing/terms";
 import { READINESS_TARGET } from "@/lib/readiness/band";
 import { EXAMS_WITH_FREE_LABS } from "@/lib/seo/cert-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
@@ -63,7 +63,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What is CertBench?",
-        a: "CertBench is a study program for CompTIA exams, set out as a study path. You choose your exam, and the study path works through it topic by topic, in short steps. A step begins with short questions and then moves to questions in the wording of the real exam. A readiness checkpoint shows where you stand, and a timed practice exam completes the study path. CertBench covers Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ Core 1 and Core 2. The A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
+        a: "CertBench is a study program for CompTIA exams, set out as a study path. You choose your exam, and the study path works through it topic by topic, in short steps. A step begins with short questions and then moves to exam-style questions. A readiness checkpoint shows where you stand, and a timed practice exam completes the study path. CertBench covers Security+ (SY0-701 and SY0-801), Network+ (N10-009), and A+ Core 1 and Core 2. The A+ questions are written to 220-1201 and 220-1202, the current A+ exams.",
       },
       {
         q: "Is CertBench free?",
@@ -72,7 +72,7 @@ const sections: Section[] = [
       },
       {
         q: "Where do I start?",
-        a: "Choose your exam. The first step is a set of introductory questions, and it needs no account. To continue, save your progress with a free account. You then study your first objective and take the readiness checkpoint, which shows where you stand in each domain.",
+        a: "Choose your exam. The first step is a set of introductory questions, and it needs no account. To continue, save your progress with a free account. You then study your first topic and take the readiness checkpoint, which shows where you stand in each domain.",
         link: { href: "/start", label: "Choose your exam" },
       },
       {
@@ -82,7 +82,7 @@ const sections: Section[] = [
       },
       {
         q: "Can I use CertBench as my only study resource?",
-        a: "CertBench teaches through questions. Most steps work through one objective, every answer shows you the main point to remember, and exam-style questions explain their reasoning in full. CertBench has no video lessons or textbook chapters, so it works best alongside a video course (such as Professor Messer or Jason Dion) or a textbook. Use CertBench to practice, to find the areas where you are weak, and to see when you are ready.",
+        a: "CertBench teaches through questions. Most steps work through one topic, every answer shows you the main point to remember, and exam-style questions explain their reasoning in full. CertBench has no video lessons or textbook chapters, so it works best alongside a video course (such as Professor Messer or Jason Dion) or a textbook. Use CertBench to practice, to find the areas where you are weak, and to see when you are ready.",
       },
     ],
   },
@@ -93,7 +93,7 @@ const sections: Section[] = [
     items: [
       {
         q: "How does the study path work?",
-        a: `The study path works through the exam topic by topic, one domain at a time. For Security+ and A+, each topic is one of CompTIA’s exam objectives. Most steps cover one objective, beginning with short questions and ending with one in the wording of the real exam. At the end of each domain, a practice step asks ${PRACTICE_SIZE} exam-style questions from that domain, and with Pro a hands-on lab completes it. The readiness checkpoint follows your first objective, and a timed practice exam is the last step. The course outline on your study path shows the status of each objective, such as “Complete” or “To review”.`,
+        a: `The study path works through the exam topic by topic, one domain at a time. For Security+ and A+, each topic is one of CompTIA’s exam objectives. The Network+ topics are CertBench’s own. Most steps cover one topic, beginning with short questions and ending with an exam-style question. At the end of each domain, a practice step asks ${PRACTICE_SIZE} exam-style questions from that domain, and with Pro a hands-on lab completes it. The readiness checkpoint follows your first topic, and a timed practice exam is the last step. The course outline on your study path shows the status of each topic, such as “Complete” or “To review”.`,
       },
       {
         q: "Do I have to follow the steps in order?",
@@ -116,7 +116,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What is the readiness checkpoint?",
-        a: `The readiness checkpoint is a set of ${CHECKPOINT_SIZE} exam-style questions that covers every domain of your exam. It follows your first objective and is free with an account. It gives you a score that is weighted in the same way as the real exam, a result for each domain, the domain in which you can gain the most, and the date by which you will finish the study path at your pace.`,
+        a: `The readiness checkpoint is a set of ${CHECKPOINT_SIZE} exam-style questions that covers every domain of your exam. It follows your first topic and is free with an account. It gives you a score that is weighted in the same way as the domains of the real exam, a result for each domain, the domain in which you can gain the most, and the date by which you will finish the study path at your pace.`,
       },
       {
         q: "How is my readiness score calculated?",
@@ -128,7 +128,7 @@ const sections: Section[] = [
       },
       {
         q: "Why did my score go down?",
-        a: `Your score is your latest result and not an average. A full practice exam asks ${FULL.questions} questions across every domain, compared with the ${CHECKPOINT_SIZE} questions of the checkpoint, so its result can be lower. Unanswered questions count as incorrect, as they do in the exam. Each practice exam result shows the change since your previous result and lets you review every answer, so that you know what to study.`,
+        a: `Your score is your latest result and not an average. A full practice exam asks ${FULL.questions} questions across every domain, compared with the ${CHECKPOINT_SIZE} questions of the checkpoint, so its result can be lower. Unanswered questions count as incorrect. Each practice exam result shows the change since your previous result and lets you review every answer, so that you know what to study.`,
       },
       {
         q: "How is the free readiness check different?",
@@ -143,7 +143,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What happens to questions that I answer incorrectly?",
-        a: `They are repeated. Most steps begin with up to ${count(MAX_RESURFACED)} questions that you missed earlier, and the course outline marks an objective as “To review” until you answer its question correctly. With Pro, “Questions to review” under “Practice at any time” repeats them ${PRACTICE_SIZE} at a time. A question that you then answer correctly is asked once more ${count(REVIEW_AGAIN_DAYS)} days later, and it leaves review after two correct answers on different days. This spacing helps you to remember the answer.`,
+        a: `They are repeated. Most steps begin with up to ${count(MAX_RESURFACED)} questions that you missed earlier, and the course outline marks a topic as “To review” until you answer its question correctly. With Pro, “Questions to review” under “Practice at any time” repeats them ${PRACTICE_SIZE} at a time. A question that you then answer correctly is asked once more ${count(REVIEW_AGAIN_DAYS)} days later, and it leaves review after two correct answers on different days. This spacing helps you to remember the answer.`,
       },
       {
         q: "Will I see the same question twice?",
@@ -158,7 +158,7 @@ const sections: Section[] = [
     items: [
       {
         q: "What are PBQs, and how do the labs work?",
-        a: `Performance-based questions (PBQs) are the hands-on tasks in real CompTIA exams. CertBench’s hands-on labs run in your browser. They include simulations, network topologies and threat hunts, and also ordering, matching and sorting tasks. On your study path a lab completes every domain, and Pro opens the whole lab library for your exam. ${EXAMS_WITH_FREE_LABS} each have a PBQ page with ${FREE_LAB_COUNT} labs that are free: ${count(LABS_WITHOUT_ACCOUNT)} with no account, and the rest with a free account.`,
+        a: `The Security+, Network+ and A+ exams have performance-based questions (PBQs) as well as multiple-choice questions, and CompTIA does not publish which topics they test. CertBench’s hands-on labs are its practice for them: each lab asks you to carry out a task in your browser instead of choosing an answer. They include simulations, network diagrams and threat hunts, and also ordering, matching and sorting tasks. On your study path a lab completes every domain, and Pro opens the whole lab library for your exam. ${EXAMS_WITH_FREE_LABS} each have a PBQ page with ${FREE_LAB_COUNT} labs that are free: ${count(LABS_WITHOUT_ACCOUNT)} with no account, and the rest with a free account.`,
       },
       {
         q: "How are labs scored?",
@@ -166,11 +166,11 @@ const sections: Section[] = [
       },
       {
         q: "What is the practice exam?",
-        a: `The practice exam is the whole exam in one sitting. It has ${FULL.questions} questions and a time limit of ${FULL.minutes} minutes, which is CompTIA’s limit for Security+, Network+ and A+, or you can take a half-length exam of ${HALF.questions} questions in ${HALF.minutes} minutes. The questions are distributed in the same proportions as the exam domains, beginning with questions that you have not seen, and no answers are shown until you finish. Unanswered questions count as incorrect, as they do in the exam. The practice exam is the last step of your study path, and with Pro you can start a new one at any time. The practice-test page for each exam also has a free full-length practice exam, which is the same for everyone, and a free account shows its score.`,
+        a: `The practice exam is the whole exam in one sitting. It has ${FULL.questions} questions and a time limit of ${FULL.minutes} minutes, which is CompTIA’s limit for Security+, Network+ and A+, or you can take a half-length exam of ${HALF.questions} questions in ${HALF.minutes} minutes. The questions are distributed in the same proportions as the exam domains, beginning with questions that you have not seen, and no answers are shown until you finish. Unanswered questions count as incorrect. The practice exam is the last step of your study path, and with Pro you can start a new one at any time. The practice-test page for each exam also has a free full-length practice exam, which is the same for everyone, and a free account shows its score.`,
       },
       {
         q: "Can I flag questions?",
-        a: "Yes, in a practice exam. You can flag any question to return to it, and you can move to any question from the question grid, as in the real exam. If you leave during the exam, the clock pauses until you return.",
+        a: "Yes, in a practice exam. You can flag any question to return to it, and you can move to any question from the question grid. If you leave during the exam, the clock pauses until you return.",
       },
     ],
   },
@@ -186,7 +186,7 @@ const sections: Section[] = [
       },
       {
         q: "Can I study for more than one exam?",
-        a: `Yes. Each exam has its own study path, course outline and readiness score. To change exam, use the link “choose another exam” at the foot of your study path. ${PRO_SCOPE_TERMS} To add another exam, open its study path. After the readiness checkpoint for that exam, you are offered it for a single payment of ${PRO_PRICES.quarterly}, which is adjusted by region, and it remains open for as long as you have Pro.`,
+        a: `Yes. Each exam has its own study path, course outline and readiness score. To change exam, use the link “choose another exam” at the foot of your study path. ${PRO_SCOPE_TERMS} To add another exam, open its study path: the exam is offered to you after its readiness checkpoint. ${PRO_ADDON_TERMS} ${PRO_PRICE_REGION_NOTE}`,
       },
       {
         q: "How do I cancel Pro?",

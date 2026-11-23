@@ -107,6 +107,14 @@ describe("SubnettingPractice", () => {
     expect(["Binary", "CIDR and mask", "Network ID", "Broadcast and range", "Host math", "Same subnet?"]).toContain(skill());
   });
 
+  it("wraps the modes onto more lines at every width, with none hidden in a row that scrolls sideways", () => {
+    render(<SubnettingPractice />);
+    const row = screen.getByRole("group", { name: "Drill mode" });
+    expect(modes().getAllByRole("button")).toHaveLength(7);
+    expect(row.className).toMatch(/(^|\s)flex-wrap(\s|$)/);
+    expect(row.className).not.toMatch(/overflow-x-auto|scrollbar|sm:flex-wrap/);
+  });
+
   it("holds the card's place while the drill loads, at the height of a typed question", () => {
     render(<SubnettingPractice />);
     // Before the first question is dealt: the same card, saying so.

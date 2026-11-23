@@ -92,6 +92,12 @@ describe("the plan and billing page", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Your certification" })).toBeInTheDocument();
     expect(screen.getByText("SY0-701")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Add a certification" })).toBeInTheDocument();
+    // The offer says what the payment buys and how long it lasts, as the pricing page does.
+    expect(
+      screen.getByText(
+        "You can add another exam for a single payment of $39. The exam stays open while your Pro plan is active."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("N10-009")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Manage billing" })).toBeInTheDocument();
     expect(screen.queryByTestId("plan-chooser")).toBeNull();

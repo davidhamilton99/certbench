@@ -35,9 +35,11 @@ interface ClaimedLead {
  * unsubscribed from it, whichever tool the unsubscribe came from. It answers
  * what happened, so that the form can say so:
  *  - "sent": the mail service accepted the email.
- *  - "skipped": nothing was sent on purpose (sent in the last 24 hours,
- *    unsubscribed, or a test address).
+ *  - "skipped": nothing was sent on purpose (sent in the last 24 hours, or
+ *    unsubscribed).
  *  - "failed": the lead could not be stored or the email could not be sent.
+ *  - "test": an address that CertBench's own tests use. Nothing is stored or
+ *    sent.
  *
  * A lead's `updated_at` is the time of its last send. A send is claimed by
  * moving that time forward before the email goes out, so two requests at once
@@ -57,7 +59,7 @@ export async function captureLead(
     // way of writing the capitals.
     const address = email.trim().toLowerCase();
     // An address that CertBench's own tests use: nothing is stored or sent.
-    if (isTestAddress(address)) return "skipped";
+    if (isTestAddress(address)) return "test";
     const admin = createAdminClient();
 
     const lead = await claimLead(admin, address, source, context, now);

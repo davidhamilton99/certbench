@@ -101,9 +101,10 @@ describe("the plan chooser on the pricing page and the billing page", () => {
     await waitFor(() => expect(h.leaveFor).toHaveBeenCalledWith("/login?next=/upgrade"));
   });
 
-  it("keeps a page's own words on the button where the page gives them", () => {
-    render(<PlanPicker initialPricing={LIST} ctaLabel="Upgrade to Pro" />);
-    expect(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
+  it("says on its button what the press does, on the billing page as on the pricing page", () => {
+    // No page gave the button words of its own, so the chooser no longer takes any.
+    render(<PlanPicker initialPricing={LIST} />);
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Continue to payment"]);
   });
 });
 

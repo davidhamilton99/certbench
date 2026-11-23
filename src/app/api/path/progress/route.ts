@@ -9,6 +9,7 @@ import { mergePathProgress, sanitizePathProgress } from "@/core/path/progress";
 import { certIdFor } from "@/server/path/cert-id";
 import { getPathAccess } from "@/server/path/access";
 import { accountNotChecked } from "@/server/data/account-errors";
+import { regionPricing } from "@/lib/pricing/ppp";
 import type { Db } from "@/server/supabase/server";
 
 /**
@@ -64,11 +65,17 @@ async function paymentPastDue(db: Db, userId: string): Promise<boolean> {
  * only what it answers with: the saved progress, the account's access and
  * whether a payment is owed, all started at once. It needs the exam's id and
  * not its questions.
+ *
+ * It also answers with the offer's prices for the learner's region, worked
+ * out from the same country header as GET /api/pricing/region (no read is
+ * made for them), so that the offer on the study path shows its prices at
+ * once and asks for nothing of its own. The checkout works the discount out
+ * again from the request, as it does for the pricing page.
  */
 export const GET = defineEndpoint(getPathProgress, {
   auth: "user",
   rateLimit: { limit: 240, windowSeconds: 3600 },
-  handler: async ({ input, user, db }) => {
+  handler: async ({ input, user, db, request }) => {
     if (!user) throw new ApiError("unauthorized");
     const [saved, account, pastDue] = await Promise.all([
       loadProgress(db, user.id, input.cert).catch(notRead),
@@ -78,14 +85,16 @@ export const GET = defineEndpoint(getPathProgress, {
       paymentPastDue(db, user.id),
     ]);
     if (!account) throw new ApiError("not_found", "That exam is not available.");
-    return {
+    const answer = {
       ...saved,
       access: account.access.level === "pro" ? ("pro" as const) : ("free" as const),
       proPlan: account.access.proPlan,
       certId: account.certId,
       // Sent only when it is true: an answer without it says that no payment is owed.
       ...(pastDue ? { paymentPastDue: true as const } : {}),
+      pricing: regionPricing(request.headers.get("x-vercel-ip-country")),
     };
+    return answer;
   },
 });
 

@@ -152,14 +152,16 @@ describe("tool pages", () => {
     // The drill's card holds the first screen until it deals its first question.
     const card = doc.querySelector(".glass")!;
     expect(text(card)).toContain("Port numbers");
-    const list = fold(doc, "The full CompTIA port numbers list");
+    // Headed as what it is: the quiz's own list, and not a list that CompTIA publishes.
+    const list = fold(doc, "The port numbers in this quiz");
     expect(list?.hasAttribute("open")).toBe(false);
     const rows = [...list!.querySelectorAll("tbody tr")].map((tr) => [...tr.children].map(text));
     expect(rows).toEqual(PORT_ENTRIES.map((e) => [e.port, e.protocol, e.transport]));
     expect(text(list!.querySelector("summary"))).toContain(`and ${PORT_ENTRIES.length - 5} more`);
     // The list comes after the quiz, never before it.
     expect(card.compareDocumentPosition(list!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    const path = [...doc.querySelectorAll("a")].find((a) => text(a) === "Start the study path for my exam");
+    // A link to the list of exams carries the one label that every page gives it.
+    const path = [...doc.querySelectorAll("a")].find((a) => text(a) === "Choose your exam");
     expect(path?.getAttribute("href")).toBe("/start");
 
     expect(facts(doc)).toEqual({
@@ -175,11 +177,14 @@ describe("tool pages", () => {
   it("acronyms: every acronym folded in the page, A to Z", () => {
     const doc = served(<AcronymsQuizPage />);
     expectContentOnly(doc);
-    const list = fold(doc, "The full Security+ acronym list");
+    // The list gives one meaning for each acronym, so it is not called the full list.
+    const list = fold(doc, "The Security+ acronyms in this quiz");
     expect(list?.hasAttribute("open")).toBe(false);
     const rows = [...list!.querySelectorAll("tbody tr")].map((tr) => text(tr.children[0]));
     expect(rows).toEqual(acronyms.entries.map((e) => e.columns.acronym));
-    expect(text(list!.querySelector("summary"))).toContain(`All ${acronyms.entries.length} from AAA to XSS`);
+    expect(text(list!.querySelector("summary"))).toContain(
+      `The list runs from AAA to XSS, with one meaning for each of its ${acronyms.entries.length} acronyms.`
+    );
     const path = [...doc.querySelectorAll("a")].find((a) => text(a) === "Start the Security+ study path");
     expect(path?.getAttribute("href")).toBe("/path/security-plus-sy0-701");
   });

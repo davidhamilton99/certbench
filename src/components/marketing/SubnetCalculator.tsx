@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { calculateSubnet } from "@/lib/tools/subnet-calculator";
+import { calculateSubnet, readAddressField } from "@/lib/tools/subnet-calculator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -42,32 +42,47 @@ function Row({ label, value, mono = true }: { label: string; value: string; mono
  * on its page, because a visitor who searches for a subnet calculator has come
  * to use one.
  *
- * Each field has a visible label. An address that cannot be read is said in a
- * sentence under the fields, tied to the address field and announced politely
- * (it appears while the visitor is still typing, so it must not interrupt).
+ * Each field has a visible label. An address or a prefix length that cannot be
+ * read is said in a sentence under the fields, tied to the address field and
+ * announced politely (it appears while the visitor is still typing, so it must
+ * not interrupt).
+ *
+ * An address typed or pasted with its prefix ("10.1.1.1/16") stays in the
+ * field as it was written, and its prefix length sets the list. The field is
+ * read whole at every keystroke, so the digits typed after the slash are never
+ * taken into the address. A slash with nothing after it yet is a prefix still
+ * being typed: it changes nothing until the field is left that way.
  */
 export function SubnetCalculator() {
-  const [ip, setIp] = useState("192.168.1.0");
+  const [text, setText] = useState("192.168.1.0");
   const [prefix, setPrefix] = useState(24);
+  // False while the visitor is typing in the address field; true once it is left.
+  const [settled, setSettled] = useState(true);
   const ipId = useId();
   const prefixId = useId();
   const hintId = useId();
   const errorId = useId();
 
-  function onIpChange(v: string) {
-    // An address pasted with its prefix ("10.0.0.0/24") fills both fields.
-    const slash = v.indexOf("/");
-    if (slash >= 0) {
-      const p = parseInt(v.slice(slash + 1), 10);
-      if (Number.isInteger(p) && p >= 0 && p <= 32) setPrefix(p);
-      setIp(v.slice(0, slash));
-    } else {
-      setIp(v);
-    }
+  const field = readAddressField(text);
+
+  function onTextChange(v: string) {
+    setText(v);
+    setSettled(false);
+    const typed = readAddressField(v).prefix;
+    if (typeof typed === "number") setPrefix(typed);
   }
 
-  const result = useMemo(() => calculateSubnet(ip, prefix), [ip, prefix]);
-  const invalid = result === null;
+  function onPrefixChange(p: number) {
+    setPrefix(p);
+    // A prefix written in the field follows the list, so the two never disagree.
+    if (field.prefix !== "none") setText(`${field.address}/${p}`);
+  }
+
+  const badPrefix = field.prefix === "invalid" || (field.prefix === "unfinished" && settled);
+  const computed = useMemo(() => calculateSubnet(field.address, prefix), [field.address, prefix]);
+  const problem = computed === null ? "address" : badPrefix ? "prefix" : null;
+  const result = problem ? null : computed;
+  const invalid = problem !== null;
 
   return (
     <div className="glass grid min-w-0 gap-6 rounded-lg p-5 sm:p-8">
@@ -77,8 +92,9 @@ export function SubnetCalculator() {
             <Label htmlFor={ipId}>IP address</Label>
             <Input
               id={ipId}
-              value={ip}
-              onChange={(e) => onIpChange(e.target.value)}
+              value={text}
+              onChange={(e) => onTextChange(e.target.value)}
+              onBlur={() => setSettled(true)}
               inputMode="decimal"
               autoComplete="off"
               spellCheck={false}
@@ -92,7 +108,7 @@ export function SubnetCalculator() {
             <select
               id={prefixId}
               value={prefix}
-              onChange={(e) => setPrefix(Number(e.target.value))}
+              onChange={(e) => onPrefixChange(Number(e.target.value))}
               // The same 18px as the address field. Anything under 16px makes a phone zoom the page when the list opens.
               className="h-12 w-full min-w-0 rounded-md border border-input bg-card px-3 font-mono text-lg transition-colors focus-visible:border-ring sm:w-fit"
             >
@@ -105,15 +121,17 @@ export function SubnetCalculator() {
           </div>
         </div>
         <p id={hintId} className="text-note text-muted-foreground">
-          An address pasted with its prefix, such as <span className="font-mono">10.0.0.0/24</span>, fills both fields.
+          An address typed or pasted with its prefix, such as <span className="font-mono">10.0.0.0/24</span>, fills
+          both fields.
         </p>
         {/* Always in the page, so that the sentence is announced when it appears. */}
         <p id={errorId} role="status" className={invalid ? "text-small text-destructive" : "sr-only"}>
-          {invalid && (
+          {problem === "address" && (
             <>
               Enter a valid IPv4 address, for example <span className="font-mono">192.168.1.0</span>.
             </>
           )}
+          {problem === "prefix" && "Enter a prefix length from 0 to 32 after the slash."}
         </p>
       </div>
 

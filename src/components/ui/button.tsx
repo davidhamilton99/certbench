@@ -28,9 +28,6 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-foreground/[0.08] disabled:text-foreground/40 disabled:opacity-100",
-        // The same button as `default`: one colour means "press this".
-        accent:
-          "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-foreground/[0.08] disabled:text-foreground/40 disabled:opacity-100",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
@@ -43,7 +40,7 @@ const buttonVariants = cva(
       size: {
         default:
           "h-10 px-4 pointer-coarse:h-11 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-3",
-        sm: "cb-tap h-8 px-3 text-[13px] has-[>svg:first-child]:pl-2 has-[>svg:last-child]:pr-2",
+        sm: "cb-tap h-8 px-3 text-note has-[>svg:first-child]:pl-2 has-[>svg:last-child]:pr-2",
         lg: "h-12 px-6 text-base has-[>svg:first-child]:pl-[1.125rem] has-[>svg:last-child]:pr-[1.125rem]",
         icon: "cb-tap size-9",
       },

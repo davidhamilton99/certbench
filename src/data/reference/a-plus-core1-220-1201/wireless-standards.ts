@@ -6,10 +6,10 @@ export const wirelessStandards: ReferenceTable = {
   description: "This table lists Wi-Fi, Bluetooth, NFC, RFID and cellular standards for the CompTIA A+ 220-1201 exam with the frequency and the maximum speed of each.",
   columnHeaders: [
     { key: "standard", label: "Standard", mono: true },
-    { key: "name", label: "Name / Brand" },
+    { key: "name", label: "Name / brand" },
     { key: "frequency", label: "Frequency" },
-    { key: "maxSpeed", label: "Max Speed", mono: true },
-    { key: "features", label: "Key Features / Exam Notes" },
+    { key: "maxSpeed", label: "Max speed", mono: true },
+    { key: "features", label: "Key features / exam notes" },
   ],
   entries: [
     // Wi-Fi standards

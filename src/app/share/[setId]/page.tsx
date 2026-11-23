@@ -6,6 +6,7 @@ import { StudySetPlayer } from "@/components/quiz/StudySetPlayer";
 import { AttemptPing } from "@/components/workspace/CommunitySetActions";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { LinkPending } from "@/components/ui/link-arrow";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
@@ -42,7 +43,9 @@ export default async function SharePage({
       <header className="flex items-center justify-between gap-4">
         <Logo />
         <Button asChild size="sm">
-          <Link href="/start">Start for free</Link>
+          <Link href="/start">
+            <LinkPending>Start for free</LinkPending>
+          </Link>
         </Button>
       </header>
       {/* The page's one main region, where the "Skip to main content" link leads. */}

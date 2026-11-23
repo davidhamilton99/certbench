@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { getPageSession } from "@/server/auth";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 import { WelcomeV2Modal } from "@/components/workspace/WelcomeV2Modal";
 import { AnalyticsIdentify } from "@/components/analytics/AnalyticsIdentify";
@@ -21,9 +19,9 @@ export default async function WorkspaceLayout({
   if (!user) redirect("/login");
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
 
   if (!profile?.onboardingCompleted || enrollments.length === 0) {

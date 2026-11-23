@@ -30,7 +30,7 @@ export function PbqUpsellCard({ upsell }: { upsell: PbqUpsell }) {
   return (
     <div className="glass rounded-lg p-5">
       <h3 className="text-base font-semibold leading-snug">{upsell.heading}</h3>
-      <p className="cb-measure mt-1 text-small text-muted-foreground">{upsell.note}</p>
+      <p className="cb-measure-sm mt-1 text-small text-muted-foreground">{upsell.note}</p>
       <Button asChild className="mt-3">
         <Link href={upsell.href} onClick={() => track("upsell_clicked", { context, href: upsell.href })}>
           {upsell.label}

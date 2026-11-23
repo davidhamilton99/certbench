@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import { CHECKPOINT_SIZE, MINUTES_PER_STOP } from "@/core/path/plan";
 import type { PathCert, PathStop } from "@/core/path/types";
 import { InlineSignup } from "@/components/auth/InlineSignup";
+import { clearBegunOnPublicPage } from "./path-start";
 
 /** The stop an account opens next, named when it's one to learn from, or the checkpoint. */
 export function nextUpTitle(next: PathStop | null): string | null {
@@ -53,6 +54,9 @@ export function SaveAsk({
     if (viewed.current) return;
     viewed.current = true;
     track("path_save_viewed", { cert, surface });
+    // From now on this request may be what makes the account: the study path
+    // counts the link when it carries the visitor's work (path-start.ts).
+    clearBegunOnPublicPage(cert);
   }, [cert, surface]);
 
   return (

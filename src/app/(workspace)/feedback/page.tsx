@@ -1,7 +1,5 @@
 import { requireProPage } from "@/server/auth";
-import { getProfile } from "@/server/data/profiles";
-import { listEnrollments } from "@/server/data/enrollments";
-import { listActiveCertifications } from "@/server/data/certifications";
+import { pageCertifications, pageEnrollments, pageProfile } from "@/server/page-reads";
 import { FeedbackClient } from "@/components/workspace/FeedbackClient";
 
 export const metadata = {
@@ -17,9 +15,9 @@ export default async function FeedbackPage({
   const { db, user } = await requireProPage();
 
   const [profile, enrollments, certifications] = await Promise.all([
-    getProfile(db, user.id),
-    listEnrollments(db, user.id),
-    listActiveCertifications(db),
+    pageProfile(db, user.id),
+    pageEnrollments(db, user.id),
+    pageCertifications(db),
   ]);
 
   const certById = new Map(certifications.map((c) => [c.id, c]));

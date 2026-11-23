@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getRecallDecks } from "@/data/recall";
+import { RECALL_QUESTIONS } from "@/data/recall/questions";
+import { PATH_CONTENT } from "@/data/path";
 import { referenceRegistry } from "@/data/reference";
+import { recallRepId } from "@/core/path/rep-id";
 import type { ReferenceTable } from "@/data/reference/types";
 import {
   buildDeck,
@@ -164,20 +167,34 @@ describe("recallToRep: every curated and derived deck", () => {
   );
   const itemsOf = (deck: ResolvedDeck) => [...new Set(deck.rows.map((row) => row[deck.config.ask.key]))];
   /** Every card a deck can deal for one fact: asked each way, and typed where it can be. */
-  const cardsFor = (deck: ResolvedDeck, item: string) => [
-    recallToRep(deck, item, "1.1", rngFrom(FORWARD), false),
-    recallToRep(deck, item, "1.1", rngFrom(BACK), false),
-    ...(deck.typeable ? [recallToRep(deck, item, "1.1", rngFrom(BACK), true)] : []),
-  ];
+  const cardsFor = (deck: ResolvedDeck, item: string) => cardsWithCue(deck, item).map(({ rep }) => rep);
+  /**
+   * The same cards, each with the cue it asked about. The cue is the card's
+   * prompt, except where the deck asks in sentences (src/data/recall/questions.ts):
+   * there it is the cell that the sentence names, the fact's item asked the
+   * deck's own way and its answer cell asked the other way (those decks have
+   * one row for each item, which a test below holds).
+   */
+  const cardsWithCue = (deck: ResolvedDeck, item: string) => {
+    const reversedCue = () => deck.rows.find((row) => row[deck.config.ask.key] === item)![deck.config.answer.key];
+    const cueOf = (rep: Rep, reversed: boolean) =>
+      RECALL_QUESTIONS[deck.config.id] ? (reversed ? reversedCue() : item) : rep.prompt;
+    const back = deck.config.bidirectional === true;
+    return [
+      { rep: recallToRep(deck, item, "1.1", rngFrom(FORWARD), false), reversed: false },
+      { rep: recallToRep(deck, item, "1.1", rngFrom(BACK), false), reversed: back },
+      ...(deck.typeable ? [{ rep: recallToRep(deck, item, "1.1", rngFrom(BACK), true), reversed: false }] : []),
+    ].map(({ rep, reversed }) => ({ rep, cue: cueOf(rep, reversed), reversed }));
+  };
 
   /**
    * The row a card asked. A cue stands for one row in nearly every deck, and
    * for two where the table has them (RADIUS has a pair of ports and a pair of
-   * legacy ports): the card's other cell, its answer or its prompt, says which.
+   * legacy ports): the card's other cell, its answer or its cue, says which.
    */
-  const rowAsked = (deck: ResolvedDeck, item: string, rep: Rep) =>
+  const rowAsked = (deck: ResolvedDeck, item: string, rep: Rep, cue = rep.prompt) =>
     deck.rows.filter(
-      (row) => row[deck.config.ask.key] === item && [rep.prompt, rightAnswer(rep)].includes(row[deck.config.answer.key])
+      (row) => row[deck.config.ask.key] === item && [cue, rightAnswer(rep)].includes(row[deck.config.answer.key])
     );
 
   it("gives the deck's sentences on every card of a deck that has a template", () => {
@@ -187,20 +204,93 @@ describe("recallToRep: every curated and derived deck", () => {
     let cards = 0;
     for (const { cert, deck } of explained) {
       for (const item of itemsOf(deck)) {
-        for (const rep of cardsFor(deck, item)) {
+        for (const { rep, cue } of cardsWithCue(deck, item)) {
           const at = `${cert}/${deck.config.id}: ${item}`;
-          const rows = rowAsked(deck, item, rep);
+          const rows = rowAsked(deck, item, rep, cue);
           expect(rows, at).toHaveLength(1);
           const sentences = explainRow(deck.config, rows[0]);
           expect(sentences, at).not.toBeNull();
           // Where the cue names another row too, the card also says which answer it asked for.
-          const also = otherAnswersSentence(rep.prompt, rightAnswer(rep), otherAnswers(deck, rep.prompt, rightAnswer(rep)));
+          const also = otherAnswersSentence(cue, rightAnswer(rep), otherAnswers(deck, cue, rightAnswer(rep)));
           expect(rep.takeaway, at).toBe([sentences, also].filter(Boolean).join(" "));
           cards++;
         }
       }
     }
     expect(cards).toBeGreaterThan(1100);
+  });
+
+  // The first questions a visitor answers on the Network+ and A+ pages. A card
+  // that printed the bare term ("POP3S") left the question ("Which port?") to
+  // a line that a screen reader does not read with the answers.
+  describe("the six decks of the introductory questions", () => {
+    const INTRODUCTORY = Object.keys(RECALL_QUESTIONS);
+    const decks = DECKS.filter(({ deck }) => INTRODUCTORY.includes(deck.config.id));
+
+    it("are the decks that the introductory questions of Network+ and both A+ cores draw on", () => {
+      const drawn = (["network-plus-n10-009", "a-plus-core1-220-1201", "a-plus-core2-220-1202"] as const).flatMap((cert) =>
+        (PATH_CONTENT[cert].warmup.decks ?? []).map(
+          ({ tableId }) => getRecallDecks(cert).find((deck) => deck.config.tableId === tableId)!.config.id
+        )
+      );
+      expect([...new Set(drawn)].sort()).toEqual([...INTRODUCTORY].sort());
+      expect(decks).toHaveLength(6);
+    });
+
+    it("have one row for each item, so that a question names one fact", () => {
+      for (const { cert, deck } of decks) {
+        expect(itemsOf(deck), `${cert}/${deck.config.id}`).toHaveLength(deck.rows.length);
+      }
+    });
+
+    it("ask every card as one sentence that names the term, with no line under it", () => {
+      let cards = 0;
+      for (const { cert, deck } of decks) {
+        for (const item of itemsOf(deck)) {
+          for (const { rep, cue } of cardsWithCue(deck, item)) {
+            const at = `${cert}/${deck.config.id}: ${rep.prompt}`;
+            expect(rep.prompt, at).toMatch(/^[A-Z][^?]* [^?]*\?$/);
+            expect(rep.prompt, at).not.toMatch(/[;:]|\s\/\s|\s{2}/);
+            // The term is in the sentence, as the table writes it, or (for a
+            // pair of ports or a note) in the sentence of its own.
+            const own = RECALL_QUESTIONS[deck.config.id].rows?.[cue];
+            if (own) expect(rep.prompt, at).toBe(own);
+            else expect(rep.prompt.toLowerCase(), at).toContain(cue.toLowerCase());
+            if (rep.type === "choice") expect(rep.cue, at).toBeUndefined();
+            cards++;
+          }
+        }
+      }
+      expect(cards).toBeGreaterThan(200);
+    });
+
+    it("ask the examples of the finding in its own words", () => {
+      const net = getRecallDecks("network-plus-n10-009").find((deck) => deck.config.id === "net-ports")!;
+      expect(recallToRep(net, "POP3S", "1.5", rngFrom(FORWARD), false).prompt).toBe("Which port does POP3S use?");
+      expect(recallToRep(net, "HTTPS", "1.5", rngFrom(BACK), false).prompt).toBe("Which protocol uses port 443?");
+      expect(recallToRep(net, "DHCP", "1.5", rngFrom(BACK), false).prompt).toBe("Which protocol uses ports 67 and 68?");
+      const osi = getRecallDecks("network-plus-n10-009").find((deck) => deck.config.id === "net-osi")!;
+      expect(recallToRep(osi, "Presentation", "1.1", rngFrom(BACK), false).prompt).toBe("Which layer of the OSI model is layer 6?");
+      const linux = getRecallDecks("a-plus-core2-220-1202").find((deck) => deck.config.id === "a2-linux")!;
+      expect(recallToRep(linux, "List directory contents", "1.9", rngFrom(FORWARD), false).prompt).toBe(
+        "Which Linux command is used to list directory contents?"
+      );
+    });
+
+    // A question's id is made from the deck and the row, and never from its
+    // words, so a stored answer still names the same question.
+    it("keep every question's id", () => {
+      for (const { deck } of decks) {
+        for (const item of itemsOf(deck)) {
+          for (const rep of cardsFor(deck, item)) expect(rep.id).toBe(recallRepId("1.1", deck.config.id, item));
+        }
+      }
+    });
+
+    it("leave every other deck as it was: the term, and a cue that asks for the answer", () => {
+      const acronyms = getRecallDecks("security-plus-sy0-701").find((deck) => deck.config.id === "sec-acronyms")!;
+      expect(recallToRep(acronyms, "MFA", "", rngFrom(FORWARD), false)).toMatchObject({ prompt: "MFA", cue: "Which expansion?" });
+    });
   });
 
   it("explains the row that was asked when a cue stands for two rows", () => {

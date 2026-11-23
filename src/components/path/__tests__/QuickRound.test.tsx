@@ -69,6 +69,10 @@ const KEY = `cb_path_${CERT}`;
 /** Work played beside an account's copy by someone who is not signed in as that account. */
 const GUEST = `cb_path_guest_${CERT}`;
 const CLAIM = `cb_path_guest_claim_${CERT}`;
+/** The study path's `path_started` is still owed for this device's copy (path-start.ts). */
+const OWED = `cb_path_start_owed_${CERT}`;
+/** The visitor's work was begun on a public page, and no save request has been shown since. */
+const BEGUN = `cb_path_begun_public_${CERT}`;
 
 const structure: PathStructure = {
   certSlug: CERT,
@@ -274,6 +278,9 @@ describe("QuickRound", () => {
     );
     play(true, true);
     expect(screen.getByText("You have started 1 of 3 topics.")).toBeInTheDocument();
+    // Network+'s topics are CertBench's own, never called its objectives.
+    expect(screen.getByRole("heading", { level: 2, name: "Network+ topics" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /objectives/ })).toBeNull();
   });
 
   it("hands the round to the account they make, counts it once, and opens their path", async () => {
@@ -384,6 +391,55 @@ describe("QuickRound", () => {
     expect(store.get(CLAIM)).toBe("user-2");
     expect(screen.getByText("These questions count toward your study path.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Continue/ })).toHaveAttribute("href", `/path/${CERT}`);
+  });
+
+  // The study path's page records `path_started` at a visitor's first answer
+  // there, when the device's copy has not started. A round's answers begin
+  // that copy, so the round leaves the start owed (path-start.ts).
+  it("leaves the study path's start owed when its first answer begins the visitor's work, and only then", () => {
+    renderRound();
+    play(true);
+    expect(store.get(OWED)).toBe("1");
+    store.delete(OWED);
+    play(true, true);
+    expect(store.has(OWED)).toBe(false);
+  });
+
+  it("owes nothing when the visitor's work had begun already", () => {
+    seed(null, recordRep(EMPTY_PATH_PROGRESS, "a|2.1|z", true, 1));
+    renderRound();
+    play(true);
+    expect(store.has(OWED)).toBe(false);
+    expect(store.has(BEGUN)).toBe(false);
+  });
+
+  // An account made anywhere else must not be counted as one that the save
+  // request made. Once the request has been shown, it may have made it.
+  it("marks the visitor's work as begun on a public page until the save request is shown", () => {
+    renderRound();
+    play(true);
+    expect(store.get(BEGUN)).toBe("1");
+    play(true, true);
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+    expect(store.has(BEGUN)).toBe(false);
+  });
+
+  // A member's first answer can come before the sign-in client has said who is
+  // here. Kept at once, it would be kept as an anonymous visitor's, which the
+  // next person at the keyboard would be shown as their own.
+  it("keeps an answer given before the page knows who is signed in, once it knows, as that account's", async () => {
+    auth.session = { user: { id: "user-1", email: "a@b.co" } };
+    renderRound();
+    play(true);
+    expect(auth.reads).toBe(0);
+    expect(store.has(KEY)).toBe(false);
+    expect(store.has(GUEST)).toBe(false);
+
+    await waitFor(() => expect(store.has(KEY)).toBe(true));
+    const saved = JSON.parse(store.get(KEY)!);
+    expect(saved.owner).toBe("user-1");
+    expect(Object.keys(saved.progress.items)).toEqual(["a|1.1|x"]);
+    expect(store.has(GUEST)).toBe(false);
   });
 
   it("keeps an account's map off a device that is signed out", () => {

@@ -6,6 +6,7 @@ import { FlaskConical, Loader2, RotateCcw } from "lucide-react";
 import { projectFinish } from "@/core/path/checkpoint";
 import { isStopDone } from "@/core/path/progress";
 import type { ObjectiveStatus, PathPlan, PathProgress, PathStructure } from "@/core/path/types";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { Button } from "@/components/ui/button";
 import { ExamMap, type LabState, type MapRehearsal } from "./ExamMap";
@@ -29,16 +30,21 @@ function UnlockCard({ eyebrow, children }: { eyebrow: string; children: ReactNod
  * Back on the path from paying, while Stripe's confirmation (the activation
  * webhook) is still on its way: usually a second or two. It says the payment
  * went through, on the path, in the unlock's own card; never the offer again.
- * `slow` once it has taken long enough to say so, with a way to look again.
+ * `slow` once it has taken long enough to say so, with a way to look again
+ * and a way back to the study path: a payment that is held up must not leave
+ * the buyer on this screen with only a reload to get out.
  */
 export function PathActivating({
   examName,
   slow,
   onCheck,
+  onContinue,
 }: {
   examName: string;
   slow: boolean;
   onCheck: () => void;
+  /** Leave the wait for the study path as it stands. */
+  onContinue: () => void;
 }) {
   return (
     <div className="path-rise grid gap-6" role="status">
@@ -54,6 +60,9 @@ export function PathActivating({
               <RotateCcw aria-hidden />
               Check again
             </Button>
+            <button type="button" onClick={onContinue} className="cb-link cb-tap text-small">
+              Return to the study path
+            </button>
             <p className="text-small text-muted-foreground">
               If you are still waiting after a few minutes, please email{" "}
               <a href="mailto:support@certbench.dev" className="cb-link">
@@ -219,7 +228,10 @@ export function PathUnlocked({
       )}
 
       <div className="glass grid gap-5 rounded-lg p-5 sm:p-8">
-        <h2 className="cb-statement">Exam objectives</h2>
+        {/* Network+ is set out by CertBench's own topics, not CompTIA's objectives. */}
+        <h2 className="cb-statement">
+          {usesOfficialObjectiveNumbers(structure.certSlug) ? "Exam objectives" : "Exam topics"}
+        </h2>
         <ExamMap structure={structure} statuses={statuses} doneStops={doneStops} labs={labs} rehearsal={rehearsal} />
       </div>
     </div>

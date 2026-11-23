@@ -9,6 +9,7 @@ import { identifyUser, track } from "@/lib/analytics";
 import { getPathProgress, savePathProgress } from "@/contracts/client";
 import { ApiError, type ApiErrorCode } from "@/contracts/errors";
 import { PAGE_OUT_OF_DATE } from "@/lib/errors/user-message";
+import type { RegionPricing } from "@/lib/pricing/ppp";
 import {
   clearGuestPath,
   readGuestClaim,
@@ -19,6 +20,7 @@ import {
   type LocalPath as LocalState,
 } from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
+import { begunOnPublicPage, clearBegunOnPublicPage, oweStartEvent, startEventOwed } from "./path-start";
 import { carryFromEarlierVersion, type VersionCarry } from "./version-carry";
 import { pathGuestKey, pathStorageKey } from "./storage-key";
 import {
@@ -53,6 +55,20 @@ const trackCarry = (cert: PathCert, carry: VersionCarry) =>
   });
 
 /**
+ * A first visit to a newer exam version carries this device's answers on the
+ * earlier one. When a public page began that earlier copy (the home page's
+ * sample questions are SY0-701's), its page still owes `path_started`
+ * (path-start.ts), and the carried copy here has started already: this page
+ * then owes it too, for the visitor's first answer here. The earlier version
+ * keeps its own mark, as it keeps its own copy. Nothing is passed on when the
+ * answers came from an account, whose study path began elsewhere, or when an
+ * answer given on this page has already recorded the event.
+ */
+function passOnOwedStart(cert: PathCert, carry: VersionCarry, answeredHere: boolean) {
+  if (carry.source === "device" && !answeredHere && startEventOwed(carry.from)) oweStartEvent(cert);
+}
+
+/**
  * How much of the path the person may open. "unknown" is a signed-in learner
  * whose account has not been reached yet: nothing is locked and nothing is
  * offered until the account has answered, and the server decides each request.
@@ -78,6 +94,12 @@ interface View {
   paymentPastDue: boolean;
   /** The exam's certification id, once the account has been asked. */
   certId: string | null;
+  /**
+   * The offer's prices for this learner's region, as the account's answer
+   * gives them, so that the offer shows its prices at once. Null until the
+   * account has answered with them: the offer then asks for them itself.
+   */
+  pricing: RegionPricing | null;
   /** false when the account can't store progress yet; null when unknown. */
   stored: boolean | null;
   /**
@@ -114,6 +136,14 @@ interface View {
    */
   foreign: boolean;
   /**
+   * The account's own copy of this path had been started before this device's
+   * work was added to it, as the account answered when it was first reached on
+   * this visit. False for a visitor, and until the account has answered. A
+   * start that a public page left owed (path-start.ts) is then not this
+   * learner's first: their study path began long before.
+   */
+  accountStarted: boolean;
+  /**
    * Counts each time the page learns who is here or what their account holds:
    * when it opens, when a slow sign-in service answers at last, and when an
    * account that could not be reached is reached. The page decides where the
@@ -132,6 +162,7 @@ const INITIAL: View = {
   proPlan: false,
   paymentPastDue: false,
   certId: null,
+  pricing: null,
   stored: null,
   held: null,
   unreached: false,
@@ -139,6 +170,7 @@ const INITIAL: View = {
   deviceSaves: true,
   outOfDate: false,
   foreign: false,
+  accountStarted: false,
   arrival: 0,
 };
 
@@ -175,6 +207,18 @@ const KEEPALIVE_MAX_BYTES = 60_000;
  */
 const isOutOfDate = (err: unknown) => err instanceof ApiError && err.message === PAGE_OUT_OF_DATE;
 
+/**
+ * The offer's prices for the learner's region, from the account's answer
+ * (GET /api/path/progress sends them beside the progress). The answer is read
+ * through its contract, which lists `pricing` once src/contracts/path.ts does;
+ * until then the field is left out of what is read, and the offer asks for its
+ * prices itself, as it always has.
+ */
+function pricingOf(answer: object): RegionPricing | null {
+  const pricing = (answer as { pricing?: unknown }).pricing;
+  return pricing && typeof pricing === "object" && "prices" in pricing ? (pricing as RegionPricing) : null;
+}
+
 /** Who the sign-in service says is here. */
 interface Person {
   uid: string;
@@ -189,6 +233,7 @@ type Account =
       proPlan: boolean;
       paymentPastDue: boolean;
       certId: string;
+      pricing: RegionPricing | null;
       stored: boolean;
     }
   /**
@@ -366,6 +411,7 @@ export function usePathProgress(cert: PathCert) {
           // The server sends it only when it is true.
           paymentPastDue: res.paymentPastDue === true,
           certId: res.certId,
+          pricing: pricingOf(res),
           stored: res.stored,
         };
       } catch (err) {
@@ -469,10 +515,12 @@ export function usePathProgress(cert: PathCert) {
         proPlan: account?.proPlan ?? last?.proPlan ?? false,
         paymentPastDue: account?.paymentPastDue ?? last?.paymentPastDue ?? false,
         certId: account?.certId ?? last?.certId ?? null,
+        pricing: account?.pricing ?? last?.pricing ?? null,
         stored: account?.stored ?? last?.stored ?? null,
         held: null,
         unreached: account ? false : last ? last.unreached : true,
         foreign: !!device?.owner && device.owner !== me.uid,
+        accountStarted: account && adopted ? hasStarted(adopted.server) : (last?.accountStarted ?? false),
         arrival: before.arrival + 1,
       };
     };
@@ -492,8 +540,12 @@ export function usePathProgress(cert: PathCert) {
       // A first visit to a newer exam version brings this device's answers on the earlier one.
       const carry = !device?.owner && !(kept && hasStarted(kept)) ? await carryFromEarlierVersion(cert, null) : null;
       if (cancelled) return;
+      const answeredHere = hasStarted(cur.current.progress);
       commit(asVisitor(device, carry));
-      if (carry) trackCarry(cert, carry);
+      if (carry) {
+        trackCarry(cert, carry);
+        passOnOwedStart(cert, carry, answeredHere);
+      }
     };
 
     (async () => {
@@ -513,6 +565,9 @@ export function usePathProgress(cert: PathCert) {
       const guest = readGuestPath(cert);
       // A public page that took the sign-up has already counted this account.
       const counted = readGuestClaim(cert) === who.uid;
+      // Work begun on a public page with no save request shown since: the
+      // request did not make this account, wherever it was made (path-start.ts).
+      const begunElsewhere = begunOnPublicPage(cert);
       // The request ends just before the time limit, so a learner whose account
       // cannot be reached is shown the device's copy once, with the reason.
       adopted = await adopt(who.uid, local, guest, Math.max(ACCOUNT_MIN_MS, deadline - Date.now() - 250));
@@ -535,16 +590,21 @@ export function usePathProgress(cert: PathCert) {
       const settled = carry ? mergePathProgress(adopted.merged, carry.progress) : adopted.merged;
       // Answers given while the page was opening are not in the account yet.
       const answeredMeanwhile = addsTo(settled, cur.current.progress);
+      const answeredHere = hasStarted(cur.current.progress);
       const next = asLearner(who, local, guest, carry);
       commit(next);
       everReached.current = adopted.account.reached;
       // The guest work is in this account's copy now (and saved, below).
       clearGuestPath(cert);
       // Back from Google with an anonymous stop to keep: it's theirs now.
-      if (adopted.carriedDevice || (adopted.carriedGuest && !counted)) {
+      if ((adopted.carriedDevice || (adopted.carriedGuest && !counted)) && !begunElsewhere) {
         track("path_account_linked", { cert, method: "redirect" });
       }
-      if (carry) trackCarry(cert, carry);
+      if (adopted.carriedDevice || adopted.carriedGuest) clearBegunOnPublicPage(cert);
+      if (carry) {
+        trackCarry(cert, carry);
+        passOnOwedStart(cert, carry, answeredHere);
+      }
       if (adopted.account.reached && (adopted.unsynced || carry || answeredMeanwhile)) {
         void saveToAccount(next.progress);
       }
@@ -719,10 +779,12 @@ export function usePathProgress(cert: PathCert) {
         proPlan: account?.proPlan ?? false,
         paymentPastDue: account?.paymentPastDue ?? false,
         certId: account?.certId ?? null,
+        pricing: account?.pricing ?? null,
         stored: account?.stored ?? null,
         held: null,
         unreached: !account,
         foreign: !!c.owner && c.owner !== uid,
+        accountStarted: account ? hasStarted(res.server) : false,
       });
       everReached.current = !!account;
       clearGuestPath(cert);
@@ -759,6 +821,7 @@ export function usePathProgress(cert: PathCert) {
       everReached.current = true;
       const carry = first && !hasStarted(res.merged) && !hasStarted(now.progress) ? await carryFromEarlierVersion(cert, c.userId) : null;
       const latest = cur.current;
+      const answeredHere = hasStarted(latest.progress);
       const settled = carry ? mergePathProgress(res.merged, carry.progress) : res.merged;
       // Whatever was answered while the account was being asked is kept.
       const progress = mergePathProgress(settled, latest.progress);
@@ -772,12 +835,19 @@ export function usePathProgress(cert: PathCert) {
         proPlan: res.account.proPlan,
         paymentPastDue: res.account.paymentPastDue,
         certId: res.account.certId,
+        pricing: res.account.pricing ?? latest.pricing,
         stored: res.account.stored,
         unreached: false,
+        // Read from the account's own copy only when it answers for the first
+        // time: later, its copy holds this visit's saves.
+        accountStarted: first ? hasStarted(res.server) : latest.accountStarted,
         arrival: latest.unreached ? latest.arrival + 1 : latest.arrival,
       });
       // (A signed-in page has no guest work: it was carried in when it loaded.)
-      if (carry) trackCarry(cert, carry);
+      if (carry) {
+        trackCarry(cert, carry);
+        passOnOwedStart(cert, carry, answeredHere);
+      }
       if (owed || carry) void saveToAccount(progress);
     })().finally(() => {
       refreshing.current = null;

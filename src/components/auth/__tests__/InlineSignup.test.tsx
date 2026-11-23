@@ -63,6 +63,13 @@ describe("the sign-up form that stays on the page", () => {
     expect([...note.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(["/terms", "/privacy"]);
   });
 
+  it("sets its notes on the left edge of the card it stands in, with the sentences around them", () => {
+    const { container } = show();
+    expect(screen.getByText(/By creating an account you accept the/)).not.toHaveClass("text-center");
+    expect(screen.getByText(/The account is free, and no payment card is required\./)).not.toHaveClass("text-center");
+    expect(container.querySelector(".text-center")).toBeNull();
+  });
+
   it("creates the account without a name and hands the page its next step", async () => {
     show();
     fill();

@@ -27,8 +27,6 @@ export function TileGrid({
   className,
 }: {
   groups: { label?: ReactNode; tiles: Tile[] }[];
-  /** Kept so that callers need not change: rows are always one to a line. */
-  columns?: 2 | 3;
   /** Where the line about each row shows: from the `sm` width (a phone gets a compact list), or always. */
   details?: "sm" | "always";
   /** The level of a group's heading: 3 under a section's own heading, 2 where the groups are the sections. */

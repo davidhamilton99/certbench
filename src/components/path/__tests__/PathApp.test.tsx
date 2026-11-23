@@ -134,6 +134,8 @@ const server = vi.hoisted(() => ({
   proPlan: false,
   /** The account's last payment did not go through (it has no Pro while the payment is owed). */
   pastDue: false,
+  /** The offer's prices for the learner's region, when the account's answer carries them. */
+  pricing: null as null | object,
   /** What enrolling answers: false when a Pro member already has another exam. */
   enrolls: true,
   /** When set, the request that makes this the account's exam waits for it before it answers. */
@@ -164,6 +166,7 @@ vi.mock("@/lib/api-client", async () => {
             certId: "11111111-1111-4111-8111-111111111111",
             // As the server does: sent only when it is true.
             ...(server.pastDue ? { paymentPastDue: true } : {}),
+            ...(server.pricing ? { pricing: server.pricing } : {}),
           };
         case "POST /api/path/progress":
           if (server.saveError) throw server.saveError;
@@ -208,6 +211,7 @@ vi.mock("@/lib/api-client", async () => {
 });
 
 import { ContinueCard, PathApp } from "../PathApp";
+import { QuickRound } from "../QuickRound";
 import { ApiError } from "@/contracts/common";
 import { pathRehearsalKey } from "../storage-key";
 import { oweStartEvent } from "../path-start";
@@ -345,6 +349,7 @@ beforeEach(() => {
   server.access = "free";
   server.proPlan = false;
   server.pastDue = false;
+  server.pricing = null;
   server.enrolls = true;
   server.enrollWaits = null;
   cards.length = 0;
@@ -626,6 +631,33 @@ describe("a signed-in learner", () => {
     expect(call?.input).toMatchObject({ cert: "security-plus-sy0-701", index: 1 });
   });
 
+  // A learn step is built from its own objective's questions, and a seen id
+  // names its objective: the rest of a long history only made the request
+  // larger. A step drawn from the whole exam still gets every seen id.
+  it("sends a learn step only its own objective's seen questions, and the checkpoint all of them", async () => {
+    const seenAcross = (progress: PathProgress) =>
+      ["q|1.1|aaa", "q|2.1|bbb", "a|1.2|ccc", "r|1.1|net-ports|1a2b3c4d"].reduce((p, id, n) => recordRep(p, id, true, n + 1), progress);
+    const sent = () =>
+      server.calls.filter((c) => c.path === "/api/path/stop").map((c) => c.input as { index: number; seen: string[] });
+
+    server.progress = seenAcross(done(["warmup"]));
+    const first = renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    expect(sent()[0].index).toBe(1);
+    expect([...sent()[0].seen].sort()).toEqual(["q|1.1|aaa", "r|1.1|net-ports|1a2b3c4d"]);
+    first.unmount();
+
+    server.calls = [];
+    server.progress = seenAcross(done(["warmup", "1.1"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } }));
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the checkpoint/ }));
+    await waitFor(() => expect(sent()).toHaveLength(1));
+    expect(sent()[0].index).toBe(2);
+    expect([...sent()[0].seen].sort()).toEqual(["a|1.2|ccc", "q|1.1|aaa", "q|2.1|bbb", "r|1.1|net-ports|1a2b3c4d"]);
+  });
+
   it("ends a step with the way on ahead of the map", async () => {
     server.progress = done(["warmup"]);
     server.stopHandler = (input) => stopReply(input.index, 1);
@@ -690,6 +722,23 @@ describe("a signed-in learner", () => {
     expect(track).toHaveBeenCalledWith("path_goal_set", { cert: "security-plus-sy0-701", step: "minutes", value: "20" });
   });
 
+  it("counts and passes a step with nothing to ask that arrives after the goal questions, and returns home", async () => {
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(["warmup", "1.1", "checkpoint"], {
+      goal: { examDate: null, target: null, minutes: null, at: 1 },
+      checkpoint: { score: 60, at: 1, domains: [] },
+    });
+    server.stopHandler = (input) => stopReply(input.index, 0);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "About 20 minutes" }));
+    // Not a screen that counts "Question 1 of 0" with nothing to press.
+    expect(await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.queryByText(/Question 1 of 0/)).toBeNull();
+    await waitFor(() => expect(savedProgress().at(-1)?.stops["1.2"]).toMatchObject({ n: 1, c: 0, t: 0 }));
+  });
+
   it("records bank answers against the account at the end of a step", async () => {
     server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
     // Displayed order is shuffled: shown option 1 is the bank's option 3.
@@ -731,6 +780,26 @@ describe("a signed-in learner", () => {
     expect(screen.getByText(/If you study with Pro for 30 days or more and do not pass your exam, CertBench refunds your last payment\./)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", { cert: "security-plus-sy0-701", score: 50 });
     expect(track).toHaveBeenCalledWith("path_offer_viewed", { cert: "security-plus-sy0-701", context: "reveal" });
+  });
+
+  // The offer used to show no price until a request of its own had answered.
+  it("makes the offer at the regional prices that came with the account's answer, and asks for no prices", async () => {
+    server.pricing = {
+      discountPercent: 40,
+      prices: {
+        monthly: { original: "$19", discounted: "$11.40" },
+        quarterly: { original: "$39", discounted: "$23.40" },
+        annual: { original: "$99", discounted: "$59.40" },
+      },
+    };
+    server.progress = done(["warmup", "1.1", "checkpoint"], {
+      goal: { examDate: null, target: null, minutes: 20, at: 1 },
+      checkpoint: { score: 50, at: 1, domains: [] },
+    });
+    renderPath();
+    expect(await screen.findByText("$11.40")).toBeInTheDocument();
+    expect(screen.queryByText("$19")).toBeNull();
+    expect(server.calls.some((c) => c.path === "/api/pricing/region")).toBe(false);
   });
 
   it("calls a high checkpoint a strong first read, never exam-ready, and shows what is still unstudied", async () => {
@@ -891,6 +960,28 @@ describe("back from paying", () => {
       server.access = "pro";
       fireEvent.click(again);
       expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
+    } finally {
+      later.mockRestore();
+    }
+  }, 10_000);
+
+  // A payment held up longer than the page asks for (or Pro held on another
+  // exam) left the buyer on this screen with only a reload to get out.
+  it("offers the way back to the study path once confirming is slow", async () => {
+    renderPath();
+    await screen.findByRole("button", { name: "Account" });
+    await act(async () => {});
+    expect(screen.queryByRole("button", { name: "Return to the study path" })).toBeNull();
+    const realNow = Date.now.bind(Date);
+    const later = vi.spyOn(Date, "now").mockImplementation(() => realNow() + 25_000);
+    try {
+      const back = await screen.findByRole("button", { name: "Return to the study path" }, { timeout: 4000 });
+      back.focus();
+      fireEvent.click(back);
+      const title = await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" });
+      expect(screen.queryByRole("heading", { name: "Your Security+ study path is being opened." })).toBeNull();
+      // The button that was pressed has gone with its screen: the focus moves to the title of the one in its place.
+      await waitFor(() => expect(document.activeElement).toBe(title));
     } finally {
       later.mockRestore();
     }
@@ -2017,6 +2108,27 @@ describe("a practice exam finished on the exam's public page", () => {
     expect(answers?.answers).toHaveLength(12);
   });
 
+  // The import and the first unlock both decide what a visit opens on, in one
+  // pass. The import's reveal stands; the unlock moment waits for a later visit.
+  it("opens on its reveal for a Pro member's first visit on the device, not on the unlock moment", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    server.progress = done(["warmup"]);
+    finishedExam();
+    const first = renderPath();
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+    await act(async () => {});
+    expect(screen.getByText("Security+ practice exam")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("path_unlock_viewed", expect.anything());
+    first.unmount();
+
+    // The next visit opens with what Pro opened.
+    server.progress = { ...done(["warmup", "checkpoint"]), checkpoint: { score: 67, at: 1, domains: [] } };
+    renderPath();
+    expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
+  });
+
   it("leaves a checkpoint already taken in place, and keeps the exam as a practice exam", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup", "1.1", "checkpoint"], { checkpoint: { score: 55, at: 1, domains: [] } });
@@ -2094,6 +2206,9 @@ describe("a practice exam finished on the exam's public page", () => {
       const first = renderPath();
       await waitFor(() => expect(imported()).toBe(true));
       expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
+      // The exam carries the account's name from now on, so that the public
+      // page shows it to that account alone (PracticeExam).
+      expect(JSON.parse(localStorage.getItem(KEY)!).claimedBy).toBe("u1");
       first.unmount();
 
       // The next person to sign in on this device, on two visits: the second
@@ -2107,6 +2222,22 @@ describe("a practice exam finished on the exam's public page", () => {
         expect(imported()).toBe(false);
         next.unmount();
       }
+      expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
+    });
+
+    // The study path took the exam for u1 before it began to stamp the exams it
+    // takes. The public page then showed it to u2, the next account to sign in,
+    // and stamped it with u2's name.
+    it("leaves an exam that the device gave to another account where it is, whoever claimed it afterwards", async () => {
+      const at = Date.now() - 600_000;
+      finishedExam(at, { claimedBy: "u2" });
+      localStorage.setItem(TAKEN, JSON.stringify({ at, by: "u1" }));
+      auth.session = { user: { id: "u2", email: "u2@example.com" } };
+      renderPath();
+      await screen.findByRole("button", { name: /^Continue/ });
+      await act(async () => {});
+      expect(imported()).toBe(false);
+      expect(screen.queryByText("Security+ practice exam")).toBeNull();
       expect(JSON.parse(localStorage.getItem(TAKEN)!)).toMatchObject({ by: "u1" });
     });
 
@@ -2295,6 +2426,107 @@ describe("recording that a visitor has started the study path", () => {
     fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
     expect(await screen.findByText(/^Correct\./)).toBeInTheDocument();
     expect(starts()).toHaveLength(1);
+  });
+
+  // The home page's samples are SY0-701's. A visitor who answered one and then
+  // opens the SY0-801 study path arrives with a copy that the first visit's
+  // carry has begun.
+  it("records it once on the newer exam version when the home page's samples began the earlier version's copy", async () => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ v: 1, owner: null, progress: recordRep(EMPTY_PATH_PROGRESS, "a|1.2|w3", true, 1) })
+    );
+    oweStartEvent(CERT);
+    const NEWER = "security-plus-sy0-801";
+    const newer: PathStructure = { ...structure, certSlug: NEWER, examCode: "SY0-801" };
+    const newerPlan = buildPlan(newer);
+    render(
+      <PathApp
+        cert={NEWER}
+        structure={newer}
+        plan={newerPlan}
+        warmup={{ stop: newerPlan.stops[0], reps: [rep("a|3.2|w1", "1.1"), rep("a|1.1|w3", "1.1"), rep("a|1.1|w4", "1.1")] }}
+        questionCount={900}
+        free={free}
+      />
+    );
+    // The carried answer is passed over: the questions continue from the first one without an answer.
+    expect(await screen.findByText(/You answered 1 of the 3 introductory questions earlier/)).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_version_carried", expect.objectContaining({ to: NEWER, source: "device" }));
+    expect(starts()).toHaveLength(0);
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: NEWER }]]);
+    fireEvent.click(await screen.findByRole("button", { name: /Right answer/ }));
+    expect(await screen.findByText(/^Correct\./)).toBeInTheDocument();
+    expect(starts()).toHaveLength(1);
+  });
+
+  it("records it once for a copy that a public page's quick round began", async () => {
+    const round = render(
+      <QuickRound
+        cert={CERT}
+        stopId="1.1"
+        examName="Security+"
+        structure={structure}
+        reps={[rep("a|1.1|q1", "1.1"), rep("a|1.1|q2", "1.1")]}
+        label="Objective 1.1: Objective 1.1"
+        surface="objective_page"
+      />
+    );
+    for (const last of [false, true]) {
+      fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+      fireEvent.click(screen.getByRole("button", { name: last ? /View my result/ : /^Continue/ }));
+    }
+    round.unmount();
+    track.mockClear();
+
+    renderPath();
+    expect(await screen.findByText("Prompt a|1.1|w1")).toBeInTheDocument();
+    await act(async () => {});
+    expect(starts()).toHaveLength(0);
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: CERT }]]);
+    await answer(true);
+    expect(starts()).toHaveLength(1);
+  });
+
+  // A member on a device that held no copy answered the home page's samples
+  // signed in. The samples began a copy that is the member's own, and left the
+  // start owed, because the home page cannot know what the account holds.
+  const memberBeganOnHome = () => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ v: 1, owner: "u1", progress: recordRep(EMPTY_PATH_PROGRESS, "a|2.1|w2", true, 1) })
+    );
+    oweStartEvent(CERT);
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+  };
+
+  it("records no start and no link for a member whose study path began long before the home page's samples", async () => {
+    memberBeganOnHome();
+    server.progress = done(["warmup"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByRole("button", { name: /Right answer/ });
+    await answer(true);
+    expect(starts()).toHaveLength(0);
+    // The mark is taken all the same, so that it is not left for a later answer.
+    expect(localStorage.getItem(`cb_path_start_owed_${CERT}`)).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("path_account_linked", expect.anything());
+  });
+
+  it("records the start once for a new account whose copy the home page's samples began, and no link", async () => {
+    memberBeganOnHome();
+    server.stopHandler = () => ({ stop: plan.stops[0], reps: warmup.reps });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByText("Prompt a|1.1|w1");
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: CERT }]]);
+    fireEvent.click(await screen.findByRole("button", { name: /Right answer/ }));
+    expect(await screen.findByText(/^Correct\./)).toBeInTheDocument();
+    expect(starts()).toHaveLength(1);
+    expect(track).not.toHaveBeenCalledWith("path_account_linked", expect.anything());
   });
 
   it("records nothing more for a copy that was begun on this page on an earlier visit", async () => {
@@ -3425,5 +3657,87 @@ describe("a member whose last payment did not go through", () => {
     expect(await screen.findByRole("button", { name: /^Continue/ })).toBeInTheDocument();
     expect(screen.queryByText(PAST_DUE)).toBeNull();
     expect(screen.queryByRole("link", { name: "Manage billing" })).toBeNull();
+  });
+});
+
+// Network+'s steps are CertBench's own topics, and its numbers are not
+// CompTIA's (usesOfficialObjectiveNumbers). The study path calls them topics,
+// and cites no number as an objective's.
+describe("Network+, whose steps are CertBench's own topics", () => {
+  const NET = "network-plus-n10-009";
+  const titles: Record<string, string> = {
+    "1.1": "The OSI model",
+    "1.2": "Network appliances",
+    "1.3": "Cloud concepts",
+    "2.1": "Routing technologies",
+    "2.2": "Switching technologies",
+    "2.3": "Wireless devices",
+  };
+  const net: PathStructure = {
+    ...structure,
+    certSlug: NET,
+    examName: "Network+",
+    examCode: "N10-009",
+    domains: structure.domains.map((d) => ({
+      ...d,
+      objectives: d.objectives.map((o) => ({ ...o, title: titles[o.code] })),
+    })),
+  };
+  const netPlan = buildPlan(net);
+  const renderNet = () =>
+    render(
+      <PathApp
+        cert={NET}
+        structure={net}
+        plan={netPlan}
+        warmup={{ stop: netPlan.stops[0], reps: warmup.reps }}
+        questionCount={500}
+        free={{ examHref: "/network-plus-practice-test", labsHref: "/network-plus-pbq-examples", labIds: [] }}
+      />
+    );
+
+  it("names the topic above a question, with no number", async () => {
+    renderNet();
+    await act(async () => {});
+    expect(screen.getByText("Topic: The OSI model.")).toBeInTheDocument();
+    expect(screen.queryByText(/Objective 1\.1/)).toBeNull();
+    await answer(true);
+    await answer(true);
+    expect(screen.getByText("Topic: Network appliances. Exam-style question.")).toBeInTheDocument();
+  });
+
+  it("counts topics where a step ends, and heads the outline with them", async () => {
+    renderNet();
+    await act(async () => {});
+    await answer(true);
+    await answer(true);
+    await answer(true);
+    expect(await screen.findByText(/You have completed the introductory questions/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Network+ topics" })).toBeInTheDocument();
+    expect(screen.getByText(/^These questions marked 3 topics: .* In all, you have started 3 of 6 topics\.$/)).toBeInTheDocument();
+    expect(screen.queryByText(/objective/i)).toBeNull();
+    // The outline's rows name the topic, with no number in front of it.
+    expect(outlineRow("The OSI model")).toBeInTheDocument();
+  });
+
+  it("heads the outline with topics where Pro opens the whole study path", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    server.progress = done(["warmup"]);
+    renderNet();
+    expect(await screen.findByRole("heading", { name: "Your full Network+ study path is now open." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Exam topics" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Exam objectives" })).toBeNull();
+  });
+
+  it("calls the outline's rows topics on the home screen and in what a row says when it is opened", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderNet();
+    expect(await screen.findByRole("heading", { level: 2, name: "Exam topics" })).toBeInTheDocument();
+    expect(screen.getByText("Choose a topic to see where you stand on it.")).toBeInTheDocument();
+    expect(screen.getByText(/You have completed 1 of \d+ steps and started 0 of 6 topics\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^The OSI model/ }));
+    expect(screen.getByText("This topic is taught in your next step.")).toBeInTheDocument();
   });
 });

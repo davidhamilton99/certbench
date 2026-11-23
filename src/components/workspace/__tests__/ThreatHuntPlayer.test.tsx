@@ -61,22 +61,22 @@ describe("threat hunts", () => {
 
   it("flags a line with a press and removes the flag with another, and says how many are flagged", () => {
     render(<ThreatHuntPlayer scenario={hunt} onBack={vi.fn()} />);
-    expect(screen.getByText("Select each line of the log that is evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Choose each line of the log that is evidence.")).toBeInTheDocument();
     const first = line("02:03:11 Failed password for root");
     expect(first).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(first);
     expect(first).toHaveAttribute("aria-pressed", "true");
     expect(
-      screen.getByText("You have flagged 1 line. Select a flagged line again to remove its flag.")
+      screen.getByText("You have flagged 1 line. Choose a flagged line again to remove its flag.")
     ).toBeInTheDocument();
     fireEvent.click(line("02:03:15 CRON session opened"));
     expect(
-      screen.getByText("You have flagged 2 lines. Select a flagged line again to remove its flag.")
+      screen.getByText("You have flagged 2 lines. Choose a flagged line again to remove its flag.")
     ).toBeInTheDocument();
     fireEvent.click(first);
     fireEvent.click(line("02:03:15 CRON session opened"));
     expect(first).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByText("Select each line of the log that is evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Choose each line of the log that is evidence.")).toBeInTheDocument();
   });
 
   it("waits for a flag and an answer, and says so beside the button", () => {
@@ -151,6 +151,19 @@ describe("threat hunts", () => {
     expect(screen.queryByRole("button", { name: "Analyze" })).toBeNull();
   });
 
+  it("draws the way out after the score as an outline button, never a grey one that looks disabled", () => {
+    render(<ThreatHuntPlayer scenario={hunt} onBack={vi.fn()} />);
+    fireEvent.click(line("02:03:11 Failed password for root"));
+    fireEvent.click(answers().getByRole("radio", { name: "A brute-force attack that succeeded" }));
+    fireEvent.click(analyze());
+    const ways = screen.getAllByRole("button", { name: "Return to the scenarios" });
+    // The last is the button under the score; the first is the arrow beside the title.
+    const out = ways[ways.length - 1];
+    expect(out).toHaveTextContent("Return to the scenarios");
+    expect(out.className).toContain("border-foreground/25");
+    expect(out.className).not.toContain("bg-foreground/[0.07]");
+  });
+
   it("names the correct answer when the one chosen was wrong", () => {
     render(<ThreatHuntPlayer scenario={hunt} onBack={vi.fn()} />);
     fireEvent.click(line("02:03:24 Accepted password for root"));
@@ -201,7 +214,7 @@ describe("threat hunts", () => {
     fireEvent.click(analyze());
     fireEvent.click(screen.getByRole("button", { name: /Repeat the lab/ }));
     expect(screen.queryByRole("group", { name: "Your score" })).toBeNull();
-    expect(screen.getByText("Select each line of the log that is evidence.")).toHaveFocus();
+    expect(screen.getByText("Choose each line of the log that is evidence.")).toHaveFocus();
     expect(line("02:03:11 Failed password for root")).toHaveAttribute("aria-pressed", "false");
     expect(answers().getAllByRole("radio").every((r) => r.getAttribute("aria-checked") === "false")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Choose another lab" }));

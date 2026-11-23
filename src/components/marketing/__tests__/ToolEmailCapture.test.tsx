@@ -6,7 +6,7 @@ import { ApiError } from "@/contracts/errors";
 const api = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api-client", () => ({ api }));
 
-import { EMAIL_NOT_REPEATED, EMAIL_NOT_SENT, ToolEmailCapture } from "../ToolEmailCapture";
+import { EMAIL_NOT_REPEATED, EMAIL_NOT_SENT, EMAIL_TEST_ADDRESS, ToolEmailCapture } from "../ToolEmailCapture";
 
 function form() {
   return render(<ToolEmailCapture source="port-numbers-quiz" />);
@@ -95,6 +95,18 @@ describe("ToolEmailCapture", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("The study plan has been sent.")).toBeNull();
     expect(screen.getByRole("button", { name: "Send the study plan" })).toBeInTheDocument();
+  });
+
+  // A test address was told that the plan had been sent in the last 24 hours.
+  it("says plainly that nothing was sent to an address that CertBench's own tests use", async () => {
+    api.mockResolvedValue({ ok: true, delivery: "test" });
+    form();
+    send();
+
+    await waitFor(() => expect(screen.getByText(EMAIL_TEST_ADDRESS)).toBeInTheDocument());
+    expect(screen.getByText(EMAIL_TEST_ADDRESS)).toHaveAttribute("role", "status");
+    expect(screen.queryByText(EMAIL_NOT_REPEATED)).toBeNull();
+    expect(screen.queryByText("The study plan has been sent.")).toBeNull();
   });
 
   it("turns a refused request into a sentence, never the code", async () => {

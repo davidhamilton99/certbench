@@ -266,7 +266,7 @@ export function studyPlanEmail(input: {
       <p style="font-size:14px;line-height:1.7;margin:0 0 12px;">
         You do not need an account for your first step.
       </p>
-      ${button(`${app}/start`, "Start the study path for my exam")}
+      ${button(`${app}/start`, "Choose your exam")}
     `,
       input.unsubscribeUrl
     ),
@@ -351,7 +351,9 @@ export function pathCountdownEmail(input: {
           : `You have completed ${standing.done} of the ${standing.total} steps in your ${examName} study path.`;
   // The advice follows where they stand as well as the day: an account that has
   // not begun was told the day before its exam that it had done the work, and
-  // one that has completed every step was advised to complete more.
+  // one that has completed every step was advised to complete more. An account
+  // without Pro that has completed its free steps is pointed to what is still
+  // free: it was advised to complete steps that it can open only with Pro.
   const advice =
     days <= 1
       ? standing.done === 0
@@ -359,11 +361,13 @@ export function pathCountdownEmail(input: {
         : "Do not study late on the night before your exam. Rest well: you have done the work."
       : left === 0
         ? "A review on your study path each day will keep the material fresh until your exam."
-        : days <= 3
-          ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
-          : days <= 7
-            ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
-            : `With ${days} days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
+        : standing.freeLeft === 0 && !input.pro
+          ? "If you have not taken it yet, the free practice exam lets you rehearse the whole exam before the day."
+          : days <= 3
+            ? "In these last days, a few steps each day will keep the material fresh, and a question that you miss returns until you answer it correctly."
+            : days <= 7
+              ? `This week, complete a few steps every day. Each step takes about ${MINUTES_PER_STOP} minutes.`
+              : `With ${days} days remaining, a few steps each day make a real difference. Each step takes about ${MINUTES_PER_STOP} minutes.`;
   const label = standing.done === 0 ? "Start the study path" : "Continue the study path";
   return {
     subject: countdownSubject(days, examName, input.examDate),

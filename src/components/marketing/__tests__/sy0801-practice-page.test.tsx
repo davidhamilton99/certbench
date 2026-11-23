@@ -108,8 +108,23 @@ describe("the SY0-801 practice test page", () => {
     expect(page).toContain(
       "This practice exam is the same length: 90 multiple-choice questions in 90 minutes, or a half-length exam of 45 questions in 45 minutes at the same pace."
     );
+    // Search and AI answers quote the description as it stands, so it is written in sentences that say who offers what.
     const { description } = await generateMetadata();
-    expect(description).toMatch(/^Free full-length Security\+ SY0-801 practice exam: 90 questions in 90 minutes/);
+    expect(description).toBe(
+      "CertBench offers a free full-length Security+ SY0-801 practice exam of 90 questions in 90 minutes, in the exam's domain weights, scored by domain, with every answer explained."
+    );
+  });
+
+  it("answers the passing score with what the practice exam reports, and nothing about how CompTIA's scale works", async () => {
+    drawn.current = fullDraw();
+    const page = text((await served()).body);
+    expect(page).toContain(
+      "You need 750 on a scale of 100 to 900. This practice exam reports the percentage that you answered correctly, weighted by each domain's share of the exam. It is not a score on CompTIA's scale."
+    );
+    expect(page).not.toMatch(/does not publish how that scale/);
+    // CertBench's own labs are hands-on labs, and they are written for SY0-701.
+    expect(page).toContain("CertBench's Security+ PBQ page, written for SY0-701, has 12 free hands-on labs");
+    expect(page).not.toMatch(/interactive (?:ones|PBQs)/);
   });
 
   it("keeps its own 45 questions as the timed exam while the bank is not there, and says that instead", async () => {
@@ -126,7 +141,9 @@ describe("the SY0-801 practice test page", () => {
     expect(text(doc.querySelector("h2"))).toBe("45 questions in 45 minutes");
     expect(page).toContain("This practice exam is half that length: 45 multiple-choice questions in 45 minutes");
     const { description } = await generateMetadata();
-    expect(description).toMatch(/^Free 45-question Security\+ SY0-801 practice test/);
+    expect(description).toBe(
+      "CertBench offers a free 45-question Security+ SY0-801 practice exam that covers all 27 objectives in the exam's weights. It is timed and scored by domain, and every answer is explained."
+    );
   });
 
   it("calls the exam a practice exam in its sentences, and a practice test only where the page is named", async () => {

@@ -241,4 +241,20 @@ describe("QuestionDeck", () => {
     fireEvent.keyDown(tiles(first)[0], { key: "b" });
     expect(verdict(first)).toHaveTextContent(/^Correct\./);
   });
+
+  // The keys act on the card where they are pressed, and no page-wide turn
+  // decides which card may hear them: the card that mounted first holds nothing.
+  it("answers from the keyboard the card where the key is pressed, whichever card was there first", () => {
+    render(
+      <>
+        <div data-testid="first">{deck({ label: "First" })}</div>
+        <div data-testid="second">{deck({ label: "Second" })}</div>
+      </>
+    );
+    const first = screen.getByTestId("first");
+    const second = screen.getByTestId("second");
+    fireEvent.keyDown(tiles(second)[0], { key: "B" });
+    expect(verdict(second)).toHaveTextContent(/^Correct\./);
+    expect(verdict(first)).toBeNull();
+  });
 });

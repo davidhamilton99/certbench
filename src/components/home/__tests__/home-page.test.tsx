@@ -222,11 +222,37 @@ describe("the home page below its first section", () => {
       "Exam facts carry a date.",
       "CertBench is independent.",
     ]);
+    // The date on which the previous A+ exams retired is not on an exam page: CompTIA gave it in an article.
     expect(flat(part)).toContain(
-      `Exam versions, domain weights and retirement dates were last checked against CompTIA's own exam pages on ${EXAM_FACTS_CHECKED}.`
+      `Exam versions, domain weights and retirement dates were last checked against CompTIA's own exam pages, and its article on the two A+ exams, on ${EXAM_FACTS_CHECKED}.`
     );
     expect(flat(part)).toContain("CertBench is not affiliated with or endorsed by CompTIA.");
     expect(flat(part)).not.toContain("Exam facts are dated");
+  });
+
+  // The Network+ questions are grouped into topics of CertBench's own, which are
+  // not CompTIA's N10-009 objectives, so a sentence about every question does not
+  // say that each one follows or is linked to a published objective.
+  it("says of every question only what is true of every exam, Network+ included", async () => {
+    const { body, text } = await served();
+    expect(flat(section(body, "Quality and accuracy"))).toContain(
+      "The Security+ and A+ questions are written against the exam objectives that CompTIA publishes. No question is taken from a real exam, and none is copied from another question bank."
+    );
+    expect(flat(section(body, "For colleges and training providers"))).toContain(
+      "Each question is linked to the objective or topic that it tests, each exam has a free full-length practice exam, and students can begin without paying."
+    );
+    expect(text).not.toMatch(/against the published exam objectives|linked to an exam objective/);
+  });
+
+  // The practice exam shows no answer until the end (the method says so on this
+  // page), so the promise of an explanation at once is the study path's.
+  it("says where an answer is explained at once, so that it agrees with the practice exam's own rule", async () => {
+    const { body, text } = await served();
+    expect(flat(section(body, "Quality and accuracy"))).toContain(
+      "On the study path, you are told why the correct answer is correct as soon as you answer."
+    );
+    expect(text).toContain("Answers are not shown until the end");
+    expect(text).not.toMatch(/(?<!study path, )you are told why the correct answer is correct as soon as you answer/i);
   });
 
   it("gives the price in the words of the pricing terms: every plan, the currency and the regional adjustment", async () => {
@@ -235,15 +261,18 @@ describe("the home page below its first section", () => {
     expect(flat(part.querySelector("p"))).toBe(
       `CertBench is free to start, and you can decide later whether to pay. ${PRO_PRICE_TERMS}`
     );
+    // The note under the figure is a whole sentence, never the fragment "Each month."
     expect(flat(part)).toContain(
-      `Each month. The price is ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year.`
+      `This is the price for a month. Pro also costs ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year.`
     );
+    expect(flat(part)).not.toContain("Each month.");
     const [free, pro] = [...part.querySelectorAll("h3")].map((h) => h.parentElement as HTMLElement);
     expect(flat(free)).toContain("$0No payment card is required.");
     expect([...free.querySelectorAll("li")].map((li) => flat(li))).toEqual([
       "One full-length practice exam of 90 questions in 90 minutes",
       `${FREE_LAB_COUNT} hands-on labs for each of ${EXAMS_WITH_FREE_LABS}`,
-      "The introductory questions, your first objective and the readiness checkpoint",
+      // Said of every exam: a Network+ step is a topic of CertBench's own, not a CompTIA objective.
+      "The introductory questions, your first topic and the readiness checkpoint",
     ]);
     // The practice exam is free for every exam. The labs are not: neither sentence says "for each exam" of them.
     expect(flat(body)).not.toMatch(/labs for each exam|labs are free for each exam/);
@@ -267,7 +296,8 @@ describe("the home page below its first section", () => {
     expect(band.nextElementSibling).toBeNull();
     expect(flat(band.querySelector("h2"))).toBe("Choose your exam to begin.");
     const links = [...band.querySelectorAll("a")];
-    expect(links.map((a) => [flat(a), a.getAttribute("href")])).toEqual([["Start for free", "/start"]]);
+    // A link to the exam list inside a page has one name everywhere; the header keeps its own button.
+    expect(links.map((a) => [flat(a), a.getAttribute("href")])).toEqual([["Choose your exam", "/start"]]);
     // Set left and run from one side of the window to the other: not a centred, rounded card.
     expect(band.outerHTML).toContain("text-left");
     expect(band.outerHTML).not.toMatch(/text-center|justify-items-center/);
@@ -328,16 +358,16 @@ describe("the home page below its first section", () => {
     for (const [file, source] of HOME_SOURCES) expect(source, file).not.toMatch(/\bflip\b|lg:order-|flex-row-reverse/);
   });
 
-  it("shows what people who passed have said only when there are three stories, and keeps the bands in turn", async () => {
+  it("shows what people who reported passing have said only when there are three stories, and keeps the bands in turn", async () => {
     data.testimonials = [story(1), story(2)];
-    expect((await served()).text).not.toContain("What people who passed have said");
+    expect((await served()).text).not.toContain("What people who reported passing have said");
 
     data.testimonials = [story(1), story(2), story(3)];
     const { body } = await served();
     const headings = [...body.querySelectorAll("h2")].map((h) => flat(h));
     expect(headings.slice(4)).toEqual([
       "For colleges and training providers",
-      "What people who passed have said",
+      "What people who reported passing have said",
       "Pricing",
       "Choose your exam to begin.",
     ]);

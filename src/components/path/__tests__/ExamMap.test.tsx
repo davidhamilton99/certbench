@@ -216,6 +216,33 @@ describe("what the outline tints and aligns", () => {
     expect(tinted[0].textContent).toBe("1.1 Security controls, Next step");
   });
 
+  // One left edge in the card: a row's text stands on the domain heading's
+  // edge, and the rule between two rows is as long as the heading's rule. Only
+  // a tint may reach past them, and it reaches as far on both sides.
+  it("keeps every row's text on the heading's edge, and its rule within the heading's rule", () => {
+    const { unmount } = render(<ExamMap structure={structure} statuses={statuses} current={new Set(["1.1"])} />);
+    const items = [...document.querySelectorAll("li")];
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      // The item carries the rule above it: no margin or padding moves it off the list's edges.
+      expect(item.className).not.toMatch(/(?:^|\s)-?m[xl]-|(?:^|\s)p[xl]-/);
+    }
+    const next = items.find((item) => item.textContent?.startsWith("1.1"))!;
+    expect(next.className).toContain("bg-tint-selected");
+    expect(next.className).toContain("shadow-[-0.5rem_0_var(--color-tint-selected),0.5rem_0_var(--color-tint-selected)]");
+    unmount();
+
+    // A row that can be pressed is wider than its item by the same amount on
+    // both sides, and its text is set in by exactly that amount.
+    render(<ExamMap structure={structure} statuses={statuses} current={new Set(["1.1"])} onSelect={() => {}} />);
+    for (const button of screen.getAllByRole("button")) {
+      expect(button.className).toMatch(/(?:^|\s)-mx-2(?:\s|$)/);
+      expect(button.className).toMatch(/(?:^|\s)px-2(?:\s|$)/);
+      expect(button.className).toContain("w-[calc(100%+1rem)]");
+      expect(button.closest("li")!.className).toBe("");
+    }
+  });
+
   it("sets a status and its check mark on the row's baseline", () => {
     render(<ExamMap structure={structure} statuses={statuses} onSelect={() => {}} />);
     const marked = screen.getAllByText("Complete", { selector: "span" });
@@ -225,6 +252,21 @@ describe("what the outline tints and aligns", () => {
       expect(status.className).not.toContain("items-center");
       expect(status.querySelector("svg")?.getAttribute("class")).toContain("translate-y-0.5");
     }
+  });
+});
+
+// Network+'s steps are CertBench's own topics, and their numbers are not
+// CompTIA's objective numbers: a row names the topic and cites no number.
+describe("an exam set out by CertBench's own topics", () => {
+  it("names each topic without a number in front of it, and keeps the numbers where they are CompTIA's", () => {
+    const { unmount } = render(
+      <ExamMap structure={{ ...structure, certSlug: "network-plus-n10-009" }} statuses={statuses} onSelect={() => {}} />
+    );
+    expect(row("Security controls, Not started")).toBeInTheDocument();
+    expect(screen.queryByText("1.1")).toBeNull();
+    unmount();
+    render(<ExamMap structure={structure} statuses={statuses} onSelect={() => {}} />);
+    expect(row("1.1 Security controls, Not started")).toBeInTheDocument();
   });
 });
 

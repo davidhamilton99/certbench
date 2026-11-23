@@ -136,9 +136,11 @@ describe("a practice-test page for one exam", () => {
     expect(body).toContain(
       "CertBench offers a free full-length practice exam for Security+ SY0-701. It has 90 questions and a time limit of 90 minutes. You do not need an account to start, and a free account shows your score. You can begin with 8 introductory questions."
     );
+    // It says what CertBench's exam does, and nothing about how the real exam shows its answers.
     expect(body).toContain(
-      "The CertBench practice exam for Security+ SY0-701 has 90 questions and a time limit of 90 minutes, which is the limit of the real exam. You can also take a half-length exam of 45 questions. As in the real exam, answers are not shown until the end. Every question is then explained with your score."
+      "The CertBench practice exam for Security+ SY0-701 has 90 questions and a time limit of 90 minutes, which is the limit of the real exam. You can also take a half-length exam of 45 questions. Answers are not shown until you finish, and every question is then explained with your score."
     );
+    expect(text(doc.getElementById("practice-test")?.querySelector("p"))).not.toMatch(/As in the real exam/);
   });
 
   it("sets the facts under the title as a summary list, each with its label", () => {
@@ -182,6 +184,46 @@ describe("a practice-test page for one exam", () => {
     // The same day as the sitemap gives for the page: both read the date kept beside the page's words.
     expect(resource?.dateModified).toBe(CERT_PAGES_UPDATED_ISO);
     expect(CERT_PAGES_UPDATED_ISO).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("names the exam's study path on its closing button, and calls itself a practice test in its structured data", () => {
+    const { doc, html } = render();
+    const start = [...doc.querySelectorAll("section.cb-sheet a")].find((a) => text(a) === "Start the Security+ study path");
+    expect(start?.getAttribute("href")).toBe("/path/security-plus-sy0-701");
+    const resource = [...new DOMParser().parseFromString(html, "text/html").querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent ?? "{}") as Record<string, unknown>)
+      .find((d) => d["@type"] === "LearningResource");
+    expect(resource?.learningResourceType).toBe("Practice test");
+    expect(resource?.timeRequired).toBe("PT90M");
+  });
+
+  // One exam's table is a column wide, so the rule over its section is too: a rule
+  // that ran on past the table broke the page's column (DE-09).
+  it("sets the outline of one exam a column wide, rule and table alike", () => {
+    const { doc } = render();
+    const section = [...doc.querySelectorAll("section")].find((s) => text(s.querySelector("h2")) === "What the exam covers")!;
+    expect(section.querySelector(":scope > div")?.className).toContain("max-w-3xl");
+  });
+
+  // The database keeps CompTIA's capitals, and the Network+ and A+ outlines in
+  // the copy tables are in sentence case: every page sets them in sentence case.
+  it("names the exam's domains in sentence case when the database gives them with capitals", () => {
+    const capitals: PracticeTestLandingData = {
+      ...data,
+      certs: data.certs.map((c) => ({
+        ...c,
+        domains: [
+          { id: "d1", domainNumber: "1.0", title: "General Security Concepts", examWeight: 40 },
+          { id: "d2", domainNumber: "2.0", title: "Threats, Vulnerabilities, and Mitigations", examWeight: 60 },
+        ],
+      })),
+    };
+    const { doc } = served(<PracticeTestLanding page={page} data={capitals} objectives={objectives} round={round} test={test} />);
+    const outline = [...doc.querySelectorAll("section")].find((s) => text(s.querySelector("h2")) === "What the exam covers");
+    expect(text(outline)).toContain("General security concepts");
+    expect(text(outline)).toContain("Threats, vulnerabilities, and mitigations");
+    expect(text(doc.body)).toContain("Domain 1: General security concepts");
+    expect(text(doc.body)).not.toMatch(/General Security Concepts/);
   });
 
   it("says that the study path covers every exam objective, where the objectives are CompTIA's own", () => {
@@ -233,7 +275,7 @@ describe("a practice-test page whose objective numbers are not CompTIA's", () =>
     );
     // Its topics are CertBench's own grouping, so the page claims no mapping to CompTIA's numbered objectives.
     expect(body).not.toMatch(/every (?:exam )?objective|mapped to the same|written against the N10-009 objectives/);
-    expect(body).toContain("They are original questions written for the N10-009 exam at exam-level difficulty.");
+    expect(body).toContain("They are original questions written for the N10-009 exam");
   });
 });
 
@@ -262,5 +304,30 @@ describe("the practice-test page for an exam taken in two parts", () => {
       ["Explanations", "With every answer"],
       ["Price", "Free"],
     ]);
+  });
+
+  it("lets the outline of its two exams, side by side, take the container's width", () => {
+    const { doc } = served(<PracticeTestLanding page={page} data={data} />);
+    const section = [...doc.querySelectorAll("section")].find((s) => text(s.querySelector("h2")) === "What the exam covers")!;
+    expect(section.querySelector(":scope > div")?.className ?? "").not.toContain("max-w-3xl");
+    expect(section.querySelectorAll("table")).toHaveLength(2);
+  });
+
+  // The page has sample questions and links to each core's exam: it is not itself a practice test.
+  it("leads to the list of exams with the one label for it, and does not call itself a practice test in its structured data", () => {
+    const html = renderToString(<PracticeTestLanding page={page} data={data} />);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const start = [...doc.querySelectorAll("section.cb-sheet a")].find((a) => a.getAttribute("href") === "/start");
+    expect(text(start)).toBe("Choose your exam");
+    const resource = [...doc.querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent ?? "{}") as Record<string, unknown>)
+      .find((d) => d["@type"] === "LearningResource");
+    expect(resource).toBeDefined();
+    expect(resource).not.toHaveProperty("learningResourceType");
+    expect(resource).not.toHaveProperty("timeRequired");
+    expect(resource?.description).toBe(page.metaDescription);
+    expect(page.metaDescription).toBe(
+      "This page has sample A+ Core 1 and Core 2 (220-1201/1202) questions with explanations, and links to a free full-length practice exam for each core."
+    );
   });
 });

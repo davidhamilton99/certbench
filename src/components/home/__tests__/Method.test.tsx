@@ -112,7 +112,7 @@ describe("how CertBench works, on the home page", () => {
     const text = flat(container);
     expect(text).toContain("The study path takes the 9 Security+ SY0-701 objectives in CompTIA's order.");
     expect(text).toContain("The Security+ SY0-701 study path has 41 steps, from the first question to a full practice exam.");
-    expect(text).toContain("CertBench has 7 hands-on labs for Security+ SY0-701 in which you practice tasks of this kind.");
+    expect(text).toContain("CertBench has 7 hands-on labs for Security+ SY0-701.");
     expect(text).toContain("These are 5 of the 7 Security+ SY0-701 labs.");
     expect(text).toContain("An example from the Security+ SY0-701 course outline.");
     // No count stands beside the exam's name alone.
@@ -292,19 +292,25 @@ describe("how CertBench works, on the home page", () => {
     const paragraph = flat(words.querySelector("p"));
     expect(paragraph).toContain("The practice exam has 90 questions and a time limit of 90 minutes.");
     expect(paragraph).toContain("against a readiness target of 75%.");
+    // The score is combined by the domains' weights (scoreCheckpoint), as the about page says.
+    expect(paragraph).toContain(
+      "The report gives your score for the whole exam, weighted by the share of the exam that each domain makes up, and the percentage that you answered correctly in each domain"
+    );
     expect(paragraph).not.toContain("scale of 100 to 900");
     const link = within(words as HTMLElement).getByRole("link", { name: "Take the free practice exam" });
+    // What CompTIA states (its passing scores are on that scale), and what CertBench does not know.
     expect(flat(link.parentElement)).toBe(
       "Take the free practice exam" +
-        "CompTIA does not publish how its scale of 100 to 900 is calculated, so CertBench does not estimate a scaled score."
+        "CompTIA states its passing scores on a scale of 100 to 900. CertBench does not know how answers are converted to that scale, so it does not estimate a scaled score."
     );
   });
 
   it("links each part to the thing itself, as underlined text links with no arrow", () => {
     render(<Method {...PROPS} />);
     const links = screen.getAllByRole("link");
+    // The link to the exam list has the one name that every page gives it.
     expect(links.map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
-      ["Start the study path", "/start"],
+      ["Choose your exam", "/start"],
       ["Try the free Security+ labs", "/security-plus-pbq-examples"],
       ["Take the free practice exam", "/security-plus-practice-test"],
     ]);
@@ -314,10 +320,27 @@ describe("how CertBench works, on the home page", () => {
     }
   });
 
-  it("calls them hands-on labs, and keeps performance-based questions as CompTIA's name for the exam's tasks", () => {
+  // CompTIA's exam pages say that the exam has performance-based questions. They
+  // do not say what those questions ask, so the part says what CertBench's own
+  // labs ask and gives no example of the exam's.
+  it("calls them hands-on labs, and says of the exam's performance-based questions only what CompTIA states", () => {
     const { container } = render(<Method {...PROPS} />);
     const text = flat(container);
     expect(text).not.toContain("hands-on questions");
-    expect(text).toContain("Performance-based questions are the hands-on tasks in the real exam");
+    expect(text).toContain(
+      "The Security+ SY0-701 exam has performance-based questions as well as multiple-choice questions, and CompTIA does not publish which topics they test."
+    );
+    expect(text).toContain(
+      "In each lab you carry out a task in your browser instead of choosing an answer, and the labs are marked with partial credit."
+    );
+    expect(text).not.toMatch(/hands-on tasks in the real exam|such as setting firewall rules|work like/);
+  });
+
+  it("says what CertBench does, and claims nothing about the real exam's wording or its rules", () => {
+    const { container } = render(<Method {...PROPS} />);
+    const text = flat(container);
+    expect(text).toContain("with quick questions first and then an exam-style question.");
+    expect(text).toContain("Answers are not shown until the end, and an unanswered question is counted as incorrect.");
+    expect(text).not.toMatch(/wording of the real exam|as it is in the real exam|as in the real exam/);
   });
 });

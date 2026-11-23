@@ -38,7 +38,7 @@ beforeEach(() => {
 
 describe("POST /api/tools/lead", () => {
   // The form used to say "your study plan is on its way" whatever happened.
-  it.each(["sent", "skipped", "failed"] as const)("tells the form that the email was %s", async (delivery) => {
+  it.each(["sent", "skipped", "failed", "test"] as const)("tells the form that the email was %s", async (delivery) => {
     captureLead.mockResolvedValue(delivery);
 
     const res = await post({ email: "sam@example.com", source: "port-numbers-quiz", context: { answered: 20 } });

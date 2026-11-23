@@ -80,8 +80,9 @@ describe("migration 033: two A+ Core 1 objective titles", () => {
     expect(before.filter((title) => CONTRACTION.test(title))).toHaveLength(CODES.length);
   });
 
-  it("says that it has not been run, and gives the read-only query before the update", () => {
-    expect(header).toContain("THIS FILE HAS NOT BEEN RUN.");
+  it("says when it was run on the live database, and gives the read-only query before the update", () => {
+    expect(header).toContain("RUN on the live database on 23 November 2026");
+    expect(header).not.toContain("THIS FILE HAS NOT BEEN RUN.");
     const query = header.indexOf("select s.code, s.title");
     expect(query).toBeGreaterThan(-1);
     expect(header.slice(query)).toContain("where c.slug = 'a-plus-core1-220-1201'");

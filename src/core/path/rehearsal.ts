@@ -7,12 +7,17 @@ import type { ChoiceRep, PathDomain, PathProgress, RehearsalResult, RehearsalSiz
  * until the end. Full length is the real exam's own limit: Security+, Network+
  * and A+ each allow at most 90 questions in 90 minutes (CompTIA's exam pages,
  * checked 2026-11-22). Half is for a shorter sitting. It's scored like the
- * checkpoint, so both read on one dial.
+ * checkpoint, so the two results are measured against the same readiness
+ * target and can be compared.
  */
 export const REHEARSAL_FORMATS: Record<RehearsalSize, { questions: number; minutes: number }> = {
   full: { questions: 90, minutes: 90 },
   half: { questions: 45, minutes: 45 },
 };
+
+/** The domain an objective sits in: "4.2" is in "4.0". */
+export const domainOf = (objective: string) =>
+  objective.includes(".") ? `${objective.split(".")[0]}.0` : objective;
 
 /**
  * A half-length sitting cut from a full-length draw: each domain keeps its
@@ -23,7 +28,6 @@ export const REHEARSAL_FORMATS: Record<RehearsalSize, { questions: number; minut
 export function halfOfExam(reps: readonly ChoiceRep[], domains: readonly PathDomain[]): ChoiceRep[] {
   const wanted = REHEARSAL_FORMATS.half.questions;
   if (reps.length <= wanted) return [...reps];
-  const domainOf = (objective: string) => (objective.includes(".") ? `${objective.split(".")[0]}.0` : objective);
   const slots = allocate(
     domains.map((d) => d.weight),
     wanted

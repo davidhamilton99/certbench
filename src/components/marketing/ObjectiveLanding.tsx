@@ -22,6 +22,7 @@ import {
   usesOfficialObjectiveNumbers,
 } from "@/lib/seo/exam-versions";
 import { codeToSlug } from "@/lib/seo/objective-code";
+import { OBJECTIVES_IN_OWN_WORDS, topicInSentence } from "@/lib/seo/objective-meta";
 import { breadcrumbList } from "@/lib/seo/structured-data";
 import type { QuickRoundData } from "@/core/path/types";
 
@@ -70,6 +71,7 @@ export function ObjectiveLanding({
     : null;
   // The Network+ objective numbers are not CompTIA's yet, so those pages go by topic.
   const official = usesOfficialObjectiveNumbers(data.certSlug);
+  const ownWords = OBJECTIVES_IN_OWN_WORDS.includes(data.certSlug);
   const retired = replacedBy(data.certSlug) !== null;
   const heading = official ? `Objective ${data.code}: ${data.title}` : `${data.topic}: ${data.shortCertName} practice questions`;
   const crumb = official ? `Objective ${data.code}` : data.topic;
@@ -152,7 +154,12 @@ export function ObjectiveLanding({
       {/* The objective's questions from the bank, one at a time on the study path's own card. */}
       {data.samples.length > 0 && (
         <LanderSection
-          title={`${round ? "More " : ""}${official ? data.code : data.topic} practice questions`}
+          // A Network+ topic is a phrase in the middle of the heading ("More practice questions on the OSI model").
+          title={
+            official
+              ? `${round ? "More " : ""}${data.code} practice questions`
+              : `${round ? "More practice" : "Practice"} questions on ${topicInSentence(data.topic)}`
+          }
           sub={`There are ${data.samples.length} exam-style questions here, and each one is explained as you answer.`}
           width="md"
           className={round ? undefined : "sm:pt-14"}
@@ -176,22 +183,32 @@ export function ObjectiveLanding({
         context="objective_page"
         note="You do not need an account to start."
       >
-        The {data.shortCertName} study path covers the whole exam in short steps, one {official ? "objective" : "topic"} at a time, and shows
-        where you stand as you progress.
+        {/* Network+ is set out by CertBench's own topics, so its study path is not said to cover the whole exam. */}
+        {official
+          ? `The ${data.shortCertName} study path covers the whole exam in short steps, one objective at a time, and shows where you stand as you progress.`
+          : `The ${data.shortCertName} study path works through the exam topic by topic, in short steps, and shows where you stand as you progress.`}
       </PathCard>
 
       <LanderProse>
+        {/* The objective's name is not quoted: on the A+ pages it is CertBench's own wording, and the page says so. */}
         {official ? (
           <p>
-            This page has practice questions for {data.shortCertName} objective {data.code}, &ldquo;{data.title}.&rdquo;{" "}
-            Every question is original, is written to the {data.examCode} exam objectives, and has a full explanation.
-            Answer the questions above to have them marked at once.
+            This page has practice questions for {data.shortCertName} objective {data.code}. Every question is
+            original, is written to the {data.examCode} exam objectives, and has a full explanation. Answer the
+            questions above to have them marked at once.
+            {ownWords && (
+              <>
+                {" "}
+                The objective&apos;s name on this page is CertBench&apos;s own wording, and CompTIA&apos;s objectives
+                document has the official wording.
+              </>
+            )}
           </p>
         ) : (
           <p>
-            This page has practice questions on {data.topic} for {data.shortCertName} {data.examCode}. Every question
-            is original, is written for the exam, and has a full explanation. Answer the questions above to have them
-            marked at once.
+            This page has practice questions on {topicInSentence(data.topic)} for {data.shortCertName}{" "}
+            {data.examCode}. Every question is original, is written for the exam, and has a full explanation. Answer
+            the questions above to have them marked at once.
           </p>
         )}
         {domain && data.domainTitle && data.domainWeight !== null && (

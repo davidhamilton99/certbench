@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { defineEndpoint } from "@/server/api/define-endpoint";
-import { startPracticeExam } from "@/contracts/practice-exam";
+import { startPracticeExam, type ExamType } from "@/contracts/practice-exam";
 import { ApiError } from "@/contracts/common";
 import type { ProgressSnapshot } from "@/contracts/quiz";
 import {
@@ -26,6 +26,13 @@ import {
 } from "@/server/data/practice-exams";
 import { requireCertAccess } from "@/server/data/enrollments";
 import { assertCanStartQuiz } from "@/server/services/subscription";
+
+/** What each kind of practice is called on its own screen, for the sentences a refusal is given in. */
+const KIND: Record<ExamType, string> = {
+  full: "practice exam",
+  domain_drill: "domain drill",
+  weak_points: "weak points review",
+};
 
 function toExamQuestion(q: CertQuestion) {
   return {
@@ -99,7 +106,7 @@ export const POST = defineEndpoint(startPracticeExam, {
         break;
       case "domain_drill": {
         const domain = domains.find((d) => d.id === domainId);
-        if (!domain) throw new ApiError("not_found", "Domain not found");
+        if (!domain) throw new ApiError("not_found", "That domain is not part of this exam.");
         selected = selectPracticeQuestions(
           pool.filter((q) => q.domain_id === domain.id),
           [
@@ -124,12 +131,13 @@ export const POST = defineEndpoint(startPracticeExam, {
         break;
     }
 
+    // The member reads these sentences as they are written.
     if (selected.length === 0) {
       throw new ApiError(
         "not_found",
         input.examType === "weak_points"
-          ? "No weak-point questions yet: answer more questions first"
-          : "No questions available"
+          ? "There are no weak points to review yet. Please answer more questions first."
+          : `There are no questions available for this ${KIND[input.examType]} yet.`
       );
     }
 

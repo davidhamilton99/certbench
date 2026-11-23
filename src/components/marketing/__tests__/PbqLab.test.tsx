@@ -37,6 +37,7 @@ vi.mock("@/components/workspace/PbqPlayer", async () => {
       onGraded,
       onStarted,
       takeFocus,
+      confirmLeave,
     }: {
       scenario: PbqScenario;
       backLabel?: string;
@@ -44,12 +45,17 @@ vi.mock("@/components/workspace/PbqPlayer", async () => {
       onGraded?: (result: unknown) => void;
       onStarted?: () => void;
       takeFocus?: boolean;
+      confirmLeave?: boolean;
     }) => {
       useEffect(() => {
         mounts.count += 1;
       }, []);
       return (
-        <div data-testid="lab" data-take-focus={String(Boolean(takeFocus))}>
+        <div
+          data-testid="lab"
+          data-take-focus={String(Boolean(takeFocus))}
+          data-confirm-leave={String(confirmLeave ?? true)}
+        >
           <p>Lab on the stage: {scenario.title}</p>
           <button type="button" onClick={() => onStarted?.()}>
             Make the first move
@@ -169,6 +175,19 @@ describe("PbqLab", () => {
     }
     // The time is written out, not abbreviated.
     expect(screen.queryByText(/\bmin\b/)).toBeNull();
+  });
+
+  it("marks the open lab's tile by a thicker edge as well as by its colour", () => {
+    render(lab());
+    const [open, ...others] = chooser().getAllByRole("button");
+    expect(open).toHaveAttribute("aria-pressed", "true");
+    // Its border and a rule inside it: an edge twice as thick as the other tiles have.
+    expect(open.className).toMatch(/(^|\s)ring-1(\s|$)/);
+    expect(open.className).toMatch(/(^|\s)ring-inset(\s|$)/);
+    for (const tile of others) expect(tile.className).not.toMatch(/(^|\s)ring-/);
+    fireEvent.click(others[1]);
+    expect(others[1].className).toMatch(/(^|\s)ring-inset(\s|$)/);
+    expect(open.className).not.toMatch(/(^|\s)ring-/);
   });
 
   it("records the first move made in a lab as its own event, once the player reports it", () => {
@@ -351,6 +370,11 @@ describe("PbqLab", () => {
     render(lab());
     fireEvent.click(screen.getByRole("button", { name: "Choose another lab" }));
     expect(chooser().getByRole("button", { name: DORA_TILE })).toHaveFocus();
+  });
+
+  it("asks the player not to warn on the way back, which keeps the lab and its answers on the page", () => {
+    render(lab());
+    expect(onStage()).toHaveAttribute("data-confirm-leave", "false");
   });
 
   it("goes back to the first of the three when the lab in hand is one from the list", () => {

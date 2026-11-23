@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireProPage } from "@/server/auth";
+import { pageProfile } from "@/server/page-reads";
 import { createAdminClient } from "@/server/supabase/admin";
-import { getProfile } from "@/server/data/profiles";
 import { listPendingTestimonials } from "@/server/data/testimonials";
 import { AdminTestimonialsList } from "@/components/workspace/AdminTestimonialsList";
 
@@ -13,7 +13,7 @@ export default async function AdminTestimonialsPage() {
   // The owner's account passes the Pro check; the role is then checked here.
   const { db, user } = await requireProPage();
 
-  const profile = await getProfile(db, user.id);
+  const profile = await pageProfile(db, user.id);
   if (profile?.role !== "admin") notFound();
 
   // Only after the role check: the queue is read with the service client,

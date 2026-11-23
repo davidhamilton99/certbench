@@ -1,5 +1,5 @@
 import { defineEndpoint } from "@/server/api/define-endpoint";
-import { submitPracticeExam } from "@/contracts/practice-exam";
+import { submitPracticeExam, type ExamType } from "@/contracts/practice-exam";
 import { ApiError } from "@/contracts/common";
 import type { DomainBreakdown, GradedResponse } from "@/contracts/quiz";
 import { getQuestionsByIds } from "@/server/data/questions";
@@ -11,19 +11,27 @@ import {
   updateQuestionPerformanceForAnswers,
 } from "@/server/services/submit-exam";
 
+/** What each kind of practice is called on its own screen, for the sentences a refusal is given in. */
+const KIND: Record<ExamType, string> = {
+  full: "practice exam",
+  domain_drill: "domain drill",
+  weak_points: "weak points review",
+};
+
 export const POST = defineEndpoint(submitPracticeExam, {
   auth: "pro",
   rateLimit: { limit: 10, windowSeconds: 60 },
   handler: async ({ input, user, db }) => {
     if (!user) throw new ApiError("unauthorized");
 
+    // The member reads these sentences as they are written.
     const attempt = await getAttempt(db, user.id, input.attemptId);
-    if (!attempt) throw new ApiError("not_found", "Attempt not found");
+    if (!attempt) throw new ApiError("not_found", "These questions could not be found. Please start them again.");
     // The attempt's exam must be in the member's plan: nothing is graded, and
     // no answer or explanation is returned, for an exam that is not.
     await requireCertAccess(db, user.id, attempt.certificationId);
     if (attempt.isComplete)
-      throw new ApiError("conflict", "Attempt already submitted");
+      throw new ApiError("conflict", `This ${KIND[attempt.examType]} has already been submitted.`);
 
     const allowedIds = new Set(attempt.progressState?.questionIds ?? []);
     const offered = input.answers.filter((a) => allowedIds.has(a.questionId));
@@ -42,7 +50,10 @@ export const POST = defineEndpoint(submitPracticeExam, {
     const questionById = new Map(questions.map((q) => [q.id, q]));
     const answers = offered.filter((a) => questionById.has(a.questionId));
     if (answers.length === 0)
-      throw new ApiError("validation_failed", "No valid answers for this attempt");
+      throw new ApiError(
+        "validation_failed",
+        `None of the answers that were sent belong to this ${KIND[attempt.examType]}.`
+      );
     const flaggedSet = new Set(input.flaggedQuestionIds);
 
     const graded: GradedResponse[] = answers.flatMap((a) => {

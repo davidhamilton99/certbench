@@ -54,15 +54,15 @@ const FULL = REHEARSAL_FORMATS.full;
 const QUALITY: { title: string; body: string }[] = [
   {
     title: "Questions are written for CertBench.",
-    body: "Every question is written against the published exam objectives. No question is taken from a real exam, and none is copied from another question bank.",
+    body: "The Security+ and A+ questions are written against the exam objectives that CompTIA publishes. No question is taken from a real exam, and none is copied from another question bank.",
   },
   {
     title: "Every answer is explained.",
-    body: "You are told why the correct answer is correct as soon as you answer. Questions that you answer incorrectly are repeated until you answer them correctly.",
+    body: "On the study path, you are told why the correct answer is correct as soon as you answer. Questions that you answer incorrectly are repeated until you answer them correctly.",
   },
   {
     title: "Exam facts carry a date.",
-    body: `Exam versions, domain weights and retirement dates were last checked against CompTIA's own exam pages on ${EXAM_FACTS_CHECKED}.`,
+    body: `Exam versions, domain weights and retirement dates were last checked against CompTIA's own exam pages, and its article on the two A+ exams, on ${EXAM_FACTS_CHECKED}.`,
   },
   {
     title: "CertBench is independent.",
@@ -203,9 +203,9 @@ export default async function LandingPage() {
               <h2 className="cb-section">For colleges and training providers</h2>
               <div className="grid content-start gap-4">
                 <p className="cb-measure text-body text-muted-foreground">
-                  Instructors who teach CompTIA courses can use CertBench alongside their own materials. Every
-                  question is linked to an exam objective, each exam has a free full-length practice exam, and
-                  students can begin without paying.
+                  Instructors who teach CompTIA courses can use CertBench alongside their own materials. Each
+                  question is linked to the objective or topic that it tests, each exam has a free full-length
+                  practice exam, and students can begin without paying.
                 </p>
                 <Link href="/educators" className="cb-link cb-tap w-fit font-semibold">
                   Read the information for educators
@@ -242,13 +242,14 @@ export default async function LandingPage() {
               items={[
                 `One full-length practice exam of ${FULL.questions} questions in ${FULL.minutes} minutes`,
                 `${FREE_LAB_COUNT} hands-on labs for each of ${EXAMS_WITH_FREE_LABS}`,
-                `The introductory questions, ${LEARN_BEFORE_CHECKPOINT === 1 ? "your first objective" : `your first ${LEARN_BEFORE_CHECKPOINT} objectives`} and the readiness checkpoint`,
+                // Said of every exam, so a step is a topic: the Network+ topics are not CompTIA's objectives.
+                `The introductory questions, ${LEARN_BEFORE_CHECKPOINT === 1 ? "your first topic" : `your first ${LEARN_BEFORE_CHECKPOINT} topics`} and the readiness checkpoint`,
               ]}
             />
             <Plan
               name="Pro"
               price={PRO_PRICES.monthly}
-              note={`Each month. The price is ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year.`}
+              note={`This is the price for a month. Pro also costs ${PRO_PRICES.quarterly} every three months, or ${PRO_PRICES.annual} a year.`}
               lead="Pro includes:"
               items={[
                 "The whole study path, which works through your exam topic by topic",
@@ -269,7 +270,7 @@ export default async function LandingPage() {
       <CtaBand title="Choose your exam to begin." className="mt-0 sm:mt-0">
         <Button asChild size="lg" className="mt-1">
           <Link href="/start">
-            Start for free
+            Choose your exam
             <LinkArrow />
           </Link>
         </Button>

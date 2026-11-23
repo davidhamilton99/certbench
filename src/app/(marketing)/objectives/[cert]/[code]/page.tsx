@@ -25,7 +25,9 @@ export async function generateMetadata({
   const data = await loadObjectivePage(cert, code);
   if (!data) return {};
   return pageMetadata({
+    // The whole title tag, kept to the length a search result shows: the layout adds nothing to it.
     title: objectivePageTitle(data),
+    absoluteTitle: true,
     description: objectivePageDescription(data),
     path: `/objectives/${cert}/${code}`,
   });

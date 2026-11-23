@@ -51,24 +51,24 @@ export default function AboutPage() {
           <dl className="border-t border-border">
             <ArticleRow term="Written for CertBench">
               <p>
-                Every question is written for CertBench against the exam objectives that CompTIA publishes.{" "}
-                <strong>No question is taken from a real exam</strong>, and none is copied from another question bank.
-                CompTIA&apos;s policy prohibits the use of real exam questions, and CertBench does not use or offer
-                them.
+                Every question is written for CertBench. <strong>No question is taken from a real exam</strong>, and
+                none is copied from another question bank. CompTIA&apos;s policy prohibits the use of real exam
+                questions, and CertBench does not use or offer them.
               </p>
             </ArticleRow>
-            <ArticleRow term="Linked to an objective">
+            <ArticleRow term="Linked to an objective or a topic">
               <p>
-                Each question is linked to the exam objective that it tests, so an incorrect answer shows you which
-                objective to study again. For Security+ and A+ the objective numbers are CompTIA&apos;s own.{" "}
-                <strong>Network+ is the exception.</strong> Its questions are grouped into topics whose numbering is
-                not CompTIA&apos;s, so the Network+ pages name the topic and do not cite an objective number.
+                Each question is linked to the objective or topic that it tests, so an incorrect answer shows you what
+                to study again. For Security+ and A+, each question is linked to one of the exam objectives that
+                CompTIA publishes, under CompTIA&apos;s own number. <strong>Network+ is the exception.</strong> Its
+                questions are grouped into topics of CertBench&apos;s own, whose numbering is not CompTIA&apos;s, so
+                the Network+ pages name the topic and do not cite an objective number.
               </p>
             </ArticleRow>
             <ArticleRow term="Explained">
               <p>
-                Every question has an explanation of why the correct answer is correct. A short version is shown as
-                soon as you answer.
+                Every question has an explanation of why the correct answer is correct. On the study path, a short
+                version is shown as soon as you answer.
               </p>
             </ArticleRow>
           </dl>
@@ -84,7 +84,10 @@ export default function AboutPage() {
                 <Source href={COMPTIA_URLS.securityV8}>Security+ SY0-801</Source>,{" "}
                 <Source href={COMPTIA_URLS.networkPlus}>Network+ N10-009</Source>,{" "}
                 <Source href={COMPTIA_URLS.aPlusCore1}>A+ Core 1</Source> and{" "}
-                <Source href={COMPTIA_URLS.aPlusCore2}>A+ Core 2</Source>.
+                <Source href={COMPTIA_URLS.aPlusCore2}>A+ Core 2</Source>. The date on which the previous A+ exams
+                retired is not on those pages: it is from CompTIA&apos;s{" "}
+                <Source href={COMPTIA_URLS.aPlusSeries}>article about the two A+ exams</Source>, which was read on the
+                same day.
               </p>
             </ArticleRow>
             <ArticleRow term="By automated checks">
@@ -114,13 +117,13 @@ export default function AboutPage() {
               <p>
                 The score is the share of exam-style questions that you answered correctly, weighted by the share of
                 the exam that each domain makes up. Short recall questions do not count toward it. A question left
-                unanswered counts as incorrect, as it does in the exam.
+                unanswered counts as incorrect.
               </p>
             </ArticleRow>
             <ArticleRow term="Why it is not a score out of 900">
               <p>
-                CompTIA scores its exams on a scale of 100 to 900 and does not publish how that scale is calculated.
-                No practice test can give you a true scaled score, so CertBench does not show one.
+                CompTIA states its passing scores on a scale of 100 to 900. CertBench does not know how answers are
+                converted to that scale, so it shows a percentage and not a score out of 900.
               </p>
             </ArticleRow>
             <ArticleRow term={`The readiness target of ${READINESS_TARGET}%`}>

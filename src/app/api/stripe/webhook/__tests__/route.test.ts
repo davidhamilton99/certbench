@@ -359,11 +359,58 @@ describe("the Stripe webhook: a completed checkout", () => {
 });
 
 describe("the Stripe webhook: an added exam", () => {
-  const addOn = () =>
+  const addOn = (payment_status = "paid") =>
     checkoutCompleted({
       subscription: null,
+      payment_status,
       metadata: { supabase_user_id: "user-1", kind: "cert_addon", cert_id: "cert-9" },
     });
+  const enrollment = {
+    table: "user_enrollments",
+    op: "upsert",
+    values: { user_id: "user-1", certification_id: "cert-9", is_active: true },
+    options: { onConflict: "user_id,certification_id" },
+    filters: [],
+  };
+
+  // A delayed method (a bank debit) completes the page before the money
+  // arrives. The exam used to be added then, and never taken back if the
+  // payment failed.
+  it("adds nothing while the payment of the page is still on its way", async () => {
+    h.event = addOn("unpaid");
+    const res = await deliver();
+
+    expect(res.status).toBe(200);
+    expect(h.calls).toEqual([]);
+    await runAfterTasks();
+    expect(h.capture).not.toHaveBeenCalledWith("user-1", "cert_added", expect.anything());
+  });
+
+  it("adds the exam when Stripe says that the delayed payment has arrived", async () => {
+    h.event = { ...addOn(), id: "evt_async", type: "checkout.session.async_payment_succeeded" };
+    const res = await deliver();
+
+    expect(res.status).toBe(200);
+    expect(h.calls).toEqual([enrollment]);
+    await runAfterTasks();
+    expect(h.capture).toHaveBeenCalledWith("user-1", "cert_added", { certification_id: "cert-9" });
+  });
+
+  it("treats a page that needed no payment as paid", async () => {
+    h.event = addOn("no_payment_required");
+    await deliver();
+    expect(h.calls).toEqual([enrollment]);
+  });
+
+  // A plan's delayed first payment is granted by the change that follows it.
+  it("writes nothing for a plan when its delayed payment arrives", async () => {
+    h.event = { ...checkoutCompleted({ payment_status: "paid" }), type: "checkout.session.async_payment_succeeded" };
+    const res = await deliver();
+
+    expect(res.status).toBe(200);
+    expect(h.retrieve).not.toHaveBeenCalled();
+    expect(h.calls).toEqual([]);
+  });
 
   it("adds the exam to the buyer's plan and reports it after the response", async () => {
     h.event = addOn();

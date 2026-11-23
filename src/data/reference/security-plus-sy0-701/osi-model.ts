@@ -8,9 +8,9 @@ export const osiModel: ReferenceTable = {
     { key: "layer", label: "Layer", mono: true },
     { key: "name", label: "Name" },
     { key: "function", label: "Function" },
-    { key: "protocols", label: "Protocols / Standards" },
+    { key: "protocols", label: "Protocols / standards" },
     { key: "devices", label: "Devices" },
-    { key: "attacks", label: "Attacks at This Layer" },
+    { key: "attacks", label: "Attacks at this layer" },
   ],
   entries: [
     { columns: { layer: "7", name: "Application", function: "End-user services, APIs, and application data", protocols: "HTTP, HTTPS, FTP, SMTP, DNS, SNMP, SSH, LDAP", devices: "Firewall (L7), WAF, proxy", attacks: "XSS, SQL injection, phishing, buffer overflow" } },

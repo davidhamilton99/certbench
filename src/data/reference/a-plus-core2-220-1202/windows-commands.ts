@@ -8,7 +8,7 @@ export const windowsCommands: ReferenceTable = {
     { key: "command", label: "Command", mono: true },
     { key: "type", label: "Shell" },
     { key: "purpose", label: "Purpose" },
-    { key: "example", label: "Example / Key Flags" },
+    { key: "example", label: "Example / key flags" },
   ],
   entries: [
     // Navigation

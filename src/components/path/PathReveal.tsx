@@ -8,6 +8,7 @@ import { bandFor, bandVars, type BandKey } from "@/lib/readiness/band";
 import { biggestOpportunity, daysUntil, projectFinish } from "@/core/path/checkpoint";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 import type { CheckpointResult, PathDomain, PathGoal, PathStructure } from "@/core/path/types";
+import { usesOfficialObjectiveNumbers } from "@/lib/seo/exam-versions";
 import { cn } from "@/lib/utils";
 
 /**
@@ -66,6 +67,8 @@ export function PathReveal({
   const objectives = structure.domains.reduce((n, d) => n + d.objectives.length, 0);
   const learned = Math.max(0, Math.min(studied, objectives));
   const ahead = objectives - learned;
+  // Network+ is set out by CertBench's own topics, not CompTIA's objectives.
+  const unit = usesOfficialObjectiveNumbers(structure.certSlug) ? "objective" : "topic";
   // "Today" for the projection, fixed for the life of the screen.
   const [now] = useState(() => Date.now());
   const minutes = goal?.minutes || 20;
@@ -115,10 +118,10 @@ export function PathReveal({
           <div className="glass grid gap-3 rounded-lg p-4 sm:col-span-2 sm:p-5">
             <p className="text-small">
               <span className="font-medium">
-                You have studied {learned} of {objectives} objectives.
+                You have studied {learned} of {objectives} {unit}s.
               </span>{" "}
               <span className="text-muted-foreground">
-                {ahead === 1 ? "There is 1 objective" : `There are ${ahead} objectives`} still to study.
+                {ahead === 1 ? `There is 1 ${unit}` : `There are ${ahead} ${unit}s`} still to study.
               </span>
             </p>
             {/* The sentence above gives the figure; the bar draws it, at its final length. */}

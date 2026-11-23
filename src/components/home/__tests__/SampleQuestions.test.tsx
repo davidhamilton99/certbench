@@ -1,18 +1,19 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ChoiceRep, PathStructure } from "@/core/path/types";
 
 const track = vi.fn();
 vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => track(...args) }));
 // The arrow reads its link's status, which needs the app router around it.
 vi.mock("@/components/ui/link-arrow", () => ({ LinkArrow: () => null }));
-// Who is signed in: nobody, unless a test says otherwise.
-const session = vi.hoisted(() => ({ userId: null as string | null }));
+// Who is signed in: nobody, unless a test says otherwise. Undefined while the
+// page has not yet learned who it is.
+const session = vi.hoisted(() => ({ userId: null as string | null | undefined }));
 vi.mock("@/components/auth/useSignedIn", () => ({ useSessionUserId: () => session.userId }));
 
-import { readGuestPath, readLocalPath, writeLocalPath } from "@/components/path/local-path";
-import { takeOwedStartEvent } from "@/components/path/path-start";
+import { readGuestPath, readLocalPath, readVisitorPath, writeLocalPath } from "@/components/path/local-path";
+import { begunOnPublicPage, takeOwedStartEvent } from "@/components/path/path-start";
 import { EMPTY_PATH_PROGRESS } from "@/core/path/types";
 import { recordRep } from "@/core/path/progress";
 import { SampleQuestions } from "../SampleQuestions";
@@ -151,16 +152,35 @@ describe("the home page's sample questions", () => {
     expect(rows[2]).toHaveTextContent(/Incorrect$/);
   });
 
-  it("records each answer and the finish, by the names the funnel already uses", () => {
+  it("records each question once and the finish, by the names and properties the funnel already uses", () => {
     render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
     answer(/Confidentiality/);
-    expect(track).toHaveBeenCalledWith("sample_question_answered", { correct: false, surface: "home_demo", repeat: false });
     answer(/Smishing/);
     answer(/Least privilege/);
+    // The missed question, asked again: answered, but not counted a second time.
     answer(/Integrity/);
-    expect(track).toHaveBeenCalledWith("sample_question_answered", { correct: true, surface: "home_demo", repeat: true });
+    expect(track.mock.calls.filter(([name]) => name === "sample_question_answered")).toEqual([
+      ["sample_question_answered", { correct: false, surface: "home_demo" }],
+      ["sample_question_answered", { correct: true, surface: "home_demo" }],
+      ["sample_question_answered", { correct: true, surface: "home_demo" }],
+    ]);
     // The score that is reported counts first answers only.
     expect(track).toHaveBeenCalledWith("question_deck_completed", { surface: "home_demo", correct: 2, total: 3 });
+  });
+
+  // An account made anywhere else (the header's sign-up, say) must not be
+  // counted as one that the study path's save request made (path-start.ts).
+  it("marks a signed-out visitor's work as begun on a public page, and a signed-in member's not", () => {
+    render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    answer(/Integrity/);
+    expect(begunOnPublicPage("security-plus-sy0-701")).toBe(true);
+
+    window.localStorage.clear();
+    cleanup();
+    session.userId = "member-1";
+    render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    answer(/Integrity/);
+    expect(begunOnPublicPage("security-plus-sy0-701")).toBe(false);
   });
 
   it("keeps the answers on the device as the study path's first answers", () => {
@@ -209,6 +229,39 @@ describe("the home page's sample questions", () => {
     expect(kept?.owner).toBe("member-1");
     expect(Object.keys(kept?.progress.items ?? {})).toEqual(expect.arrayContaining(["a|1.1|w1", "a|1.2|w3"]));
     expect(readGuestPath("security-plus-sy0-701")).toBeNull();
+  });
+
+  // A shared computer with no copy on it: a member answers the samples, signs
+  // out, and the next person answers them too.
+  it("begins the member's own copy, and keeps the next person's answers apart from it", () => {
+    session.userId = "member-1";
+    const first = render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    answer(/Integrity/);
+    expect(readLocalPath("security-plus-sy0-701")).toMatchObject({ owner: "member-1" });
+    first.unmount();
+
+    session.userId = null;
+    render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    answer(/Confidentiality/);
+    expect(Object.keys(readLocalPath("security-plus-sy0-701")?.progress.items ?? {})).toEqual(["a|1.2|w3"]);
+    expect(readLocalPath("security-plus-sy0-701")?.progress.items["a|1.2|w3"]).toMatchObject({ c: 1 });
+    // The next person's answer is guest work, and they are shown nothing of the member's.
+    expect(readGuestPath("security-plus-sy0-701")?.items["a|1.2|w3"]).toMatchObject({ c: 0 });
+    expect(readVisitorPath("security-plus-sy0-701")?.items["a|1.2|w3"]).toMatchObject({ c: 0 });
+  });
+
+  it("keeps an answer given before the page knows who is signed in, once it knows, as that person's", () => {
+    session.userId = undefined;
+    const view = render(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    answer(/Integrity/);
+    // Not kept as an anonymous visitor's in the meantime.
+    expect(readLocalPath("security-plus-sy0-701")).toBeNull();
+    expect(readGuestPath("security-plus-sy0-701")).toBeNull();
+
+    session.userId = "member-1";
+    view.rerender(<SampleQuestions reps={REPS} structure={STRUCTURE} steps={41} />);
+    expect(readLocalPath("security-plus-sy0-701")).toMatchObject({ owner: "member-1" });
+    expect(Object.keys(readLocalPath("security-plus-sy0-701")?.progress.items ?? {})).toEqual(["a|1.2|w3"]);
   });
 
   // A shared computer: the device holds one person's study path and someone

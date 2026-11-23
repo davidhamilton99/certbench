@@ -29,6 +29,15 @@ describe("the contact page", () => {
     expect(links.filter((a) => !a.classList.contains("cb-link"))).toEqual([]);
   });
 
+  // One person answers the support address, so the page states an aim and not a
+  // firm promise, and it names the help page as the help page names itself.
+  it("states the time for reviewing a report as an aim, and names the help page in sentence case", () => {
+    const body = (doc.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(body).toContain("CertBench aims to review each report within 24 hours");
+    expect(body).not.toContain("Each report is reviewed within 24 hours");
+    expect(doc.querySelector('a[href="/help"]')?.textContent?.trim()).toBe("Help center");
+  });
+
   it("keeps running text to its measure", () => {
     const paragraphs = [...doc.querySelectorAll("section p, section li")];
     expect(paragraphs.length).toBeGreaterThan(5);

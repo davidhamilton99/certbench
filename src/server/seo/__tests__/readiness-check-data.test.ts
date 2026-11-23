@@ -28,9 +28,10 @@ vi.mock("@/server/data/certifications", () => ({
     examCode: "SY0-701",
   }),
   listActiveCertifications: async () => [],
+  // As the database holds them: with CompTIA's capitals.
   listDomains: async () => [
-    { id: "d1", domainNumber: "1.0", title: "General security concepts", examWeight: 50, sortOrder: 1 },
-    { id: "d2", domainNumber: "2.0", title: "Security operations", examWeight: 50, sortOrder: 2 },
+    { id: "d1", domainNumber: "1.0", title: "General Security Concepts", examWeight: 50, sortOrder: 1 },
+    { id: "d2", domainNumber: "2.0", title: "Security Operations", examWeight: 50, sortOrder: 2 },
   ],
 }));
 vi.mock("@/server/data/questions", () => ({
@@ -91,6 +92,12 @@ describe("the readiness check's questions", () => {
     expect(check?.questions).toHaveLength(10);
     expect(check?.questions.filter((q) => q.domainTitle === "General security concepts")).toHaveLength(5);
     expect(check?.objectiveCount).toBe(28);
+  });
+
+  // The practice-test pages name the domains in sentence case, so the check names them the same way.
+  it("name each domain in sentence case, as the practice-test pages do", async () => {
+    const { check } = await checkWith("SSH encrypts the whole session.");
+    expect([...new Set(check?.questions.map((q) => q.domainTitle))]).toEqual(["General security concepts", "Security operations"]);
   });
 
   it("have their answers shuffled, the same way every time, with the correct answer still marked", async () => {

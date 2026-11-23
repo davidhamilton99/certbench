@@ -64,6 +64,12 @@ export default async function VsPage({
   if (!page) notFound();
 
   const guide = ROUNDUPS.find((r) => r.path === "best-security-plus-practice-tests");
+  // Only a price can be read at the vendor's source (the facts file holds prices and nothing else), so
+  // every other entry in the competitor's column is said to be CertBench's own assessment.
+  const priceRead = Boolean(page.priceSource && page.priceChecked);
+  const attribution = `The ${page.competitorName} column is CertBench's own assessment${
+    priceRead ? ", except for the price, which CertBench read on the vendor's own page" : ""
+  }.`;
 
   return (
     <LanderPage>
@@ -91,6 +97,8 @@ export default async function VsPage({
 
         <ArticleSection title="Side by side" wide>
           <table className="w-full border-collapse text-left text-small max-sm:block">
+            {/* The table's name says whose words the competitor's column holds, before any row is read. */}
+            <caption className="pb-4 text-left text-note text-muted-foreground max-sm:block">{attribution}</caption>
             <thead className="max-sm:sr-only">
               <tr className="border-y border-foreground/70 text-note text-muted-foreground">
                 <th scope="col" className="w-[22%] py-2.5 pr-6 font-medium">
@@ -141,11 +149,11 @@ export default async function VsPage({
         className="mt-20 sm:mt-28"
         title="The fastest way to decide"
         href="/start"
-        label="Start the study path for my exam"
+        label="Choose your exam"
         context="compare_page"
       >
-        Start the study path for your exam. The first steps are free, and the readiness checkpoint shows where you
-        stand.
+        Choose your exam to start its study path. The first steps are free, and the readiness checkpoint shows where
+        you stand.
       </PathCard>
 
       <LanderBlock>

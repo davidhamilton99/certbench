@@ -10,22 +10,26 @@ const SHARE_IMAGE = "/opengraph-image";
  * layout's openGraph and twitter describe the homepage, and Next keeps them
  * until a page sets its own, so without this every shared link reads as the
  * homepage. `title` is the base title: the layout's template adds " | CertBench"
- * to the <title> tag, and the social title gets the same suffix here.
+ * to the <title> tag, and the social title gets the same suffix here. With
+ * `absoluteTitle`, `title` is the whole tag and nothing is added to it: a page
+ * whose title is built to fit a length (objective-meta.ts) says so.
  */
 export function pageMetadata({
   title,
   description,
   path,
   noindex = false,
+  absoluteTitle = false,
 }: {
   title: string;
   description: string;
   path: string;
   noindex?: boolean;
+  absoluteTitle?: boolean;
 }): Metadata {
-  const socialTitle = `${title} | ${SITE_NAME}`;
+  const socialTitle = absoluteTitle ? title : `${title} | ${SITE_NAME}`;
   return {
-    title,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: path },
     openGraph: {

@@ -75,12 +75,12 @@ export function Method({
         body={
           <>
             The study path takes the {objectives} {examText} objectives in CompTIA&apos;s order. Each objective is one
-            short step of about {minutes} minutes, with quick questions first and then a question in the wording of
-            the real exam. A question that you answer incorrectly is repeated at the start of a later step until you
-            answer it correctly.
+            short step of about {minutes} minutes, with quick questions first and then an exam-style question. A
+            question that you answer incorrectly is repeated at the start of a later step until you answer it
+            correctly.
           </>
         }
-        link={{ href: "/start", label: "Start the study path" }}
+        link={{ href: "/start", label: "Choose your exam" }}
         note={`The ${exam} study path has ${steps} steps, from the first question to a full practice exam.`}
       >
         <Figure
@@ -129,10 +129,10 @@ export function Method({
           title="Practice in the hands-on labs."
           body={
             <>
-              Performance-based questions are the hands-on tasks in the real exam, such as setting firewall rules,
-              reading logs or correcting a network. CertBench has {library.length} hands-on labs for {examText} in which
-              you practice tasks of this kind. You complete them in your browser, and they are marked with partial
-              credit.
+              The {examText} exam has performance-based questions as well as multiple-choice questions, and CompTIA
+              does not publish which topics they test. CertBench has {library.length} hands-on labs for {examText}. In
+              each lab you carry out a task in your browser instead of choosing an answer, and the labs are marked with
+              partial credit.
             </>
           }
           link={{ href: labsHref, label: `Try the free ${structure.examName} labs` }}
@@ -154,13 +154,13 @@ export function Method({
           <>
             The practice exam has {questions} questions and a time limit of {examMinutes} minutes. The questions are
             drawn from each domain in proportion to its weight in the real exam. Answers are not shown until the end,
-            and an unanswered question is counted as incorrect, as it is in the real exam. The report gives the
-            percentage that you answered correctly, for the whole exam and for each domain, against a readiness
-            target of {READINESS_TARGET}%.
+            and an unanswered question is counted as incorrect. The report gives your score for the whole exam,
+            weighted by the share of the exam that each domain makes up, and the percentage that you answered
+            correctly in each domain, against a readiness target of {READINESS_TARGET}%.
           </>
         }
         link={{ href: examHref, label: "Take the free practice exam" }}
-        note="CompTIA does not publish how its scale of 100 to 900 is calculated, so CertBench does not estimate a scaled score."
+        note="CompTIA states its passing scores on a scale of 100 to 900. CertBench does not know how answers are converted to that scale, so it does not estimate a scaled score."
       >
         <Figure caption="A sample report with example figures, for a second practice exam compared with the first.">
           <div className="grid gap-5 p-4 sm:p-5">

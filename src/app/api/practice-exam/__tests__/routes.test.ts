@@ -381,6 +381,49 @@ describe("POST /api/practice-exam/submit", () => {
   });
 });
 
+// A refusal's message is shown to the member as it is written (userMessage on
+// the page), so each one is a sentence.
+describe("refusals of the practice exam's start and submit, in sentences", () => {
+  const message = async (res: Response) => ((await res.json()) as { error: { message: string } }).error.message;
+  const attempt = (extra: Record<string, unknown>) =>
+    h.getAttempt.mockResolvedValue({
+      id: ATTEMPT,
+      certificationId: SEC_701,
+      examType: "full",
+      domainId: null,
+      totalQuestions: 1,
+      isComplete: false,
+      progressState: { index: 0, responses: {}, flagged: [], revealed: [], startedAt: "", seed: "s", questionIds: [id(1)] },
+      ...extra,
+    });
+  const answering = () => submit(post("submit", { attemptId: ATTEMPT, answers: [{ questionId: id(1), selectedIndex: 1 }] }));
+
+  it("says in a sentence that there is nothing to start", async () => {
+    h.listActiveQuestions.mockResolvedValue([]);
+    expect(await message(await start(post("start", { certId: SEC_701, examType: "full" })))).toBe(
+      "There are no questions available for this practice exam yet."
+    );
+    expect(await message(await start(post("start", { certId: SEC_701, examType: "weak_points" })))).toBe(
+      "There are no weak points to review yet. Please answer more questions first."
+    );
+    expect(await message(await start(post("start", { certId: SEC_701, examType: "domain_drill", domainId: id(51) })))).toBe(
+      "That domain is not part of this exam."
+    );
+  });
+
+  it("says in a sentence what is wrong with a submission", async () => {
+    h.getAttempt.mockResolvedValue(null);
+    expect(await message(await answering())).toBe("These questions could not be found. Please start them again.");
+    attempt({ isComplete: true });
+    expect(await message(await answering())).toBe("This practice exam has already been submitted.");
+    attempt({ examType: "domain_drill", isComplete: true });
+    expect(await message(await answering())).toBe("This domain drill has already been submitted.");
+    attempt({});
+    h.getQuestionsByIds.mockResolvedValue([question(1, NETWORK)]);
+    expect(await message(await answering())).toBe("None of the answers that were sent belong to this practice exam.");
+  });
+});
+
 describe("POST /api/practice-exam/progress", () => {
   const snapshotOf = (count: number) => ({
     index: 0,

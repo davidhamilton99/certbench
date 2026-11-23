@@ -54,4 +54,25 @@ describe("titles and headings in the copy tables", () => {
   it("open with a capital letter or a figure", () => {
     expect(TITLES.filter(({ text }) => !/^[A-Z0-9]/.test(text))).toEqual([]);
   });
+
+  // A search result shows about 60 characters of a title tag, and the root
+  // layout adds " | CertBench" to every one of these. The Network+ guide's ran
+  // to 66 and was cut short.
+  // Search and AI answers quote a description as it stands, so each is written
+  // in sentences that say who offers what. They opened with noun phrases ("Free
+  // full-length Security+ SY0-701 practice exam: 90 questions in 90 minutes").
+  it("describe the practice-test and PBQ pages in sentences that open with who offers the page", () => {
+    const descriptions = [...PRACTICE_TEST_PAGES, ...PBQ_EXAMPLE_PAGES].map((p) => ({ where: p.path, text: p.metaDescription }));
+    expect(descriptions).toHaveLength(9);
+    expect(descriptions.filter(({ text }) => !/^(?:CertBench offers|This page has) .*\.$/.test(text))).toEqual([]);
+  });
+
+  it("make title tags of no more than 60 characters with the brand that the layout adds", () => {
+    const tags = TITLES.filter(({ where }) => where.endsWith("metaTitle")).map(({ where, text }) => ({
+      where,
+      tag: `${text} | CertBench`,
+    }));
+    expect(tags.length).toBeGreaterThanOrEqual(15);
+    expect(tags.filter(({ tag }) => tag.length > 60)).toEqual([]);
+  });
 });

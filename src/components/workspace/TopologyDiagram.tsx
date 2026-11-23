@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { AlertTriangle, Check, X } from "lucide-react";
 import type { TopoDevice, TopoConnection, TopoDeviceType } from "@/data/pbq/types";
 import { cn } from "@/lib/utils";
@@ -235,6 +236,11 @@ interface TopologyDiagramProps {
  * tick or a cross, and the one being fixed a ring. Tapping a device (on the
  * map, or its chip underneath, which is the easier target on a phone) shows
  * its config.
+ *
+ * The links between the devices, with the port or the name drawn on each, are
+ * also listed in words under the map. A screen reader cannot follow a line on
+ * a drawing, a question can depend on which port leads where, and on a phone
+ * the labels on the map are drawn too small to read.
  */
 export function TopologyDiagram({
   devices,
@@ -245,10 +251,13 @@ export function TopologyDiagram({
   viewingId,
   onDeviceClick,
 }: TopologyDiagramProps) {
+  const linksId = useId();
   const posMap = new Map<string, { x: number; y: number }>();
   for (const d of devices) {
     posMap.set(d.id, { x: d.position.x * 10, y: d.position.y * 6 });
   }
+  const labelOf = new Map(devices.map((d) => [d.id, d.label] as const));
+  const links = connections.filter((c) => labelOf.has(c.from) && labelOf.has(c.to));
   const shownId = viewingId ?? activeId;
   const canOpen = (d: TopoDevice) => d.fields.length > 0 || !!d.currentConfig;
   const toFix = devices.filter((d) => {
@@ -413,8 +422,29 @@ export function TopologyDiagram({
             );
           })}
         </div>
-        <p className="text-note text-muted-foreground">Select a device to see its configuration.</p>
+        <p className="text-note text-muted-foreground">Choose a device to see its configuration.</p>
       </div>
+
+      {links.length > 0 && (
+        <div className="grid gap-1 border-t border-border px-4 py-2.5">
+          <p id={linksId} className="cb-label text-muted-foreground">
+            Connections
+          </p>
+          {/* Each link as the map draws it: the two devices, then the label on the line. */}
+          <ul aria-labelledby={linksId} className="grid gap-0.5 text-note">
+            {links.map((c, i) => (
+              <li key={i} className="[overflow-wrap:anywhere]">
+                {labelOf.get(c.from)} to {labelOf.get(c.to)}
+                {c.label && (
+                  <>
+                    : <span className="font-mono">{c.label}</span>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

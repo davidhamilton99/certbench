@@ -26,8 +26,10 @@ export const LEAD_CONTEXT_MAX_VALUE_LENGTH = 64;
  *    plan from this tool in the last 24 hours, or it has unsubscribed.
  *  - "failed": the email could not be sent. The visitor may try again in a few
  *    minutes: a failed attempt does not count toward the 24 hours.
+ *  - "test": the address is one that CertBench's own tests use. Nothing is
+ *    stored or sent.
  */
-export const LEAD_DELIVERIES = ["sent", "skipped", "failed"] as const;
+export const LEAD_DELIVERIES = ["sent", "skipped", "failed", "test"] as const;
 
 export type LeadDelivery = (typeof LEAD_DELIVERIES)[number];
 
