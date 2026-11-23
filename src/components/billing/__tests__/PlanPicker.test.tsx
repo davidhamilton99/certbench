@@ -6,6 +6,8 @@ import { ApiError } from "@/contracts/errors";
 import { regionPricing } from "@/lib/pricing/ppp";
 
 const h = vi.hoisted(() => ({
+  /** The PostHog ids the browser holds, as analyticsIds() reads them. */
+  ids: { distinctId: "019a-anonymous", sessionId: "019a-session" } as { distinctId?: string; sessionId?: string },
   calls: [] as { key: string; input: unknown }[],
   track: vi.fn(),
   leaveFor: vi.fn(),
@@ -13,7 +15,7 @@ const h = vi.hoisted(() => ({
   checkout: null as null | Error,
 }));
 
-vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args) }));
+vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args), analyticsIds: () => h.ids }));
 vi.mock("../leave", () => ({ leaveFor: (url: string) => h.leaveFor(url) }));
 vi.mock("sonner", () => ({ toast: { error: (message: string) => h.toastError(message) } }));
 vi.mock("@/lib/api-client", () => ({
@@ -90,7 +92,12 @@ describe("the plan chooser on the pricing page and the billing page", () => {
     expect(h.track).toHaveBeenCalledWith("pricing_viewed", { surface: "upgrade" });
     pay();
     await waitFor(() => expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/session"));
-    expect(h.calls).toEqual([{ key: "POST /api/stripe/checkout", input: { interval: "quarterly", returnTo: "upgrade" } }]);
+    expect(h.calls).toEqual([
+      {
+        key: "POST /api/stripe/checkout",
+        input: { interval: "quarterly", returnTo: "upgrade", analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" } },
+      },
+    ]);
     expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "quarterly" });
   });
 
@@ -113,7 +120,9 @@ describe("adding a certification to a plan", () => {
     render(<AddCertButton certId="cert-2" price="$39" />);
     fireEvent.click(screen.getByRole("button", { name: "Add for $39" }));
     await waitFor(() => expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/session"));
-    expect(h.calls).toEqual([{ key: "POST /api/stripe/cert-checkout", input: { certId: "cert-2" } }]);
+    expect(h.calls).toEqual([
+      { key: "POST /api/stripe/cert-checkout", input: { certId: "cert-2", analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" } } },
+    ]);
     expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "cert_addon" });
   });
 

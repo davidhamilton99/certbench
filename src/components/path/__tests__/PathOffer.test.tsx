@@ -4,6 +4,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { ApiError } from "@/contracts/errors";
 
 const h = vi.hoisted(() => ({
+  /** The PostHog ids the browser holds, as analyticsIds() reads them. */
+  ids: { distinctId: "019a-anonymous", sessionId: "019a-session" } as { distinctId?: string; sessionId?: string },
   calls: [] as { contract: string; input: unknown }[],
   track: vi.fn(),
   leaveFor: vi.fn(),
@@ -12,7 +14,7 @@ const h = vi.hoisted(() => ({
   checkout: null as null | Error,
 }));
 
-vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args) }));
+vi.mock("@/lib/analytics", () => ({ track: (...args: unknown[]) => h.track(...args), analyticsIds: () => h.ids }));
 vi.mock("@/components/billing/leave", () => ({ leaveFor: (url: string) => h.leaveFor(url) }));
 vi.mock("@/lib/api-client", () => ({
   api: async (contract: { method: string; path: string }, input: unknown) => {
@@ -123,7 +125,11 @@ describe("PathOffer", () => {
   it("checks out monthly when nothing else is chosen, and counts the checkout once the payment page exists", async () => {
     render(offer());
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
-    expect(await checkoutInput()).toEqual({ interval: "monthly", returnTo: "path/security-plus-sy0-701" });
+    expect(await checkoutInput()).toEqual({
+      interval: "monthly",
+      returnTo: "path/security-plus-sy0-701",
+      analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" },
+    });
     await waitFor(() => expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/session"));
     expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "monthly" });
     expect(h.track).toHaveBeenCalledWith("path_offer_clicked", {
@@ -140,7 +146,11 @@ describe("PathOffer", () => {
     expect(screen.getByRole("radio", { name: /Three months/ })).toBeChecked();
     expect(screen.getByText(/The plan renews every three months until you cancel\./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
-    expect(await checkoutInput()).toEqual({ interval: "quarterly", returnTo: "path/security-plus-sy0-701" });
+    expect(await checkoutInput()).toEqual({
+      interval: "quarterly",
+      returnTo: "path/security-plus-sy0-701",
+      analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" },
+    });
     await waitFor(() => expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "quarterly" }));
     // The exam is claimed before checkout, so the purchase unlocks this path.
     const order = h.calls.map((c) => c.contract);
@@ -172,7 +182,10 @@ describe("PathOffer", () => {
     expect(await screen.findByText("$39")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Add Security\+/ }));
     await waitFor(() => expect(h.track).toHaveBeenCalledWith("checkout_started", { interval: "cert_addon" }));
-    expect(h.calls.map((c) => c.contract)).toContain("POST /api/stripe/cert-checkout");
+    expect(h.calls.find((c) => c.contract === "POST /api/stripe/cert-checkout")?.input).toEqual({
+      certId: "cert-1",
+      analytics: { distinctId: "019a-anonymous", sessionId: "019a-session" },
+    });
     expect(h.leaveFor).toHaveBeenCalledWith("https://checkout.example/session");
     expect(h.track).toHaveBeenCalledWith("path_offer_clicked", {
       cert: "security-plus-sy0-701",

@@ -34,7 +34,7 @@ The interface uses one word for each thing.
 
 The code and the analytics kept the names they had before the words on the screen changed. This table gives, for each visible word, the name it has in the code and the names of its analytics events.
 
-Analytics names are frozen. Never rename an event or one of its properties, even where the visible word has changed: a renamed event starts a new history, and every funnel and chart built on the old name stops counting. This holds for the browser's events (`src/lib/analytics.ts`) and for the events that the server sends through `captureServerEvent` (`src/server/analytics.ts`). Identifiers keep their old names too, because some of them are stored: a step's id, such as warmup or checkpoint, is the key under which a learner's saved progress records that step.
+Analytics names are frozen. Never rename an event or one of its properties, even where the visible word has changed: a renamed event starts a new history, and every funnel and chart built on the old name stops counting. This holds for the browser's events (`src/lib/analytics.ts`) and for the events that the server sends through `captureServerEvent` and `capturePurchase` (`src/server/analytics.ts`). Identifiers keep their old names too, because some of them are stored: a step's id, such as warmup or checkpoint, is the key under which a learner's saved progress records that step.
 
 | Visible word | Identifier in the code | Analytics name |
 | --- | --- | --- |

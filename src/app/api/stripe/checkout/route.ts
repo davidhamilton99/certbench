@@ -4,6 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { expireOpenCheckouts, getStripe, subscriptionStanding } from "@/server/stripe";
 import { rateLimiter } from "@/server/rate-limit";
 import { createAdminClient } from "@/server/supabase/admin";
+import { visitMetadata } from "@/server/purchase-visit";
 import { pppForCountry } from "@/lib/pricing/ppp";
 import { afterCheckoutPath } from "@/lib/billing/after-checkout";
 import {
@@ -146,34 +147,35 @@ export const POST = defineEndpoint(createCheckout, {
     }
 
     const origin = publicEnv.NEXT_PUBLIC_APP_URL;
-    // Backing out of an offer returns to that offer, not the app.
-    const cancelUrl = `${origin}/${input.returnTo}`;
-    // Paying lands on the path itself, which waits for the activation webhook
-    // and opens with the unlock moment. Never the workspace.
-    const successUrl = `${origin}${afterCheckoutPath(input.returnTo)}`;
+    // The browser this page is opened from, kept on the page and on the plan
+    // it starts, so that the webhook can record the purchase on this visit.
+    const visit = visitMetadata(input.analytics, request.headers.get("user-agent"));
+    const page = {
+      customer: customerId,
+      mode: "subscription" as const,
+      // Backing out of an offer returns to that offer, not the app.
+      cancel_url: `${origin}/${input.returnTo}`,
+      // Paying lands on the path itself, which waits for the activation webhook
+      // and opens with the unlock moment. Never the workspace.
+      success_url: `${origin}${afterCheckoutPath(input.returnTo)}`,
+      metadata: { supabase_user_id: user.id, ...visit },
+      ...(Object.keys(visit).length > 0 ? { subscription_data: { metadata: visit } } : {}),
+    };
     let session;
     try {
       try {
         session = await getStripe().checkout.sessions.create({
-          customer: customerId,
-          mode: "subscription",
+          ...page,
           line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
           discounts,
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-          metadata: { supabase_user_id: user.id },
         });
       } catch (err) {
         // A missing/expired PPP coupon must not block checkout — retry at full price.
         if (discounts && err instanceof Error && /coupon/i.test(err.message)) {
           console.error("PPP coupon rejected, falling back to full price:", err.message);
           session = await getStripe().checkout.sessions.create({
-            customer: customerId,
-            mode: "subscription",
+            ...page,
             line_items: [{ price: await resolvePriceId(input.interval), quantity: 1 }],
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            metadata: { supabase_user_id: user.id },
           });
         } else {
           throw err;

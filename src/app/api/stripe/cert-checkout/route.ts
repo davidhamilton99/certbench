@@ -4,6 +4,7 @@ import { ApiError } from "@/contracts/common";
 import { expireOpenCheckouts, getStripe } from "@/server/stripe";
 import { rateLimiter } from "@/server/rate-limit";
 import { createAdminClient } from "@/server/supabase/admin";
+import { visitMetadata } from "@/server/purchase-visit";
 import { getCertification } from "@/server/data/certifications";
 import { listEnrollments, otherVersionIds } from "@/server/data/enrollments";
 import { BASE_PRICES_CENTS, pppForCountry } from "@/lib/pricing/ppp";
@@ -120,6 +121,9 @@ export const POST = defineEndpoint(addCertCheckout, {
       supabase_user_id: user.id,
       cert_id: cert.id,
       kind: "cert_addon",
+      // The browser this page is opened from, so that the webhook can record
+      // the purchase on this visit.
+      ...visitMetadata(input.analytics, request.headers.get("user-agent")),
     };
     const lineItems = [
       {

@@ -7,7 +7,7 @@ import { api } from "@/lib/api-client";
 import { addCertCheckout } from "@/contracts/client";
 import { userMessage } from "@/lib/errors/user-message";
 import { PAYMENT_PAGE_FAILED } from "@/lib/billing/messages";
-import { track } from "@/lib/analytics";
+import { analyticsIds, track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { leaveFor } from "./leave";
 
@@ -38,7 +38,7 @@ export function AddCertButton({
     if (busy) return;
     setBusy(true);
     try {
-      const { url } = await api(addCertCheckout, { certId });
+      const { url } = await api(addCertCheckout, { certId, analytics: analyticsIds() });
       // Counted only once there is a payment page to go to.
       track("checkout_started", { interval: "cert_addon" });
       leaveFor(url);

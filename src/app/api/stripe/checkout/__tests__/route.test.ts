@@ -382,3 +382,65 @@ describe("POST /api/stripe/checkout: the price ids", () => {
     );
   });
 });
+
+// The purchase is recorded by the webhook, from Stripe, after this page has
+// gone. The payment page carries the browser it was opened from, so that the
+// record can join that visit and that person in PostHog.
+describe("POST /api/stripe/checkout: the visit the payment page is opened from", () => {
+  const AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
+  const ids = { distinctId: "019a8f2e-0b1c-7d2e-9f30-4a5b6c7d8e9f", sessionId: "019a8f2e-1111-7222-8333-444455556666" };
+  const kept = {
+    posthog_distinct_id: ids.distinctId,
+    posthog_session_id: ids.sessionId,
+    posthog_user_agent: AGENT,
+  };
+
+  it("keeps the browser's ids and user agent on the payment page and on the plan it starts", async () => {
+    const res = await checkout({ interval: "monthly", analytics: ids }, { "user-agent": AGENT });
+
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: { supabase_user_id: "user-1", ...kept },
+        // A plan whose first payment arrives later is granted by its own change, which has only the subscription.
+        subscription_data: { metadata: kept },
+      })
+    );
+  });
+
+  it("keeps them on a page opened at the list price after the coupon was refused", async () => {
+    h.stripe.checkout.sessions.create
+      .mockRejectedValueOnce(new Error("No such coupon: 'ppp60'"))
+      .mockResolvedValueOnce({ url: "https://checkout.stripe.com/c/pay/cs_2" });
+
+    const res = await checkout({ interval: "monthly", analytics: ids }, { "x-vercel-ip-country": "IN", "user-agent": AGENT });
+    expect(res.status).toBe(200);
+    expect(h.stripe.checkout.sessions.create.mock.calls[1][0]).toMatchObject({
+      metadata: { supabase_user_id: "user-1", ...kept },
+      subscription_data: { metadata: kept },
+    });
+  });
+
+  // PostHog blocked in the browser: the request still says what browser it was.
+  it("keeps the user agent alone when the browser sends no ids", async () => {
+    await checkout({ interval: "monthly" }, { "user-agent": AGENT });
+    expect(h.stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: { supabase_user_id: "user-1", posthog_user_agent: AGENT },
+        subscription_data: { metadata: { posthog_user_agent: AGENT } },
+      })
+    );
+  });
+
+  it("never refuses a payment over ids that are not ids: it drops them and opens the page", async () => {
+    for (const analytics of [{ distinctId: "<img src=x>", sessionId: 42 }, "019a-not-an-object", { distinctId: "x".repeat(129) }]) {
+      h.stripe.checkout.sessions.create.mockClear();
+      const res = await checkout({ interval: "monthly", analytics });
+      expect(res.status).toBe(200);
+      expect(h.stripe.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({ metadata: { supabase_user_id: "user-1" } })
+      );
+      expect(h.stripe.checkout.sessions.create.mock.calls[0][0]).not.toHaveProperty("subscription_data");
+    }
+  });
+});

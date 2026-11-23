@@ -10,7 +10,7 @@ import { userMessage } from "@/lib/errors/user-message";
 import { PAYMENT_PAGE_FAILED } from "@/lib/billing/messages";
 import { BASE_PRICES_CENTS, type RegionPricing } from "@/lib/pricing/ppp";
 import { PRO_PRICE_REGION_NOTE } from "@/lib/pricing/terms";
-import { track } from "@/lib/analytics";
+import { analyticsIds, track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { leaveFor } from "./leave";
@@ -124,7 +124,7 @@ export function PlanChooser<P extends BillingInterval>({
     onPress?.(plan);
     try {
       await beforeCheckout?.();
-      const { url } = await api(createCheckout, { interval: plan, returnTo });
+      const { url } = await api(createCheckout, { interval: plan, returnTo, analytics: analyticsIds() });
       // Counted only now that there is a payment page to go to. A press by
       // someone who is signed out, or one that fails, is not a checkout.
       track("checkout_started", { interval: plan });
