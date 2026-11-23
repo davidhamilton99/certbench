@@ -6,9 +6,13 @@ const nextConfig: NextConfig = {
   // Do not name the framework in a response header.
   poweredByHeader: false,
   // No page uses next/image, so the image optimizer endpoint (/_next/image)
-  // is switched off: with this set it answers 404 instead of resizing files
-  // for anyone who asks.
-  images: { unoptimized: true },
+  // is switched off. `unoptimized` does this where Next.js serves the
+  // endpoint itself: `next start` answers 404. Vercel's build adapter for
+  // Next.js 16 does not read `unoptimized` and keeps Vercel's own optimizer
+  // on, so the empty list of local patterns also leaves that optimizer no
+  // file in public/ to resize. (Next.js adds its static media folders to the
+  // list, which hold only fonts and the favicon. No remote host is allowed.)
+  images: { unoptimized: true, localPatterns: [] },
   // PostHog through our own domain, so ad blockers that block posthog.com
   // don't silently drop a visitor's events and session recording. Library,
   // recorder and remote config come from the assets host; the rest is the API.
