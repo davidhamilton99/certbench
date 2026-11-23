@@ -66,7 +66,7 @@ const QUALITY: { title: string; body: string }[] = [
   },
   {
     title: "CertBench is independent.",
-    body: "CertBench is not affiliated with or endorsed by CompTIA. Messages sent to support@certbench.dev are read and answered by a person.",
+    body: "CertBench is not affiliated with or endorsed by CompTIA. Messages sent to support@certbench.dev are read and answered by our team.",
   },
 ];
 

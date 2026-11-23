@@ -75,7 +75,7 @@ export default async function PricingPage({
   // comes back with it in the address: it is chosen again.
   const chosen = isBillingPeriod(plan) ? plan : undefined;
 
-  // The ground, the column, the title and the opening paragraphs are the layout's (layout.tsx).
+  // The ground, the column and the title are the layout's (layout.tsx).
   return (
     <>
     <div className={PRICING_PLANS}>

@@ -1,8 +1,8 @@
 import { PRICING_PLANS } from "./intro";
 
 /**
- * What a press on "Pricing" shows at once, under the title and the opening
- * paragraphs that the layout has already drawn (layout.tsx). The page itself
+ * What a press on "Pricing" shows at once, under the title that the layout
+ * has already drawn (layout.tsx). The page itself
  * waits for the visitor's country, so the plans cannot be prepared ahead of
  * the press: their outlines stand in their final place, with the wait said to
  * a screen reader, and the page takes their place when it arrives. Nothing

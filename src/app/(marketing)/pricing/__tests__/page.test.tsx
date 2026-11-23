@@ -28,25 +28,39 @@ async function page(country: string | null, plan?: string): Promise<HTMLElement>
 }
 
 const text = (el: Element | null | undefined) => (el?.textContent ?? "").replace(/\s+/g, " ").trim();
-/** The page's opening block: its title and the paragraphs under it. */
-const intro = (root: HTMLElement) => root.querySelector("h1")?.parentElement ?? null;
-/** The Pro plan's card, found by its heading. */
-const proCard = (root: HTMLElement) =>
-  [...root.querySelectorAll("h2")].find((h) => h.textContent === "Pro")?.closest("[data-slot='card']") ?? null;
+/** A plan's card, found by its heading. */
+const planCard = (root: HTMLElement, name: "Free" | "Pro") =>
+  [...root.querySelectorAll("h2")].find((h) => h.textContent === name)?.closest("[data-slot='card']") ?? null;
+/** The Pro plan's card. */
+const proCard = (root: HTMLElement) => planCard(root, "Pro");
 
 describe("the pricing page", () => {
-  it("states the list prices in a sentence that is the same for every country", async () => {
-    const home = await page(null);
-    const india = await page("IN");
-    expect(text(intro(home))).toBe(text(intro(india)));
-    expect(text(intro(home))).toContain(
-      "CertBench Pro costs $19 a month, $39 every three months, or $99 a year. Prices are in US dollars and are adjusted by region."
-    );
-    expect(text(intro(home))).toContain("The price shown for your country on this page may be lower.");
-    // What CertBench is, in the page's first sentence.
-    expect(text(intro(home)?.querySelector("p"))).toBe(
-      "CertBench is a study program for the CompTIA Security+, Network+ and A+ exams. It is free to start, and no payment card is required."
-    );
+  // The owner asked on 23 November 2026 for the paragraphs above the plans to go:
+  // every fact in them was repeated in the plans.
+  it("opens on its title, with the plans directly under it and no paragraph between them", async () => {
+    for (const country of [null, "IN"]) {
+      const root = await page(country);
+      const title = root.querySelector("h1");
+      const firstPlan = root.querySelector("[data-slot='card']");
+      expect(title?.textContent).toBe("Plans and pricing");
+      expect(firstPlan).not.toBeNull();
+      const between = [...root.querySelectorAll("p")].filter(
+        (p) =>
+          (title!.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
+          (p.compareDocumentPosition(firstPlan!) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+      );
+      expect(between.map(text)).toEqual([]);
+    }
+  });
+
+  it("states in the plans each fact that the paragraphs above them used to repeat", async () => {
+    const root = await page(null);
+    expect(text(planCard(root, "Free"))).toContain("No payment card is required.");
+    const pro = text(proCard(root));
+    expect(pro).toContain("$19 a month, or $39 every three months, or $99 a year.");
+    expect(pro).toContain("Prices are in US dollars and are adjusted by region.");
+    expect(pro).toContain("Pro covers one exam.");
+    expect(pro).toContain("You can cancel at any time from your billing page.");
   });
 
   it("says in its description what the body says: three prices, in US dollars, adjusted by region", () => {
@@ -73,7 +87,6 @@ describe("the pricing page", () => {
   it("says that Pro covers one exam, and that A+ is two", async () => {
     const root = await page(null);
     expect(text(root)).not.toMatch(/one certification/i);
-    expect(text(intro(root))).toContain("A Pro plan covers one exam.");
     const pro = text(proCard(root));
     expect(pro).toContain("The complete study path for one exam.");
     expect(pro).toContain(
@@ -142,7 +155,7 @@ describe("the pricing page", () => {
   it("links the words billing page to the help entry that says how to cancel", async () => {
     const root = await page(null);
     const links = [...root.querySelectorAll("a")].filter((a) => a.textContent === "billing page");
-    expect(links.length).toBeGreaterThanOrEqual(2);
+    expect(links.length).toBeGreaterThanOrEqual(1);
     for (const link of links) expect(link.getAttribute("href")).toBe("/help#account");
     // Every link inside a sentence is underlined.
     for (const link of [...root.querySelectorAll("p a")]) expect(link.className).toContain("cb-link");
@@ -170,7 +183,7 @@ describe("the pricing page", () => {
 });
 
 describe("what is shown while the pricing page is on its way", () => {
-  it("is the page's own title and opening paragraphs, from the layout, with the plans' outlines and the wait said to a screen reader", async () => {
+  it("is the page's own title, from the layout, with the plans' outlines and the wait said to a screen reader", async () => {
     const waiting = document.createElement("div");
     waiting.innerHTML = renderToString(
       <PricingLayout>
@@ -178,7 +191,7 @@ describe("what is shown while the pricing page is on its way", () => {
       </PricingLayout>
     );
     const ready = await page(null);
-    expect(text(intro(waiting))).toBe(text(intro(ready)));
+    expect(waiting.querySelector("h1")?.outerHTML).toBe(ready.querySelector("h1")?.outerHTML);
     expect(waiting.querySelector("h1")?.textContent).toBe("Plans and pricing");
     const status = waiting.querySelector("[role='status']");
     expect(text(status)).toBe("The plans are loading.");
@@ -186,7 +199,7 @@ describe("what is shown while the pricing page is on its way", () => {
     expect(waiting.innerHTML).not.toMatch(/animate-|transition|opacity-0/);
   });
 
-  it("is sent with one title and one opening: neither the loading frame nor the page draws them again", async () => {
+  it("is sent with one title and the prices once: neither the loading frame nor the page draws them again", async () => {
     // Next sends the layout with the loading frame in place, then the page, in one document.
     request.country = null;
     const sent = document.createElement("div");
@@ -197,8 +210,8 @@ describe("what is shown while the pricing page is on its way", () => {
         </PricingLayout>
       ) + renderToString(await PricingPage({ searchParams: Promise.resolve({}) }));
     expect([...sent.querySelectorAll("h1")].map((h) => h.textContent)).toEqual(["Plans and pricing"]);
-    expect(text(sent).split("CertBench is a study program for the CompTIA").length - 1).toBe(1);
-    expect(text(sent).split("CertBench Pro costs $19 a month").length - 1).toBe(1);
+    // The prices are stated once, in the Pro plan.
+    expect(text(sent).split("$19 a month").length - 1).toBe(1);
     // The loading frame is only the outlines and their sentence.
     const frame = document.createElement("div");
     frame.innerHTML = renderToString(<PricingLoading />);

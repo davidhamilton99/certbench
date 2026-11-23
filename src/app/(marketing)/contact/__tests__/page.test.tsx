@@ -29,7 +29,7 @@ describe("the contact page", () => {
     expect(links.filter((a) => !a.classList.contains("cb-link"))).toEqual([]);
   });
 
-  // One person answers the support address, so the page states an aim and not a
+  // The team that builds CertBench answers the support address, so the page states an aim and not a
   // firm promise, and it names the help page as the help page names itself.
   it("states the time for reviewing a report as an aim, and names the help page in sentence case", () => {
     const body = (doc.body.textContent ?? "").replace(/\s+/g, " ");

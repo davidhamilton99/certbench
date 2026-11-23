@@ -105,7 +105,7 @@ export default function AboutPage() {
                 <a href="mailto:support@certbench.dev" className="cb-link">
                   support@certbench.dev
                 </a>
-                . Every report is read by a person, and a question that is wrong is corrected or withdrawn.
+                . Every report is read by our team, and a question that is wrong is corrected or withdrawn.
               </p>
             </ArticleRow>
           </dl>
@@ -168,7 +168,7 @@ export default function AboutPage() {
           <dl className="border-t border-border">
             <ArticleRow term="Who operates it">
               <p>
-                CertBench is a small, independent product. The person who builds it also answers the support email, at{" "}
+                CertBench is a small, independent product. The team that builds it also answers the support email, at{" "}
                 <a href="mailto:support@certbench.dev" className="cb-link">
                   support@certbench.dev
                 </a>
