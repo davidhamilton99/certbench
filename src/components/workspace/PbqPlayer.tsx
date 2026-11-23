@@ -19,6 +19,8 @@ import { seedFromString, shuffleSeeded } from "@/core/pbq/shuffle";
 import { MatchMove, SimMove } from "@/components/workspace/SimMoves";
 import { LabHeader, LabResult, PairList, useKeepInView, useStarted } from "@/components/workspace/LabKit";
 import { LARGE_PLAYERS, type PbqHostProps } from "@/components/workspace/pbq-host";
+import { domainLabel } from "@/components/path/lab-types";
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 
 // Re-exported so existing importers of PbqPlayer keep resolving the type.
@@ -177,7 +179,7 @@ function OneMoveLab({
       />
       <LabHeader
         title={scenario.title}
-        subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+        subtitle={`Domain ${domainLabel(scenario.domain_number)}: ${domainName(scenario.domain_title)}`}
         onBack={handleBack}
         backLabel={backLabel}
         takeFocus={takeFocus}

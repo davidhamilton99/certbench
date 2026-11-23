@@ -45,4 +45,23 @@ describe("LinkPending", () => {
     // The link keeps its name for a screen reader.
     expect(screen.getByRole("link", { name: "Start for free" })).toBeInTheDocument();
   });
+
+  it("keeps every box inline, so a link in running text keeps its underline, and sizes its own spinner", () => {
+    status.pending = true;
+    const { container } = render(
+      <a href="/start" className="cb-link">
+        <LinkPending>Choose your exam</LinkPending>
+      </a>
+    );
+    act(() => vi.advanceTimersByTime(150));
+    const link = container.querySelector("a")!;
+    // An underline reaches only the words in inline boxes: a flex, grid or
+    // block box around them would take a text link's underline away.
+    for (const box of link.querySelectorAll("span")) {
+      expect(box.className).not.toMatch(/(?:^|\s)(?:inline-)?(?:flex|grid|block|table)(?:\s|$)/);
+    }
+    // Outside a Button nothing else sizes the spinner: it is the small size of its own, over the words.
+    expect(link.querySelector("svg.animate-spin")).toHaveClass("absolute", "inset-0", "m-auto", "size-4");
+    expect(screen.getByRole("link", { name: "Choose your exam" })).toBe(link);
+  });
 });

@@ -36,8 +36,8 @@ export default async function RecallPage({
       <div className="grid gap-1.5">
         <h1 className="cb-subsection">Recall</h1>
         <p className="text-small text-muted-foreground">
-          Recall drills the {active.name} facts that you must know from memory. A fact that you answer incorrectly
-          is asked again later in the session.
+          Recall asks you {active.name} facts to answer from memory. A fact that you answer incorrectly is asked
+          again later in the session.
         </p>
       </div>
       <RecallSurface

@@ -19,15 +19,16 @@ import { RecallMastery } from "./RecallMastery";
 import { cn } from "@/lib/utils";
 
 const SUBNETTING_KEY = "__subnetting__";
-/** Answers in a session before the note about the rest of the exam appears. */
+/** Answers in a session before the note about the rest of CertBench appears. */
 const REFRAME_AFTER = 20;
 
 /**
  * The Recall page's working part: a row of tabs to choose what to drill (every
  * deck, Mixed, and the subnetting drill), a line that counts the facts last
  * answered correctly, and, after a real session, a note that recall is one part
- * of the exam with a link to the study plan. The choice lives here; RecallPlayer is
- * remounted for each choice (through `key`), so each starts a new session.
+ * of studying on CertBench, with a link to the study plan. The choice lives
+ * here; RecallPlayer is remounted for each choice (through `key`), so each
+ * starts a new session.
  *
  * The tabs are real tabs: one stop for the Tab key, the arrow keys move between
  * them, and the drill is the panel they control.
@@ -184,11 +185,13 @@ export function RecallSurface({
             <X aria-hidden className="size-4" />
           </button>
           <div className="grid gap-1.5">
-            <h2 className="pr-8 text-base font-semibold">Recall is one part of the exam.</h2>
+            {/* What CertBench offers beside Recall, and nothing about what the exam is made of:
+                CompTIA does not publish that (src/lib/seo/__tests__/exam-content-claims.test.ts). */}
+            <h2 className="pr-8 text-base font-semibold">Recall is one part of studying on CertBench.</h2>
             <p className="cb-measure-sm text-small text-muted-foreground">
               You have answered {session.answered} recall questions in this session, {sessionAccuracy}% of them
-              correctly. The exam also sets scenario questions and performance-based questions. Your study plan
-              shows where you stand in every domain.
+              correctly. Your study path also has exam-style questions and a hands-on lab for each domain, and your
+              study plan shows where you stand in each one.
             </p>
           </div>
           <Button asChild className="justify-self-start">

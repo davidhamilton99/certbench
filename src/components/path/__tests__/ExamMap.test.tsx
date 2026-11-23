@@ -273,6 +273,35 @@ describe("an exam set out by CertBench's own topics", () => {
     render(<ExamMap structure={structure} statuses={statuses} onSelect={() => {}} />);
     expect(row("1.1 Security controls, Not started")).toBeInTheDocument();
   });
+
+  // A topic's row keeps the column in which a lab's or the practice exam's row
+  // names its kind ("Lab", "Exam"), empty and not read, so that the titles of
+  // one list do not start on two edges.
+  it("starts every title on one edge: a topic's row keeps the lead column, empty and hidden", () => {
+    render(
+      <ExamMap
+        structure={{ ...structure, certSlug: "network-plus-n10-009" }}
+        statuses={statuses}
+        labs={labs("free", "locked")}
+        rehearsal={exam("free")}
+        onSelect={() => {}}
+      />
+    );
+    const rows = screen.getAllByRole("button");
+    // Six topics, two labs and the practice exam.
+    expect(rows).toHaveLength(9);
+    for (const r of rows) {
+      const lead = r.firstElementChild!;
+      expect(lead.tagName.toLowerCase(), r.textContent ?? "").toBe("span");
+      expect(lead.className.split(" "), r.textContent ?? "").toEqual(expect.arrayContaining(["w-8", "shrink-0"]));
+    }
+    const topic = row("Security controls, Not started").firstElementChild!;
+    expect(topic).toHaveAttribute("aria-hidden");
+    expect(topic).toBeEmptyDOMElement();
+    expect(row("Exam, Full-length timed practice exam, One practice exam is free.").firstElementChild).toHaveTextContent(/^Exam$/);
+    const lab = rows.find((r) => r.textContent?.startsWith("Lab"))!;
+    expect(lab.firstElementChild).toHaveTextContent(/^Lab$/);
+  });
 });
 
 describe("the practice exam's row", () => {

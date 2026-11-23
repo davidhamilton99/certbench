@@ -171,8 +171,33 @@ describe("RehearsalPlayer", () => {
     const swatch = (state: string) => screen.getByText(state).closest("li")!.querySelector("span[aria-hidden]")!.className;
     expect(swatch("Answered")).toContain("forced-colors:bg-[Highlight]");
     expect(swatch("Flagged")).toContain("forced-colors:bg-[CanvasText]");
-    expect(swatch("Current question")).toContain("forced-colors:bg-[Highlight]");
+    // The current question's line: the colour of the rule under a current cell that is not answered.
+    expect(swatch("Current question")).toContain("forced-colors:forced-color-adjust-none");
+    expect(swatch("Current question")).toContain("forced-colors:bg-[CanvasText]");
     expect(swatch("Not answered")).not.toContain("forced-colors:");
+  });
+
+  // The rule under the current question's number is drawn in the cell's text
+  // colour. A contrast theme replaced that colour with the cell's background,
+  // so the rule that the key names was not drawn under it.
+  it("keeps the current question's rule under a Windows contrast theme, answered or not", () => {
+    const ruleOf = (name: string) =>
+      [...screen.getByRole("button", { name }).querySelectorAll("span[aria-hidden]")].find((s) => s.className.includes("h-0.5"));
+    for (const [picks, name] of [
+      [[0, null, null], "Question 1: answered"],
+      [[null, null, null], "Question 1: not answered"],
+    ] as const) {
+      setup(makeRun({ picks: [...picks] }));
+      fireEvent.click(gridButton(1));
+      const rule = ruleOf(name);
+      expect(rule, name).toBeDefined();
+      expect(rule!.className.split(" "), name).toEqual(
+        expect.arrayContaining(["bg-current", "forced-colors:forced-color-adjust-none"])
+      );
+      // Only the current cell has one.
+      expect(ruleOf("Question 2: not answered")).toBeUndefined();
+      cleanup();
+    }
   });
 
   it("says how many are blank before scoring, and can send them back to answer them", () => {

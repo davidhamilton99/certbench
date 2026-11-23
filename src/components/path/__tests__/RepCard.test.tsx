@@ -132,7 +132,7 @@ describe("RepCard — a question whose explanation names its answers by letter",
   it("keeps B in its key box once marked, and still draws the check, at the end of the answer", () => {
     render(<RepCard rep={letteredRep} onAnswer={() => {}} onNext={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /SYN flood/ }));
-    const right = screen.getByRole("button", { name: /^Your answer, which is correct: ?SYN flood$/ });
+    const right = screen.getByRole("button", { name: /^Your answer, which is correct: ?B\. ?SYN flood$/ });
     const box = keyBox(/SYN flood/);
     expect(box).toHaveTextContent(/^B$/);
     expect(box.querySelector("svg")).toBeNull();
@@ -149,11 +149,41 @@ describe("RepCard — a question whose explanation names its answers by letter",
   it("keeps the letter of a wrong answer, with the cross at its end, beside the correct one's check", () => {
     render(<RepCard rep={letteredRep} onAnswer={() => {}} onNext={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /Smurf attack/ }));
-    const wrong = screen.getByRole("button", { name: /^Your answer, which is incorrect: ?Smurf attack$/ });
+    const wrong = screen.getByRole("button", { name: /^Your answer, which is incorrect: ?A\. ?Smurf attack$/ });
     expect(keyBox(/Smurf attack/)).toHaveTextContent(/^A$/);
     expect(marks(wrong)).toEqual(["x"]);
     expect(keyBox(/SYN flood/)).toHaveTextContent(/^B$/);
-    expect(marks(screen.getByRole("button", { name: /^Correct answer: ?SYN flood$/ }))).toEqual(["check"]);
+    expect(marks(screen.getByRole("button", { name: /^Correct answer: ?B\. ?SYN flood$/ }))).toEqual(["check"]);
+  });
+
+  // The explanation names the answers by letter, and the key box that prints
+  // each letter is hidden from a screen reader: the letter is said in each
+  // answer's name, before and after marking, as MultipleChoice says it.
+  // (The test's DOM library drops the space at the edge of an inline span; a browser keeps it.)
+  it("says each answer's letter to a screen reader, before marking and with the mark after it", () => {
+    render(<RepCard rep={letteredRep} onAnswer={() => {}} onNext={() => {}} />);
+    expect(screen.getByRole("button", { name: /^A\. ?Smurf attack$/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^B\. ?SYN flood$/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^C\. ?Teardrop attack$/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^D\. ?Ping of death$/ })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /^C\. ?Teardrop attack$/ }));
+    expect(screen.getByRole("button", { name: /^A\. ?Smurf attack$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Correct answer: ?B\. ?SYN flood$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Your answer, which is incorrect: ?C\. ?Teardrop attack$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^D\. ?Ping of death$/ })).toBeDisabled();
+  });
+
+  // A shuffled question's letter is only its place for this learner, which the
+  // order the answers are read in already gives: as in MultipleChoice, it is not said.
+  it("says no letter for a lettered question whose explanation names none, before or after marking", () => {
+    render(<RepCard rep={{ ...letteredRep, keepsLetters: undefined }} onAnswer={() => {}} onNext={() => {}} />);
+    expect(screen.getByRole("button", { name: "Smurf attack" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "SYN flood" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Smurf attack" }));
+    expect(screen.getByRole("button", { name: /^Your answer, which is incorrect: ?Smurf attack$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Correct answer: ?SYN flood$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Teardrop attack" })).toBeDisabled();
   });
 
   it("is unchanged for a question whose explanation names no letter: the check takes the letter's place", () => {

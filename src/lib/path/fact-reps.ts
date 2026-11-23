@@ -29,11 +29,11 @@ const VALUE = /\{value(:lowerFirst)?\}/g;
 const lowerFirst = (cell: string) => (/^[A-Z][a-z]/.test(cell) ? cell[0].toLowerCase() + cell.slice(1) : cell);
 
 /**
- * A deck's question as a sentence that names the term ("Which port does POP3S
- * use?"), from its template in src/data/recall/questions.ts, or null for a
- * deck that has none: that deck prints the term, with a cue under it that the
- * card reads as part of the question. `reversed`: the deck's answer column is
- * the cue.
+ * A deck's question as a sentence that names the term ("Which port or ports
+ * does POP3S use?"), from its template in src/data/recall/questions.ts, or
+ * null for a deck that has none: that deck prints the term, with a cue under
+ * it that the card reads as part of the question. `reversed`: the deck's
+ * answer column is the cue.
  */
 function questionFor(deckId: string, cue: string, reversed: boolean): string | null {
   const text = RECALL_QUESTIONS[deckId];
@@ -78,7 +78,9 @@ export function recallToRep(deck: ResolvedDeck, itemId: string, objective: strin
       tier: "recall",
       objective,
       prompt: question ?? q.promptValue,
-      cue: `Type the ${prettyLabel(q.answerLabel)}`,
+      // A typed card is always asked the deck's own way, so the field's words
+      // follow that question where the deck gives them.
+      cue: RECALL_QUESTIONS[deck.config.id]?.typedCue ?? `Type the ${prettyLabel(q.answerLabel)}`,
       accept: q.acceptable,
       answerText: q.answer,
       takeaway,

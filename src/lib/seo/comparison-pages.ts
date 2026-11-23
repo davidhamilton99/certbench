@@ -302,7 +302,7 @@ export const ROUNDUP: RoundupData = {
   path: "best-security-plus-practice-tests",
   metaTitle: "Best Security+ practice tests and exams in 2026",
   metaDescription:
-    "CertBench publishes this guide to CompTIA Security+ (SY0-701) practice tests in 2026 and is one of the six products in it. The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster, Dion Training, ExamCompass and Professor Messer.",
+    "CertBench publishes this guide to CompTIA Security+ (SY0-701) practice tests in 2026 and is one of the six products in it. The guide sets out the strengths and limitations of Boson, CertBench, CertMaster, Dion Training, ExamCompass and Professor Messer.",
   h1: "The best Security+ practice tests and exams in 2026",
   intro: [
     GUIDE_DISCLOSURE,
@@ -404,7 +404,7 @@ export const A_PLUS_ROUNDUP: RoundupData = {
   path: "best-a-plus-practice-tests",
   metaTitle: "Best CompTIA A+ practice tests and exams in 2026",
   metaDescription:
-    "CertBench publishes this guide to CompTIA A+ (220-1201 and 220-1202) practice tests in 2026 and is one of the six products in it. The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster, Jason Dion, Professor Messer and TotalTester.",
+    "CertBench publishes this guide to CompTIA A+ (220-1201 and 220-1202) practice tests in 2026 and is one of the six products in it. The guide sets out the strengths and limitations of Boson, CertBench, CertMaster, Jason Dion, Professor Messer and TotalTester.",
   h1: "The best CompTIA A+ practice tests and exams in 2026",
   intro: [
     GUIDE_DISCLOSURE,
@@ -515,7 +515,7 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
   // With the layout's " | CertBench" the title tag stays within the 60 characters a search result shows.
   metaTitle: "Best Network+ practice tests and exams in 2026",
   metaDescription:
-    "CertBench publishes this guide to CompTIA Network+ (N10-009) practice tests in 2026 and is one of the four products in it. The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster and Jason Dion.",
+    "CertBench publishes this guide to CompTIA Network+ (N10-009) practice tests in 2026 and is one of the four products in it. The guide sets out the strengths and limitations of Boson, CertBench, CertMaster and Jason Dion.",
   h1: "The best CompTIA Network+ practice tests and exams in 2026",
   intro: [
     GUIDE_DISCLOSURE,
@@ -533,7 +533,8 @@ export const NETWORK_PLUS_ROUNDUP: RoundupData = {
       isSelf: true,
       strengths: [
         "A study path written for N10-009: every topic in short steps, a readiness checkpoint, then timed full-length practice exams, with spaced repetition of every question that you miss",
-        "Free subnetting and port-number drills against the clock, and hands-on network diagram labs",
+        // Only the subnetting drill shows the pace of the answers: the port numbers quiz shows no time.
+        "A free subnetting drill against the clock, a free port numbers quiz and hands-on network diagram labs",
         "More than 600 Network+ questions. Free: a full-length 90-question exam and 12 hands-on labs",
       ],
       weaknesses: [WEB_APP_ONLY, "A newer question bank than the established products"],

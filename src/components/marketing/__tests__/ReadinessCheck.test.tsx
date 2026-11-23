@@ -60,8 +60,8 @@ describe("ReadinessCheck", () => {
         objectiveCount={5}
       />
     );
-    fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: "80" }));
-    const correct = answers("Which port does DNS use?").getByRole("button", { name: /^Correct answer: ?53$/ });
+    fireEvent.click(answers("Which port does DNS use?").getByRole("button", { name: /^B\. ?80$/ }));
+    const correct = answers("Which port does DNS use?").getByRole("button", { name: /^Correct answer: ?A\. ?53$/ });
     expect(correct.querySelector("[aria-hidden]")?.textContent).toBe("A");
   });
 

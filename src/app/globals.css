@@ -642,9 +642,8 @@
  * pressed toggle, the open tab, the current question or page) would then look
  * like every other control, so under such a theme it is drawn as a frame in
  * the theme's highlight colour, which the theme keeps. The frame is an outline
- * inside the control's own edge, so nothing moves and no parent clips it; the
- * keyboard's ring then stands outside it, so a control can show both. It is
- * outside every layer so that the utilities that draw these states in
+ * inside the control's own edge, so nothing moves and no parent clips it. It
+ * is outside every layer so that the utilities that draw these states in
  * ordinary colours do not override it.
  * ========================================================================= */
 @media (forced-colors: active) {
@@ -657,6 +656,13 @@
     outline: 2px solid Highlight;
     outline-offset: -3px;
   }
+  /* With the keyboard on it, a chosen control keeps its frame and gains the
+     ring as well. Chromium paints the border of every focused control in the
+     highlight colour, and an element has one outline, so neither of them alone
+     can tell a focused chosen control from any other focused control. A double
+     outline draws both lines: seven pixels from three inside the edge give a
+     2px line where the frame stands, a gap over the border, and a 2px line from
+     two to four pixels outside, where every other control's ring stands. */
   :is(
       [aria-pressed="true"],
       [aria-checked="true"],
@@ -664,6 +670,7 @@
       :is(a, button)[aria-current]:not([aria-current="false"]),
       [data-state="chosen"]
     ):focus-visible {
-    outline-offset: 2px;
+    outline: 7px double Highlight;
+    outline-offset: -3px;
   }
 }

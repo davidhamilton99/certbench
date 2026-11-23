@@ -2541,6 +2541,69 @@ describe("recording that a visitor has started the study path", () => {
     expect(track).not.toHaveBeenCalledWith("path_account_linked", expect.anything());
   });
 
+  /** A practice exam that this device finished on the exam's public page, signed out. */
+  function publicExamOnDevice() {
+    const uuid = (i: number) => `${String(i).padStart(8, "0")}-2222-4222-8222-222222222222`;
+    const examReps = Array.from({ length: 12 }, (_, i) => rep(`q|1.1|${uuid(i)}`, "1.1", "exam"));
+    const at = Date.now() - 600_000;
+    localStorage.setItem(
+      pathRehearsalKey(`${CERT}-practice-test`),
+      JSON.stringify({
+        v: 1,
+        owner: "public",
+        size: "half",
+        asStop: false,
+        reps: examReps,
+        picks: examReps.map((_, i) => (i < 8 ? 0 : 1)),
+        flagged: [],
+        i: 0,
+        spentMs: 900_000,
+        limitMs: 2_700_000,
+        startedAt: at - 900_000,
+        done: {
+          result: { score: 67, at, domains: [{ number: "1.0", correct: 8, total: 12 }], size: "half", answered: 12, total: 12, seconds: 900 },
+          before: null,
+          timedOut: false,
+        },
+      })
+    );
+  }
+
+  // A visitor took the free practice exam on its public page and made an account
+  // at its score. The study path takes the exam as its checkpoint, so the copy
+  // has started before anything is answered here: the start is owed to the
+  // first answer on this page.
+  it("records it once for a new account whose study path began with the public practice exam", async () => {
+    publicExamOnDevice();
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    renderPath();
+    // The page opens on the exam's result, and nothing is answered yet.
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_checkpoint_completed", expect.objectContaining({ source: "practice_exam" }));
+    expect(starts()).toHaveLength(0);
+
+    // Home, and on to the next step: its first answer is the first on this page.
+    fireEvent.click(headerLink());
+    fireEvent.click(await screen.findByRole("button", { name: /^Continue/ }));
+    await screen.findByRole("button", { name: /Right answer/ });
+    await answer(true);
+    expect(starts()).toEqual([["path_started", { cert: CERT }]]);
+    expect(localStorage.getItem(`cb_path_start_owed_${CERT}`)).toBeNull();
+    await screen.findByRole("button", { name: /Right answer/ });
+    await answer(true);
+    expect(starts()).toHaveLength(1);
+  });
+
+  it("owes no start for an exam carried into a study path that had begun already", async () => {
+    publicExamOnDevice();
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderPath();
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+    expect(localStorage.getItem(`cb_path_start_owed_${CERT}`)).toBeNull();
+    expect(starts()).toHaveLength(0);
+  });
+
   it("records nothing more for a copy that was begun on this page on an earlier visit", async () => {
     const first = renderPath();
     await act(async () => {});

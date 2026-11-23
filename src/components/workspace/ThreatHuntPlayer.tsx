@@ -11,6 +11,8 @@ import { PbqUpsellCard, type PbqUpsell } from "@/components/workspace/pbq-upsell
 import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { LabHeader, LabScore, useKeepInView, useStarted, type LabVerdicts } from "@/components/workspace/LabKit";
 import { ConsoleFrame, Ticket } from "@/components/workspace/SimCaseFile";
+import { domainLabel } from "@/components/path/lab-types";
+import { domainName } from "@/lib/seo/objective-meta";
 import { cn } from "@/lib/utils";
 
 /** A hunt's verdict in each band of its score. */
@@ -164,7 +166,7 @@ export function ThreatHuntPlayer({
     <div ref={root} className="flex min-w-0 flex-col gap-4 sm:gap-5">
       <LabHeader
         title={scenario.title}
-        subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+        subtitle={`Domain ${domainLabel(scenario.domain_number)}: ${domainName(scenario.domain_title)}`}
         onBack={onBack}
         backLabel={backLabel}
         takeFocus={takeFocus}

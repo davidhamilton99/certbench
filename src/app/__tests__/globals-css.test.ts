@@ -175,8 +175,24 @@ describe("globals.css under a Windows contrast theme", () => {
     expect(forced).toMatch(/outline:\s*2px solid Highlight/);
     // Inside the control's own edge, so nothing moves and no parent clips it.
     expect(forced).toMatch(/outline-offset:\s*-3px/);
-    // The keyboard's ring stands outside the frame on a control that has both.
-    expect(forced).toMatch(/\):focus-visible\s*\{\s*outline-offset:\s*2px/);
+  });
+
+  it("keeps the frame and adds the keyboard's ring on a chosen control that has the focus", () => {
+    // Chromium paints the border of every focused control in Highlight, and an
+    // element has one outline: a frame that moved outside on focus left a
+    // focused chosen control looking like any other focused control.
+    const focused = block(forced ?? "", /\):focus-visible\s*\{/) ?? "";
+    const double = /outline:\s*(\d+)px double Highlight;\s*outline-offset:\s*(-\d+)px;/.exec(focused);
+    expect(double).not.toBeNull();
+    const width = Number(double![1]);
+    const offset = Number(double![2]);
+    // Chromium draws each line of a double outline (width + 1) / 3 pixels wide, rounded down.
+    const line = Math.floor((width + 1) / 3);
+    // The inner line is the frame, where it stands without the focus: 2px wide, from 3px inside the edge.
+    expect(line).toBe(2);
+    expect(offset).toBe(-3);
+    // The outer line is the ring, where every other control's ring stands: 2px wide, 2px outside the edge.
+    expect(width + offset).toBe(2 + 2);
   });
 
   it("keeps that rule outside every layer, so the utilities that draw the states in colour cannot override it", () => {

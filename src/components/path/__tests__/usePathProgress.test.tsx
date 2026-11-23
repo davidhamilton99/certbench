@@ -656,6 +656,47 @@ describe("a first visit to a newer exam version", () => {
     await carried();
     expect(store.has(OWED(NEWER))).toBe(false);
   });
+
+  // `path_account_linked` with the method "redirect" counts an account that the
+  // save request made. Work that a public page began is marked so, and the mark
+  // goes with the work to the newer version.
+  const BEGUN = (cert: string) => `cb_path_begun_public_${cert}`;
+
+  it("passes on the mark that a public page began the earlier copy, and leaves that copy its own", async () => {
+    seed(null, answered("a|1.2|w3"));
+    store.set(BEGUN(CERT), "1");
+    openNewer();
+    await carried();
+    expect(store.get(BEGUN(NEWER))).toBe("1");
+    expect(store.get(BEGUN(CERT))).toBe("1");
+  });
+
+  it("passes on no such mark when a public page did not begin the earlier copy", async () => {
+    seed(null, answered("a|1.2|w3"));
+    openNewer();
+    await carried();
+    expect(store.has(BEGUN(NEWER))).toBe(false);
+  });
+
+  // The home page's samples began the earlier copy. The visitor opens the newer
+  // version, leaves before any save request, makes an account elsewhere (the
+  // header's sign-up, the practice exam's score gate) and comes back signed in.
+  it("records no path_account_linked when that account then opens the newer version and takes the work", async () => {
+    seed(null, answered("a|1.2|w3"));
+    store.set(BEGUN(CERT), "1");
+    const visit = openNewer();
+    await carried();
+    visit.unmount();
+
+    signIn();
+    const { result } = openNewer();
+    await waitFor(() => expect(saves()).toHaveLength(1));
+    expect(result.current.userId).toBe("u1");
+    expect(items(saves()[0].progress)).toEqual(["a|1.1|w3"]);
+    expect(track).not.toHaveBeenCalledWith("path_account_linked", expect.anything());
+    // The work is the account's now, and the mark goes with it.
+    expect(store.has(BEGUN(NEWER))).toBe(false);
+  });
 });
 
 describe("saving to the account", () => {

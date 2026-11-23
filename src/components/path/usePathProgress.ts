@@ -20,7 +20,13 @@ import {
   type LocalPath as LocalState,
 } from "./local-path";
 import { carryOverPreV15Path } from "./carry-over";
-import { begunOnPublicPage, clearBegunOnPublicPage, oweStartEvent, startEventOwed } from "./path-start";
+import {
+  begunOnPublicPage,
+  clearBegunOnPublicPage,
+  markBegunOnPublicPage,
+  oweStartEvent,
+  startEventOwed,
+} from "./path-start";
 import { carryFromEarlierVersion, type VersionCarry } from "./version-carry";
 import { pathGuestKey, pathStorageKey } from "./storage-key";
 import {
@@ -66,6 +72,17 @@ const trackCarry = (cert: PathCert, carry: VersionCarry) =>
  */
 function passOnOwedStart(cert: PathCert, carry: VersionCarry, answeredHere: boolean) {
   if (carry.source === "device" && !answeredHere && startEventOwed(carry.from)) oweStartEvent(cert);
+}
+
+/**
+ * The same carry passes on the mark that a public page began the earlier copy
+ * (path-start.ts). The carried copy here then holds that work, and an account
+ * made anywhere but the save request is not counted as the request's when it
+ * opens this version and takes the work. The earlier version keeps its own
+ * mark. Nothing is passed on when the answers came from an account.
+ */
+function passOnBegunOnPublicPage(cert: PathCert, carry: VersionCarry) {
+  if (carry.source === "device" && begunOnPublicPage(carry.from)) markBegunOnPublicPage(cert);
 }
 
 /**
@@ -534,6 +551,7 @@ export function usePathProgress(cert: PathCert) {
       if (carry) {
         trackCarry(cert, carry);
         passOnOwedStart(cert, carry, answeredHere);
+        passOnBegunOnPublicPage(cert, carry);
       }
     };
 
@@ -593,6 +611,7 @@ export function usePathProgress(cert: PathCert) {
       if (carry) {
         trackCarry(cert, carry);
         passOnOwedStart(cert, carry, answeredHere);
+        passOnBegunOnPublicPage(cert, carry);
       }
       if (adopted.account.reached && (adopted.unsynced || carry || answeredMeanwhile)) {
         void saveToAccount(next.progress);
@@ -836,6 +855,7 @@ export function usePathProgress(cert: PathCert) {
       if (carry) {
         trackCarry(cert, carry);
         passOnOwedStart(cert, carry, answeredHere);
+        passOnBegunOnPublicPage(cert, carry);
       }
       if (owed || carry) void saveToAccount(progress);
     })().finally(() => {

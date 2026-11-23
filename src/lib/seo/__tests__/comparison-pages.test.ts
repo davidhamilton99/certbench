@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PRO_PRICE_SHORT, PRO_PRICE_TERMS } from "@/lib/pricing/terms";
 import { PBQ_EXAMPLE_PAGES, PRACTICE_TEST_PAGES } from "../cert-pages";
@@ -15,6 +17,30 @@ const LONG_DATE = /^(?:January|February|March|April|May|June|July|August|Septemb
 const WHERE_TO_FIND = /^See [A-Z][\w ]*'s own site for the current price$/;
 const tools = (guide: { tools: RoundupTool[] }) => guide.tools;
 const find = (guide: { tools: RoundupTool[] }, name: RegExp) => tools(guide).find((tool) => name.test(tool.name));
+
+/** Words in a product's name that name no one product: its exam's vendor and the kind of product. */
+const GENERIC = new Set(["CompTIA", "Practice"]);
+
+/** The products of a guide that a sentence names, by any distinctive word of each name ("Boson", "CertMaster", "Dion"). */
+const namedIn = (words: string, guide: { tools: RoundupTool[] }) =>
+  tools(guide).filter((tool) =>
+    tool.name
+      .split(/[\s()]+/)
+      .filter((word) => /^[A-Z][\w-]{3,}$/.test(word) && !GENERIC.has(word))
+      .some((word) => new RegExp(`(?<![\\w-])${word}(?![\\w-])`).test(words))
+  );
+
+/**
+ * The products whose price a guide's description promises without the guide
+ * printing it from the vendor's own page: every product a description names,
+ * once it speaks of prices, other than CertBench, whose price is its own.
+ */
+const unsourcedPrices = (guide: { metaDescription: string; tools: RoundupTool[] }) =>
+  /\bprices?\b/i.test(guide.metaDescription)
+    ? namedIn(guide.metaDescription, guide)
+        .filter((tool) => !tool.isSelf && !(tool.source && tool.checked))
+        .map((tool) => tool.name)
+    : [];
 
 describe("the guides to practice tests", () => {
   it("say who publishes them in the description, the opening line and the publisher's own entry", () => {
@@ -50,6 +76,23 @@ describe("the guides to practice tests", () => {
     expect(ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster, Dion Training, ExamCompass and Professor Messer.");
     expect(A_PLUS_ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster, Jason Dion, Professor Messer and TotalTester.");
     expect(NETWORK_PLUS_ROUNDUP.metaDescription).toContain("Boson, CertBench, CertMaster and Jason Dion.");
+  });
+
+  // The description is shown in search results, in the guide's structured data
+  // and under "Guides for other exams" on the other guides. Round 5 replaced the
+  // prices that could not be read with where to find them, and the descriptions
+  // still promised the prices of every product (FW-03).
+  it("promise no price in a description that the guide does not print from the vendor's own page", () => {
+    for (const guide of ROUNDUPS) expect(unsourcedPrices(guide), guide.path).toEqual([]);
+    // The check knows the promise in the form it was written in.
+    const promised =
+      "The guide sets out the strengths, limitations and prices of Boson, CertBench, CertMaster, Dion Training, ExamCompass and Professor Messer.";
+    expect(unsourcedPrices({ ...ROUNDUP, metaDescription: promised })).toEqual(["CompTIA CertMaster Practice", "ExamCompass"]);
+    // A description may name the prices that were read, and CertBench's own.
+    expect(unsourcedPrices({ ...NETWORK_PLUS_ROUNDUP, metaDescription: "It gives the prices of Boson and CertBench." })).toEqual([]);
+    expect(unsourcedPrices({ ...NETWORK_PLUS_ROUNDUP, metaDescription: "It gives the prices of Boson and Jason Dion." })).toEqual([
+      "Jason Dion Network+ practice exams (Udemy)",
+    ]);
   });
 
   it("say whose judgments the entries are, and which prices were read at the source", () => {
@@ -110,6 +153,20 @@ describe("the guides to practice tests", () => {
       expect(tool.checked, tool.name).toBeUndefined();
       expect(tool.source, tool.name).toBeUndefined();
     }
+  });
+
+  // The drill player shows the pace of the answers only where a drill asks for
+  // it (`pace`), and only the subnetting drill does: the port quiz shows no time (FW-08).
+  it("say that only the subnetting drill is played against the clock, as the drills themselves do", () => {
+    expect(find(NETWORK_PLUS_ROUNDUP, /^CertBench$/)!.strengths).toContain(
+      "A free subnetting drill against the clock, a free port numbers quiz and hands-on network diagram labs"
+    );
+    expect(JSON.stringify([ROUNDUPS, VS_PAGES]).match(/[^."]*against the clock/g)).toEqual([
+      "A free subnetting drill against the clock",
+    ]);
+    const drill = (file: string) => readFileSync(join(process.cwd(), "src/components/marketing", file), "utf8");
+    expect(drill("SubnettingPractice.tsx")).toMatch(/<DrillPlayer[^>]*\bpace\b/);
+    expect(drill("PortQuiz.tsx")).not.toMatch(/\bpace\b/);
   });
 
   it("describe no Professor Messer practice exams for Network+, because none was found on his N10-009 page", () => {

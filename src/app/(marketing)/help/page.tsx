@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LanderPage } from "@/components/marketing/lander/Lander";
 import { ArticleBody, ArticleHero, ArticleSection } from "@/components/marketing/lander/Article";
 import { COLUMN } from "@/components/marketing/lander/layout";
+import { LinkPending } from "@/components/ui/link-arrow";
 import { FREE_LAB_COUNT, LABS_WITHOUT_ACCOUNT } from "@/core/path/free-labs";
 import { CHECKPOINT_SIZE, MAX_RESURFACED, PRACTICE_SIZE } from "@/core/path/plan";
 import { REVIEW_AGAIN_DAYS } from "@/core/path/progress";
@@ -218,8 +219,9 @@ function SectionBlock({ section }: { section: Section }) {
               <p>{item.a}</p>
               {item.link && (
                 <p>
+                  {/* A page such as /start has no loading screen: the link itself answers the press. */}
                   <Link href={item.link.href} className="cb-link">
-                    {item.link.label}
+                    <LinkPending>{item.link.label}</LinkPending>
                   </Link>
                 </p>
               )}

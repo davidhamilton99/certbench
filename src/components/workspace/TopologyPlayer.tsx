@@ -9,6 +9,8 @@ import type { PbqHostProps } from "@/components/workspace/pbq-host";
 import { StagedLab, type LabStage } from "@/components/workspace/LabKit";
 import { EvidenceConsole, Ticket } from "@/components/workspace/SimCaseFile";
 import { TopologyDiagram, type DeviceMark } from "@/components/workspace/TopologyDiagram";
+import { domainLabel } from "@/components/path/lab-types";
+import { domainName } from "@/lib/seo/objective-meta";
 
 /**
  * A topology lab, played on its network map. Each device that needs fixing
@@ -61,7 +63,7 @@ export function TopologyPlayer({
     <StagedLab
       scenarioId={scenario.id}
       title={scenario.title}
-      subtitle={`${scenario.domain_number} ${scenario.domain_title}`}
+      subtitle={`Domain ${domainLabel(scenario.domain_number)}: ${domainName(scenario.domain_title)}`}
       stages={stages}
       noun="Device"
       renderCase={({ stage, run, credit }) => (

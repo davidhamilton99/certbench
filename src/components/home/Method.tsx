@@ -5,6 +5,7 @@ import type { PathLabInfo, PathStructure } from "@/core/path/types";
 import { HANDS_ON } from "@/core/path/labs";
 import { ScoreBar, ScoreLevel } from "@/components/instrument/ScoreLevel";
 import { labMeta } from "@/components/path/lab-types";
+import { LinkPending } from "@/components/ui/link-arrow";
 import { keepCodes } from "@/lib/keep-codes";
 import { domainName } from "@/lib/seo/objective-meta";
 import { READINESS_TARGET, bandFor } from "@/lib/readiness/band";
@@ -232,8 +233,9 @@ function Part({
         <h3 className="cb-subsection">{title}</h3>
         <p className="cb-measure text-body text-muted-foreground">{body}</p>
         <div className="grid gap-2 pt-1">
+          {/* A page such as /start has no loading screen: the link itself answers the press. */}
           <Link href={link.href} className="cb-link cb-tap w-fit font-semibold">
-            {link.label}
+            <LinkPending>{link.label}</LinkPending>
           </Link>
           {note && <p className="cb-measure-sm text-small text-muted-foreground">{keepCodes(note)}</p>}
         </div>

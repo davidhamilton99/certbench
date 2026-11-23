@@ -694,7 +694,7 @@ describe("/security-plus-sy0-801-vs-sy0-701", () => {
     const page = text(doc.body);
     expect(page).not.toMatch(/lead to the same/);
     expect(text(doc.querySelector("header"))).toContain(
-      "CompTIA lists both exams as versions of Security+, and SY0-701 has three years of study material behind it."
+      "CompTIA lists both exams as versions of Security+, and in CertBench's view SY0-701 has three years of study material behind it."
     );
     expect(page).toContain(
       "The certification: CompTIA lists both exams as versions of Security+, and a Security+ certification is valid for three years from the day that you pass."
@@ -770,6 +770,20 @@ describe("the SY0-801 reading pages", () => {
     }
     expect(band(served(<SecurityPlusV8Page />)).querySelector("p.cb-measure-sm.text-small")).not.toBeNull();
     expect(band(served(<Sy0801AiQuestionsPage />)).querySelector("p.cb-measure-sm.text-small")).not.toBeNull();
+  });
+
+  // No source says how much study material either version has (FW-10), so
+  // wherever a page says it, in its text or its structured data, it is CertBench's view.
+  it("give the study material behind SY0-701 as CertBench's view, everywhere they mention it", () => {
+    for (const page of [<SecurityPlusV8Page key="v8" />, <SecurityPlusVersionsPage key="vs" />]) {
+      const doc = served(page);
+      const said = [text(doc.body), JSON.stringify(jsonLd(doc))]
+        .join(" ")
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) => /study material/i.test(sentence));
+      expect(said.length).toBeGreaterThan(0);
+      for (const sentence of said) expect(sentence).toContain("CertBench's view");
+    }
   });
 });
 

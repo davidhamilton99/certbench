@@ -90,7 +90,7 @@ import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
 import { usePathProgress } from "./usePathProgress";
 import { mayTakeExam, readExamMark, writeExamMark } from "./local-path";
 import { pathUnlockedKey } from "./storage-key";
-import { takeOwedStartEvent } from "./path-start";
+import { oweStartEvent, takeOwedStartEvent } from "./path-start";
 import { reloadPage } from "./reload-page";
 import { whenIdleAfterLoad } from "./when-idle";
 
@@ -1231,6 +1231,12 @@ export function PathApp({
       if (!run.claimedBy && mark?.at !== exam.result.at) writeExamMark(cert, { at: exam.result.at, by: null });
       return;
     }
+    // An exam that begins the study path (nothing had started before it) leaves
+    // the copy started before any answer is given here, as a public page's
+    // questions do: the page then owes `path_started` for the first answer on
+    // it (path-start.ts). A learner whose account had begun a study path is
+    // never counted again (onAnswer).
+    if (!hasStarted(p.progress)) oweStartEvent(cert);
     const asCheckpoint = p.importExam(exam.answers, exam.result);
     writeExamMark(cert, { at: exam.result.at, by: p.userId });
     // The exam is this account's now, on the public page as well: it shows a

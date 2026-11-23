@@ -1,7 +1,7 @@
 /**
  * The question that a recall deck asks, as a sentence that names the term:
- * "Which port does POP3S use?", where the card once printed the bare term
- * ("POP3S") with "Which port?" under it. These are the decks of the
+ * "Which port or ports does POP3S use?", where the card once printed the bare
+ * term ("POP3S") with "Which port?" under it. These are the decks of the
  * introductory questions of Network+ and of both A+ cores, the first questions
  * a visitor answers on those exams' public pages.
  *
@@ -10,6 +10,8 @@
  * {value} is replaced by the cue as the table has it. A cue that does not fit
  * its template as it stands (a pair of ports written "20/21", a purpose
  * written as a note) has a question of its own in `rows`, under the cue.
+ * `typedCue` is what the field of a typed card asks for, where "Type the
+ * {answer}" would not agree with the question.
  *
  * Only the words of the question are here. A question's id is made from the
  * deck and the row (src/core/path/rep-id.ts), never from these words, so they
@@ -19,18 +21,21 @@ export interface DeckQuestionText {
   ask: string;
   reverse?: string;
   rows?: Readonly<Record<string, string>>;
+  typedCue?: string;
 }
 
-/** Ports and protocols: the same table in Network+ and A+ Core 1. */
+/**
+ * Ports and protocols: the same table in Network+ and A+ Core 1. A protocol's
+ * question is asked in the same words whether it uses one port or several:
+ * "Which ports does FTP use?" told the learner that the answer was the one
+ * option with two ports in it. A typed answer may be any one of a protocol's
+ * ports (src/lib/recall/normalize.ts), so the field asks for a port number.
+ */
 const PORTS: DeckQuestionText = {
-  ask: "Which port does {value} use?",
+  ask: "Which port or ports does {value} use?",
   reverse: "Which protocol uses port {value}?",
+  typedCue: "Type a port number",
   rows: {
-    FTP: "Which ports does FTP use?",
-    DHCP: "Which ports does DHCP use?",
-    SNMP: "Which ports does SNMP use?",
-    SIP: "Which ports does SIP use?",
-    "NetBIOS/NetBT": "Which ports does NetBIOS/NetBT use?",
     "20/21": "Which protocol uses ports 20 and 21?",
     "67/68": "Which protocol uses ports 67 and 68?",
     "161/162": "Which protocol uses ports 161 and 162?",

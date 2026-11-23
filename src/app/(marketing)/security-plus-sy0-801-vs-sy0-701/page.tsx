@@ -57,7 +57,7 @@ const CHOICES = [
   {
     situation: "You are starting now, and you can take the exam by spring 2027",
     take: "SY0-701",
-    why: "Three years of study material exists for it, and you keep time for a retake before June 11.",
+    why: "In CertBench's view, it has three years of study material behind it, and you keep time for a retake before June 11.",
   },
   {
     situation: "Your exam date is after June 11, 2027",
@@ -85,7 +85,7 @@ const FAQS = [
   {
     question: "Should I take SY0-701 or switch to SY0-801?",
     answer:
-      "Take SY0-701 if you can take it by June 11, 2027, with time for a retake. CompTIA lists both exams as versions of Security+, and SY0-701 has three years of study material behind it. Take SY0-801 if your exam date falls after that, or if you have no date and would rather learn the newest objectives from the start.",
+      "Take SY0-701 if you can take it by June 11, 2027, with time for a retake. CompTIA lists both exams as versions of Security+, and in CertBench's view SY0-701 has three years of study material behind it. Take SY0-801 if your exam date falls after that, or if you have no date and would rather learn the newest objectives from the start.",
   },
   {
     question: "Will my Security+ expire early now that SY0-801 is out?",
@@ -149,7 +149,8 @@ export default function SecurityPlusVersionsPage() {
         <ArticleHero eyebrow="CompTIA Security+" title="Security+ SY0-801 vs SY0-701: which should you take?">
           <p>
             <strong>Choose SY0-701 if you can take it by June 11, 2027, with time for a retake.</strong> CompTIA lists
-            both exams as versions of Security+, and SY0-701 has three years of study material behind it.
+            both exams as versions of Security+, and in CertBench&apos;s view SY0-701 has three years of study material
+            behind it.
           </p>
           <p>
             <strong>Plan for SY0-801 if your exam date falls after that,</strong> or if you have no date yet and would

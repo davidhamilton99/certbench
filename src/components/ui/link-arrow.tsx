@@ -46,19 +46,25 @@ export function LinkArrow({ className }: { className?: string }) {
 }
 
 /**
- * The words of a link drawn as a button with no arrow (the header's "Start for
- * free"), for the same wait: while the link's page is on the way the words give
- * way to the small spinner, as a button's own `loading` state does. The words
- * stay in place unseen, so the button keeps its width and its name.
+ * The words of a link with no arrow, for the same wait: a link drawn as a
+ * button (the header's "Start for free") or a link in running text (a
+ * `cb-link`). While the link's page is on the way the words give way to the
+ * small spinner, as a button's own `loading` state does. The words stay in
+ * place unseen, so the link keeps its width and its name.
+ *
+ * The boxes are inline, because a text link's underline reaches only the words
+ * in inline boxes: a flex box here would take the underline off a text link.
+ * The spinner is placed over the words at a size of its own, since outside a
+ * Button nothing else sizes it.
  *
  * Use it as the child of a `next/link` `Link` (it reads that link's status).
  */
 export function LinkPending({ children }: { children: ReactNode }) {
   const waiting = useLinkWait();
   return (
-    <span className="relative inline-flex items-center justify-center">
+    <span className="relative">
       <span className={cn(waiting && "opacity-0")}>{children}</span>
-      {waiting && <Loader2 aria-hidden className="absolute animate-spin" />}
+      {waiting && <Loader2 aria-hidden className="absolute inset-0 m-auto size-4 animate-spin" />}
     </span>
   );
 }

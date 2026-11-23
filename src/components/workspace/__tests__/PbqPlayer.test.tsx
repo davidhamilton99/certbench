@@ -41,6 +41,16 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe("the lab's header", () => {
+  // The lab pages and the study path head a domain "Domain 1: Networking concepts";
+  // the open lab names its domain the same way, so one page never prints it twice over.
+  it("names the lab's domain as the pages around it do, in sentence case", () => {
+    render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);
+    expect(screen.getByText("Domain 1: Networking concepts")).toBeInTheDocument();
+    expect(screen.queryByText(/Networking Concepts|1\.0/)).toBeNull();
+  });
+});
+
 describe("ordering PBQs", () => {
   it("fills the next row with each press, and checks once every item is placed", () => {
     render(<PbqPlayer scenario={dora} onBack={vi.fn()} />);

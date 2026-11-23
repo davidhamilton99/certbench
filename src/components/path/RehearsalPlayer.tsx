@@ -463,8 +463,15 @@ export function RehearsalPlayer({
                       />
                     )}
                     {/* The question in hand: a rule under its number, which a
-                        focus ring cannot be mistaken for. */}
-                    {current && <span aria-hidden className="absolute inset-x-2.5 bottom-1 h-0.5 bg-current" />}
+                        focus ring cannot be mistaken for. It is drawn in the
+                        cell's own text colour, which a contrast theme would
+                        otherwise replace with the cell's background. */}
+                    {current && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-2.5 bottom-1 h-0.5 bg-current forced-colors:forced-color-adjust-none"
+                      />
+                    )}
                   </button>
                 </li>
               );
@@ -491,9 +498,10 @@ export function RehearsalPlayer({
               Flagged
             </li>
             <li className="inline-flex items-center gap-1.5">
+              {/* The rule of a current cell that is not answered: the cell's text colour. */}
               <span
                 aria-hidden
-                className="h-0.5 w-3 bg-foreground forced-colors:forced-color-adjust-none forced-colors:bg-[Highlight]"
+                className="h-0.5 w-3 bg-foreground forced-colors:forced-color-adjust-none forced-colors:bg-[CanvasText]"
               />
               Current question
             </li>

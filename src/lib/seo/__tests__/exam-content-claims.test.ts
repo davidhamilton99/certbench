@@ -28,6 +28,9 @@ const PUBLIC_COPY = [
   "src/components/marketing",
   "src/components/home",
   "src/components/path",
+  // Signed in, but its note and its page spoke of what the exam is made of (FW-06, 23 November 2026).
+  "src/components/recall",
+  "src/app/(workspace)/recall",
   "src/lib/seo",
   "public/llms.txt",
 ];
@@ -57,6 +60,8 @@ const CLAIMS: { claim: string; pattern: RegExp }[] = [
   { claim: "what carried over from one exam version to the next", pattern: /\bmost topics carr(?:y|ied) over\b/i },
   { claim: "a CompTIA conversion of the score", pattern: /\bdoes not publish the percentage\b/i },
   { claim: "what the N10-009 objectives include", pattern: /\bN10-009\)? exam objectives include\b|\bpart of the N10-009 exam objectives\b/i },
+  { claim: "what else the exam sets", pattern: /\bthe exam also sets\b|\bRecall is one part of the exam\b/i },
+  { claim: "what a learner must know for the exam", pattern: /\bthat you must know from memory\b/i },
 ];
 
 /**
@@ -112,6 +117,9 @@ describe("what the public pages say about the content of CompTIA's exams", () =>
 
   it("knows each claim in the form it was written in, and not the sentences that replaced it", () => {
     const said = [
+      "Recall is one part of the exam.",
+      "The exam also sets scenario questions and performance-based questions.",
+      "Recall drills the Network+ facts that you must know from memory.",
       "Every CompTIA exam expects you to know the port numbers from memory.",
       "This quiz covers the 35 ports that CompTIA tests.",
       "This quiz covers the 35 ports that the exams test, in both directions.",

@@ -178,10 +178,15 @@ export function ExamMap({
                     detail={selected === o.code ? detail : null}
                     highlight={isCurrent}
                   >
-                    {codes && (
+                    {codes ? (
                       <>
                         <span className="w-8 shrink-0 font-mono text-note tabular-nums text-muted-foreground">{o.code}</span>{" "}
                       </>
+                    ) : (
+                      // No number, but the column it would stand in is kept, so
+                      // that every title starts on one edge with the titles of
+                      // the labs and the practice exam, whose rows name their kind there.
+                      <span aria-hidden className="w-8 shrink-0" />
                     )}
                     <span className={cn("min-w-0 flex-1 text-small", isCurrent && "font-semibold")}>{o.title}</span>
                     <Pause />

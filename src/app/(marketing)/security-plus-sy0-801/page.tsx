@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "Should I take SY0-801 or SY0-701?",
     answer:
-      "If you can take the exam by June 11, 2027, with time for a retake, SY0-701 has more study material behind it, and CompTIA lists both exams as versions of Security+. If your date falls after that, or if you are starting now and have no date, plan for SY0-801.",
+      "If you can take the exam by June 11, 2027, with time for a retake, choose SY0-701: in CertBench's view it has more study material behind it, and CompTIA lists both exams as versions of Security+. If your date falls after that, or if you are starting now and have no date, plan for SY0-801.",
   },
 ];
 

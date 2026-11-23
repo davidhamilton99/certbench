@@ -56,7 +56,7 @@ export const domain5: AuthoredRep[] = [
   choice("5.3a", "5.3", "quick", "Which agreement sets the uptime and response times a provider must meet?",
     ["SLA", "NDA", "MOU", "BPA"],
     "An SLA sets measurable service levels, and what happens when they are missed."),
-  choice("5.3b", "5.3", "quick", "A contract clause lets the company inspect the vendor's security controls. What is it?",
+  choice("5.3b", "5.3", "quick", "Under its contract with a vendor, the company may inspect that vendor's security controls. What is this called?",
     ["Right-to-audit clause", "Non-disclosure agreement", "Rules of engagement", "Statement of work"],
     "A right-to-audit clause lets you verify a vendor's security instead of trusting it."),
   choice("5.3c", "5.3", "quick", "What is a non-binding document that records two parties' shared intentions called?",
@@ -76,7 +76,7 @@ export const domain5: AuthoredRep[] = [
     "Due diligence happens before you sign. Monitoring continues after."),
 
   // 5.4 Security compliance
-  choice("5.4a", "5.4", "quick", "A customer asks a company to delete all of their personal data. Which GDPR right is this?",
+  choice("5.4a", "5.4", "quick", "Under GDPR, a customer asks a company to delete all of their personal data. What is this called?",
     ["Right to be forgotten", "Data sovereignty", "Attestation", "Data retention"],
     "The right to be forgotten lets people have their personal data erased."),
   choice("5.4b", "5.4", "quick", "What is the person whose personal data is being collected called?",
@@ -122,7 +122,7 @@ export const domain5: AuthoredRep[] = [
     "Self-assessments are quick internal checks, but less independent."),
 
   // 5.6 Security awareness
-  choice("5.6a", "5.6", "quick", "IT sends staff a fake phishing email to see who clicks, then trains those who did. What is this called?",
+  choice("5.6a", "5.6", "quick", "IT sends staff a simulated scam email to see who clicks its link, then trains those who did. What is this called?",
     ["Phishing campaign", "Watering hole attack", "Tabletop exercise", "Threat hunt"],
     "Simulated phishing campaigns measure and train real behavior."),
   choice("5.6b", "5.6", "quick", "An email has a mismatched sender, an urgent tone and a link to an odd domain. What should you do?",
@@ -131,7 +131,7 @@ export const domain5: AuthoredRep[] = [
   choice("5.6c", "5.6", "quick", "An employee accidentally emails a customer spreadsheet to the wrong person. Which kind of behavior is this?",
     ["Unintentional", "Risky", "Unexpected", "Malicious"],
     "Training targets three kinds of anomalous behavior, which are risky, unexpected and unintentional."),
-  choice("5.6d", "5.6", "quick", "Remote staff are told to lock their screens and use the VPN on public Wi-Fi. Which topic does this guidance cover?",
+  choice("5.6d", "5.6", "quick", "Employees outside the office are told to lock their screens and use the VPN on public Wi-Fi. Which topic does this guidance cover?",
     ["Hybrid and remote work", "Insider threats", "Removable media", "Password management"],
     "Remote work needs its own guidance on screens, networks and home devices."),
   choice("5.6e", "5.6", "quick", "Which practice includes not posting photos of your badge or office whiteboards online?",

@@ -65,7 +65,8 @@ export interface RepAnswer {
  *
  * Screen readers. The answers are a group named by the question. A marked
  * answer says so in words ("Correct answer: "), and the verdict is read with
- * the Continue button as the focus moves to it.
+ * the Continue button as the focus moves to it. Where the explanation names
+ * the answers by their letters, each answer's letter is part of its name.
  */
 export function RepCard({
   rep,
@@ -238,11 +239,27 @@ export function RepCard({
     return "dimmed";
   }
 
-  function srPrefixOf(i: number): string | undefined {
-    if (rep.type !== "choice" || !answered) return undefined;
+  /** The mark in words, for a screen reader, once the question is answered. */
+  function markOf(i: number): string {
+    if (rep.type !== "choice" || !answered) return "";
     if (i === rep.answer) return i === picked ? "Your answer, which is correct: " : "Correct answer: ";
     if (i === picked) return "Your answer, which is incorrect: ";
-    return undefined;
+    return "";
+  }
+
+  /**
+   * What a screen reader hears before an answer's words: its mark once the
+   * question is answered and, where the explanation names the answers by their
+   * letters (`keepsLetters`), the answer's letter, before and after marking
+   * ("A. ", then "Correct answer: A. "), as MultipleChoice says it. The key box
+   * that prints the letter is hidden from a screen reader. A shuffled
+   * question's letter is only its place for this learner, which the order the
+   * answers are read in already gives, so it is not said, as in MultipleChoice.
+   */
+  function srPrefixOf(i: number): string | undefined {
+    if (rep.type !== "choice") return undefined;
+    const letter = rep.lettered && rep.keepsLetters ? `${OPTION_LETTERS[i]}. ` : "";
+    return `${markOf(i)}${letter}` || undefined;
   }
 
   const lastKey = rep.type === "choice" ? (rep.lettered ? OPTION_LETTERS[rep.options.length - 1] : rep.options.length) : null;
