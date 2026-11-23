@@ -12,7 +12,14 @@ export function returnPath(raw: string | null | undefined, origin: string): stri
     const url = new URL(raw, origin);
     // "//host" and "/\host" both begin with a slash and both name another site.
     if (url.origin !== origin) return null;
-    return url.pathname + url.search + url.hash;
+    const path = url.pathname + url.search + url.hash;
+    // The parser folds "/./" and "/x/../" away, so "/.//host" passes the check
+    // above (it is a path on this site) and comes out as "//host", which names
+    // another site the moment it is navigated to. What is returned is what is
+    // followed, so the result itself must still be a path on this site.
+    if (/^\/[/\\]/.test(path)) return null;
+    if (new URL(path, origin).origin !== origin) return null;
+    return path;
   } catch {
     return null;
   }

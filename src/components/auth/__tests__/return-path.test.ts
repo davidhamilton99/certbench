@@ -18,6 +18,33 @@ describe("returnPath", () => {
     expect(returnPath("", ORIGIN)).toBeNull();
   });
 
+  // Each of these IS a path on this site as it is written, so the first check
+  // passes. The parser then folds the dot segment away and what is left begins
+  // with two slashes: followed by the router, that is another site.
+  it.each(["/.//evil.example", "/%2e//evil.example", "/x/..//evil.example", "/./\\evil.example", "/.//evil.example/path?x=1"])(
+    "refuses %s, which becomes another site's address once it is normalised",
+    (raw) => {
+      expect(returnPath(raw, ORIGIN)).toBeNull();
+    }
+  );
+
+  it("never returns an address that begins with two slashes, whatever it is given", () => {
+    const dots = ["", ".", "..", "%2e", "%2E%2e", "x/.."];
+    const seps = ["/", "//", "/\\", "\\/", "/%2f", "/%5c"];
+    for (const a of dots) {
+      for (const sep of seps) {
+        for (const b of dots) {
+          const raw = `/${a}${sep}${b}${sep}evil.example`;
+          const out = returnPath(raw, ORIGIN);
+          if (out !== null) {
+            expect(out, raw).not.toMatch(/^\/[/\\]/);
+            expect(new URL(out, ORIGIN).origin, raw).toBe(ORIGIN);
+          }
+        }
+      }
+    }
+  });
+
   it.each([
     "//evil.com/x",
     "/\\evil.com",
