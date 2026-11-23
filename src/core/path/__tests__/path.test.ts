@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildPlan, isFreeStop, LEARN_BEFORE_CHECKPOINT, stopAt } from "../plan";
 import {
+  doneStopIds,
   finishStop,
   mergePathProgress,
   missedIds,
@@ -168,6 +169,19 @@ describe("progress", () => {
     expect(stopsDone(plan, p)).toBe(2);
     for (const s of plan.stops) p = finishStop(p, s.id, 8, 8, 3000);
     expect(nextStopIndex(plan, p)).toBe(plan.stops.length);
+  });
+
+  it("lists the steps that are finished, which is how the outline knows an objective has been studied", () => {
+    let p = EMPTY_PATH_PROGRESS;
+    expect([...doneStopIds(p)]).toEqual([]);
+    // An answer to a question on objective 1.2 does not finish objective 1.2's own step.
+    p = recordRep(p, authoredRepId("1.2", "w"), true, 1);
+    p = finishStop(p, "warmup", 7, 8, 1000);
+    p = finishStop(p, "1.1", 6, 8, 2000);
+    expect([...doneStopIds(p)].sort()).toEqual(["1.1", "warmup"]);
+    expect(doneStopIds(p).has("1.2")).toBe(false);
+    // A stored run that was never finished does not count.
+    expect(doneStopIds({ ...p, stops: { ...p.stops, "1.3": { n: 0, c: 0, t: 0, at: 1 } } }).has("1.3")).toBe(false);
   });
 
   it("rolls answers up into objective statuses", () => {

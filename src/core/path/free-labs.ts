@@ -8,6 +8,22 @@ import type { PbqScenario } from "@/data/pbq/types";
  */
 export const FREE_LAB_COUNT = 12;
 
+/**
+ * What an exam gives away on its public pages, as its study path needs it in
+ * order to say so: where the free practice exam is, where the free labs are,
+ * and which labs they are. The study path's own page works this out on the
+ * server (it knows the public pages) and hands it to the outline, so that a
+ * row never says "Included with Pro" about something that is free.
+ */
+export interface FreeOnPublicPages {
+  /** The exam's public practice exam page, where one full practice exam is free. */
+  examHref: string;
+  /** The exam's public page of labs, or null for an exam that has no such page. */
+  labsHref: string | null;
+  /** The ids of the labs that are free on that page. Empty when there is no page. */
+  labIds: string[];
+}
+
 /** Difficulty rank per PBQ type: the on-ramp leads with the lowest. */
 export function labRank(type: PbqScenario["type"]): number {
   return {

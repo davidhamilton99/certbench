@@ -5,13 +5,19 @@ import { buildStop } from "@/server/path/build-stop";
 import { buildPlan } from "@/core/path/plan";
 import { seedFrom } from "@/core/path/compose";
 import { isPathCert, PATH_CERTS } from "@/core/path/types";
+import { studyPathTitle } from "@/core/path/versions";
 import { EXAM_NAMES } from "@/data/path/titles";
 import { PathApp } from "@/components/path/PathApp";
 import { holdScript } from "@/components/path/path-hold";
 import { pageMetadata } from "@/lib/seo/metadata";
+import { freeOnPublicPages } from "./free-parts";
 
-// The warm-up is the same for every first-time visitor; rebuild hourly.
+// The introductory questions are the same for every first-time visitor; they are rebuilt each hour.
 export const revalidate = 3600;
+
+// Only the exams listed below have a study path. Any other address under
+// /path/ is answered as not found at once, without running the page for it.
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return PATH_CERTS.map((cert) => ({ cert }));
@@ -27,7 +33,8 @@ export async function generateMetadata({
   // The app itself: a few words of server HTML and no heading, so it stays out
   // of search. The practice-test and objective pages are what should rank.
   return pageMetadata({
-    title: `${name} study path`,
+    // An exam that is taught in two versions carries its code in the title.
+    title: studyPathTitle(cert, name),
     description: `Study for ${name} one short step at a time: quick questions on every exam objective, a readiness checkpoint, and a chart of where you stand on every objective.`,
     path: `/path/${cert}`,
     noindex: true,
@@ -53,10 +60,10 @@ export default async function PathPage({ params }: { params: Promise<{ cert: str
 
   return (
     <>
-      {/* Before first paint: has this device started this path, or are they
-          back from paying? Then hold the stage until the client picks up where
-          they are, instead of flashing the warm-up. A first visit paints the
-          warm-up immediately. */}
+      {/* Before first paint: has this device started this study path, is
+          someone signed in, or are they back from paying? Then the stage is
+          held until the page knows where they are, instead of flashing the
+          introductory questions. A first visit paints them at once. */}
       <script dangerouslySetInnerHTML={{ __html: holdScript(cert) }} />
       <PathApp
         cert={cert}
@@ -64,6 +71,7 @@ export default async function PathPage({ params }: { params: Promise<{ cert: str
         plan={plan}
         warmup={warmup}
         questionCount={bank.questions.length}
+        free={freeOnPublicPages(cert)}
       />
     </>
   );

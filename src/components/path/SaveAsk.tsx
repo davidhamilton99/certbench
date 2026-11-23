@@ -21,16 +21,17 @@ export function nextUpLead(next: PathStop | null): string {
 }
 
 /**
- * The path's one account ask, where a first stop ends: what an account is
- * for, and the signup right there. On the path it sits in its own card; a
- * public page that played the stop inline puts it under the round's score.
- * Renders its two blocks bare, so the card around them sets the spacing.
+ * The study path's one request for an account, where a first step ends: what
+ * an account is for, and the form to make one in place. On the study path it
+ * sits in its own card; a public page that played the step inline puts it
+ * under the round's score. It renders its two blocks bare, so the card around
+ * them sets the spacing.
  */
 export function SaveAsk({
   cert,
   surface,
   title,
-  titleAs: Title = "h3",
+  titleAs: Title = "h2",
   children,
   onSaved,
   staysOnPage = true,
@@ -39,7 +40,7 @@ export function SaveAsk({
   /** Where it's shown: "path", or the public page's surface. */
   surface: string;
   title: string;
-  /** "h2" on a public page, where the round sits straight under the page's title. */
+  /** "h2" straight under a screen's or a page's title; "h3" where a section heading stands between. */
   titleAs?: "h2" | "h3";
   /** What an account does here. */
   children: ReactNode;
@@ -56,9 +57,9 @@ export function SaveAsk({
 
   return (
     <>
-      <div className="grid gap-1">
-        <Title className="font-display text-xl font-semibold tracking-tight">{title}</Title>
-        <p className="text-sm leading-relaxed text-muted-foreground">{children}</p>
+      <div className="grid gap-1.5">
+        <Title className="cb-statement">{title}</Title>
+        <p className="text-small text-muted-foreground">{children}</p>
       </div>
       <InlineSignup
         nextPath={`/path/${cert}`}

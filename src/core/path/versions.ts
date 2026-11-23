@@ -43,6 +43,17 @@ export function newerVersion(cert: string): PathCert | null {
   return i > 0 ? family[0] : null;
 }
 
+/**
+ * The title of a study path's page, given the exam's short name. An exam that
+ * is taught in two versions carries its code ("Security+ SY0-801 study path"),
+ * so that two tabs, two bookmarks and two entries in the browser's history can
+ * be told apart; an exam with one version is named alone ("Network+ study path").
+ */
+export function studyPathTitle(cert: string, examName: string): string {
+  const code = examVersions(cert).length > 0 ? ` ${EXAM_CODES[cert as PathCert]}` : "";
+  return `${examName}${code} study path`;
+}
+
 /** "June 11, 2027" for an ISO date, the same in every time zone. */
 export function longDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {

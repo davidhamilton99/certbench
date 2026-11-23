@@ -171,6 +171,36 @@ describe("QuickRound", () => {
     });
   });
 
+  it("lets a long label wrap, and draws the question counter afresh for each question", () => {
+    renderRound();
+    const label = screen.getByText("Objective 1.1 · Security controls");
+    // Cut short with an ellipsis, a label cannot be read at high zoom.
+    expect(label.className).not.toMatch(/\btruncate\b/);
+    const counter = screen.getByText("Question 1 of 2");
+    // What a browser does when it translates the page.
+    counter.innerHTML = "<font>Frage 1 von 2</font>";
+    play(true);
+    expect(screen.getByText("Question 2 of 2")).not.toBe(counter);
+    expect(screen.queryByText("Frage 1 von 2")).toBeNull();
+    play(true, true);
+    expect(screen.getByText("Objective 1.1 · Security controls").className).not.toMatch(/\btruncate\b/);
+  });
+
+  it("gives the focus to each question that follows a press, and to the result, but not to the first question of a page", () => {
+    renderRound();
+    // The page has only just loaded: the round does not take the focus from its top.
+    expect(document.activeElement).toBe(document.body);
+    play(true);
+    expect(document.activeElement).toBe(screen.getByText("Prompt a|1.1|y"));
+    play(true, true);
+    // The result takes the focus, and it is named for a screen reader.
+    expect(document.activeElement).toBe(screen.getByRole("group", { name: "Objective 1.1 · Security controls: your result" }));
+
+    // Answering again follows a press, so its first question takes the focus too.
+    fireEvent.click(screen.getByRole("button", { name: /Answer the questions again/ }));
+    expect(document.activeElement).toBe(screen.getByText("Prompt a|1.1|x"));
+  });
+
   it("says where the last answer leads", () => {
     renderRound();
     fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
@@ -187,8 +217,13 @@ describe("QuickRound", () => {
     play(false, true);
 
     // The ask, with the signup in place: no button to another page stands in for it.
-    expect(screen.getByRole("heading", { name: "Save your progress" })).toBeInTheDocument();
-    expect(screen.getByText(/A free account saves your progress and opens your Security\+ study path/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Save your progress" })).toBeInTheDocument();
+    // What a free account opens, in the pricing page's words: not the whole study path.
+    expect(
+      screen.getByText(
+        /A free account saves your progress and opens the first study step and the readiness checkpoint of your Security\+ study path\. The checkpoint shows where you stand on the whole exam\./
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText(/Until then, your progress is kept on this device only\./)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Start the Security\+ study path/ })).toBeNull();
@@ -213,7 +248,11 @@ describe("QuickRound", () => {
 
     expect(screen.getByText("You answered every question correctly.")).toBeInTheDocument();
     expect(screen.getByText("You have started 2 of 3 objectives.")).toBeInTheDocument();
-    expect(tile("2.1")).toHaveTextContent("2.1 Threat actors, Complete");
+    // The objective whose own step was just played, with nothing to review, is
+    // complete. One that only an earlier question touched is started: an
+    // instructor who checks the outline must not find it marked complete.
+    expect(tile("1.1")).toHaveTextContent("1.1 Security controls, Complete");
+    expect(tile("2.1")).toHaveTextContent("2.1 Threat actors, Started");
     // Warm-up and 1.1 done: the readiness checkpoint is next on their path, as the path's own card would say.
     expect(screen.getByRole("heading", { name: "Your next step: the readiness checkpoint" })).toBeInTheDocument();
     expect(screen.getByText(/It has 12 exam-style questions and gives you a score for each domain\./)).toBeInTheDocument();

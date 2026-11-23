@@ -177,6 +177,28 @@ describe("opening the study path", () => {
     // The answer is not in the account yet, so it is sent.
     expect(items(saves().at(-1)?.progress)).toEqual(["a|1.1|w1", "a|1.2|account"]);
   });
+
+  it("hands the page functions that are never made again, and the state as it is at that moment", async () => {
+    signIn();
+    const { result, rerender } = open();
+    await pass();
+    const first = result.current;
+    // Read inside one handler, before the page has rendered again: the answer just recorded is there.
+    let seen: string[] = [];
+    act(() => {
+      first.record("a|1.1|w1", true);
+      seen = items(first.peek().progress);
+    });
+    expect(seen).toEqual(["a|1.1|w1"]);
+    expect(first.peek().userId).toBe("u1");
+
+    rerender();
+    await pass();
+    // The page's own handlers depend on these, so a question is not handed new functions on every render.
+    for (const name of ["peek", "record", "finish", "finishLab", "retire", "setGoal", "refreshAccess"] as const) {
+      expect(result.current[name], name).toBe(first[name]);
+    }
+  });
 });
 
 describe("an account that cannot be reached", () => {

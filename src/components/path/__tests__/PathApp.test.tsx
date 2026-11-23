@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { itemStatus } from "@/core/drill-rounds/drill-rounds";
 import { buildPlan } from "@/core/path/plan";
 import { isoInDays } from "@/core/path/checkpoint";
 import { recordRep } from "@/core/path/progress";
+import type { FreeOnPublicPages } from "@/core/path/free-labs";
 import { EMPTY_PATH_PROGRESS, type ChoiceRep, type PathProgress, type PathStop, type PathStructure, type Rep } from "@/core/path/types";
 
 /** Who the mocked Supabase client says is signed in. */
@@ -40,14 +41,36 @@ const track = vi.hoisted(() => vi.fn());
 const identifyUser = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics", () => ({ track, identifyUser, resetAnalytics: vi.fn() }));
 
-// The dial animates with rAF; its look isn't under test here.
-vi.mock("@/components/instrument/ReadinessDial", () => ({
-  ReadinessDial: ({ score, band, readyMark = true }: { score: number; band: { label: string }; readyMark?: boolean }) => (
-    <div data-testid="dial" data-label={band.label} data-ready-mark={String(readyMark)}>
+// The score counts up with requestAnimationFrame; its look is not under test
+// here (PathReveal.test.tsx and the score level's own tests hold that). The
+// bars beside it stay real.
+vi.mock("@/components/instrument/ScoreLevel", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/instrument/ScoreLevel")>()),
+  ScoreLevel: ({ score, band, readyMark = true }: { score: number; band: { label: string }; readyMark?: boolean }) => (
+    <div data-testid="score" data-label={band.label} data-ready-mark={String(readyMark)}>
       {score}%
     </div>
   ),
 }));
+
+/**
+ * Everything the question card was handed, render by render, so that a test
+ * can see whether its handlers were made again and whether it was told to take
+ * the focus. The card itself is the real one.
+ */
+const cards = vi.hoisted(
+  () => [] as { rep: { id: string }; onAnswer: unknown; onNext: unknown; takeFocus?: boolean }[]
+);
+vi.mock("../RepCard", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../RepCard")>();
+  return {
+    ...real,
+    RepCard: (props: Parameters<typeof real.RepCard>[0]) => {
+      cards.push(props);
+      return <real.RepCard {...props} />;
+    },
+  };
+});
 
 // The lab players have their own tests; here a lab only has to report a grade.
 vi.mock("@/components/workspace/PbqPlayer", () => ({
@@ -77,6 +100,9 @@ const server = vi.hoisted(() => ({
   proPlan: false,
   /** What enrolling answers: false when a Pro member already has another exam. */
   enrolls: true,
+  /** When set, the request that makes this the account's exam waits for it before it answers. */
+  enrollWaits: null as null | Promise<unknown>,
+  /** What a request for a step answers. It may answer later (a promise), as a slow server does. */
   stopHandler: null as null | ((input: { index: number }) => unknown),
   rehearsalHandler: null as null | ((input: { size: string }) => unknown),
   labHandler: null as null | ((input: { id: string }) => unknown),
@@ -105,7 +131,7 @@ vi.mock("@/lib/api-client", async () => {
           if (server.saveError) throw server.saveError;
           return { ok: true, stored: true };
         case "POST /api/path/stop": {
-          const out = server.stopHandler?.(input as { index: number });
+          const out = await server.stopHandler?.(input as { index: number });
           if (out instanceof Error) throw out;
           // As the contract's parse would: nothing retired unless the reply says so.
           return { retired: [], ...(out as object) };
@@ -123,6 +149,7 @@ vi.mock("@/lib/api-client", async () => {
         case "POST /api/path/answers":
           return { ok: true };
         case "POST /api/path/enroll":
+          if (server.enrollWaits) await server.enrollWaits;
           // A Pro plan with this exam claimed opens the whole path.
           if (server.enrolls && server.proPlan) server.access = "pro";
           return { enrolled: server.enrolls };
@@ -142,7 +169,7 @@ vi.mock("@/lib/api-client", async () => {
   };
 });
 
-import { PathApp } from "../PathApp";
+import { ContinueCard, PathApp } from "../PathApp";
 import { ApiError } from "@/contracts/common";
 import { pathRehearsalKey } from "../storage-key";
 
@@ -201,8 +228,52 @@ function stopReply(index: number, n = 3) {
   return { stop, reps: Array.from({ length: n }, (_, i) => rep(`a|${objective}|s${index}-${i}`, objective)) };
 }
 
-function renderPath() {
-  return render(<PathApp cert="security-plus-sy0-701" structure={structure} plan={plan} warmup={warmup} questionCount={842} />);
+/**
+ * What the exam gives away on its public pages, as the study path's page works
+ * it out on the server: where the free practice exam is, where the free labs
+ * are, and which labs they are (none of this exam's test labs, unless a test says so).
+ */
+const free: FreeOnPublicPages = {
+  examHref: "/security-plus-practice-test",
+  labsHref: "/security-plus-pbq-examples",
+  labIds: [],
+};
+
+function renderPath(freeParts: FreeOnPublicPages = free) {
+  return render(
+    <PathApp
+      cert="security-plus-sy0-701"
+      structure={structure}
+      plan={plan}
+      warmup={warmup}
+      questionCount={842}
+      free={freeParts}
+    />
+  );
+}
+
+/**
+ * The exam's name in the header, which leads back to the home screen of the
+ * study path. It reads "Your Security+ SY0-701 study path" (the first and last
+ * words are for a screen reader); the test library's own naming drops the
+ * spaces between its parts, so it is found by the part that is always there.
+ */
+function headerLink(): HTMLElement {
+  const link = within(screen.getByRole("banner")).getByRole("link", { name: /Security\+/ });
+  expect(link.textContent).toBe("Your Security+ SY0-701 study path");
+  return link;
+}
+
+/**
+ * A row of the course outline, found by the words it shows. A row has no label
+ * of its own, so its text is its name; the test library's own naming drops the
+ * spaces that a browser keeps between the parts of a row.
+ */
+function outlineRow(start: string): HTMLElement {
+  const rows = [...document.querySelectorAll<HTMLElement>(".path-stage-body li")];
+  const found = rows.find((row) => (row.textContent ?? "").startsWith(start));
+  if (!found) throw new Error(`No row of the outline begins "${start}". Rows: ${rows.map((r) => r.textContent).join(" | ")}`);
+  return found;
 }
 
 /**
@@ -234,6 +305,8 @@ beforeEach(() => {
   server.access = "free";
   server.proPlan = false;
   server.enrolls = true;
+  server.enrollWaits = null;
+  cards.length = 0;
   server.stopHandler = (input) => stopReply(input.index);
   server.rehearsalHandler = null;
   server.labHandler = null;
@@ -249,14 +322,47 @@ beforeEach(() => {
   for (const name of ["returning", "wait", "late", "live"]) document.documentElement.removeAttribute(`data-path-${name}`);
 });
 
+// The page gives back the history entry it added when a learner returns to the
+// home screen, and the test DOM carries that out a moment later. It is let
+// through here, while the page is still mounted, so that it cannot move the
+// next test's address.
+afterEach(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 20));
+});
+
+/** The browser's Back, and the moment it takes to arrive. */
+async function goBack() {
+  await act(async () => {
+    const arrived = new Promise((resolve) => window.addEventListener("popstate", resolve, { once: true }));
+    window.history.back();
+    await arrived;
+  });
+}
+
+/** Every save of the study path that the page sent to the account, oldest first. */
+const savedProgress = () =>
+  server.calls.flatMap((c) =>
+    c.path === "/api/path/progress" && "progress" in (c.input as object)
+      ? [(c.input as { progress: PathProgress }).progress]
+      : []
+  );
+
+/** The requests for a step that the page has made, oldest first. */
+const stepRequests = () =>
+  server.calls.filter((c) => c.path === "/api/path/stop").map((c) => c.input as { index: number; focus?: string });
+
 describe("a first visit", () => {
   it("starts on the warm-up's first rep with nothing to decide", async () => {
     renderPath();
     await act(async () => {});
     expect(screen.getByText("Prompt a|1.1|w1")).toBeInTheDocument();
-    expect(screen.getByText("Introductory questions")).toBeInTheDocument();
-    // No map to go back to yet, so the exam name isn't a link.
-    expect(screen.queryByRole("link", { name: "Security+" })).toBeNull();
+    // The step's name is the screen's title, and the question is the heading under it.
+    expect(screen.getByRole("heading", { level: 1, name: "Introductory questions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Prompt a|1.1|w1" })).toBeInTheDocument();
+    // No home screen to go back to yet, so the exam name is not a link.
+    expect(screen.queryByRole("link", { name: /Security\+.*study path/ })).toBeNull();
+    // The page's one main region, which the skip link at the top of the document leads to.
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
   });
 
   it("ends the warm-up by naming the next step, the save prompt ahead of the map", async () => {
@@ -267,7 +373,22 @@ describe("a first visit", () => {
     await answer(true);
     expect(await screen.findByText(/You have completed the introductory questions/i)).toBeInTheDocument();
     expect(screen.getByText(/1 question will be repeated/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Your next step: Objective 1.1" })).toBeInTheDocument();
+    // The result is the screen's title, then the save ask, then the outline with the domains under it.
+    expect(screen.getByRole("heading", { level: 1, name: "You answered 2 of 3 questions correctly." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Your next step: Objective 1.1" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Security+ objectives" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Domain 1: Domain 1" })).toBeInTheDocument();
+    // What the questions changed in the outline, in the outline's own words. No
+    // objective is "Complete" on the strength of an introductory question.
+    expect(
+      screen.getByText("These questions marked 3 objectives: 3 are started. In all, you have started 3 of 6 objectives.")
+    ).toBeInTheDocument();
+    expect(outlineRow("1.2")).toHaveTextContent("1.2 Objective 1.2, Started");
+    expect(screen.queryByText("Complete")).toBeNull();
+    // What a free account opens, in the pricing page's words.
+    expect(
+      screen.getByText(/A free account saves your progress and opens your first study step and the readiness checkpoint\./)
+    ).toBeInTheDocument();
     expect(screen.getByText(/It takes about 4 minutes\./)).toBeInTheDocument();
     const save = screen.getByRole("button", { name: "Save and continue" });
     expect(comesBefore(save, screen.getByText("Security+ objectives"))).toBe(true);
@@ -471,6 +592,30 @@ describe("a signed-in learner", () => {
     await screen.findByText(/You have completed step 2/i);
     const onward = screen.getByRole("button", { name: /Continue/ });
     expect(comesBefore(onward, screen.getByText("Security+ objectives"))).toBe(true);
+    // The step taught objective 1.1 and nothing is left to review, so it is
+    // complete: the sentence above the outline says what the step changed, and
+    // the row under it says the same.
+    expect(
+      screen.getByText("This step marked 1 objective: it is complete. In all, you have started 1 of 6 objectives.")
+    ).toBeInTheDocument();
+    expect(outlineRow("1.1")).toHaveTextContent("1.1 Objective 1.1, Complete");
+    // The way on names the step that is next, as a heading under the result.
+    expect(screen.getByRole("heading", { level: 2, name: "Readiness checkpoint" })).toBeInTheDocument();
+  });
+
+  it("says when a step left an objective to review", async () => {
+    server.progress = done(["warmup"]);
+    server.stopHandler = (input) => stopReply(input.index, 2);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    await answer(true);
+    await answer(false);
+    await screen.findByText(/You have completed step 2/i);
+    expect(
+      screen.getByText("This step marked 1 objective: it is to review. In all, you have started 1 of 6 objectives.")
+    ).toBeInTheDocument();
+    expect(outlineRow("1.1")).toHaveTextContent("1.1 Objective 1.1, To review");
   });
 
   it("asks the exam date and daily time right before the checkpoint, then opens it", async () => {
@@ -533,10 +678,11 @@ describe("a signed-in learner", () => {
     await screen.findByText(/Prompt q\|1\.1/);
     await answer(true);
     await answer(false);
-    expect(await screen.findByTestId("dial")).toHaveTextContent("50%");
+    expect(await screen.findByTestId("score")).toHaveTextContent("50%");
     expect(screen.getByRole("heading", { name: "You are making good progress." })).toBeInTheDocument();
     expect(screen.getByText("Continue your study path with Pro")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continue with Pro/ })).toBeInTheDocument();
+    // The offer's own button says where it leads.
+    expect(await screen.findByRole("button", { name: "Continue to payment" })).toBeInTheDocument();
     // The guarantee states its conditions right on the offer.
     expect(screen.getByText(/If you study with Pro for 30 days or more and do not pass your exam, CertBench refunds your last payment\./)).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_checkpoint_completed", { cert: "security-plus-sy0-701", score: 50 });
@@ -558,11 +704,11 @@ describe("a signed-in learner", () => {
     await answer(true);
     await answer(true);
 
-    const dial = await screen.findByTestId("dial");
-    expect(dial).toHaveTextContent("100%");
+    const score = await screen.findByTestId("score");
+    expect(score).toHaveTextContent("100%");
     // A dozen questions can't call anyone exam-ready: not the label, the mark or the copy.
-    expect(dial).toHaveAttribute("data-label", "Strong first result");
-    expect(dial).toHaveAttribute("data-ready-mark", "false");
+    expect(score).toHaveAttribute("data-label", "Strong first result");
+    expect(score).toHaveAttribute("data-ready-mark", "false");
     expect(screen.getByRole("heading", { name: "This is a strong first result." })).toBeInTheDocument();
     // The size of the sample, as a label rather than a paragraph.
     expect(screen.getByText("This result is based on 2 questions, so each answer changes it by about 50 points. The exam itself has up to 90 questions.")).toBeInTheDocument();
@@ -601,7 +747,7 @@ describe("a signed-in learner", () => {
     renderPath();
     fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
     await screen.findByText("Prompt a|1.1|s1-0");
-    fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
+    fireEvent.click(headerLink());
     expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
     expect(screen.queryByText("Prompt a|1.1|s1-0")).toBeNull();
     // Switching exams is still a click away, under the map.
@@ -706,12 +852,45 @@ describe("back from paying", () => {
     }
   }, 10_000);
 
-  it("is an ordinary visit when they are not signed in", async () => {
+  // A bank's approval step can reopen the site in another browser, where the
+  // buyer has no session. They were shown the first visit's questions with no
+  // mention of the payment.
+  it("tells a buyer who returns signed out that the payment was received, and asks them to sign in", async () => {
     auth.session = null;
     server.progress = null;
     renderPath();
-    expect(await screen.findByRole("button", { name: /Right answer/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Your payment was received." })).toBeInTheDocument();
+    expect(screen.getByText("Please sign in to open your study path.")).toBeInTheDocument();
+    // Neither the first visit's questions nor the wait for a confirmation that nobody is signed in to receive.
+    expect(screen.queryByRole("button", { name: /Right answer/ })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Your Security+ study path is being opened." })).toBeNull();
+    // Signing in comes back to this address, still marked as a return from
+    // paying, so the wait for the confirmation begins there.
+    expect(screen.getByRole("button", { name: /Continue with Google/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in with email" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fpath%2Fsecurity-plus-sy0-701%3Fupgraded%3D1"
+    );
+    // The flag stays on the address: a reload says the same thing.
+    expect(window.location.search).toBe("?upgraded=1");
+    expect(landed()).toEqual([]);
+  });
+
+  it("lets someone who is not signed in carry on as a visitor", async () => {
+    auth.session = null;
+    server.progress = null;
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Continue without signing in" }));
+    expect(await screen.findByRole("button", { name: /Right answer/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your payment was received." })).toBeNull();
+    expect(window.location.search).toBe("");
+  });
+
+  it("takes the flag off the address for someone who is signed in, so that a reload is an ordinary visit", async () => {
+    renderPath();
+    // The account control appears once the page knows who is here.
+    await screen.findByRole("button", { name: "Account" });
+    expect(screen.getByRole("heading", { level: 1, name: "Your Security+ study path is being opened." })).toBeInTheDocument();
     expect(window.location.search).toBe("");
   });
 });
@@ -863,9 +1042,16 @@ describe("labs on the path", () => {
   const lab1 = labPlan.stops.findIndex((s) => s.id === "lab1");
   const goal = { examDate: null, target: null, minutes: 20, at: 1 };
 
-  const renderLabs = () =>
+  const renderLabs = (freeParts: FreeOnPublicPages = free) =>
     render(
-      <PathApp cert="security-plus-sy0-701" structure={labStructure} plan={labPlan} warmup={warmup} questionCount={842} />
+      <PathApp
+        cert="security-plus-sy0-701"
+        structure={labStructure}
+        plan={labPlan}
+        warmup={warmup}
+        questionCount={842}
+        free={freeParts}
+      />
     );
 
   beforeEach(() => {
@@ -884,12 +1070,93 @@ describe("labs on the path", () => {
     };
   });
 
-  it("shows each domain's lab on the map, as part of Pro for a free account", async () => {
+  // The home page and the pricing page say that one practice exam and 12 labs
+  // are free. The outline used to call all of them "Included with Pro".
+  it("shows a free account which labs are free and which Pro includes, and leads to the free ones", async () => {
     server.progress = done(["warmup"]);
-    renderLabs();
+    // The first domain's lab is one of the labs on the exam's public page of labs.
+    renderLabs({ ...free, labIds: ["lab-1.0"] });
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.getAllByLabelText(/hands-on lab, Lab for domain .*: part of Pro/)).toHaveLength(2);
-    expect(screen.getByText("Hands-on labs and the practice exam are included with Pro.")).toBeInTheDocument();
+    expect(outlineRow("Lab, Lab for domain 1.0")).toHaveTextContent("Lab, Lab for domain 1.0, Free");
+    expect(outlineRow("Lab, Lab for domain 2.0")).toHaveTextContent("Lab, Lab for domain 2.0, Included with Pro");
+    // Fewer than the usual number of free labs here, so the sentence under the outline states this exam's own count.
+    expect(
+      screen.getByText("One practice exam and 1 lab are free. Further labs and practice exams are included with Pro.")
+    ).toBeInTheDocument();
+
+    // The free lab's row leads to the public page where it is free.
+    fireEvent.click(within(outlineRow("Lab, Lab for domain 1.0")).getByRole("button"));
+    const freeLab = screen.getByRole("region", { name: "Lab for domain 1.0" });
+    expect(freeLab).toHaveTextContent("It is free, and it opens on the page of free Security+ labs.");
+    expect(freeLab).not.toHaveTextContent("included with Pro");
+    expect(within(freeLab).getByRole("link", { name: "Open the free labs" })).toHaveAttribute(
+      "href",
+      "/security-plus-pbq-examples"
+    );
+    expect(track).toHaveBeenCalledWith("path_map_tile_opened", {
+      cert: "security-plus-sy0-701",
+      tile: "lab:1.0",
+      state: "free",
+    });
+
+    // The other lab is included with Pro. Before the checkpoint there is no offer to lead to.
+    fireEvent.click(within(outlineRow("Lab, Lab for domain 2.0")).getByRole("button"));
+    const proLab = screen.getByRole("region", { name: "Lab for domain 2.0" });
+    expect(proLab).toHaveTextContent("It is included with Pro.");
+    expect(within(proLab).queryByRole("button")).toBeNull();
+    expect(within(proLab).queryByRole("link")).toBeNull();
+  });
+
+  it("says that the exam's 12 free labs are free, in the outline's own sentence", async () => {
+    server.progress = done(["warmup"]);
+    renderLabs({ ...free, labIds: Array.from({ length: 12 }, (_, i) => (i === 0 ? "lab-1.0" : `other-${i}`)) });
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(
+      screen.getByText("One practice exam and 12 labs are free. Further labs and practice exams are included with Pro.")
+    ).toBeInTheDocument();
+  });
+
+  it("claims no free labs for an exam that has no public page of labs", async () => {
+    server.progress = done(["warmup"]);
+    // As for Security+ SY0-801 today: a free practice exam, and no page of free labs.
+    renderLabs({ examHref: "/security-plus-sy0-801-practice-test", labsHref: null, labIds: [] });
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(outlineRow("Lab, Lab for domain 1.0")).toHaveTextContent("Included with Pro");
+    expect(
+      screen.getByText("One practice exam is free. Hands-on labs and further practice exams are included with Pro.")
+    ).toBeInTheDocument();
+  });
+
+  it("does not offer a visitor without an account to save their progress under a row that an account does not open", async () => {
+    auth.session = null;
+    localStorage.setItem(
+      "cb_path_security-plus-sy0-701",
+      JSON.stringify({ v: 1, owner: null, progress: done(["warmup"]) })
+    );
+    renderLabs({ ...free, labIds: ["lab-1.0"] });
+    await screen.findByRole("button", { name: "Save and continue" });
+
+    // A lab that Pro includes: no "Save my progress", which would not open it.
+    fireEvent.click(within(outlineRow("Lab, Lab for domain 2.0")).getByRole("button"));
+    expect(within(screen.getByRole("region", { name: "Lab for domain 2.0" })).queryByRole("button")).toBeNull();
+
+    // An objective past the readiness checkpoint: said plainly, with nothing to press.
+    fireEvent.click(within(outlineRow("2.1")).getByRole("button"));
+    const later = screen.getByRole("region", { name: "Objective 2.1" });
+    expect(later).toHaveTextContent(
+      "This objective is taught later in the study path. The steps after the readiness checkpoint are included with Pro."
+    );
+    expect(within(later).queryByRole("button")).toBeNull();
+
+    // The first study step is what a free account opens: its row offers to save, and leads to the form.
+    fireEvent.click(within(outlineRow("1.1")).getByRole("button"));
+    const first = screen.getByRole("region", { name: "Objective 1.1" });
+    expect(first).toHaveTextContent(
+      "A free account saves your progress and opens your first study step and the readiness checkpoint."
+    );
+    fireEvent.click(within(first).getByRole("button", { name: "Save my progress" }));
+    expect(document.activeElement).toBe(screen.getByLabelText("Email address"));
+    expect(track).toHaveBeenCalledWith("path_map_action", { cert: "security-plus-sy0-701", tile: "1.1", action: "save" });
   });
 
   it("plays a lab in place and counts it once it is graded", async () => {
@@ -900,8 +1167,10 @@ describe("labs on the path", () => {
     expect(await screen.findByText(/Your next step is a hands-on lab of about 6 minutes\./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
 
-    expect(await screen.findByRole("heading", { name: "Lab for domain 1.0" })).toBeInTheDocument();
-    expect(screen.getByText(/Hands-on lab for domain 1/)).toBeInTheDocument();
+    // The lab's screen: its title names the domain, and the lab's own name is the heading under it.
+    expect(await screen.findByRole("heading", { level: 1, name: /^Hands-on lab for domain 1/ })).toBeInTheDocument();
+    // (The lab's player is fetched when a lab opens, so it arrives a moment after its screen.)
+    expect(await screen.findByRole("heading", { level: 2, name: "Lab for domain 1.0" })).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("path_lab_started", {
       cert: "security-plus-sy0-701",
       stop: "lab1",
@@ -1022,7 +1291,7 @@ describe("practice exams", () => {
 
     // Domain 1 half right, domain 2 all right, weighted evenly: 75.
     expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
-    expect(screen.getByTestId("dial")).toHaveTextContent("75%");
+    expect(screen.getByTestId("score")).toHaveTextContent("75%");
     expect(screen.getByRole("heading", { name: "You met the readiness target, 17 points above your checkpoint." })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Missed (1)" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText(`Prompt q|1.2|${uuid(3)}`)).toBeInTheDocument();
@@ -1047,19 +1316,41 @@ describe("practice exams", () => {
     expect(saved.stops.rehearsal).toBeUndefined();
 
     // Home again, the latest reading is the rehearsal's, and its answers are a tap away.
-    fireEvent.click(screen.getByRole("link", { name: "Security+ SY0-701" }));
+    fireEvent.click(headerLink());
     expect(await screen.findByText(/Your last practice exam result was 75%/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Review its answers" }));
     expect(await screen.findByRole("tab", { name: "Missed (1)" })).toBeInTheDocument();
   });
 
-  it("shows a free account the practice exam at the end of the map, as part of Pro", async () => {
+  it("tells a free account that one practice exam is free, and leads to it on the exam's public page", async () => {
     server.access = "free";
     server.progress = done(["warmup"]);
     renderPath();
     await screen.findByRole("button", { name: /Continue/ });
-    expect(screen.getByLabelText("Practice exam: part of Pro")).toBeInTheDocument();
+    const row = outlineRow("Exam, Full-length timed practice exam");
+    expect(row).toHaveTextContent("Exam, Full-length timed practice exam, One practice exam is free.");
+    expect(row).not.toHaveTextContent("Included with Pro");
+    // The practice exams on the study path itself are included with Pro.
     expect(screen.queryByRole("button", { name: "Start: Practice exam" })).toBeNull();
+    // An exam with no labs on its study path: the sentence under the outline names none.
+    expect(screen.getByText("One practice exam is free. Further practice exams are included with Pro.")).toBeInTheDocument();
+
+    fireEvent.click(within(row).getByRole("button"));
+    const detail = screen.getByRole("region", { name: "Practice exam" });
+    expect(detail).toHaveTextContent(
+      "The practice exam has 90 questions and a time limit of 90 minutes. One practice exam is free, and it opens on its own page. Further practice exams are included with Pro."
+    );
+    expect(within(detail).getByRole("link", { name: "Open the free practice exam" })).toHaveAttribute(
+      "href",
+      "/security-plus-practice-test"
+    );
+    // The row does not offer to save progress or to see an offer: neither would open it.
+    expect(within(detail).queryByRole("button")).toBeNull();
+    expect(track).toHaveBeenCalledWith("path_map_tile_opened", {
+      cert: "security-plus-sy0-701",
+      tile: "rehearsal",
+      state: "free",
+    });
   });
 
   it("brings back a practice exam left mid-way, where it was and with its clock", async () => {
@@ -1116,8 +1407,9 @@ describe("practice exams", () => {
       expect.objectContaining({ stop: "rehearsal", kind: "rehearsal", correct: 2, total: 3 })
     );
     expect(lastSave().stops.rehearsal).toMatchObject({ n: 1, c: 2, t: 3 });
-    // The path goes on to review rounds.
-    expect(await screen.findByText("You have completed the study path. This is a review round.")).toBeInTheDocument();
+    // The study path goes on to review, which has one name everywhere.
+    expect(await screen.findByText("You have completed the study path. Your next step is a review.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Review" })).toBeInTheDocument();
   });
 
   it("offers Pro when the server says practice exams are part of it", async () => {
@@ -1145,7 +1437,7 @@ describe("practice exams", () => {
       })
     );
     expect(track).toHaveBeenCalledWith("path_review_started", expect.objectContaining({ from: "rehearsal" }));
-    expect(await screen.findByText("Review of questions you answered incorrectly")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Review" })).toBeInTheDocument();
   });
 });
 
@@ -1182,7 +1474,8 @@ describe("reviewing misses", () => {
       })
     );
     expect(track).toHaveBeenCalledWith("path_review_started", { cert: "security-plus-sy0-701", from: "home", reps: 3 });
-    expect(await screen.findByText("Review of questions you answered incorrectly")).toBeInTheDocument();
+    // A review has one name: the screen's title here, the button that opened it, and the step that ends the study path.
+    expect(await screen.findByRole("heading", { level: 1, name: "Review" })).toBeInTheDocument();
 
     await answer(true);
     await answer(true);
@@ -1193,8 +1486,16 @@ describe("reviewing misses", () => {
       "path_stop_completed",
       expect.objectContaining({ stop: "review", kind: "review", focus: "misses", correct: 2, total: 3 })
     );
-    // Got right, the objective is covered again on the map.
-    expect(screen.getByLabelText(/^1\.1 Objective 1\.1: covered/)).toBeInTheDocument();
+    // The outline counts as the sentence above it does. These objectives' own
+    // steps have not been taken, so an objective answered correctly is
+    // "Started", never "Complete", and the one with a miss is to review.
+    expect(outlineRow("2.1")).toHaveTextContent("2.1 Objective 2.1, Started");
+    expect(outlineRow("1.2")).toHaveTextContent("1.2 Objective 1.2, Started");
+    // The objective whose own step comes next says so, whatever other questions have touched it.
+    expect(outlineRow("1.1")).toHaveTextContent("1.1 Objective 1.1, Next step");
+    // The review moved no objective from one standing to another, so the line
+    // above the outline gives the running count alone.
+    expect(screen.getByText("In all, you have started 3 of 6 objectives.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Review 1 more/ }));
     await waitFor(() =>
@@ -1247,7 +1548,14 @@ describe("the lab library", () => {
     ).progress;
   const renderLibrary = () =>
     render(
-      <PathApp cert="security-plus-sy0-701" structure={libStructure} plan={libPlan} warmup={warmup} questionCount={842} />
+      <PathApp
+        cert="security-plus-sy0-701"
+        structure={libStructure}
+        plan={libPlan}
+        warmup={warmup}
+        questionCount={842}
+        free={free}
+      />
     );
   /** From the home, into the library. */
   async function openLibrary() {
@@ -1275,6 +1583,13 @@ describe("the lab library", () => {
     expect(screen.getByRole("heading", { name: "Domain 2: Domain 2" })).toBeInTheDocument();
     expect(screen.getAllByText(/This lab ends the domain on your study path\.$/)).toHaveLength(2);
     expect(screen.getByText("Matching drill, 3 minutes.")).toBeInTheDocument();
+    // A row is named by the words printed on it, in the order they are printed: it has no label of its own.
+    const row = screen.getByRole("button", { name: /Port matching/ });
+    expect(row).not.toHaveAttribute("aria-label");
+    expect(row.textContent).toBe("Port matching. Matching drill, 3 minutes.");
+    // The list's title is the screen's title, and each domain is a heading under it.
+    expect(screen.getByRole("heading", { level: 1, name: "Hands-on labs for Security+" })).toBeInTheDocument();
+    expect(screen.getByText("0 of 2 complete.", { selector: "section:first-of-type p" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Return to the study path" }));
     expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
   });
@@ -1363,13 +1678,18 @@ describe("the account menu", () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup"]);
     renderPath();
+    // A button that shows and hides a small panel: a disclosure, not a menu.
     const account = await screen.findByRole("button", { name: "Account" });
-    expect(screen.queryByRole("menuitem", { name: "Sign out" })).toBeNull();
+    expect(account).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
     fireEvent.click(account);
-    expect(screen.getByRole("menu", { name: "Account" })).toHaveTextContent("Signed in as u1@example.com");
-    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
+    expect(account).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText(/Signed in as/)).toHaveTextContent("Signed in as u1@example.com");
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Plan and billing" })).toHaveAttribute("href", "/upgrade");
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+    expect(account).toHaveAttribute("aria-expanded", "false");
   });
 });
 
@@ -1926,5 +2246,455 @@ describe("when the account cannot be reached", () => {
     // The questions still work in this tab.
     await answer(true);
     expect(screen.getByText("Prompt a|2.1|w2")).toBeInTheDocument();
+  });
+});
+
+describe("moving the focus with the screen", () => {
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+
+  it("leaves the focus alone as the page loads, and gives it to each question that follows a press", async () => {
+    renderPath();
+    await act(async () => {});
+    // The question that the page loads with does not take the focus: the page starts at its top.
+    expect(document.activeElement).toBe(document.body);
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|1.1|w1" }, takeFocus: false });
+
+    await answer(true);
+    // The next question follows a press of Continue: it takes the focus, so it is read.
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|2.1|w2" }, takeFocus: true });
+    expect(document.activeElement).toBe(screen.getByText("Prompt a|2.1|w2"));
+  });
+
+  it("moves the focus to the result when a step ends", async () => {
+    renderPath();
+    await act(async () => {});
+    for (let i = 0; i < 3; i++) await answer(true);
+    const result = await screen.findByRole("heading", { level: 1, name: "You answered 3 of 3 questions correctly." });
+    expect(document.activeElement).toBe(result);
+    expect(result).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("says that the next step is being prepared as a status, and then gives the focus to its first question", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    let release: (value: unknown) => void = () => {};
+    server.stopHandler = (input) => new Promise((resolve) => (release = () => resolve(stopReply(input.index))));
+    renderPath();
+    // A returning learner's own screen arrives as the page loads: it does not take the focus.
+    const onward = await screen.findByRole("button", { name: /Continue/ });
+    expect(document.activeElement).toBe(document.body);
+
+    fireEvent.click(onward);
+    const waiting = await screen.findByText("Your next step is being prepared.");
+    expect(waiting.closest('[role="status"]')).not.toBeNull();
+    // A full sentence, with no ellipsis.
+    expect(screen.queryByText(/…/)).toBeNull();
+
+    await act(async () => release(null));
+    expect(await screen.findByText("Prompt a|1.1|s1-0")).toBe(document.activeElement);
+  });
+
+  it("moves the focus to the home screen's title when the learner returns there", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    fireEvent.click(headerLink());
+    const title = await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" });
+    expect(document.activeElement).toBe(title);
+    // The outline's own heading is under the title, with the domains under it.
+    expect(screen.getByRole("heading", { level: 2, name: "Exam objectives" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Domain 1: Domain 1" })).toBeInTheDocument();
+  });
+
+  it("gives each planning question the focus as it replaces the one before", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup", "1.1"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    const booked = await screen.findByRole("heading", { level: 1, name: "Have you booked your Security+ exam?" });
+    expect(document.activeElement).toBe(booked);
+    fireEvent.click(screen.getByRole("button", { name: "No, I have not booked it yet" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { level: 1, name: "When do you expect to take the exam?" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "In one to two months" }));
+    const minutes = await screen.findByRole("heading", { level: 1, name: "How much time can you study on most days?" });
+    expect(document.activeElement).toBe(minutes);
+    fireEvent.click(screen.getByRole("button", { name: "About 20 minutes" }));
+    const intro = await screen.findByRole("heading", { level: 1, name: "The readiness checkpoint" });
+    expect(document.activeElement).toBe(intro);
+    expect(screen.getByText(/The checkpoint has 12 exam-style questions drawn from all 2 domains/)).toBeInTheDocument();
+  });
+
+  it("hands the focus on when the wait after a payment ends by itself", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    window.history.replaceState(null, "", "/path/security-plus-sy0-701?upgraded=1");
+    renderPath();
+    await screen.findByRole("button", { name: "Account" });
+    server.access = "pro";
+    const opened = await screen.findByRole(
+      "heading",
+      { level: 1, name: "Your full Security+ study path is now open." },
+      { timeout: 4000 }
+    );
+    expect(document.activeElement).toBe(opened);
+  }, 10_000);
+
+  it("keeps a question's own screen free of the entrance that other screens have", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"], { goal });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    const prompt = await screen.findByText("Prompt a|1.1|s1-0");
+    // A learner meets a question hundreds of times in a sitting: nothing around it moves.
+    expect(prompt.closest(".path-rise")).toBeNull();
+    // Every screen is drawn in the same column, so the page does not change width between them.
+    expect(screen.getByRole("main").className).toContain("max-w-3xl");
+  });
+});
+
+describe("the question's own lines", () => {
+  it("draws the question counter and the objective's line afresh for each question", async () => {
+    renderPath();
+    await act(async () => {});
+    const counter = screen.getByText("Question 1 of 3");
+    const objective = screen.getByText("Objective 1.1: Objective 1.1.");
+    // What a browser does when it translates the page: the text of each line
+    // is replaced by its own elements, which React does not know about.
+    counter.innerHTML = "<font>Frage 1 von 3</font>";
+    objective.innerHTML = "<font>Ziel 1.1</font>";
+
+    await answer(true);
+    expect(screen.getByText("Question 2 of 3")).not.toBe(counter);
+    expect(screen.getByText("Objective 2.1: Objective 2.1.")).not.toBe(objective);
+    // The translated lines of the question before are gone, not left on the page.
+    expect(screen.queryByText("Frage 1 von 3")).toBeNull();
+    expect(screen.queryByText("Ziel 1.1")).toBeNull();
+  });
+
+  it("hands the question card the same handlers from one render to the next", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    // An answer changes the progress, so the page renders again around the same question.
+    fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+    await act(async () => {});
+    const sameQuestion = cards.filter((card) => card.rep.id === "a|1.1|s1-0");
+    expect(sameQuestion.length).toBeGreaterThan(1);
+    expect(new Set(sameQuestion.map((card) => card.onAnswer)).size).toBe(1);
+    expect(new Set(sameQuestion.map((card) => card.onNext)).size).toBe(1);
+  });
+});
+
+describe("requests that are answered late or fail", () => {
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+  });
+
+  it("does not move a learner who has gone elsewhere when a step arrives late", async () => {
+    let release: (value: unknown) => void = () => {};
+    server.stopHandler = (input) => new Promise((resolve) => (release = () => resolve(stopReply(input.index))));
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Your next step is being prepared.");
+    // They go back to the home screen while the step is still on its way.
+    fireEvent.click(headerLink());
+    await screen.findByRole("heading", { name: "Your Security+ study path" });
+
+    await act(async () => release(null));
+    await act(async () => {});
+    // The late answer does not open the step over the screen they chose.
+    expect(screen.getByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
+    expect(screen.queryByText("Prompt a|1.1|s1-0")).toBeNull();
+  });
+
+  it("says what went wrong in a sentence, never in the server's or the network's own words", async () => {
+    server.stopHandler = () => new ApiError("internal", "Request failed (502)");
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    const said = await screen.findByText("Your next step could not be loaded. Please try again.");
+    // It replaces the loading line, and takes the focus so that it is read.
+    expect(document.activeElement).toBe(said);
+    expect(screen.queryByText(/502/)).toBeNull();
+
+    // A bare code from the server is never shown either: it has a sentence.
+    server.stopHandler = () => new ApiError("rate_limited");
+    fireEvent.click(screen.getByRole("button", { name: /Try again/ }));
+    expect(
+      await screen.findByText("Too many requests were made in a short time. Please wait a few minutes and try again.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("rate_limited")).toBeNull();
+
+    server.stopHandler = (input) => stopReply(input.index);
+    fireEvent.click(screen.getByRole("button", { name: /Try again/ }));
+    expect(await screen.findByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
+  });
+
+  it("shows the next planning question at once, without waiting for the request that sets the exam", async () => {
+    server.progress = done(["warmup", "1.1"]);
+    // The request that makes this the account's exam never answers.
+    server.enrollWaits = new Promise(() => {});
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "No, I have not booked it yet" }));
+    fireEvent.click(screen.getByRole("button", { name: "In one to two months" }));
+    // No wait: the next question is on the screen in the same moment.
+    expect(screen.getByText("How much time can you study on most days?")).toBeInTheDocument();
+    expect(server.calls.some((c) => c.path === "/api/path/enroll")).toBe(true);
+    // The answer itself is kept with the progress, whatever becomes of that request.
+    await waitFor(() => expect(savedProgress().at(-1)?.goal?.target).toBe(isoInDays(60, Date.now())));
+  });
+});
+
+describe("asking for the next step ahead of time", () => {
+  const goal = { examDate: null, target: null, minutes: 20, at: 1 };
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(["warmup", "1.1", "checkpoint"], { goal, checkpoint: { score: 60, at: 1, domains: [] } });
+    server.stopHandler = (input) => stopReply(input.index, 1);
+  });
+
+  it("asks for the next step while the end of a step is read, so that Continue has nothing to wait for", async () => {
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.2|s3-0");
+    expect(stepRequests().map((r) => r.index)).toEqual([3]);
+    await answer(true);
+    await screen.findByText(/You have completed step 4/i);
+    // The step after it has been asked for already, and its answer has arrived.
+    await waitFor(() => expect(stepRequests().map((r) => r.index)).toEqual([3, 4]));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    // The question is on the screen in the same moment: no loading line, and no second request.
+    expect(screen.getByText("Prompt a|1.3|s4-0")).toBeInTheDocument();
+    expect(screen.queryByText("Your next step is being prepared.")).toBeNull();
+    expect(stepRequests().map((r) => r.index)).toEqual([3, 4]);
+  });
+
+  it("waits for that same request, without sending another, when Continue is pressed before it has been answered", async () => {
+    let release: (value: unknown) => void = () => {};
+    server.stopHandler = (input) =>
+      input.index === 4
+        ? new Promise((resolve) => (release = () => resolve(stopReply(4, 1))))
+        : stopReply(input.index, 1);
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.2|s3-0");
+    await answer(true);
+    await screen.findByText(/You have completed step 4/i);
+    await waitFor(() => expect(stepRequests()).toHaveLength(2));
+
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(await screen.findByText("Your next step is being prepared.")).toBeInTheDocument();
+    await act(async () => release(null));
+    expect(await screen.findByText("Prompt a|1.3|s4-0")).toBeInTheDocument();
+    expect(stepRequests()).toHaveLength(2);
+  });
+
+  it("asks for nothing ahead of time that the learner may not open", async () => {
+    // A free account at the end of its first study step: the checkpoint is next, and it is free.
+    server.access = "free";
+    server.progress = done(["warmup"]);
+    const { unmount } = renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    await answer(true);
+    await screen.findByText(/You have completed step 2/i);
+    await waitFor(() => expect(stepRequests().map((r) => r.index)).toEqual([1, 2]));
+    unmount();
+
+    // Past the checkpoint the next step is one that Pro opens: a free account's page does not ask for it.
+    server.calls = [];
+    server.progress = done(["warmup", "1.1"], { goal });
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("q|1.1|33333333-3333-4333-8333-333333333333", "1.1", "exam")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Start the checkpoint/ }));
+    await screen.findByText(/Prompt q\|1\.1/);
+    await answer(true);
+    await screen.findByText("Continue your study path with Pro");
+    await act(async () => {});
+    expect(stepRequests().map((r) => r.index)).toEqual([2]);
+  });
+});
+
+describe("the browser's Back", () => {
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+  });
+
+  it("returns from a step to the home screen of the study path instead of leaving it", async () => {
+    renderPath();
+    const onward = await screen.findByRole("button", { name: /Continue/ });
+    const entries = window.history.length;
+    fireEvent.click(onward);
+    await screen.findByText("Prompt a|1.1|s1-0");
+    // One entry was added when the step opened, and none for the questions inside it.
+    expect(window.history.length).toBe(entries + 1);
+    await answer(true);
+    expect(window.history.length).toBe(entries + 1);
+
+    await goBack();
+    const title = await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" });
+    expect(screen.queryByText(/^Prompt /)).toBeNull();
+    // The address is the study path's own, and the home screen is read from its title.
+    expect(window.location.pathname).toBe("/path/security-plus-sy0-701");
+    expect(document.activeElement).toBe(title);
+  });
+
+  it("gives the entry back when the learner returns by one of the page's own controls", async () => {
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    const inStep = window.history.length;
+
+    // The exam's name in the header leads home; the entry for the step is given back.
+    await act(async () => {
+      const arrived = new Promise((resolve) => window.addEventListener("popstate", resolve, { once: true }));
+      fireEvent.click(headerLink());
+      await arrived;
+    });
+    await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" });
+
+    // Opening a step again adds one entry in its place, never a second one on top.
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    expect(window.history.length).toBe(inStep);
+  });
+
+  it("returns from the list of labs and from a practice exam's first screen in the same way", async () => {
+    server.access = "pro";
+    localStorage.setItem("cb_path_unlocked_security-plus-sy0-701", "1");
+    server.progress = done(["warmup"], { goal: { examDate: null, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Start: Practice exam" }));
+    await screen.findByRole("heading", { name: "Take a full-length practice exam." });
+    await goBack();
+    expect(await screen.findByRole("heading", { level: 1, name: "Your Security+ study path" })).toBeInTheDocument();
+  });
+
+  it("adds nothing for a visitor without an account, whose whole visit is the introductory questions", async () => {
+    auth.session = null;
+    server.progress = null;
+    renderPath();
+    await act(async () => {});
+    const entries = window.history.length;
+    for (let i = 0; i < 3; i++) await answer(true);
+    await screen.findByText(/You have completed the introductory questions/i);
+    expect(window.history.length).toBe(entries);
+  });
+});
+
+describe("changing the exam date", () => {
+  const longDate = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+  beforeEach(() => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+  });
+
+  it("states the exam date on the home screen and opens the question again from there", async () => {
+    const booked = isoInDays(40, Date.now());
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: booked, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    expect(await screen.findByText(/Your exam is booked for/)).toHaveTextContent(
+      `Your exam is booked for ${longDate(booked)}. Change my exam date`
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Change my exam date" }));
+    // The question said that the answer could be changed at any time: now it can.
+    expect(await screen.findByRole("heading", { level: 1, name: "Have you booked your Security+ exam?" })).toBeInTheDocument();
+    expect(screen.getByText("Your answer sets the pace of your study path. You can change it at any time.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "No, I have not booked it yet" }));
+    fireEvent.click(screen.getByRole("button", { name: "In three months or more" }));
+
+    // Back on the home screen with the new answer, and the daily study time kept as it was.
+    const target = isoInDays(90, Date.now());
+    expect(await screen.findByText(/You plan to take the exam by/)).toHaveTextContent(
+      `You plan to take the exam by ${longDate(target)}.`
+    );
+    await waitFor(() => expect(savedProgress().at(-1)?.goal).toMatchObject({ examDate: null, target, minutes: 20 }));
+    expect(track).toHaveBeenCalledWith("path_goal_set", { cert: "security-plus-sy0-701", step: "exam", value: target });
+    // It did not go on to ask for the daily time again, or start a step.
+    expect(screen.queryByText("How much time can you study on most days?")).toBeNull();
+    expect(stepRequests()).toHaveLength(0);
+  });
+
+  it("leaves the date as it was when the learner returns without answering", async () => {
+    const booked = isoInDays(40, Date.now());
+    server.progress = done(["warmup", "1.1"], { goal: { examDate: booked, target: null, minutes: 20, at: 1 } });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: "Change my exam date" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Return to the study path" }));
+    expect(await screen.findByText(/Your exam is booked for/)).toHaveTextContent(longDate(booked));
+    expect(savedProgress().every((saved) => saved.goal?.examDate === booked)).toBe(true);
+  });
+
+  it("offers no change before a date has been given", async () => {
+    server.progress = done(["warmup"]);
+    renderPath();
+    await screen.findByRole("button", { name: /Continue/ });
+    expect(screen.queryByRole("button", { name: "Change my exam date" })).toBeNull();
+  });
+});
+
+describe("the way on past the free steps", () => {
+  const stop = plan.stops[plan.freeThrough + 1];
+
+  it("names the button that leads to the offer by what it shows, in the same words as the outline uses", () => {
+    const onContinue = vi.fn();
+    render(<ContinueCard stop={stop} total={plan.stops.length} onContinue={onContinue} locked />);
+    // It opens the offer, so it says so. "Continue" would promise the step itself.
+    const button = screen.getByRole("button", { name: "See what Pro includes" });
+    expect(screen.queryByRole("button", { name: /Continue/ })).toBeNull();
+    // The arrow means that study starts or continues: this button leads to an offer, so it has none.
+    expect(button.querySelector("svg")).toBeNull();
+    fireEvent.click(button);
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it("names the step that is next as a heading, with one button that continues to it", () => {
+    const { container } = render(<ContinueCard stop={stop} total={plan.stops.length} onContinue={() => {}} />);
+    expect(screen.getByRole("heading", { level: 2, name: stop.title })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" }).querySelector("svg")).not.toBeNull();
+    // No coloured rule on the card's edge: a rule there marks a notice.
+    expect(container.innerHTML).not.toMatch(/border-l-\[|border-l-primary/);
+  });
+
+  it("leads from a completed step's row to the offer on the home screen, and gives the offer the focus", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    const freeSteps = plan.stops.slice(0, plan.freeThrough + 1).map((s) => s.id);
+    server.progress = done(freeSteps, {
+      goal: { examDate: null, target: null, minutes: 20, at: 1 },
+      checkpoint: { score: 64, at: 1, domains: [] },
+    });
+    renderPath();
+    await screen.findByText("Continue your study path with Pro");
+    fireEvent.click(within(outlineRow("1.1")).getByRole("button"));
+    const row = screen.getByRole("region", { name: "Objective 1.1" });
+    fireEvent.click(within(row).getByRole("button", { name: "See what Pro includes" }));
+    // The offer is on this screen: it is brought into view and takes the focus, so that it is read.
+    expect(document.activeElement).toBe(document.getElementById("path-offer"));
   });
 });

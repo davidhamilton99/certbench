@@ -70,6 +70,7 @@ describe("grading normalization", () => {
     mode: "network-id",
     prompt: "",
     promptValue: "",
+    sentence: "",
     answerKind: "dotted",
     answer: "192.168.1.128",
     placeholder: "",

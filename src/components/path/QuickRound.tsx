@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { identifyUser, track } from "@/lib/analytics";
 import { api } from "@/lib/api-client";
 import { savePathProgress } from "@/contracts/client";
 import { SIGNIN_CANCELLED_PARAM } from "@/lib/google-signin";
 import { buildPlan, stopAt } from "@/core/path/plan";
-import { finishStop, nextStopIndex, objectiveStatuses, recordRep } from "@/core/path/progress";
+import { doneStopIds, finishStop, nextStopIndex, objectiveStatuses, recordRep } from "@/core/path/progress";
 import { EMPTY_PATH_PROGRESS, type PathCert, type PathProgress, type PathStructure, type Rep } from "@/core/path/types";
 import { useSessionUserId } from "@/components/auth/useSignedIn";
 import { Button } from "@/components/ui/button";
-import { ExamMap, MapLegend } from "./ExamMap";
+import { LinkArrow } from "@/components/ui/link-arrow";
+import { ExamMap, objectiveStanding } from "./ExamMap";
 import { useKeyboardTurn } from "./keyboard-turn";
 import { RepCard, StopProgress, type RepAnswer } from "./RepCard";
 import { nextUpLead, nextUpTitle, SaveAsk } from "./SaveAsk";
@@ -56,7 +57,7 @@ export function QuickRound({
   /** The exam's domains and objectives, for the map the round ends on. */
   structure: PathStructure;
   reps: Rep[];
-  /** Eyebrow for the round, e.g. "Objective 1.1 · Security controls". */
+  /** The line above the round, which says what it is: "Objective 1.1: Security controls". */
   label: string;
   /** Analytics surface, e.g. "objective_page". */
   surface: string;
@@ -143,7 +144,8 @@ export function QuickRound({
 
   const rep = reps[i];
   // min-w-0 down to the label: the pages lay the round out in a grid, where a
-  // one-line label would otherwise widen the card past a phone's screen.
+  // long label would otherwise widen the card past a phone's screen. The label
+  // wraps and is never cut short: at high zoom a cut label cannot be read.
   return (
     <div ref={root} className="min-w-0">
       {ended ? (
@@ -151,7 +153,6 @@ export function QuickRound({
           cert={cert}
           examName={examName}
           structure={structure}
-          reps={reps}
           label={label}
           surface={surface}
           unit={unit}
@@ -162,13 +163,14 @@ export function QuickRound({
       ) : (
         <div className="glass min-w-0 rounded-lg p-5 sm:p-8">
           <div className="mb-6 grid gap-3">
-            <div className="flex min-w-0 items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate cb-label text-muted-foreground">
-                {label}
-              </p>
-              <span className="shrink-0 text-[0.8125rem] tabular-nums text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p className="cb-label min-w-0 text-muted-foreground">{label}</p>
+              {/* A new element for each question: a browser that translates
+                  the page replaces the text of a line it has translated, and
+                  React can then no longer change that text. */}
+              <p key={i} className="shrink-0 text-note tabular-nums text-muted-foreground">
                 Question {i + 1} of {reps.length}
-              </span>
+              </p>
             </div>
             <StopProgress results={results} current={i} />
           </div>
@@ -180,6 +182,10 @@ export function QuickRound({
               onNext={onNext}
               promptAs="p"
               keyboard={keyboard}
+              // Every question after the one that the page loads with follows a
+              // press (Continue, or "Answer the questions again"), so it takes
+              // the focus and is read.
+              takeFocus={i > 0 || run > 0}
               // The last answer leads somewhere the page hasn't shown yet: say where.
               nextLabel={i === reps.length - 1 ? "View my result" : undefined}
             />
@@ -199,7 +205,6 @@ function RoundEnd({
   cert,
   examName,
   structure,
-  reps,
   label,
   surface,
   unit,
@@ -210,7 +215,6 @@ function RoundEnd({
   cert: PathCert;
   examName: string;
   structure: PathStructure;
-  reps: Rep[];
   label: string;
   surface: string;
   unit: "objectives" | "topics";
@@ -234,11 +238,16 @@ function RoundEnd({
   // The round is on the device, so their study path takes it up when it opens.
   const theirs = result.kept && device !== null;
   const statuses = useMemo(() => objectiveStatuses(progress.items), [progress]);
+  // Which steps are finished: the outline marks an objective complete only once its own step is.
+  const doneStops = useMemo(() => doneStopIds(progress), [progress]);
   const plan = useMemo(() => buildPlan(structure), [structure]);
   const next = stopAt(plan, structure, nextStopIndex(plan, progress));
   const nextUp = nextUpTitle(next);
-  const fresh = useMemo(() => new Set(reps.map((r) => r.objective)), [reps]);
-  const tiles = structure.domains.reduce((n, d) => n + d.objectives.length, 0);
+  const codes = structure.domains.flatMap((d) => d.objectives.map((o) => o.code));
+  // Counted as the outline under it counts: everything that is no longer "Not started".
+  const started = codes.filter(
+    (code) => objectiveStanding(statuses.get(code) ?? "new", doneStops.has(code)) !== "new"
+  ).length;
   const missed = result.total - result.correct;
 
   // The result replaces a question that was a different height, and may have
@@ -257,30 +266,30 @@ function RoundEnd({
   return (
     <div
       ref={top}
+      // It takes the focus so that the result is read; it is not a control.
       tabIndex={-1}
       role="group"
       aria-label={`${label}: your result`}
-      className="grid min-w-0 scroll-mt-24 gap-4 outline-none"
+      className="grid min-w-0 scroll-mt-24 gap-4"
     >
-      <div className="glass path-rise grid min-w-0 gap-5 rounded-lg p-6 sm:p-8">
+      <div className="glass path-rise grid min-w-0 gap-5 rounded-lg p-5 sm:p-8">
         <div className="grid min-w-0 gap-1.5">
-          <div className="flex min-w-0 items-baseline justify-between gap-3">
-            <span className="min-w-0 truncate cb-label text-muted-foreground">
-              {label}
-            </span>
+          <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            {/* It wraps and is never cut short. */}
+            <p className="cb-label min-w-0 text-muted-foreground">{label}</p>
             <button
               type="button"
               onClick={onReplay}
-              className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              className="cb-tap inline-flex shrink-0 items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
             >
-              <RotateCcw className="size-3.5" />
+              <RotateCcw className="size-3.5" aria-hidden />
               Answer the questions again
             </button>
           </div>
           <p className="cb-display text-5xl tabular-nums">
             {result.correct} <span className="text-muted-foreground">of {result.total}</span>
           </p>
-          <p className="text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             {missed === 0
               ? "You answered every question correctly."
               : `${missed} ${missed === 1 ? "question" : "questions"} will be repeated in a later step of your study path.`}
@@ -288,22 +297,22 @@ function RoundEnd({
         </div>
 
         {userId ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/70 pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
             <div className="grid min-w-0 gap-1">
               {theirs && (
-                <p className="text-sm text-muted-foreground">These questions count toward your study path.</p>
+                <p className="text-small text-muted-foreground">These questions count toward your study path.</p>
               )}
-              <p className="font-display text-xl font-semibold tracking-tight">Your {examName} study path</p>
+              <p className="cb-statement">Your {examName} study path</p>
             </div>
-            <Button asChild size="lg" className="h-12 w-full px-6 text-base sm:w-auto">
+            <Button asChild size="lg" className="w-full sm:w-auto">
               <Link href={`/path/${cert}`} onClick={() => track("path_exam_picked", { cert, surface })}>
                 Continue
-                <ArrowRight />
+                <LinkArrow />
               </Link>
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 border-t border-border/70 pt-5">
+          <div className="grid gap-4 border-t border-border pt-5">
             <SaveAsk
               cert={cert}
               surface={surface}
@@ -323,9 +332,9 @@ function RoundEnd({
                 router.push(`/path/${cert}`);
               }}
             >
-              {nextUpLead(next)}A free account saves your progress and opens your {examName} study path. The path
-              continues in short sets of questions like this one, up to a readiness checkpoint that shows where you
-              stand.
+              {/* What a free account opens, in the pricing page's own words. */}
+              {nextUpLead(next)}A free account saves your progress and opens the first study step and the readiness
+              checkpoint of your {examName} study path. The checkpoint shows where you stand on the whole exam.
               {!result.kept
                 ? " This browser is not saving your progress. Create a free account to keep it."
                 : !nextUp && " Until then, your progress is kept on this device only."}
@@ -334,15 +343,14 @@ function RoundEnd({
         )}
       </div>
 
-      <div className="glass grid min-w-0 gap-5 rounded-lg p-5 sm:p-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display font-semibold tracking-tight">{examName} objectives</h2>
-          <span className="text-[0.8125rem] text-muted-foreground">
-            You have started {statuses.size} of {tiles} {unit}.
-          </span>
+      <div className="glass grid min-w-0 gap-5 rounded-lg p-5 sm:p-8">
+        <div className="grid gap-1.5">
+          <h2 className="cb-statement">{examName} objectives</h2>
+          <p className="text-small text-muted-foreground">
+            You have started {started} of {codes.length} {unit}.
+          </p>
         </div>
-        <ExamMap structure={structure} statuses={statuses} fresh={fresh} />
-        <MapLegend />
+        <ExamMap structure={structure} statuses={statuses} doneStops={doneStops} />
       </div>
     </div>
   );

@@ -5,9 +5,8 @@ import { listEnrollments } from "@/server/data/enrollments";
 import { listActiveCertifications } from "@/server/data/certifications";
 import { isPathCert } from "@/core/path/types";
 import { ExamPicker } from "@/components/path/ExamPicker";
-import { ThemeToggle } from "@/components/workspace/ThemeToggle";
 import { pageMetadata } from "@/lib/seo/metadata";
-import { Logo } from "@/components/brand/Logo";
+import { START_COLUMN, StartHeader, StartLead } from "./lead";
 
 export const metadata: Metadata = pageMetadata({
   title: "Choose your exam",
@@ -17,10 +16,13 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /**
- * Where "Start free" leads, and where a signed-in account without Pro lands.
- * Someone already enrolled in an exam goes straight to that path, unless they
- * came here to switch (`?pick=1`). Paying from anywhere but a path lands here
- * too (`?upgraded=1`), and goes on to their path, which opens with the unlock.
+ * Where "Start for free" leads, and where a signed-in account without Pro
+ * lands. Someone already enrolled in an exam goes straight to that study path,
+ * unless they came here to change exam (`?pick=1`). Paying from anywhere but a
+ * study path lands here too (`?upgraded=1`), and goes on to their study path,
+ * which opens with what Pro opened.
+ *
+ * While the server is still answering, loading.tsx stands in for this page.
  */
 export default async function StartPage({
   searchParams,
@@ -43,28 +45,9 @@ export default async function StartPage({
 
   return (
     <div className="flex min-h-svh flex-col aurora-bg text-foreground">
-      <header className="glass-nav sticky top-0 z-40">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Logo />
-          <ThemeToggle />
-        </div>
-      </header>
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto grid w-full max-w-2xl flex-1 content-start gap-10 px-4 pb-20 pt-14 outline-none sm:px-6 sm:pt-24"
-      >
-        <div className="grid gap-4">
-          {paid && <span className="cb-label text-muted-foreground">Your payment has been received.</span>}
-          <h1 className="cb-display text-balance text-[2.25rem] sm:text-[3rem]">
-            {paid ? "Which exam is your Pro plan for?" : "Which exam are you preparing for?"}
-          </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            {paid
-              ? "Choose the exam, and its whole study path will open. This includes every step, every hands-on lab and the timed practice exams."
-              : "This is the only choice that you need to make. After this, each step is set out for you in order."}
-          </p>
-        </div>
+      <StartHeader />
+      <main id="main-content" tabIndex={-1} className={START_COLUMN}>
+        <StartLead paid={paid} />
         <ExamPicker surface="start" upgraded={paid} />
       </main>
     </div>
