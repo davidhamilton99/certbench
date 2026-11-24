@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, FlaskConical, Loader2, RotateCcw, Timer } from "lucide-react";
@@ -300,6 +300,9 @@ interface StopInput {
 const requestStop = (input: StopInput) => api(getPathStop, input);
 type BuiltStop = Awaited<ReturnType<typeof requestStop>>;
 
+/** The progress hook's state as it is at one moment (its `peek`). */
+type ProgressState = ReturnType<ReturnType<typeof usePathProgress>["peek"]>;
+
 /**
  * Names a request for a step by what it asks for. A request made ahead of time
  * is used only when the step is then asked for in the same way: the same step,
@@ -344,6 +347,15 @@ const PAGE_ENDPOINTS = [
 const SLOW_AFTER_MS = 20_000;
 /** And how long it keeps asking the account on its own. */
 const STOP_ASKING_AFTER_MS = 120_000;
+
+// The address, read as the page renders (`flagged` in PathApp). What matters is
+// whether it carries the flag as the page opens, and only the page itself takes
+// the flag off: there is nothing to listen for.
+const subscribeToNothing = () => () => {};
+/** Whether the address carries the flag that the return from paying adds. */
+const upgradedInAddress = () => UPGRADED_FLAG.test(window.location.search);
+/** The server has no address to read, and the first pass in the browser repeats the server. */
+const notOnServer = () => false;
 
 /** Take the flag that the return from paying carries off the address. */
 function dropUpgradedFlag() {
@@ -392,7 +404,14 @@ export function PathApp({
    */
   free: FreeOnPublicPages;
 }) {
-  const p = usePathProgress(cert);
+  // What the page decides each time the progress hook has learned who is here
+  // or what their account holds (`onLearned`, below `onNext`). The hook is
+  // called first, so it is handed a function that calls the page's own.
+  const onLearnedRef = useRef<() => void>(() => {});
+  const learned = useCallback(() => onLearnedRef.current(), []);
+  const p = usePathProgress(cert, { onLearned: learned });
+  // The hook's functions keep their identity from one render to the next.
+  const { ready, signedIn, proPlan, refreshAccess, record, finish, finishLab, retire, importExam, peek } = p;
   const total = plan.stops.length;
   // "objective", or "topic" where the steps are CertBench's own topics (Network+).
   const unit = outlineUnit(cert);
@@ -447,11 +466,25 @@ export function PathApp({
   // they are (below), so a reload is an ordinary visit. A buyer who returns
   // signed out keeps it: they are asked to sign in, and signing in brings them
   // back to this address, flag and all, to the wait for their confirmation.
-  const [landing, setLanding] = useState<{ done: boolean } | null>(null);
+  const [landing, setLandingState] = useState<{ done: boolean } | null>(null);
+  // The address is read in the browser only: the server's HTML, and the first
+  // pass over it in the browser, are drawn without it. On a page opened from
+  // inside the app it is read before the first paint; on a full page load the
+  // inline script holds the stage meanwhile (path-hold.ts), so the introductory
+  // questions never show. The flag is kept in `landing` as soon as it is seen,
+  // because it comes off the address once the page knows who is here.
+  const flagged = useSyncExternalStore(subscribeToNothing, upgradedInAddress, notOnServer);
+  if (flagged && landing === null) setLandingState({ done: false });
+  // The landing as it is at this moment, for what the page decides between
+  // renders (`onLearned`). It follows the state, and a change made in a handler
+  // is in it at once.
+  const landingRef = useRef(landing);
   useLayoutEffect(() => {
-    // The address is only readable once mounted; before paint, so the
-    // introductory questions do not flash.
-    if (UPGRADED_FLAG.test(window.location.search)) setLanding({ done: false });
+    landingRef.current = landing;
+  }, [landing]);
+  const setLanding = useCallback((next: { done: boolean }) => {
+    landingRef.current = next;
+    setLandingState(next);
   }, []);
 
   const freshPlay = useCallback(
@@ -463,14 +496,21 @@ export function PathApp({
   );
 
   const [view, setViewState] = useState<View>({ kind: "play" });
+  // The screen as it is at this moment, for what the page decides between
+  // renders. Every move goes through `showView`, which keeps it.
+  const viewRef = useRef(view);
   // Counts every screen the page moves to. A request notes the count as it is
   // made. If the count has moved on when the answer arrives, the learner has
   // gone elsewhere meanwhile (the exam's name in the header, the browser's
   // Back), and the answer no longer decides what they see.
   const moves = useRef(0);
-  const setView = useCallback((next: View | ((current: View) => View)) => {
+  /** Move to a screen, and say which. `setView`, below, also makes the first-unlock check. */
+  const showView = useCallback((next: View | ((current: View) => View)): View => {
     moves.current++;
-    setViewState(next);
+    const shown = typeof next === "function" ? next(viewRef.current) : next;
+    viewRef.current = shown;
+    setViewState(shown);
+    return shown;
   }, []);
   // "Now" for what's due for review, fixed for the visit: due-ness moves in days.
   const [visitAt] = useState(() => Date.now());
@@ -483,15 +523,55 @@ export function PathApp({
     setPlayState(next);
   }, []);
 
-  // First paint is the warm-up (fast for first-time visitors and crawlers);
-  // once the page knows who is here and what they have done, it decides where
-  // they belong (the effect below `onNext`). This is the arrival, as the
-  // progress hook counts them, that has been decided for.
+  // The first paint shows the introductory questions (fast for first-time
+  // visitors and crawlers); once the page knows who is here and what they have
+  // done, it decides where they belong (`placeArrival`, below `onNext`). This
+  // is the arrival, as the progress hook counts them, that has been decided for.
   const arrived = useRef(0);
-  // Whether the first-unlock check has been made (the effect after that one).
-  // The effects run in the order they are written: the arrival's decision,
-  // then a practice exam brought in from a public page, then the unlock.
+  // Whether the first-unlock check has been made (`checkUnlock`, below).
   const unlockChecked = useRef(false);
+  // True while the page decides what the progress hook has learned
+  // (`onLearned`). Its decisions are taken in order, and the first-unlock
+  // check comes last among them, so a screen chosen meanwhile does not make it.
+  const deciding = useRef(false);
+
+  /**
+   * The first time Pro covers this exam on this device, the page opens with
+   * what it opened: in place of the learner's map, or of a step not yet
+   * answered (the first paint's introductory questions, which a started study
+   * path is about to leave for the map). Partway through a step it waits until
+   * they are back on the map. The check is made once a visit, at the first
+   * moment that allows it: each time the page has learned something
+   * (`onLearned`), each time the screen changes (`setView`), and when "Payment
+   * received" gives way.
+   */
+  const checkUnlock = useCallback(() => {
+    const now = peek();
+    const landed = landingRef.current;
+    if (!now.ready || now.userId === null || now.access !== "pro" || unlockChecked.current) return;
+    if (landed !== null && !landed.done) return;
+    const shown = viewRef.current;
+    const untouched = shown.kind === "play" && playRef.current.results.every((r) => r === null);
+    if (shown.kind !== "home" && !untouched) return;
+    unlockChecked.current = true;
+    if (!firstUnlock(cert)) return;
+    track("path_unlock_viewed", { cert });
+    showView({ kind: "unlocked" });
+  }, [cert, peek, showView]);
+
+  /**
+   * Move to a screen. A new screen can be the moment for the first-unlock
+   * check. While the page decides what it has learned, the check waits until
+   * those decisions are taken.
+   */
+  const setView = useCallback(
+    (next: View | ((current: View) => View)) => {
+      const from = viewRef.current.kind;
+      const shown = showView(next);
+      if (shown.kind !== from && !deciding.current) checkUnlock();
+    },
+    [showView, checkUnlock]
+  );
 
   // The map tile that's open on the home screen, if any.
   const [tile, setTile] = useState<MapTile | null>(null);
@@ -594,14 +674,22 @@ export function PathApp({
       }
     : undefined;
 
-  // This device's rehearsal for this account: one in progress, or the last one scored.
-  const [run, setRunState] = useState<RehearsalRun | null>(null);
-  useEffect(() => {
-    setRunState(p.ready && p.userId ? readRun(cert, p.userId) : null);
-  }, [p.ready, p.userId, cert]);
+  // This device's practice exam for this account: one in progress, or the last
+  // one scored. It is read from the device for the account that the page knows
+  // is here (nobody, until the page knows), and read again whenever that changes.
+  const runOwner = p.ready ? p.userId : null;
+  const [kept, setKept] = useState<{ cert: PathCert; owner: string | null; run: RehearsalRun | null }>({
+    cert,
+    owner: null,
+    run: null,
+  });
+  if (kept.cert !== cert || kept.owner !== runOwner) {
+    setKept({ cert, owner: runOwner, run: runOwner ? readRun(cert, runOwner) : null });
+  }
+  const { run } = kept;
   const saveRun = useCallback(
     (next: RehearsalRun) => {
-      setRunState(next);
+      setKept((k) => ({ ...k, run: next }));
       writeRun(cert, next);
     },
     [cert]
@@ -613,8 +701,6 @@ export function PathApp({
   // back to the picker. Claim this one. The server only lets an account with no
   // exam yet take it, so a member who has one still gets the offer to add it.
   const claimed = useRef(false);
-  // The hook's functions keep their identity from one render to the next.
-  const { ready, signedIn, proPlan, refreshAccess, arrival, record, finish, finishLab, retire, peek } = p;
   // Back from paying with nobody signed in: the buyer is asked to sign in.
   const paidSignedOut = awaitingPro && ready && !signedIn;
   // Names the screen that is showing, so that the page can tell when it changes.
@@ -640,27 +726,36 @@ export function PathApp({
     })();
   }, [ready, signedIn, proPlan, pro, cert, refreshAccess]);
 
-  // Back from paying. Signed out, the page asks the buyer to sign in (the
-  // screen is chosen below) and the flag stays on the address. Signed in, the
-  // flag comes off, and the moment Pro is confirmed the page opens with what
-  // it opened, straight from "Payment received" before any other screen paints.
+  // When the page began to ask the account for Pro (below), for how long the wait lasted.
   const waitedSince = useRef<number | null>(null);
-  useLayoutEffect(() => {
-    if (!awaitingPro || !ready || !signedIn) return;
-    dropUpgradedFlag();
-    if (!pro) return;
-    setLanding({ done: true });
-    // This decides what opens: the arrival's own decision and the unlock check stand down.
-    arrived.current = arrival;
-    unlockChecked.current = true;
-    track("path_upgrade_landed", {
-      cert,
-      waited_ms: waitedSince.current === null ? 0 : Date.now() - waitedSince.current,
-    });
-    const first = firstUnlock(cert);
-    if (first) track("path_unlock_viewed", { cert });
-    setView(first ? { kind: "unlocked" } : { kind: "home" });
-  }, [awaitingPro, ready, signedIn, pro, cert, arrival, setView]);
+  /**
+   * Back from paying. Signed out, the page asks the buyer to sign in (the
+   * screen is chosen below) and the flag stays on the address. Signed in, the
+   * flag comes off, and the moment Pro is confirmed the page opens with what it
+   * opened, straight from "Payment received" before any other screen paints.
+   * The first of the decisions taken when the page has learned something
+   * (`onLearned`).
+   */
+  const landIfPaid = useCallback(
+    (now: ProgressState) => {
+      const landed = landingRef.current;
+      if (landed === null || landed.done || !now.ready || now.userId === null) return;
+      dropUpgradedFlag();
+      if (now.access !== "pro") return;
+      setLanding({ done: true });
+      // This decides what opens: the arrival's own decision and the unlock check stand down.
+      arrived.current = now.arrival;
+      unlockChecked.current = true;
+      track("path_upgrade_landed", {
+        cert,
+        waited_ms: waitedSince.current === null ? 0 : Date.now() - waitedSince.current,
+      });
+      const first = firstUnlock(cert);
+      if (first) track("path_unlock_viewed", { cert });
+      setView(first ? { kind: "unlocked" } : { kind: "home" });
+    },
+    [cert, setLanding, setView]
+  );
 
   // Until then, ask the account again while the activation webhook lands:
   // every 2 seconds, every 5 once it's slow, on its own for 2 minutes.
@@ -1171,108 +1266,136 @@ export function PathApp({
     stageBody.current?.querySelector<HTMLElement>("[data-screen-title], h1")?.focus({ preventScroll: true });
   }, [unreached]);
 
-  // Where the learner belongs, decided each time the page learns who is here
-  // or what their account holds: when it opens, when a slow sign-in service
-  // answers at last, and when an account that could not be reached is reached.
-  // Only someone who has not acted yet is moved: an answer given on the screen
-  // keeps them where they are, and it is kept (the progress hook merges it).
+  // Whether this visit has recorded the welcome back to an account's study path.
   const welcomed = useRef(false);
-  useEffect(() => {
-    if (!p.ready || arrived.current === p.arrival) return;
-    arrived.current = p.arrival;
-    const cur = playRef.current;
-    const answeredHere = cur.results.filter((r) => r !== null).length > (cur.resumed?.answered ?? 0);
-    const undecided =
-      view.kind === "welcome" || (view.kind === "play" && cur.stop.id === warmup.stop.id && !answeredHere);
-    if (!undecided) return;
+  /**
+   * Where the learner belongs, decided once for each arrival as the progress
+   * hook counts them: when the page opens, when a slow sign-in service answers
+   * at last, and when an account that could not be reached is reached. Only
+   * someone who has not acted yet is moved: an answer given on the screen keeps
+   * them where they are, and it is kept (the progress hook merges it). The
+   * second of the decisions taken when the page has learned something
+   * (`onLearned`).
+   */
+  const placeArrival = useCallback(
+    (now: ProgressState) => {
+      if (!now.ready || arrived.current === now.arrival) return;
+      arrived.current = now.arrival;
+      const cur = playRef.current;
+      const shown = viewRef.current;
+      const answeredHere = cur.results.filter((r) => r !== null).length > (cur.resumed?.answered ?? 0);
+      const undecided =
+        shown.kind === "welcome" || (shown.kind === "play" && cur.stop.id === warmup.stop.id && !answeredHere);
+      if (!undecided) return;
 
-    // Signed out beside an account's path: offer that account before a blank one.
-    if (!p.signedIn && p.held && hasStarted(p.held)) {
-      setView({ kind: "welcome" });
-      if (!welcomed.current) track("path_welcome_back_viewed", { cert });
-      welcomed.current = true;
-      return;
-    }
-    if (p.signedIn) {
-      // An account's own screen is its home, once it has anything on it.
-      setView(hasStarted(p.progress) ? { kind: "home" } : { kind: "play" });
-      return;
-    }
-    // Nobody is signed in. A visitor who has finished the introductory
-    // questions is asked to save them; one who left part-way (a reload, a tab
-    // the phone discarded) carries on from the first question without an answer.
-    if (isStopDone(p.progress, warmup.stop.id)) setView({ kind: "home" });
-    else resumeWarmup(p.progress);
-  }, [p.ready, p.arrival, p.progress, p.signedIn, p.held, cert, view.kind, warmup.stop.id, resumeWarmup, setView]);
+      // Signed out beside an account's path: offer that account before a blank one.
+      if (now.userId === null && now.held && hasStarted(now.held)) {
+        setView({ kind: "welcome" });
+        if (!welcomed.current) track("path_welcome_back_viewed", { cert });
+        welcomed.current = true;
+        return;
+      }
+      if (now.userId !== null) {
+        // An account's own screen is its home, once it has anything on it.
+        setView(hasStarted(now.progress) ? { kind: "home" } : { kind: "play" });
+        return;
+      }
+      // Nobody is signed in. A visitor who has finished the introductory
+      // questions is asked to save them; one who left part-way (a reload, a tab
+      // the phone discarded) carries on from the first question without an answer.
+      if (isStopDone(now.progress, warmup.stop.id)) setView({ kind: "home" });
+      else resumeWarmup(now.progress);
+    },
+    [cert, warmup.stop.id, resumeWarmup, setView]
+  );
 
-  // A practice exam this device finished on the exam's public page counts on
-  // the path: its misses come back, and with no checkpoint yet it becomes the
-  // checkpoint, so its reveal and the offer come straight away. It waits until
-  // the account has been reached: an exam must not stand in for a checkpoint
-  // that the account already holds.
+  // Whether this visit has looked for a practice exam from the exam's public page.
   const examChecked = useRef(false);
-  useEffect(() => {
-    if (!p.ready || !p.userId || p.unreached || examChecked.current) return;
-    examChecked.current = true;
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("from")) {
-      url.searchParams.delete("from");
-      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    }
-    const run = readRun(`${cert}-practice-test`, "public");
-    // An exam whose score was shown to another account is never read here.
-    const exam = run ? examToImport(run, Date.now(), p.userId) : null;
-    if (!run || !exam) return;
-    // A public page keeps an exam for the device, not for a person. On a shared
-    // computer it goes only to the account that it can be shown to belong to;
-    // otherwise it is set aside, and it stays set aside.
-    const mark = readExamMark(cert);
-    if (!mayTakeExam(p.userId, { at: exam.result.at, claimedBy: run.claimedBy ?? null }, { foreign: p.foreign, mark })) {
-      if (!run.claimedBy && mark?.at !== exam.result.at) writeExamMark(cert, { at: exam.result.at, by: null });
-      return;
-    }
-    // An exam that begins the study path (nothing had started before it) leaves
-    // the copy started before any answer is given here, as a public page's
-    // questions do: the page then owes `path_started` for the first answer on
-    // it (path-start.ts). A learner whose account had begun a study path is
-    // never counted again (onAnswer).
-    if (!hasStarted(p.progress)) oweStartEvent(cert);
-    const asCheckpoint = p.importExam(exam.answers, exam.result);
-    writeExamMark(cert, { at: exam.result.at, by: p.userId });
-    // The exam is this account's now, on the public page as well: it shows a
-    // finished exam only to the account whose name it carries (PracticeExam).
-    if (run.claimedBy !== p.userId) writeRun(`${cert}-practice-test`, { ...run, claimedBy: p.userId });
-    if (!asCheckpoint) return;
-    // The bank answers go to the account too, as a stop's do.
-    const answers = run.reps.flatMap((rep, i) => {
-      const pick = run.picks[i];
-      const qid = questionIdOf(rep.id);
-      if (!qid || pick === null) return [];
-      return [{ questionId: qid, selectedIndex: rep.type === "choice" && rep.order ? (rep.order[pick] ?? pick) : pick }];
-    });
-    if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
-    track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
-    // The reveal is what this visit opens on. The unlock check below runs in
-    // the same pass and would read the screen as it was before this one:
-    // it stands down, and the unlock moment waits for a later visit.
-    unlockChecked.current = true;
-    setView({ kind: "reveal" });
-    window.scrollTo({ top: 0 });
-  }, [p, cert, setView]);
+  /**
+   * A practice exam this device finished on the exam's public page counts on
+   * the path: its misses come back, and with no checkpoint yet it becomes the
+   * checkpoint, so its reveal and the offer come straight away. It waits until
+   * the account has been reached: an exam must not stand in for a checkpoint
+   * that the account already holds. The third of the decisions taken when the
+   * page has learned something (`onLearned`).
+   */
+  const takePublicExam = useCallback(
+    (now: ProgressState) => {
+      if (!now.ready || !now.userId || now.unreached || examChecked.current) return;
+      examChecked.current = true;
+      const userId = now.userId;
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("from")) {
+        url.searchParams.delete("from");
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+      const run = readRun(`${cert}-practice-test`, "public");
+      // An exam whose score was shown to another account is never read here.
+      const exam = run ? examToImport(run, Date.now(), userId) : null;
+      if (!run || !exam) return;
+      // A public page keeps an exam for the device, not for a person. On a shared
+      // computer it goes only to the account that it can be shown to belong to;
+      // otherwise it is set aside, and it stays set aside.
+      const mark = readExamMark(cert);
+      if (!mayTakeExam(userId, { at: exam.result.at, claimedBy: run.claimedBy ?? null }, { foreign: now.foreign, mark })) {
+        if (!run.claimedBy && mark?.at !== exam.result.at) writeExamMark(cert, { at: exam.result.at, by: null });
+        return;
+      }
+      // An exam that begins the study path (nothing had started before it) leaves
+      // the copy started before any answer is given here, as a public page's
+      // questions do: the page then owes `path_started` for the first answer on
+      // it (path-start.ts). A learner whose account had begun a study path is
+      // never counted again (onAnswer).
+      if (!hasStarted(now.progress)) oweStartEvent(cert);
+      const asCheckpoint = importExam(exam.answers, exam.result);
+      writeExamMark(cert, { at: exam.result.at, by: userId });
+      // The exam is this account's now, on the public page as well: it shows a
+      // finished exam only to the account whose name it carries (PracticeExam).
+      if (run.claimedBy !== userId) writeRun(`${cert}-practice-test`, { ...run, claimedBy: userId });
+      if (!asCheckpoint) return;
+      // The bank answers go to the account too, as a stop's do.
+      const answers = run.reps.flatMap((rep, i) => {
+        const pick = run.picks[i];
+        const qid = questionIdOf(rep.id);
+        if (!qid || pick === null) return [];
+        return [{ questionId: qid, selectedIndex: rep.type === "choice" && rep.order ? (rep.order[pick] ?? pick) : pick }];
+      });
+      if (answers.length > 0) void api(recordPathAnswers, { cert, answers }).catch(() => {});
+      track("path_checkpoint_completed", { cert, score: exam.result.score, source: "practice_exam" });
+      // The reveal is what this visit opens on. The first-unlock check, which
+      // comes next, stands down, and the unlock moment waits for a later visit.
+      unlockChecked.current = true;
+      setView({ kind: "reveal" });
+      window.scrollTo({ top: 0 });
+    },
+    [cert, importExam, setView]
+  );
 
-  // The first time Pro covers this exam on this device, open with what it
-  // opened: in place of their map, or of a stop not yet answered (the first
-  // paint's warm-up, which a started path is about to leave for the map).
-  // Mid-stop it waits until they're back on the map.
-  useEffect(() => {
-    if (!p.ready || !p.signedIn || !pro || unlockChecked.current || awaitingPro) return;
-    const untouched = view.kind === "play" && playRef.current.results.every((r) => r === null);
-    if (view.kind !== "home" && !untouched) return;
-    unlockChecked.current = true;
-    if (!firstUnlock(cert)) return;
-    track("path_unlock_viewed", { cert });
-    setView({ kind: "unlocked" });
-  }, [p.ready, p.signedIn, pro, cert, view.kind, awaitingPro, setView]);
+  /**
+   * What the page decides each time the progress hook has learned who is here
+   * or what their account holds (see `onLearned` in usePathProgress). It runs
+   * as the hook finishes its own work for that news, so the screen it chooses
+   * arrives in the same render as what was learned. Four decisions are taken,
+   * in this order, on the state as it was learned: the return from paying,
+   * where an arriving learner belongs, a practice exam brought in from a public
+   * page, and last the first unlock, which reads the screen that the others
+   * have chosen.
+   */
+  const onLearned = useCallback(() => {
+    const now = peek();
+    deciding.current = true;
+    try {
+      landIfPaid(now);
+      placeArrival(now);
+      takePublicExam(now);
+    } finally {
+      deciding.current = false;
+    }
+    checkUnlock();
+  }, [peek, landIfPaid, placeArrival, takePublicExam, checkUnlock]);
+  useLayoutEffect(() => {
+    onLearnedRef.current = onLearned;
+  }, [onLearned]);
 
   // What the step that has just ended changed in the outline: the objectives
   // whose standing is not what it was before the step, counted by where they
@@ -1377,6 +1500,8 @@ export function PathApp({
           // with was not); any other screen is given it at its title.
           setPlay({ ...playRef.current, takeFocus: true });
           setLanding({ done: true });
+          // The first-unlock check waits while this screen holds the page.
+          checkUnlock();
         }}
       />
     ) : (
@@ -1389,6 +1514,7 @@ export function PathApp({
           // the wait follows a press, so it takes the focus.
           setPlay({ ...playRef.current, takeFocus: true });
           setLanding({ done: true });
+          checkUnlock();
         }}
       />
     );
@@ -2070,7 +2196,7 @@ export function PathApp({
   /** Throw away a rehearsal in progress. */
   function discardRehearsal() {
     clearRun(cert);
-    setRunState(null);
+    setKept((k) => ({ ...k, run: null }));
   }
 
   /**

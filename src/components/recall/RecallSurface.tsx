@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import * as Tabs from "@radix-ui/react-tabs";
 import { X } from "lucide-react";
@@ -16,9 +16,12 @@ import { SubnettingDrillLazy } from "@/components/marketing/SubnettingDrillLazy"
 import { Button } from "@/components/ui/button";
 import { RecallPlayer, MIXED_DECK_KEY } from "./RecallPlayer";
 import { RecallMastery } from "./RecallMastery";
+import { useInBrowser } from "./useInBrowser";
 import { cn } from "@/lib/utils";
 
 const SUBNETTING_KEY = "__subnetting__";
+/** No fact answered correctly yet: what is shown until the device's storage has been read. */
+const NOTHING_MASTERED: MasteryMap = {};
 /** Answers in a session before the note about the rest of CertBench appears. */
 const REFRAME_AFTER = 20;
 
@@ -51,7 +54,14 @@ export function RecallSurface({
       : decks[0]?.config.tableId ?? SUBNETTING_KEY;
 
   const [active, setActive] = useState<string>(validInitial);
-  const [mastery, setMastery] = useState<MasteryMap>({});
+  // The facts last answered correctly, as this device keeps them for one exam.
+  // Its storage is read in the browser only: the server's HTML, and the first
+  // pass over it in the browser, start empty, so hydration never mismatches.
+  // It is read again when the exam changes.
+  const inBrowser = useInBrowser();
+  const [saved, setSaved] = useState<{ cert: string; map: MasteryMap } | null>(null);
+  if (inBrowser && saved?.cert !== certSlug) setSaved({ cert: certSlug, map: readMastery(certSlug) });
+  const mastery = saved?.cert === certSlug ? saved.map : NOTHING_MASTERED;
   const [session, setSession] = useState({ answered: 0, correct: 0 });
   const [reframeDismissed, setReframeDismissed] = useState(false);
   const [typed, setTyped] = useState(false);
@@ -65,12 +75,6 @@ export function RecallSurface({
     setReframeDismissed(true);
   }
 
-  // Load saved mastery after mount (localStorage is client-only, so the server
-  // and the first client render both start empty and hydration never mismatches).
-  useEffect(() => {
-    setMastery(readMastery(certSlug));
-  }, [certSlug]);
-
   const canMix = decks.length > 1;
 
   function handleAnswer(tableId: string, itemId: string, correct: boolean) {
@@ -78,10 +82,10 @@ export function RecallSurface({
       answered: s.answered + 1,
       correct: s.correct + (correct ? 1 : 0),
     }));
-    setMastery((prev) => {
-      const next = applyMastery(prev, tableId, itemId, correct);
+    setSaved((prev) => {
+      const next = applyMastery(prev?.cert === certSlug ? prev.map : NOTHING_MASTERED, tableId, itemId, correct);
       writeMastery(certSlug, next);
-      return next;
+      return { cert: certSlug, map: next };
     });
   }
 
