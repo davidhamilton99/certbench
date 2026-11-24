@@ -39,6 +39,7 @@ import {
   seenIds,
   stopsDone,
 } from "@/core/path/progress";
+import { itemStatus, type ItemMap } from "@/core/drill-rounds/drill-rounds";
 import { parseRepId, questionIdOf } from "@/core/path/rep-id";
 import { checkpointFromExam, examToImport } from "@/core/path/exam-import";
 import { EXAM_CODES, examVersions, fmtDay, LAST_EXAM_DAY, longDate, newerVersion } from "@/core/path/versions";
@@ -123,6 +124,12 @@ interface Play {
   /** "misses": a review round of their misses alone. */
   focus?: "misses";
   /**
+   * The questions that were missed before the step began and that it asks
+   * again. A step opens with up to two of them, and each says so: a question
+   * from another objective was otherwise taken for a mistake in the step.
+   */
+  back: ReadonlySet<string>;
+  /**
    * The step continues from answers given earlier (before a reload, or on
    * another page): how many of its questions had been answered, and the
    * question it continues at.
@@ -136,11 +143,14 @@ interface Play {
   takeFocus: boolean;
 }
 
-/** A step at its first question, with nothing answered. */
+/** The line above a question that a step asks again because it was missed earlier. */
+const REPEATED_QUESTION = "You answered this question incorrectly earlier, so it is asked again here.";
+
+/** A step at its first question, with nothing answered, measured against the answers before it. */
 const newPlay = (
   stop: PathStop,
   reps: Rep[],
-  before: Map<string, ObjectiveStatus>,
+  items: ItemMap,
   takeFocus: boolean,
   focus?: "misses"
 ): Play => ({
@@ -150,8 +160,9 @@ const newPlay = (
   results: reps.map(() => null),
   bank: new Map(),
   checkpoint: [],
-  before,
+  before: objectiveStatuses(items),
   focus,
+  back: new Set(reps.filter((r) => items[r.id] && itemStatus(items[r.id]) === "missed").map((r) => r.id)),
   takeFocus,
 });
 
@@ -488,10 +499,10 @@ export function PathApp({
   }, []);
 
   const freshPlay = useCallback(
-    (stop: PathStop, reps: Rep[], before: Map<string, ObjectiveStatus>, focus?: "misses"): Play =>
+    (stop: PathStop, reps: Rep[], items: ItemMap, focus?: "misses"): Play =>
       // A step that opens after the person has done something on the page
       // takes the focus at its first question; the one a page loads with does not.
-      newPlay(stop, reps, before, acted.current, focus),
+      newPlay(stop, reps, items, acted.current, focus),
     []
   );
 
@@ -514,7 +525,7 @@ export function PathApp({
   }, []);
   // "Now" for what's due for review, fixed for the visit: due-ness moves in days.
   const [visitAt] = useState(() => Date.now());
-  const [play, setPlayState] = useState<Play>(() => newPlay(warmup.stop, warmup.reps, new Map(), false));
+  const [play, setPlayState] = useState<Play>(() => newPlay(warmup.stop, warmup.reps, {}, false));
   // Handlers read the play through a ref, so that an answer and the press of
   // Continue in one moment always see the question in hand.
   const playRef = useRef(play);
@@ -852,12 +863,12 @@ export function PathApp({
         reps.map((r) => r.id)
       );
       const answered = results.filter((r) => r !== null).length;
-      if (answered === 0) return freshPlay(stop, reps, objectiveStatuses(progress.items));
+      if (answered === 0) return freshPlay(stop, reps, progress.items);
       // What the step changes is measured from the path as it was without the step's own answers.
       const own = new Set(reps.map((r) => r.id));
       const others = Object.fromEntries(Object.entries(progress.items).filter(([id]) => !own.has(id)));
       const at = Math.max(0, openFrom(results, 0));
-      return { ...freshPlay(stop, reps, objectiveStatuses(others)), i: at, results, resumed: { answered, at } };
+      return { ...freshPlay(stop, reps, others), i: at, results, resumed: { answered, at } };
     },
     [freshPlay]
   );
@@ -992,7 +1003,7 @@ export function PathApp({
             return;
           }
         } else {
-          setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items)));
+          setPlay(freshPlay(built.stop, built.reps, p.progress.items));
         }
         setView({ kind: "play" });
         window.scrollTo({ top: 0 });
@@ -1538,9 +1549,10 @@ export function PathApp({
   } else if (view.kind === "play") {
     const rep = play.reps[play.i];
     // A learn step is one objective, named in the heading; other steps mix
-    // objectives, so each question says which one it belongs to.
+    // objectives, so each question says which one it belongs to. A question
+    // that a learn step asks again from another objective says which one too.
     const objective =
-      rep && play.stop.kind !== "learn"
+      rep && (play.stop.kind !== "learn" || !play.stop.objectives.includes(rep.objective))
         ? structure.domains.flatMap((d) => d.objectives).find((o) => o.code === rep.objective)
         : undefined;
     // The kind of question ("Exam-style question") is said on the objective's
@@ -1586,11 +1598,15 @@ export function PathApp({
               takeFocus={play.takeFocus}
               // The line above has said the kind already.
               showKind={!objective}
-              // A step that continues from earlier answers says so above its first question.
+              // A step that continues from earlier answers says so above its first
+              // question, and a question that is asked again says why. A round of
+              // review is titled "Review", so its questions need not say so.
               preface={
                 play.resumed && play.i === play.resumed.at
                   ? `You answered ${play.resumed.answered} of the ${play.reps.length} introductory questions earlier. The questions continue from here.`
-                  : undefined
+                  : play.focus !== "misses" && play.back.has(rep.id)
+                    ? REPEATED_QUESTION
+                    : undefined
               }
             />
           )}
@@ -2169,7 +2185,7 @@ export function PathApp({
         return;
       }
       track("path_review_started", { cert, from, reps: built.reps.length });
-      setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(p.progress.items), "misses"));
+      setPlay(freshPlay(built.stop, built.reps, p.progress.items, "misses"));
       setView({ kind: "play" });
       window.scrollTo({ top: 0 });
     } catch (err) {
@@ -2227,7 +2243,7 @@ export function PathApp({
         setView({ kind: "home" });
         return;
       }
-      setPlay(freshPlay(built.stop, built.reps, objectiveStatuses(peek().progress.items)));
+      setPlay(freshPlay(built.stop, built.reps, peek().progress.items));
       setView({ kind: "play" });
       window.scrollTo({ top: 0 });
     } catch (err) {

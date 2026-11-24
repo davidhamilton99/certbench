@@ -1,7 +1,7 @@
 import { freeLabs, type FreeOnPublicPages } from "@/core/path/free-labs";
 import type { PathCert } from "@/core/path/types";
 import { pbqRegistry } from "@/data/pbq";
-import { PBQ_EXAMPLE_PAGES, practicePageFor } from "@/lib/seo/cert-pages";
+import { PBQ_EXAMPLE_PAGES, PRACTICE_EXAM_ANCHOR, practicePageFor } from "@/lib/seo/cert-pages";
 import { SY0_801_CERT, SY0_801_PRACTICE_PATH } from "@/lib/seo/exam-versions";
 
 /**
@@ -22,8 +22,13 @@ import { SY0_801_CERT, SY0_801_PRACTICE_PATH } from "@/lib/seo/exam-versions";
 export function freeOnPublicPages(cert: PathCert): FreeOnPublicPages {
   const labsPage = PBQ_EXAMPLE_PAGES.find((page) => page.certSlug === cert);
   return {
-    // SY0-801 has a practice test page of its own, which the list of practice test pages does not hold.
-    examHref: cert === SY0_801_CERT ? SY0_801_PRACTICE_PATH : practicePageFor(cert),
+    // SY0-801 has a practice test page of its own, which the list of practice
+    // test pages does not hold, and which opens with the exam. The others open
+    // with the introductory questions, so the link goes past them to the exam:
+    // a member who pressed "Open the free practice exam" was given the
+    // introductory questions again.
+    examHref:
+      cert === SY0_801_CERT ? SY0_801_PRACTICE_PATH : `${practicePageFor(cert)}#${PRACTICE_EXAM_ANCHOR}`,
     labsHref: labsPage ? `/${labsPage.path}` : null,
     labIds: labsPage ? freeLabs(pbqRegistry[cert] ?? []).map((lab) => lab.id) : [],
   };

@@ -129,14 +129,16 @@ beforeEach(() => {
 describe("what each exam gives away on its public pages", () => {
   it("names a public practice exam page of its own for every exam that has a study path", () => {
     const pages = PATH_CERTS.map((cert) => freeOnPublicPages(cert).examHref);
+    // A page that opens with the introductory questions is linked at its exam,
+    // so a member who asks for the exam is not given those questions again.
     expect(pages).toEqual([
-      "/security-plus-practice-test",
+      "/security-plus-practice-test#practice-test",
       "/security-plus-sy0-801-practice-test",
-      "/network-plus-practice-test",
-      "/a-plus-core-1-practice-test",
-      "/a-plus-core-2-practice-test",
+      "/network-plus-practice-test#practice-test",
+      "/a-plus-core-1-practice-test#practice-test",
+      "/a-plus-core-2-practice-test#practice-test",
     ]);
-    for (const href of pages) expect(pageExists(href), href).toBe(true);
+    for (const href of pages) expect(pageExists(href.split("#")[0]), href).toBe(true);
   });
 
   it("names the labs that the exam's public page of labs itself offers free", () => {

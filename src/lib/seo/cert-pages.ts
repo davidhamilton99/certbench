@@ -539,6 +539,13 @@ export const PRACTICE_TEST_PAGES: PracticeTestPage[] = [
   },
 ];
 
+/**
+ * The practice exam's place on a practice-test page. The page opens with the
+ * exam's introductory questions, so a link that is meant to open the exam
+ * itself (the study path's "Open the free practice exam") goes to this place.
+ */
+export const PRACTICE_EXAM_ANCHOR = "practice-test";
+
 /** The practice-test page for one exam: its own page, else the page that includes it. */
 export function practicePageFor(certSlug: string): string {
   const page =

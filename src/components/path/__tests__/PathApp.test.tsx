@@ -3486,6 +3486,31 @@ describe("the question's own lines", () => {
     expect(screen.getAllByText("Exam-style question")).toHaveLength(1);
   });
 
+  // A replay: a step on objective 1.1 of A+ opened with a ports question that
+  // the learner had missed earlier, with nothing on the screen to say why.
+  it("says why a step asks a missed question again, and names its objective when it is from another one", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"], { items: recordRep(EMPTY_PATH_PROGRESS, "a|2.1|old", false, 1).items });
+    server.stopHandler = (input) => ({
+      stop: plan.stops[input.index],
+      reps: [rep("a|2.1|old", "2.1"), rep("a|1.1|new", "1.1")],
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|2.1|old");
+    expect(screen.getByText("Objective 2.1: Objective 2.1.")).toBeInTheDocument();
+    expect(cards.at(-1)).toMatchObject({
+      rep: { id: "a|2.1|old" },
+      preface: "You answered this question incorrectly earlier, so it is asked again here.",
+    });
+
+    await answer(true);
+    // The step's own question: its objective is the step's title, and it is new.
+    await screen.findByText("Prompt a|1.1|new");
+    expect(screen.queryByText(/^Objective 1.1: /)).toBeNull();
+    expect(cards.at(-1)).toMatchObject({ rep: { id: "a|1.1|new" }, preface: undefined });
+  });
+
   it("hands the question card the same handlers from one render to the next", async () => {
     auth.session = { user: { id: "u1", email: "u1@example.com" } };
     server.progress = done(["warmup"]);

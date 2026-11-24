@@ -1,4 +1,9 @@
-import { CERT_PAGES_UPDATED_ISO, PRACTICE_TEST_PAGES, type PracticeTestPage } from "@/lib/seo/cert-pages";
+import {
+  CERT_PAGES_UPDATED_ISO,
+  PRACTICE_EXAM_ANCHOR,
+  PRACTICE_TEST_PAGES,
+  type PracticeTestPage,
+} from "@/lib/seo/cert-pages";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { QuestionDeck, type DeckQuestion } from "@/components/marketing/QuestionDeck";
 import { ExamVersionNote } from "@/components/marketing/ExamVersionNote";
@@ -51,7 +56,7 @@ export interface ObjectiveLink {
 }
 
 /** The practice exam's place on the page: the opening lines link to it. */
-const EXAM_ANCHOR = "practice-test";
+const EXAM_ANCHOR = PRACTICE_EXAM_ANCHOR;
 
 /** Counts are written the American way wherever the page is built. */
 const count = (n: number) => n.toLocaleString("en-US");
