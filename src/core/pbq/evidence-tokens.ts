@@ -51,8 +51,65 @@ export function toneLine(line: string): EvidenceToken[] {
 
 /**
  * Whether a block is laid out in columns (two or more spaces between words on
- * some line), so it keeps its spacing and scrolls sideways instead of wrapping.
+ * some line), so its spacing is kept and it is not numbered line by line. A
+ * table among them (`isTable`) also keeps every line whole and scrolls
+ * sideways; the rest wrap, each wrapped part under its own column (`hangOf`).
  */
 export function isColumnar(content: string): boolean {
   return content.split("\n").some((l) => /\S {2,}\S/.test(l));
+}
+
+/** Where each cell of a line starts: runs of text split by two or more spaces. */
+function cellStarts(line: string): number[] {
+  return [...line.matchAll(/\S+(?: \S+)*/g)].map((m) => m.index ?? 0);
+}
+
+/** A rule under a table's header: two or more runs of dashes, e.g. "----  -------". */
+const TABLE_RULE = /^[\s-]*-{2,} +-{2,}[\s-]*$/;
+
+/**
+ * Whether a block is a table, whose rows mean something only whole: it has a
+ * rule of dashes under its header, or three rows running with three or more
+ * cells each that start in the same places (a tracert). A table keeps every
+ * line whole and scrolls sideways where it is wider than its box. Wrapped on a
+ * phone, a tracert's times and hosts fell under the wrong hop.
+ */
+export function isTable(content: string): boolean {
+  const lines = content.split("\n");
+  if (lines.some((l) => TABLE_RULE.test(l))) return true;
+  let rows = 1;
+  for (let i = 1; i < lines.length; i++) {
+    const a = cellStarts(lines[i - 1]);
+    const b = cellStarts(lines[i]);
+    const same = b.length >= 3 && a.length === b.length && b.every((x, k) => Math.abs(x - a[k]) <= 1);
+    rows = same ? rows + 1 : 1;
+    if (rows >= 3) return true;
+  }
+  return false;
+}
+
+/** The deepest a wrapped part is set, in characters: past this a phone has too little room left. */
+export const MAX_HANG = 20;
+
+/**
+ * How far in, in characters, the wrapped part of a line in columns is set:
+ * under the value of a "Key : value" line, under the second cell of a line in
+ * cells, under its own first character for a line that is only indented. So a
+ * line that wraps on a phone stays in its column ("Static range    : 192.168.1.1
+ * to" wraps under the address, not under "Static"), and a line that fits is
+ * drawn exactly as it is. Never deeper than MAX_HANG.
+ */
+export function hangOf(line: string): number {
+  const indent = /^ */.exec(line)?.[0].length ?? 0;
+  const rest = line.slice(indent);
+  // "Key : value", "Key: value", "Key . . . : value": where the value starts.
+  const key = /^[^:]{1,60}?:\s+(?=\S)/.exec(rest)?.[0].length;
+  // Where the second cell starts, after a run of two or more spaces.
+  const cell = /^\S+(?: \S+)* {2,}(?=\S)/.exec(rest)?.[0].length;
+  let at = indent + Math.min(key ?? Infinity, cell ?? Infinity);
+  if (!Number.isFinite(at)) return Math.min(indent, MAX_HANG);
+  // A second cell that opens with the colon ("Static range    : 192…") hangs under the value after it.
+  const colon = cell !== undefined && cell < (key ?? Infinity) ? /^: +(?=\S)/.exec(line.slice(at))?.[0].length : undefined;
+  if (colon) at += colon;
+  return Math.min(at, MAX_HANG);
 }

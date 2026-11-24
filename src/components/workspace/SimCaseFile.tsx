@@ -1,13 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ChevronDown, ClipboardList } from "lucide-react";
-import { isColumnar, toneLine, type EvidenceTone } from "@/core/pbq/evidence-tokens";
+import { hangOf, isColumnar, isTable, toneLine, type EvidenceTone } from "@/core/pbq/evidence-tokens";
 import { cn } from "@/lib/utils";
 
 export interface Evidence {
   label: string;
   content: string;
+}
+
+/**
+ * A hanging indent in characters of the code face: the wrapped part of a line
+ * starts under its column. Never more than 40% of the evidence box's width
+ * (cqw: the box is the container both lengths are measured in, where a
+ * percentage would be the line's own width for one and its row's for the
+ * other): at 320 pixels a deep column left a value 13 characters, and
+ * "corp.internal" broke in two.
+ */
+export function hangStyle(line: string): CSSProperties | undefined {
+  const n = hangOf(line);
+  if (n === 0) return undefined;
+  const depth = `min(${n}ch, 40cqw)`;
+  return { paddingLeft: depth, textIndent: `calc(-1 * ${depth})` };
 }
 
 /**
@@ -61,7 +76,8 @@ export function ConsoleFrame({
         className
       )}
     >
-      <div className="flex min-w-0 items-start gap-2 border-b border-border py-1.5 pl-3 pr-1.5">{header}</div>
+      {/* pr-2: a control at the bar's end keeps the whole of its touch area (cb-tap) inside the frame. */}
+      <div className="flex min-w-0 items-start gap-2 border-b border-border py-1.5 pl-3 pr-2">{header}</div>
       {children}
     </div>
   );
@@ -159,21 +175,22 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
   const [open, setOpen] = useState(true);
   const active = evidence[Math.min(tab, evidence.length - 1)];
   const columnar = isColumnar(active.content);
+  const table = columnar && isTable(active.content);
   const lines = active.content.replace(/\n+$/, "").split("\n");
   const tabs = evidence.length > 1;
-  // Whether output in columns is wider than its box, measured as the box and
-  // the evidence change size, so that the line about scrolling sideways shows
-  // only when there is something to scroll to.
+  // Whether a table is wider than its box, measured as the box and the
+  // evidence change size, so that the line about scrolling sideways shows only
+  // when there is something to scroll to.
   const box = useRef<HTMLDivElement>(null);
   const [wide, setWide] = useState(false);
   useEffect(() => {
     const el = box.current;
-    if (!el || !columnar || typeof ResizeObserver === "undefined") return;
+    if (!el || !table || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(() => setWide(el.scrollWidth > el.clientWidth + 1));
     observer.observe(el);
     if (el.firstElementChild) observer.observe(el.firstElementChild);
     return () => observer.disconnect();
-  }, [columnar, open, tab]);
+  }, [table, open, tab]);
 
   function pick(i: number) {
     setTab(i);
@@ -195,7 +212,8 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
                   aria-pressed={i === tab}
                   onClick={() => pick(i)}
                   className={cn(
-                    "relative min-h-7 min-w-0 rounded-md px-2.5 py-1 text-left font-mono text-xs leading-5 transition-colors [overflow-wrap:anywhere]",
+                    // A full-size target under a thumb: 44px tall on a touch screen.
+                    "relative min-h-7 min-w-0 rounded-md px-2.5 py-1 text-left font-mono text-xs leading-5 transition-colors [overflow-wrap:anywhere] pointer-coarse:py-3",
                     i === tab
                       ? "bg-accent text-foreground"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -228,7 +246,7 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
         </>
       }
     >
-      {open && columnar && wide && (
+      {open && table && wide && (
         <p className="px-3 pt-2 text-note text-muted-foreground">Scroll sideways to read each whole line.</p>
       )}
       {open && (
@@ -236,25 +254,29 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
           ref={box}
           role="group"
           aria-label={active.label}
-          // The evidence scrolls inside its box, so the box takes the keyboard:
-          // the arrow keys then scroll it.
+          // The evidence can scroll inside its box (sideways, and down too on a
+          // screen that is wide and tall: `roomy`), so the box takes the
+          // keyboard: the arrow keys then scroll it. On a phone, upright or on
+          // its side, it is laid out at its full height (24 lines at most): a
+          // box that scrolls inside a page that scrolls catches the thumb, and
+          // a few lines were hidden for the sake of four pixels.
           tabIndex={0}
-          className="max-h-64 overflow-auto py-2 focus-visible:-outline-offset-2 sm:max-h-80"
+          className="overflow-x-auto py-2 [container-type:inline-size] focus-visible:-outline-offset-2 roomy:max-h-80 roomy:overflow-y-auto"
         >
-          {/* Output in columns (tracert, a routing table) keeps its columns at
-              every width, and the box scrolls sideways where the lines are
-              wider than it; the line above says so. Wrapped on a phone, a
-              tracert's times and hosts fell under the wrong hop and a learner
-              could not read which hop failed. Other evidence wraps. */}
-          <div className={cn(columnar && "w-max min-w-full")}>
+          {/* A table (a tracert, an ACL) keeps every line whole at every width,
+              and the box scrolls sideways where the lines are wider than it;
+              the line above says so. Wrapped on a phone, a tracert's times and
+              hosts fell under the wrong hop and a learner could not read which
+              hop failed. Other output in columns ("Key : value", ipconfig)
+              wraps, each wrapped part under its own column: scrolled sideways,
+              every value of an ipconfig was off the screen. Other evidence
+              wraps. */}
+          <div className={cn(table && "w-max min-w-full")}>
             {tabs && <p className="px-3 pb-1 font-mono text-xs text-muted-foreground"># {active.label}</p>}
             {lines.map((line, i) => (
               <div
                 key={`${tab}-${i}`}
-                className={cn(
-                  "flex gap-3 px-3 font-mono leading-relaxed",
-                  columnar ? "text-[0.6875rem] sm:text-xs" : "text-xs"
-                )}
+                className="flex gap-3 px-3 font-mono text-xs leading-relaxed"
               >
                 {/* Quieter than the evidence, and still above the contrast that
                     small text needs. Output in columns has none: it numbers its
@@ -266,7 +288,10 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
                   </span>
                 )}
                 <span
-                  className={columnar ? "min-w-fit whitespace-pre" : "min-w-0 whitespace-pre-wrap break-words"}
+                  className={table ? "min-w-fit whitespace-pre" : "min-w-0 whitespace-pre-wrap break-words"}
+                  // A wrapped part starts under its column: the first line is
+                  // drawn from the start, the rest from the hang.
+                  style={columnar && !table ? hangStyle(line) : undefined}
                 >
                   {toneLine(line).map((t, k) => (
                     <span key={k} className={CONSOLE_TONE[t.tone]}>

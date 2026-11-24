@@ -800,13 +800,30 @@ function useTakeFocus(target: RefObject<HTMLElement | null>, takeFocus: boolean)
   }, [target, takeFocus]);
 }
 
-/** Each new item in a run takes the focus (never the first), so a screen reader reads it and the keys stay with the move. */
+/** Room for a page's sticky header (as LabKit's HEADER_CLEARANCE, which imports this file). */
+const CARD_CLEARANCE = 72;
+
+/**
+ * Each new item in a run takes the focus (never the first), so a screen reader
+ * reads it and the keys stay with the move. On a phone the verdict under the
+ * answers is scrolled into view, which can carry the item above the top of the
+ * screen: the next item then arrived out of sight, and every item of a
+ * matching lab began with a scroll back up. So the move is brought back into
+ * view, from its top (its count and question), when its item is not in sight.
+ */
 function useCardFocus(card: RefObject<HTMLElement | null>, pos: number) {
   const shown = useRef(pos);
   useEffect(() => {
     if (shown.current === pos) return;
     shown.current = pos;
-    card.current?.focus({ preventScroll: true });
+    const el = card.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    const at = el.getBoundingClientRect();
+    if (at.top >= CARD_CLEARANCE && at.bottom <= window.innerHeight) return;
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    // The move's frame: the card's parent, with the count and the question above the card.
+    (el.parentElement ?? el).scrollIntoView?.({ block: "start", behavior: still ? "auto" : "smooth" });
   }, [card, pos]);
 }
 

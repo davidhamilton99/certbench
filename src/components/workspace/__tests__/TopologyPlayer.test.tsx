@@ -96,6 +96,10 @@ afterEach(() => {
   track.mockClear();
 });
 
+
+/** The network map: the drawing whose devices can be chosen. */
+const mapOf = (container: HTMLElement) => [...container.querySelectorAll("svg")].find((svg) => svg.querySelector("g[role]"))!;
+
 describe("topology labs, played on the map", () => {
   it("opens on the map with what to fix marked, the first device's configuration up and its first setting as answers", () => {
     render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
@@ -112,7 +116,7 @@ describe("topology labs, played on the map", () => {
 
   it("draws every mark on the map from the theme's tokens, and nothing on it pulses", () => {
     const { container } = render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
-    const map = container.querySelector("svg[viewBox='0 0 1000 600']")!;
+    const map = mapOf(container);
     const classes = [...map.querySelectorAll("*")].map((el) => el.getAttribute("class") ?? "").join(" ");
     // A mark's fill and what is drawn on it are a token and its own foreground.
     expect(classes).toMatch(/fill-warning\b/);
@@ -138,6 +142,50 @@ describe("topology labs, played on the map", () => {
     // Its mark is drawn and not typed, so the text inside it is exactly those words.
     expect(r1.textContent).toBe("R1 router");
     expect(r1.getAttribute("aria-label")!.startsWith(r1.textContent!)).toBe(true);
+  });
+
+  // On a phone the whole 1000 by 600 plane was drawn at about a third of its
+  // size: names came out 5 pixels tall, in a frame mostly empty.
+  it("frames the map round its devices", () => {
+    const { container } = render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
+    // Devices from x 300 to 500 and y 60 to 540, with room for their names and marks.
+    expect(mapOf(container).getAttribute("viewBox")).toBe("170 0 460 625");
+  });
+
+  it("on a phone, sets names large enough to read and leaves the links' labels to the list", () => {
+    // jsdom lays nothing out: the map is drawn at 0.3 of a pixel to a unit, as on a 360-pixel phone.
+    const proto = SVGElement.prototype as unknown as { getScreenCTM?: () => { a: number } };
+    proto.getScreenCTM = () => ({ a: 0.3 });
+    const observers: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(cb: ResizeObserverCallback) {
+          observers.push(cb);
+        }
+        observe() {
+          for (const cb of observers) cb([], this as unknown as ResizeObserver);
+        }
+        unobserve() {}
+        disconnect() {}
+      }
+    );
+    try {
+      const { container } = render(<TopologyPlayer scenario={net} onBack={vi.fn()} />);
+      const map = mapOf(container);
+      const name = [...map.querySelectorAll("text")].find((t) => t.textContent === "R1")!;
+      // 11 pixels on the screen at 0.3 of a pixel to a unit.
+      expect(parseFloat(name.style.fontSize)).toBeCloseTo(11 / 0.3, 1);
+      // The kind of device and the links' labels are not drawn: the icon and the list say them.
+      expect([...map.querySelectorAll("text")].map((t) => t.textContent)).not.toContain("router");
+      expect(screen.getByRole("list", { name: "Connections" })).toBeInTheDocument();
+      // A device's touch area is a thumb's width on the screen: 22 pixels round.
+      const hit = map.querySelector("g[role=button] circle.fill-transparent")!;
+      expect(Number(hit.getAttribute("r"))).toBeGreaterThanOrEqual(22 / 0.3 - 0.01);
+    } finally {
+      delete proto.getScreenCTM;
+      vi.unstubAllGlobals();
+    }
   });
 
   it("lists every link of the map in words, with the label drawn on its line, for a screen reader and a small screen", () => {
