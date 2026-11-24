@@ -288,15 +288,22 @@ export function ExamPicker({
           }}
           className={cn(rowClass, isOpen && "bg-tint-selected")}
         >
-          <span className="min-w-0 flex-1 text-body font-semibold sm:text-lede">{EXAM_LIST[first].name}</span>{" "}
-          {/* Each code is set in the code face; the word between them is not a code. */}
-          <span className="shrink-0 text-note text-muted-foreground">
-            {tile.map((c, i) => (
-              <Fragment key={c}>
-                {i > 0 && " and "}
-                <span className="font-mono">{EXAM_CODES[c]}</span>
-              </Fragment>
-            ))}
+          {/* On a narrow phone (320px) the two codes and "Choose" leave too
+              little room beside the name, and a name allowed to shrink was
+              drawn under the codes. There the codes are set on a line of their
+              own under the name; from 400px they stand beside it, as on the
+              other rows. */}
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5 min-[400px]:flex-row min-[400px]:items-center min-[400px]:gap-4">
+            <span className="shrink-0 text-body font-semibold sm:text-lede">{EXAM_LIST[first].name}</span>{" "}
+            {/* Each code is set in the code face; the word between them is not a code. */}
+            <span className="text-note text-muted-foreground min-[400px]:flex-1 min-[400px]:text-right">
+              {tile.map((c, i) => (
+                <Fragment key={c}>
+                  {i > 0 && " and "}
+                  <span className="whitespace-nowrap font-mono">{EXAM_CODES[c]}</span>
+                </Fragment>
+              ))}
+            </span>
           </span>{" "}
           <span className="inline-flex shrink-0 items-center gap-1 text-small font-semibold text-primary">
             Choose
