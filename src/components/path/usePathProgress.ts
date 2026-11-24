@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { hasSessionCookie, loadBrowserClient } from "@/lib/supabase-lazy";
 import { api } from "@/lib/api-client";
 import { identifyUser, track } from "@/lib/analytics";
@@ -310,11 +310,28 @@ async function browserSaysSignedOut(): Promise<boolean> {
  * and saved to the account once signed in (other devices' work included). The
  * same ref-backed pattern as the drills, so a record-then-advance in one click
  * always sees the latest state.
+ *
+ * `onLearned` is called each time the hook has learned who is here or what
+ * their account holds: when the page opens, when the time limit opens it on
+ * the device's copy, when the account answers a later request (one that could
+ * not be reached before included), and when someone signs in on the page. It
+ * is called once the hook's own work for that news is done (the copy written,
+ * the account counted, a save sent), and before the page renders what was
+ * learned, so that what the page decides then arrives in the same render. It
+ * reads the state through `peek`. A request that does not reach the account
+ * teaches the page nothing, and is not announced.
  */
-export function usePathProgress(cert: PathCert) {
+export function usePathProgress(cert: PathCert, { onLearned }: { onLearned?: () => void } = {}) {
   const [view, setView] = useState<View>(INITIAL);
   const cur = useRef<View>(INITIAL);
   const unsaved = useRef(0);
+
+  // The page's function as it is now: the work that calls it outlives renders.
+  const learned = useRef(onLearned);
+  useLayoutEffect(() => {
+    learned.current = onLearned;
+  });
+  const announce = useCallback(() => learned.current?.(), []);
 
   const commit = useCallback(
     (next: View) => {
@@ -539,6 +556,7 @@ export function usePathProgress(cert: PathCert) {
       if (cancelled || cur.current.ready) return;
       const device = local === undefined ? readLocalPath(cert) : local;
       commit(who ? asLearner(who, device, readGuestPath(cert), null) : asVisitor(device, null));
+      announce();
     }, ACCOUNT_LIMIT_MS);
 
     const openForVisitor = async (device: LocalState | null) => {
@@ -553,6 +571,7 @@ export function usePathProgress(cert: PathCert) {
         passOnOwedStart(cert, carry, answeredHere);
         passOnBegunOnPublicPage(cert, carry);
       }
+      announce();
     };
 
     (async () => {
@@ -616,12 +635,13 @@ export function usePathProgress(cert: PathCert) {
       if (adopted.account.reached && (adopted.unsynced || carry || answeredMeanwhile)) {
         void saveToAccount(next.progress);
       }
+      announce();
     })();
     return () => {
       cancelled = true;
       window.clearTimeout(limit);
     };
-  }, [cert, adopt, commit, saveToAccount]);
+  }, [cert, adopt, commit, saveToAccount, announce]);
 
   // Flush unsaved answers when the tab is hidden or closed.
   useEffect(() => {
@@ -796,10 +816,14 @@ export function usePathProgress(cert: PathCert) {
       });
       everReached.current = !!account;
       clearGuestPath(cert);
-      await saveToAccount(res.merged);
+      // The save is sent before the page decides what the sign-in changes,
+      // which may send a save of its own (a practice exam brought in).
+      const saving = saveToAccount(res.merged);
+      announce();
+      await saving;
       return res.merged;
     },
-    [cert, adopt, commit, saveToAccount]
+    [cert, adopt, commit, saveToAccount, announce]
   );
 
   /** One request to the account at a time, however many callers ask. */
@@ -858,11 +882,12 @@ export function usePathProgress(cert: PathCert) {
         passOnBegunOnPublicPage(cert, carry);
       }
       if (owed || carry) void saveToAccount(progress);
+      announce();
     })().finally(() => {
       refreshing.current = null;
     });
     return refreshing.current;
-  }, [cert, adopt, commit, saveToAccount]);
+  }, [cert, adopt, commit, saveToAccount, announce]);
 
   // While the account cannot be reached, ask again: after 1, 3 and 8 seconds,
   // when the browser says the connection is back, and when the tab is looked

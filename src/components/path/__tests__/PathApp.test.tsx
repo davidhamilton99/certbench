@@ -496,6 +496,27 @@ describe("a returning visitor", () => {
     );
   }
 
+  // The page decides where a learner belongs as the progress hook learns who
+  // is here, in the same render: the held stage never opens on the first
+  // visit's question and then moves on.
+  it("opens the held stage on their map, never on the first visit's question", async () => {
+    returning("warmup");
+    const shown: string[] = [];
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(".path-stage")?.getAttribute("data-ready") !== "true") return;
+      shown.push(screen.queryByText("Prompt a|1.1|w1") ? "the first visit's question" : "their own screen");
+    });
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+    try {
+      renderPath();
+      expect(await screen.findByText("Your Security+ study path")).toBeInTheDocument();
+    } finally {
+      observer.disconnect();
+    }
+    expect(shown).toContain("their own screen");
+    expect(shown).not.toContain("the first visit's question");
+  });
+
   function fillIn(email = "sam@example.com") {
     fireEvent.change(screen.getByLabelText("Email address"), { target: { value: email } });
     fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "long-enough-password" } });
@@ -589,6 +610,38 @@ describe("a signed-in learner", () => {
     renderPath();
     expect(await screen.findByRole("heading", { name: "Your Security+ study path" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
+  });
+
+  it("opens Pro with what it opened once they are back on the map, when Pro arrives partway through a step", async () => {
+    server.proPlan = true;
+    server.progress = done(["warmup"]);
+    let confirm = () => {};
+    server.enrollWaits = new Promise((resolve) => {
+      confirm = () => resolve(undefined);
+    });
+    renderPath();
+    fireEvent.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByText("Prompt a|1.1|s1-0");
+    // One answer: the step has begun when Pro is confirmed.
+    fireEvent.click(screen.getByRole("button", { name: /Right answer/ }));
+    await act(async () => confirm());
+    await waitFor(() => expect(accessReads()).toBe(2));
+    await act(async () => {});
+    expect(screen.getByText("Prompt a|1.1|s1-0")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
+
+    // The rest of the step, and the screen that ends it: still the step's own screens.
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    await answer();
+    await answer();
+    expect(await screen.findByText(/You have completed step 2./i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your full Security+ study path is now open." })).toBeNull();
+    expect(track).not.toHaveBeenCalledWith("path_unlock_viewed", expect.anything());
+
+    // Back on the map, the unlock moment opens in its place.
+    fireEvent.click(headerLink());
+    expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
   });
 
   it("does not open with the unlock moment for a free account", async () => {
@@ -926,6 +979,21 @@ describe("back from paying", () => {
     expect(landed()).toEqual([{ cert: "security-plus-sy0-701", waited_ms: 0 }]);
     expect(track).toHaveBeenCalledWith("path_unlock_viewed", { cert: "security-plus-sy0-701" });
     expect(screen.queryByText("Continue your study path with Pro")).toBeNull();
+  });
+
+  it("takes the flag off the address before it records the landing", async () => {
+    server.access = "pro";
+    const addresses: string[] = [];
+    track.mockImplementation((name: string) => {
+      if (name === "path_upgrade_landed") addresses.push(window.location.search);
+    });
+    try {
+      renderPath();
+      expect(await screen.findByRole("heading", { name: "Your full Security+ study path is now open." })).toBeInTheDocument();
+      expect(addresses).toEqual([""]);
+    } finally {
+      track.mockReset();
+    }
   });
 
   it("says the payment went through while Stripe confirms it, never the offer, then opens", async () => {
@@ -2173,6 +2241,25 @@ describe("a practice exam finished on the exam's public page", () => {
     expect(saved().at(-1)?.stops.checkpoint).toMatchObject({ c: 8, t: 12 });
     const answers = server.calls.find((c) => c.path === "/api/path/answers")?.input as { answers: unknown[] } | undefined;
     expect(answers?.answers).toHaveLength(12);
+  });
+
+  // The page decides what the account's answer changes once the progress hook
+  // has done its own work for it, so the page's events come after the hook's.
+  it("records the link to the account before the checkpoint that the exam becomes", async () => {
+    auth.session = { user: { id: "u1", email: "u1@example.com" } };
+    server.progress = done(["warmup"]);
+    // Work begun on this device before the account existed: the account takes it as it opens.
+    localStorage.setItem(
+      "cb_path_security-plus-sy0-701",
+      JSON.stringify({ v: 1, owner: null, progress: recordRep(EMPTY_PATH_PROGRESS, "a|1.1|w1", true, 1) })
+    );
+    finishedExam();
+    renderPath();
+    expect(await screen.findByText("Security+ practice exam")).toBeInTheDocument();
+    const events = track.mock.calls.map(([name]) => name as string);
+    expect(events).toContain("path_account_linked");
+    expect(events).toContain("path_checkpoint_completed");
+    expect(events.indexOf("path_account_linked")).toBeLessThan(events.indexOf("path_checkpoint_completed"));
   });
 
   // The import and the first unlock both decide what a visit opens on, in one

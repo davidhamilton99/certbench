@@ -59,8 +59,8 @@ const server = vi.hoisted(() => ({
   pricing: null as null | object,
   /** Reading the account: it answers, it fails with this error, or it never answers. */
   read: "ok" as "ok" | "hang" | Error,
-  /** Saving to the account: it works, or it fails with this error. */
-  save: "ok" as "ok" | Error,
+  /** Saving to the account: it works, it fails with this error, or it never answers. */
+  save: "ok" as "ok" | "hang" | Error,
   /** False where the database has no table for saved progress: saving is not available there. */
   stored: true,
   /** Something that happens in the browser just as the account is asked. */
@@ -88,6 +88,7 @@ vi.mock("@/lib/api-client", () => ({
         ...(server.pricing ? { pricing: server.pricing } : {}),
       };
     }
+    if (server.save === "hang") return new Promise(() => {});
     if (server.save instanceof Error) throw server.save;
     return { ok: true, stored: server.stored };
   },
@@ -942,5 +943,109 @@ describe("the copy on the device", () => {
       window.dispatchEvent(new StorageEvent("storage", { key: KEY }));
     });
     expect(items(result.current.progress)).toEqual([]);
+  });
+});
+
+describe("telling the page what it has learned", () => {
+  /**
+   * Open the study path with a page that writes down, each time it is told,
+   * the state it reads, the events recorded so far and the requests made so far.
+   */
+  function openWatched() {
+    const told: { state: ReturnType<ReturnType<typeof usePathProgress>["peek"]>; events: string[]; requests: string[] }[] = [];
+    const hook = renderHook(() =>
+      usePathProgress(CERT, {
+        onLearned: () =>
+          told.push({
+            state: hook.result.current.peek(),
+            events: track.mock.calls.map(([name]) => name as string),
+            requests: server.calls.map((c) => c.method),
+          }),
+      })
+    );
+    return { ...hook, told };
+  }
+
+  it("tells the page once when a visitor's study path opens, with the state already there", async () => {
+    const { told } = openWatched();
+    expect(told).toHaveLength(0);
+    await pass();
+    expect(told).toHaveLength(1);
+    expect(told[0].state).toMatchObject({ ready: true, userId: null, arrival: 1 });
+  });
+
+  it("tells the page once the account has answered, after the account was counted and the save was sent", async () => {
+    signIn();
+    // Work begun on this device before the account existed: the open counts the link and saves it.
+    seed(null, answered("a|1.1|device"));
+    const { told } = openWatched();
+    await pass();
+    expect(told).toHaveLength(1);
+    expect(told[0].state).toMatchObject({ ready: true, userId: "u1", unreached: false, arrival: 1 });
+    expect(told[0].events).toContain("path_account_linked");
+    expect(told[0].requests).toEqual(["GET", "POST"]);
+  });
+
+  it("tells the page when the time limit opens it, and again when the account answers", async () => {
+    signIn();
+    seed("u1", answered("a|1.1|device"));
+    server.read = "hang";
+    const { result, told } = openWatched();
+    await pass(ACCOUNT_LIMIT_MS);
+    expect(told.map((t) => t.state.arrival)).toEqual([1]);
+    expect(told[0].state).toMatchObject({ ready: true, unreached: true });
+
+    server.read = "ok";
+    server.access = "pro";
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    expect(told.map((t) => t.state.arrival)).toEqual([1, 2]);
+    expect(told[1].state).toMatchObject({ access: "pro", unreached: false });
+  });
+
+  it("does not tell the page about a request that did not reach the account", async () => {
+    signIn();
+    const { result, told } = openWatched();
+    await pass();
+    expect(told).toHaveLength(1);
+    server.read = new ApiError("internal", "The connection was lost. Please check your connection and try again.");
+    await act(async () => {
+      await result.current.refreshAccess();
+    });
+    expect(result.current.unreached).toBe(true);
+    expect(told).toHaveLength(1);
+  });
+
+  it("tells the page when someone signs in on it, once the save is sent and before it is answered", async () => {
+    const { result, told } = openWatched();
+    await pass();
+    expect(told).toHaveLength(1);
+    act(() => result.current.record("a|1.1|w1", true));
+    server.save = "hang";
+    let linked = false;
+    act(() => {
+      void result.current.linkAccount("u2", "u2@example.com", "email_signup").then(() => {
+        linked = true;
+      });
+    });
+    await pass();
+    expect(told).toHaveLength(2);
+    expect(told[1].state).toMatchObject({ ready: true, userId: "u2" });
+    expect(told[1].requests).toEqual(["GET", "POST"]);
+    expect(linked).toBe(false);
+  });
+
+  it("does not tell the page about answers, finished steps or saves", async () => {
+    signIn();
+    const { result, told } = openWatched();
+    await pass();
+    expect(told).toHaveLength(1);
+    act(() => {
+      result.current.record("a|1.1|w1", true);
+      result.current.finish("warmup", 1, 1);
+    });
+    await pass();
+    expect(told).toHaveLength(1);
   });
 });
