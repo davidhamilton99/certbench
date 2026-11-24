@@ -161,6 +161,19 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
   const columnar = isColumnar(active.content);
   const lines = active.content.replace(/\n+$/, "").split("\n");
   const tabs = evidence.length > 1;
+  // Whether output in columns is wider than its box, measured as the box and
+  // the evidence change size, so that the line about scrolling sideways shows
+  // only when there is something to scroll to.
+  const box = useRef<HTMLDivElement>(null);
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || !columnar || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setWide(el.scrollWidth > el.clientWidth + 1));
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, [columnar, open, tab]);
 
   function pick(i: number) {
     setTab(i);
@@ -215,8 +228,12 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
         </>
       }
     >
+      {open && columnar && wide && (
+        <p className="px-3 pt-2 text-note text-muted-foreground">Scroll sideways to read each whole line.</p>
+      )}
       {open && (
         <div
+          ref={box}
           role="group"
           aria-label={active.label}
           // The evidence scrolls inside its box, so the box takes the keyboard:
@@ -224,27 +241,40 @@ export function EvidenceConsole({ evidence }: { evidence: readonly Evidence[] })
           tabIndex={0}
           className="max-h-64 overflow-auto py-2 focus-visible:-outline-offset-2 sm:max-h-80"
         >
-          {/* Columns keep their spacing where there's room for them; on a phone,
-              where a box that scrolls sideways goes unnoticed, every line wraps. */}
-          <div className={cn(columnar && "sm:w-max sm:min-w-full")}>
+          {/* Output in columns (tracert, a routing table) keeps its columns at
+              every width, and the box scrolls sideways where the lines are
+              wider than it; the line above says so. Wrapped on a phone, a
+              tracert's times and hosts fell under the wrong hop and a learner
+              could not read which hop failed. Other evidence wraps. */}
+          <div className={cn(columnar && "w-max min-w-full")}>
             {tabs && <p className="px-3 pb-1 font-mono text-xs text-muted-foreground"># {active.label}</p>}
             {lines.map((line, i) => (
-              <div key={`${tab}-${i}`} className="flex gap-3 px-3 font-mono text-xs leading-relaxed">
-                {/* Quieter than the evidence, and still above the contrast that small text needs. */}
-                <span aria-hidden className="w-5 shrink-0 select-none text-right text-muted-foreground/80">
-                  {i + 1}
-                </span>
+              <div
+                key={`${tab}-${i}`}
+                className={cn(
+                  "flex gap-3 px-3 font-mono leading-relaxed",
+                  columnar ? "text-[0.6875rem] sm:text-xs" : "text-xs"
+                )}
+              >
+                {/* Quieter than the evidence, and still above the contrast that
+                    small text needs. Output in columns has none: it numbers its
+                    own rows (a tracert's hops), and a line number beside a hop
+                    number was read as the hop. */}
+                {!columnar && (
+                  <span aria-hidden className="w-5 shrink-0 select-none text-right text-muted-foreground/80">
+                    {i + 1}
+                  </span>
+                )}
                 <span
-                  className={cn(
-                    "min-w-0 whitespace-pre-wrap break-words",
-                    columnar && "sm:min-w-fit sm:whitespace-pre sm:break-normal"
-                  )}
+                  className={columnar ? "min-w-fit whitespace-pre" : "min-w-0 whitespace-pre-wrap break-words"}
                 >
                   {toneLine(line).map((t, k) => (
                     <span key={k} className={CONSOLE_TONE[t.tone]}>
                       {t.text}
                     </span>
                   ))}
+                  {/* An empty line keeps its height: without a line number beside it, it had none. */}
+                  {line === "" && " "}
                 </span>
               </div>
             ))}
