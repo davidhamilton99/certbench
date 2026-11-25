@@ -748,14 +748,14 @@ Ping statistics for 8.8.8.8:
             label: "tracert 8.8.8.8",
             content: `Tracing route to 8.8.8.8 over a maximum of 30 hops:
 
-  1    1 ms    1 ms    1 ms   10.10.1.1
-  2    *        *        *     Request timed out.
-  3    *        *        *     Request timed out.
-  4    *        *        *     Request timed out.
-  5    *        *        *     Request timed out.
-  6    *        *        *     Request timed out.
-  7    *        *        *     Request timed out.
-  8    *        *        *     Request timed out.
+  1     1 ms     1 ms     1 ms  10.10.1.1
+  2     *        *        *     Request timed out.
+  3     *        *        *     Request timed out.
+  4     *        *        *     Request timed out.
+  5     *        *        *     Request timed out.
+  6     *        *        *     Request timed out.
+  7     *        *        *     Request timed out.
+  8     *        *        *     Request timed out.
 
 Trace complete.`,
           },

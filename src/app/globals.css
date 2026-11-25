@@ -4,6 +4,14 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * A screen wide enough for the sm layout and tall enough to hold a box that
+ * scrolls inside the page with room to spare. A phone turned on its side is sm
+ * wide and only 360 to 430 pixels tall: there, a box that scrolls on its own
+ * was nearly the whole screen, and caught every swipe.
+ */
+@custom-variant roomy (@media (min-width: 40rem) and (min-height: 40rem));
+
+/*
  * CertBench design tokens (CertBench 4).
  *
  * The site is meant to read like a public institution's: white paper,

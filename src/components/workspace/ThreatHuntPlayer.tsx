@@ -36,6 +36,9 @@ const MARK: Record<LineMark, { row: string; ink: string; words: string }> = {
   "false-alarm": { row: "border-warning/60 bg-warning/10", ink: "text-warning", words: "This line is not evidence." },
 };
 
+// A line's text breaks anywhere it must: a long path or call with no space in
+// it ("read_file(\"Suppliers/…\")") otherwise set the width of the whole log,
+// and on a phone the end of every long line was cut off at the box's edge.
 const ROW = "flex w-full items-start gap-2 rounded-md border px-2.5 py-1.5 text-left font-mono text-xs leading-relaxed";
 
 /** The mark that separates the parts of a log's source as it is filed ("file, host"). */
@@ -204,10 +207,13 @@ export function ThreatHuntPlayer({
             // Named as a list for every screen reader, with or without list markers.
             role="list"
             aria-label="Log lines"
-            // While the hunt is on, a long log scrolls in its box, and the focus
-            // carries the scroll with it. Once it is marked it is laid out whole,
-            // to be read with its notes.
-            className={cn("grid gap-0.5 p-1.5", !revealed && "max-h-104 overflow-y-auto")}
+            // While the hunt is on, a long log scrolls in its box on a screen
+            // that is wide and tall (`roomy`), and the focus carries the scroll
+            // with it. On a phone, upright or on its side, it is laid out whole:
+            // its lines wrap many times there, and a box that scrolls inside a
+            // page that scrolls catches the thumb. Once it is marked it is laid
+            // out whole everywhere, to be read with its notes.
+            className={cn("grid gap-0.5 p-1.5", !revealed && "roomy:max-h-104 roomy:overflow-y-auto")}
           >
             {scenario.lines.map((line, i) => {
               const isFlagged = flagged.has(i);
@@ -232,7 +238,7 @@ export function ThreatHuntPlayer({
                           <X className={cn("size-3.5", MARK["false-alarm"].ink)} strokeWidth={3} />
                         ) : null}
                       </span>
-                      <span className="min-w-0 whitespace-pre-wrap break-words">{line.text}</span>
+                      <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{line.text}</span>
                     </div>
                   ) : (
                     <button
@@ -250,7 +256,7 @@ export function ThreatHuntPlayer({
                       <span aria-hidden className="mt-0.5 flex size-3.5 shrink-0 items-center justify-center">
                         {isFlagged && <Flag className="size-3.5 text-primary" />}
                       </span>
-                      <span className="min-w-0 whitespace-pre-wrap break-words">{line.text}</span>
+                      <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{line.text}</span>
                     </button>
                   )}
                   {mark && (

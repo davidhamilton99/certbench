@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, X } from "lucide-react";
 import type { TopoDevice, TopoConnection, TopoDeviceType } from "@/data/pbq/types";
 import { cn } from "@/lib/utils";
@@ -219,6 +219,26 @@ function ChipMark({ mark }: { mark: DeviceMark | undefined }) {
 /*  The map                                                            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The map's frame, around the devices and the room their names and marks
+ * take: a map laid on the whole 1000 by 600 plane left most of a phone's width
+ * empty around a network drawn in its middle.
+ */
+function frameOf(points: readonly { x: number; y: number }[]) {
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const left = Math.min(...xs) - 130;
+  const top = Math.min(...ys) - 60;
+  return { x: left, y: top, w: Math.max(...xs) + 130 - left, h: Math.max(...ys) + 85 - top };
+}
+
+/** The smallest a device's name is drawn, in screen pixels, however small the map. */
+const NAME_MIN_PX = 11;
+/** A touch target's radius in screen pixels: 44 across. */
+const TOUCH_RADIUS_PX = 22;
+/** Below this many screen pixels to a unit, the map is on a phone: link labels and type words would be specks. */
+const SMALL_MAP = 0.5;
+
 interface TopologyDiagramProps {
   devices: TopoDevice[];
   connections: TopoConnection[];
@@ -240,7 +260,9 @@ interface TopologyDiagramProps {
  * The links between the devices, with the port or the name drawn on each, are
  * also listed in words under the map. A screen reader cannot follow a line on
  * a drawing, a question can depend on which port leads where, and on a phone
- * the labels on the map are drawn too small to read.
+ * the labels on the lines are not drawn: set large enough to read there, they
+ * covered one another. A phone's map shows each device's name at a size that
+ * can be read, and a touch area a thumb can hit.
  */
 export function TopologyDiagram({
   devices,
@@ -256,6 +278,41 @@ export function TopologyDiagram({
   for (const d of devices) {
     posMap.set(d.id, { x: d.position.x * 10, y: d.position.y * 6 });
   }
+  const frame = frameOf([...posMap.values()]);
+  // Half the distance to the nearest device: the most a device's touch area can
+  // take without reaching into its neighbour's.
+  const room = useMemo(() => {
+    const at = devices.map((d) => ({ id: d.id, x: d.position.x * 10, y: d.position.y * 6 }));
+    return new Map(
+      at.map((a) => [
+        a.id,
+        Math.min(...at.filter((b) => b.id !== a.id).map((b) => Math.hypot(a.x - b.x, a.y - b.y) / 2 - 2), 200),
+      ])
+    );
+  }, [devices]);
+
+  // How many screen pixels the map draws per unit, measured as it is laid
+  // out. On a phone the map is drawn at about a third of its size, where a
+  // 17-unit name came out 5 pixels tall: names are then set larger in units,
+  // so they are never under NAME_MIN_PX on the screen.
+  const svg = useRef<SVGSVGElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = svg.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      const s = el.getScreenCTM?.()?.a;
+      if (s && s > 0) setScale(s);
+    };
+    // Once as soon as the map is on the page, then whenever it changes size.
+    queueMicrotask(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const small = scale < SMALL_MAP;
+  const nameSize = Math.max(17, NAME_MIN_PX / scale);
+  const hitRadius = (id: string) => Math.min(Math.max(32, TOUCH_RADIUS_PX / scale), room.get(id) ?? 32);
   const labelOf = new Map(devices.map((d) => [d.id, d.label] as const));
   const links = connections.filter((c) => labelOf.has(c.from) && labelOf.has(c.to));
   const shownId = viewingId ?? activeId;
@@ -277,7 +334,14 @@ export function TopologyDiagram({
         )}
       </div>
 
-      <svg viewBox="0 0 1000 600" className="h-auto w-full" preserveAspectRatio="xMidYMid meet" style={{ maxHeight: "460px" }}>
+      <svg
+        ref={svg}
+        viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`}
+        className="h-auto w-full"
+        preserveAspectRatio="xMidYMid meet"
+        // Never taller than most of the screen: a phone on its side is 360 pixels tall.
+        style={{ maxHeight: "min(460px, 60svh)" }}
+      >
         {connections.map((conn, i) => {
           const from = posMap.get(conn.from);
           const to = posMap.get(conn.to);
@@ -321,6 +385,10 @@ export function TopologyDiagram({
                 }
               }}
             >
+              {clickable && (
+                // The touch area: a thumb's width on a phone, short of the nearest device's.
+                <circle cx={pos.x} cy={pos.y} r={hitRadius(device.id)} className="fill-transparent" />
+              )}
               {isActive && (
                 // The device in hand is outlined, and the outline is still.
                 <circle
@@ -343,24 +411,34 @@ export function TopologyDiagram({
               {mark && <MapBadge mark={mark} x={pos.x} y={pos.y} />}
               <text
                 x={pos.x}
-                y={pos.y + 38}
+                // Under the icon. On a phone, where the name is set larger and the kind of device is not
+                // written under it, the name drops clear of the ring round the device in hand.
+                y={pos.y + (small ? Math.max(38, 36 + nameSize * 0.72) : 38)}
                 textAnchor="middle"
-                className={cn("font-semibold", isActive ? "fill-primary" : "fill-foreground")}
-                style={{ fontSize: "17px" }}
+                // A halo in the card's colour, under the letters: a link drawn through a name no longer cuts it.
+                className={cn("stroke-card font-semibold", isActive ? "fill-primary" : "fill-foreground")}
+                strokeWidth={4 / scale}
+                strokeLinejoin="round"
+                style={{ fontSize: `${nameSize}px`, paintOrder: "stroke" }}
               >
                 {device.label}
               </text>
               {/* A space between the two lines of the name. It is not drawn; it keeps them two words when the
                   device's text is read as one string (by a checker comparing it with the name above). */}{" "}
-              <text x={pos.x} y={pos.y + 56} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: "13px" }}>
-                {device.type.replace("-", " ")}
-              </text>
+              {/* The kind of device, in words, where it can be read. On a phone the icon says it. */}
+              {!small && (
+                <text x={pos.x} y={pos.y + 56} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: "13px" }}>
+                  {device.type.replace("-", " ")}
+                </text>
+              )}
             </g>
           );
         })}
 
-        {/* Link labels last, so a label's box sits on top of any device text it meets. */}
-        {connections.map((conn, i) => {
+        {/* Link labels last, so a label's box sits on top of any device text it meets. On a phone they
+            would be specks, and set large enough to read they cover one another: there the links are
+            read in the list under the map. */}
+        {!small && connections.map((conn, i) => {
           const from = posMap.get(conn.from);
           const to = posMap.get(conn.to);
           if (!from || !to || !conn.label) return null;
