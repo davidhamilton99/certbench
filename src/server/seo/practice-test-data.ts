@@ -12,6 +12,7 @@ import {
   listSampleQuestions,
 } from "@/server/data/questions";
 import { loadPublicTest } from "@/server/path/public-test";
+import { shownAnswers } from "@/server/seo/shown-answers";
 import { questionIdOf } from "@/core/path/rep-id";
 import { REHEARSAL_FORMATS } from "@/core/path/rehearsal";
 
@@ -77,8 +78,8 @@ export async function loadPracticeTestData(
       examCode: cert.examCode,
       questions: sampleLists[i].map((q) => ({
         questionText: q.question_text,
-        options: q.options.map((o) => o.text),
-        correctIndex: q.correct_index,
+        // Not in the stored order, which puts the answer at B too often (see shownAnswers).
+        ...shownAnswers(q),
         explanation: q.explanation,
       })),
     })),

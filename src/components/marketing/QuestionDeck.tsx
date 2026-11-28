@@ -49,10 +49,12 @@ function pathCovers(path: string): string {
 
 /**
  * The questions as the study path's own: lettered like the exam, the
- * explanation's first line as the takeaway. The answers come in their stored
- * order, so an explanation that names them by their letters ("Option A
- * describes") names the answer under that letter, and such a question keeps
- * its letters once it is marked, as it does on the study path.
+ * explanation's first line as the takeaway. The answers are shown in the
+ * order the page gives them in. A page's loader shuffles a bank question's
+ * answers, and leaves them in their stored order only where the explanation
+ * names them by their letters ("Option A describes"), so that the letter
+ * names the answer under it (shownAnswers in src/server/seo). Such a question
+ * keeps its letters once it is marked, as it does on the study path.
  */
 function toReps(questions: readonly DeckQuestion[]): ChoiceRep[] {
   return questions.map((q, k) => {

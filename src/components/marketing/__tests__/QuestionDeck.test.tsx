@@ -256,9 +256,10 @@ describe("QuestionDeck", () => {
     expect(verdict(first)).toHaveTextContent(/^Correct\./);
   });
 
-  // The deck shows the answers in their stored order. An explanation that names
-  // them by their letters ("Option A, port 21") must still find A once the
-  // answers are marked: the check or the cross goes to the end of the answer.
+  // A question whose explanation names the answers by their letters ("Option A,
+  // port 21") reaches the deck in its stored order. The explanation must still
+  // find A once the answers are marked: the check or the cross goes to the end
+  // of the answer.
   it("keeps every letter once a question whose explanation names one is marked", () => {
     const lettered: DeckQuestion = {
       ...QUESTIONS[0],

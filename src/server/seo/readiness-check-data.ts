@@ -9,12 +9,11 @@ import {
   listDomains,
 } from "@/server/data/certifications";
 import { listDiagnosticQuestions } from "@/server/data/questions";
+import { shownAnswers } from "@/server/seo/shown-answers";
 import {
   allocateSlots,
   type CheckQuestion,
 } from "@/lib/tools/readiness-estimate";
-import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
-import { mentionsOptionLetter, splitExplanation } from "@/core/path/text";
 import { UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
 import { domainName } from "@/lib/seo/objective-meta";
 
@@ -84,20 +83,10 @@ export const loadReadinessCheck = cache(async (
           (a.id < b.id ? -1 : 1)
       );
     for (const q of domainPool.slice(0, slots[i])) {
-      // The stored order puts the answer at B far more often than chance, so
-      // the answers are shuffled, the same way every time for one question
-      // (the page stays static), unless the explanation names an answer by
-      // its letter. That is looked for in everything the page shows of the
-      // explanation: its first sentence, printed as the reason, and the rest.
-      const stored = q.options.map((o) => o.text);
-      const { takeaway, rest } = splitExplanation(q.explanation);
-      const order = mentionsOptionLetter(`${takeaway} ${rest}`)
-        ? stored.map((_, k) => k)
-        : shuffle(stored.map((_, k) => k), seededRng(seedFrom(q.id)));
       questions.push({
         questionText: q.question_text,
-        options: order.map((k) => stored[k]),
-        correctIndex: order.indexOf(q.correct_index),
+        // Not in the stored order, which puts the answer at B too often (see shownAnswers).
+        ...shownAnswers(q),
         explanation: q.explanation,
         // In sentence case, as the practice-test pages name the same domains.
         domainTitle: domainName(domain.title),
