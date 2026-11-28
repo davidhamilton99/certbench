@@ -12,6 +12,7 @@ import {
   countQuestionsBySubObjective,
   listQuestionsBySubObjective,
 } from "@/server/data/questions";
+import { shownAnswers } from "@/server/seo/shown-answers";
 import { codeToSlug, slugToCode } from "@/lib/seo/objective-code";
 import { OBJECTIVE_HUB_CERTS, UNPUBLISHED_PAGE_CERTS } from "@/lib/seo/exam-versions";
 import { domainName } from "@/lib/seo/objective-meta";
@@ -170,8 +171,8 @@ export const loadObjectivePage = cache(async (
     domainWeight: domain?.examWeight ?? null,
     samples: questions.map((q) => ({
       questionText: q.question_text,
-      options: q.options.map((o) => o.text),
-      correctIndex: q.correct_index,
+      // Not in the stored order, which puts the answer at B too often (see shownAnswers).
+      ...shownAnswers(q),
       explanation: q.explanation,
     })),
     siblings,

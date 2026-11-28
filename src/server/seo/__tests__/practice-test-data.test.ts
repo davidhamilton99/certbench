@@ -1,13 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { seededRng, seedFrom, shuffle } from "@/core/path/compose";
 
 /** The exam's active questions in id order: q00 to q119. */
 const QUESTIONS = Array.from({ length: 120 }, (_, i) => `q${String(i).padStart(2, "0")}`);
+
+/** Every question's answers as the bank stores them: the correct one second, where the bank has it most often. */
+const STORED = ["Telnet", "SSH", "FTP", "HTTP"];
+const STORED_ORDER = [0, 1, 2, 3];
+
+/** How the page orders the answers of a question whose explanation names no letter. */
+const shuffledOrder = (id: string) => shuffle(STORED_ORDER, seededRng(seedFrom(id)));
 
 const db = vi.hoisted(() => ({
   /** The ids of the questions in the page's timed practice exam. */
   inExam: [] as string[],
   /** How many questions each read of the samples asked for. */
   asked: [] as number[],
+  /** The ids of the questions whose explanation names an answer by its letter. */
+  lettered: [] as string[],
 }));
 
 vi.mock("@/server/supabase/anon", () => ({ createAnonClient: () => ({}) }));
@@ -28,9 +38,9 @@ vi.mock("@/server/data/questions", () => ({
     return QUESTIONS.slice(0, count).map((id) => ({
       id,
       question_text: `Question ${id}?`,
-      options: [{ text: "Right" }, { text: "Wrong" }],
-      correct_index: 0,
-      explanation: "Because.",
+      options: STORED.map((text) => ({ text })),
+      correct_index: 1,
+      explanation: db.lettered.includes(id) ? "Option B is the only one of these that encrypts the session." : "Because.",
     }));
   },
 }));
@@ -46,6 +56,7 @@ import { loadPracticeTestData } from "../practice-test-data";
 beforeEach(() => {
   db.inExam = [];
   db.asked = [];
+  db.lettered = [];
 });
 
 describe("loadPracticeTestData", () => {
@@ -72,5 +83,34 @@ describe("loadPracticeTestData", () => {
   it("shares the ten samples between two exams on one page", async () => {
     const data = await loadPracticeTestData(["a-plus-core1-220-1201", "a-plus-core2-220-1202"]);
     expect(data.sampleGroups.map((g) => g.questions.length)).toEqual([5, 5]);
+  });
+
+  // The defect: the samples were listed in their stored order, which has the
+  // answer at B in half of the bank, so a visitor who always chose B was right
+  // half the time.
+  it("lists each sample's answers shuffled, the same way every time, with the correct answer still marked", async () => {
+    const data = await loadPracticeTestData(["security-plus-sy0-701"]);
+    const samples = data.sampleGroups[0].questions;
+    expect(samples.map((q) => q.options)).toEqual(
+      QUESTIONS.slice(0, 10).map((id) => shuffledOrder(id).map((k) => STORED[k]))
+    );
+    for (const q of samples) expect(q.options[q.correctIndex]).toBe("SSH");
+    // As stored, every one of these answers is at B.
+    expect(new Set(samples.map((q) => q.correctIndex)).size).toBeGreaterThan(1);
+    const again = await loadPracticeTestData(["security-plus-sy0-701"]);
+    expect(again.sampleGroups[0].questions).toEqual(samples);
+  });
+
+  // The page prints the explanation under the lettered answers, so the letter
+  // in it must name the answer shown under that letter.
+  it("keeps the stored order of a sample whose explanation names an answer by its letter", async () => {
+    // The test's own ground: shuffled, this question's answers would move.
+    expect(shuffledOrder("q03")).not.toEqual(STORED_ORDER);
+    db.lettered = ["q03"];
+    const data = await loadPracticeTestData(["security-plus-sy0-701"]);
+    const sample = data.sampleGroups[0].questions[3];
+    expect(sample.questionText).toBe("Question q03?");
+    expect(sample.options).toEqual(STORED);
+    expect(sample.correctIndex).toBe(1);
   });
 });
